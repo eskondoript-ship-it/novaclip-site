@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip - Learn. Play. Level Up.</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: #0E1117; color: #FAFAFA; }
+.hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;
+  background: radial-gradient(circle at 30% 20%, rgba(247,37,133,0.25), transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(76,201,240,0.25), transparent 50%), #0E1117; }
+h1 { font-size: 4rem; font-weight: 800; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0);
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tag { letter-spacing: 5px; color: #999; margin: 10px 0 30px; font-size: 0.9rem; }
+.btn { display: inline-block; padding: 16px 40px; font-size: 1.2rem; font-weight: 700; color: white;
+  background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); border-radius: 40px; text-decoration: none;
+  box-shadow: 0 0 25px rgba(114,9,183,0.6); transition: transform 0.2s; }
+.btn:hover { transform: scale(1.07); }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 1000px; margin: 60px auto; padding: 0 20px; }
+.card { background: #1E2130; border-radius: 16px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+.card h3 { margin-bottom: 8px; }
+.card p { color: #bbb; font-size: 0.95rem; }
+footer { text-align: center; padding: 30px; color: #777; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class='hero'>
+  <h1>NovaClip</h1>
+  <div class='tag'>LEARN · PLAY · LEVEL UP</div>
+  <p style='max-width: 500px; margin-bottom: 30px; color: #ccc;'>Your AI tutor for YouTube growth, space, business and more. Quizzes, points, streaks and rewards - learning that feels like a game.</p>
+  <a class='btn' href='https://novaclip.streamlit.app' target='_blank'>🚀 Launch NovaClip</a>
+</div>
+<div class='features'>
+  <div class='card'><h3>🎬 YouTube Coach</h3><p>Advice trained on 700+ channels with 50K+ subs. Titles, trends, growth hacks.</p></div>
+  <div class='card'><h3>☄️ Space Tutors</h3><p>Asteroid data plus live NASA feeds of what is flying past Earth this week.</p></div>
+  <div class='card'><h3>📝 Quiz Mode</h3><p>Test yourself after every answer. Earn points, unlock NovaClip Pro rewards.</p></div>
+  <div class='card'><h3>🔥 Streaks</h3><p>Come back daily, keep the flame alive, track it all on your calendar.</p></div>
+</div>
+<footer>Made by eskon · NovaClip 2026</footer>
+</body>
+</html>
