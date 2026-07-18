@@ -53,7 +53,53 @@ onAuthStateChanged(auth, (user) => {
   }
 });
     <script>
+const GEMINI_KEY = '<script>
 const GEMINI_KEY = 'PASTE_YOUR_NEW_RESTRICTED_KEY';
+
+async function askGemini(model, body) {
+  const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + GEMINI_KEY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+document.getElementById('askbtn').onclick = async () => {
+  const q = document.getElementById('askbox').value;
+  if (!q) return;
+  const out = document.getElementById('aiout');
+  out.style.display = 'block';
+  out.textContent = 'Thinking...';
+  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: 'You are NovaClip, a friendly AI tutor for teen creators. Use emojis. ' + q }] }] });
+  if (data.candidates && data.candidates[0].content.parts[0].text) {
+    out.textContent = data.candidates[0].content.parts[0].text;
+  } else {
+    out.textContent = 'Error - check the API key setup.';
+  }
+};
+
+document.getElementById('thumbbtn').onclick = async () => {
+  const q = document.getElementById('askbox').value || 'exciting gaming video';
+  const out = document.getElementById('aiout');
+  out.style.display = 'block';
+  out.textContent = 'Painting your thumbnail... (10-20s)';
+  const data = await askGemini('gemini-2.5-flash-image', { contents: [{ parts: [{ text: 'Generate a bold YouTube thumbnail image, 16:9, vivid colors, high contrast, big readable style, about: ' + q }] }] });
+  let done = false;
+  if (data.candidates) {
+    for (const p of data.candidates[0].content.parts) {
+      if (p.inlineData) {
+        const img = document.getElementById('aiimg');
+        img.src = 'data:image/png;base64,' + p.inlineData.data;
+        img.style.display = 'block';
+        out.style.display = 'none';
+        done = true;
+      }
+    }
+  }
+  if (!done) out.textContent = 'Could not generate the image - try again in a minute.';
+};
+</script>';
 
 async function askGemini(model, body) {
   const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + GEMINI_KEY, {
