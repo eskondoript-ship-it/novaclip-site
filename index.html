@@ -52,6 +52,53 @@ onAuthStateChanged(auth, (user) => {
     p.textContent = '👤 ' + user.displayName;
   }
 });
+    <script>
+const GEMINI_KEY = 'PASTE_YOUR_NEW_RESTRICTED_KEY';
+
+async function askGemini(model, body) {
+  const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + GEMINI_KEY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+document.getElementById('askbtn').onclick = async () => {
+  const q = document.getElementById('askbox').value;
+  if (!q) return;
+  const out = document.getElementById('aiout');
+  out.style.display = 'block';
+  out.textContent = 'Thinking...';
+  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: 'You are NovaClip, a friendly AI tutor for teen creators. Use emojis. ' + q }] }] });
+  if (data.candidates && data.candidates[0].content.parts[0].text) {
+    out.textContent = data.candidates[0].content.parts[0].text;
+  } else {
+    out.textContent = 'Error - check the API key setup.';
+  }
+};
+
+document.getElementById('thumbbtn').onclick = async () => {
+  const q = document.getElementById('askbox').value || 'exciting gaming video';
+  const out = document.getElementById('aiout');
+  out.style.display = 'block';
+  out.textContent = 'Painting your thumbnail... (10-20s)';
+  const data = await askGemini('gemini-2.5-flash-image', { contents: [{ parts: [{ text: 'Generate a bold YouTube thumbnail image, 16:9, vivid colors, high contrast, big readable style, about: ' + q }] }] });
+  let done = false;
+  if (data.candidates) {
+    for (const p of data.candidates[0].content.parts) {
+      if (p.inlineData) {
+        const img = document.getElementById('aiimg');
+        img.src = 'data:image/png;base64,' + p.inlineData.data;
+        img.style.display = 'block';
+        out.style.display = 'none';
+        done = true;
+      }
+    }
+  }
+  if (!done) out.textContent = 'Could not generate the image - try again in a minute.';
+};
+</script>
 </script>
 <body>
 <div class='hero'>
@@ -62,7 +109,15 @@ onAuthStateChanged(auth, (user) => {
   <p id='uname' style='display:none; color:#4CC9F0; font-weight:700;'></p>
 </div>
   <p style='max-width: 500px; margin-bottom: 30px; color: #ccc;'>Your AI tutor for YouTube growth, space, business and more. Quizzes, points, streaks and rewards - learning that feels like a game.</p>
-  <a class='btn' href='https://novaclip.streamlit.app' target='_blank'>🚀 Launch NovaClip</a>
+ <div style='width:100%; max-width:620px;'>
+  <textarea id='askbox' rows='2' placeholder='Ask NovaClip anything, or describe your thumbnail...' style='width:100%; padding:14px; border-radius:14px; border:2px solid #7209B7; background:#1E2130; color:#FAFAFA; font-size:1rem;'></textarea>
+  <div style='margin-top:10px;'>
+    <button id='askbtn' class='btn' style='border:none;'>💬 Ask NovaClip</button>
+    <button id='thumbbtn' class='btn' style='border:none;'>🎨 Generate thumbnail</button>
+  </div>
+  <div id='aiout' style='margin-top:20px; text-align:left; background:#1E2130; border-radius:14px; padding:16px; display:none; white-space:pre-wrap;'></div>
+  <img id='aiimg' style='margin-top:20px; max-width:100%; border-radius:14px; display:none;'>
+</div>
 </div>
 <div class='features'>
   <div class='card'><h3>🎬 YouTube Coach</h3><p>Advice trained on 700+ channels with 50K+ subs. Titles, trends, growth hacks.</p></div>
