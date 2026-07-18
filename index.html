@@ -24,10 +24,43 @@ h1 { font-size: 4rem; font-weight: 800; background: linear-gradient(90deg, #F725
 footer { text-align: center; padding: 30px; color: #777; font-size: 0.85rem; }
 </style>
 </head>
+  <script type='module'>
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyCKJVKqArOofTZT4fiz18cs_-thLB1O2J4',
+  authDomain: 'novaclip-eaf8c.firebaseapp.com',
+  projectId: 'novaclip-eaf8c',
+  storageBucket: 'novaclip-eaf8c.firebasestorage.app',
+  messagingSenderId: '299962701489',
+  appId: '1:299962701489:web:766f4ea8632830c625b490'
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+document.getElementById('gbtn').onclick = () => {
+  signInWithPopup(auth, new GoogleAuthProvider());
+};
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById('gbtn').style.display = 'none';
+    const p = document.getElementById('uname');
+    p.style.display = 'block';
+    p.textContent = '👤 ' + user.displayName;
+  }
+});
+</script>
 <body>
 <div class='hero'>
   <h1>NovaClip</h1>
   <div class='tag'>LEARN · PLAY · LEVEL UP</div>
+  <div id='authbox' style='margin-bottom:20px'>
+  <button id='gbtn' style='padding:12px 28px; border-radius:30px; border:none; font-weight:700; cursor:pointer; background:white; color:#333;'>🔑 Sign in with Google</button>
+  <p id='uname' style='display:none; color:#4CC9F0; font-weight:700;'></p>
+</div>
   <p style='max-width: 500px; margin-bottom: 30px; color: #ccc;'>Your AI tutor for YouTube growth, space, business and more. Quizzes, points, streaks and rewards - learning that feels like a game.</p>
   <a class='btn' href='https://novaclip.streamlit.app' target='_blank'>🚀 Launch NovaClip</a>
 </div>
