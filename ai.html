@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip AI</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: var(--bg); color: var(--txt); display: flex; flex-direction: column; height: 100vh; margin-left: 70px; }
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 70px; background: var(--box); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 22px; z-index: 998; border-right: 1px solid #33333355; }
+.sidebar a { font-size: 1.6rem; text-decoration: none; }
+.sidebar select { width: 58px; font-size: 0.7rem; background: var(--bg); color: var(--txt); border: 1px solid #7209B7; border-radius: 8px; padding: 4px; margin-top: auto; margin-bottom: 16px; }
+.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); border-radius: 50%; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
+header { position: relative; z-index: 1; padding: 16px 24px; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); font-weight: 800; font-size: 1.2rem; color: white; }
+#panels { position: relative; z-index: 1; padding: 10px 24px; max-width: 800px; width: 100%; margin: 0 auto; }
+details { background: var(--box); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
+summary { cursor: pointer; font-weight: 700; }
+details div { margin-top: 8px; font-size: 0.9rem; line-height: 1.6; }
+#aiout { position: relative; z-index: 1; flex: 1; overflow-y: auto; padding: 18px 24px; white-space: pre-wrap; font-size: 1rem; max-width: 800px; width: 100%; margin: 0 auto; }
+#aiimg { position: relative; z-index: 1; max-width: 480px; width: 90%; border-radius: 14px; margin: 16px auto; display: none; }
+#controls { position: relative; z-index: 1; padding: 16px; border-top: 1px solid #33333355; max-width: 800px; width: 100%; margin: 0 auto; }
+#subject { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: var(--box); color: var(--txt); margin-bottom: 10px; }
+#askbox { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #7209B7; background: var(--box); color: var(--txt); resize: none; font-size: 1rem; }
+.smallbtn { margin-top: 10px; margin-right: 8px; padding: 10px 20px; border-radius: 22px; border: none; cursor: pointer; font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); font-size: 0.95rem; }
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <a href='index.html' title='Home'>🏠</a>
+  <a href='app.html' title='Studio'>📈</a>
+  <a href='ai.html' title='NovaClip AI' class='aidot'>✨</a>
+  <select id='themepick'></select>
+</div>
+<header>✨ NovaClip AI</header>
+<div id='panels'>
+  <details><summary>⚔️ Quests</summary><div id='questlist'></div></details>
+  <details><summary>🏅 Achievements</summary><div id='achlist'></div></details>
+  <details><summary>📜 History</summary><div id='histlist'></div></details>
+</div>
+<div id='aiout'>Yo! Pick your tutor, then ask away (+5 pts), cook a thumbnail with 🎨 (+10 pts), or plan a whole video with 🎬 (+10 pts) fr fr</div>
+<img id='aiimg'>
+<div id='controls'>
+  <select id='subject'>
+    <option value='youtube'>🎬 YouTube Coach</option>
+    <option value='space'>☄️ Asteroid Tutor</option>
+    <option value='business'>💼 Business Tutor</option>
+  </select>
+  <textarea id='askbox' rows='2' placeholder='Ask NovaClip anything...'></textarea>
+  <div>
+    <button id='askbtn' class='smallbtn'>💬 Ask</button>
+    <button id='thumbbtn' class='smallbtn'>🎨 Thumbnail</button>
+    <button id='vidbtn' class='smallbtn'>🎬 Video maker</button>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = 'https://novaclip-ai.eskondoript-ship-it.workers.dev';
+
+async function askGemini(model, payload) {
+  const r = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: model, payload: payload })
+  });
+  return r.json();
+}
+
+const SLANG = 'Talk in HEAVY gen z slang: fr fr, no cap, ong, lowkey, highkey, W, L, bet, rizz, cooked, ate, slay, bussin, deadass, its giving, valid, hits different, goated, sheesh, sigma, delulu. Pack slang into almost every sentence but keep it readable and actually helpful. Use emojis. ';
+
+const PERSONAS = {
+  youtube: 'You are NovaClip, a YouTube coach for teen creators 13-18, expert in titles, trends and growth hacks. ',
+  space: 'You are NovaClip, a fun space tutor for teens, expert in asteroids, planets and NASA missions. ',
+  business: 'You are NovaClip, a business and money tutor for teens, expert in side hustles, saving and entrepreneurship. '
+};
+
+function persona() {
+  return PERSONAS[document.getElementById('subject').value] + SLANG;
+}
+
+function subjectName() {
+  return document.getElementById('subject').selectedOptions[0].textContent;
+}
+
+document.getElementById('askbtn').onclick = async () => {
+  const q = document.getElementById('askbox').value;
+  if (!q) return;
+  const out = document.getElementById('aiout');
+  document.getElementById('aiimg').style.display = 'none';
+  out.textContent = 'Cooking... 🔥';
+  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Keep it under 200 words. Question: ' + q }] }] });
+  if (data.candidates && data.candidates[0].content.parts[0].text) {
+    out.textContent = data.candidates[0].content.parts[0].text;
+    saveHist(subjectName(), q, out.textContent);
+    addPts(5);
+  } else {
+    out.textContent = 'The AI is cooked rn 💀 try again in a minute.';
+  }
+};
+
+document.getElementById('thumbbtn').onclick = async () => {
+  const q = document.getElementById('askbox').value || 'exciting gaming video';
+  const out = document.getElementById('aiout');
+  out.textContent = 'Painting your thumbnail... (10-20s) 🎨';
+  const data = await askGemini('gemini-2.5-flash-image', { contents: [{ parts: [{ text: 'Generate a bold YouTube thumbnail image, 16:9, vivid colors, high contrast, about: ' + q }] }] });
+  let done = false;
+  if (data.candidates) {
+    for (const p of data.candidates[0].content.parts) {
+      if (p.inlineData) {
+        const img = document.getElementById('aiimg');
+        img.src = 'data:image/png;base64,' + p.inlineData.data;
+        img.style.display = 'block';
+        out.textContent = 'It ate. Right-click to save it 🔥';
+        saveHist(subjectName(), 'Thumbnail: ' + q, 'image generated');
+        addPts(10);
+        done = true;
+      }
+    }
+  }
+  if (!done) out.textContent = 'Could not generate the image rn 💀 try again in a minute.';
+};
+
+document.getElementById('vidbtn').onclick = async () => {
+  const q = document.getElementById('askbox').value;
+  if (!q) {
+    document.getElementById('aiout').textContent = 'Type your video idea first, then hit 🎬';
+    return;
+  }
+  const out = document.getElementById('aiout');
+  document.getElementById('aiimg').style.display = 'none';
+  out.textContent = 'Directing your video... 🎬';
+  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Create a complete video plan for this idea: ' + q + '. Give me: 1) A viral title, 2) A 3-second hook line, 3) Full script outline scene by scene (5-8 scenes with what to say and show), 4) Shot list with camera angles, 5) Music and sound effect suggestions, 6) A thumbnail concept. Format it clearly with the numbers.' }] }] });
+  if (data.candidates && data.candidates[0].content.parts[0].text) {
+    out.textContent = data.candidates[0].content.parts[0].text;
+    saveHist(subjectName(), 'Video plan: ' + q, out.textContent);
+    addPts(10);
+  } else {
+    out.textContent = 'The AI is cooked rn 💀 try again in a minute.';
+  }
+};
+</script>
+<script src='nova.js'></script>
+</body>
+</html>
