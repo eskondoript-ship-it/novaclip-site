@@ -17,6 +17,8 @@ h1 { font-size: 4rem; font-weight: 800; background: linear-gradient(90deg, #F725
   background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); border-radius: 40px; text-decoration: none; border: none; cursor: pointer;
   box-shadow: 0 0 25px rgba(114,9,183,0.6); transition: transform 0.2s; }
 .btn:hover { transform: scale(1.07); }
+.toolbtn { margin: 6px; padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; background: #1E2130; color: #4CC9F0; border: 2px solid #4CC9F0; }
+.panelbox { margin-top: 16px; text-align: left; display: none; background: #1E2130; border-radius: 14px; padding: 16px; max-width: 620px; width: 100%; }
 .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 1000px; margin: 60px auto; padding: 0 20px; }
 .card { background: #1E2130; border-radius: 16px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
 .card h3 { margin-bottom: 8px; }
@@ -26,14 +28,14 @@ footer { text-align: center; padding: 30px; color: #777; font-size: 0.85rem; }
   background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; font-size: 1.7rem;
   box-shadow: 0 4px 20px rgba(114,9,183,0.7); z-index: 999; transition: transform 0.2s; }
 #aifab:hover { transform: scale(1.12); }
-#aipanel { position: fixed; bottom: 100px; right: 24px; width: 360px; max-width: calc(100vw - 40px); max-height: 70vh;
+#aipanel { position: fixed; bottom: 100px; right: 24px; width: 370px; max-width: calc(100vw - 40px); max-height: 72vh;
   background: #1E2130; border-radius: 18px; border: 2px solid #7209B7; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
   display: none; flex-direction: column; overflow: hidden; z-index: 999; }
 #aipanel header { padding: 14px 16px; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); font-weight: 700; }
 #aiout { padding: 14px; overflow-y: auto; flex: 1; white-space: pre-wrap; font-size: 0.92rem; color: #FAFAFA; }
 #aiimg { max-width: 100%; border-radius: 10px; margin: 10px 14px; display: none; }
 #aicontrols { padding: 12px; border-top: 1px solid #333; }
-#askbox { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: #0E1117; color: #FAFAFA; resize: none; }
+#askbox, #duelbox { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: #0E1117; color: #FAFAFA; resize: none; }
 .smallbtn { margin-top: 8px; margin-right: 6px; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer;
   font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); }
 </style>
@@ -42,32 +44,43 @@ footer { text-align: center; padding: 30px; color: #777; font-size: 0.85rem; }
 <div class='hero'>
   <h1>NovaClip</h1>
   <div class='tag'>LEARN · PLAY · LEVEL UP</div>
-  <div id='authbox' style='margin-bottom:20px'>
+  <div id='authbox' style='margin-bottom:10px'>
     <button id='gbtn' style='padding:12px 28px; border-radius:30px; border:none; font-weight:700; cursor:pointer; background:white; color:#333;'>🔑 Sign in with Google</button>
     <p id='uname' style='display:none; color:#4CC9F0; font-weight:700;'></p>
   </div>
-  <button id='compbtn' style='display:none; margin-top:10px; padding:12px 28px; border-radius:30px; font-weight:700; cursor:pointer; background:#1E2130; color:#4CC9F0; border:2px solid #4CC9F0;'>🥊 Find my closest competitors</button>
-  <div id='complist' style='margin-top:16px; text-align:left; display:none; background:#1E2130; border-radius:14px; padding:16px; max-width:620px;'></div>
+  <div id='toolbar' style='display:none;'>
+    <button id='statsbtn' class='toolbtn'>📈 My analytics</button>
+    <button id='compbtn' class='toolbtn'>🥊 Closest competitors</button>
+    <button id='duelbtn' class='toolbtn'>⚔️ Duel a channel</button>
+    <button id='trendbtn' class='toolbtn'>🔥 Trending topics</button>
+  </div>
+  <div id='duelsetup' class='panelbox'>
+    <b>⚔️ Views and subs duel (max 20k subs difference between channels)</b><br><br>
+    <input id='duelbox' placeholder='Opponent channel name...'>
+    <button id='duelgo' class='smallbtn'>Fight!</button>
+  </div>
+  <div id='toolout' class='panelbox'></div>
   <p style='max-width: 500px; margin: 24px 0; color: #ccc;'>Your AI tutor for YouTube growth, space, business and more. Quizzes, points, streaks and rewards - learning that feels like a game.</p>
   <a class='btn' href='https://novaclip.streamlit.app' target='_blank'>🚀 Launch NovaClip</a>
 </div>
 <div class='features'>
   <div class='card'><h3>🎬 YouTube Coach</h3><p>Advice trained on 700+ channels with 50K+ subs. Titles, trends, growth hacks.</p></div>
-  <div class='card'><h3>📊 Channel Analytics</h3><p>Connect your YouTube channel and see your subs, views and closest competitors.</p></div>
-  <div class='card'><h3>📝 Quiz Mode</h3><p>Test yourself after every answer. Earn points, unlock NovaClip Pro rewards.</p></div>
-  <div class='card'><h3>🔥 Streaks</h3><p>Come back daily, keep the flame alive, track it all on your calendar.</p></div>
+  <div class='card'><h3>⚔️ Channel Duels</h3><p>Battle channels near your size in subs and views. Max 20k gap - fair fights only.</p></div>
+  <div class='card'><h3>📈 Channel Analytics</h3><p>Your stats, your best and worst videos, trending topics and closest rivals.</p></div>
+  <div class='card'><h3>🔥 Streaks and Quizzes</h3><p>Earn points, keep the flame alive, unlock NovaClip Pro rewards.</p></div>
 </div>
 <footer>Made by eskon · NovaClip 2026</footer>
 
 <button id='aifab'>💬</button>
 <div id='aipanel'>
-  <header>✨ NovaClip AI - ask or generate thumbnails</header>
-  <div id='aiout'>Hey! Ask me anything about growing your channel, or describe a thumbnail and hit 🎨</div>
+  <header>✨ NovaClip AI</header>
+  <div id='aiout'>Yo! Ask me anything, cook up a thumbnail with 🎨, or plan a whole video with 🎬 fr fr</div>
   <img id='aiimg'>
   <div id='aicontrols'>
     <textarea id='askbox' rows='2' placeholder='Ask NovaClip anything...'></textarea>
     <button id='askbtn' class='smallbtn'>💬 Ask</button>
     <button id='thumbbtn' class='smallbtn'>🎨 Thumbnail</button>
+    <button id='vidbtn' class='smallbtn'>🎬 Video maker</button>
   </div>
 </div>
 
@@ -90,39 +103,105 @@ const auth = getAuth(app);
 let ytToken = null;
 let myStats = null;
 
+function yt(url) {
+  return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json());
+}
+
+function show(html) {
+  const box = document.getElementById('toolout');
+  box.style.display = 'block';
+  box.innerHTML = html;
+}
+
 document.getElementById('gbtn').onclick = async () => {
   const provider = new GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
   const result = await signInWithPopup(auth, provider);
   ytToken = GoogleAuthProvider.credentialFromResult(result).accessToken;
-  const r = await fetch('https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&mine=true', { headers: { Authorization: 'Bearer ' + ytToken } });
-  const data = await r.json();
+  const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
   if (data.items && data.items.length) {
     myStats = data.items[0];
     document.getElementById('gbtn').style.display = 'none';
     const p = document.getElementById('uname');
     p.style.display = 'block';
-    p.textContent = '📊 ' + myStats.snippet.title + ': ' + myStats.statistics.subscriberCount + ' subs · ' + myStats.statistics.viewCount + ' views';
-    document.getElementById('compbtn').style.display = 'inline-block';
+    p.textContent = '👤 ' + myStats.snippet.title;
+    document.getElementById('toolbar').style.display = 'block';
   }
 };
 
+document.getElementById('statsbtn').onclick = async () => {
+  show('Crunching your numbers...');
+  const s = myStats.statistics;
+  let html = '<b>📈 ' + myStats.snippet.title + '</b><br>' +
+    'Subscribers: ' + parseInt(s.subscriberCount).toLocaleString() + '<br>' +
+    'Total views: ' + parseInt(s.viewCount).toLocaleString() + '<br>' +
+    'Videos: ' + s.videoCount + '<br><br>';
+  const uploads = myStats.contentDetails.relatedPlaylists.uploads;
+  const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=50');
+  if (pl.items && pl.items.length) {
+    const ids = pl.items.map(i => i.contentDetails.videoId).join(',');
+    const vs = await yt('videos?part=snippet,statistics&id=' + ids);
+    const vids = vs.items.map(v => ({ title: v.snippet.title, views: parseInt(v.statistics.viewCount || 0) })).sort((a, b) => b.views - a.views);
+    const best = vids.slice(0, 3);
+    const worst = vids.slice(-3).reverse();
+    html += '<b>🏆 Best videos:</b><br>' + best.map((v, i) => (i + 1) + '. ' + v.title + ' — ' + v.views.toLocaleString() + ' views').join('<br>') +
+      '<br><br><b>💀 Worst videos:</b><br>' + worst.map((v, i) => (i + 1) + '. ' + v.title + ' — ' + v.views.toLocaleString() + ' views').join('<br>');
+  } else {
+    html += 'No videos yet — upload something and come back! 🎬';
+  }
+  show(html);
+};
+
 document.getElementById('compbtn').onclick = async () => {
-  const box = document.getElementById('complist');
-  box.style.display = 'block';
-  box.textContent = 'Scouting your rivals...';
+  show('Scouting your rivals...');
   const q = encodeURIComponent(myStats.snippet.title.split(' ')[0]);
-  const s = await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&maxResults=15&q=' + q, { headers: { Authorization: 'Bearer ' + ytToken } });
-  const sd = await s.json();
+  const sd = await yt('search?part=snippet&type=channel&maxResults=15&q=' + q);
   const ids = sd.items.map(i => i.snippet.channelId).filter(id => id !== myStats.id).join(',');
-  const c = await fetch('https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=' + ids, { headers: { Authorization: 'Bearer ' + ytToken } });
-  const cd = await c.json();
+  const cd = await yt('channels?part=statistics,snippet&id=' + ids);
   const mySubs = parseInt(myStats.statistics.subscriberCount);
   const ranked = cd.items
     .map(ch => ({ name: ch.snippet.title, subs: parseInt(ch.statistics.subscriberCount || 0), views: ch.statistics.viewCount, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) }))
-    .sort((a, b) => a.diff - b.diff)
-    .slice(0, 5);
-  box.innerHTML = '<b>🥊 Channels closest to your size:</b><br>' + ranked.map((r, i) => (i + 1) + '. ' + r.name + ' — ' + r.subs + ' subs · ' + r.views + ' views').join('<br>');
+    .sort((a, b) => a.diff - b.diff).slice(0, 5);
+  show('<b>🥊 Channels closest to your size:</b><br>' + ranked.map((r, i) => (i + 1) + '. ' + r.name + ' — ' + r.subs.toLocaleString() + ' subs · ' + parseInt(r.views).toLocaleString() + ' views').join('<br>'));
+};
+
+document.getElementById('duelbtn').onclick = () => {
+  const d = document.getElementById('duelsetup');
+  d.style.display = d.style.display === 'block' ? 'none' : 'block';
+};
+
+document.getElementById('duelgo').onclick = async () => {
+  const name = document.getElementById('duelbox').value;
+  if (!name) return;
+  show('Preparing the arena...');
+  const mySubs = parseInt(myStats.statistics.subscriberCount);
+  const myViews = parseInt(myStats.statistics.viewCount);
+  const sd = await yt('search?part=snippet&type=channel&maxResults=1&q=' + encodeURIComponent(name));
+  if (!sd.items || !sd.items.length) { show('Could not find that channel.'); return; }
+  const cd = await yt('channels?part=statistics,snippet&id=' + sd.items[0].snippet.channelId);
+  const opp = cd.items[0];
+  const oppSubs = parseInt(opp.statistics.subscriberCount || 0);
+  const oppViews = parseInt(opp.statistics.viewCount || 0);
+  const gap = Math.abs(mySubs - oppSubs);
+  if (gap > 20000) {
+    show('⚔️ Unfair matchup! The gap between you and ' + opp.snippet.title + ' is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer to your size!');
+    return;
+  }
+  let myScore = 0;
+  let oppScore = 0;
+  if (mySubs >= oppSubs) myScore++; else oppScore++;
+  if (myViews >= oppViews) myScore++; else oppScore++;
+  const winner = myScore > oppScore ? myStats.snippet.title : (oppScore > myScore ? opp.snippet.title : 'It is a TIE');
+  show('<b>⚔️ DUEL RESULT</b><br><br>' +
+    myStats.snippet.title + ': ' + mySubs.toLocaleString() + ' subs · ' + myViews.toLocaleString() + ' views<br>' +
+    opp.snippet.title + ': ' + oppSubs.toLocaleString() + ' subs · ' + oppViews.toLocaleString() + ' views<br><br>' +
+    '🏆 <b>Winner: ' + winner + '</b>');
+};
+
+document.getElementById('trendbtn').onclick = async () => {
+  show('Checking what is hot right now...');
+  const t = await yt('videos?part=snippet,statistics&chart=mostPopular&regionCode=PT&maxResults=8');
+  show('<b>🔥 Trending on YouTube right now:</b><br>' + t.items.map((v, i) => (i + 1) + '. ' + v.snippet.title + ' — ' + parseInt(v.statistics.viewCount).toLocaleString() + ' views (' + v.snippet.channelTitle + ')').join('<br>'));
 };
 </script>
 
@@ -143,24 +222,26 @@ async function askGemini(model, payload) {
   return r.json();
 }
 
+const SLANG = 'You are NovaClip, an AI tutor for teen creators. Talk in HEAVY gen z slang: fr fr, no cap, ong, lowkey, highkey, W, L, bet, rizz, cooked, ate, slay, bussin, deadass, its giving, valid, hits different, goated, sheesh, sigma, delulu. Pack slang into almost every sentence but keep it readable and actually helpful. Use emojis. ';
+
 document.getElementById('askbtn').onclick = async () => {
   const q = document.getElementById('askbox').value;
   if (!q) return;
   const out = document.getElementById('aiout');
   document.getElementById('aiimg').style.display = 'none';
-  out.textContent = 'Thinking...';
-  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: 'You are NovaClip, a friendly AI tutor for teen creators. Use emojis. Keep it under 150 words. ' + q }] }] });
+  out.textContent = 'Cooking... 🔥';
+  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: SLANG + 'Keep it under 150 words. Question: ' + q }] }] });
   if (data.candidates && data.candidates[0].content.parts[0].text) {
     out.textContent = data.candidates[0].content.parts[0].text;
   } else {
-    out.textContent = 'Error - the AI backend did not answer. Try again in a minute.';
+    out.textContent = 'The AI is cooked rn 💀 try again in a minute.';
   }
 };
 
 document.getElementById('thumbbtn').onclick = async () => {
   const q = document.getElementById('askbox').value || 'exciting gaming video';
   const out = document.getElementById('aiout');
-  out.textContent = 'Painting your thumbnail... (10-20s)';
+  out.textContent = 'Painting your thumbnail... (10-20s) 🎨';
   const data = await askGemini('gemini-2.5-flash-image', { contents: [{ parts: [{ text: 'Generate a bold YouTube thumbnail image, 16:9, vivid colors, high contrast, about: ' + q }] }] });
   let done = false;
   if (data.candidates) {
@@ -169,12 +250,29 @@ document.getElementById('thumbbtn').onclick = async () => {
         const img = document.getElementById('aiimg');
         img.src = 'data:image/png;base64,' + p.inlineData.data;
         img.style.display = 'block';
-        out.textContent = 'Here is your thumbnail! Right-click to save it.';
+        out.textContent = 'It ate. Right-click to save it 🔥';
         done = true;
       }
     }
   }
-  if (!done) out.textContent = 'Could not generate the image - try again in a minute.';
+  if (!done) out.textContent = 'Could not generate the image rn 💀 try again in a minute.';
+};
+
+document.getElementById('vidbtn').onclick = async () => {
+  const q = document.getElementById('askbox').value;
+  if (!q) {
+    document.getElementById('aiout').textContent = 'Type your video idea first, then hit 🎬';
+    return;
+  }
+  const out = document.getElementById('aiout');
+  document.getElementById('aiimg').style.display = 'none';
+  out.textContent = 'Directing your video... 🎬';
+  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: SLANG + 'Create a complete video plan for this idea: ' + q + '. Give me: 1) A viral title, 2) A 3-second hook line, 3) Full script outline scene by scene (5-8 scenes with what to say and show), 4) Shot list with camera angles, 5) Music and sound effect suggestions, 6) A thumbnail concept. Format it clearly with the numbers.' }] }] });
+  if (data.candidates && data.candidates[0].content.parts[0].text) {
+    out.textContent = data.candidates[0].content.parts[0].text;
+  } else {
+    out.textContent = 'The AI is cooked rn 💀 try again in a minute.';
+  }
 };
 </script>
 </body>
