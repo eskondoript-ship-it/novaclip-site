@@ -18,33 +18,29 @@ body { background: var(--bg); color: var(--txt); }
 h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
 .toolbtn { margin: 20px; padding: 14px 30px; border-radius: 30px; font-weight: 700; cursor: pointer; background: var(--box); color: #4CC9F0; border: 2px solid #4CC9F0; font-size: 1.05rem; }
-#region { padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: var(--box); color: var(--txt); font-size: 1rem; }
-#out { margin-top: 20px; text-align: left; background: var(--box); border-radius: 14px; padding: 20px; max-width: 640px; width: 100%; display: none; line-height: 1.9; }
+#niche { padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: var(--box); color: var(--txt); font-size: 1rem; width: 300px; max-width: 90%; }
+#out { margin-top: 20px; text-align: left; background: var(--box); border-radius: 14px; padding: 20px; max-width: 640px; width: 100%; display: none; line-height: 1.9; white-space: pre-wrap; }
 .scanning { color: #4CC9F0; font-weight: 700; margin-top: 10px; }
 </style>
 </head>
 <body>
 <div class='sidebar'>
-  <a href='index.html'>🏠 Home</a>
-  <a href='app.html'>📈 Studio</a>
-  <a href='trends.html'>🛰️ Trend Spotter</a>
-  <a href='ai.html' class='aidot'>✨ NovaClip AI</a>
+  <a href='index.html' data-t='home'>🏠 Home</a>
+  <a href='app.html' data-t='studio'>📈 Studio</a>
+  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
+  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
   <div class='themewrap'>
     <label>🎨 Background</label>
     <select id='themepick'></select>
+    <label style='margin-top:12px;'>🌐 Language</label>
+    <select id='langpick'></select>
   </div>
 </div>
 <div class='wrap'>
   <h1>🛰️ Trend Spotter</h1>
-  <p style='opacity:0.8; max-width:520px; margin-top:10px;'>Scan YouTube for what's blowing up right now. Pick a region and drop the radar.</p>
+  <p style='opacity:0.8; max-width:520px; margin-top:10px;'>Type your niche and drop the radar - NovaClip AI predicts what's about to blow up.</p>
   <div style='margin-top:20px;'>
-    <select id='region'>
-      <option value='PT'>🇵🇹 Portugal</option>
-      <option value='US'>🇺🇸 United States</option>
-      <option value='GB'>🇬🇧 United Kingdom</option>
-      <option value='BR'>🇧🇷 Brazil</option>
-      <option value='ES'>🇪🇸 Spain</option>
-    </select>
+    <input id='niche' placeholder='Your niche (e.g. Minecraft, cooking, football)'>
   </div>
   <button id='scanbtn' class='toolbtn'>🛰️ Scan for trends</button>
   <div id='radarwrap' style='display:none;'>
@@ -55,23 +51,27 @@ h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F7
 </div>
 
 <script>
+const WORKER_URL = 'https://novaclip-ai.YOURNAME.workers.dev';
+
 document.getElementById('scanbtn').onclick = async () => {
-  const region = document.getElementById('region').value;
+  const niche = document.getElementById('niche').value || 'YouTube';
   const out = document.getElementById('out');
   const radar = document.getElementById('radarwrap');
   out.style.display = 'none';
   radar.style.display = 'block';
+  const prompt = 'You are NovaClip trend analyst. For the niche "' + niche + '", list 6 video topic trends that are rising right now and about to blow up. For each: a catchy title idea and one line on why it works. Use emojis. Be specific and punchy.' + (typeof langInstruction === 'function' ? langInstruction() : '');
+  let text = '';
   try {
-    const t = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=' + region + '&maxResults=10&key=NO_KEY');
-    // Trend Spotter uses the public trending chart via the same YouTube access token if signed in on Studio.
+    const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'gemini-2.5-flash', payload: { contents: [{ parts: [{ text: prompt }] }] } }) });
+    const data = await r.json();
+    text = data.candidates && data.candidates[0].content.parts[0].text;
   } catch (e) {}
-  // Give the radar a moment to sweep for the effect, then show results.
   setTimeout(() => {
     radar.style.display = 'none';
     out.style.display = 'block';
-    out.innerHTML = '<b>🔥 To load live trends, sign in on the 📈 Studio page first (it grants YouTube access), then come back.</b><br><br>Tip: the Studio "🔥 Trending topics" button already shows live trends using your access.';
-    if (typeof addPts === 'function') addPts(5);
-  }, 2600);
+    out.textContent = text || 'Could not reach the trend radar rn 💀 try again in a minute.';
+    if (text && typeof addPts === 'function') addPts(5);
+  }, 2200);
 };
 </script>
 <script src='nova.js'></script>
