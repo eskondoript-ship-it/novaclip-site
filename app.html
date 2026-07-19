@@ -7,11 +7,14 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 body { background: var(--bg); color: var(--txt); }
-.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 70px; background: var(--box); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 22px; z-index: 998; border-right: 1px solid #33333355; }
-.sidebar a { font-size: 1.6rem; text-decoration: none; }
-.sidebar select { width: 58px; font-size: 0.7rem; background: var(--bg); color: var(--txt); border: 1px solid #7209B7; border-radius: 8px; padding: 4px; margin-top: auto; margin-bottom: 16px; }
-.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); border-radius: 50%; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
-.hero { position: relative; z-index: 1; min-height: 100vh; margin-left: 70px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; padding: 50px 20px; }
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: var(--box); display: flex; flex-direction: column; align-items: stretch; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid #33333355; }
+.sidebar a { font-size: 1.1rem; text-decoration: none; color: var(--txt); display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 700; }
+.sidebar a:hover { background: #7209B733; }
+.sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: 0.8rem; opacity: 0.7; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: 1rem; background: var(--bg); color: var(--txt); border: 2px solid #7209B7; border-radius: 10px; padding: 10px; }
+.hero { position: relative; z-index: 1; min-height: 100vh; margin-left: 200px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; padding: 50px 20px; }
 h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
 .toolbtn { margin: 6px; padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; background: var(--box); color: #4CC9F0; border: 2px solid #4CC9F0; }
@@ -22,10 +25,16 @@ h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F7
 </head>
 <body>
 <div class='sidebar'>
-  <a href='index.html' title='Home'>🏠</a>
-  <a href='app.html' title='Studio'>📈</a>
-  <a href='ai.html' title='NovaClip AI' class='aidot'>✨</a>
-  <select id='themepick'></select>
+  <a href='index.html' data-t='home'>🏠 Home</a>
+  <a href='app.html' data-t='studio'>📈 Studio</a>
+  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
+  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <div class='themewrap'>
+    <label>🎨 Background</label>
+    <select id='themepick'></select>
+    <label style='margin-top:12px;'>🌐 Language</label>
+    <select id='langpick'></select>
+  </div>
 </div>
 <div class='hero'>
   <h1>NovaClip Studio</h1>
@@ -63,19 +72,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-
 let ytToken = null;
 let myStats = null;
 
-function yt(url) {
-  return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json());
-}
-
-function show(html) {
-  const box = document.getElementById('toolout');
-  box.style.display = 'block';
-  box.innerHTML = html;
-}
+function yt(url) { return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json()); }
+function show(html) { const box = document.getElementById('toolout'); box.style.display = 'block'; box.innerHTML = html; }
 
 document.getElementById('gbtn').onclick = async () => {
   const provider = new GoogleAuthProvider();
@@ -96,10 +97,7 @@ document.getElementById('gbtn').onclick = async () => {
 document.getElementById('statsbtn').onclick = async () => {
   show('Crunching your numbers...');
   const s = myStats.statistics;
-  let html = '<b>📈 ' + myStats.snippet.title + '</b><br>' +
-    'Subscribers: ' + parseInt(s.subscriberCount).toLocaleString() + '<br>' +
-    'Total views: ' + parseInt(s.viewCount).toLocaleString() + '<br>' +
-    'Videos: ' + s.videoCount + '<br><br>';
+  let html = '<b>📈 ' + myStats.snippet.title + '</b><br>Subscribers: ' + parseInt(s.subscriberCount).toLocaleString() + '<br>Total views: ' + parseInt(s.viewCount).toLocaleString() + '<br>Videos: ' + s.videoCount + '<br><br>';
   const uploads = myStats.contentDetails.relatedPlaylists.uploads;
   const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=50');
   if (pl.items && pl.items.length) {
@@ -108,11 +106,8 @@ document.getElementById('statsbtn').onclick = async () => {
     const vids = vs.items.map(v => ({ title: v.snippet.title, views: parseInt(v.statistics.viewCount || 0) })).sort((a, b) => b.views - a.views);
     const best = vids.slice(0, 3);
     const worst = vids.slice(-3).reverse();
-    html += '<b>🏆 Best videos:</b><br>' + best.map((v, i) => (i + 1) + '. ' + v.title + ' — ' + v.views.toLocaleString() + ' views').join('<br>') +
-      '<br><br><b>💀 Worst videos:</b><br>' + worst.map((v, i) => (i + 1) + '. ' + v.title + ' — ' + v.views.toLocaleString() + ' views').join('<br>');
-  } else {
-    html += 'No videos yet — upload something and come back! 🎬';
-  }
+    html += '<b>🏆 Best videos:</b><br>' + best.map((v, i) => (i + 1) + '. ' + v.title + ' — ' + v.views.toLocaleString() + ' views').join('<br>') + '<br><br><b>💀 Worst videos:</b><br>' + worst.map((v, i) => (i + 1) + '. ' + v.title + ' — ' + v.views.toLocaleString() + ' views').join('<br>');
+  } else { html += 'No videos yet — upload something and come back! 🎬'; }
   show(html);
 };
 
@@ -123,16 +118,11 @@ document.getElementById('compbtn').onclick = async () => {
   const ids = sd.items.map(i => i.snippet.channelId).filter(id => id !== myStats.id).join(',');
   const cd = await yt('channels?part=statistics,snippet&id=' + ids);
   const mySubs = parseInt(myStats.statistics.subscriberCount);
-  const ranked = cd.items
-    .map(ch => ({ name: ch.snippet.title, subs: parseInt(ch.statistics.subscriberCount || 0), views: ch.statistics.viewCount, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) }))
-    .sort((a, b) => a.diff - b.diff).slice(0, 5);
+  const ranked = cd.items.map(ch => ({ name: ch.snippet.title, subs: parseInt(ch.statistics.subscriberCount || 0), views: ch.statistics.viewCount, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, 5);
   show('<b>🥊 Channels closest to your size:</b><br>' + ranked.map((r, i) => (i + 1) + '. ' + r.name + ' — ' + r.subs.toLocaleString() + ' subs · ' + parseInt(r.views).toLocaleString() + ' views').join('<br>'));
 };
 
-document.getElementById('duelbtn').onclick = () => {
-  const d = document.getElementById('duelsetup');
-  d.style.display = d.style.display === 'block' ? 'none' : 'block';
-};
+document.getElementById('duelbtn').onclick = () => { const d = document.getElementById('duelsetup'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; };
 
 document.getElementById('duelgo').onclick = async () => {
   const name = document.getElementById('duelbox').value;
@@ -147,19 +137,12 @@ document.getElementById('duelgo').onclick = async () => {
   const oppSubs = parseInt(opp.statistics.subscriberCount || 0);
   const oppViews = parseInt(opp.statistics.viewCount || 0);
   const gap = Math.abs(mySubs - oppSubs);
-  if (gap > 20000) {
-    show('⚔️ Unfair matchup! The gap between you and ' + opp.snippet.title + ' is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer to your size!');
-    return;
-  }
-  let myScore = 0;
-  let oppScore = 0;
+  if (gap > 20000) { show('⚔️ Unfair matchup! The gap between you and ' + opp.snippet.title + ' is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer to your size!'); return; }
+  let myScore = 0, oppScore = 0;
   if (mySubs >= oppSubs) myScore++; else oppScore++;
   if (myViews >= oppViews) myScore++; else oppScore++;
   const winner = myScore > oppScore ? myStats.snippet.title : (oppScore > myScore ? opp.snippet.title : 'It is a TIE');
-  show('<b>⚔️ DUEL RESULT</b><br><br>' +
-    myStats.snippet.title + ': ' + mySubs.toLocaleString() + ' subs · ' + myViews.toLocaleString() + ' views<br>' +
-    opp.snippet.title + ': ' + oppSubs.toLocaleString() + ' subs · ' + oppViews.toLocaleString() + ' views<br><br>' +
-    '🏆 <b>Winner: ' + winner + '</b>');
+  show('<b>⚔️ DUEL RESULT</b><br><br>' + myStats.snippet.title + ': ' + mySubs.toLocaleString() + ' subs · ' + myViews.toLocaleString() + ' views<br>' + opp.snippet.title + ': ' + oppSubs.toLocaleString() + ' subs · ' + oppViews.toLocaleString() + ' views<br><br>🏆 <b>Winner: ' + winner + '</b>');
   if (myScore > oppScore) addPts(20);
 };
 
