@@ -4,6 +4,7 @@
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaClip Studio</title>
+<script src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 body { background: var(--bg); color: var(--txt); }
@@ -18,9 +19,11 @@ body { background: var(--bg); color: var(--txt); }
 h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
 .toolbtn { margin: 6px; padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; background: var(--box); color: #4CC9F0; border: 2px solid #4CC9F0; }
-.panelbox { margin-top: 16px; text-align: left; display: none; background: var(--box); border-radius: 14px; padding: 16px; max-width: 620px; width: 100%; }
+.panelbox { margin-top: 16px; text-align: left; display: none; background: var(--box); border-radius: 14px; padding: 16px; max-width: 680px; width: 100%; }
 #duelbox { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: var(--bg); color: var(--txt); }
 .smallbtn { margin-top: 8px; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); }
+.toggle { display: inline-flex; align-items: center; gap: 8px; margin: 10px 0; font-weight: 700; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; }
 </style>
 </head>
 <body>
@@ -48,6 +51,11 @@ h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F7
     <button id='duelbtn' class='toolbtn'>⚔️ Duel a channel</button>
     <button id='trendbtn' class='toolbtn'>🔥 Trending topics</button>
   </div>
+  <div id='statspanel' class='panelbox'>
+    <label class='toggle'><input type='checkbox' id='compToggle'> Compare with competitors</label>
+    <div id='statstext'></div>
+    <canvas id='statschart' height='220'></canvas>
+  </div>
   <div id='duelsetup' class='panelbox'>
     <b>⚔️ Views and subs duel (max 20k subs difference between channels)</b><br><br>
     <input id='duelbox' placeholder='Opponent channel name...'>
@@ -74,6 +82,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 let ytToken = null;
 let myStats = null;
+let myChart = null;
 
 function yt(url) { return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json()); }
 function show(html) { const box = document.getElementById('toolout'); box.style.display = 'block'; box.innerHTML = html; }
@@ -94,32 +103,56 @@ document.getElementById('gbtn').onclick = async () => {
   }
 };
 
-document.getElementById('statsbtn').onclick = async () => {
-  show('Crunching your numbers...');
-  const s = myStats.statistics;
-  let html = '<b>📈 ' + myStats.snippet.title + '</b><br>Subscribers: ' + parseInt(s.subscriberCount).toLocaleString() + '<br>Total views: ' + parseInt(s.viewCount).toLocaleString() + '<br>Videos: ' + s.videoCount + '<br><br>';
-  const uploads = myStats.contentDetails.relatedPlaylists.uploads;
-  const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=50');
-  if (pl.items && pl.items.length) {
-    const ids = pl.items.map(i => i.contentDetails.videoId).join(',');
-    const vs = await yt('videos?part=snippet,statistics&id=' + ids);
-    const vids = vs.items.map(v => ({ title: v.snippet.title, views: parseInt(v.statistics.viewCount || 0) })).sort((a, b) => b.views - a.views);
-    const best = vids.slice(0, 3);
-    const worst = vids.slice(-3).reverse();
-    html += '<b>🏆 Best videos:</b><br>' + best.map((v, i) => (i + 1) + '. ' + v.title + ' — ' + v.views.toLocaleString() + ' views').join('<br>') + '<br><br><b>💀 Worst videos:</b><br>' + worst.map((v, i) => (i + 1) + '. ' + v.title + ' — ' + v.views.toLocaleString() + ' views').join('<br>');
-  } else { html += 'No videos yet — upload something and come back! 🎬'; }
-  show(html);
-};
-
-document.getElementById('compbtn').onclick = async () => {
-  show('Scouting your rivals...');
+async function getCompetitors() {
   const q = encodeURIComponent(myStats.snippet.title.split(' ')[0]);
   const sd = await yt('search?part=snippet&type=channel&maxResults=15&q=' + q);
   const ids = sd.items.map(i => i.snippet.channelId).filter(id => id !== myStats.id).join(',');
   const cd = await yt('channels?part=statistics,snippet&id=' + ids);
   const mySubs = parseInt(myStats.statistics.subscriberCount);
-  const ranked = cd.items.map(ch => ({ name: ch.snippet.title, subs: parseInt(ch.statistics.subscriberCount || 0), views: ch.statistics.viewCount, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, 5);
-  show('<b>🥊 Channels closest to your size:</b><br>' + ranked.map((r, i) => (i + 1) + '. ' + r.name + ' — ' + r.subs.toLocaleString() + ' subs · ' + parseInt(r.views).toLocaleString() + ' views').join('<br>'));
+  return cd.items.map(ch => ({ name: ch.snippet.title, subs: parseInt(ch.statistics.subscriberCount || 0), diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, 5);
+}
+
+async function drawStats() {
+  const panel = document.getElementById('statspanel');
+  panel.style.display = 'block';
+  const withComp = document.getElementById('compToggle').checked;
+  const s = myStats.statistics;
+  document.getElementById('statstext').innerHTML = '<b>📈 ' + myStats.snippet.title + '</b><br>Subscribers: ' + parseInt(s.subscriberCount).toLocaleString() + ' · Views: ' + parseInt(s.viewCount).toLocaleString() + ' · Videos: ' + s.videoCount;
+  let labels = [], values = [], colors = [], title = '';
+  if (withComp) {
+    title = 'Subscribers vs competitors';
+    const comps = await getCompetitors();
+    labels = ['You'].concat(comps.map(c => c.name.slice(0, 12)));
+    values = [parseInt(s.subscriberCount)].concat(comps.map(c => c.subs));
+    colors = ['#F72585'].concat(comps.map(() => '#4CC9F0'));
+  } else {
+    title = 'Your top videos by views';
+    const uploads = myStats.contentDetails.relatedPlaylists.uploads;
+    const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=50');
+    if (pl.items && pl.items.length) {
+      const ids = pl.items.map(i => i.contentDetails.videoId).join(',');
+      const vs = await yt('videos?part=snippet,statistics&id=' + ids);
+      const vids = vs.items.map(v => ({ title: v.snippet.title, views: parseInt(v.statistics.viewCount || 0) })).sort((a, b) => b.views - a.views).slice(0, 8);
+      labels = vids.map(v => v.title.slice(0, 14));
+      values = vids.map(v => v.views);
+      colors = vids.map(() => '#7209B7');
+    }
+  }
+  if (myChart) myChart.destroy();
+  myChart = new Chart(document.getElementById('statschart'), {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ label: title, data: values, backgroundColor: colors, borderRadius: 6 }] },
+    options: { plugins: { legend: { display: true, labels: { color: getComputedStyle(document.body).getPropertyValue('--txt') } } }, scales: { x: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--txt'), font: { size: 9 } } }, y: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--txt') } } } }
+  });
+}
+
+document.getElementById('statsbtn').onclick = drawStats;
+document.getElementById('compToggle').onchange = drawStats;
+
+document.getElementById('compbtn').onclick = async () => {
+  show('Scouting your rivals...');
+  const comps = await getCompetitors();
+  show('<b>🥊 Channels closest to your size:</b><br>' + comps.map((r, i) => (i + 1) + '. ' + r.name + ' — ' + r.subs.toLocaleString() + ' subs').join('<br>'));
 };
 
 document.getElementById('duelbtn').onclick = () => { const d = document.getElementById('duelsetup'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; };
@@ -137,19 +170,19 @@ document.getElementById('duelgo').onclick = async () => {
   const oppSubs = parseInt(opp.statistics.subscriberCount || 0);
   const oppViews = parseInt(opp.statistics.viewCount || 0);
   const gap = Math.abs(mySubs - oppSubs);
-  if (gap > 20000) { show('⚔️ Unfair matchup! The gap between you and ' + opp.snippet.title + ' is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer to your size!'); return; }
-  let myScore = 0, oppScore = 0;
-  if (mySubs >= oppSubs) myScore++; else oppScore++;
-  if (myViews >= oppViews) myScore++; else oppScore++;
-  const winner = myScore > oppScore ? myStats.snippet.title : (oppScore > myScore ? opp.snippet.title : 'It is a TIE');
+  if (gap > 20000) { show('⚔️ Unfair matchup! The gap is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer!'); return; }
+  let a = 0, b = 0;
+  if (mySubs >= oppSubs) a++; else b++;
+  if (myViews >= oppViews) a++; else b++;
+  const winner = a > b ? myStats.snippet.title : (b > a ? opp.snippet.title : 'It is a TIE');
   show('<b>⚔️ DUEL RESULT</b><br><br>' + myStats.snippet.title + ': ' + mySubs.toLocaleString() + ' subs · ' + myViews.toLocaleString() + ' views<br>' + opp.snippet.title + ': ' + oppSubs.toLocaleString() + ' subs · ' + oppViews.toLocaleString() + ' views<br><br>🏆 <b>Winner: ' + winner + '</b>');
-  if (myScore > oppScore) addPts(20);
+  if (a > b) addPts(20);
 };
 
 document.getElementById('trendbtn').onclick = async () => {
   show('Checking what is hot right now...');
   const t = await yt('videos?part=snippet,statistics&chart=mostPopular&regionCode=PT&maxResults=8');
-  show('<b>🔥 Trending on YouTube right now:</b><br>' + t.items.map((v, i) => (i + 1) + '. ' + v.snippet.title + ' — ' + parseInt(v.statistics.viewCount).toLocaleString() + ' views (' + v.snippet.channelTitle + ')').join('<br>'));
+  show('<b>🔥 Trending on YouTube right now:</b><br>' + t.items.map((v, i) => (i + 1) + '. ' + v.snippet.title + ' — ' + parseInt(v.statistics.viewCount).toLocaleString() + ' views').join('<br>'));
 };
 </script>
 <script src='nova.js'></script>
