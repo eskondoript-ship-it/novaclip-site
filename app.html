@@ -7,34 +7,24 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 body { background: #0E1117; color: #FAFAFA; }
-.hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; padding: 40px 20px;
+.hero { min-height: 100vh; margin-left: 70px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; padding: 40px 20px;
   background: radial-gradient(circle at 30% 20%, rgba(247,37,133,0.25), transparent 50%),
               radial-gradient(circle at 70% 80%, rgba(76,201,240,0.25), transparent 50%), #0E1117; }
 h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
 .toolbtn { margin: 6px; padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; background: #1E2130; color: #4CC9F0; border: 2px solid #4CC9F0; }
 .panelbox { margin-top: 16px; text-align: left; display: none; background: #1E2130; border-radius: 14px; padding: 16px; max-width: 620px; width: 100%; }
-#aifab { position: fixed; bottom: 24px; right: 24px; width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer;
-  background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; font-size: 1.7rem;
-  box-shadow: 0 4px 20px rgba(114,9,183,0.7); z-index: 999; transition: transform 0.2s; }
-#aifab:hover { transform: scale(1.12); }
-#aipanel { position: fixed; bottom: 100px; right: 24px; width: 370px; max-width: calc(100vw - 40px); max-height: 72vh;
-  background: #1E2130; border-radius: 18px; border: 2px solid #7209B7; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-  display: none; flex-direction: column; overflow: hidden; z-index: 999; }
-#aipanel header { padding: 14px 16px; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); font-weight: 700; }
-#aiout { padding: 14px; overflow-y: auto; flex: 1; white-space: pre-wrap; font-size: 0.92rem; }
-#aiimg { max-width: 100%; border-radius: 10px; margin: 10px 14px; display: none; }
-#aicontrols { padding: 12px; border-top: 1px solid #333; }
-#askbox, #duelbox { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: #0E1117; color: #FAFAFA; resize: none; }
-#subject { width: 100%; padding: 8px; border-radius: 10px; border: 1px solid #7209B7; background: #0E1117; color: #FAFAFA; margin-bottom: 8px; }
-.smallbtn { margin-top: 8px; margin-right: 6px; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer;
-  font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); }
-a.back { color: #777; font-size: 0.9rem; text-decoration: none; margin-bottom: 14px; display: inline-block; }
+#duelbox { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: #0E1117; color: #FAFAFA; }
+.smallbtn { margin-top: 8px; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); }
 </style>
 </head>
 <body>
+<div style='position:fixed; left:0; top:0; bottom:0; width:70px; background:#1E2130; display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:22px; z-index:998; border-right:1px solid #333;'>
+  <a href='index.html' title='Home' style='font-size:1.6rem; text-decoration:none;'>🏠</a>
+  <a href='app.html' title='Studio' style='font-size:1.6rem; text-decoration:none;'>📈</a>
+  <a href='ai.html' title='NovaClip AI' style='font-size:1.6rem; text-decoration:none; background:linear-gradient(135deg,#F72585,#7209B7,#4CC9F0); border-radius:50%; width:46px; height:46px; display:flex; align-items:center; justify-content:center;'>✨</a>
+</div>
 <div class='hero'>
-  <a class='back' href='index.html'>← Back to home</a>
   <h1>NovaClip Studio</h1>
   <div id='authbox' style='margin:20px 0 10px'>
     <button id='gbtn' style='padding:12px 28px; border-radius:30px; border:none; font-weight:700; cursor:pointer; background:white; color:#333;'>🔑 Sign in with Google</button>
@@ -52,25 +42,7 @@ a.back { color: #777; font-size: 0.9rem; text-decoration: none; margin-bottom: 1
     <button id='duelgo' class='smallbtn'>Fight!</button>
   </div>
   <div id='toolout' class='panelbox'></div>
-  <p style='color:#888; margin-top:30px;'>Need AI help? Hit the 💬 bubble in the corner - the NovaClip tutors are in there.</p>
-</div>
-
-<button id='aifab'>💬</button>
-<div id='aipanel'>
-  <header>✨ NovaClip AI</header>
-  <div id='aiout'>Yo! Pick your tutor below, then ask away, cook a thumbnail with 🎨, or plan a whole video with 🎬 fr fr</div>
-  <img id='aiimg'>
-  <div id='aicontrols'>
-    <select id='subject'>
-      <option value='youtube'>🎬 YouTube Coach</option>
-      <option value='space'>☄️ Asteroid Tutor</option>
-      <option value='business'>💼 Business Tutor</option>
-    </select>
-    <textarea id='askbox' rows='2' placeholder='Ask NovaClip anything...'></textarea>
-    <button id='askbtn' class='smallbtn'>💬 Ask</button>
-    <button id='thumbbtn' class='smallbtn'>🎨 Thumbnail</button>
-    <button id='vidbtn' class='smallbtn'>🎬 Video maker</button>
-  </div>
+  <p style='color:#888; margin-top:30px;'>Need AI help? Hit ✨ in the sidebar - the NovaClip tutors live there.</p>
 </div>
 
 <script type='module'>
@@ -191,87 +163,6 @@ document.getElementById('trendbtn').onclick = async () => {
   show('Checking what is hot right now...');
   const t = await yt('videos?part=snippet,statistics&chart=mostPopular&regionCode=PT&maxResults=8');
   show('<b>🔥 Trending on YouTube right now:</b><br>' + t.items.map((v, i) => (i + 1) + '. ' + v.snippet.title + ' — ' + parseInt(v.statistics.viewCount).toLocaleString() + ' views (' + v.snippet.channelTitle + ')').join('<br>'));
-};
-</script>
-
-<script>
-const WORKER_URL = 'https://novaclip-ai.eskondori-pt.workers.dev';
-
-document.getElementById('aifab').onclick = () => {
-  const p = document.getElementById('aipanel');
-  p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
-};
-
-async function askGemini(model, payload) {
-  const r = await fetch(WORKER_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: model, payload: payload })
-  });
-  return r.json();
-}
-
-const SLANG = 'Talk in HEAVY gen z slang: fr fr, no cap, ong, lowkey, highkey, W, L, bet, rizz, cooked, ate, slay, bussin, deadass, its giving, valid, hits different, goated, sheesh, sigma, delulu. Pack slang into almost every sentence but keep it readable and actually helpful. Use emojis. ';
-
-const PERSONAS = {
-  youtube: 'You are NovaClip, a YouTube coach for teen creators 13-18, expert in titles, trends and growth hacks. ',
-  space: 'You are NovaClip, a fun space tutor for teens, expert in asteroids, planets and NASA missions. ',
-  business: 'You are NovaClip, a business and money tutor for teens, expert in side hustles, saving and entrepreneurship. '
-};
-
-function persona() {
-  return PERSONAS[document.getElementById('subject').value] + SLANG;
-}
-
-document.getElementById('askbtn').onclick = async () => {
-  const q = document.getElementById('askbox').value;
-  if (!q) return;
-  const out = document.getElementById('aiout');
-  document.getElementById('aiimg').style.display = 'none';
-  out.textContent = 'Cooking... 🔥';
-  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Keep it under 150 words. Question: ' + q }] }] });
-  if (data.candidates && data.candidates[0].content.parts[0].text) {
-    out.textContent = data.candidates[0].content.parts[0].text;
-  } else {
-    out.textContent = 'The AI is cooked rn 💀 try again in a minute.';
-  }
-};
-
-document.getElementById('thumbbtn').onclick = async () => {
-  const q = document.getElementById('askbox').value || 'exciting gaming video';
-  const out = document.getElementById('aiout');
-  out.textContent = 'Painting your thumbnail... (10-20s) 🎨';
-  const data = await askGemini('gemini-2.5-flash-image', { contents: [{ parts: [{ text: 'Generate a bold YouTube thumbnail image, 16:9, vivid colors, high contrast, about: ' + q }] }] });
-  let done = false;
-  if (data.candidates) {
-    for (const p of data.candidates[0].content.parts) {
-      if (p.inlineData) {
-        const img = document.getElementById('aiimg');
-        img.src = 'data:image/png;base64,' + p.inlineData.data;
-        img.style.display = 'block';
-        out.textContent = 'It ate. Right-click to save it 🔥';
-        done = true;
-      }
-    }
-  }
-  if (!done) out.textContent = 'Could not generate the image rn 💀 try again in a minute.';
-};
-
-document.getElementById('vidbtn').onclick = async () => {
-  const q = document.getElementById('askbox').value;
-  if (!q) {
-    document.getElementById('aiout').textContent = 'Type your video idea first, then hit 🎬';
-    return;
-  }
-  const out = document.getElementById('aiout');
-  document.getElementById('aiimg').style.display = 'none';
-  out.textContent = 'Directing your video... 🎬';
-  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Create a complete video plan for this idea: ' + q + '. Give me: 1) A viral title, 2) A 3-second hook line, 3) Full script outline scene by scene (5-8 scenes with what to say and show), 4) Shot list with camera angles, 5) Music and sound effect suggestions, 6) A thumbnail concept. Format it clearly with the numbers.' }] }] });
-  if (data.candidates && data.candidates[0].content.parts[0].text) {
-    out.textContent = data.candidates[0].content.parts[0].text;
-  } else {
-    out.textContent = 'The AI is cooked rn 💀 try again in a minute.';
-  }
 };
 </script>
 </body>
