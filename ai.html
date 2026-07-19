@@ -6,11 +6,14 @@
 <title>NovaClip AI</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-body { background: var(--bg); color: var(--txt); display: flex; flex-direction: column; height: 100vh; margin-left: 70px; }
-.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 70px; background: var(--box); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 22px; z-index: 998; border-right: 1px solid #33333355; }
-.sidebar a { font-size: 1.6rem; text-decoration: none; }
-.sidebar select { width: 58px; font-size: 0.7rem; background: var(--bg); color: var(--txt); border: 1px solid #7209B7; border-radius: 8px; padding: 4px; margin-top: auto; margin-bottom: 16px; }
-.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); border-radius: 50%; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
+body { background: var(--bg); color: var(--txt); display: flex; flex-direction: column; height: 100vh; margin-left: 200px; }
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: var(--box); display: flex; flex-direction: column; align-items: stretch; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid #33333355; }
+.sidebar a { font-size: 1.1rem; text-decoration: none; color: var(--txt); display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 700; }
+.sidebar a:hover { background: #7209B733; }
+.sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: 0.8rem; opacity: 0.7; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: 1rem; background: var(--bg); color: var(--txt); border: 2px solid #7209B7; border-radius: 10px; padding: 10px; }
 header { position: relative; z-index: 1; padding: 16px 24px; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); font-weight: 800; font-size: 1.2rem; color: white; }
 #panels { position: relative; z-index: 1; padding: 10px 24px; max-width: 800px; width: 100%; margin: 0 auto; }
 details { background: var(--box); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
@@ -26,10 +29,16 @@ details div { margin-top: 8px; font-size: 0.9rem; line-height: 1.6; }
 </head>
 <body>
 <div class='sidebar'>
-  <a href='index.html' title='Home'>🏠</a>
-  <a href='app.html' title='Studio'>📈</a>
-  <a href='ai.html' title='NovaClip AI' class='aidot'>✨</a>
-  <select id='themepick'></select>
+  <a href='index.html' data-t='home'>🏠 Home</a>
+  <a href='app.html' data-t='studio'>📈 Studio</a>
+  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
+  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <div class='themewrap'>
+    <label>🎨 Background</label>
+    <select id='themepick'></select>
+    <label style='margin-top:12px;'>🌐 Language</label>
+    <select id='langpick'></select>
+  </div>
 </div>
 <header>✨ NovaClip AI</header>
 <div id='panels'>
@@ -57,29 +66,18 @@ details div { margin-top: 8px; font-size: 0.9rem; line-height: 1.6; }
 const WORKER_URL = 'https://novaclip-ai.eskondoript-ship-it.workers.dev';
 
 async function askGemini(model, payload) {
-  const r = await fetch(WORKER_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: model, payload: payload })
-  });
+  const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: model, payload: payload }) });
   return r.json();
 }
 
 const SLANG = 'Talk in HEAVY gen z slang: fr fr, no cap, ong, lowkey, highkey, W, L, bet, rizz, cooked, ate, slay, bussin, deadass, its giving, valid, hits different, goated, sheesh, sigma, delulu. Pack slang into almost every sentence but keep it readable and actually helpful. Use emojis. ';
-
 const PERSONAS = {
   youtube: 'You are NovaClip, a YouTube coach for teen creators 13-18, expert in titles, trends and growth hacks. ',
   space: 'You are NovaClip, a fun space tutor for teens, expert in asteroids, planets and NASA missions. ',
   business: 'You are NovaClip, a business and money tutor for teens, expert in side hustles, saving and entrepreneurship. '
 };
-
-function persona() {
-  return PERSONAS[document.getElementById('subject').value] + SLANG;
-}
-
-function subjectName() {
-  return document.getElementById('subject').selectedOptions[0].textContent;
-}
+function persona() { return PERSONAS[document.getElementById('subject').value] + SLANG + (typeof langInstruction === 'function' ? langInstruction() : ''); }
+function subjectName() { return document.getElementById('subject').selectedOptions[0].textContent; }
 
 document.getElementById('askbtn').onclick = async () => {
   const q = document.getElementById('askbox').value;
@@ -92,9 +90,7 @@ document.getElementById('askbtn').onclick = async () => {
     out.textContent = data.candidates[0].content.parts[0].text;
     saveHist(subjectName(), q, out.textContent);
     addPts(5);
-  } else {
-    out.textContent = 'The AI is cooked rn 💀 try again in a minute.';
-  }
+  } else { out.textContent = 'The AI is cooked rn 💀 try again in a minute.'; }
 };
 
 document.getElementById('thumbbtn').onclick = async () => {
@@ -121,10 +117,7 @@ document.getElementById('thumbbtn').onclick = async () => {
 
 document.getElementById('vidbtn').onclick = async () => {
   const q = document.getElementById('askbox').value;
-  if (!q) {
-    document.getElementById('aiout').textContent = 'Type your video idea first, then hit 🎬';
-    return;
-  }
+  if (!q) { document.getElementById('aiout').textContent = 'Type your video idea first, then hit 🎬'; return; }
   const out = document.getElementById('aiout');
   document.getElementById('aiimg').style.display = 'none';
   out.textContent = 'Directing your video... 🎬';
@@ -133,9 +126,7 @@ document.getElementById('vidbtn').onclick = async () => {
     out.textContent = data.candidates[0].content.parts[0].text;
     saveHist(subjectName(), 'Video plan: ' + q, out.textContent);
     addPts(10);
-  } else {
-    out.textContent = 'The AI is cooked rn 💀 try again in a minute.';
-  }
+  } else { out.textContent = 'The AI is cooked rn 💀 try again in a minute.'; }
 };
 </script>
 <script src='nova.js'></script>
