@@ -20,7 +20,10 @@ h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F7
 .toolbtn { margin: 20px; padding: 14px 30px; border-radius: 30px; font-weight: 700; cursor: pointer; background: var(--box); color: #4CC9F0; border: 2px solid #4CC9F0; font-size: 1.05rem; }
 #niche { padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: var(--box); color: var(--txt); font-size: 1rem; width: 300px; max-width: 90%; }
 #out { margin-top: 20px; text-align: left; background: var(--box); border-radius: 14px; padding: 20px; max-width: 640px; width: 100%; display: none; line-height: 1.9; white-space: pre-wrap; }
-.scanning { color: #4CC9F0; font-weight: 700; margin-top: 10px; }
+#radarwrap { position: fixed; top: 0; left: 200px; right: 0; bottom: 0; background: radial-gradient(circle, #0a1520 0%, #05080d 100%); z-index: 900; display: none; flex-direction: column; align-items: center; justify-content: center; }
+body.navclosed #radarwrap { left: 0; }
+#radarwrap .radar { width: 60vmin; height: 60vmin; margin: 0; }
+#radarwrap .scanning { margin-top: 26px; font-size: 1.3rem; letter-spacing: 2px; color: #4CC9F0; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -43,22 +46,23 @@ h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F7
     <input id='niche' placeholder='Your niche (e.g. Minecraft, cooking, football)'>
   </div>
   <button id='scanbtn' class='toolbtn'>🛰️ Scan for trends</button>
-  <div id='radarwrap' style='display:none;'>
-    <div class='radar'><div class='sweep'></div></div>
-    <div class='scanning'>Scanning the airwaves...</div>
-  </div>
   <div id='out'></div>
 </div>
 
+<div id='radarwrap'>
+  <div class='radar'><div class='sweep'></div></div>
+  <div class='scanning'>Scanning the airwaves...</div>
+</div>
+
 <script>
-const WORKER_URL = 'https://novaclip-ai.YOURNAME.workers.dev';
+const WORKER_URL = 'https://novaclip-ai.eskondoript-ship-it.workers.dev';
 
 document.getElementById('scanbtn').onclick = async () => {
   const niche = document.getElementById('niche').value || 'YouTube';
   const out = document.getElementById('out');
   const radar = document.getElementById('radarwrap');
   out.style.display = 'none';
-  radar.style.display = 'block';
+  radar.style.display = 'flex';
   const prompt = 'You are NovaClip trend analyst. For the niche "' + niche + '", list 6 video topic trends that are rising right now and about to blow up. For each: a catchy title idea and one line on why it works. Use emojis. Be specific and punchy.' + (typeof langInstruction === 'function' ? langInstruction() : '');
   let text = '';
   try {
