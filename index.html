@@ -6,43 +6,44 @@
 <title>NovaClip - Learn. Play. Level Up.</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-body { background: #0E1117; color: #FAFAFA; }
-.hero { min-height: 100vh; margin-left: 70px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;
-  background: radial-gradient(circle at 30% 20%, rgba(247,37,133,0.25), transparent 50%),
-              radial-gradient(circle at 70% 80%, rgba(76,201,240,0.25), transparent 50%), #0E1117; }
+body { background: var(--bg); color: var(--txt); }
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 70px; background: var(--box); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 22px; z-index: 998; border-right: 1px solid #33333355; }
+.sidebar a { font-size: 1.6rem; text-decoration: none; }
+.sidebar select { width: 58px; font-size: 0.7rem; background: var(--bg); color: var(--txt); border: 1px solid #7209B7; border-radius: 8px; padding: 4px; margin-top: auto; margin-bottom: 16px; }
+.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); border-radius: 50%; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
+.hero { position: relative; z-index: 1; min-height: 100vh; margin-left: 70px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
 h1 { font-size: 4rem; font-weight: 800; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
 .tag { letter-spacing: 5px; color: #999; margin: 10px 0 30px; font-size: 0.9rem; }
-.btn { display: inline-block; padding: 16px 40px; font-size: 1.2rem; font-weight: 700; color: white;
-  background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); border-radius: 40px; text-decoration: none;
-  box-shadow: 0 0 25px rgba(114,9,183,0.6); transition: transform 0.2s; }
-.btn:hover { transform: scale(1.07); }
-.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 1000px; margin: 60px auto; padding: 0 20px 0 90px; }
-.card { background: #1E2130; border-radius: 16px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+h2 { font-size: 1.6rem; margin-bottom: 14px; }
+.features { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 1000px; margin: 40px auto; padding: 0 20px 0 90px; }
+.card { background: var(--box); border-radius: 16px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
 .card h3 { margin-bottom: 8px; }
-.card p { color: #bbb; font-size: 0.95rem; }
-footer { text-align: center; padding: 30px; padding-left: 100px; color: #777; font-size: 0.85rem; }
+.card p { opacity: 0.75; font-size: 0.95rem; }
+footer { position: relative; z-index: 1; text-align: center; padding: 30px 30px 30px 100px; opacity: 0.6; font-size: 0.85rem; }
 footer a { color: #4CC9F0; }
 </style>
 </head>
 <body>
-<div style='position:fixed; left:0; top:0; bottom:0; width:70px; background:#1E2130; display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:22px; z-index:998; border-right:1px solid #333;'>
-  <a href='index.html' title='Home' style='font-size:1.6rem; text-decoration:none;'>🏠</a>
-  <a href='app.html' title='Studio' style='font-size:1.6rem; text-decoration:none;'>📈</a>
-  <a href='ai.html' title='NovaClip AI' style='font-size:1.6rem; text-decoration:none; background:linear-gradient(135deg,#F72585,#7209B7,#4CC9F0); border-radius:50%; width:46px; height:46px; display:flex; align-items:center; justify-content:center;'>✨</a>
+<div class='sidebar'>
+  <a href='index.html' title='Home'>🏠</a>
+  <a href='app.html' title='Studio'>📈</a>
+  <a href='ai.html' title='NovaClip AI' class='aidot'>✨</a>
+  <select id='themepick'></select>
 </div>
 <div class='hero'>
   <h1>NovaClip</h1>
   <div class='tag'>LEARN · PLAY · LEVEL UP</div>
-  <p style='max-width: 500px; margin-bottom: 30px; color: #ccc;'>Your AI coach for YouTube growth. Analyze your channel, duel rival creators, generate thumbnails and plan whole videos - powered by NovaClip AI.</p>
-  <a class='btn' href='app.html'>🚀 Open NovaClip Studio</a>
+  <h2>👋 Welcome to NovaClip!</h2>
+  <p style='max-width: 520px; color: inherit; opacity: 0.8;'>Your AI coach for YouTube growth. Analyze your channel, duel rival creators, generate thumbnails and plan whole videos. Use the sidebar: 📈 for your Studio tools, ✨ for the NovaClip AI tutors. Earn points as you go and unlock NovaClip Pro rewards! 🏆</p>
 </div>
 <div class='features'>
-  <div class='card'><h3>🎬 NovaClip AI</h3><p>Our AI tutors: YouTube Coach, Space Tutor and Business Tutor - right in your browser.</p></div>
+  <div class='card'><h3>🎬 NovaClip AI</h3><p>Three tutors: YouTube Coach, Space Tutor and Business Tutor - right in your browser.</p></div>
   <div class='card'><h3>⚔️ Channel Duels</h3><p>Battle channels near your size in subs and views. Max 20k gap - fair fights only.</p></div>
   <div class='card'><h3>📈 Channel Analytics</h3><p>Your stats, best and worst videos, trending topics and closest rivals.</p></div>
-  <div class='card'><h3>🎨 Thumbnail and Video Maker</h3><p>Describe your idea - get a thumbnail image and a full scene-by-scene video plan.</p></div>
+  <div class='card'><h3>🏆 Quests and Achievements</h3><p>Earn points with every action. Unlock free NovaClip Pro time at 100, 450, 700 and 1250 points.</p></div>
 </div>
 <footer>Made by eskon · NovaClip 2026 · <a href='https://novaclip.streamlit.app' target='_blank'>Classic app with quizzes and streaks</a></footer>
+<script src='nova.js'></script>
 </body>
 </html>
