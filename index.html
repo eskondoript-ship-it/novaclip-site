@@ -1,143 +1,34 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-  <meta charset='UTF-8'>
-  <meta name='viewport' content='width=device-width, initial-scale=1'>
-  <title>NovaClip - Level Up Your YouTube</title>
-  <style>
-    :root {
-      --bg: #0E1117;
-      --box: #1E2130;
-      --txt: #FAFAFA;
-      --accent: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0);
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { 
-      background: var(--bg); color: var(--txt); 
-      font-family: 'Segoe UI', system-ui, sans-serif; 
-      overflow-x: hidden;
-    }
-    .hero {
-      height: 100vh; display: flex; align-items: center; justify-content: center; 
-      text-align: center; position: relative; overflow: hidden;
-    }
-    .hero::before {
-      content: ''; position: absolute; inset: 0; 
-      background: radial-gradient(circle at 50% 30%, rgba(114,9,183,0.4) 0%, transparent 60%);
-      animation: pulse 8s infinite ease-in-out;
-    }
-    @keyframes pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
-
-    h1 { font-size: 5.5rem; font-weight: 900; background: var(--accent); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .tagline { font-size: 1.4rem; margin: 20px 0; opacity: 0.9; }
-
-    .section {
-      padding: 120px 5%; max-width: 1200px; margin: 0 auto;
-      opacity: 0; transform: translateY(60px); transition: all 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
-    }
-    .section.visible {
-      opacity: 1; transform: translateY(0);
-    }
-
-    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
-    .card {
-      background: var(--box); border-radius: 20px; padding: 32px; 
-      transition: transform 0.4s, box-shadow 0.4s;
-      cursor: pointer;
-    }
-    .card:hover {
-      transform: translateY(-15px) scale(1.03);
-      box-shadow: 0 25px 40px rgba(114,9,183,0.3);
-    }
-    .emoji { font-size: 3rem; margin-bottom: 16px; display: block; }
-
-    .scroll-indicator {
-      position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-      animation: bounce 2s infinite;
-    }
-    @keyframes bounce { 0%,100% { transform: translate(-50%,0); } 50% { transform: translate(-50%,20px); } }
-  </style>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip - Level Up Your YouTube</title>
+<style>
+  :root { --bg:#0E1117; --box:#1E2130; --txt:#FAFAFA; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Segoe UI',sans-serif; }
+  .sidebar { position:fixed; left:0; top:0; bottom:0; width:200px; background:var(--box); z-index:998; padding:20px 0; }
+  .sidebar a { display:block; padding:12px 20px; color:var(--txt); text-decoration:none; font-weight:700; }
+  .hero { margin-left:200px; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px; }
+  h1 { font-size:5rem; font-weight:900; background:linear-gradient(90deg,#F72585,#7209B7,#4CC9F0); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .tag { font-size:1.4rem; margin:10px 0 30px; opacity:0.9; }
+</style>
 </head>
 <body>
-  <!-- Sidebar from nova.js -->
-  <div class='sidebar'> <!-- We'll keep this from nova.js -->
-    <!-- Sidebar content is handled in nova.js -->
+  <div class='sidebar'>
+    <a href='index.html'>🏠 Home</a>
+    <a href='app.html'>📈 Studio</a>
+    <a href='trends.html'>🛰️ Trends</a>
+    <a href='ai.html'>✨ AI</a>
+    <a href='roof-sniper.html'>🔫 Roof Sniper</a>
   </div>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div>
-      <h1>NovaClip</h1>
-      <p class="tagline" data-t="intro">Your AI coach for YouTube growth. Analyze • Duel • Create • Level Up 🏆</p>
-      <button onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})" 
-              style="margin-top:30px; padding:16px 40px; font-size:1.2rem; background:var(--accent); border:none; border-radius:50px; color:white; font-weight:700; cursor:pointer;">
-        Start Growing →
-      </button>
-    </div>
-    <div class="scroll-indicator">↓ Scroll to explore</div>
-  </section>
+  <div class='hero'>
+    <h1>NovaClip</h1>
+    <p class="tag">AI coach for YouTube growth. Analyze • Duel • Create • Level Up 🏆</p>
+  </div>
 
-  <!-- FEATURES SECTION -->
-  <section id="features" class="section">
-    <h2 style="text-align:center; font-size:2.8rem; margin-bottom:60px;">How NovaClip Levels You Up</h2>
-    <div class="features">
-      <div class="card" onclick="window.location.href='ai.html'">
-        <span class="emoji">✨</span>
-        <h3 data-t="card_ai">NovaClip AI</h3>
-        <p data-t="card_ai_d">YouTube Coach, Space Tutor & Business Tutor — all in your browser. Ask anything, get thumbnails & full video plans.</p>
-      </div>
-      <div class="card" onclick="window.location.href='app.html'">
-        <span class="emoji">🥊</span>
-        <h3 data-t="card_duel">Channel Duels</h3>
-        <p data-t="card_duel_d">Battle similar creators. Who wins? Real stats + AI prediction.</p>
-      </div>
-      <div class="card">
-        <span class="emoji">📈</span>
-        <h3 data-t="card_ana">Channel Analytics</h3>
-        <p data-t="card_ana_d">Best videos, growth trends, rival gaps — all visualized.</p>
-      </div>
-      <div class="card">
-        <span class="emoji">🏆</span>
-        <h3 data-t="card_quest">Quests & Rewards</h3>
-        <p data-t="card_quest_d">Earn points. Unlock free NovaClip Pro at milestones.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- TREND RADAR TEASER -->
-  <section class="section" style="background:#1a1f2e;">
-    <div style="text-align:center; max-width:700px; margin:0 auto;">
-      <h2 style="font-size:2.6rem;">🛰️ Spot Trends Before They Explode</h2>
-      <p style="font-size:1.3rem; margin:30px 0;">Type your niche and watch the radar light up with what’s about to go viral.</p>
-      <button onclick="window.location.href='trends.html'" 
-              style="padding:16px 50px; font-size:1.3rem; background:#4CC9F0; border:none; border-radius:50px; color:#111; font-weight:700;">
-        Open Trend Spotter →
-      </button>
-    </div>
-  </section>
-
-  <footer style="text-align:center; padding:60px 20px; opacity:0.7;">
-    Made with 🔥 by eskon • NovaClip 2026
-  </footer>
-
-  <script src="nova.js"></script>
-  <script>
-    // Scroll animations
-    function handleScroll() {
-      const sections = document.querySelectorAll('.section');
-      sections.forEach(sec => {
-        const rect = sec.getBoundingClientRect();
-        if (rect.top < window.innerHeight * 0.85) {
-          sec.classList.add('visible');
-        }
-      });
-    }
-
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('load', () => {
-      applyLang(lang()); // from nova.js
-      handleScroll(); // trigger first section
-    });
-  </script>
+  <script src='nova.js'></script>
 </body>
 </html>
