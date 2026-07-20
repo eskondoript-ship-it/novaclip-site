@@ -34,17 +34,17 @@ details div { margin-top: 8px; font-size: 0.9rem; line-height: 1.6; }
   <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
   <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
   <div class='themewrap'>
-    <label>🎨 Background</label>
+    <label data-t='background'>Background</label>
     <select id='themepick'></select>
-    <label style='margin-top:12px;'>🌐 Language</label>
+    <label style='margin-top:12px;' data-t='language'>Language</label>
     <select id='langpick'></select>
   </div>
 </div>
-<header>✨ NovaClip AI</header>
+<header data-t='ai_h'>✨ NovaClip AI</header>
 <div id='panels'>
-  <details><summary>⚔️ Quests</summary><div id='questlist'></div></details>
-  <details><summary>🏅 Achievements</summary><div id='achlist'></div></details>
-  <details><summary>📜 History</summary><div id='histlist'></div></details>
+  <details><summary data-t='quests'>⚔️ Quests</summary><div id='questlist'></div></details>
+  <details><summary data-t='achievements'>🏅 Achievements</summary><div id='achlist'></div></details>
+  <details><summary data-t='history'>📜 History</summary><div id='histlist'></div></details>
 </div>
 <div id='aiout'>Yo! Pick your tutor, then ask away (+5 pts), cook a thumbnail with 🎨 (+10 pts), or plan a whole video with 🎬 (+10 pts) fr fr</div>
 <img id='aiimg'>
@@ -56,14 +56,14 @@ details div { margin-top: 8px; font-size: 0.9rem; line-height: 1.6; }
   </select>
   <textarea id='askbox' rows='2' placeholder='Ask NovaClip anything...'></textarea>
   <div>
-    <button id='askbtn' class='smallbtn'>💬 Ask</button>
-    <button id='thumbbtn' class='smallbtn'>🎨 Thumbnail</button>
-    <button id='vidbtn' class='smallbtn'>🎬 Video maker</button>
+    <button id='askbtn' class='smallbtn' data-t='ask'>💬 Ask</button>
+    <button id='thumbbtn' class='smallbtn' data-t='thumb'>🎨 Thumbnail</button>
+    <button id='vidbtn' class='smallbtn' data-t='video'>🎬 Video maker</button>
   </div>
 </div>
 
 <script>
-const WORKER_URL = 'https://novaclip-ai.eskondoript-ship-it.workers.dev';
+const WORKER_URL = 'https://novaclip-ai.YOURNAME.workers.dev';
 
 async function askGemini(model, payload) {
   const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: model, payload: payload }) });
