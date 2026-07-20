@@ -63,7 +63,7 @@ details div { margin-top: 8px; font-size: 0.9rem; line-height: 1.6; }
 </div>
 
 <script>
-const WORKER_URL = 'https://novaclip-ai.YOURNAME.workers.dev';
+const WORKER_URL = 'https://novaclip-ai.eskondori-pt.workers.dev';
 
 async function askGemini(model, payload) {
   const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: model, payload: payload }) });
