@@ -5,59 +5,34 @@
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaClip AI</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--txt); font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column; height:100vh; margin-left:200px; }
-  .sidebar { position:fixed; left:0; top:0; bottom:0; width:200px; background:var(--box); ... } /* keep your existing sidebar styles */
-  header { padding:20px 24px; background:linear-gradient(90deg,#F72585,#7209B7,#4CC9F0); font-size:1.4rem; font-weight:800; }
-  #aiout { flex:1; padding:24px; overflow-y:auto; line-height:1.7; font-size:1.05rem; }
-  .message { margin:15px 0; padding:16px; border-radius:16px; max-width:80%; }
-  .user { background:#7209B733; margin-left:auto; }
-  .ai { background:var(--box); }
-  textarea, select { width:100%; padding:14px; border-radius:12px; border:2px solid #7209B7; background:var(--box); color:var(--txt); }
-  button { padding:12px 24px; border:none; border-radius:9999px; font-weight:700; cursor:pointer; }
+  body { background:var(--bg); color:var(--txt); font-family:'Segoe UI',sans-serif; margin-left:200px; display:flex; flex-direction:column; height:100vh; }
+  .sidebar { position:fixed; left:0; top:0; bottom:0; width:200px; background:var(--box); z-index:998; padding:20px 0; border-right:1px solid #333; }
+  header { padding:20px; background:var(--accent); font-size:1.6rem; font-weight:800; }
+  #aiout { flex:1; padding:24px; overflow-y:auto; }
+  textarea, select { width:100%; padding:16px; margin:10px 0; border-radius:12px; background:var(--box); color:var(--txt); border:2px solid #7209B7; }
+  button { padding:14px 28px; background:#f72585; color:white; border:none; border-radius:50px; font-weight:700; margin:5px; }
 </style>
 </head>
 <body>
-  <!-- Sidebar (same as before) -->
-  <div class='sidebar'>...</div>
-
+  <div class='sidebar'>... (same sidebar as above)</div>
   <header>✨ NovaClip AI</header>
-  <div id='aiout'>Choose a tutor and start chatting!</div>
-
-  <div style="padding:16px 24px; border-top:1px solid #333;">
+  <div id='aiout'>Choose a tutor and ask anything...</div>
+  <div style="padding:20px; border-top:1px solid #333;">
     <select id='subject'>
       <option value='youtube'>🎬 YouTube Coach</option>
       <option value='space'>☄️ Space Tutor</option>
       <option value='business'>💼 Business Tutor</option>
     </select>
     <textarea id='askbox' rows='3' placeholder='Ask anything...'></textarea>
-    <div style="margin-top:12px;">
-      <button onclick="sendMessage()">💬 Send</button>
-      <button onclick="generateThumbnail()">🎨 Thumbnail</button>
-      <button onclick="generateVideoPlan()">🎬 Video Plan</button>
-    </div>
+    <button onclick="sendMessage()">💬 Send</button>
+    <button onclick="generateThumbnail()">🎨 Thumbnail</button>
+    <button onclick="generateVideoPlan()">🎬 Video Plan</button>
   </div>
 
   <script src='nova.js'></script>
   <script>
-    const WORKER_URL = 'https://novaclip-ai.eskondori-pt.workers.dev';
-
-    async function askGemini(payload) {
-      const r = await fetch(WORKER_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-      return r.json();
-    }
-
-    async function sendMessage() {
-      const q = document.getElementById('askbox').value.trim();
-      if (!q) return;
-      addMessage(q, 'user');
-      const out = document.getElementById('aiout');
-      out.innerHTML += `<div class="message ai">Thinking...</div>`;
-      // ... call Gemini with persona (same as before)
-      document.getElementById('askbox').value = '';
-    }
-
-    // Add similar functions for thumbnail and video plan with nice loading animations
+    // Your existing AI logic here (from previous ai.html)
+    async function sendMessage() { /* ... */ }
   </script>
 </body>
 </html>
