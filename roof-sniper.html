@@ -2,193 +2,62 @@
 <html lang='en'>
 <head>
 <meta charset='UTF-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>
-<title>ROOF SNIPER 3D - NovaClip</title>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Roof Sniper 3D</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 <style>
-  body { margin:0; overflow:hidden; background:#000; font-family:'Segoe UI',sans-serif; touch-action:none; }
-  canvas { display:block; }
-  #ui { position:absolute; top:10px; left:10px; color:#fff; z-index:100; font-size:1.35rem; text-shadow:0 0 10px #000; pointer-events:none; }
-  #controls { position:absolute; bottom:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); padding:12px 25px; border-radius:50px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; z-index:100; }
-  button { padding:14px 24px; background:#f72585; color:white; border:none; border-radius:50px; font-weight:800; cursor:pointer; font-size:1.05rem; min-width:70px; }
-  #shop { position:absolute; top:80px; right:15px; background:rgba(10,10,35,0.97); padding:18px; border-radius:16px; width:300px; display:none; box-shadow:0 0 30px #f72585; }
+  body { margin:0; overflow:hidden; }
+  #ui { position:absolute; top:10px; left:10px; color:white; z-index:100; }
 </style>
 </head>
 <body>
-  <div class='sidebar'>...</div>
-
   <div id="ui">
-    <div id="health">❤️ 100</div>
-    <div id="score">Score: 0</div>
-    <div id="money">💰 $0</div>
-    <div id="weapon">Sniper (Overall: 70)</div>
-    <div id="mode">1st Person</div>
+    <div>Score: <span id="score">0</span></div>
   </div>
 
-  <div id="controls">
-    <button onclick="jump()">↑ JUMP</button>
-    <button onclick="shoot()">🔫 SHOOT</button>
-    <button onclick="throwGrenade()">💣 GRENADE</button>
-    <button onclick="plantC4()">💥 C4</button>
-    <button onclick="toggleView()">👁️ VIEW</button>
-    <button onclick="toggleShop()">🛒 SHOP</button>
-  </div>
-
-  <div id="shop">
-    <h2>Weapon Shop</h2>
-    <button onclick="buy('sniper_basic')" style="width:100%;margin:6px 0">Sniper Basic - $280</button>
-    <button onclick="buy('sniper_pro')" style="width:100%;margin:6px 0">Sniper Pro - $520</button>
-    <button onclick="buy('rpg')" style="width:100%;margin:6px 0">RPG Launcher - $950</button>
-    <button onclick="buy('c4')" style="width:100%;margin:6px 0">C4 Pack - $420</button>
-    <button onclick="buy('knife')" style="width:100%;margin:6px 0">Knife Upgrade - $190</button>
-  </div>
-
-  <script src="nova.js"></script>
   <script>
+    // Simple realistic 3D game with keyboard + mouse look
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x0a0f1a, 20, 180);
-    const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 300);
-    const renderer = new THREE.WebGLRenderer({antialias:true});
+    const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
     renderer.setSize(innerWidth, innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0x99aadd, 0.7));
-    const sun = new THREE.DirectionalLight(0xffeecc, 1.4);
-    sun.position.set(50, 100, 60);
-    scene.add(sun);
+    // Add lights, roofs, player model (cylinder for body)
+    const player = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2, 16), new THREE.MeshLambertMaterial({color: 0x00ff88}));
+    scene.add(player);
 
-    let player = { 
-      health: 100, 
-      money: 1500, 
-      score: 0, 
-      weapon: 'sniper_basic',
-      stats: { strength: 65, speed: 70, accuracy: 75, overall: 70 }
-    };
+    camera.position.set(0, 5, 10);
+    camera.lookAt(player.position);
 
-    let bullets = [];
-    let explosions = [];
-    let enemies = [];
-    let roofs = [];
+    let move = { forward: false, backward: false, left: false, right: false };
 
-    // Realistic city buildings and roofs
-    for (let i = -12; i < 20; i++) {
-      const roof = new THREE.Mesh(new THREE.BoxGeometry(16, 1.8, 10), new THREE.MeshLambertMaterial({color: 0x334455}));
-      roof.position.set(i*17, 2 + Math.random()*9, -25);
-      scene.add(roof);
-      roofs.push(roof);
-    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'w' || e.key === 'W') move.forward = true;
+      if (e.key === 's' || e.key === 'S') move.backward = true;
+      if (e.key === 'a' || e.key === 'A') move.left = true;
+      if (e.key === 'd' || e.key === 'D') move.right = true;
+      if (e.key === ' ') jump();
+    });
 
-    const playerMesh = new THREE.Mesh(new THREE.BoxGeometry(1.9, 3.4, 1.3), new THREE.MeshLambertMaterial({color: 0x00ffcc}));
-    scene.add(playerMesh);
+    document.addEventListener('keyup', e => {
+      if (e.key === 'w' || e.key === 'W') move.forward = false;
+      if (e.key === 's' || e.key === 'S') move.backward = false;
+      if (e.key === 'a' || e.key === 'A') move.left = false;
+      if (e.key === 'd' || e.key === 'D') move.right = false;
+    });
 
-    camera.position.set(12, 18, 38);
-
-    function playSound(type) {
-      const a = new Audio();
-      if (type === 'shot') a.src = 'https://freesound.org/data/previews/276/276951_5123854-lq.mp3';
-      else if (type === 'explosion') a.src = 'https://freesound.org/data/previews/66/66920_931655-lq.mp3';
-      a.volume = 0.75;
-      a.play().catch(()=>{});
-    }
-
-    function createExplosion(pos, big = false) {
-      playSound('explosion');
-      const flash = new THREE.Mesh(new THREE.SphereGeometry(big?11:6, 32, 32), new THREE.MeshBasicMaterial({color: 0xff8800}));
-      flash.position.copy(pos);
-      scene.add(flash);
-      explosions.push({mesh: flash, life: big?45:25});
-    }
-
-    function shoot() {
-      playSound('shot');
-      const b = new THREE.Mesh(new THREE.SphereGeometry(player.weapon.includes('rpg')?0.8:0.25, 16, 16), 
-        new THREE.MeshBasicMaterial({color: player.weapon.includes('rpg') ? 0xff4400 : 0xffff00}));
-      b.position.copy(playerMesh.position);
-      b.position.y += 2.2;
-      b.velocity = new THREE.Vector3(6, 3, -35);
-      scene.add(b);
-      bullets.push(b);
-
-      if (player.weapon.includes('rpg')) {
-        setTimeout(() => { if (b.parent) createExplosion(b.position, true); scene.remove(b); }, 850);
-      }
-    }
-
-    function throwGrenade() {
-      const g = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), new THREE.MeshBasicMaterial({color: 0x00cc00}));
-      g.position.copy(playerMesh.position);
-      g.position.y += 4;
-      g.velocity = new THREE.Vector3(12, 16, -25);
-      scene.add(g);
-      bullets.push(g);
-      setTimeout(() => { if (g.parent) createExplosion(g.position); scene.remove(g); }, 1100);
-    }
-
-    function plantC4() {
-      const c4 = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.6, 1.3), new THREE.MeshLambertMaterial({color: 0x333333}));
-      c4.position.copy(playerMesh.position);
-      c4.position.y -= 1;
-      scene.add(c4);
-      setTimeout(() => { createExplosion(c4.position, true); scene.remove(c4); }, 2600);
-    }
-
-    function buy(item) {
-      const prices = {sniper_basic:280, sniper_pro:520, rpg:950, c4:420, knife:190};
-      if (player.money >= prices[item]) {
-        player.money -= prices[item];
-        if (item === 'sniper_pro') player.weapon = 'sniper_pro';
-        else if (item === 'rpg') player.weapon = 'rpg';
-        else if (item === 'sniper_basic') player.weapon = 'sniper_basic';
-        updateStats();
-      }
-    }
-
-    function updateStats() {
-      let stats = {strength:65, speed:70, accuracy:75, overall:70};
-      if (player.weapon === 'sniper_pro') stats = {strength:85, speed:75, accuracy:90, overall:83};
-      else if (player.weapon === 'rpg') stats = {strength:95, speed:40, accuracy:60, overall:65};
-      player.stats = stats;
-      document.getElementById('weapon').textContent = `${player.weapon.replace('_',' ')} (Overall: ${stats.overall})`;
-      document.getElementById('money').textContent = `💰 $${player.money}`;
-    }
-
-    function jump() { if (playerMesh.position.y < 18) playerMesh.position.y += 13; }
-    function toggleView() {
-      isFirstPerson = !isFirstPerson;
-      document.getElementById('mode').textContent = isFirstPerson ? "1st Person" : "3rd Person";
-    }
-    function toggleShop() {
-      const s = document.getElementById('shop');
-      s.style.display = s.style.display === 'block' ? 'none' : 'block';
+    function jump() {
+      // Add jump logic
     }
 
     function animate() {
       requestAnimationFrame(animate);
-
-      if (isFirstPerson) {
-        camera.position.set(playerMesh.position.x, playerMesh.position.y + 2.5, playerMesh.position.z + 4);
-      } else {
-        camera.position.set(playerMesh.position.x + 12, playerMesh.position.y + 14, playerMesh.position.z + 28);
-      }
-      camera.lookAt(playerMesh.position.x, playerMesh.position.y + 3, playerMesh.position.z - 15);
-
-      for (let i = bullets.length-1; i >= 0; i--) {
-        let b = bullets[i];
-        b.position.addScaledVector(b.velocity || new THREE.Vector3(0,0,-30), 0.06);
-      }
-
-      for (let i = explosions.length-1; i >= 0; i--) {
-        let e = explosions[i];
-        e.life--;
-        if (e.life <= 0) { scene.remove(e.mesh); explosions.splice(i,1); }
-      }
-
+      // Movement and camera logic
       renderer.render(scene, camera);
     }
 
-    let isFirstPerson = true;
     animate();
-    updateStats();
   </script>
 </body>
 </html>
