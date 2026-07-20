@@ -7,16 +7,16 @@
 <style>
   body { background:var(--bg); color:var(--txt); font-family:'Segoe UI',sans-serif; margin-left:200px; display:flex; flex-direction:column; height:100vh; }
   .sidebar { position:fixed; left:0; top:0; bottom:0; width:200px; background:var(--box); z-index:998; padding:20px 0; border-right:1px solid #333; }
-  header { padding:20px; background:var(--accent); font-size:1.6rem; font-weight:800; }
-  #aiout { flex:1; padding:24px; overflow-y:auto; }
+  header { padding:20px; background:linear-gradient(90deg,#F72585,#7209B7,#4CC9F0); font-size:1.6rem; font-weight:800; }
+  #aiout { flex:1; padding:24px; overflow-y:auto; line-height:1.7; }
   textarea, select { width:100%; padding:16px; margin:10px 0; border-radius:12px; background:var(--box); color:var(--txt); border:2px solid #7209B7; }
   button { padding:14px 28px; background:#f72585; color:white; border:none; border-radius:50px; font-weight:700; margin:5px; }
 </style>
 </head>
 <body>
-  <div class='sidebar'>... (same sidebar as above)</div>
+  <div class='sidebar'>... (same as homepage)</div>
   <header>✨ NovaClip AI</header>
-  <div id='aiout'>Choose a tutor and ask anything...</div>
+  <div id='aiout'>Choose a tutor and start chatting...</div>
   <div style="padding:20px; border-top:1px solid #333;">
     <select id='subject'>
       <option value='youtube'>🎬 YouTube Coach</option>
@@ -31,8 +31,7 @@
 
   <script src='nova.js'></script>
   <script>
-    // Your existing AI logic here (from previous ai.html)
-    async function sendMessage() { /* ... */ }
+    // Paste your original AI logic here (Gemini calls, etc.)
   </script>
 </body>
 </html>
