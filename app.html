@@ -19,11 +19,15 @@ body { background: var(--bg); color: var(--txt); }
 h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0);
   -webkit-background-clip: text; background-clip: text; color: transparent; }
 .toolbtn { margin: 6px; padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; background: var(--box); color: #4CC9F0; border: 2px solid #4CC9F0; }
-.panelbox { margin-top: 16px; text-align: left; display: none; background: var(--box); border-radius: 14px; padding: 16px; max-width: 680px; width: 100%; }
+.panelbox { margin-top: 16px; text-align: left; display: none; background: var(--box); border-radius: 14px; padding: 16px; max-width: 760px; width: 100%; }
 #duelbox { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: var(--bg); color: var(--txt); }
 .smallbtn { margin-top: 8px; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); }
 .toggle { display: inline-flex; align-items: center; gap: 8px; margin: 10px 0; font-weight: 700; cursor: pointer; }
 .toggle input { width: 18px; height: 18px; }
+.chartgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+.chartcard { background: #00000022; border-radius: 12px; padding: 10px; }
+.chartcard h4 { font-size: 0.9rem; margin-bottom: 6px; text-align: center; }
+@media (max-width: 640px) { .chartgrid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -33,36 +37,42 @@ h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F7
   <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
   <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
   <div class='themewrap'>
-    <label>🎨 Background</label>
+    <label data-t='background'>Background</label>
     <select id='themepick'></select>
-    <label style='margin-top:12px;'>🌐 Language</label>
+    <label style='margin-top:12px;' data-t='language'>Language</label>
     <select id='langpick'></select>
   </div>
 </div>
 <div class='hero'>
-  <h1>NovaClip Studio</h1>
+  <h1 data-t='studio_h'>NovaClip Studio</h1>
   <div id='authbox' style='margin:20px 0 10px'>
-    <button id='gbtn' style='padding:12px 28px; border-radius:30px; border:none; font-weight:700; cursor:pointer; background:white; color:#333;'>🔑 Sign in with Google</button>
+    <button id='gbtn' data-t='signin' style='padding:12px 28px; border-radius:30px; border:none; font-weight:700; cursor:pointer; background:white; color:#333;'>🔑 Sign in with Google</button>
     <p id='uname' style='display:none; color:#4CC9F0; font-weight:700;'></p>
   </div>
   <div id='toolbar' style='display:none;'>
-    <button id='statsbtn' class='toolbtn'>📈 My analytics</button>
-    <button id='compbtn' class='toolbtn'>🥊 Closest competitors</button>
-    <button id='duelbtn' class='toolbtn'>⚔️ Duel a channel</button>
-    <button id='trendbtn' class='toolbtn'>🔥 Trending topics</button>
+    <button id='statsbtn' class='toolbtn' data-t='t_stats'>📈 My analytics</button>
+    <button id='compbtn' class='toolbtn' data-t='t_comp'>🥊 Closest competitors</button>
+    <button id='duelbtn' class='toolbtn' data-t='t_duel'>⚔️ Duel a channel</button>
+    <button id='trendbtn' class='toolbtn' data-t='t_trend'>🔥 Trending topics</button>
   </div>
   <div id='statspanel' class='panelbox'>
-    <label class='toggle'><input type='checkbox' id='compToggle'> Compare with competitors</label>
+    <label class='toggle'><input type='checkbox' id='compToggle' checked> <span data-t='compare'>Compare with 2 competitors</span></label>
     <div id='statstext'></div>
-    <canvas id='statschart' height='220'></canvas>
+    <div class='chartgrid'>
+      <div class='chartcard'><h4>👥 Subscribers</h4><canvas id='c_subs' height='150'></canvas></div>
+      <div class='chartcard'><h4>👁️ Total views</h4><canvas id='c_views' height='150'></canvas></div>
+      <div class='chartcard'><h4>👍 Likes (recent)</h4><canvas id='c_likes' height='150'></canvas></div>
+      <div class='chartcard'><h4>💬 Comments (recent)</h4><canvas id='c_comments' height='150'></canvas></div>
+      <div class='chartcard'><h4>🎬 Videos</h4><canvas id='c_videos' height='150'></canvas></div>
+      <div class='chartcard'><h4>⭐ Overall score</h4><canvas id='c_overall' height='150'></canvas></div>
+    </div>
   </div>
   <div id='duelsetup' class='panelbox'>
-    <b>⚔️ Views and subs duel (max 20k subs difference between channels)</b><br><br>
-    <input id='duelbox' placeholder='Opponent channel name...'>
-    <button id='duelgo' class='smallbtn'>Fight!</button>
+    <b data-t='duel_label'>⚔️ Views and subs duel (max 20k subs difference between channels)</b><br><br>
+    <input id='duelbox' data-tph='opp_ph' placeholder='Opponent channel name...'>
+    <button id='duelgo' class='smallbtn' data-t='fight'>Fight!</button>
   </div>
   <div id='toolout' class='panelbox'></div>
-  <p style='opacity:0.6; margin-top:30px;'>Win a duel: +20 pts 🏆 · AI questions and thumbnails earn points too (✨ in the sidebar)</p>
 </div>
 
 <script type='module'>
@@ -82,7 +92,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 let ytToken = null;
 let myStats = null;
-let myChart = null;
+const charts = {};
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
@@ -113,52 +123,80 @@ async function connect() {
   }
 }
 document.getElementById('gbtn').onclick = connect;
-
 async function ensureToken() { if (!ytToken || !myStats) await connect(); }
 
-async function getCompetitors() {
+// Sum likes + comments across a channel's recent uploads
+async function recentEngagement(channel) {
+  const uploads = channel.contentDetails && channel.contentDetails.relatedPlaylists && channel.contentDetails.relatedPlaylists.uploads;
+  if (!uploads) return { likes: 0, comments: 0 };
+  const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=20');
+  if (!pl.items || !pl.items.length) return { likes: 0, comments: 0 };
+  const ids = pl.items.map(i => i.contentDetails.videoId).join(',');
+  const vs = await yt('videos?part=statistics&id=' + ids);
+  let likes = 0, comments = 0;
+  vs.items.forEach(v => { likes += parseInt(v.statistics.likeCount || 0); comments += parseInt(v.statistics.commentCount || 0); });
+  return { likes, comments };
+}
+
+async function getTwoCompetitors() {
   const q = encodeURIComponent(myStats.snippet.title.split(' ')[0]);
   const sd = await yt('search?part=snippet&type=channel&maxResults=15&q=' + q);
-  const ids = sd.items.map(i => i.snippet.channelId).filter(id => id !== myStats.id).join(',');
-  const cd = await yt('channels?part=statistics,snippet&id=' + ids);
+  const ids = sd.items.map(i => i.snippet.channelId).filter(id => id !== myStats.id).slice(0, 10).join(',');
+  const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + ids);
   const mySubs = parseInt(myStats.statistics.subscriberCount);
-  return cd.items.map(ch => ({ name: ch.snippet.title, subs: parseInt(ch.statistics.subscriberCount || 0), diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, 5);
+  return cd.items
+    .map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) }))
+    .sort((a, b) => a.diff - b.diff).slice(0, 2).map(x => x.ch);
+}
+
+function makeChart(id, labels, values, colors) {
+  if (charts[id]) charts[id].destroy();
+  const txt = getComputedStyle(document.body).getPropertyValue('--txt');
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 6 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: txt, font: { size: 9 } } }, y: { ticks: { color: txt, font: { size: 9 } } } } }
+  });
 }
 
 async function drawStats() {
   await ensureToken();
-  const panel = document.getElementById('statspanel');
-  panel.style.display = 'block';
+  document.getElementById('statspanel').style.display = 'block';
   const withComp = document.getElementById('compToggle').checked;
   const s = myStats.statistics;
-  document.getElementById('statstext').innerHTML = '<b>📈 ' + myStats.snippet.title + '</b><br>Subscribers: ' + parseInt(s.subscriberCount).toLocaleString() + ' · Views: ' + parseInt(s.viewCount).toLocaleString() + ' · Videos: ' + s.videoCount;
-  let labels = [], values = [], colors = [], title = '';
-  if (withComp) {
-    title = 'Subscribers vs competitors';
-    const comps = await getCompetitors();
-    labels = ['You'].concat(comps.map(c => c.name.slice(0, 12)));
-    values = [parseInt(s.subscriberCount)].concat(comps.map(c => c.subs));
-    colors = ['#F72585'].concat(comps.map(() => '#4CC9F0'));
-  } else {
-    title = 'Your top videos by views';
-    const uploads = myStats.contentDetails.relatedPlaylists.uploads;
-    const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=50');
-    if (pl.items && pl.items.length) {
-      const ids = pl.items.map(i => i.contentDetails.videoId).join(',');
-      const vs = await yt('videos?part=snippet,statistics&id=' + ids);
-      const vids = vs.items.map(v => ({ title: v.snippet.title, views: parseInt(v.statistics.viewCount || 0) })).sort((a, b) => b.views - a.views).slice(0, 8);
-      labels = vids.map(v => v.title.slice(0, 14));
-      values = vids.map(v => v.views);
-      colors = vids.map(() => '#7209B7');
-    }
-  }
-  if (myChart) myChart.destroy();
-  const txtColor = getComputedStyle(document.body).getPropertyValue('--txt');
-  myChart = new Chart(document.getElementById('statschart'), {
-    type: 'bar',
-    data: { labels: labels, datasets: [{ label: title, data: values, backgroundColor: colors, borderRadius: 6 }] },
-    options: { plugins: { legend: { labels: { color: txtColor } } }, scales: { x: { ticks: { color: txtColor, font: { size: 9 } } }, y: { ticks: { color: txtColor } } } }
+  document.getElementById('statstext').innerHTML = '<b>📈 ' + myStats.snippet.title + '</b>';
+
+  // Build the list of channels: you first, then up to 2 competitors
+  let channels = [myStats];
+  if (withComp) { try { channels = channels.concat(await getTwoCompetitors()); } catch (e) {} }
+
+  const labels = channels.map((c, i) => i === 0 ? 'You' : c.snippet.title.slice(0, 12));
+  const colors = channels.map((c, i) => i === 0 ? '#F72585' : (i === 1 ? '#4CC9F0' : '#4CC96A'));
+
+  const subs = channels.map(c => parseInt(c.statistics.subscriberCount || 0));
+  const views = channels.map(c => parseInt(c.statistics.viewCount || 0));
+  const videos = channels.map(c => parseInt(c.statistics.videoCount || 0));
+
+  makeChart('c_subs', labels, subs, colors);
+  makeChart('c_views', labels, views, colors);
+  makeChart('c_videos', labels, videos, colors);
+
+  // Likes + comments need per-video sums
+  const eng = [];
+  for (const c of channels) { eng.push(await recentEngagement(c)); }
+  const likes = eng.map(e => e.likes);
+  const comments = eng.map(e => e.comments);
+  makeChart('c_likes', labels, likes, colors);
+  makeChart('c_comments', labels, comments, colors);
+
+  // Overall = normalized sum of all metrics (0-100 scale relative to the biggest)
+  const metrics = [subs, views, videos, likes, comments];
+  const overall = labels.map((_, idx) => {
+    let score = 0;
+    metrics.forEach(arr => { const max = Math.max(...arr, 1); score += (arr[idx] / max) * 20; });
+    return Math.round(score);
   });
+  makeChart('c_overall', labels, overall, colors);
 }
 
 document.getElementById('statsbtn').onclick = drawStats;
@@ -167,8 +205,8 @@ document.getElementById('compToggle').onchange = drawStats;
 document.getElementById('compbtn').onclick = async () => {
   await ensureToken();
   show('Scouting your rivals...');
-  const comps = await getCompetitors();
-  show('<b>🥊 Channels closest to your size:</b><br>' + comps.map((r, i) => (i + 1) + '. ' + r.name + ' — ' + r.subs.toLocaleString() + ' subs').join('<br>'));
+  const comps = await getTwoCompetitors();
+  show('<b>🥊 Your 2 closest competitors:</b><br>' + comps.map((c, i) => (i + 1) + '. ' + c.snippet.title + ' — ' + parseInt(c.statistics.subscriberCount || 0).toLocaleString() + ' subs').join('<br>'));
 };
 
 document.getElementById('duelbtn').onclick = () => { const d = document.getElementById('duelsetup'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; };
