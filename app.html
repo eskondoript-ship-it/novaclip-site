@@ -67,7 +67,7 @@ h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F7
 
 <script type='module'>
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCKJVKqArOofTZT4fiz18cs_-thLB1O2J4',
@@ -84,10 +84,20 @@ let ytToken = null;
 let myStats = null;
 let myChart = null;
 
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    const p = document.getElementById('uname');
+    p.style.display = 'block';
+    p.textContent = '👤 ' + user.displayName + ' (tap a tool to load your channel)';
+    document.getElementById('gbtn').textContent = '🔄 Reconnect YouTube';
+    document.getElementById('toolbar').style.display = 'block';
+  }
+});
+
 function yt(url) { return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json()); }
 function show(html) { const box = document.getElementById('toolout'); box.style.display = 'block'; box.innerHTML = html; }
 
-document.getElementById('gbtn').onclick = async () => {
+async function connect() {
   const provider = new GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
   const result = await signInWithPopup(auth, provider);
@@ -101,7 +111,10 @@ document.getElementById('gbtn').onclick = async () => {
     p.textContent = '👤 ' + myStats.snippet.title;
     document.getElementById('toolbar').style.display = 'block';
   }
-};
+}
+document.getElementById('gbtn').onclick = connect;
+
+async function ensureToken() { if (!ytToken || !myStats) await connect(); }
 
 async function getCompetitors() {
   const q = encodeURIComponent(myStats.snippet.title.split(' ')[0]);
@@ -113,6 +126,7 @@ async function getCompetitors() {
 }
 
 async function drawStats() {
+  await ensureToken();
   const panel = document.getElementById('statspanel');
   panel.style.display = 'block';
   const withComp = document.getElementById('compToggle').checked;
@@ -139,10 +153,11 @@ async function drawStats() {
     }
   }
   if (myChart) myChart.destroy();
+  const txtColor = getComputedStyle(document.body).getPropertyValue('--txt');
   myChart = new Chart(document.getElementById('statschart'), {
     type: 'bar',
     data: { labels: labels, datasets: [{ label: title, data: values, backgroundColor: colors, borderRadius: 6 }] },
-    options: { plugins: { legend: { display: true, labels: { color: getComputedStyle(document.body).getPropertyValue('--txt') } } }, scales: { x: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--txt'), font: { size: 9 } } }, y: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--txt') } } } }
+    options: { plugins: { legend: { labels: { color: txtColor } } }, scales: { x: { ticks: { color: txtColor, font: { size: 9 } } }, y: { ticks: { color: txtColor } } } }
   });
 }
 
@@ -150,6 +165,7 @@ document.getElementById('statsbtn').onclick = drawStats;
 document.getElementById('compToggle').onchange = drawStats;
 
 document.getElementById('compbtn').onclick = async () => {
+  await ensureToken();
   show('Scouting your rivals...');
   const comps = await getCompetitors();
   show('<b>🥊 Channels closest to your size:</b><br>' + comps.map((r, i) => (i + 1) + '. ' + r.name + ' — ' + r.subs.toLocaleString() + ' subs').join('<br>'));
@@ -158,6 +174,7 @@ document.getElementById('compbtn').onclick = async () => {
 document.getElementById('duelbtn').onclick = () => { const d = document.getElementById('duelsetup'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; };
 
 document.getElementById('duelgo').onclick = async () => {
+  await ensureToken();
   const name = document.getElementById('duelbox').value;
   if (!name) return;
   show('Preparing the arena...');
@@ -180,6 +197,7 @@ document.getElementById('duelgo').onclick = async () => {
 };
 
 document.getElementById('trendbtn').onclick = async () => {
+  await ensureToken();
   show('Checking what is hot right now...');
   const t = await yt('videos?part=snippet,statistics&chart=mostPopular&regionCode=PT&maxResults=8');
   show('<b>🔥 Trending on YouTube right now:</b><br>' + t.items.map((v, i) => (i + 1) + '. ' + v.snippet.title + ' — ' + parseInt(v.statistics.viewCount).toLocaleString() + ' views').join('<br>'));
