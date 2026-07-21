@@ -46,13 +46,15 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
       <option value='gbp'>£ British Pound</option>
       <option value='cny'>¥ Chinese Yuan</option>
       <option value='chf'>CHF Swiss Franc</option>
+      <option value='inr'>₹ Indian Rupee</option>
+      <option value='bdt'>৳ Bangladeshi Taka</option>
     </select>
   </div>
 
   <div class='grid'>
     <div class='plan'>
       <h3>👨‍👩‍👧 Family Dashboard</h3>
-      <div class='price' data-eur='6.99' data-usd='7.99' data-gbp='5.99' data-cny='49.9' data-chf='6.90'><small class='per'>/month</small></div>
+      <div class='price' data-eur='6.99' data-usd='7.99' data-gbp='5.99' data-cny='49.9' data-chf='6.90' data-inr='599' data-bdt='799'><small class='per'>/month</small></div>
       <ul>
         <li>Parental controls & PIN access</li>
         <li>Activity overview of your kid's usage</li>
@@ -65,7 +67,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 
     <div class='plan'>
       <h3>🛠️ Kids' Tools Upgrade</h3>
-      <div class='price' data-eur='4.99' data-usd='5.99' data-gbp='4.49' data-cny='39.9' data-chf='4.90'><small class='per'>/month</small></div>
+      <div class='price' data-eur='4.99' data-usd='5.99' data-gbp='4.49' data-cny='39.9' data-chf='4.90' data-inr='449' data-bdt='599'><small class='per'>/month</small></div>
       <ul>
         <li>Priority AI answers</li>
         <li>Longer editor exports</li>
@@ -78,11 +80,11 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
     <div class='plan best'>
       <span class='tag'>BEST VALUE</span>
       <h3>🎁 Family Bundle</h3>
-      <div class='price' data-eur='9.99' data-usd='10.99' data-gbp='8.99' data-cny='79.9' data-chf='9.90'><small class='per'>/month</small></div>
+      <div class='price' data-eur='9.99' data-usd='10.99' data-gbp='8.99' data-cny='79.9' data-chf='9.90' data-inr='899' data-bdt='1199'><small class='per'>/month</small></div>
       <ul>
         <li>Family Dashboard included</li>
         <li>Kids' Tools Upgrade included</li>
-        <li id='saveline' data-eur='1.99' data-usd='2.99' data-gbp='1.49' data-cny='9.9' data-chf='1.90'>Save €1.99 every month</li>
+        <li id='saveline' data-eur='1.99' data-usd='2.99' data-gbp='1.49' data-cny='9.9' data-chf='1.90' data-inr='150' data-bdt='200'>Save €1.99 every month</li>
         <li>Priority support</li>
       </ul>
       <button class='cta' onclick="alert('Secure checkout opening soon')">Get the bundle</button>
@@ -90,7 +92,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 
     <div class='plan'>
       <h3>📜 Creator Certificate</h3>
-      <div class='price' data-eur='24.99' data-usd='27.99' data-gbp='21.99' data-cny='199' data-chf='24.90'><small class='per'> one-time</small></div>
+      <div class='price' data-eur='24.99' data-usd='27.99' data-gbp='21.99' data-cny='199' data-chf='24.90' data-inr='1999' data-bdt='2799'><small class='per'> one-time</small></div>
       <ul>
         <li>Basic NovaClip Creator Certificate</li>
         <li>Proof of completed creator training</li>
@@ -104,26 +106,32 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 </div>
 <script>
 const CUR = {
-  eur: { sym: '€', pre: true },
-  usd: { sym: '$', pre: true },
-  gbp: { sym: '£', pre: true },
-  cny: { sym: '¥', pre: true },
-  chf: { sym: 'CHF ', pre: true }
+  eur: { sym: '€', dec: 2 },
+  usd: { sym: '$', dec: 2 },
+  gbp: { sym: '£', dec: 2 },
+  cny: { sym: '¥', dec: 1 },
+  chf: { sym: 'CHF ', dec: 2 },
+  inr: { sym: '₹', dec: 0 },
+  bdt: { sym: '৳', dec: 0 }
 };
 function fmt(cur, val) {
   const c = CUR[cur];
-  // CNY shows no decimals when whole-ish, others keep 2
-  let n = (cur === 'cny') ? (Number(val) % 1 === 0 ? val : Number(val).toFixed(1)) : Number(val).toFixed(2);
+  let n = Number(val);
+  if (c.dec === 0) n = Math.round(n);
+  else if (cur === 'cny') n = (n % 1 === 0 ? n : n.toFixed(1));
+  else n = n.toFixed(2);
   return c.sym + n;
 }
 function guessCurrency() {
   const saved = localStorage.getItem('nc_currency');
   if (saved) return saved;
   const loc = (navigator.language || 'en').toLowerCase();
-  if (loc.includes('gb') || loc.includes('en-gb')) return 'gbp';
-  if (loc.endsWith('-us') || loc === 'en') return 'usd';
+  if (loc.includes('gb')) return 'gbp';
+  if (loc.includes('in') || loc.includes('hi')) return 'inr';
+  if (loc.includes('bn') || loc.includes('bd')) return 'bdt';
   if (loc.startsWith('zh')) return 'cny';
-  if (loc.includes('ch') || loc.includes('de-ch') || loc.includes('fr-ch')) return 'chf';
+  if (loc.includes('ch')) return 'chf';
+  if (loc.endsWith('-us') || loc === 'en') return 'usd';
   return 'eur';
 }
 function renderPrices(cur) {
