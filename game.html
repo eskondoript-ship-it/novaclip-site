@@ -24,7 +24,12 @@ body { background: #120c1c; overflow: hidden; color: #fff; }
 #board h4 { color: #00F0FF; margin-bottom: 6px; font-size: 0.8rem; letter-spacing: 1px; }
 #board .r { display: flex; justify-content: space-between; padding: 2px 0; }
 #board .me { color: #FF2E97; font-weight: 800; }
-#ammo { position: fixed; bottom: 20px; right: 24px; z-index: 11; font-size: 1.4rem; font-weight: 800; background: #000a; padding: 8px 18px; border-radius: 12px; }
+#ammo { position: fixed; bottom: 20px; right: 24px; z-index: 11; font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, rgba(0,240,255,0.12), rgba(10,12,20,0.85)); border: 1px solid rgba(0,240,255,0.4); padding: 10px 20px; border-radius: 14px; box-shadow: 0 0 24px rgba(0,240,255,0.15); backdrop-filter: blur(8px); }
+#loadout { position: fixed; bottom: 108px; left: 24px; z-index: 11; display: flex; flex-direction: column; gap: 5px; }
+#loadout .slot { display: flex; align-items: center; gap: 8px; background: rgba(10,12,20,0.7); border: 1px solid rgba(255,255,255,0.12); border-left: 3px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 5px 12px 5px 8px; font-size: 0.78rem; color: #7E8AA6; backdrop-filter: blur(6px); transition: 0.2s; min-width: 132px; }
+#loadout .slot.active { border-left-color: #00F0FF; color: #EAF2FF; background: rgba(0,240,255,0.1); box-shadow: 0 0 16px rgba(0,240,255,0.2); }
+#loadout .slot .key { background: #1a1f2c; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 0.72rem; color: #00F0FF; flex-shrink: 0; }
+#loadout .slot .nm { font-weight: 700; letter-spacing: 0.5px; }
 #ammo small { font-size: 0.85rem; opacity: 0.6; }
 #weapname { font-size: 0.8rem; color: #00F0FF; display: block; }
 #feed { position: fixed; bottom: 20px; left: 24px; z-index: 11; font-size: 0.85rem; }
@@ -50,13 +55,14 @@ body { background: #120c1c; overflow: hidden; color: #fff; }
 #overlay h1 .c { color: #00F0FF; text-shadow: 0 0 44px rgba(0,240,255,.5); }
 #overlay h1 .m { color: #FF2E97; text-shadow: 0 0 44px rgba(255,46,151,.5); }
 #overlay p.sub { color: #b8bccb; max-width: 480px; line-height: 1.6; margin-bottom: 18px; }
-.diffgrid { display: grid; grid-template-columns: repeat(3, minmax(150px, 190px)); gap: 12px; margin-bottom: 20px; }
-@media (max-width: 620px) { .diffgrid { grid-template-columns: 1fr; } }
+.diffgrid { display: grid; grid-template-columns: repeat(4, minmax(140px, 180px)); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 720px) { .diffgrid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 420px) { .diffgrid { grid-template-columns: 1fr; } }
 .diff { background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 16px 12px; cursor: pointer; transition: 0.25s; }
 .diff:hover { transform: translateY(-4px); }
 .diff.sel { border-color: #00F0FF; box-shadow: 0 0 30px rgba(0,240,255,0.35); }
 .diff h3 { font-size: 1.1rem; margin-bottom: 6px; }
-.diff.easy h3 { color: #B6FF3C; } .diff.med h3 { color: #00F0FF; } .diff.hard h3 { color: #FF2E97; }
+.diff.easy h3 { color: #B6FF3C; } .diff.med h3 { color: #00F0FF; } .diff.hard h3 { color: #FF2E97; } .diff.ranked h3 { color: #FFD700; }
 .diff small { color: #7E8AA6; font-size: 0.78rem; line-height: 1.5; display: block; }
 .keysgrid { display: grid; grid-template-columns: repeat(3, minmax(130px, 175px)); gap: 8px; margin-bottom: 22px; justify-content: center; }
 .keyrow { display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 9px 12px; font-size: 0.8rem; color: #b8bccb; text-align: left; white-space: nowrap; }
@@ -95,7 +101,8 @@ body { background: #120c1c; overflow: hidden; color: #fff; }
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming 20s…</span></div>
 <div id='ptsbadge'>🏆 <b id='gamepts'>0</b> pts</div>
-<div id='viewTag'>1 Pistol · 2 Sniper · 3 Knife · G Grenade · B Sticky · C Plant C4 · X Detonate · E Shop · V View</div>
+<div id='loadout'></div>
+<div id='viewTag'>1-9 Weapons · G Grenade · B Sticky · C Plant C4 · X Detonate · E Shop · V View</div>
 <div id='shopprompt' style="position:fixed;top:50%;left:50%;transform:translate(-50%,60px);z-index:11;background:rgba(0,240,255,0.15);border:1px solid #00F0FF;color:#00F0FF;padding:8px 18px;border-radius:20px;font-weight:800;display:none;">Press E to open the shop 🏪</div>
 
 <div id='shopui'>
@@ -113,8 +120,9 @@ body { background: #120c1c; overflow: hidden; color: #fff; }
   <p class='sub'>10 fighters, 5 minutes, one sunset rooftop. Earn NovaClip points with every kill — top the board for the MVP bonus. Spend points in the rooftop shop.</p>
   <div class='diffgrid'>
     <div class='diff easy' data-mode='easy'><h3>😌 EASY</h3><small>Chill bots · 2 pts per kill · MVP bonus +10</small></div>
-    <div class='diff med sel' data-mode='medium'><h3>⚡ MEDIUM</h3><small>Sharper bots · 5 pts per kill · MVP bonus +20</small></div>
+    <div class='diff med sel' data-mode='medium'><h3>⚡ MEDIUM</h3><small>Tough bots · 5 pts per kill · MVP bonus +20</small></div>
     <div class='diff hard' data-mode='hard'><h3>💀 HARD</h3><small>Deadly bots · 10 pts per kill · MVP bonus +50</small></div>
+    <div class='diff ranked' data-mode='ranked'><h3>🏆 RANKED</h3><small>Elite bots · 15 pts per kill · MVP bonus +80 · climb the ranks</small></div>
   </div>
   <div class='keysgrid'>
     <div class='keyrow'><kbd>MOUSE</kbd> Aim</div>
@@ -141,25 +149,37 @@ body { background: #120c1c; overflow: hidden; color: #fff; }
 window.addEventListener('error', (e) => { const b = document.getElementById('errbox'); b.style.display = 'block'; b.textContent = '⚠ ' + e.message; });
 
 const MODES = {
-  easy:   { botHit: 0.06, burst: 2, cool: [2.2, 2.6], perKill: 2,  mvp: 10, label: 'EASY' },
-  medium: { botHit: 0.12, burst: 3, cool: [1.6, 2.0], perKill: 5,  mvp: 20, label: 'MEDIUM' },
-  hard:   { botHit: 0.20, burst: 3, cool: [1.2, 1.6], perKill: 10, mvp: 50, label: 'HARD' }
+  easy:   { botHit: 0.09, burst: 2, cool: [2.0, 2.4], perKill: 2,  mvp: 10, label: 'EASY' },
+  medium: { botHit: 0.20, burst: 3, cool: [1.3, 1.7], perKill: 5,  mvp: 20, label: 'MEDIUM' },
+  hard:   { botHit: 0.30, burst: 4, cool: [1.0, 1.3], perKill: 10, mvp: 50, label: 'HARD' },
+  ranked: { botHit: 0.34, burst: 4, cool: [0.9, 1.2], perKill: 15, mvp: 80, label: 'RANKED' }
 };
 let mode = 'medium';
 document.querySelectorAll('.diff').forEach(d => { d.onclick = () => { document.querySelectorAll('.diff').forEach(x => x.classList.remove('sel')); d.classList.add('sel'); mode = d.dataset.mode; }; });
 
-// weapons
+// weapons — permanent purchases stored in localStorage
+function ownedWeapons() { try { return JSON.parse(localStorage.getItem('nc_weapons') || '["sniper"]'); } catch (e) { return ['sniper']; } }
+function saveOwned(list) { localStorage.setItem('nc_weapons', JSON.stringify([...new Set(list)])); }
 const WEAPONS = {
-  pistol: { name: 'PISTOL', mag: 12, dmg: 30, scopedDmg: 30, rate: 180, owned: false },
-  sniper: { name: 'SNIPER', mag: 10, dmg: 55, scopedDmg: 100, rate: 700, owned: true },
-  knife:  { name: 'KNIFE',  mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, owned: false }
+  pistol:  { name: 'PISTOL',  slot: 1, mag: 12, dmg: 34, scopedDmg: 34, rate: 170, cost: 30 },
+  sniper:  { name: 'SNIPER',  slot: 2, mag: 10, dmg: 55, scopedDmg: 100, rate: 700, cost: 0 },
+  knife:   { name: 'KNIFE',   slot: 3, mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, cost: 20 },
+  smg:     { name: 'SMG',     slot: 4, mag: 30, dmg: 20, scopedDmg: 20, rate: 90,  cost: 60 },
+  rifle:   { name: 'RIFLE',   slot: 5, mag: 25, dmg: 32, scopedDmg: 40, rate: 130, cost: 70 },
+  shotgun: { name: 'SHOTGUN', slot: 6, mag: 6,  dmg: 85, scopedDmg: 85, rate: 650, cost: 80 },
+  lmg:     { name: 'LMG',     slot: 7, mag: 60, dmg: 26, scopedDmg: 26, rate: 100, cost: 100 },
+  dmr:     { name: 'DMR',     slot: 8, mag: 15, dmg: 48, scopedDmg: 70, rate: 240, cost: 90 },
+  revolver:{ name: 'REVOLVER',slot: 9, mag: 6,  dmg: 70, scopedDmg: 70, rate: 500, cost: 55 }
 };
+WEAPONS.pistol.owned = false; WEAPONS.sniper.owned = true; WEAPONS.knife.owned = false;
+// restore permanent ownership
+ownedWeapons().forEach(w => { if (WEAPONS[w]) WEAPONS[w].owned = true; });
 let curWeap = 'sniper';
 let inv = { frag: 0, sticky: 0 };
 let lastShot = 0;
 
 function pts() { return parseInt(localStorage.getItem('nc_points') || '0'); }
-function setPts(v) { localStorage.setItem('nc_points', v); document.getElementById('gamepts').textContent = v; const sb = document.getElementById('shopbal'); if (sb) sb.textContent = v; }
+function setPts(v) { localStorage.setItem('nc_points', v); const gp = document.getElementById('gamepts'); if (gp) gp.textContent = v; const sb = document.getElementById('shopbal'); if (sb) sb.textContent = v; }
 function earn(n, why) { setPts(pts() + n); addFeed('+' + n + ' pts — ' + why); }
 
 let scene, camera, renderer, skyDome;
@@ -385,32 +405,39 @@ function buildShop() {
 function insideShop() { return Math.abs(player.x - SHOP.x) < SHOP.w/2 - 0.3 && Math.abs(player.z - SHOP.z) < SHOP.d/2 - 0.3; }
 
 const SHOP_ITEMS = [
-  { id: 'pistol', name: '🔫 Pistol', desc: 'Fast sidearm — key 1', cost: 30, once: true },
-  { id: 'knife',  name: '🔪 Knife', desc: 'Silent one-hit melee — key 3', cost: 20, once: true },
-  { id: 'frag',   name: '💥 Frag grenades ×3', desc: 'Throw with G', cost: 40 },
-  { id: 'sticky', name: '🧨 Sticky bombs ×2', desc: 'Throw with B, detonate with X', cost: 50 },
-  { id: 'heavy',  name: '🎯 Heavy sniper rounds', desc: 'Unscoped shots one-hit too', cost: 80, once: true }
+  { id: 'pistol',  name: '🔫 Pistol',   desc: 'Fast sidearm — slot 1', cost: 30, weap: true },
+  { id: 'knife',   name: '🔪 Knife',    desc: 'One-hit melee — slot 3', cost: 20, weap: true },
+  { id: 'smg',     name: '💨 SMG',      desc: 'Rapid fire, 30 rounds — slot 4', cost: 60, weap: true },
+  { id: 'rifle',   name: '🎖️ Rifle',    desc: 'Balanced auto — slot 5', cost: 70, weap: true },
+  { id: 'shotgun', name: '💥 Shotgun',  desc: 'Devastating up close — slot 6', cost: 80, weap: true },
+  { id: 'lmg',     name: '🔩 LMG',      desc: '60-round belt — slot 7', cost: 100, weap: true },
+  { id: 'dmr',     name: '🎯 DMR',      desc: 'Marksman rifle — slot 8', cost: 90, weap: true },
+  { id: 'revolver',name: '🤠 Revolver', desc: 'Heavy pistol — slot 9', cost: 55, weap: true },
+  { id: 'frag',    name: '💣 Frag grenades ×3', desc: 'Throw with G', cost: 40 },
+  { id: 'sticky',  name: '🧨 Sticky bombs ×2', desc: 'Throw with B, detonate with X', cost: 50 },
+  { id: 'heavy',   name: '⚡ Heavy sniper rounds', desc: 'Unscoped shots one-hit too (permanent)', cost: 80, once: true }
 ];
-let heavyRounds = false;
+let heavyRounds = localStorage.getItem('nc_heavy') === '1';
+if (heavyRounds) WEAPONS.sniper.dmg = 100;
 function renderShop() {
   document.getElementById('shopbal').textContent = pts();
   document.getElementById('shopitems').innerHTML = SHOP_ITEMS.map(it => {
-    const owned = it.once && ((it.id === 'pistol' && WEAPONS.pistol.owned) || (it.id === 'knife' && WEAPONS.knife.owned) || (it.id === 'heavy' && heavyRounds));
+    const owned = (it.weap && WEAPONS[it.id] && WEAPONS[it.id].owned) || (it.id === 'heavy' && heavyRounds);
     return '<div class="item"><div><b>' + it.name + '</b><small>' + it.desc + '</small></div>' +
-      '<button ' + (owned || pts() < it.cost ? 'disabled' : '') + ' onclick="buyItem(\'' + it.id + '\')">' + (owned ? 'OWNED' : it.cost + ' pts') + '</button></div>';
+      '<button ' + (owned || pts() < it.cost ? 'disabled' : '') + ' onclick="buyItem(\'' + it.id + '\')">' + (owned ? '✅ OWNED' : it.cost + ' pts') + '</button></div>';
   }).join('');
 }
 window.buyItem = function(id) {
   const it = SHOP_ITEMS.find(x => x.id === id);
   if (!it || pts() < it.cost) return;
   setPts(pts() - it.cost);
-  if (id === 'pistol') WEAPONS.pistol.owned = true;
-  if (id === 'knife') WEAPONS.knife.owned = true;
-  if (id === 'heavy') { heavyRounds = true; WEAPONS.sniper.dmg = 100; }
+  if (it.weap) { WEAPONS[id].owned = true; saveOwned([...ownedWeapons(), id]); }  // PERMANENT
+  if (id === 'heavy') { heavyRounds = true; WEAPONS.sniper.dmg = 100; localStorage.setItem('nc_heavy', '1'); }
   if (id === 'frag') inv.frag += 3;
   if (id === 'sticky') inv.sticky += 2;
   addFeed('🛒 Bought ' + it.name);
   renderShop();
+  buildLoadoutHUD();
 };
 function openShop() { shopOpen = true; document.getElementById('shopui').style.display = 'flex'; renderShop(); document.exitPointerLock(); }
 window.closeShop = function() { shopOpen = false; document.getElementById('shopui').style.display = 'none'; if (running) renderer.domElement.requestPointerLock(); };
@@ -471,7 +498,7 @@ document.getElementById('game').addEventListener('click', () => {
 document.addEventListener('mousedown', (e) => {
   if (!running || shopOpen) return;
   if (e.button === 0) shoot();
-  if (e.button === 2 && curWeap === 'sniper') { scoped = true; if (!thirdPerson) document.getElementById('scope').style.display = 'block'; }
+  if (e.button === 2 && (curWeap === 'sniper' || curWeap === 'dmr')) { scoped = true; if (!thirdPerson) document.getElementById('scope').style.display = 'block'; }
 });
 document.addEventListener('mouseup', (e) => { if (e.button === 2) { scoped = false; document.getElementById('scope').style.display = 'none'; } });
 document.addEventListener('contextmenu', e => e.preventDefault());
@@ -481,9 +508,11 @@ document.addEventListener('keydown', (e) => {
   if (e.code === 'KeyR') reload();
   if (e.code === 'KeyV') { thirdPerson = !thirdPerson; if (scoped) { scoped = false; document.getElementById('scope').style.display = 'none'; } }
   if (e.code === 'ShiftLeft') player.sprint = true;
-  if (e.code === 'Digit1' && WEAPONS.pistol.owned) switchWeap('pistol');
-  if (e.code === 'Digit2') switchWeap('sniper');
-  if (e.code === 'Digit3' && WEAPONS.knife.owned) switchWeap('knife');
+  if (/^Digit[1-9]$/.test(e.code)) {
+    const slot = parseInt(e.code.slice(5));
+    const w = Object.keys(WEAPONS).find(k => WEAPONS[k].slot === slot);
+    if (w && WEAPONS[w].owned) switchWeap(w);
+  }
   if (e.code === 'KeyG') throwNade('frag');
   if (e.code === 'KeyB') throwNade('sticky');
   if (e.code === 'KeyC') plantC4();
@@ -492,12 +521,22 @@ document.addEventListener('keydown', (e) => {
 });
 document.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'ShiftLeft') player.sprint = false; });
 
+function buildLoadoutHUD() {
+  const el = document.getElementById('loadout');
+  if (!el) return;
+  el.innerHTML = Object.keys(WEAPONS).filter(k => WEAPONS[k].owned).map(k => {
+    const W = WEAPONS[k];
+    return '<div class="slot' + (k === curWeap ? ' active' : '') + '" data-w="' + k + '"><span class="key">' + W.slot + '</span><span class="nm">' + W.name + '</span></div>';
+  }).join('');
+}
+
 function switchWeap(w) {
   curWeap = w;
   player.mag = WEAPONS[w].mag === Infinity ? Infinity : WEAPONS[w].mag;
   document.getElementById('weapname').textContent = WEAPONS[w].name;
   document.getElementById('mag').textContent = WEAPONS[w].mag === Infinity ? '∞' : player.mag;
   document.getElementById('magmax').textContent = WEAPONS[w].mag === Infinity ? '' : '/' + WEAPONS[w].mag;
+  buildLoadoutHUD();
 }
 function reload() {
   const W = WEAPONS[curWeap];
@@ -557,7 +596,7 @@ function shoot() {
   gunGroup.userData.flash.getWorldPosition(muzzleWorld);
   spawnTracer(muzzleWorld, end, 0x00F0FF);
   if (hit) {
-    hit.hp -= scoped ? WEAPONS.sniper.scopedDmg : W.dmg;
+    hit.hp -= scoped ? W.scopedDmg : W.dmg;
     if (hit.hp <= 0) killBot(hit);
   }
 }
@@ -810,6 +849,7 @@ updateBoard();
 setPts(pts());
 document.getElementById('hpbar').style.width = '100%';
 switchWeap('sniper');
+buildLoadoutHUD();
 animate();
 </script>
 </body>
