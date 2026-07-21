@@ -6,27 +6,40 @@
 <title>NovaClip Studio</title>
 <script src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-body { background: var(--bg); color: var(--txt); }
-.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: var(--box); display: flex; flex-direction: column; align-items: stretch; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid #33333355; }
-.sidebar a { font-size: 1.1rem; text-decoration: none; color: var(--txt); display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 700; }
-.sidebar a:hover { background: #7209B733; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
+body { background: #060608; color: #f4f4f6; overflow-x: hidden; }
+
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: stretch; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); }
+.sidebar a { font-size: 1.05rem; text-decoration: none; color: #f4f4f6; display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background 0.2s; }
+.sidebar a:hover { background: rgba(114,9,183,0.25); }
 .sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
 .sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
-.sidebar .themewrap label { display: block; font-size: 0.8rem; opacity: 0.7; margin-bottom: 6px; }
-.sidebar select { width: 100%; font-size: 1rem; background: var(--bg); color: var(--txt); border: 2px solid #7209B7; border-radius: 10px; padding: 10px; }
-.hero { position: relative; z-index: 1; min-height: 100vh; margin-left: 200px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; padding: 50px 20px; }
-h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0);
-  -webkit-background-clip: text; background-clip: text; color: transparent; }
-.toolbtn { margin: 6px; padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; background: var(--box); color: #4CC9F0; border: 2px solid #4CC9F0; }
-.panelbox { margin-top: 16px; text-align: left; display: none; background: var(--box); border-radius: 14px; padding: 16px; max-width: 760px; width: 100%; }
-#duelbox { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #7209B7; background: var(--bg); color: var(--txt); }
-.smallbtn { margin-top: 8px; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); }
-.toggle { display: inline-flex; align-items: center; gap: 8px; margin: 10px 0; font-weight: 700; cursor: pointer; }
+.sidebar .themewrap label { display: block; font-size: 0.78rem; opacity: 0.6; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: 0.95rem; background: rgba(255,255,255,0.05); color: #f4f4f6; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px; }
+
+#orbs { position: fixed; inset: 0; left: 200px; z-index: 0; pointer-events: none; overflow: hidden; }
+.orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.35; }
+.orb.a { width: 440px; height: 440px; background: #7209B7; top: -80px; left: 15%; animation: f1 16s ease-in-out infinite; }
+.orb.b { width: 380px; height: 380px; background: #F72585; bottom: -60px; right: 10%; animation: f2 19s ease-in-out infinite; }
+@keyframes f1 { 0%,100% { transform: translate(0,0);} 50% { transform: translate(50px,60px);} }
+@keyframes f2 { 0%,100% { transform: translate(0,0);} 50% { transform: translate(-50px,-40px);} }
+
+.hero { position: relative; z-index: 2; min-height: 100vh; margin-left: 200px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 60px 20px; }
+h1 { font-size: clamp(2.2rem,5vw,3.4rem); font-weight: 800; letter-spacing: -2px; }
+h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.gbtn { padding: 14px 32px; border-radius: 40px; border: none; font-weight: 700; cursor: pointer; background: #fff; color: #222; margin: 24px 0 10px; font-size: 1rem; transition: transform 0.2s; }
+.gbtn:hover { transform: translateY(-2px); }
+#uname { display: none; color: #4CC9F0; font-weight: 700; }
+.toolbtn { margin: 6px; padding: 12px 24px; border-radius: 30px; font-weight: 700; cursor: pointer; background: rgba(255,255,255,0.06); color: #4CC9F0; border: 1px solid rgba(76,201,240,0.5); transition: transform 0.2s, background 0.2s; }
+.toolbtn:hover { transform: translateY(-2px); background: rgba(76,201,240,0.15); }
+.panelbox { margin-top: 16px; text-align: left; display: none; background: rgba(255,255,255,0.04); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 20px; max-width: 780px; width: 100%; }
+#duelbox { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #f4f4f6; }
+.smallbtn { margin-top: 10px; padding: 10px 18px; border-radius: 24px; border: none; cursor: pointer; font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); }
+.toggle { display: inline-flex; align-items: center; gap: 8px; margin: 4px 0 14px; font-weight: 700; cursor: pointer; }
 .toggle input { width: 18px; height: 18px; }
 .chartgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
-.chartcard { background: #00000022; border-radius: 12px; padding: 10px; }
-.chartcard h4 { font-size: 0.9rem; margin-bottom: 6px; text-align: center; }
+.chartcard { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px; }
+.chartcard h4 { font-size: 0.9rem; margin-bottom: 8px; text-align: center; opacity: 0.85; }
 @media (max-width: 640px) { .chartgrid { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -35,6 +48,8 @@ h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F7
   <a href='index.html' data-t='home'>🏠 Home</a>
   <a href='app.html' data-t='studio'>📈 Studio</a>
   <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
+  <a href='editor.html'>🎬 Editor</a>
+  <a href='game.html'>🎯 Sniper</a>
   <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
   <div class='themewrap'>
     <label data-t='background'>Background</label>
@@ -43,11 +58,14 @@ h1 { font-size: 2.6rem; font-weight: 800; background: linear-gradient(90deg, #F7
     <select id='langpick'></select>
   </div>
 </div>
+
+<div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
+
 <div class='hero'>
-  <h1 data-t='studio_h'>NovaClip Studio</h1>
-  <div id='authbox' style='margin:20px 0 10px'>
-    <button id='gbtn' data-t='signin' style='padding:12px 28px; border-radius:30px; border:none; font-weight:700; cursor:pointer; background:white; color:#333;'>🔑 Sign in with Google</button>
-    <p id='uname' style='display:none; color:#4CC9F0; font-weight:700;'></p>
+  <h1><span class='grad' data-t='studio_h'>NovaClip Studio</span></h1>
+  <div>
+    <button id='gbtn' class='gbtn' data-t='signin'>🔑 Sign in with Google</button>
+    <p id='uname'></p>
   </div>
   <div id='toolbar' style='display:none;'>
     <button id='statsbtn' class='toolbtn' data-t='t_stats'>📈 My analytics</button>
@@ -90,8 +108,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-let ytToken = null;
-let myStats = null;
+let ytToken = null, myStats = null;
 const charts = {};
 
 onAuthStateChanged(auth, (user) => {
@@ -117,15 +134,13 @@ async function connect() {
     myStats = data.items[0];
     document.getElementById('gbtn').style.display = 'none';
     const p = document.getElementById('uname');
-    p.style.display = 'block';
-    p.textContent = '👤 ' + myStats.snippet.title;
+    p.style.display = 'block'; p.textContent = '👤 ' + myStats.snippet.title;
     document.getElementById('toolbar').style.display = 'block';
   }
 }
 document.getElementById('gbtn').onclick = connect;
 async function ensureToken() { if (!ytToken || !myStats) await connect(); }
 
-// Sum likes + comments across a channel's recent uploads
 async function recentEngagement(channel) {
   const uploads = channel.contentDetails && channel.contentDetails.relatedPlaylists && channel.contentDetails.relatedPlaylists.uploads;
   if (!uploads) return { likes: 0, comments: 0 };
@@ -144,18 +159,16 @@ async function getTwoCompetitors() {
   const ids = sd.items.map(i => i.snippet.channelId).filter(id => id !== myStats.id).slice(0, 10).join(',');
   const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + ids);
   const mySubs = parseInt(myStats.statistics.subscriberCount);
-  return cd.items
-    .map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) }))
-    .sort((a, b) => a.diff - b.diff).slice(0, 2).map(x => x.ch);
+  return cd.items.map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, 2).map(x => x.ch);
 }
 
 function makeChart(id, labels, values, colors) {
   if (charts[id]) charts[id].destroy();
-  const txt = getComputedStyle(document.body).getPropertyValue('--txt');
+  const txt = '#c8ccd8';
   charts[id] = new Chart(document.getElementById(id), {
     type: 'bar',
     data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 6 }] },
-    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: txt, font: { size: 9 } } }, y: { ticks: { color: txt, font: { size: 9 } } } } }
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: txt, font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: txt, font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
   });
 }
 
@@ -165,40 +178,25 @@ async function drawStats() {
   const withComp = document.getElementById('compToggle').checked;
   const s = myStats.statistics;
   document.getElementById('statstext').innerHTML = '<b>📈 ' + myStats.snippet.title + '</b>';
-
-  // Build the list of channels: you first, then up to 2 competitors
   let channels = [myStats];
   if (withComp) { try { channels = channels.concat(await getTwoCompetitors()); } catch (e) {} }
-
   const labels = channels.map((c, i) => i === 0 ? 'You' : c.snippet.title.slice(0, 12));
   const colors = channels.map((c, i) => i === 0 ? '#F72585' : (i === 1 ? '#4CC9F0' : '#4CC96A'));
-
   const subs = channels.map(c => parseInt(c.statistics.subscriberCount || 0));
   const views = channels.map(c => parseInt(c.statistics.viewCount || 0));
   const videos = channels.map(c => parseInt(c.statistics.videoCount || 0));
-
   makeChart('c_subs', labels, subs, colors);
   makeChart('c_views', labels, views, colors);
   makeChart('c_videos', labels, videos, colors);
-
-  // Likes + comments need per-video sums
   const eng = [];
   for (const c of channels) { eng.push(await recentEngagement(c)); }
-  const likes = eng.map(e => e.likes);
-  const comments = eng.map(e => e.comments);
+  const likes = eng.map(e => e.likes), comments = eng.map(e => e.comments);
   makeChart('c_likes', labels, likes, colors);
   makeChart('c_comments', labels, comments, colors);
-
-  // Overall = normalized sum of all metrics (0-100 scale relative to the biggest)
   const metrics = [subs, views, videos, likes, comments];
-  const overall = labels.map((_, idx) => {
-    let score = 0;
-    metrics.forEach(arr => { const max = Math.max(...arr, 1); score += (arr[idx] / max) * 20; });
-    return Math.round(score);
-  });
+  const overall = labels.map((_, idx) => { let sc = 0; metrics.forEach(arr => { const mx = Math.max(...arr, 1); sc += (arr[idx] / mx) * 20; }); return Math.round(sc); });
   makeChart('c_overall', labels, overall, colors);
 }
-
 document.getElementById('statsbtn').onclick = drawStats;
 document.getElementById('compToggle').onchange = drawStats;
 
@@ -222,8 +220,7 @@ document.getElementById('duelgo').onclick = async () => {
   if (!sd.items || !sd.items.length) { show('Could not find that channel.'); return; }
   const cd = await yt('channels?part=statistics,snippet&id=' + sd.items[0].snippet.channelId);
   const opp = cd.items[0];
-  const oppSubs = parseInt(opp.statistics.subscriberCount || 0);
-  const oppViews = parseInt(opp.statistics.viewCount || 0);
+  const oppSubs = parseInt(opp.statistics.subscriberCount || 0), oppViews = parseInt(opp.statistics.viewCount || 0);
   const gap = Math.abs(mySubs - oppSubs);
   if (gap > 20000) { show('⚔️ Unfair matchup! The gap is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer!'); return; }
   let a = 0, b = 0;
