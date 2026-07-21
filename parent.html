@@ -44,8 +44,18 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
   <div class='card' id='gate'>
     <h3>🔒 Parent access <small>First time: set a 5-digit PIN and a security question. You'll need the PIN every visit; the question recovers access if you forget it. The kid's pages never show this dashboard.</small></h3>
     <div id='setupfields'>
-      <input type='password' id='pin' placeholder='5-digit PIN' maxlength='5' inputmode='numeric'>
       <div id='setuponly'>
+        <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06); margin-bottom:14px;'>👋 <b>Parents only.</b> This one-time setup confirms it's really you — not your child — before parental controls are created.</div>
+        <input type='email' id='parentSetupEmail' placeholder='Parent email address'>
+        <button class='btn' id='sendcodebtn' style='margin-bottom:12px;'>📧 Send confirmation code</button>
+        <div id='codebox' style='display:none;'>
+          <input type='text' id='confcode' placeholder='6-digit code from your email' maxlength='6' inputmode='numeric'>
+          <label class='sm' style='display:block; font-size:0.85rem; color:#7E8AA6; margin:6px 0 3px;'>Your child's age</label>
+          <input type='text' id='kidage' placeholder="Child's age (13–18)" maxlength='2' inputmode='numeric'>
+        </div>
+      </div>
+      <input type='password' id='pin' placeholder='5-digit PIN' maxlength='5' inputmode='numeric' style='display:none;'>
+      <div id='setuponly2' style='display:none;'>
         <select id='secq' style='width:100%; padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:#0A0C14; color:#EAF2FF; margin-bottom:12px; font-size:1rem;'>
           <option value=''>Choose a security question…</option>
           <option>What was the name of your first pet?</option>
@@ -57,9 +67,9 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
         <input type='text' id='seca' placeholder='Answer to your security question'>
       </div>
     </div>
-    <button class='btn' id='pinbtn'>Unlock</button>
+    <button class='btn' id='pinbtn' style='display:none;'>Unlock</button>
     <button class='btn' id='forgotbtn' style='background:transparent; border:1px solid rgba(255,255,255,0.2); color:#7E8AA6; margin-left:8px; display:none;'>Forgot PIN?</button>
-    <div class='notice' id='pinmsg'></div>
+    <div class='notice' id='pinmsg' style='display:none;'></div>
 
     <div id='recoverbox' style='display:none; margin-top:14px;'>
       <div id='secqlabel' style='color:#00F0FF; font-weight:700; margin-bottom:8px;'></div>
@@ -127,6 +137,12 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 <script>
 // PIN gate (stored locally)
 const gate = document.getElementById('gate'), dash = document.getElementById('dash');
+// auto show/hide the message box whenever its content changes
+(function(){
+  const box = document.getElementById('pinmsg');
+  const obs = new MutationObserver(() => { box.style.display = (box.textContent.trim() || box.innerHTML.trim()) ? 'block' : 'none'; });
+  obs.observe(box, { childList: true, subtree: true, characterData: true });
+})();
 // --- hardened PIN: 5 digits, hashed storage, lockout, security-question recovery ---
 async function hashPin(v) {
   const data = new TextEncoder().encode('novaclip-salt-v1:' + v);
@@ -145,11 +161,75 @@ function isSetUp() { return !!localStorage.getItem('nc_parent_pin_h'); }
 // on load, adjust UI for setup vs returning
 window.addEventListener('DOMContentLoaded', () => {
   const setUp = isSetUp();
-  document.getElementById('setuponly').style.display = setUp ? 'none' : 'block';
-  document.getElementById('pinbtn').textContent = setUp ? 'Unlock' : 'Set up & unlock';
-  document.getElementById('forgotbtn').style.display = setUp ? 'inline-block' : 'none';
-  // clean up any legacy 4-digit hash format note
+  if (setUp) {
+    // returning parent — just show PIN + unlock
+    document.getElementById('setuponly').style.display = 'none';
+    document.getElementById('setuponly2').style.display = 'none';
+    document.getElementById('pin').style.display = 'block';
+    document.getElementById('pinbtn').style.display = 'inline-block';
+    document.getElementById('pinbtn').textContent = 'Unlock';
+    document.getElementById('forgotbtn').style.display = 'inline-block';
+  } else {
+    // first-time — must confirm parent email code first
+    document.getElementById('setuponly').style.display = 'block';
+  }
 });
+
+// simulated email confirmation (real email requires a backend; demo generates a code)
+let CONF_CODE = null;
+
+// read the kid's connected YouTube channel email/title, if Studio connected one
+async function kidChannelInfo() {
+  const tok = tokenOK();
+  if (!tok) return null;
+  try {
+    const r = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', { headers: { Authorization: 'Bearer ' + tok } });
+    const d = await r.json();
+    if (d.items && d.items.length) return { title: d.items[0].snippet.title, id: d.items[0].id };
+  } catch (e) {}
+  return null;
+}
+// also read the signed-in Google email via userinfo (kid's account)
+async function kidAccountEmail() {
+  const tok = tokenOK();
+  if (!tok) return null;
+  try {
+    const r = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', { headers: { Authorization: 'Bearer ' + tok } });
+    const d = await r.json();
+    return d.email ? d.email.toLowerCase() : null;
+  } catch (e) { return null; }
+}
+
+document.getElementById('sendcodebtn').onclick = async () => {
+  const email = document.getElementById('parentSetupEmail').value.trim().toLowerCase();
+  const msg = document.getElementById('pinmsg');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.textContent = 'Enter a valid parent email.'; return; }
+
+  // FOOLPROOFING CHECK: parent email must NOT be the kid's own YouTube/Google account
+  const kidEmail = await kidAccountEmail();
+  if (kidEmail && kidEmail === email) {
+    msg.innerHTML = '🚫 That email is the one signed in to the kid\u0027s YouTube account. The parent email must be different from the child\u0027s account.';
+    return;
+  }
+
+  CONF_CODE = ('' + Math.floor(100000 + Math.random()*900000));
+  localStorage.setItem('nc_parent_email', email);
+  document.getElementById('codebox').style.display = 'block';
+  // DEMO: show the code on screen. In production this is emailed and never shown.
+  msg.innerHTML = '📧 (Demo) Your confirmation code is <b style="color:#00F0FF">' + CONF_CODE + '</b> — in the real product this is emailed to the parent, not shown here.';
+};
+
+document.getElementById('confcode').oninput = (e) => {
+  if (CONF_CODE && e.target.value === CONF_CODE) {
+    // code correct — reveal PIN + security question setup
+    document.getElementById('setuponly').style.display = 'none';
+    document.getElementById('pin').style.display = 'block';
+    document.getElementById('setuponly2').style.display = 'block';
+    document.getElementById('pinbtn').style.display = 'inline-block';
+    document.getElementById('pinbtn').textContent = 'Set up & unlock';
+    document.getElementById('pinmsg').innerHTML = '✅ Email confirmed. Now set your parent PIN and security question.';
+  }
+};
 
 document.getElementById('pinbtn').onclick = async () => {
   const v = document.getElementById('pin').value.trim();
@@ -158,8 +238,16 @@ document.getElementById('pinbtn').onclick = async () => {
   if (ls.until > Date.now()) { msg.textContent = '🔒 Too many wrong tries. Locked for ' + Math.ceil((ls.until - Date.now())/1000) + 's.'; return; }
   if (!/^\d{5}$/.test(v)) { msg.textContent = 'PIN must be exactly 5 digits.'; return; }
 
-  // first-time setup
+  // first-time setup — requires confirmed email code
   if (!isSetUp()) {
+    if (!CONF_CODE || document.getElementById('confcode').value !== CONF_CODE) {
+      msg.textContent = 'Please confirm the parent email code first.'; return;
+    }
+    const age = parseInt(document.getElementById('kidage').value, 10);
+    if (isNaN(age) || age < 13 || age > 18) {
+      msg.innerHTML = '⚠️ NovaClip is for ages 13–18. For younger children, verified parental consent (COPPA/GDPR-K) is required — see our roadmap.';
+      return;
+    }
     const q = document.getElementById('secq').value;
     const a = document.getElementById('seca').value.trim();
     if (!q) { msg.textContent = 'Please choose a security question.'; return; }
@@ -167,6 +255,7 @@ document.getElementById('pinbtn').onclick = async () => {
     localStorage.setItem('nc_parent_pin_h', await hashPin(v));
     localStorage.setItem('nc_secq', q);
     localStorage.setItem('nc_seca_h', await hashAns(a));
+    localStorage.setItem('nc_kid_age', String(age));
     localStorage.removeItem('nc_parent_pin');
     setLock({ fails: 0, until: 0 });
     msg.textContent = '';
@@ -228,7 +317,9 @@ const PLANS = [
   { id: 'dash', name: '👨‍👩‍👧 Family Dashboard', price: '€6.99/mo' },
   { id: 'tools', name: '🛠️ Kids\u0027 Tools', price: '€4.99/mo' },
   { id: 'bundle', name: '🎁 Family Bundle', price: '€9.99/mo' },
-  { id: 'cert', name: '📜 Certificate', price: '€24.99' }
+  { id: 'cert_basic', name: '📜 Basic Certificate', price: '€24.99' },
+  { id: 'cert_adv', name: '🥈 Advanced Certificate', price: '€49.99' },
+  { id: 'cert_master', name: '🏆 Master Certificate', price: '€99.99' }
 ];
 function renderPlans() {
   const active = localStorage.getItem('nc_plan') || '';
