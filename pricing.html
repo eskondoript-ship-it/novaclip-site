@@ -38,10 +38,21 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
   <h1>Plans & <span class='g'>Pricing</span></h1>
   <p class='sub'>The kid's core experience is free. Paid plans fund the platform — and every ad or offer lives on the <a href='parent.html'>parent dashboard</a>, never in front of the kids.</p>
 
+  <div style='margin-bottom:30px'>
+    <label style='font-size:0.85rem; color:#7E8AA6; margin-right:8px'>💱 Currency</label>
+    <select id='curpick' style='padding:9px 14px; border-radius:10px; background:#0A0C14; color:#EAF2FF; border:1px solid rgba(0,240,255,0.4); font-size:0.95rem;'>
+      <option value='eur'>€ Euro</option>
+      <option value='usd'>$ US Dollar</option>
+      <option value='gbp'>£ British Pound</option>
+      <option value='cny'>¥ Chinese Yuan</option>
+      <option value='chf'>CHF Swiss Franc</option>
+    </select>
+  </div>
+
   <div class='grid'>
     <div class='plan'>
       <h3>👨‍👩‍👧 Family Dashboard</h3>
-      <div class='price'>€7<small>/month</small></div>
+      <div class='price' data-eur='6.99' data-usd='7.99' data-gbp='5.99' data-cny='49.9' data-chf='6.90'><small class='per'>/month</small></div>
       <ul>
         <li>Parental controls & PIN access</li>
         <li>Activity overview of your kid's usage</li>
@@ -49,49 +60,88 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
         <li>One-tap report to YouTube's flow</li>
         <li>All ads shown to parents only</li>
       </ul>
-      <button class='cta' onclick="alert('Checkout coming soon — pitch build')">Start free trial</button>
+      <button class='cta' onclick="alert('Secure checkout opening soon')">Start free trial</button>
     </div>
 
     <div class='plan'>
       <h3>🛠️ Kids' Tools Upgrade</h3>
-      <div class='price'>€5<small>/month</small></div>
+      <div class='price' data-eur='4.99' data-usd='5.99' data-gbp='4.49' data-cny='39.9' data-chf='4.90'><small class='per'>/month</small></div>
       <ul>
         <li>Priority AI answers</li>
         <li>Longer editor exports</li>
         <li>Extra effects & transitions</li>
         <li>Exclusive game skins</li>
       </ul>
-      <button class='cta' onclick="alert('Checkout coming soon — pitch build')">Upgrade tools</button>
+      <button class='cta' onclick="alert('Secure checkout opening soon')">Upgrade tools</button>
     </div>
 
     <div class='plan best'>
       <span class='tag'>BEST VALUE</span>
       <h3>🎁 Family Bundle</h3>
-      <div class='price'>€10<small>/month</small></div>
+      <div class='price' data-eur='9.99' data-usd='10.99' data-gbp='8.99' data-cny='79.9' data-chf='9.90'><small class='per'>/month</small></div>
       <ul>
         <li>Family Dashboard included</li>
         <li>Kids' Tools Upgrade included</li>
-        <li>Save €2 every month</li>
+        <li id='saveline' data-eur='1.99' data-usd='2.99' data-gbp='1.49' data-cny='9.9' data-chf='1.90'>Save €1.99 every month</li>
         <li>Priority support</li>
       </ul>
-      <button class='cta' onclick="alert('Checkout coming soon — pitch build')">Get the bundle</button>
+      <button class='cta' onclick="alert('Secure checkout opening soon')">Get the bundle</button>
     </div>
 
     <div class='plan'>
       <h3>📜 Creator Certificate</h3>
-      <div class='price'>€25<small> one-time</small></div>
+      <div class='price' data-eur='24.99' data-usd='27.99' data-gbp='21.99' data-cny='199' data-chf='24.90'><small class='per'> one-time</small></div>
       <ul>
         <li>Basic NovaClip Creator Certificate</li>
         <li>Proof of completed creator training</li>
         <li>Shareable on socials & CVs</li>
         <li>Verified badge on your profile</li>
       </ul>
-      <button class='cta' onclick="alert('Checkout coming soon — pitch build')">Get certified</button>
+      <button class='cta' onclick="alert('Secure checkout opening soon')">Get certified</button>
     </div>
   </div>
 
-  <p class='note'>Startup World Cup 2027 pitch build: payments are not yet live — plans shown model the business: parents fund the platform (€7 dashboard / €5 tools / €10 bundle / €25 certificate) so kids' tools stay ad-free and safe.</p>
 </div>
+<script>
+const CUR = {
+  eur: { sym: '€', pre: true },
+  usd: { sym: '$', pre: true },
+  gbp: { sym: '£', pre: true },
+  cny: { sym: '¥', pre: true },
+  chf: { sym: 'CHF ', pre: true }
+};
+function fmt(cur, val) {
+  const c = CUR[cur];
+  // CNY shows no decimals when whole-ish, others keep 2
+  let n = (cur === 'cny') ? (Number(val) % 1 === 0 ? val : Number(val).toFixed(1)) : Number(val).toFixed(2);
+  return c.sym + n;
+}
+function guessCurrency() {
+  const saved = localStorage.getItem('nc_currency');
+  if (saved) return saved;
+  const loc = (navigator.language || 'en').toLowerCase();
+  if (loc.includes('gb') || loc.includes('en-gb')) return 'gbp';
+  if (loc.endsWith('-us') || loc === 'en') return 'usd';
+  if (loc.startsWith('zh')) return 'cny';
+  if (loc.includes('ch') || loc.includes('de-ch') || loc.includes('fr-ch')) return 'chf';
+  return 'eur';
+}
+function renderPrices(cur) {
+  localStorage.setItem('nc_currency', cur);
+  document.querySelectorAll('.price').forEach(p => {
+    const val = p.dataset[cur];
+    const per = p.querySelector('.per');
+    const perTxt = per ? per.outerHTML : '';
+    p.innerHTML = fmt(cur, val) + perTxt;
+  });
+  const sv = document.getElementById('saveline');
+  if (sv) sv.textContent = 'Save ' + fmt(cur, sv.dataset[cur]) + ' every month';
+  document.getElementById('curpick').value = cur;
+}
+const startCur = guessCurrency();
+renderPrices(startCur);
+document.getElementById('curpick').onchange = (e) => renderPrices(e.target.value);
+</script>
 <script src='nova.js'></script>
 </body>
 </html>
