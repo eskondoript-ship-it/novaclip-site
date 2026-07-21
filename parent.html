@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip — Family Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: #05060A; color: #EAF2FF; min-height: 100vh; }
+a { color: #00F0FF; text-decoration: none; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+h1 { font-size: 2rem; font-weight: 800; letter-spacing: -1px; }
+h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sub { color: #7E8AA6; margin: 8px 0 26px; line-height: 1.6; }
+.card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; padding: 22px; margin-bottom: 16px; animation: up .6s both; }
+.card h3 { margin-bottom: 10px; font-size: 1.05rem; }
+.card h3 small { color: #7E8AA6; font-weight: 400; font-size: 0.8rem; display: block; }
+@keyframes up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+input[type=password], input[type=text], input[type=email] { padding: 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.05); color: #EAF2FF; width: 100%; margin-bottom: 10px; }
+.btn { padding: 12px 26px; border-radius: 30px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(90deg,#00F0FF,#4CC9F0); color: #04121a; transition: .25s; }
+.btn:hover { box-shadow: 0 0 26px rgba(0,240,255,0.5); transform: translateY(-2px); }
+.btn.pink { background: linear-gradient(90deg,#FF2E97,#7209B7); color: white; }
+.stat { display: inline-block; margin: 6px 18px 6px 0; }
+.stat b { font-size: 1.7rem; color: #B6FF3C; display: block; }
+.stat span { color: #7E8AA6; font-size: 0.82rem; }
+.log { font-size: 0.88rem; line-height: 1.9; color: #b8bccb; max-height: 220px; overflow-y: auto; }
+.flag { border: 1px solid rgba(255,46,151,0.5); background: rgba(255,46,151,0.08); border-radius: 10px; padding: 10px 14px; margin: 8px 0; font-size: 0.88rem; }
+.flag .who { color: #FF2E97; font-weight: 700; }
+.flag .actions { margin-top: 6px; }
+.flag .actions a { margin-right: 14px; font-size: 0.82rem; }
+.ok { color: #B6FF3C; }
+.notice { border-left: 3px solid #00F0FF; padding: 10px 14px; background: rgba(0,240,255,0.05); font-size: 0.85rem; color: #b8bccb; border-radius: 0 10px 10px 0; margin-top: 10px; line-height: 1.6; }
+#dash { display: none; }
+.backlnk { display: inline-block; margin-bottom: 18px; color: #7E8AA6; }
+</style>
+</head>
+<body>
+<div class='wrap'>
+  <a class='backlnk' href='index.html'>← Back to NovaClip</a>
+  <h1>👨‍👩‍👧 <span class='g'>Family Dashboard</span></h1>
+  <p class='sub'>Parental controls for NovaClip. See what your kid is working on, get alerts if harassment shows up in their YouTube comments, and keep ads away from them — ads and offers only ever appear here, on the parent side, never in the kid's tools.</p>
+
+  <!-- PIN GATE -->
+  <div class='card' id='gate'>
+    <h3>🔒 Parent access <small>Set a PIN the first time; you'll need it every visit. The kid's pages never show this dashboard.</small></h3>
+    <input type='password' id='pin' placeholder='4-digit PIN' maxlength='8'>
+    <button class='btn' id='pinbtn'>Unlock</button>
+    <div class='notice' id='pinmsg'></div>
+  </div>
+
+  <div id='dash'>
+    <!-- ACTIVITY -->
+    <div class='card'>
+      <h3>📊 Activity overview <small>Live from this device's NovaClip usage.</small></h3>
+      <div class='stat'><b id='s_pts'>0</b><span>points earned</span></div>
+      <div class='stat'><b id='s_chats'>0</b><span>AI chats</span></div>
+      <div class='stat'><b id='s_scans'>0</b><span>trend scans</span></div>
+      <div class='stat'><b id='s_unlocks'>0</b><span>rewards unlocked</span></div>
+      <h3 style='margin-top:14px'>Recent AI activity</h3>
+      <div class='log' id='actlog'>—</div>
+    </div>
+
+    <!-- HARASSMENT SCANNER -->
+    <div class='card'>
+      <h3>🛡️ Comment safety scanner <small>Scans the newest comments on your kid's uploads for harassment or bullying. Uses the YouTube connection made in Studio.</small></h3>
+      <input type='email' id='parentEmail' placeholder='Parent alert email (used for the report draft)'>
+      <button class='btn pink' id='scanBtn'>🔍 Scan latest comments</button>
+      <div id='scanout' style='margin-top:12px'></div>
+      <div class='notice'>How reporting works: flagged comments appear here instantly for the parent. "Report to YouTube" opens YouTube's official reporting flow for that exact comment (YouTube doesn't allow apps to file reports directly — a human must confirm). "Email me this" opens a pre-written alert to your email so there's a record.</div>
+    </div>
+
+    <!-- ADS -->
+    <div class='card'>
+      <h3>📢 Ads & offers <small>This is the only place ads exist in NovaClip.</small></h3>
+      <p style='color:#b8bccb; font-size:0.9rem; line-height:1.7'>NovaClip never shows advertising inside the kid's tools, games, or editor. Sponsored offers and plan upgrades appear only on this parent dashboard. See <a href='pricing.html'>Plans & Pricing</a> for the Family Dashboard subscription, kids' tool upgrades, and certificates.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// PIN gate (stored locally)
+const gate = document.getElementById('gate'), dash = document.getElementById('dash');
+document.getElementById('pinbtn').onclick = () => {
+  const v = document.getElementById('pin').value.trim();
+  const saved = localStorage.getItem('nc_parent_pin');
+  const msg = document.getElementById('pinmsg');
+  if (!v || v.length < 4) { msg.textContent = 'PIN must be at least 4 digits.'; return; }
+  if (!saved) { localStorage.setItem('nc_parent_pin', v); msg.textContent = ''; unlock(); }
+  else if (saved === v) { unlock(); }
+  else { msg.textContent = '❌ Wrong PIN.'; }
+};
+function unlock() {
+  gate.style.display = 'none'; dash.style.display = 'block';
+  document.getElementById('s_pts').textContent = localStorage.getItem('nc_points') || '0';
+  const hist = JSON.parse(localStorage.getItem('nc_history') || '{}');
+  let chats = 0, lines = [];
+  for (const s in hist) { chats += hist[s].length; hist[s].slice(-4).forEach(x => lines.push('<b>' + s.replace(/</g,'&lt;') + ':</b> ' + x[0].replace(/</g,'&lt;'))); }
+  document.getElementById('s_chats').textContent = chats;
+  document.getElementById('s_scans').textContent = (JSON.parse(localStorage.getItem('nc_recent_scans') || '[]')).length;
+  document.getElementById('s_unlocks').textContent = (JSON.parse(localStorage.getItem('nc_unlocked') || '[]')).length;
+  document.getElementById('actlog').innerHTML = lines.length ? lines.join('<br>') : 'No AI chats yet on this device.';
+}
+
+// Harassment scanner — uses the YouTube token saved by Studio (nc_yt)
+const BAD = ['hate you','kill yourself','kys','ugly','stupid','idiot','loser','trash','garbage','nobody likes','die','fat','dumb','worst','cringe af','shut up','freak','pathetic','worthless','go away'];
+function tokenOK() { try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {} return null; }
+async function yt(url, tok) { const r = await fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + tok } }); return r.json(); }
+
+document.getElementById('scanBtn').onclick = async () => {
+  const out = document.getElementById('scanout');
+  const tok = tokenOK();
+  if (!tok) { out.innerHTML = '<div class="flag">⚠ No active YouTube connection. Ask your kid to open <a href="app.html">Studio</a> and connect YouTube first (the connection stays active about an hour).</div>'; return; }
+  out.innerHTML = 'Scanning…';
+  try {
+    const ch = await yt('channels?part=contentDetails,snippet&mine=true', tok);
+    if (!ch.items || !ch.items.length) { out.innerHTML = 'Could not read the channel.'; return; }
+    const uploads = ch.items[0].contentDetails.relatedPlaylists.uploads;
+    const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=5', tok);
+    if (!pl.items || !pl.items.length) { out.innerHTML = '<span class="ok">No uploads found — nothing to scan.</span>'; return; }
+    let flags = [], checked = 0;
+    for (const it of pl.items) {
+      const vid = it.contentDetails.videoId;
+      const cm = await yt('commentThreads?part=snippet&videoId=' + vid + '&maxResults=25&order=time', tok).catch(() => null);
+      if (!cm || !cm.items) continue;
+      cm.items.forEach(c => {
+        checked++;
+        const s = c.snippet.topLevelComment.snippet;
+        const txt = (s.textDisplay || '').toLowerCase().replace(/<[^>]+>/g, '');
+        if (BAD.some(w => txt.includes(w))) {
+          flags.push({ author: s.authorDisplayName, text: s.textDisplay.replace(/<[^>]+>/g, '').slice(0, 160), vid, cid: c.id });
+        }
+      });
+    }
+    if (!flags.length) { out.innerHTML = '<span class="ok">✅ Scanned ' + checked + ' recent comments — nothing harmful found.</span>'; return; }
+    const email = document.getElementById('parentEmail').value || '';
+    out.innerHTML = '<b style="color:#FF2E97">⚠ ' + flags.length + ' flagged comment(s) of ' + checked + ' scanned:</b>' + flags.map(f => {
+      const mailto = 'mailto:' + email + '?subject=' + encodeURIComponent('NovaClip alert: harmful comment on your kid\u0027s video') + '&body=' + encodeURIComponent('Flagged comment by ' + f.author + ':\n\n"' + f.text + '"\n\nVideo: https://www.youtube.com/watch?v=' + f.vid);
+      return '<div class="flag"><span class="who">' + f.author.replace(/</g,'&lt;') + ':</span> ' + f.text.replace(/</g,'&lt;') +
+        '<div class="actions"><a target="_blank" href="https://www.youtube.com/watch?v=' + f.vid + '&lc=' + f.cid + '">🚩 Report to YouTube</a>' +
+        '<a href="' + mailto + '">📧 Email me this</a></div></div>';
+    }).join('');
+  } catch (e) {
+    out.innerHTML = '<div class="flag">Scan failed — the YouTube connection may have expired. Reconnect in <a href="app.html">Studio</a>.</div>';
+  }
+};
+</script>
+</body>
+</html>
