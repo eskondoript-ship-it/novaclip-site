@@ -48,8 +48,8 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
   <a href='index.html' data-t='home'>🏠 Home</a>
   <a href='app.html' data-t='studio'>📈 Studio</a>
   <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
-  <a href='editor.html'>🎬 Editor</a>
-  <a href='game.html'>🎯 Sniper</a>
+  <a href='editor.html' data-t='editor'>🎬 Editor</a>
+  <a href='game.html' data-t='sniper'>🎯 Sniper</a>
   <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
   <div class='themewrap'>
     <label data-t='background'>Background</label>
@@ -111,13 +111,31 @@ const auth = getAuth(app);
 let ytToken = null, myStats = null;
 const charts = {};
 
-onAuthStateChanged(auth, (user) => {
+// --- persistent YouTube session: token cached ~50 min, auto-restore ---
+function saveToken(tok) { ytToken = tok; localStorage.setItem('nc_yt', JSON.stringify({ t: tok, exp: Date.now() + 50*60*1000 })); }
+function loadToken() { try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {} return null; }
+function signedInUI(name) {
+  document.getElementById('gbtn').style.display = 'none';
+  const p = document.getElementById('uname');
+  p.style.display = 'block';
+  p.innerHTML = '👤 ' + name + ' &nbsp; <a href="#" id="signoutlink" style="color:#7E8AA6;font-size:0.85rem;" data-t="signout">Sign out</a>';
+  document.getElementById('toolbar').style.display = 'block';
+  const so = document.getElementById('signoutlink');
+  if (so) so.onclick = (e) => { e.preventDefault(); localStorage.removeItem('nc_yt'); auth.signOut().then(() => location.reload()); };
+}
+
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const p = document.getElementById('uname');
-    p.style.display = 'block';
-    p.textContent = '👤 ' + user.displayName + ' (tap a tool to load your channel)';
-    document.getElementById('gbtn').textContent = '🔄 Reconnect YouTube';
-    document.getElementById('toolbar').style.display = 'block';
+    signedInUI(user.displayName);
+    const cached = loadToken();
+    if (cached) {
+      ytToken = cached;
+      try {
+        const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
+        if (data.items && data.items.length) { myStats = data.items[0]; }
+        else { ytToken = null; localStorage.removeItem('nc_yt'); }
+      } catch (e) { ytToken = null; }
+    }
   }
 });
 
@@ -128,18 +146,23 @@ async function connect() {
   const provider = new GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
   const result = await signInWithPopup(auth, provider);
-  ytToken = GoogleAuthProvider.credentialFromResult(result).accessToken;
+  saveToken(GoogleAuthProvider.credentialFromResult(result).accessToken);
   const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
   if (data.items && data.items.length) {
     myStats = data.items[0];
-    document.getElementById('gbtn').style.display = 'none';
-    const p = document.getElementById('uname');
-    p.style.display = 'block'; p.textContent = '👤 ' + myStats.snippet.title;
-    document.getElementById('toolbar').style.display = 'block';
+    signedInUI(myStats.snippet.title);
   }
 }
 document.getElementById('gbtn').onclick = connect;
-async function ensureToken() { if (!ytToken || !myStats) await connect(); }
+async function ensureToken() {
+  if (ytToken && myStats) return;
+  const cached = loadToken();
+  if (cached && !ytToken) {
+    ytToken = cached;
+    try { const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true'); if (d.items && d.items.length) { myStats = d.items[0]; return; } } catch (e) {}
+  }
+  await connect();
+}
 
 async function recentEngagement(channel) {
   const uploads = channel.contentDetails && channel.contentDetails.relatedPlaylists && channel.contentDetails.relatedPlaylists.uploads;
@@ -154,10 +177,15 @@ async function recentEngagement(channel) {
 }
 
 async function getTwoCompetitors() {
-  const q = encodeURIComponent(myStats.snippet.title.split(' ')[0]);
-  const sd = await yt('search?part=snippet&type=channel&maxResults=15&q=' + q);
-  const ids = sd.items.map(i => i.snippet.channelId).filter(id => id !== myStats.id).slice(0, 10).join(',');
-  const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + ids);
+  // wide pool from several searches — matched by CLOSEST SUBS, names don't matter
+  const seeds = [myStats.snippet.title.split(' ')[0], 'gaming channel', 'vlog channel', 'music channel'];
+  let ids = new Set();
+  for (const q of seeds) {
+    const sd = await yt('search?part=snippet&type=channel&maxResults=10&q=' + encodeURIComponent(q)).catch(() => null);
+    if (sd && sd.items) sd.items.forEach(i => { if (i.snippet.channelId !== myStats.id) ids.add(i.snippet.channelId); });
+    if (ids.size >= 25) break;
+  }
+  const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + [...ids].slice(0, 40).join(','));
   const mySubs = parseInt(myStats.statistics.subscriberCount);
   return cd.items.map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, 2).map(x => x.ch);
 }
@@ -204,7 +232,17 @@ document.getElementById('compbtn').onclick = async () => {
   await ensureToken();
   show('Scouting your rivals...');
   const comps = await getTwoCompetitors();
-  show('<b>🥊 Your 2 closest competitors:</b><br>' + comps.map((c, i) => (i + 1) + '. ' + c.snippet.title + ' — ' + parseInt(c.statistics.subscriberCount || 0).toLocaleString() + ' subs').join('<br>'));
+  show('<b>🥊 Your 2 closest competitors (by subscriber count):</b><br><br>' + comps.map((c, i) => {
+    const s = c.statistics;
+    const subs = parseInt(s.subscriberCount || 0), views = parseInt(s.viewCount || 0), vids = parseInt(s.videoCount || 1);
+    const avg = Math.round(views / Math.max(vids, 1));
+    return '<div style="border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 14px; margin-bottom:10px;">' +
+      '<b>' + (i + 1) + '. ' + c.snippet.title + '</b>' + (c.snippet.country ? ' · ' + c.snippet.country : '') + '<br>' +
+      '👥 ' + subs.toLocaleString() + ' subs · 👁️ ' + views.toLocaleString() + ' total views<br>' +
+      '🎬 ' + vids.toLocaleString() + ' videos · 📊 ~' + avg.toLocaleString() + ' views per video<br>' +
+      '📝 ' + (c.snippet.description ? c.snippet.description.slice(0, 90).replace(/</g, '&lt;') + '…' : 'No description') + '<br>' +
+      '<a target="_blank" style="color:#00F0FF" href="https://www.youtube.com/channel/' + c.id + '">Open channel ↗</a></div>';
+  }).join(''));
 };
 
 document.getElementById('duelbtn').onclick = () => { const d = document.getElementById('duelsetup'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; };
