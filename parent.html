@@ -42,10 +42,31 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 
   <!-- PIN GATE -->
   <div class='card' id='gate'>
-    <h3>🔒 Parent access <small>Set a PIN the first time; you'll need it every visit. The kid's pages never show this dashboard.</small></h3>
-    <input type='password' id='pin' placeholder='4-digit PIN' maxlength='8'>
+    <h3>🔒 Parent access <small>First time: set a 5-digit PIN and a security question. You'll need the PIN every visit; the question recovers access if you forget it. The kid's pages never show this dashboard.</small></h3>
+    <div id='setupfields'>
+      <input type='password' id='pin' placeholder='5-digit PIN' maxlength='5' inputmode='numeric'>
+      <div id='setuponly'>
+        <select id='secq' style='width:100%; padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:#0A0C14; color:#EAF2FF; margin-bottom:12px; font-size:1rem;'>
+          <option value=''>Choose a security question…</option>
+          <option>What was the name of your first pet?</option>
+          <option>What city were you born in?</option>
+          <option>What is your mother's maiden name?</option>
+          <option>What was your first school's name?</option>
+          <option>What is your favorite book?</option>
+        </select>
+        <input type='text' id='seca' placeholder='Answer to your security question'>
+      </div>
+    </div>
     <button class='btn' id='pinbtn'>Unlock</button>
+    <button class='btn' id='forgotbtn' style='background:transparent; border:1px solid rgba(255,255,255,0.2); color:#7E8AA6; margin-left:8px; display:none;'>Forgot PIN?</button>
     <div class='notice' id='pinmsg'></div>
+
+    <div id='recoverbox' style='display:none; margin-top:14px;'>
+      <div id='secqlabel' style='color:#00F0FF; font-weight:700; margin-bottom:8px;'></div>
+      <input type='text' id='recanswer' placeholder='Your answer'>
+      <input type='password' id='newpin' placeholder='New 5-digit PIN' maxlength='5' inputmode='numeric'>
+      <button class='btn' id='resetbtn'>Reset PIN</button>
+    </div>
   </div>
 
   <div id='dash'>
@@ -72,7 +93,33 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
     <!-- ADS -->
     <div class='card'>
       <h3>📢 Ads & offers <small>This is the only place ads exist in NovaClip.</small></h3>
-      <p style='color:#b8bccb; font-size:0.9rem; line-height:1.7'>NovaClip never shows advertising inside the kid's tools, games, or editor. Sponsored offers and plan upgrades appear only on this parent dashboard. See <a href='pricing.html'>Plans & Pricing</a> for the Family Dashboard subscription, kids' tool upgrades, and certificates.</p>
+      <p style='color:#b8bccb; font-size:0.95rem; line-height:1.7'>NovaClip never shows advertising inside the kid's tools, games, or editor. Sponsored offers and plan upgrades appear only on this parent dashboard.</p>
+    </div>
+
+    <!-- BILLING / PLANS (PIN-protected because it lives inside the dashboard) -->
+    <div class='card'>
+      <h3>💳 Plans & billing <small>Manage your NovaClip subscription. Everything here sits behind your parent PIN.</small></h3>
+      <div id='planpick' style='display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:16px;'></div>
+
+      <h3 style='margin-top:10px'>Saved card</h3>
+      <div id='savedcard' style='display:none; background:linear-gradient(135deg,#12203a,#1a1030); border:1px solid rgba(0,240,255,0.3); border-radius:14px; padding:16px 18px; margin-bottom:12px;'>
+        <div style='font-family:monospace; letter-spacing:2px; font-size:1.1rem;' id='cardnum'>•••• •••• •••• ••••</div>
+        <div style='display:flex; justify-content:space-between; margin-top:8px; font-size:0.85rem; color:#b8bccb;'><span id='cardname'>—</span><span id='cardexp'>—</span></div>
+        <button class='btn' style='margin-top:12px; background:transparent; border:1px solid rgba(255,46,151,0.5); color:#FF2E97;' id='removecard'>Remove card</button>
+      </div>
+      <div id='cardform'>
+        <input type='text' id='ccname' placeholder='Name on card'>
+        <input type='text' id='ccnum' placeholder='Card number' inputmode='numeric' maxlength='19'>
+        <div style='display:flex; gap:10px;'>
+          <input type='text' id='ccexp' placeholder='MM/YY' maxlength='5' style='flex:1'>
+          <input type='text' id='cccvc' placeholder='CVC' maxlength='4' inputmode='numeric' style='flex:1'>
+        </div>
+        <label style='display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#b8bccb; margin:6px 0 12px;'>
+          <input type='checkbox' id='savecard' style='accent-color:#00F0FF;'> Save this card for next time
+        </label>
+        <button class='btn' id='savecardbtn'>Save payment method</button>
+      </div>
+      <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06);'>⚠️ Pitch build — do not enter a real card. This demonstrates the billing flow only. In production, card data would go straight to a certified payment processor (Stripe/Adyen) and never touch NovaClip's servers — we'd store only a token, never the real number.</div>
     </div>
   </div>
 </div>
@@ -80,56 +127,86 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 <script>
 // PIN gate (stored locally)
 const gate = document.getElementById('gate'), dash = document.getElementById('dash');
-// --- hardened PIN: hashed storage + lockout after 3 wrong tries ---
+// --- hardened PIN: 5 digits, hashed storage, lockout, security-question recovery ---
 async function hashPin(v) {
   const data = new TextEncoder().encode('novaclip-salt-v1:' + v);
   const buf = await crypto.subtle.digest('SHA-256', data);
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
-function lockState() { try { return JSON.parse(localStorage.getItem('nc_pin_lock') || '{"fails":0,"until":0}'); } catch (e) { return { fails: 0, until: 0 }; }
+async function hashAns(v) {
+  const data = new TextEncoder().encode('novaclip-ans-v1:' + v.trim().toLowerCase());
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
+function lockState() { try { return JSON.parse(localStorage.getItem('nc_pin_lock') || '{"fails":0,"until":0}'); } catch (e) { return { fails: 0, until: 0 }; } }
 function setLock(s) { localStorage.setItem('nc_pin_lock', JSON.stringify(s)); }
+function isSetUp() { return !!localStorage.getItem('nc_parent_pin_h'); }
+
+// on load, adjust UI for setup vs returning
+window.addEventListener('DOMContentLoaded', () => {
+  const setUp = isSetUp();
+  document.getElementById('setuponly').style.display = setUp ? 'none' : 'block';
+  document.getElementById('pinbtn').textContent = setUp ? 'Unlock' : 'Set up & unlock';
+  document.getElementById('forgotbtn').style.display = setUp ? 'inline-block' : 'none';
+  // clean up any legacy 4-digit hash format note
+});
 
 document.getElementById('pinbtn').onclick = async () => {
   const v = document.getElementById('pin').value.trim();
   const msg = document.getElementById('pinmsg');
   const ls = lockState();
+  if (ls.until > Date.now()) { msg.textContent = '🔒 Too many wrong tries. Locked for ' + Math.ceil((ls.until - Date.now())/1000) + 's.'; return; }
+  if (!/^\d{5}$/.test(v)) { msg.textContent = 'PIN must be exactly 5 digits.'; return; }
 
-  // locked out?
-  if (ls.until > Date.now()) {
-    const secs = Math.ceil((ls.until - Date.now()) / 1000);
-    msg.textContent = '🔒 Too many wrong tries. Locked for ' + secs + 's.';
-    return;
-  }
-  if (!v || v.length < 4) { msg.textContent = 'PIN must be at least 4 digits.'; return; }
-
-  const savedHash = localStorage.getItem('nc_parent_pin_h');
-  const tryHash = await hashPin(v);
-
-  // first-time setup — store only the hash, never the PIN itself
-  if (!savedHash) {
-    localStorage.setItem('nc_parent_pin_h', tryHash);
-    localStorage.removeItem('nc_parent_pin'); // clean up any old plain PIN
+  // first-time setup
+  if (!isSetUp()) {
+    const q = document.getElementById('secq').value;
+    const a = document.getElementById('seca').value.trim();
+    if (!q) { msg.textContent = 'Please choose a security question.'; return; }
+    if (a.length < 2) { msg.textContent = 'Please answer your security question.'; return; }
+    localStorage.setItem('nc_parent_pin_h', await hashPin(v));
+    localStorage.setItem('nc_secq', q);
+    localStorage.setItem('nc_seca_h', await hashAns(a));
+    localStorage.removeItem('nc_parent_pin');
     setLock({ fails: 0, until: 0 });
     msg.textContent = '';
     unlock();
     return;
   }
 
-  if (savedHash === tryHash) {
-    setLock({ fails: 0, until: 0 });
-    msg.textContent = '';
-    unlock();
+  // returning user
+  if (localStorage.getItem('nc_parent_pin_h') === await hashPin(v)) {
+    setLock({ fails: 0, until: 0 }); msg.textContent = ''; unlock();
   } else {
     const fails = ls.fails + 1;
-    if (fails >= 3) {
-      setLock({ fails: 0, until: Date.now() + 30000 }); // 30s lockout
-      msg.textContent = '🔒 3 wrong tries — locked for 30 seconds.';
-    } else {
-      setLock({ fails, until: 0 });
-      msg.textContent = '❌ Wrong PIN. ' + (3 - fails) + ' tries left.';
-    }
+    if (fails >= 3) { setLock({ fails: 0, until: Date.now() + 30000 }); msg.textContent = '🔒 3 wrong tries — locked for 30 seconds. Or use "Forgot PIN?"'; }
+    else { setLock({ fails, until: 0 }); msg.textContent = '❌ Wrong PIN. ' + (3 - fails) + ' tries left.'; }
     document.getElementById('pin').value = '';
+  }
+};
+
+// forgot -> show security question
+document.getElementById('forgotbtn').onclick = () => {
+  const q = localStorage.getItem('nc_secq');
+  if (!q) { document.getElementById('pinmsg').textContent = 'No security question on file.'; return; }
+  document.getElementById('recoverbox').style.display = 'block';
+  document.getElementById('secqlabel').textContent = '🔑 ' + q;
+};
+
+// reset via security answer
+document.getElementById('resetbtn').onclick = async () => {
+  const ans = document.getElementById('recanswer').value;
+  const np = document.getElementById('newpin').value.trim();
+  const msg = document.getElementById('pinmsg');
+  if (!/^\d{5}$/.test(np)) { msg.textContent = 'New PIN must be exactly 5 digits.'; return; }
+  if (await hashAns(ans) === localStorage.getItem('nc_seca_h')) {
+    localStorage.setItem('nc_parent_pin_h', await hashPin(np));
+    setLock({ fails: 0, until: 0 });
+    document.getElementById('recoverbox').style.display = 'none';
+    msg.textContent = '✅ PIN reset. Unlocking…';
+    setTimeout(unlock, 600);
+  } else {
+    msg.textContent = '❌ Security answer is incorrect.';
   }
 };
 function unlock() {
@@ -142,7 +219,58 @@ function unlock() {
   document.getElementById('s_scans').textContent = (JSON.parse(localStorage.getItem('nc_recent_scans') || '[]')).length;
   document.getElementById('s_unlocks').textContent = (JSON.parse(localStorage.getItem('nc_unlocked') || '[]')).length;
   document.getElementById('actlog').innerHTML = lines.length ? lines.join('<br>') : 'No AI chats yet on this device.';
+  renderPlans();
+  renderSavedCard();
 }
+
+// --- Plans & billing (inside PIN-gated dashboard) ---
+const PLANS = [
+  { id: 'dash', name: '👨‍👩‍👧 Family Dashboard', price: '€6.99/mo' },
+  { id: 'tools', name: '🛠️ Kids\u0027 Tools', price: '€4.99/mo' },
+  { id: 'bundle', name: '🎁 Family Bundle', price: '€9.99/mo' },
+  { id: 'cert', name: '📜 Certificate', price: '€24.99' }
+];
+function renderPlans() {
+  const active = localStorage.getItem('nc_plan') || '';
+  document.getElementById('planpick').innerHTML = PLANS.map(p =>
+    '<div style="border:1px solid ' + (active===p.id?'#00F0FF':'rgba(255,255,255,0.12)') + '; border-radius:12px; padding:12px; text-align:center;">' +
+    '<div style="font-weight:700; font-size:0.9rem;">' + p.name + '</div>' +
+    '<div style="color:#B6FF3C; margin:6px 0; font-weight:800;">' + p.price + '</div>' +
+    '<button class="btn" style="width:100%; font-size:0.8rem; padding:8px;" onclick="choosePlan(\'' + p.id + '\')">' + (active===p.id?'✓ Active':'Choose') + '</button></div>'
+  ).join('');
+}
+window.choosePlan = function(id) {
+  if (!localStorage.getItem('nc_card')) { alert('Add a payment method below first.'); return; }
+  localStorage.setItem('nc_plan', id); renderPlans();
+  alert('Plan selected (pitch build — no real charge).');
+};
+
+function renderSavedCard() {
+  const card = JSON.parse(localStorage.getItem('nc_card') || 'null');
+  document.getElementById('savedcard').style.display = card ? 'block' : 'none';
+  document.getElementById('cardform').style.display = card ? 'none' : 'block';
+  if (card) {
+    document.getElementById('cardnum').textContent = '•••• •••• •••• ' + card.last4;
+    document.getElementById('cardname').textContent = card.name;
+    document.getElementById('cardexp').textContent = card.exp;
+  }
+}
+document.getElementById('savecardbtn').onclick = () => {
+  const num = document.getElementById('ccnum').value.replace(/\s/g, '');
+  const name = document.getElementById('ccname').value.trim();
+  const exp = document.getElementById('ccexp').value.trim();
+  const cvc = document.getElementById('cccvc').value.trim();
+  if (name.length < 2 || num.length < 12 || !/^\d\d\/\d\d$/.test(exp) || cvc.length < 3) { alert('Please fill all card fields (MM/YY format).'); return; }
+  if (document.getElementById('savecard').checked) {
+    // pitch build: store ONLY last 4 + name + expiry — never full number or CVC
+    localStorage.setItem('nc_card', JSON.stringify({ last4: num.slice(-4), name, exp }));
+    renderSavedCard();
+    alert('Card saved for next time (only the last 4 digits are kept on this device).');
+  } else {
+    alert('Payment method entered for this session (not saved).');
+  }
+};
+document.getElementById('removecard').onclick = () => { localStorage.removeItem('nc_card'); localStorage.removeItem('nc_plan'); renderSavedCard(); renderPlans(); };
 
 // Harassment scanner — uses the YouTube token saved by Studio (nc_yt)
 const BAD = ['hate you','kill yourself','kys','ugly','stupid','idiot','loser','trash','garbage','nobody likes','die','fat','dumb','worst','cringe af','shut up','freak','pathetic','worthless','go away'];
