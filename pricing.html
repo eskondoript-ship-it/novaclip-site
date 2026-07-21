@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip — Plans & Pricing</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: #05060A; color: #EAF2FF; min-height: 100vh; }
+a { color: #00F0FF; text-decoration: none; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 46px 20px; text-align: center; }
+h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; letter-spacing: -2px; }
+h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sub { color: #7E8AA6; margin: 12px auto 40px; max-width: 560px; line-height: 1.7; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.plan { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 26px 20px; text-align: left; position: relative; transition: .3s; animation: up .6s both; }
+.plan:nth-child(2) { animation-delay: .1s; } .plan:nth-child(3) { animation-delay: .2s; } .plan:nth-child(4) { animation-delay: .3s; }
+@keyframes up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+.plan:hover { transform: translateY(-6px); border-color: rgba(0,240,255,0.5); box-shadow: 0 20px 50px rgba(0,240,255,0.12); }
+.plan.best { border-color: #FF2E97; box-shadow: 0 0 40px rgba(255,46,151,0.2); }
+.plan .tag { position: absolute; top: -11px; right: 14px; background: linear-gradient(90deg,#FF2E97,#7209B7); font-size: 0.7rem; font-weight: 800; padding: 4px 12px; border-radius: 12px; }
+.plan h3 { font-size: 1.05rem; margin-bottom: 4px; }
+.price { font-size: 2.2rem; font-weight: 800; margin: 8px 0 2px; }
+.price small { font-size: 0.85rem; color: #7E8AA6; font-weight: 400; }
+.plan ul { list-style: none; margin: 14px 0 18px; }
+.plan li { font-size: 0.88rem; color: #b8bccb; padding: 5px 0; line-height: 1.5; }
+.plan li::before { content: '✓ '; color: #B6FF3C; font-weight: 800; }
+.cta { width: 100%; padding: 12px; border-radius: 30px; border: none; font-weight: 800; cursor: pointer; background: rgba(255,255,255,0.08); color: #EAF2FF; border: 1px solid rgba(255,255,255,0.2); transition: .25s; }
+.plan.best .cta { background: linear-gradient(90deg,#FF2E97,#7209B7); border: none; }
+.cta:hover { transform: translateY(-2px); box-shadow: 0 0 24px rgba(0,240,255,0.35); }
+.note { margin-top: 30px; color: #7E8AA6; font-size: 0.85rem; max-width: 620px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+.backlnk { display: inline-block; margin-bottom: 18px; color: #7E8AA6; }
+</style>
+</head>
+<body>
+<div class='wrap'>
+  <a class='backlnk' href='index.html'>← Back to NovaClip</a>
+  <h1>Plans & <span class='g'>Pricing</span></h1>
+  <p class='sub'>The kid's core experience is free. Paid plans fund the platform — and every ad or offer lives on the <a href='parent.html'>parent dashboard</a>, never in front of the kids.</p>
+
+  <div class='grid'>
+    <div class='plan'>
+      <h3>👨‍👩‍👧 Family Dashboard</h3>
+      <div class='price'>€7<small>/month</small></div>
+      <ul>
+        <li>Parental controls & PIN access</li>
+        <li>Activity overview of your kid's usage</li>
+        <li>Harassment comment scanner + instant alerts</li>
+        <li>One-tap report to YouTube's flow</li>
+        <li>All ads shown to parents only</li>
+      </ul>
+      <button class='cta' onclick="alert('Checkout coming soon — pitch build')">Start free trial</button>
+    </div>
+
+    <div class='plan'>
+      <h3>🛠️ Kids' Tools Upgrade</h3>
+      <div class='price'>€5<small>/month</small></div>
+      <ul>
+        <li>Priority AI answers</li>
+        <li>Longer editor exports</li>
+        <li>Extra effects & transitions</li>
+        <li>Exclusive game skins</li>
+      </ul>
+      <button class='cta' onclick="alert('Checkout coming soon — pitch build')">Upgrade tools</button>
+    </div>
+
+    <div class='plan best'>
+      <span class='tag'>BEST VALUE</span>
+      <h3>🎁 Family Bundle</h3>
+      <div class='price'>€10<small>/month</small></div>
+      <ul>
+        <li>Family Dashboard included</li>
+        <li>Kids' Tools Upgrade included</li>
+        <li>Save €2 every month</li>
+        <li>Priority support</li>
+      </ul>
+      <button class='cta' onclick="alert('Checkout coming soon — pitch build')">Get the bundle</button>
+    </div>
+
+    <div class='plan'>
+      <h3>📜 Creator Certificate</h3>
+      <div class='price'>€25<small> one-time</small></div>
+      <ul>
+        <li>Basic NovaClip Creator Certificate</li>
+        <li>Proof of completed creator training</li>
+        <li>Shareable on socials & CVs</li>
+        <li>Verified badge on your profile</li>
+      </ul>
+      <button class='cta' onclick="alert('Checkout coming soon — pitch build')">Get certified</button>
+    </div>
+  </div>
+
+  <p class='note'>Startup World Cup 2027 pitch build: payments are not yet live — plans shown model the business: parents fund the platform (€7 dashboard / €5 tools / €10 bundle / €25 certificate) so kids' tools stay ad-free and safe.</p>
+</div>
+<script src='nova.js'></script>
+</body>
+</html>
