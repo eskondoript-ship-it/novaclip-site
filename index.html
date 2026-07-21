@@ -169,7 +169,24 @@ footer a:hover{color:var(--cyan)}
 .duel:hover .vs{animation-duration:.6s}
 .tk:hover{animation-play-state:paused}
 :focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.slideL,.slideR{opacity:1;transform:none}}
+/* scroll progress bar */
+#scrollbar{position:fixed;top:0;left:0;height:3px;width:0;z-index:999;background:linear-gradient(90deg,var(--cyan),var(--magenta),var(--lime));box-shadow:0 0 12px var(--cyan)}
+/* mouse-follow glow */
+#mouseglow{position:fixed;width:400px;height:400px;border-radius:50%;pointer-events:none;z-index:1;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(0,240,255,0.08),transparent 65%);transition:opacity .3s;mix-blend-mode:screen}
+/* animated section header underline sweep */
+.sec-h{position:relative}
+.split.in .sec-h::after,.section.in .sec-h::after{content:'';position:absolute;left:0;bottom:-10px;height:3px;width:70px;background:linear-gradient(90deg,var(--cyan),var(--magenta));border-radius:2px;animation:hgrow .8s .3s both}
+@keyframes hgrow{from{width:0;opacity:0}to{width:70px;opacity:1}}
+/* magnetic button pop */
+.btn-primary,.btn-ghost{will-change:transform}
+/* card entrance stagger via nth */
+.card{transition:opacity .7s,transform .7s,border-color .3s,box-shadow .3s}
+/* floating tilt on tool rows */
+.tool{transition:.3s}
+.tool:hover{transform:translateX(6px) scale(1.01)}
+/* hero title letter shimmer */
+h1 .n,h1 .m{background-size:200% auto}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.slideL,.slideR{opacity:1;transform:none}#scrollbar,#mouseglow{display:none}}
 </style>
 </head>
 <body>
@@ -192,6 +209,9 @@ footer a:hover{color:var(--cyan)}
 <div id='stars'></div>
 <div class='grid-floor'></div>
 <div class='scanline'></div>
+
+<div id='scrollbar'></div>
+<div id='mouseglow'></div>
 
 <div class='content'>
 
@@ -335,7 +355,28 @@ setTimeout(typeLoop, 900);
 
 // SCROLL REVEALS
 const io = new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:0.18});
-document.querySelectorAll('.reveal,.slideL,.slideR').forEach(x=>io.observe(x));
+document.querySelectorAll('.reveal,.slideL,.slideR,.split,.section').forEach(x=>io.observe(x));
+
+// SCROLL PROGRESS BAR
+addEventListener('scroll',()=>{
+  const sc = document.documentElement.scrollTop || document.body.scrollTop;
+  const h = (document.documentElement.scrollHeight - document.documentElement.clientHeight);
+  document.getElementById('scrollbar').style.width = (h>0? (sc/h*100):0) + '%';
+});
+
+// MOUSE-FOLLOW GLOW
+const mg = document.getElementById('mouseglow');
+addEventListener('mousemove', e => { mg.style.left = e.clientX + 'px'; mg.style.top = e.clientY + 'px'; });
+
+// MAGNETIC BUTTONS
+document.querySelectorAll('.btn-primary,.btn-ghost').forEach(b => {
+  b.addEventListener('mousemove', e => {
+    const r = b.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
+    b.style.transform = 'translate(' + dx*0.18 + 'px,' + (dy*0.18 - 2) + 'px)';
+  });
+  b.addEventListener('mouseleave', () => { b.style.transform = ''; });
+});
 
 // COUNTING NUMBERS
 const nio = new IntersectionObserver(es=>{es.forEach(e=>{
