@@ -80,14 +80,57 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 <script>
 // PIN gate (stored locally)
 const gate = document.getElementById('gate'), dash = document.getElementById('dash');
-document.getElementById('pinbtn').onclick = () => {
+// --- hardened PIN: hashed storage + lockout after 3 wrong tries ---
+async function hashPin(v) {
+  const data = new TextEncoder().encode('novaclip-salt-v1:' + v);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function lockState() { try { return JSON.parse(localStorage.getItem('nc_pin_lock') || '{"fails":0,"until":0}'); } catch (e) { return { fails: 0, until: 0 }; }
+}
+function setLock(s) { localStorage.setItem('nc_pin_lock', JSON.stringify(s)); }
+
+document.getElementById('pinbtn').onclick = async () => {
   const v = document.getElementById('pin').value.trim();
-  const saved = localStorage.getItem('nc_parent_pin');
   const msg = document.getElementById('pinmsg');
+  const ls = lockState();
+
+  // locked out?
+  if (ls.until > Date.now()) {
+    const secs = Math.ceil((ls.until - Date.now()) / 1000);
+    msg.textContent = '🔒 Too many wrong tries. Locked for ' + secs + 's.';
+    return;
+  }
   if (!v || v.length < 4) { msg.textContent = 'PIN must be at least 4 digits.'; return; }
-  if (!saved) { localStorage.setItem('nc_parent_pin', v); msg.textContent = ''; unlock(); }
-  else if (saved === v) { unlock(); }
-  else { msg.textContent = '❌ Wrong PIN.'; }
+
+  const savedHash = localStorage.getItem('nc_parent_pin_h');
+  const tryHash = await hashPin(v);
+
+  // first-time setup — store only the hash, never the PIN itself
+  if (!savedHash) {
+    localStorage.setItem('nc_parent_pin_h', tryHash);
+    localStorage.removeItem('nc_parent_pin'); // clean up any old plain PIN
+    setLock({ fails: 0, until: 0 });
+    msg.textContent = '';
+    unlock();
+    return;
+  }
+
+  if (savedHash === tryHash) {
+    setLock({ fails: 0, until: 0 });
+    msg.textContent = '';
+    unlock();
+  } else {
+    const fails = ls.fails + 1;
+    if (fails >= 3) {
+      setLock({ fails: 0, until: Date.now() + 30000 }); // 30s lockout
+      msg.textContent = '🔒 3 wrong tries — locked for 30 seconds.';
+    } else {
+      setLock({ fails, until: 0 });
+      msg.textContent = '❌ Wrong PIN. ' + (3 - fails) + ' tries left.';
+    }
+    document.getElementById('pin').value = '';
+  }
 };
 function unlock() {
   gate.style.display = 'none'; dash.style.display = 'block';
