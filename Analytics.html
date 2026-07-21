@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip — Analytics</title>
+<script src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
+body { background: #060608; color: #EAF2FF; overflow-x: hidden; }
+a { text-decoration: none; color: inherit; }
+
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 210px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 20px 0; gap: 4px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); }
+.sidebar a { font-size: 1rem; color: #EAF2FF; display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background 0.2s; }
+.sidebar a:hover { background: rgba(114,9,183,0.25); }
+.sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: 0.78rem; opacity: 0.6; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: 0.95rem; background: rgba(255,255,255,0.05); color: #EAF2FF; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px; }
+
+.main { margin-left: 210px; padding: 34px 40px 60px; }
+@media (max-width: 820px) { .main { margin-left: 0; padding: 20px; } .sidebar { position: static; width: 100%; flex-direction: row; flex-wrap: wrap; } }
+h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -1.5px; }
+h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.subtitle { color: #7E8AA6; margin: 8px 0 24px; font-size: 1.02rem; }
+.gbtn { padding: 13px 28px; border-radius: 40px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(90deg, #00F0FF, #4CC9F0); color: #04121a; font-size: 1rem; transition: 0.2s; }
+.gbtn:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,240,255,0.4); }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.kpi { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; padding: 18px; }
+.kpi .n { font-size: 1.9rem; font-weight: 800; color: #00F0FF; }
+.kpi .l { color: #7E8AA6; font-size: 0.85rem; margin-top: 2px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+.chartcard { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px; }
+.chartcard h4 { font-size: 0.95rem; margin-bottom: 12px; }
+.chartcard.wide { grid-column: 1 / -1; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; font-weight: 700; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: #00F0FF; }
+.hint { color: #7E8AA6; font-size: 0.95rem; margin-top: 14px; }
+.loading { color: #7E8AA6; padding: 20px 0; }
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <a href='index.html' data-t='home'>🏠 Home</a>
+  <a href='app.html' data-t='studio'>📈 Studio</a>
+  <a href='analytics.html' data-t='analytics'>📊 Analytics</a>
+  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>🎬 Editor</a>
+  <a href='game.html' data-t='sniper'>🎯 Sniper</a>
+  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div class='main'>
+  <h1><span class='grad' data-t='analytics_h'>Analytics</span></h1>
+  <p class='subtitle' data-t='analytics_sub'>Deep charts comparing your channel to your closest rivals.</p>
+
+  <div id='connectrow'>
+    <button id='gbtn' class='gbtn' data-t='signin'>🔑 Sign in with Google</button>
+    <p class='hint' data-t='analytics_hint'>Connect your channel to load your analytics.</p>
+  </div>
+
+  <div id='dash' style='display:none;'>
+    <label class='toggle'><input type='checkbox' id='compToggle' checked> <span data-t='compare'>Compare with 2 competitors</span></label>
+    <div class='kpis' id='kpis'></div>
+    <div class='grid'>
+      <div class='chartcard'><h4>👥 Subscribers</h4><canvas id='c_subs' height='190'></canvas></div>
+      <div class='chartcard'><h4>👁️ Total views</h4><canvas id='c_views' height='190'></canvas></div>
+      <div class='chartcard'><h4>🎬 Videos</h4><canvas id='c_videos' height='190'></canvas></div>
+      <div class='chartcard'><h4>👍 Likes (recent)</h4><canvas id='c_likes' height='190'></canvas></div>
+      <div class='chartcard'><h4>💬 Comments (recent)</h4><canvas id='c_comments' height='190'></canvas></div>
+      <div class='chartcard'><h4>📊 Avg views per video</h4><canvas id='c_avg' height='190'></canvas></div>
+      <div class='chartcard wide'><h4>📈 Recent uploads — view trend</h4><canvas id='c_trend' height='90'></canvas></div>
+      <div class='chartcard'><h4>🕸️ Overall profile</h4><canvas id='c_radar' height='240'></canvas></div>
+      <div class='chartcard'><h4>🍩 Engagement mix (you)</h4><canvas id='c_dough' height='240'></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script type='module'>
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const firebaseConfig = { apiKey: 'PASTE_YOURS', authDomain: 'PASTE_YOURS', projectId: 'PASTE_YOURS', storageBucket: 'PASTE_YOURS', messagingSenderId: 'PASTE_YOURS', appId: 'PASTE_YOURS' };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+let ytToken = null, myStats = null;
+const charts = {};
+
+function loadToken() { try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {} return null; }
+function saveToken(tok) { ytToken = tok; localStorage.setItem('nc_yt', JSON.stringify({ t: tok, exp: Date.now() + 50*60*1000 })); }
+function yt(url) { return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json()); }
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const cached = loadToken();
+    if (cached) { ytToken = cached; try { const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true'); if (d.items && d.items.length) { myStats = d.items[0]; enterDash(); } } catch (e) {} }
+  }
+});
+
+async function connect() {
+  const provider = new GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
+  const result = await signInWithPopup(auth, provider);
+  saveToken(GoogleAuthProvider.credentialFromResult(result).accessToken);
+  const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
+  if (d.items && d.items.length) { myStats = d.items[0]; enterDash(); }
+}
+document.getElementById('gbtn').onclick = connect;
+
+function enterDash() { document.getElementById('connectrow').style.display = 'none'; document.getElementById('dash').style.display = 'block'; drawAll(); }
+document.getElementById('compToggle').onchange = drawAll;
+
+async function getCompetitors() {
+  const seeds = [myStats.snippet.title.split(' ')[0], 'gaming channel', 'vlog channel', 'music channel'];
+  let ids = new Set();
+  for (const q of seeds) {
+    const sd = await yt('search?part=snippet&type=channel&maxResults=10&q=' + encodeURIComponent(q)).catch(() => null);
+    if (sd && sd.items) sd.items.forEach(i => { if (i.snippet.channelId !== myStats.id) ids.add(i.snippet.channelId); });
+    if (ids.size >= 25) break;
+  }
+  const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + [...ids].slice(0, 40).join(','));
+  const mySubs = parseInt(myStats.statistics.subscriberCount);
+  return cd.items.map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, 2).map(x => x.ch);
+}
+
+async function recentEngagement(channel) {
+  const uploads = channel.contentDetails && channel.contentDetails.relatedPlaylists && channel.contentDetails.relatedPlaylists.uploads;
+  if (!uploads) return { likes: 0, comments: 0, series: [] };
+  const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=15');
+  if (!pl.items || !pl.items.length) return { likes: 0, comments: 0, series: [] };
+  const ids = pl.items.map(i => i.contentDetails.videoId).join(',');
+  const vs = await yt('videos?part=statistics&id=' + ids);
+  let likes = 0, comments = 0; const series = [];
+  vs.items.forEach(v => { likes += parseInt(v.statistics.likeCount || 0); comments += parseInt(v.statistics.commentCount || 0); series.push(parseInt(v.statistics.viewCount || 0)); });
+  return { likes, comments, series: series.reverse() };
+}
+
+function mk(id, type, labels, datasets, extra) {
+  if (charts[id]) charts[id].destroy();
+  const txt = '#c8ccd8';
+  const scaleAxis = { ticks: { color: txt, font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } };
+  charts[id] = new Chart(document.getElementById(id), {
+    type,
+    data: { labels, datasets },
+    options: Object.assign({
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: type === 'doughnut' || datasets.length > 1, labels: { color: txt, font: { size: 11 } } } },
+      scales: (type === 'radar' || type === 'doughnut') ? {} : { x: scaleAxis, y: scaleAxis }
+    }, extra || {})
+  });
+}
+
+async function drawAll() {
+  const withComp = document.getElementById('compToggle').checked;
+  let channels = [myStats];
+  if (withComp) { try { channels = channels.concat(await getCompetitors()); } catch (e) {} }
+  const labels = channels.map((c, i) => i === 0 ? 'You' : c.snippet.title.slice(0, 12));
+  const cyan = '#00F0FF', pink = '#F72585', lime = '#B6FF3C';
+  const colors = channels.map((c, i) => i === 0 ? pink : (i === 1 ? cyan : lime));
+  const subs = channels.map(c => parseInt(c.statistics.subscriberCount || 0));
+  const views = channels.map(c => parseInt(c.statistics.viewCount || 0));
+  const videos = channels.map(c => parseInt(c.statistics.videoCount || 0));
+  const avg = channels.map((c, i) => Math.round(views[i] / Math.max(videos[i], 1)));
+
+  // KPIs (you)
+  document.getElementById('kpis').innerHTML =
+    kpi(subs[0].toLocaleString(), 'Subscribers') + kpi(views[0].toLocaleString(), 'Total views') +
+    kpi(videos[0].toLocaleString(), 'Videos') + kpi(avg[0].toLocaleString(), 'Avg views/video');
+
+  mk('c_subs', 'bar', labels, [{ data: subs, backgroundColor: colors, borderRadius: 6 }]);
+  mk('c_views', 'bar', labels, [{ data: views, backgroundColor: colors, borderRadius: 6 }]);
+  mk('c_videos', 'bar', labels, [{ data: videos, backgroundColor: colors, borderRadius: 6 }]);
+  mk('c_avg', 'bar', labels, [{ data: avg, backgroundColor: colors, borderRadius: 6 }]);
+
+  const eng = [];
+  for (const c of channels) eng.push(await recentEngagement(c));
+  const likes = eng.map(e => e.likes), comments = eng.map(e => e.comments);
+  mk('c_likes', 'bar', labels, [{ data: likes, backgroundColor: colors, borderRadius: 6 }]);
+  mk('c_comments', 'bar', labels, [{ data: comments, backgroundColor: colors, borderRadius: 6 }]);
+
+  // line trend of your recent uploads
+  const mine = eng[0].series || [];
+  mk('c_trend', 'line', mine.map((_, i) => 'Video ' + (i + 1)), [{ label: 'Views', data: mine, borderColor: cyan, backgroundColor: 'rgba(0,240,255,0.15)', fill: true, tension: 0.35, pointRadius: 3 }]);
+
+  // radar: normalized profile
+  const metrics = [subs, views, videos, likes, comments];
+  const metricLabels = ['Subs', 'Views', 'Videos', 'Likes', 'Comments'];
+  const radarSets = channels.map((c, idx) => ({
+    label: labels[idx],
+    data: metrics.map(arr => { const mx = Math.max(...arr, 1); return Math.round((arr[idx] / mx) * 100); }),
+    borderColor: colors[idx], backgroundColor: colors[idx].replace(')', ',0.15)').replace('#', 'rgba(') && hexA(colors[idx], 0.15), pointBackgroundColor: colors[idx]
+  }));
+  mk('c_radar', 'radar', metricLabels, radarSets, { scales: { r: { angleLines: { color: 'rgba(255,255,255,0.1)' }, grid: { color: 'rgba(255,255,255,0.1)' }, pointLabels: { color: '#c8ccd8', font: { size: 11 } }, ticks: { display: false } } } });
+
+  // doughnut: your engagement mix
+  mk('c_dough', 'doughnut', ['Likes', 'Comments', 'Videos'], [{ data: [likes[0], comments[0], videos[0]], backgroundColor: [pink, cyan, lime], borderWidth: 0 }]);
+}
+
+function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; }
+function kpi(n, l) { return '<div class="kpi"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
+</script>
+<script src='nova.js'></script>
+</body>
+</html>
