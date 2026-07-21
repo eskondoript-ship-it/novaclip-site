@@ -5,83 +5,333 @@
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaClip Editor</title>
 <style>
-  body { background:var(--bg); color:var(--txt); margin-left:200px; font-family:'Segoe UI',sans-serif; }
-  .stage { display:grid; grid-template-columns:1fr 380px; gap:20px; padding:20px; }
-  #preview { width:100%; background:#000; border-radius:12px; border:3px solid #7209B7; }
-  .panel { background:var(--box); padding:18px; border-radius:14px; margin-bottom:16px; }
-  button { padding:10px 20px; margin:4px; border-radius:999px; font-weight:700; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: #060608; color: #f4f4f6; }
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: stretch; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); }
+.sidebar a { font-size: 1.1rem; text-decoration: none; color: var(--txt); display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 700; }
+.sidebar a:hover { background: #7209B733; }
+.sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: 0.8rem; opacity: 0.7; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: 1rem; background: var(--bg); color: var(--txt); border: 2px solid #7209B7; border-radius: 10px; padding: 10px; }
+.wrap { position: relative; z-index: 1; margin-left: 200px; min-height: 100vh; padding: 24px; }
+h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 6px; }
+.sub { opacity: 0.7; margin-bottom: 18px; font-size: 0.9rem; }
+.stage { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+@media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
+#preview { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 14px; border: 2px solid #7209B7; }
+.panel { background: var(--box); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.panel h3 { font-size: 1rem; margin-bottom: 10px; }
+.btn { padding: 10px 16px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); margin: 4px 4px 4px 0; font-size: 0.9rem; }
+.btn.alt { background: var(--box); color: #4CC9F0; border: 2px solid #4CC9F0; }
+input[type=text], textarea, select.field { width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #7209B7; background: var(--bg); color: var(--txt); margin-bottom: 8px; font-size: 0.9rem; }
+label.lil { font-size: 0.8rem; opacity: 0.7; display: block; margin-bottom: 4px; }
+#timeline { display: flex; gap: 8px; overflow-x: auto; padding: 12px; background: var(--box); border-radius: 14px; margin-top: 14px; min-height: 92px; align-items: center; }
+.clip { flex: 0 0 auto; width: 110px; height: 66px; border-radius: 8px; background: #000; position: relative; cursor: grab; border: 2px solid transparent; overflow: hidden; }
+.clip.sel { border-color: #F72585; }
+.clip img, .clip video { width: 100%; height: 100%; object-fit: cover; }
+.clip .lbl { position: absolute; bottom: 0; left: 0; right: 0; font-size: 0.6rem; background: #000a; padding: 2px 4px; text-align: center; }
+.clip .del { position: absolute; top: 2px; right: 2px; background: #F72585; border: none; color: white; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; font-size: 0.7rem; line-height: 1; }
+.hint { font-size: 0.78rem; opacity: 0.6; margin-top: 6px; line-height: 1.5; }
+.seledit { background: #00000022; border-radius: 10px; padding: 10px; margin-top: 10px; }
 </style>
 </head>
 <body>
-  <div class='sidebar'>... (keep sidebar)</div>
+<div class='sidebar'>
+  <a href='index.html' data-t='home'>🏠 Home</a>
+  <a href='app.html' data-t='studio'>📈 Studio</a>
+  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
+  <a href='editor.html'>🎬 Editor</a>
+  <a href='game.html'>🎯 Sniper</a>
+  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <div class='themewrap'>
+    <label data-t='background'>Background</label>
+    <select id='themepick'></select>
+    <label style='margin-top:12px;' data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+<div class='wrap'>
+  <h1>🎬 NovaClip Editor</h1>
+  <div class='sub'>Add clips, give each one an effect and a transition, drop text, add an AI voiceover and music, then Play. Record to save your video.</div>
+
   <div class='stage'>
     <div>
       <canvas id='preview' width='1280' height='720'></canvas>
-      <div>
-        <button onclick="playPreview()">▶️ Play</button>
-        <button onclick="startRecording()">⏺️ Record Video</button>
+      <div style='margin-top:10px;'>
+        <button id='playBtn' class='btn'>▶️ Play preview</button>
+        <button id='recBtn' class='btn alt'>⏺️ Record & download</button>
+        <button id='stopBtn' class='btn alt'>⏹️ Stop</button>
       </div>
-      <div id='timeline' style="display:flex; gap:8px; overflow-x:auto; margin-top:20px;"></div>
+      <div id='timeline'></div>
+      <div class='hint'>Click a clip to give it an effect + transition. Drag to reorder. Recording captures the preview into a downloadable video.</div>
+
+      <div id='selPanel' class='seledit' style='display:none;'>
+        <b id='selTitle'>Clip settings</b>
+        <div style='display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;'>
+          <div>
+            <label class='lil'>✨ Effect</label>
+            <select id='clipFx' class='field'>
+              <option value='none'>None</option>
+              <option value='grayscale(1)'>Black & White</option>
+              <option value='sepia(1)'>Sepia</option>
+              <option value='saturate(2.2)'>Vivid</option>
+              <option value='contrast(1.6)'>Punchy</option>
+              <option value='blur(4px)'>Blur</option>
+              <option value='hue-rotate(90deg) saturate(1.6)'>Neon shift</option>
+              <option value='brightness(1.3) contrast(1.2) saturate(1.4)'>Glow</option>
+              <option value='sepia(0.5) contrast(1.3) brightness(0.9)'>Vintage</option>
+              <option value='invert(1)'>Invert</option>
+            </select>
+          </div>
+          <div>
+            <label class='lil'>🎞️ Transition IN</label>
+            <select id='clipTrans' class='field'>
+              <option value='none'>None (cut)</option>
+              <option value='fade'>Fade</option>
+              <option value='slideL'>Slide from left</option>
+              <option value='slideR'>Slide from right</option>
+              <option value='zoom'>Zoom in</option>
+              <option value='spin'>Spin in</option>
+            </select>
+          </div>
+        </div>
+        <label class='lil'>Seconds on screen</label>
+        <input type='text' id='clipDur' value='3'>
+      </div>
     </div>
 
     <div>
       <div class='panel'>
-        <h3>Add Clips / Images</h3>
-        <input type="file" id="mediaInput" accept="image/*,video/*" multiple>
+        <h3>📁 Add media</h3>
+        <label class='lil'>Video or image clips</label>
+        <input type='file' id='mediaInput' accept='video/*,image/*' multiple>
       </div>
-      <!-- Add text, music, etc. panels -->
+
+      <div class='panel'>
+        <h3>🔤 Text overlay</h3>
+        <input type='text' id='txtInput' placeholder='Caption / title text'>
+        <select id='txtPos' class='field'>
+          <option value='top'>Top</option>
+          <option value='center' selected>Center</option>
+          <option value='bottom'>Bottom</option>
+        </select>
+        <button id='txtBtn' class='btn'>Add text</button>
+        <button id='txtClear' class='btn alt'>Clear text</button>
+        <div class='hint'>Text shows on every clip during playback.</div>
+      </div>
+
+      <div class='panel'>
+        <h3>🗣️ AI voiceover</h3>
+        <textarea id='voScript' rows='3' placeholder='Type what the voice should say...'></textarea>
+        <label class='lil'>Voice</label>
+        <select id='voVoice' class='field'></select>
+        <button id='voPlay' class='btn'>🔊 Preview voice</button>
+        <div class='hint'>Uses your browser's built-in voices (free). Plays during recording too.</div>
+      </div>
+
+      <div class='panel'>
+        <h3>🎵 Music</h3>
+        <input type='file' id='musicInput' accept='audio/*'>
+        <div class='hint'>Plays under the whole video.</div>
+      </div>
     </div>
   </div>
+</div>
 
-  <script src='nova.js'></script>
-  <script>
-    // Simple but working preview + recording
-    const canvas = document.getElementById('preview');
-    const ctx = canvas.getContext('2d');
-    let clips = [];
+<audio id='musicEl' loop></audio>
 
-    document.getElementById('mediaInput').onchange = e => {
-      [...e.target.files].forEach(file => {
-        const url = URL.createObjectURL(file);
-        const img = new Image();
-        img.src = url;
-        img.onload = () => {
-          clips.push(img);
-          renderTimeline();
-        };
-      });
-    };
+<script>
+const canvas = document.getElementById('preview');
+const ctx = canvas.getContext('2d');
+let clips = [];       // {type, el, dur, fx, trans}
+let overlays = [];
+let selected = -1;
 
-    function renderTimeline() {
-      // Simple timeline with thumbnails
-      const tl = document.getElementById('timeline');
-      tl.innerHTML = clips.map((c,i) => `<img src="${c.src}" style="height:80px; margin:4px; border-radius:6px;">`).join('');
+document.getElementById('mediaInput').onchange = (e) => {
+  [...e.target.files].forEach(file => {
+    const url = URL.createObjectURL(file);
+    if (file.type.startsWith('video')) {
+      const v = document.createElement('video');
+      v.src = url; v.muted = true; v.playsInline = true;
+      v.onloadedmetadata = () => { clips.push({ type: 'video', el: v, dur: Math.min(v.duration, 8), fx: 'none', trans: 'fade' }); renderTimeline(); };
+    } else {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => { clips.push({ type: 'image', el: img, dur: 3, fx: 'none', trans: 'fade' }); renderTimeline(); };
     }
+  });
+  e.target.value = '';
+};
 
-    function playPreview() {
-      let i = 0;
-      const interval = setInterval(() => {
-        if (i >= clips.length) { clearInterval(interval); return; }
-        ctx.drawImage(clips[i], 0, 0, canvas.width, canvas.height);
-        i++;
-      }, 1500);
-    }
+function renderTimeline() {
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  if (!clips.length) { tl.innerHTML = '<div style="opacity:0.5; padding:20px;">No clips yet — add media on the right ➡️</div>'; document.getElementById('selPanel').style.display = 'none'; return; }
+  clips.forEach((c, i) => {
+    const d = document.createElement('div');
+    d.className = 'clip' + (i === selected ? ' sel' : '');
+    d.draggable = true;
+    d.onclick = () => selectClip(i);
+    if (c.type === 'image') { const im = document.createElement('img'); im.src = c.el.src; d.appendChild(im); }
+    else { const v = document.createElement('video'); v.src = c.el.src; v.muted = true; d.appendChild(v); }
+    const lbl = document.createElement('div'); lbl.className = 'lbl'; lbl.textContent = c.dur.toFixed(1) + 's · ' + (c.fx === 'none' ? 'no fx' : 'fx'); d.appendChild(lbl);
+    const del = document.createElement('button'); del.className = 'del'; del.textContent = '×';
+    del.onclick = (ev) => { ev.stopPropagation(); clips.splice(i, 1); selected = -1; renderTimeline(); };
+    d.appendChild(del);
+    d.ondragstart = (ev) => ev.dataTransfer.setData('i', i);
+    d.ondragover = (ev) => ev.preventDefault();
+    d.ondrop = (ev) => { ev.preventDefault(); const from = +ev.dataTransfer.getData('i'); const m = clips.splice(from, 1)[0]; clips.splice(i, 0, m); selected = i; renderTimeline(); };
+    tl.appendChild(d);
+  });
+}
 
-    async function startRecording() {
-      const stream = canvas.captureStream(30);
-      const recorder = new MediaRecorder(stream);
-      const chunks = [];
-      recorder.ondataavailable = e => chunks.push(e.data);
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, {type: 'video/webm'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'novaclip-edit.webm'; a.click();
-      };
-      recorder.start();
-      playPreview(); // play while recording
-      setTimeout(() => recorder.stop(), 8000); // 8 seconds example
-    }
-  </script>
+function selectClip(i) {
+  selected = i;
+  const c = clips[i];
+  document.getElementById('selPanel').style.display = 'block';
+  document.getElementById('selTitle').textContent = 'Clip ' + (i + 1) + ' settings';
+  document.getElementById('clipFx').value = c.fx;
+  document.getElementById('clipTrans').value = c.trans;
+  document.getElementById('clipDur').value = c.dur;
+  renderTimeline();
+}
+document.getElementById('clipFx').onchange = (e) => { if (selected >= 0) { clips[selected].fx = e.target.value; renderTimeline(); } };
+document.getElementById('clipTrans').onchange = (e) => { if (selected >= 0) clips[selected].trans = e.target.value; };
+document.getElementById('clipDur').oninput = (e) => { if (selected >= 0) { const v = parseFloat(e.target.value); if (v > 0) { clips[selected].dur = v; renderTimeline(); } } };
+renderTimeline();
+
+document.getElementById('txtBtn').onclick = () => {
+  const t = document.getElementById('txtInput').value.trim();
+  if (!t) return;
+  overlays.push({ text: t, pos: document.getElementById('txtPos').value });
+  document.getElementById('txtInput').value = '';
+};
+document.getElementById('txtClear').onclick = () => { overlays = []; };
+
+let voices = [];
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+  const sel = document.getElementById('voVoice');
+  sel.innerHTML = '';
+  voices.forEach((v, i) => { const o = document.createElement('option'); o.value = i; o.textContent = v.name + ' (' + v.lang + ')'; sel.appendChild(o); });
+}
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+function speak(text) {
+  if (!text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const vi = document.getElementById('voVoice').value;
+  if (voices[vi]) u.voice = voices[vi];
+  speechSynthesis.speak(u);
+}
+document.getElementById('voPlay').onclick = () => speak(document.getElementById('voScript').value);
+
+document.getElementById('musicInput').onchange = (e) => {
+  const f = e.target.files[0];
+  if (f) document.getElementById('musicEl').src = URL.createObjectURL(f);
+};
+
+let playing = false;
+function drawFrame(clip, prog) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+
+  // transition IN (first 500ms)
+  let alpha = 1, tx = 0, ty = 0, scale = 1, rot = 0;
+  if (prog < 0.12) {
+    const p = prog / 0.12; // 0..1
+    if (clip.trans === 'fade') alpha = p;
+    else if (clip.trans === 'slideL') tx = -canvas.width * (1 - p);
+    else if (clip.trans === 'slideR') tx = canvas.width * (1 - p);
+    else if (clip.trans === 'zoom') { scale = 0.5 + 0.5 * p; alpha = p; }
+    else if (clip.trans === 'spin') { rot = (1 - p) * Math.PI; alpha = p; scale = 0.6 + 0.4 * p; }
+  }
+
+  ctx.globalAlpha = alpha;
+  ctx.translate(canvas.width / 2 + tx, canvas.height / 2 + ty);
+  ctx.scale(scale, scale);
+  ctx.rotate(rot);
+  ctx.filter = clip.fx === 'none' ? 'none' : clip.fx;
+
+  const el = clip.el;
+  const iw = el.videoWidth || el.width, ih = el.videoHeight || el.height;
+  const s = Math.max(canvas.width / iw, canvas.height / ih);
+  const w = iw * s, h = ih * s;
+  ctx.drawImage(el, -w / 2, -h / 2, w, h);
+  ctx.restore();
+
+  // overlays (no filter)
+  ctx.save();
+  overlays.forEach(o => {
+    ctx.font = 'bold 60px Segoe UI, sans-serif';
+    ctx.fillStyle = 'white'; ctx.strokeStyle = 'black'; ctx.lineWidth = 6; ctx.textAlign = 'center';
+    const y = o.pos === 'top' ? 90 : o.pos === 'bottom' ? canvas.height - 50 : canvas.height / 2;
+    ctx.strokeText(o.text, canvas.width / 2, y);
+    ctx.fillText(o.text, canvas.width / 2, y);
+  });
+  ctx.restore();
+}
+
+async function playSequence() {
+  if (!clips.length || playing) return;
+  playing = true;
+  const music = document.getElementById('musicEl');
+  if (music.src) { music.currentTime = 0; music.play().catch(() => {}); }
+  const vo = document.getElementById('voScript').value;
+  if (vo) speak(vo);
+
+  for (let i = 0; i < clips.length && playing; i++) {
+    const clip = clips[i];
+    if (clip.type === 'video') { try { clip.el.currentTime = 0; await clip.el.play().catch(() => {}); } catch (e) {} }
+    const start = performance.now();
+    const durMs = clip.dur * 1000;
+    await new Promise(res => {
+      function frame(now) {
+        if (!playing) return res();
+        const t = now - start;
+        drawFrame(clip, t / durMs);
+        if (t < durMs) requestAnimationFrame(frame); else res();
+      }
+      requestAnimationFrame(frame);
+    });
+    if (clip.type === 'video') clip.el.pause();
+  }
+  music.pause();
+  playing = false;
+}
+document.getElementById('playBtn').onclick = playSequence;
+
+let recorder, chunks = [];
+document.getElementById('recBtn').onclick = async () => {
+  if (!clips.length) { alert('Add some clips first!'); return; }
+  chunks = [];
+  const stream = canvas.captureStream(30);
+  try {
+    const actx = new AudioContext();
+    const dest = actx.createMediaStreamDestination();
+    const music = document.getElementById('musicEl');
+    if (music.src) { const src = actx.createMediaElementSource(music); src.connect(dest); src.connect(actx.destination); }
+    dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+  } catch (e) {}
+  const mime = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
+  recorder = new MediaRecorder(stream, { mimeType: mime });
+  recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: mime });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'novaclip-video.' + (mime === 'video/mp4' ? 'mp4' : 'webm');
+    a.click();
+  };
+  recorder.start();
+  await playSequence();
+  if (recorder.state !== 'inactive') recorder.stop();
+};
+document.getElementById('stopBtn').onclick = () => { playing = false; if (recorder && recorder.state !== 'inactive') recorder.stop(); speechSynthesis.cancel(); document.getElementById('musicEl').pause(); };
+</script>
+<script src='nova.js'></script>
 </body>
 </html>
