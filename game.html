@@ -715,8 +715,27 @@ document.getElementById('startBtn').onclick = () => {
   if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
   running = true; c4Ready = false; c4Timer = 20; setPts(pts());
   switchWeap(curWeap);
+  // guarantee the gun is attached to the camera and visible
+  if (gunGroup) {
+    if (gunGroup.parent !== camera) { if (gunGroup.parent) gunGroup.parent.remove(gunGroup); camera.add(gunGroup); }
+    gunGroup.visible = true;
+    gunGroup.position.set(0.42, -0.42, -0.9);
+  }
   timerId = setInterval(tick, 1000);
   setInterval(updateBoard, 1500);
+  // temporary diagnostic — confirms gun is attached (remove later)
+  setTimeout(() => {
+    const b = document.getElementById('errbox');
+    if (b && gunGroup) {
+      const attached = gunGroup.parent === camera;
+      const camInScene = camera.parent === scene;
+      const botsVisible = bots.filter(x => x.mesh.visible).length;
+      b.style.display = 'block';
+      b.style.background = '#0a0c';
+      b.textContent = 'gun→camera: ' + attached + ' · cam→scene: ' + camInScene + ' · gun.visible: ' + gunGroup.visible + ' · bots shown: ' + botsVisible;
+      setTimeout(() => { b.style.display = 'none'; }, 6000);
+    }
+  }, 500);
 };
 document.addEventListener('mousemove', (e) => {
   if (document.pointerLockElement !== renderer.domElement) return;
