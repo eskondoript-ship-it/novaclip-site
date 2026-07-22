@@ -175,7 +175,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 </div>
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js' onerror="console.warn('GLTFLoader unavailable — custom .glb models disabled, built-in models will be used')"></script>
 <script>
 window.addEventListener('error', (e) => { const b = document.getElementById('errbox'); b.style.display = 'block'; b.textContent = '⚠ ' + e.message; });
 
@@ -214,10 +214,11 @@ const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Ech
 //  export as .glb, upload to your repo (Add file > Upload files).
 // ============================================================
 const CUSTOM_MODELS = {
-  character: 'military_tactical_suit_lowpolygameready.glb',        // e.g. 'soldier.glb'  — used for you AND the bots
-  characterScale: 0.5,  // shrink/grow to fit (try 1.0, adjust if too big/small)
+  character: '',        // e.g. 'soldier.glb'  — used for you AND the bots
+  characterScale: 1.0,  // shrink/grow to fit (try 1.0, adjust if too big/small)
   characterYOffset: 0,  // nudge up/down if feet aren't on the ground
-  weapon: 'low-poly_just_right_carbine.glb'            // e.g. 'rifle.glb'    — first-person gun model
+  weapon: '
+low-poly_just_right_carbine.glb'            // e.g. 'rifle.glb'    — first-person gun model
 };
 let loadedCharGLB = null, loadedWeapGLB = null;
 const gltfLoader = (typeof THREE !== 'undefined' && THREE.GLTFLoader) ? new THREE.GLTFLoader() : null;
@@ -310,16 +311,20 @@ function init() {
   buildWorld();
   buildShop();
 
-  // load any custom .glb models first, THEN build the fighters (falls back to built-in)
-  loadCustomModels(() => {
+  // build fighters + gun. If custom .glb models are set, load them first; otherwise build immediately.
+  function buildActors() {
     for (let i = 0; i < 9; i++) spawnBot(i);
     playerMesh = makeFighter(playerColor);
     playerMesh.visible = false;
     scene.add(playerMesh);
     gunGroup = buildWeaponModel(WEAPONS[curWeap].model);
-    camera.add(gunGroup);
     scene.add(camera);
-  });
+    camera.add(gunGroup);
+  }
+  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon) { loadCustomModels(buildActors); }
+  else { buildActors(); }
+  // ensure the gun starts in the correct hand position relative to camera
+  if (gunGroup) gunGroup.position.set(0.42, -0.42, -0.9);
 
   window.addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 }
