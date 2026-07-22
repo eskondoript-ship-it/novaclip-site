@@ -319,14 +319,13 @@ function init() {
    if (loadedWeapGLB) {
   gunGroup = loadedWeapGLB;
 
-  gunGroup.scale.set(0.15, 0.15, 0.15); // make weapon smaller
+  gunGroup.scale.set(0.08,0.08,0.08);
 
   gunGroup.position.set(
-    0.45,  // right
-    -0.45, // down
-    -0.8   // closer/farther
+    0.45,
+    -0.35,
+    -0.75
   );
-
   gunGroup.rotation.set(
     0,
     Math.PI,
@@ -334,9 +333,29 @@ function init() {
   );
 
   camera.add(gunGroup);
-} else {
-  gunGroup = buildWeaponModel(WEAPONS[curWeap].model);
+if (loadedWeapGLB) {
+
+  gunGroup = loadedWeapGLB;
+
+  // FPS weapon size like COD
+  gunGroup.scale.set(0.12, 0.12, 0.12);
+
+  // bottom right hand position
+  gunGroup.position.set(
+    0.55,   // right
+    -0.55,  // down
+    -1.1    // forward
+  );
+
+  // rotate to face player correctly
+  gunGroup.rotation.set(
+    0,
+    Math.PI,
+    0
+  );
+
   camera.add(gunGroup);
+
 }
 
 scene.add(camera);
