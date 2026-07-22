@@ -217,10 +217,7 @@ const CUSTOM_MODELS = {
   character: 'soldier.glb',
   characterScale: 1.0,
   characterYOffset: 0,
-  weapons: [
-    'low-poly_fn_arka.glb',
-    'low-poly_just_right_carbine.glb'
-  ]
+  weapon: 'low-poly_fn_arka.glb'
 };
 let loadedCharGLB = null, loadedWeapGLB = null;
 const gltfLoader = (typeof THREE !== 'undefined' && THREE.GLTFLoader) ? new THREE.GLTFLoader() : null;
