@@ -312,42 +312,21 @@ function init() {
 
   // load any custom .glb models first, THEN build the fighters (falls back to built-in)
   loadCustomModels(() => {
-    for (let i = 0; i < 9; i++) spawnBot(i);
-    playerMesh = makeFighter(playerColor);
-    playerMesh.visible = false;
-    scene.add(playerMesh);
-   if (loadedWeapGLB) {
-  gunGroup = loadedWeapGLB;
+    if (loadedWeapGLB) {
 
-  gunGroup.scale.set(0.08,0.08,0.08);
+  gunGroup = loadedWeapGLB.clone();
 
-  gunGroup.position.set(
-    0.45,
-    -0.35,
-    -0.75
-  );
-  gunGroup.rotation.set(
-    0,
-    Math.PI,
-    0
-  );
+  // COD style FPS gun size
+  gunGroup.scale.set(0.18, 0.18, 0.18);
 
-  camera.add(gunGroup);
-if (loadedWeapGLB) {
-
-  gunGroup = loadedWeapGLB;
-
-  // FPS weapon size like COD
-  gunGroup.scale.set(0.12, 0.12, 0.12);
-
-  // bottom right hand position
+  // right hand position
   gunGroup.position.set(
     0.55,   // right
-    -0.55,  // down
-    -1.1    // forward
+    -0.45,  // down
+    -1.0    // closer
   );
 
-  // rotate to face player correctly
+  // rotate GLB correctly
   gunGroup.rotation.set(
     0,
     Math.PI,
@@ -356,11 +335,11 @@ if (loadedWeapGLB) {
 
   camera.add(gunGroup);
 
+} else {
+
+  console.warn("No GLB weapon loaded");
+
 }
-
-scene.add(camera);
-  });
-
   window.addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 }
 
