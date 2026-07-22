@@ -319,9 +319,19 @@ function init() {
    if (loadedWeapGLB) {
   gunGroup = loadedWeapGLB;
 
-  gunGroup.scale.set(0.01,0.01,0.01);
-  gunGroup.position.set(0.35, -0.35, -0.7); // bottom-right FPS position
-  gunGroup.rotation.set(0, Math.PI, 0);
+  gunGroup.scale.set(0.15, 0.15, 0.15); // make weapon smaller
+
+  gunGroup.position.set(
+    0.45,  // right
+    -0.45, // down
+    -0.8   // closer/farther
+  );
+
+  gunGroup.rotation.set(
+    0,
+    Math.PI,
+    0
+  );
 
   camera.add(gunGroup);
 } else {
