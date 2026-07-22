@@ -214,10 +214,10 @@ const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Ech
 //  export as .glb, upload to your repo (Add file > Upload files).
 // ============================================================
 const CUSTOM_MODELS = {
-  character: 'soldier.glb',
-  characterScale: 1.0,
-  characterYOffset: 0,
-  weapon: 'low-poly_fn_arka.glb'
+  character: '',        // e.g. 'soldier.glb'  — used for you AND the bots
+  characterScale: 1.0,  // shrink/grow to fit (try 1.0, adjust if too big/small)
+  characterYOffset: 0,  // nudge up/down if feet aren't on the ground
+  weapon: 'low-poly_just_right_carbine.glb'            // e.g. 'rifle.glb'    — first-person gun model
 };
 let loadedCharGLB = null, loadedWeapGLB = null;
 const gltfLoader = (typeof THREE !== 'undefined' && THREE.GLTFLoader) ? new THREE.GLTFLoader() : null;
@@ -312,34 +312,15 @@ function init() {
 
   // load any custom .glb models first, THEN build the fighters (falls back to built-in)
   loadCustomModels(() => {
-    if (loadedWeapGLB) {
+    for (let i = 0; i < 9; i++) spawnBot(i);
+    playerMesh = makeFighter(playerColor);
+    playerMesh.visible = false;
+    scene.add(playerMesh);
+    gunGroup = buildWeaponModel(WEAPONS[curWeap].model);
+    camera.add(gunGroup);
+    scene.add(camera);
+  });
 
-  gunGroup = loadedWeapGLB.clone();
-
-  // COD style FPS gun size
-  gunGroup.scale.set(0.18, 0.18, 0.18);
-
-  // right hand position
-  gunGroup.position.set(
-    0.55,   // right
-    -0.45,  // down
-    -1.0    // closer
-  );
-
-  // rotate GLB correctly
-  gunGroup.rotation.set(
-    0,
-    Math.PI,
-    0
-  );
-
-  camera.add(gunGroup);
-
-} else {
-
-  console.warn("No GLB weapon loaded");
-
-}
   window.addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 }
 
