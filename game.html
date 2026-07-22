@@ -213,7 +213,7 @@ const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Ech
 //  export as .glb, upload to your repo (Add file > Upload files).
 // ============================================================
 const CUSTOM_MODELS = {
-  character: 'military_tactical_suit_lowpolygameready.glb',        // e.g. 'soldier.glb'  — used for you AND the bots
+  character: '',        // e.g. 'soldier.glb'  — used for you AND the bots
   characterScale: 1.0,  // shrink/grow to fit (try 1.0, adjust if too big/small)
   characterYOffset: 0,  // nudge up/down if feet aren't on the ground
   weapon: 'low-poly_just_right_carbine.glb'            // e.g. 'rifle.glb'    — first-person gun model
@@ -712,7 +712,7 @@ function camDir() { return new THREE.Vector3(-Math.sin(player.yaw)*Math.cos(play
 document.getElementById('startBtn').onclick = () => {
   document.getElementById('overlay').style.display = 'none';
   document.querySelector('.topbar .mode').textContent = '⚔️ ' + MODES[mode].label;
-  renderer.domElement.requestPointerLock();
+  if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
   running = true; c4Ready = false; c4Timer = 20; setPts(pts());
   switchWeap(curWeap);
   timerId = setInterval(tick, 1000);
@@ -1034,12 +1034,18 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-init();
-updateBoard();
-setPts(pts());
-document.getElementById('hpbar').style.width = '100%';
-buildLoadoutHUD();
-animate();
+try {
+  init();
+  updateBoard();
+  setPts(pts());
+  document.getElementById('hpbar').style.width = '100%';
+  buildLoadoutHUD();
+  animate();
+} catch (err) {
+  const b = document.getElementById('errbox');
+  if (b) { b.style.display = 'block'; b.textContent = '⚠ Game init error: ' + err.message; }
+  console.error(err);
+}
 </script>
 </body>
 </html>
