@@ -83,7 +83,6 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
     <div class='cardgrid'>
       <div class='tool' id='compbtn'><div class='ico'>🥊</div><h3 data-t='t_comp'>Closest competitors</h3><p data-t='t_comp_d'>Channels closest to your size — full stats and links.</p></div>
       <div class='tool' id='duelbtn'><div class='ico'>⚔️</div><h3 data-t='t_duel'>Duel a channel</h3><p data-t='t_duel_d'>Challenge a channel within 20k subs and win points.</p></div>
-      <div class='tool' id='trendbtn'><div class='ico'>🔥</div><h3 data-t='t_trend'>Trending topics</h3><p data-t='t_trend_d'>See what is blowing up on YouTube right now.</p></div>
       <a class='tool' href='analytics.html'><div class='ico'>📊</div><h3 data-t='t_analytics'>Full analytics</h3><p data-t='t_analytics_d'>Deep charts comparing you to rivals — on its own page.</p></a>
     </div>
   </div>
@@ -220,12 +219,7 @@ document.getElementById('duelgo').onclick = async () => {
   if (a > b && window.addPts) addPts(20);
 };
 
-document.getElementById('trendbtn').onclick = async () => {
-  await ensureToken();
-  show('Checking what is hot right now...');
-  const t = await yt('videos?part=snippet,statistics&chart=mostPopular&regionCode=PT&maxResults=10');
-  show('<b>🔥 Trending on YouTube right now</b><br><br>' + t.items.map((v, i) => (i + 1) + '. <b>' + v.snippet.title.replace(/</g,'&lt;') + '</b> — ' + parseInt(v.statistics.viewCount).toLocaleString() + ' views').join('<br>'));
-};
+
 </script>
 <script src='nova.js'></script>
 </body>
