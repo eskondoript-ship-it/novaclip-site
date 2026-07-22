@@ -377,6 +377,89 @@ function buildWorld() {
   const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 12, 6), new THREE.MeshStandardMaterial({ color: 0x999 }));
   mast.position.y = 38; tower.add(mast);
   tower.position.set(-60, 0, -50); scene.add(tower);
+
+  // ===== WAR-TORN BATTLEFIELD DRESSING =====
+  const rubbleMat = new THREE.MeshStandardMaterial({ color: 0x9a9186, roughness: 1 });
+  const concreteMat = new THREE.MeshStandardMaterial({ color: 0xb0a89a, roughness: 1 });
+  const sandbagMat = new THREE.MeshStandardMaterial({ color: 0xc2b280, roughness: 1 });
+  const rustMat = new THREE.MeshStandardMaterial({ color: 0x6e4a3a, roughness: 0.95 });
+  const barrierMat = new THREE.MeshStandardMaterial({ color: 0xd0c4a0, roughness: 1 });
+
+  // scattered rubble chunks all over the ground
+  for (let i = 0; i < 90; i++) {
+    const s = 0.3 + Math.random()*1.0;
+    let px = (Math.random()-0.5)*150, pz = (Math.random()-0.5)*150;
+    if (Math.abs(px) < 12 && Math.abs(pz - SHOP.z) < 12) continue;
+    const chunk = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), rubbleMat);
+    chunk.position.set(px, s*0.4, pz); chunk.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+    chunk.castShadow = true; chunk.receiveShadow = true; scene.add(chunk);
+  }
+
+  // destroyed / half-collapsed buildings (broken walls)
+  const ruins = [[-48, 34], [50, 38], [38, -46], [-44, -34], [58, -8], [-58, 12]];
+  for (const r of ruins) {
+    const bx = r[0], bz = r[1];
+    // broken wall segments at varying heights
+    for (let w = 0; w < 5; w++) {
+      const h = 2 + Math.random()*6;
+      const seg = box(2.4, h, 0.6, concreteMat.color.getHex(), bx - 4 + w*2, h/2, bz, true, 0);
+    }
+    // side wall
+    for (let w = 0; w < 3; w++) {
+      const h = 2 + Math.random()*5;
+      box(0.6, h, 2.4, concreteMat.color.getHex(), bx - 4.5, h/2, bz - 3 + w*2.4, true, 0);
+    }
+    // rebar sticking up
+    for (let k = 0; k < 4; k++) {
+      const rebar = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,1.5,4), rustMat);
+      rebar.position.set(bx - 4 + Math.random()*8, 3 + Math.random()*2, bz + (Math.random()-0.5)); rebar.rotation.z = (Math.random()-0.5)*0.4; scene.add(rebar);
+    }
+  }
+
+  // sandbag walls (cover)
+  const sandSpots = [[-15, 15], [18, -12], [-22, -18], [24, 20], [-8, 28], [12, 32]];
+  for (const s of sandSpots) {
+    for (let row = 0; row < 2; row++) for (let col = 0; col < 4; col++) {
+      const bag = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 5), sandbagMat);
+      bag.scale.set(1.3, 0.7, 0.9); bag.position.set(s[0] + col*0.7 - 1, 0.25 + row*0.45, s[1] + (row%2)*0.2);
+      bag.castShadow = true; scene.add(bag);
+      obstacles.push(bag);
+    }
+  }
+
+  // concrete jersey barriers along the road
+  for (let i = 0; i < 10; i++) {
+    const bx = -50 + i*11, bz = (i % 2 === 0) ? 9 : -9;
+    const bar = box(3, 1.3, 0.9, 0xd0c4a0, bx, 0.65, bz, true, 0);
+  }
+
+  // burned-out car wrecks
+  for (const c of [[-30, 24], [34, -30], [-38, 6], [44, 16]]) {
+    const wreck = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.0, 1.7), new THREE.MeshStandardMaterial({ color: 0x3a3532, roughness: 1 }));
+    body.position.y = 0.7; wreck.add(body);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.8, 1.6), new THREE.MeshStandardMaterial({ color: 0x2a2724, roughness: 1 }));
+    cabin.position.set(-0.2, 1.4, 0); wreck.add(cabin);
+    for (const wx of [-1.2, 1.2]) for (const wz of [-0.85, 0.85]) {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 10), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
+      wheel.rotation.x = Math.PI/2; wheel.position.set(wx, 0.4, wz); wreck.add(wheel);
+    }
+    wreck.position.set(c[0], 0, c[1]); wreck.rotation.y = Math.random()*3; wreck.castShadow = true; scene.add(wreck);
+    obstacles.push(body);
+  }
+
+  // rising smoke plumes (billboard-ish dark columns)
+  for (const sp of [[-48, 34], [50, 38], [-30, 24]]) {
+    for (let k = 0; k < 5; k++) {
+      const puff = new THREE.Mesh(new THREE.SphereGeometry(2 + k*0.8, 8, 6), new THREE.MeshBasicMaterial({ color: 0x2a2a2a, transparent: true, opacity: 0.4 - k*0.06, fog: false }));
+      puff.position.set(sp[0] + (Math.random()-0.5)*3, 5 + k*4, sp[1] + (Math.random()-0.5)*3); scene.add(puff);
+    }
+  }
+  // craters (dark ground patches)
+  for (let i = 0; i < 8; i++) {
+    const crater = new THREE.Mesh(new THREE.CircleGeometry(2 + Math.random()*2, 16), new THREE.MeshStandardMaterial({ color: 0x3a352e, roughness: 1 }));
+    crater.rotation.x = -Math.PI/2; crater.position.set((Math.random()-0.5)*130, 0.03, (Math.random()-0.5)*130); scene.add(crater);
+  }
 }
 
 function buildShop() {
@@ -399,23 +482,76 @@ function insideShop() { return Math.abs(player.x - SHOP.x) < SHOP.w/2 - 0.3 && M
 
 function makeFighter(color) {
   const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 1.15, 10), new THREE.MeshStandardMaterial({ color }));
-  body.position.y = 0.9; body.castShadow = true; g.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 12), new THREE.MeshStandardMaterial({ color: 0xffe0bd }));
-  head.position.y = 1.7; head.castShadow = true; g.add(head);
-  const helm = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 8, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({ color: 0x2a3a2a }));
-  helm.position.y = 1.74; g.add(helm);
-  const legMat = new THREE.MeshStandardMaterial({ color: 0x2a2f38 });
-  const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,0.7,6), legMat); legL.position.set(-0.14,0.35,0); g.add(legL);
-  const legR = legL.clone(); legR.position.x = 0.14; g.add(legR);
-  // rifle in hands
+  const camo = new THREE.MeshStandardMaterial({ color: 0x6b6f5c, roughness: 0.95 });      // camo fatigues
+  const camoDark = new THREE.MeshStandardMaterial({ color: 0x4a4d3e, roughness: 0.95 });   // darker camo
+  const vestMat = new THREE.MeshStandardMaterial({ color: 0x2f3330, roughness: 0.8 });      // plate carrier
+  const gear = new THREE.MeshStandardMaterial({ color: 0x1c1e1b, roughness: 0.7 });         // black gear
+  const skin = new THREE.MeshStandardMaterial({ color: 0xe8b48c, roughness: 0.7 });
+  const accent = new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.2 }); // operator color
+  const pouch = new THREE.MeshStandardMaterial({ color: 0x3a3d33, roughness: 0.9 });
+  function m(geo, mat, x, y, z, rx, rz) { const me = new THREE.Mesh(geo, mat); me.position.set(x,y,z); if (rx) me.rotation.x = rx; if (rz) me.rotation.z = rz; me.castShadow = true; g.add(me); return me; }
+  const BX = THREE.BoxGeometry, CY = THREE.CylinderGeometry, SP = THREE.SphereGeometry;
+
+  // legs — camo trousers + knee pads + boots
+  for (const side of [-1, 1]) {
+    m(new BX(0.19, 0.5, 0.22), camo, side*0.15, 0.5, 0);           // thigh
+    m(new BX(0.17, 0.45, 0.2), camoDark, side*0.15, 0.12, 0.01);   // shin
+    m(new SP(0.11, 8, 6), gear, side*0.15, 0.32, 0.11);            // knee pad
+    m(new BX(0.19, 0.14, 0.32), gear, side*0.15, -0.05, 0.04);     // boot
+  }
+  // hips / belt
+  m(new BX(0.44, 0.16, 0.26), gear, 0, 0.78, 0);
+  m(new BX(0.12, 0.2, 0.14), pouch, -0.22, 0.72, 0.08);            // hip pouch
+  m(new BX(0.1, 0.22, 0.1), gear, 0.24, 0.68, 0.06);              // holster
+
+  // torso — plate carrier vest
+  m(new BX(0.5, 0.62, 0.3), camo, 0, 1.2, 0);                      // torso base
+  m(new BX(0.46, 0.5, 0.16), vestMat, 0, 1.24, 0.16);             // front plate
+  m(new BX(0.46, 0.5, 0.14), vestMat, 0, 1.24, -0.15);            // back plate
+  // vest pouches (mag pouches across chest/belly)
+  for (let i = -1; i <= 1; i++) m(new BX(0.12, 0.16, 0.09), pouch, i*0.14, 1.05, 0.24);
+  m(new BX(0.13, 0.12, 0.08), accent, 0.15, 1.34, 0.24);          // colored patch (operator id)
+  m(new BX(0.13, 0.12, 0.08), pouch, -0.15, 1.34, 0.24);          // radio pouch
+  // shoulders
+  m(new SP(0.15, 8, 6), vestMat, -0.3, 1.42, 0);
+  m(new SP(0.15, 8, 6), vestMat, 0.3, 1.42, 0);
+
+  // arms — camo sleeves + gloves
+  for (const side of [-1, 1]) {
+    m(new BX(0.15, 0.42, 0.15), camo, side*0.36, 1.24, 0.02);      // upper arm
+    m(new BX(0.13, 0.36, 0.13), camoDark, side*0.36, 0.88, 0.06);  // forearm
+    m(new SP(0.09, 8, 6), gear, side*0.36, 0.68, 0.1);             // glove/hand
+  }
+
+  // neck + head
+  m(new CY(0.09, 0.09, 0.1, 8), skin, 0, 1.56, 0);
+  const head = m(new SP(0.16, 14, 12), skin, 0, 1.72, 0.02);
+  // face detail: darker back, small nose hint
+  m(new BX(0.05, 0.05, 0.04), skin, 0, 1.7, 0.17);
+  // helmet — combat helmet with brim + strap + colored band
+  m(new SP(0.2, 14, 10, 0, Math.PI*2, 0, Math.PI*0.62), gear, 0, 1.76, 0);   // helmet dome
+  m(new BX(0.26, 0.05, 0.24), gear, 0, 1.78, 0.06);                          // brim/rim
+  m(new BX(0.28, 0.04, 0.28), accent, 0, 1.83, 0).scale.set(1, 1, 1);        // colored band
+  // NVG mount hint on front
+  m(new BX(0.06, 0.06, 0.08), vestMat, 0, 1.84, 0.18);
+  // headset
+  m(new SP(0.05, 8, 6), gear, -0.16, 1.72, 0.02);
+  m(new SP(0.05, 8, 6), gear, 0.16, 1.72, 0.02);
+  // small mic boom
+  m(new BX(0.02, 0.02, 0.12), gear, 0.14, 1.66, 0.1);
+
+  // backpack
+  m(new BX(0.34, 0.42, 0.16), camoDark, 0, 1.2, -0.24);
+
+  // rifle held across body
   const rifle = new THREE.Group();
   const rDark = new THREE.MeshStandardMaterial({ color: 0x14161c });
-  const rb = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.85,8), rDark); rb.rotation.x = Math.PI/2; rb.position.z = -0.45; rifle.add(rb);
-  const rbody = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.1,0.4), rDark); rbody.position.z = -0.05; rifle.add(rbody);
-  rifle.position.set(0.28, 1.15, -0.2); g.add(rifle);
-  const flash = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
-  flash.position.set(0.28, 1.15, -1.1); g.add(flash);
+  const rb = new THREE.Mesh(new CY(0.03,0.03,0.85,8), rDark); rb.rotation.x = Math.PI/2; rb.position.z = -0.45; rifle.add(rb);
+  const rbody = new THREE.Mesh(new BX(0.08,0.12,0.42), rDark); rbody.position.z = -0.05; rifle.add(rbody);
+  const rmag = new THREE.Mesh(new BX(0.06,0.2,0.1), rDark); rmag.position.set(0,-0.14,-0.05); rifle.add(rmag);
+  rifle.position.set(0.26, 1.02, 0.14); rifle.rotation.y = -0.15; g.add(rifle);
+  const flash = new THREE.Mesh(new SP(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
+  flash.position.set(0.26, 1.02, -0.7); g.add(flash);
   g.userData.flash = flash;
   return g;
 }
