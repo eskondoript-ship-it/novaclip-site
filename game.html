@@ -175,7 +175,6 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 </div>
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js' onerror="console.warn('GLTFLoader unavailable — custom .glb models disabled, built-in models will be used')"></script>
 <script>
 window.addEventListener('error', (e) => { const b = document.getElementById('errbox'); b.style.display = 'block'; b.textContent = '⚠ ' + e.message; });
 
@@ -217,27 +216,27 @@ const CUSTOM_MODELS = {
   character: '',        // e.g. 'soldier.glb'  — used for you AND the bots
   characterScale: 1.0,  // shrink/grow to fit (try 1.0, adjust if too big/small)
   characterYOffset: 0,  // nudge up/down if feet aren't on the ground
-  weapon: '
-low-poly_just_right_carbine.glb'            // e.g. 'rifle.glb'    — first-person gun model
+  weapon: 'low-poly_just_right_carbine.glb'            // e.g. 'rifle.glb'    — first-person gun model
 };
 let loadedCharGLB = null, loadedWeapGLB = null;
-const gltfLoader = (typeof THREE !== 'undefined' && THREE.GLTFLoader) ? new THREE.GLTFLoader() : null;
 
 function loadCustomModels(done) {
-  let pending = 0, fired = false;
-  const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
-  if (!gltfLoader) { done(); return; }
-  if (CUSTOM_MODELS.character) {
-    pending++;
-    gltfLoader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; pending--; finish(); },
-      undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); });
-  }
-  if (CUSTOM_MODELS.weapon) {
-    pending++;
-    gltfLoader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); },
-      undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); });
-  }
-  if (pending === 0) done();
+  // only bother if a custom model is actually configured
+  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon) { done(); return; }
+  // dynamically load GLTFLoader, then the models — never blocks the base game
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+  s.onload = () => {
+    if (!THREE.GLTFLoader) { console.warn('GLTFLoader missing — using built-in models'); done(); return; }
+    const loader = new THREE.GLTFLoader();
+    let pending = 0, fired = false;
+    const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
+    if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); }); }
+    if (pending === 0) done();
+  };
+  s.onerror = () => { console.warn('GLTFLoader unavailable — using built-in models'); done(); };
+  document.head.appendChild(s);
 }
 
 // ---------- state ----------
