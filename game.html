@@ -175,6 +175,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 </div>
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'></script>
 <script>
 window.addEventListener('error', (e) => { const b = document.getElementById('errbox'); b.style.display = 'block'; b.textContent = '⚠ ' + e.message; });
 
@@ -205,6 +206,38 @@ ownedWeapons().forEach(w => { if (WEAPONS[w]) WEAPONS[w].owned = true; });
 WEAPONS.sniper.owned = true;
 
 const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Echo','Rogue'];
+
+// ============================================================
+//  CUSTOM 3D MODELS (optional) — drop a .glb in your repo and
+//  put its filename here. Leave '' to use the built-in models.
+//  Get free rigged models from Mixamo, Sketchfab, or Kenney,
+//  export as .glb, upload to your repo (Add file > Upload files).
+// ============================================================
+const CUSTOM_MODELS = {
+  character: 'soldier.glb',        // e.g. 'soldier.glb'  — used for you AND the bots
+  characterScale: 1.0,  // shrink/grow to fit (try 1.0, adjust if too big/small)
+  characterYOffset: 0,  // nudge up/down if feet aren't on the ground
+  weapon: 'weapon.glb'            // e.g. 'rifle.glb'    — first-person gun model
+};
+let loadedCharGLB = null, loadedWeapGLB = null;
+const gltfLoader = (typeof THREE !== 'undefined' && THREE.GLTFLoader) ? new THREE.GLTFLoader() : null;
+
+function loadCustomModels(done) {
+  let pending = 0, fired = false;
+  const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
+  if (!gltfLoader) { done(); return; }
+  if (CUSTOM_MODELS.character) {
+    pending++;
+    gltfLoader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; pending--; finish(); },
+      undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); });
+  }
+  if (CUSTOM_MODELS.weapon) {
+    pending++;
+    gltfLoader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); },
+      undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); });
+  }
+  if (pending === 0) done();
+}
 
 // ---------- state ----------
 let scene, camera, renderer, skyMesh;
@@ -276,15 +309,17 @@ function init() {
 
   buildWorld();
   buildShop();
-  for (let i = 0; i < 9; i++) spawnBot(i);
 
-  playerMesh = makeFighter(playerColor);
-  playerMesh.visible = false;
-  scene.add(playerMesh);
-
-  gunGroup = buildWeaponModel(WEAPONS[curWeap].model);
-  camera.add(gunGroup);
-  scene.add(camera);
+  // load any custom .glb models first, THEN build the fighters (falls back to built-in)
+  loadCustomModels(() => {
+    for (let i = 0; i < 9; i++) spawnBot(i);
+    playerMesh = makeFighter(playerColor);
+    playerMesh.visible = false;
+    scene.add(playerMesh);
+    gunGroup = buildWeaponModel(WEAPONS[curWeap].model);
+    camera.add(gunGroup);
+    scene.add(camera);
+  });
 
   window.addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 }
@@ -481,6 +516,19 @@ function buildShop() {
 function insideShop() { return Math.abs(player.x - SHOP.x) < SHOP.w/2 - 0.3 && Math.abs(player.z - SHOP.z) < SHOP.d/2 - 0.3; }
 
 function makeFighter(color) {
+  // if a custom .glb character is loaded, clone and use it
+  if (loadedCharGLB) {
+    const g = new THREE.Group();
+    const model = loadedCharGLB.clone(true);
+    model.scale.setScalar(CUSTOM_MODELS.characterScale);
+    model.position.y = CUSTOM_MODELS.characterYOffset;
+    // tint with the operator color so the 6 characters differ
+    model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.material = o.material.clone(); if (o.material.color) o.material.color.lerp(new THREE.Color(color), 0.25); } });
+    g.add(model);
+    const flash = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
+    flash.position.set(0.26, 1.02, -0.7); g.add(flash); g.userData.flash = flash;
+    return g;
+  }
   const g = new THREE.Group();
   const camo = new THREE.MeshStandardMaterial({ color: 0x6b6f5c, roughness: 0.95 });      // camo fatigues
   const camoDark = new THREE.MeshStandardMaterial({ color: 0x4a4d3e, roughness: 0.95 });   // darker camo
@@ -558,6 +606,17 @@ function makeFighter(color) {
 
 // ---------- per-weapon first-person models ----------
 function buildWeaponModel(type) {
+  // if a custom .glb weapon is loaded, use it for all guns (not the knife)
+  if (loadedWeapGLB && type !== 'knife') {
+    const g = new THREE.Group();
+    const model = loadedWeapGLB.clone(true);
+    model.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    g.add(model);
+    const mz = -1.6;
+    const fl = new THREE.PointLight(0xffbb44, 0, 6); fl.position.set(0,0.02,mz); g.add(fl); g.userData.flashLight = fl;
+    const flash = new THREE.Mesh(new THREE.SphereGeometry(0.16,10,10), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 })); flash.position.set(0,0.02,mz); g.add(flash); g.userData.flash = flash;
+    return g;
+  }
   const g = new THREE.Group();
   const dark = new THREE.MeshStandardMaterial({ color: 0x23262e, roughness: 0.45, metalness: 0.7 });
   const black = new THREE.MeshStandardMaterial({ color: 0x14161b, roughness: 0.5, metalness: 0.6 });
@@ -731,6 +790,7 @@ function reload() {
 }
 
 function shoot() {
+  if (!gunGroup) return;
   const W = WEAPONS[curWeap]; const now = performance.now();
   if (now - lastShot < W.rate || player.reloading) return;
   if (W.mag !== Infinity && player.mag <= 0) { reload(); return; }
@@ -922,6 +982,7 @@ function updatePlayer(dt) {
   if (!c4Ready) { c4Timer -= dt; if (c4Timer <= 0) { c4Ready = true; document.getElementById('c4stat').textContent = 'READY — C to plant'; } else document.getElementById('c4stat').textContent = 'arming ' + Math.ceil(c4Timer) + 's…'; }
 }
 function updateCamera(dt) {
+  if (!gunGroup || !playerMesh) return;
   const fov = scoped ? 25 : 72;
   if (Math.abs(camera.fov - fov) > 0.5) { camera.fov += (fov - camera.fov)*0.2; camera.updateProjectionMatrix(); }
   recoil = Math.max(0, recoil - dt*6); const kick = recoil*0.03;
