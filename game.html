@@ -63,6 +63,12 @@ body { background: #120c1c; overflow: hidden; color: #fff; }
 .diff.sel { border-color: #00F0FF; box-shadow: 0 0 30px rgba(0,240,255,0.35); }
 .diff h3 { font-size: 1.1rem; margin-bottom: 6px; }
 .diff.easy h3 { color: #B6FF3C; } .diff.med h3 { color: #00F0FF; } .diff.hard h3 { color: #FF2E97; } .diff.ranked h3 { color: #FFD700; }
+.charpick { margin-bottom: 20px; }
+.charlabel { font-size: 0.85rem; color: #7E8AA6; margin-bottom: 10px; letter-spacing: 1px; }
+.chargrid { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.char { width: 58px; height: 58px; border-radius: 14px; border: 2px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 1.7rem; cursor: pointer; transition: 0.2s; }
+.char:hover { transform: translateY(-3px); }
+.char.sel { border-color: var(--cc); box-shadow: 0 0 20px var(--cc); background: color-mix(in srgb, var(--cc) 15%, transparent); }
 .diff small { color: #7E8AA6; font-size: 0.78rem; line-height: 1.5; display: block; }
 .keysgrid { display: grid; grid-template-columns: repeat(3, minmax(130px, 175px)); gap: 8px; margin-bottom: 22px; justify-content: center; }
 .keyrow { display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 9px 12px; font-size: 0.8rem; color: #b8bccb; text-align: left; white-space: nowrap; }
@@ -102,7 +108,7 @@ body { background: #120c1c; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming 20s…</span></div>
 <div id='ptsbadge'>🏆 <b id='gamepts'>0</b> pts</div>
 <div id='loadout'></div>
-<div id='viewTag'>1-9 Weapons · G Grenade · B Sticky · C Plant C4 · X Detonate · E Shop · V View</div>
+<div id='viewTag'>1-9 Weapons · SPACE Jump · G Grenade · B Sticky · C Plant C4 · X Detonate · E Shop · V View</div>
 <div id='shopprompt' style="position:fixed;top:50%;left:50%;transform:translate(-50%,60px);z-index:11;background:rgba(0,240,255,0.15);border:1px solid #00F0FF;color:#00F0FF;padding:8px 18px;border-radius:20px;font-weight:800;display:none;">Press E to open the shop 🏪</div>
 
 <div id='shopui'>
@@ -130,6 +136,7 @@ body { background: #120c1c; overflow: hidden; color: #fff; }
     <div class='keyrow'><kbd>RMB</kbd> Scope</div>
     <div class='keyrow'><kbd>WASD</kbd> Move</div>
     <div class='keyrow'><kbd>SHIFT</kbd> Sprint</div>
+    <div class='keyrow'><kbd>SPACE</kbd> Jump</div>
     <div class='keyrow'><kbd>R</kbd> Reload</div>
     <div class='keyrow'><kbd>1</kbd> Pistol</div>
     <div class='keyrow'><kbd>2</kbd> Sniper</div>
@@ -140,6 +147,17 @@ body { background: #120c1c; overflow: hidden; color: #fff; }
     <div class='keyrow'><kbd>X</kbd> Detonate</div>
     <div class='keyrow'><kbd>E</kbd> Shop</div>
     <div class='keyrow'><kbd>V</kbd> View</div>
+  </div>
+  <div class='charpick'>
+    <div class='charlabel'>🎭 Choose your character</div>
+    <div class='chargrid'>
+      <div class='char sel' data-color='0xFF2E97' data-name='Magenta' style='--cc:#FF2E97'>🦸</div>
+      <div class='char' data-color='0x00F0FF' data-name='Cyan' style='--cc:#00F0FF'>🥷</div>
+      <div class='char' data-color='0xB6FF3C' data-name='Lime' style='--cc:#B6FF3C'>🤖</div>
+      <div class='char' data-color='0xFFD700' data-name='Gold' style='--cc:#FFD700'>👑</div>
+      <div class='char' data-color='0xFF6B35' data-name='Orange' style='--cc:#FF6B35'>🔥</div>
+      <div class='char' data-color='0x9D4EDD' data-name='Violet' style='--cc:#9D4EDD'>🎮</div>
+    </div>
   </div>
   <button id='startBtn'>▶️ Enter the match</button>
 </div>
@@ -156,6 +174,15 @@ const MODES = {
 };
 let mode = 'medium';
 document.querySelectorAll('.diff').forEach(d => { d.onclick = () => { document.querySelectorAll('.diff').forEach(x => x.classList.remove('sel')); d.classList.add('sel'); mode = d.dataset.mode; }; });
+
+let playerColor = parseInt(localStorage.getItem('nc_char') || '0xFF2E97');
+document.querySelectorAll('.char').forEach(c => { c.onclick = () => {
+  document.querySelectorAll('.char').forEach(x => x.classList.remove('sel'));
+  c.classList.add('sel');
+  playerColor = parseInt(c.dataset.color);
+  localStorage.setItem('nc_char', c.dataset.color);
+  if (playerMesh) { playerMesh.children[0].material.color.setHex(playerColor); }
+}; });
 
 // weapons — permanent purchases stored in localStorage
 function ownedWeapons() { try { return JSON.parse(localStorage.getItem('nc_weapons') || '["sniper"]'); } catch (e) { return ['sniper']; } }
@@ -183,7 +210,7 @@ function setPts(v) { localStorage.setItem('nc_points', v); const gp = document.g
 function earn(n, why) { setPts(pts() + n); addFeed('+' + n + ' pts — ' + why); }
 
 let scene, camera, renderer, skyDome;
-let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, mag: 10, reloading: false, sprint: false };
+let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true };
 const keys = {};
 let bots = [], tracers = [], obstacles = [], planted = [];
 let thirdPerson = false, scoped = false, running = false;
@@ -193,34 +220,82 @@ const gclock = { last: performance.now() };
 let playerMesh, gunGroup, timerId, recoil = 0;
 let c4Ready = false, c4Timer = 20, inShop = false, safeLeft = 60, shopOpen = false;
 
-function buildGun() {
+function buildWeaponModel(type) {
   const g = new THREE.Group();
-  const dark = new THREE.MeshStandardMaterial({ color: 0x1c1f26, roughness: 0.5, metalness: 0.6 });
-  const grip = new THREE.MeshStandardMaterial({ color: 0x2e2418, roughness: 0.8 });
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.9, 10), dark);
-  barrel.rotation.x = Math.PI/2; barrel.position.set(0, 0, -0.7); g.add(barrel);
-  const muzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.1, 10), dark);
-  muzzle.rotation.x = Math.PI/2; muzzle.position.set(0, 0, -1.13); g.add(muzzle);
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.12, 0.55), dark);
-  body.position.set(0, -0.01, -0.28); g.add(body);
-  const scopeT = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.3, 12), dark);
-  scopeT.rotation.x = Math.PI/2; scopeT.position.set(0, 0.1, -0.32); g.add(scopeT);
-  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.04, 12), new THREE.MeshBasicMaterial({ color: 0x66d9ff }));
-  lens.position.set(0, 0.1, -0.47); g.add(lens);
-  const stock = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.14, 0.35), grip);
-  stock.position.set(0, -0.04, 0.12); g.add(stock);
-  const gr = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.16, 0.07), grip);
-  gr.position.set(0, -0.13, -0.12); gr.rotation.x = 0.3; g.add(gr);
-  const mag = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.1), dark);
-  mag.position.set(0, -0.13, -0.3); mag.rotation.x = -0.15; g.add(mag);
-  const flashLight = new THREE.PointLight(0xffbb44, 0, 4);
-  flashLight.position.set(0, 0, -1.2); g.add(flashLight);
+  const dark = new THREE.MeshStandardMaterial({ color: 0x23262e, roughness: 0.45, metalness: 0.7 });
+  const black = new THREE.MeshStandardMaterial({ color: 0x14161b, roughness: 0.5, metalness: 0.6 });
+  const grip = new THREE.MeshStandardMaterial({ color: 0x3a2f22, roughness: 0.8 });
+  const steel = new THREE.MeshStandardMaterial({ color: 0xb8c0cc, roughness: 0.25, metalness: 0.95 });
+  const accent = new THREE.MeshStandardMaterial({ color: 0x00F0FF, emissive: 0x0088aa, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.8 });
+  const wood = new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.7 });
+  function part(geo, mat, x, y, z, rx) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; g.add(m); return m; }
+  const CY = THREE.CylinderGeometry, BX = THREE.BoxGeometry;
+
+  if (type === 'knife') {
+    // blade + handle — clearly a knife
+    const blade = new THREE.Mesh(new BX(0.05, 0.16, 0.7), steel);
+    blade.position.set(0, 0, -0.5); g.add(blade);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.3, 4), steel);
+    tip.rotation.x = -Math.PI/2; tip.rotation.z = Math.PI/4; tip.position.set(0, 0, -0.95); g.add(tip);
+    part(new BX(0.07, 0.1, 0.28), grip, 0, -0.02, -0.05);
+    part(new BX(0.12, 0.04, 0.05), black, 0, 0, -0.2); // guard
+  } else if (type === 'pistol' || type === 'revolver') {
+    part(new CY(0.035, 0.035, 0.5, 10), dark, 0, 0.05, -0.35, Math.PI/2); // barrel
+    part(new BX(0.11, 0.18, 0.34), dark, 0, 0, -0.1); // slide
+    part(new BX(0.09, 0.26, 0.12), grip, 0, -0.2, 0.02).rotation.x = 0.3; // grip
+    if (type === 'revolver') part(new CY(0.09, 0.09, 0.14, 8), steel, 0, 0.02, -0.12, Math.PI/2); // cylinder
+  } else if (type === 'shotgun') {
+    part(new CY(0.055, 0.055, 1.3, 12), dark, 0, 0.02, -0.9, Math.PI/2); // long thick barrel
+    part(new CY(0.05, 0.05, 1.1, 12), black, 0, -0.08, -0.8, Math.PI/2); // pump tube
+    part(new BX(0.13, 0.16, 0.5), wood, 0, -0.02, -0.15);
+    part(new BX(0.11, 0.2, 0.4), wood, 0, -0.06, 0.28); // stock
+    part(new BX(0.1, 0.13, 0.22), black, 0, -0.14, -0.55); // pump grip
+  } else if (type === 'smg') {
+    part(new CY(0.04, 0.04, 0.6, 10), dark, 0, 0.03, -0.45, Math.PI/2);
+    part(new BX(0.12, 0.18, 0.55), dark, 0, 0, -0.15);
+    part(new BX(0.09, 0.28, 0.13), black, 0, -0.22, -0.05).rotation.x = 0.25; // mag
+    part(new BX(0.09, 0.2, 0.1), grip, 0, -0.18, 0.12).rotation.x = 0.4;
+    part(new BX(0.06, 0.1, 0.35), black, 0, 0.02, 0.3); // folding stock
+  } else if (type === 'lmg') {
+    part(new CY(0.05, 0.05, 1.4, 12), dark, 0, 0.05, -1.0, Math.PI/2); // long barrel
+    part(new BX(0.18, 0.24, 0.9), dark, 0, -0.02, -0.4); // big receiver
+    part(new BX(0.22, 0.3, 0.3), black, 0, -0.22, -0.4); // ammo box
+    part(new BX(0.11, 0.24, 0.45), black, 0, -0.05, 0.3); // stock
+    part(new CY(0.02, 0.02, 0.3, 6), steel, 0, -0.2, -0.9); // bipod hint
+  } else if (type === 'dmr' || type === 'rifle') {
+    part(new CY(0.045, 0.045, 1.3, 12), dark, 0, 0.04, -0.95, Math.PI/2);
+    part(new BX(0.14, 0.2, 0.85), dark, 0, -0.02, -0.45);
+    part(new BX(0.05, 0.05, 1.2), accent, 0, 0.13, -0.7); // rail
+    part(new CY(0.06, 0.06, 0.35, 10), black, 0, 0.17, -0.55, Math.PI/2); // scope
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.05, 12), new THREE.MeshBasicMaterial({ color: 0x66d9ff })); lens.position.set(0, 0.17, -0.74); g.add(lens);
+    part(new BX(0.1, 0.28, 0.16), black, 0, -0.24, -0.42).rotation.x = -0.12; // mag
+    part(new BX(0.11, 0.2, 0.4), grip, 0, -0.05, 0.25); // stock
+    part(new BX(0.09, 0.26, 0.12), grip, 0, -0.2, -0.02).rotation.x = 0.35;
+  } else {
+    // sniper (default) — long with big scope
+    part(new CY(0.05, 0.05, 1.5, 12), dark, 0, 0, -1.1, Math.PI/2);
+    part(new CY(0.08, 0.08, 0.18, 12), black, 0, 0, -1.9, Math.PI/2); // muzzle brake
+    part(new BX(0.16, 0.22, 0.95), dark, 0, -0.02, -0.5);
+    part(new BX(0.13, 0.15, 0.7), black, 0, -0.02, -1.15); // handguard
+    part(new BX(0.05, 0.05, 1.4), accent, 0, 0.13, -0.7); // rail
+    part(new CY(0.07, 0.07, 0.42, 12), black, 0, 0.18, -0.5, Math.PI/2); // scope
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.06, 12), new THREE.MeshBasicMaterial({ color: 0x66d9ff })); lens.position.set(0, 0.18, -0.72); g.add(lens);
+    part(new BX(0.13, 0.24, 0.55), black, 0, -0.06, 0.25); // stock
+    part(new BX(0.1, 0.3, 0.13), grip, 0, -0.24, -0.02).rotation.x = 0.35;
+    part(new BX(0.1, 0.32, 0.18), black, 0, -0.26, -0.5).rotation.x = -0.12; // mag
+  }
+
+  // muzzle flash (not for knife)
+  const muzzleZ = type === 'knife' ? -0.9 : (type === 'pistol' || type === 'revolver' ? -0.6 : -1.6);
+  const flashLight = new THREE.PointLight(0xffbb44, 0, 6);
+  flashLight.position.set(0, 0.02, muzzleZ); g.add(flashLight);
   g.userData.flashLight = flashLight;
-  const flash = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
-  flash.position.set(0, 0, -1.2); g.add(flash);
+  const flash = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
+  flash.position.set(0, 0.02, muzzleZ); g.add(flash);
   g.userData.flash = flash;
   return g;
 }
+function buildGun() { return buildWeaponModel('sniper'); }
 
 function makeFighter(color) {
   const g = new THREE.Group();
@@ -286,11 +361,12 @@ function init() {
   buildShop();
   for (let i = 0; i < 9; i++) spawnBot(i);
 
-  playerMesh = makeFighter(0xFF2E97);
+  playerMesh = makeFighter(playerColor);
   playerMesh.visible = false;
   scene.add(playerMesh);
   gunGroup = buildGun();
-  scene.add(gunGroup);
+  camera.add(gunGroup);
+  scene.add(camera);
 
   window.addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 }
@@ -504,6 +580,7 @@ document.addEventListener('mouseup', (e) => { if (e.button === 2) { scoped = fal
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
+  if (e.code === 'Space' && running) e.preventDefault();
   if (!running) return;
   if (e.code === 'KeyR') reload();
   if (e.code === 'KeyV') { thirdPerson = !thirdPerson; if (scoped) { scoped = false; document.getElementById('scope').style.display = 'none'; } }
@@ -536,6 +613,14 @@ function switchWeap(w) {
   document.getElementById('weapname').textContent = WEAPONS[w].name;
   document.getElementById('mag').textContent = WEAPONS[w].mag === Infinity ? '∞' : player.mag;
   document.getElementById('magmax').textContent = WEAPONS[w].mag === Infinity ? '' : '/' + WEAPONS[w].mag;
+  // swap the 3D model to match the weapon
+  if (gunGroup && camera) {
+    const wasVisible = gunGroup.visible;
+    camera.remove(gunGroup);
+    gunGroup = buildWeaponModel(w);
+    gunGroup.visible = wasVisible;
+    camera.add(gunGroup);
+  }
   buildLoadoutHUD();
 }
 function reload() {
@@ -765,6 +850,13 @@ function updatePlayer(dt) {
   player.x = Math.max(-38, Math.min(38, player.x));
   player.z = Math.max(-38, Math.min(38, player.z));
 
+  // JUMP + gravity
+  const GROUND = 1.7;
+  if (keys['Space'] && player.onGround) { player.vy = 6.2; player.onGround = false; }
+  player.vy = (player.vy || 0) - 18 * dt;
+  player.y += player.vy * dt;
+  if (player.y <= GROUND) { player.y = GROUND; player.vy = 0; player.onGround = true; }
+
   // shop / safe zone logic
   const nowIn = insideShop();
   document.getElementById('shopprompt').style.display = (nowIn && !shopOpen) ? 'block' : 'none';
@@ -802,14 +894,14 @@ function updateCamera(dt) {
     gunGroup.visible = true;
     camera.position.set(player.x, player.y, player.z);
     camera.rotation.set(player.pitch + kick, player.yaw, 0);
+    // gun is parented to camera — position it in view space (bottom-right)
     const t = performance.now()/1000;
-    const off = scoped ? { x: 0, y: -0.12, z: -0.25 } : { x: 0.22, y: -0.18, z: -0.35 };
-    const pos = new THREE.Vector3(off.x, off.y, off.z - kick*0.8);
-    pos.applyEuler(camera.rotation);
-    gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
-    gunGroup.rotation.copy(camera.rotation);
-    gunGroup.rotation.z = Math.sin(t*1.4)*0.008;
-    gunGroup.rotation.x += Math.sin(t*1.1)*0.006 - kick*0.6;
+    if (scoped) {
+      gunGroup.position.set(0, -0.14, -0.4);
+    } else {
+      gunGroup.position.set(0.42 + Math.sin(t*1.2)*0.006, -0.42 + Math.sin(t*1.6)*0.006 - kick*0.15, -0.9 + kick*0.25);
+    }
+    gunGroup.rotation.set(Math.sin(t*1.1)*0.01 - kick*0.5, 0.04, Math.sin(t*1.4)*0.008);
   }
   skyDome.position.set(player.x, 0, player.z);
 }
