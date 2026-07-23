@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v11 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v12 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -645,25 +645,22 @@ function buildWeaponModel(type) {
   function part(geo, mat, x, y, z, rx) { const m = new THREE.Mesh(geo, mat); m.position.set(x,y,z); if (rx) m.rotation.x = rx; g.add(m); return m; }
 
   if (type === 'knife') {
-    // final-size knife (~0.34 long)
-    const blade = new THREE.Mesh(new BX(0.022, 0.07, 0.30), steel); blade.position.set(0,0,-0.20); g.add(blade);
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.12, 4), steel);
-    tip.rotation.x = -Math.PI/2; tip.rotation.z = Math.PI/4; tip.position.set(0,0,-0.40); g.add(tip);
-    part(new BX(0.03,0.045,0.13), grip, 0,-0.008,-0.02);
-    part(new BX(0.055,0.018,0.022), black, 0,0,-0.085);
+    part(new BX(0.022, 0.07, 0.30), steel, 0, 0, -0.20);      // blade
+    part(new BX(0.014, 0.045, 0.10), steel, 0, 0, -0.40);     // point
+    part(new BX(0.030, 0.045, 0.13), grip, 0, -0.008, -0.02); // handle
+    part(new BX(0.055, 0.018, 0.022), black, 0, 0, -0.085);   // guard
   } else {
-    // final-size sniper rifle (~0.63 long)
-    part(new CY(0.013,0.013,0.375,12), dark, 0,0,-0.275, Math.PI/2);   // barrel
-    part(new CY(0.020,0.020,0.045,12), black, 0,0,-0.475, Math.PI/2);  // muzzle brake
-    part(new BX(0.040,0.055,0.238), dark, 0,-0.005,-0.125);            // receiver
-    part(new BX(0.033,0.038,0.175), black, 0,-0.005,-0.288);           // handguard
-    part(new BX(0.013,0.013,0.350), accent, 0,0.033,-0.175);           // rail
-    part(new CY(0.018,0.018,0.105,12), black, 0,0.045,-0.125, Math.PI/2); // scope
-    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.015,12), new THREE.MeshBasicMaterial({ color: 0x66d9ff }));
-    lens.position.set(0,0.045,-0.180); g.add(lens);
-    part(new BX(0.033,0.060,0.138), black, 0,-0.015,0.063);            // stock
-    part(new BX(0.025,0.075,0.033), grip, 0,-0.060,-0.005).rotation.x = 0.35;
-    part(new BX(0.025,0.080,0.045), black, 0,-0.065,-0.125).rotation.x = -0.12;
+    part(new BX(0.026, 0.026, 0.375), dark,  0,  0.000, -0.275);  // barrel
+    part(new BX(0.040, 0.040, 0.045), black, 0,  0.000, -0.475);  // muzzle brake
+    part(new BX(0.040, 0.055, 0.238), dark,  0, -0.005, -0.125);  // receiver
+    part(new BX(0.033, 0.038, 0.175), black, 0, -0.005, -0.288);  // handguard
+    part(new BX(0.013, 0.013, 0.350), accent,0,  0.033, -0.175);  // top rail
+    part(new BX(0.036, 0.036, 0.105), black, 0,  0.045, -0.125);  // scope body
+    const lens = new THREE.Mesh(new THREE.PlaneGeometry(0.028, 0.028), new THREE.MeshBasicMaterial({ color: 0x66d9ff }));
+    lens.position.set(0, 0.045, -0.179); g.add(lens);             // scope lens
+    part(new BX(0.033, 0.060, 0.138), black, 0, -0.015,  0.063);  // stock
+    part(new BX(0.025, 0.075, 0.033), grip,  0, -0.060, -0.005);  // pistol grip
+    part(new BX(0.025, 0.080, 0.045), black, 0, -0.065, -0.125);  // magazine
   }
   const mz = type === 'knife' ? -0.42 : -0.50;
   const fl = new THREE.PointLight(0xffbb44, 0, 2); fl.position.set(0,0.01,mz); g.add(fl); g.userData.flashLight = fl;
@@ -1014,21 +1011,18 @@ function updateCamera(dt) {
       const s = Math.sin(prog * Math.PI);
       rl = -s * 0.35; rlrot = s * 0.9;
     }
-    // Place the gun in the world, locked to the camera.
-    // copy camera transform, then step right / down / forward along the camera's own axes.
-    gunGroup.position.copy(camera.position);
-    gunGroup.quaternion.copy(camera.quaternion);
-    if (scoped && !player.reloading) {
-      gunGroup.translateX(0);
-      gunGroup.translateY(-0.045);
-      gunGroup.translateZ(-0.42);
-    } else {
-      gunGroup.translateX(0.115 + Math.sin(t*1.2)*0.004);
-      gunGroup.translateY(-0.10 + rl*0.35 + Math.sin(t*1.6)*0.004 - kick*0.05);
-      gunGroup.translateZ(-0.32 + kick*0.08);
-      gunGroup.rotateY(0.10);
-      gunGroup.rotateX(-0.02 + Math.sin(t*1.1)*0.012 - kick*0.45 + rlrot);
-      gunGroup.rotateZ(Math.sin(t*1.4)*0.01);
+    // Position the gun relative to the camera (method from the original working build)
+    const off = (scoped && !player.reloading)
+      ? { x: 0,     y: -0.045, z: -0.42 }
+      : { x: 0.115, y: -0.10 + rl*0.35, z: -0.32 + kick*0.08 };
+    const pos = new THREE.Vector3(off.x, off.y, off.z);
+    pos.applyEuler(camera.rotation);
+    gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
+    gunGroup.rotation.copy(camera.rotation);
+    if (!scoped) {
+      gunGroup.rotation.y += 0.10;
+      gunGroup.rotation.x += -0.02 + Math.sin(t*1.1)*0.012 - kick*0.45 + rlrot;
+      gunGroup.rotation.z += Math.sin(t*1.4)*0.01;
     }
   }
   skyMesh.position.set(player.x, 0, player.z);
@@ -1045,7 +1039,7 @@ function tick() {
     const gi = (gunGroup && gunGroup.children[0]) ? gunGroup.children[0].scale.x.toFixed(2) : '?';
     const gp = gunGroup ? [gunGroup.position.x.toFixed(2), gunGroup.position.y.toFixed(2), gunGroup.position.z.toFixed(2)].join(',') : '-';
     const cp = [camera.position.x.toFixed(0), camera.position.y.toFixed(1), camera.position.z.toFixed(0)].join(',');
-    vt.textContent = 'v11 | cam(' + cp + ') | gunPos(' + gp + ') outerScale=' + gs + ' innerScale=' + gi +
+    vt.textContent = 'v12 | cam(' + cp + ') | gunPos(' + gp + ') outerScale=' + gs + ' innerScale=' + gi +
                      ' vis=' + (gunGroup ? gunGroup.visible : '-') + ' | 3rdP=' + thirdPerson;
   } catch (e) {}
   if (timeLeft <= 0) endMatch();
