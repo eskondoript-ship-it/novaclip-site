@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v16 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v18 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -206,9 +206,30 @@ const CUSTOM_MODELS = {
   character: 'military_tactical_suit_lowpolygameready.glb',  // must be uploaded to your repo
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_m4a1.glb'            // your rifle .glb filename, if you have one
+  weapon: 'rpg7_rocket_launcher.glb'            // your rifle .glb filename, if you have one
 };
 let loadedCharGLB = null, loadedWeapGLB = null;
+
+// Rigged ("game ready") models contain SkinnedMeshes, which Three.js cannot
+// clone safely — broken skeleton bindings produce invalid transforms and can
+// blank the whole scene. We don't animate the models, so convert them to plain
+// static meshes in their bind pose once, up front.
+function deskin(root) {
+  try {
+    const skinned = [];
+    root.traverse(o => { if (o.isSkinnedMesh) skinned.push(o); });
+    skinned.forEach(sm => {
+      const plain = new THREE.Mesh(sm.geometry, sm.material);
+      plain.position.copy(sm.position);
+      plain.quaternion.copy(sm.quaternion);
+      plain.scale.copy(sm.scale);
+      plain.castShadow = true;
+      if (sm.parent) { sm.parent.add(plain); sm.parent.remove(sm); }
+    });
+    if (skinned.length) console.log('converted ' + skinned.length + ' skinned mesh(es) to static');
+  } catch (e) { console.warn('deskin failed', e); }
+  return root;
+}
 
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
@@ -221,7 +242,7 @@ function loadCustomModels(done) {
     const loader = new THREE.GLTFLoader();
     let pending = 0, fired = false;
     const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
-    if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = deskin(g.scene); pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); }); }
     if (pending === 0) done();
   };
@@ -515,14 +536,26 @@ function makeFighter(color) {
     if (loadedCharGLB) {
       const g = new THREE.Group();
       const model = loadedCharGLB.clone(true);
-      const bb = new THREE.Box3().setFromObject(model);
-      const sz = new THREE.Vector3(); bb.getSize(sz);
-      const ctr = new THREE.Vector3(); bb.getCenter(ctr);
-      let s = 1.8 / (sz.y || 1);
-      if (!isFinite(s) || s <= 0.0001 || s > 1000) s = 1;
+      // ---- fully guarded auto-fit: never let a bad number reach the scene ----
+      let s = 1, offX = 0, offY = 0, offZ = 0;
+      try {
+        const bb = new THREE.Box3().setFromObject(model);
+        const sz = new THREE.Vector3(); bb.getSize(sz);
+        const ctr = new THREE.Vector3(); bb.getCenter(ctr);
+        if (isFinite(sz.y) && sz.y > 0.0001 && isFinite(ctr.x) && isFinite(bb.min.y)) {
+          const k = 1.8 / sz.y;
+          if (isFinite(k) && k > 0.0001 && k < 1000) {
+            s = k; offX = -ctr.x * k; offZ = -ctr.z * k; offY = -bb.min.y * k;
+          }
+        }
+      } catch (e) { console.warn('character auto-fit skipped', e); }
       s *= (CUSTOM_MODELS.characterScale || 1);
+      if (!isFinite(s) || s <= 0) s = 1;
+      if (!isFinite(offX)) offX = 0;
+      if (!isFinite(offY)) offY = 0;
+      if (!isFinite(offZ)) offZ = 0;
       model.scale.setScalar(s);
-      model.position.set(-ctr.x * s, -bb.min.y * s + (CUSTOM_MODELS.characterYOffset || 0), -ctr.z * s);
+      model.position.set(offX, offY + (CUSTOM_MODELS.characterYOffset || 0), offZ);
       model.traverse(o => { if (o.isMesh) o.castShadow = true; });
       g.add(model);
       // coloured team band so you can still tell fighters apart at a glance
