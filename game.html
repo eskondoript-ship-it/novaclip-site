@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v18 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v20 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -203,33 +203,12 @@ const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Ech
 //  export as .glb, upload to your repo (Add file > Upload files).
 // ============================================================
 const CUSTOM_MODELS = {
-  character: 'military_tactical_suit_lowpolygameready.glb',  // must be uploaded to your repo
+  character: 'ct_urban.glb',  // must be uploaded to your repo
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_m4a1.glb'            // your rifle .glb filename, if you have one
+  weapon: 'low-poly_colt_c7a2.glb'            // your rifle .glb filename, if you have one
 };
 let loadedCharGLB = null, loadedWeapGLB = null;
-
-// Rigged ("game ready") models contain SkinnedMeshes, which Three.js cannot
-// clone safely — broken skeleton bindings produce invalid transforms and can
-// blank the whole scene. We don't animate the models, so convert them to plain
-// static meshes in their bind pose once, up front.
-function deskin(root) {
-  try {
-    const skinned = [];
-    root.traverse(o => { if (o.isSkinnedMesh) skinned.push(o); });
-    skinned.forEach(sm => {
-      const plain = new THREE.Mesh(sm.geometry, sm.material);
-      plain.position.copy(sm.position);
-      plain.quaternion.copy(sm.quaternion);
-      plain.scale.copy(sm.scale);
-      plain.castShadow = true;
-      if (sm.parent) { sm.parent.add(plain); sm.parent.remove(sm); }
-    });
-    if (skinned.length) console.log('converted ' + skinned.length + ' skinned mesh(es) to static');
-  } catch (e) { console.warn('deskin failed', e); }
-  return root;
-}
 
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
@@ -242,7 +221,7 @@ function loadCustomModels(done) {
     const loader = new THREE.GLTFLoader();
     let pending = 0, fired = false;
     const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
-    if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = deskin(g.scene); pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); }); }
     if (pending === 0) done();
   };
@@ -294,6 +273,11 @@ function init() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.getElementById('game').appendChild(renderer.domElement);
+  renderer.domElement.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    const b = document.getElementById('errbox');
+    if (b) { b.style.display = 'block'; b.textContent = '⚠ Graphics memory ran out (WebGL context lost). The character model is too heavy — set CUSTOM_MODELS.character back to \'\' to recover.'; }
+  }, false);
 
   // bright sky dome with clouds
   const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 512;
@@ -324,7 +308,7 @@ function init() {
   // build fighters + gun. If custom .glb models are set, load them first; otherwise build immediately.
   function buildActors() {
     for (let i = 0; i < 9; i++) spawnBot(i);
-    playerMesh = makeFighter(playerColor);
+    playerMesh = makeFighter(playerColor, true);
     playerMesh.visible = false;
     scene.add(playerMesh);
     gunGroup = buildWeapon(WEAPONS[curWeap].model);
@@ -530,12 +514,12 @@ function buildShop() {
 }
 function insideShop() { return Math.abs(player.x - SHOP.x) < SHOP.w/2 - 0.3 && Math.abs(player.z - SHOP.z) < SHOP.d/2 - 0.3; }
 
-function makeFighter(color) {
+function makeFighter(color, useGLB) {
   try {
-    // --- uploaded .glb character (auto-fitted to human height) ---
-    if (loadedCharGLB) {
+    // --- uploaded .glb character (player only — 10 copies would exhaust GPU memory) ---
+    if (loadedCharGLB && useGLB) {
       const g = new THREE.Group();
-      const model = loadedCharGLB.clone(true);
+      const model = loadedCharGLB;   // used once, by the player — never cloned
       // ---- fully guarded auto-fit: never let a bad number reach the scene ----
       let s = 1, offX = 0, offY = 0, offZ = 0;
       try {
