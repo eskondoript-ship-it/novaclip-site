@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v12 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v13 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -206,7 +206,7 @@ const CUSTOM_MODELS = {
   character: 'military_tactical_suit_lowpolygameready.glb',        // e.g. 'soldier.glb'  — used for you AND the bots
   characterScale: 1.0,  // shrink/grow to fit (try 1.0, adjust if too big/small)
   characterYOffset: 0,  // nudge up/down if feet aren't on the ground
-  weapon: 'low-poly_just_right_carbine.glb'            // e.g. 'rifle.glb'    — first-person gun model
+  weapon: 'low-poly_colt_m4a1.glb'            // e.g. 'rifle.glb'    — first-person gun model
 };
 let loadedCharGLB = null, loadedWeapGLB = null;
 
@@ -524,13 +524,13 @@ function makeFighter(color) {
     return g;
   }
   const g = new THREE.Group();
-  const camo = new THREE.MeshStandardMaterial({ color: 0x6b6f5c, roughness: 0.95 });      // camo fatigues
-  const camoDark = new THREE.MeshStandardMaterial({ color: 0x4a4d3e, roughness: 0.95 });   // darker camo
-  const vestMat = new THREE.MeshStandardMaterial({ color: 0x2f3330, roughness: 0.8 });      // plate carrier
-  const gear = new THREE.MeshStandardMaterial({ color: 0x1c1e1b, roughness: 0.7 });         // black gear
+  const camo = new THREE.MeshStandardMaterial({ color: 0xa8ab8e, roughness: 0.9 });       // camo fatigues
+  const camoDark = new THREE.MeshStandardMaterial({ color: 0x8a8d70, roughness: 0.9 });    // darker camo
+  const vestMat = new THREE.MeshStandardMaterial({ color: 0x5c6157, roughness: 0.8 });     // plate carrier
+  const gear = new THREE.MeshStandardMaterial({ color: 0x44483f, roughness: 0.7 });        // dark gear
   const skin = new THREE.MeshStandardMaterial({ color: 0xe8b48c, roughness: 0.7 });
-  const accent = new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.2 }); // operator color
-  const pouch = new THREE.MeshStandardMaterial({ color: 0x3a3d33, roughness: 0.9 });
+  const accent = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.1, emissive: color, emissiveIntensity: 0.25 });
+  const pouch = new THREE.MeshStandardMaterial({ color: 0x6e7259, roughness: 0.9 });
   function m(geo, mat, x, y, z, rx, rz) { const me = new THREE.Mesh(geo, mat); me.position.set(x,y,z); if (rx) me.rotation.x = rx; if (rz) me.rotation.z = rz; me.castShadow = true; g.add(me); return me; }
   const BX = THREE.BoxGeometry, CY = THREE.CylinderGeometry, SP = THREE.SphereGeometry;
 
@@ -548,7 +548,7 @@ function makeFighter(color) {
 
   // torso — plate carrier vest
   m(new BX(0.5, 0.62, 0.3), camo, 0, 1.2, 0);                      // torso base
-  m(new BX(0.46, 0.5, 0.16), vestMat, 0, 1.24, 0.16);             // front plate
+  m(new BX(0.46, 0.5, 0.16), accent, 0, 1.24, 0.16);              // front plate (operator colour)
   m(new BX(0.46, 0.5, 0.14), vestMat, 0, 1.24, -0.15);            // back plate
   // vest pouches (mag pouches across chest/belly)
   for (let i = -1; i <= 1; i++) m(new BX(0.12, 0.16, 0.09), pouch, i*0.14, 1.05, 0.24);
@@ -636,9 +636,9 @@ function buildWeaponModel(type) {
     return g;
   }
   const g = new THREE.Group();
-  const dark = new THREE.MeshStandardMaterial({ color: 0x23262e, roughness: 0.45, metalness: 0.7 });
-  const black = new THREE.MeshStandardMaterial({ color: 0x14161b, roughness: 0.5, metalness: 0.6 });
-  const grip = new THREE.MeshStandardMaterial({ color: 0x3a2f22, roughness: 0.8 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x6a7080, roughness: 0.5, metalness: 0.55 });
+  const black = new THREE.MeshStandardMaterial({ color: 0x4a4f5a, roughness: 0.55, metalness: 0.5 });
+  const grip = new THREE.MeshStandardMaterial({ color: 0x7a6247, roughness: 0.8 });
   const steel = new THREE.MeshStandardMaterial({ color: 0xb8c0cc, roughness: 0.25, metalness: 0.95 });
   const accent = new THREE.MeshStandardMaterial({ color: 0x00F0FF, emissive: 0x0088aa, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.8 });
   const CY = THREE.CylinderGeometry, BX = THREE.BoxGeometry;
@@ -997,7 +997,7 @@ function updateCamera(dt) {
     const d = camDir(); camera.position.set(player.x - d.x*6, player.y + 2.6, player.z - d.z*6);
     camera.rotation.set(player.pitch*0.6 + kick, player.yaw, 0);
   } else {
-    playerMesh.visible = false; gunGroup.visible = true;
+    playerMesh.visible = false; gunGroup.visible = !scoped;
     // keep the body with the player even while hidden, so nothing is stranded at the map centre
     playerMesh.position.set(player.x, player.y - 1.7, player.z);
     playerMesh.rotation.y = player.yaw;
@@ -1012,9 +1012,7 @@ function updateCamera(dt) {
       rl = -s * 0.35; rlrot = s * 0.9;
     }
     // Position the gun relative to the camera (method from the original working build)
-    const off = (scoped && !player.reloading)
-      ? { x: 0,     y: -0.045, z: -0.42 }
-      : { x: 0.115, y: -0.10 + rl*0.35, z: -0.32 + kick*0.08 };
+    const off = { x: 0.185, y: -0.155 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -0.46 + kick*0.10 };
     const pos = new THREE.Vector3(off.x, off.y, off.z);
     pos.applyEuler(camera.rotation);
     gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
@@ -1032,16 +1030,6 @@ function tick() {
   timeLeft -= 1;
   const m = Math.floor(timeLeft/60), s = timeLeft % 60;
   document.getElementById('timer').textContent = m + ':' + (s < 10 ? '0'+s : s);
-  // DIAGNOSTIC readout — tells us exactly what the gun and camera are doing
-  try {
-    const vt = document.getElementById('viewTag');
-    const gs = gunGroup ? gunGroup.scale.x.toFixed(2) : 'none';
-    const gi = (gunGroup && gunGroup.children[0]) ? gunGroup.children[0].scale.x.toFixed(2) : '?';
-    const gp = gunGroup ? [gunGroup.position.x.toFixed(2), gunGroup.position.y.toFixed(2), gunGroup.position.z.toFixed(2)].join(',') : '-';
-    const cp = [camera.position.x.toFixed(0), camera.position.y.toFixed(1), camera.position.z.toFixed(0)].join(',');
-    vt.textContent = 'v12 | cam(' + cp + ') | gunPos(' + gp + ') outerScale=' + gs + ' innerScale=' + gi +
-                     ' vis=' + (gunGroup ? gunGroup.visible : '-') + ' | 3rdP=' + thirdPerson;
-  } catch (e) {}
   if (timeLeft <= 0) endMatch();
 }
 function endMatch() {
