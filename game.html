@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v7 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v8 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -610,24 +610,34 @@ function makeFighter(color) {
 }
 
 // ---------- per-weapon first-person models ----------
-// Wrap a weapon model so it is auto-centered and auto-scaled to a sensible
-// on-screen size. Works for the built-in models AND any uploaded .glb.
-function fitWeapon(inner) {
+// Known-good sizes for the built-in models (measured by hand, no guesswork).
+const WEAPON_FIT = { sniper: 0.25, knife: 0.5 };
+
+// Only uploaded .glb models need measuring, since their size is unknown.
+function autoFitGLB(inner) {
   const wrapper = new THREE.Group();
   const bbox = new THREE.Box3().setFromObject(inner);
   const size = new THREE.Vector3(), center = new THREE.Vector3();
   bbox.getSize(size); bbox.getCenter(center);
-  const longest = Math.max(size.x, size.y, size.z) || 1;
-  const scale = 0.62 / longest;            // target overall length in view
-  inner.position.sub(center);              // centre the model on the origin
-  inner.position.multiplyScalar(scale);
+  let longest = Math.max(size.x, size.y, size.z);
+  let scale = 0.62 / longest;
+  if (!isFinite(scale) || scale <= 0 || scale > 100) scale = 1;   // safety net
+  inner.position.sub(center).multiplyScalar(scale);
   inner.scale.setScalar(scale);
   wrapper.add(inner);
-  wrapper.userData = inner.userData;       // keep muzzle flash refs accessible
+  wrapper.userData = inner.userData;
   return wrapper;
 }
 
-function buildWeapon(type) { return fitWeapon(buildWeaponModel(type)); }
+function buildWeapon(type) {
+  const inner = buildWeaponModel(type);
+  if (loadedWeapGLB && type !== 'knife') return autoFitGLB(inner);
+  const wrapper = new THREE.Group();
+  inner.scale.setScalar(WEAPON_FIT[type] || 0.25);
+  wrapper.add(inner);
+  wrapper.userData = inner.userData;
+  return wrapper;
+}
 
 function buildWeaponModel(type) {
   // if a custom .glb weapon is loaded, use it for all guns (not the knife)
@@ -996,15 +1006,15 @@ function updateCamera(dt) {
     }
     // gun sits in the weapon overlay scene at fixed coords in front of weaponCam
     if (scoped && !player.reloading) {
-      gunGroup.position.set(0, -0.06, -0.5);
+      gunGroup.position.set(0, -0.05, -0.4);
       gunGroup.rotation.set(0, 0, 0);
     } else {
       gunGroup.position.set(
-        0.22 + Math.sin(t*1.2)*0.006,
-        -0.17 + rl + Math.sin(t*1.6)*0.006 - kick*0.12,
-        -0.62 + kick*0.18
+        0.16 + Math.sin(t*1.2)*0.005,
+        -0.12 + rl*0.5 + Math.sin(t*1.6)*0.005 - kick*0.08,
+        -0.45 + kick*0.12
       );
-      gunGroup.rotation.set(-0.03 + Math.sin(t*1.1)*0.012 - kick*0.5 + rlrot, 0.12, Math.sin(t*1.4)*0.01);
+      gunGroup.rotation.set(-0.03 + Math.sin(t*1.1)*0.012 - kick*0.5 + rlrot, 0.1, Math.sin(t*1.4)*0.01);
     }
   }
   skyMesh.position.set(player.x, 0, player.z);
