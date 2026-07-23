@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v13 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v14 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -188,7 +188,7 @@ const MODES = {
 let mode = 'medium';
 
 const WEAPONS = {
-  sniper: { name: 'AWP',   slot: 1, mag: 10, dmg: 55, scopedDmg: 100, rate: 700, cost: 0, scope: true,  auto: false, range: 400, model: 'sniper', owned: true },
+  sniper: { name: 'ASSAULT RIFLE', slot: 1, mag: 30, dmg: 34, scopedDmg: 42, rate: 110, cost: 0, scope: true, auto: true, range: 320, model: 'sniper', owned: true },
   knife:  { name: 'KNIFE', slot: 2, mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, cost: 0, scope: false, auto: false, range: 3, model: 'knife', owned: true }
 };
 function ownedWeapons() { return ['sniper', 'knife']; }
@@ -206,7 +206,7 @@ const CUSTOM_MODELS = {
   character: 'military_tactical_suit_lowpolygameready.glb',        // e.g. 'soldier.glb'  — used for you AND the bots
   characterScale: 1.0,  // shrink/grow to fit (try 1.0, adjust if too big/small)
   characterYOffset: 0,  // nudge up/down if feet aren't on the ground
-  weapon: 'low-poly_colt_m4a1.glb'            // e.g. 'rifle.glb'    — first-person gun model
+  weapon: 'low-poly_just_right_carbine.glb'            // e.g. 'rifle.glb'    — first-person gun model
 };
 let loadedCharGLB = null, loadedWeapGLB = null;
 
@@ -514,9 +514,16 @@ function makeFighter(color) {
   if (loadedCharGLB) {
     const g = new THREE.Group();
     const model = loadedCharGLB.clone(true);
-    model.scale.setScalar(CUSTOM_MODELS.characterScale);
-    model.position.y = CUSTOM_MODELS.characterYOffset;
-    // tint with the operator color so the 6 characters differ
+    // auto-fit ANY uploaded model to human height with feet on the ground,
+    // so a model exported at any scale still shows up correctly.
+    const bb = new THREE.Box3().setFromObject(model);
+    const sz = new THREE.Vector3(), ctr = new THREE.Vector3();
+    bb.getSize(sz); bb.getCenter(ctr);
+    let s = 1.8 / (sz.y || 1);
+    if (!isFinite(s) || s <= 0.0001 || s > 1000) s = 1;
+    s *= (CUSTOM_MODELS.characterScale || 1);
+    model.scale.setScalar(s);
+    model.position.set(-ctr.x * s, -bb.min.y * s + (CUSTOM_MODELS.characterYOffset || 0), -ctr.z * s);
     model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.material = o.material.clone(); if (o.material.color) o.material.color.lerp(new THREE.Color(color), 0.25); } });
     g.add(model);
     const flash = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
@@ -886,9 +893,9 @@ function updateNades(dt) {
 const SHOP_ITEMS = [
   { id: 'frag', name: '💣 Frags ×3', desc: 'Equip with G, throw with LMB', cost: 40 },
   { id: 'sticky', name: '🧨 Stickies ×2', desc: 'Equip with B, throw with LMB, X detonate', cost: 50 },
-  { id: 'heavy', name: '⚡ Heavy AWP rounds', desc: 'Unscoped one-hit (permanent)', cost: 80, once: true }
+  { id: 'heavy', name: '⚡ Armour-piercing rounds', desc: 'Much higher damage (permanent)', cost: 80, once: true }
 ];
-if (heavyRounds) WEAPONS.sniper.dmg = 100;
+if (heavyRounds) WEAPONS.sniper.dmg = 60;
 function renderShop() {
   document.getElementById('shopbal').textContent = pts();
   document.getElementById('shopitems').innerHTML = SHOP_ITEMS.map(it => {
@@ -899,7 +906,7 @@ function renderShop() {
 window.buyItem = function(id) {
   const it = SHOP_ITEMS.find(x => x.id === id); if (!it || pts() < it.cost) return;
   setPts(pts() - it.cost);
-  if (id === 'heavy') { heavyRounds = true; WEAPONS.sniper.dmg = 100; localStorage.setItem('nc_heavy','1'); }
+  if (id === 'heavy') { heavyRounds = true; WEAPONS.sniper.dmg = 60; localStorage.setItem('nc_heavy','1'); }
   if (id === 'frag') inv.frag += 3;
   if (id === 'sticky') inv.sticky += 2;
   addFeed('🛒 Bought ' + it.name); renderShop(); buildLoadoutHUD();
@@ -992,8 +999,14 @@ function updateCamera(dt) {
   if (Math.abs(camera.fov - fov) > 0.5) { camera.fov += (fov - camera.fov)*0.2; camera.updateProjectionMatrix(); }
   recoil = Math.max(0, recoil - dt*6); const kick = recoil*0.03;
   if (thirdPerson) {
-    playerMesh.visible = true; gunGroup.visible = false;
+    playerMesh.visible = true;
     playerMesh.position.set(player.x, player.y - 1.7, player.z); playerMesh.rotation.y = player.yaw;
+    // show the weapon in the player's hands in third person
+    gunGroup.visible = true;
+    const hand = new THREE.Vector3(0.26, 1.12, -0.30);
+    hand.applyEuler(new THREE.Euler(0, player.yaw, 0, 'YXZ'));
+    gunGroup.position.set(player.x + hand.x, (player.y - 1.7) + hand.y, player.z + hand.z);
+    gunGroup.rotation.set(0, player.yaw, 0);
     const d = camDir(); camera.position.set(player.x - d.x*6, player.y + 2.6, player.z - d.z*6);
     camera.rotation.set(player.pitch*0.6 + kick, player.yaw, 0);
   } else {
