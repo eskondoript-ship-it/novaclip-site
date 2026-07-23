@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v9 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v10 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -303,9 +303,9 @@ function init() {
   weaponScene = new THREE.Scene();
   weaponCam = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.01, 20);
   weaponCam.position.set(0, 0, 0);
-  weaponScene.add(new THREE.AmbientLight(0xffffff, 0.85));
-  const wl = new THREE.DirectionalLight(0xffffff, 1.1); wl.position.set(1.5, 2, 2); weaponScene.add(wl);
-  const wl2 = new THREE.DirectionalLight(0x99bbff, 0.5); wl2.position.set(-2, -1, 1); weaponScene.add(wl2);
+  weaponScene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const wl = new THREE.DirectionalLight(0xffffff, 0.75); wl.position.set(1.5, 2, 2); weaponScene.add(wl);
+  const wl2 = new THREE.DirectionalLight(0x99bbff, 0.3); wl2.position.set(-2, -1, 1); weaponScene.add(wl2);
 
   buildWorld();
   buildShop();
@@ -611,17 +611,16 @@ function makeFighter(color) {
 
 // ---------- per-weapon first-person models ----------
 // Known-good sizes for the built-in models (measured by hand, no guesswork).
-const WEAPON_FIT = { sniper: 0.25, knife: 0.5 };
-
-// Only uploaded .glb models need measuring, since their size is unknown.
+// Weapons are built at their FINAL size directly — no scaling is applied
+// anywhere, so a bad scale value can never corrupt the transform.
 function autoFitGLB(inner) {
   const wrapper = new THREE.Group();
   const bbox = new THREE.Box3().setFromObject(inner);
   const size = new THREE.Vector3(), center = new THREE.Vector3();
   bbox.getSize(size); bbox.getCenter(center);
-  let longest = Math.max(size.x, size.y, size.z);
-  let scale = 0.62 / longest;
-  if (!isFinite(scale) || scale <= 0 || scale > 100) scale = 1;   // safety net
+  const longest = Math.max(size.x, size.y, size.z);
+  let scale = 0.6 / longest;
+  if (!isFinite(scale) || scale <= 0.0001 || scale > 100) scale = 1;
   inner.position.sub(center).multiplyScalar(scale);
   inner.scale.setScalar(scale);
   wrapper.add(inner);
@@ -630,13 +629,9 @@ function autoFitGLB(inner) {
 }
 
 function buildWeapon(type) {
-  const inner = buildWeaponModel(type);
-  if (loadedWeapGLB && type !== 'knife') return autoFitGLB(inner);
-  const wrapper = new THREE.Group();
-  inner.scale.setScalar(WEAPON_FIT[type] || 0.25);
-  wrapper.add(inner);
-  wrapper.userData = inner.userData;
-  return wrapper;
+  const m = buildWeaponModel(type);
+  if (loadedWeapGLB && type !== 'knife') return autoFitGLB(m);
+  return m;   // already the right size — no scaling
 }
 
 function buildWeaponModel(type) {
@@ -647,7 +642,7 @@ function buildWeaponModel(type) {
     model.traverse(o => { if (o.isMesh) o.castShadow = true; });
     g.add(model);
     const mz = -1.6;
-    const fl = new THREE.PointLight(0xffbb44, 0, 6); fl.position.set(0,0.02,mz); g.add(fl); g.userData.flashLight = fl;
+    const fl = new THREE.PointLight(0xffbb44, 0, 2); fl.position.set(0,0.01,mz); g.add(fl); g.userData.flashLight = fl;
     const flash = new THREE.Mesh(new THREE.SphereGeometry(0.16,10,10), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 })); flash.position.set(0,0.02,mz); g.add(flash); g.userData.flash = flash;
     return g;
   }
@@ -661,25 +656,29 @@ function buildWeaponModel(type) {
   function part(geo, mat, x, y, z, rx) { const m = new THREE.Mesh(geo, mat); m.position.set(x,y,z); if (rx) m.rotation.x = rx; g.add(m); return m; }
 
   if (type === 'knife') {
-    const blade = new THREE.Mesh(new BX(0.05, 0.16, 0.7), steel); blade.position.set(0,0,-0.5); g.add(blade);
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.3, 4), steel); tip.rotation.x = -Math.PI/2; tip.rotation.z = Math.PI/4; tip.position.set(0,0,-0.95); g.add(tip);
-    part(new BX(0.07,0.1,0.28), grip, 0,-0.02,-0.05); part(new BX(0.12,0.04,0.05), black, 0,0,-0.2);
+    // final-size knife (~0.34 long)
+    const blade = new THREE.Mesh(new BX(0.022, 0.07, 0.30), steel); blade.position.set(0,0,-0.20); g.add(blade);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.12, 4), steel);
+    tip.rotation.x = -Math.PI/2; tip.rotation.z = Math.PI/4; tip.position.set(0,0,-0.40); g.add(tip);
+    part(new BX(0.03,0.045,0.13), grip, 0,-0.008,-0.02);
+    part(new BX(0.055,0.018,0.022), black, 0,0,-0.085);
   } else {
-    // sniper
-    part(new CY(0.05,0.05,1.5,12), dark, 0,0,-1.1, Math.PI/2);
-    part(new CY(0.08,0.08,0.18,12), black, 0,0,-1.9, Math.PI/2);
-    part(new BX(0.16,0.22,0.95), dark, 0,-0.02,-0.5);
-    part(new BX(0.13,0.15,0.7), black, 0,-0.02,-1.15);
-    part(new BX(0.05,0.05,1.4), accent, 0,0.13,-0.7);
-    part(new CY(0.07,0.07,0.42,12), black, 0,0.18,-0.5, Math.PI/2);
-    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.06,12), new THREE.MeshBasicMaterial({ color: 0x66d9ff })); lens.position.set(0,0.18,-0.72); g.add(lens);
-    part(new BX(0.13,0.24,0.55), black, 0,-0.06,0.25);
-    part(new BX(0.1,0.3,0.13), grip, 0,-0.24,-0.02).rotation.x = 0.35;
-    part(new BX(0.1,0.32,0.18), black, 0,-0.26,-0.5).rotation.x = -0.12;
+    // final-size sniper rifle (~0.63 long)
+    part(new CY(0.013,0.013,0.375,12), dark, 0,0,-0.275, Math.PI/2);   // barrel
+    part(new CY(0.020,0.020,0.045,12), black, 0,0,-0.475, Math.PI/2);  // muzzle brake
+    part(new BX(0.040,0.055,0.238), dark, 0,-0.005,-0.125);            // receiver
+    part(new BX(0.033,0.038,0.175), black, 0,-0.005,-0.288);           // handguard
+    part(new BX(0.013,0.013,0.350), accent, 0,0.033,-0.175);           // rail
+    part(new CY(0.018,0.018,0.105,12), black, 0,0.045,-0.125, Math.PI/2); // scope
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.015,12), new THREE.MeshBasicMaterial({ color: 0x66d9ff }));
+    lens.position.set(0,0.045,-0.180); g.add(lens);
+    part(new BX(0.033,0.060,0.138), black, 0,-0.015,0.063);            // stock
+    part(new BX(0.025,0.075,0.033), grip, 0,-0.060,-0.005).rotation.x = 0.35;
+    part(new BX(0.025,0.080,0.045), black, 0,-0.065,-0.125).rotation.x = -0.12;
   }
-  const mz = type === 'knife' ? -0.9 : (type === 'pistol' || type === 'revolver' ? -0.6 : -1.6);
-  const fl = new THREE.PointLight(0xffbb44, 0, 6); fl.position.set(0,0.02,mz); g.add(fl); g.userData.flashLight = fl;
-  const flash = new THREE.Mesh(new THREE.SphereGeometry(0.16,10,10), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 })); flash.position.set(0,0.02,mz); g.add(flash); g.userData.flash = flash;
+  const mz = type === 'knife' ? -0.42 : -0.50;
+  const fl = new THREE.PointLight(0xffbb44, 0, 2); fl.position.set(0,0.01,mz); g.add(fl); g.userData.flashLight = fl;
+  const flash = new THREE.Mesh(new THREE.SphereGeometry(0.05,10,10), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 })); flash.position.set(0,0.01,mz); g.add(flash); g.userData.flash = flash;
   return g;
 }
 
@@ -1054,7 +1053,7 @@ function tick() {
     const gp = gunGroup ? [gunGroup.position.x.toFixed(2), gunGroup.position.y.toFixed(2), gunGroup.position.z.toFixed(2)].join(',') : '-';
     const cp = [camera.position.x.toFixed(0), camera.position.y.toFixed(1), camera.position.z.toFixed(0)].join(',');
     const wc = weaponScene ? weaponScene.children.length : -1;
-    vt.textContent = 'v9 | cam(' + cp + ') | gunPos(' + gp + ') outerScale=' + gs + ' innerScale=' + gi +
+    vt.textContent = 'v10 | cam(' + cp + ') | gunPos(' + gp + ') outerScale=' + gs + ' innerScale=' + gi +
                      ' vis=' + (gunGroup ? gunGroup.visible : '-') + ' | wScene=' + wc + ' | 3rdP=' + thirdPerson;
   } catch (e) {}
   if (timeLeft <= 0) endMatch();
