@@ -113,6 +113,7 @@ a { color: inherit; text-decoration: none; }
     <div class='rbtn active' data-tab='media'><span class='ic'>🎞️</span>Media</div>
     <div class='rbtn' data-tab='fx'><span class='ic'>✨</span>Effects</div>
     <div class='rbtn' data-tab='audio'><span class='ic'>🎵</span>Audio</div>
+    <div class='rbtn' data-tab='memes'><span class='ic'>😂</span>Memes</div>
     <div class='rbtn' data-tab='text'><span class='ic'>🅰️</span>Text</div>
     <div class='rbtn' data-tab='voice'><span class='ic'>🎙️</span>Voice</div>
   </div>
@@ -137,6 +138,13 @@ a { color: inherit; text-decoration: none; }
       <h4>Audio</h4>
       <div class='hint' style='margin-bottom:8px'>Add a music track — it plays through preview and export.</div>
       <input type='file' id='musicInput' accept='audio/*' style='width:100%; font-size:0.8rem;'>
+    </div>
+    <div class='sect' id='sect-memes'>
+      <h4>Meme search</h4>
+      <input type='text' id='memeSearch' placeholder='Search memes… (drake, doge, cat)' style='width:100%; padding:10px; border-radius:8px; border:1px solid var(--line2); background:#0e1118; color:var(--txt); font-size:0.85rem; margin-bottom:10px;'>
+      <div id='memeStatus' class='hint' style='margin-bottom:8px;'>Loading meme library…</div>
+      <div class='thumbs' id='memeResults'></div>
+      <div class='hint'>Click any meme to drop it straight onto your timeline.</div>
     </div>
     <div class='sect' id='sect-text'>
       <h4>Text overlay</h4>
@@ -296,6 +304,7 @@ document.querySelectorAll('.rail .rbtn').forEach(btn => {
     btn.classList.add('active');
     document.querySelectorAll('.railpanel .sect').forEach(s => s.classList.remove('show'));
     document.getElementById('sect-' + btn.dataset.tab).classList.add('show');
+    if (btn.dataset.tab === 'memes') loadMemes();
   };
 });
 
@@ -315,6 +324,67 @@ Object.keys(FX_LABELS).forEach(key => {
   };
   fxgrid.appendChild(c);
 });
+
+// ---------- MEME SEARCH ----------
+let MEMES = [], memesLoaded = false;
+function showMemes(list) {
+  const box = document.getElementById('memeResults');
+  box.innerHTML = '';
+  list.slice(0, 40).forEach(mm => {
+    const d = document.createElement('div');
+    d.className = 'th';
+    d.title = mm.name;
+    const im = document.createElement('img');
+    im.src = mm.url; im.loading = 'lazy';
+    d.appendChild(im);
+    const lbl = document.createElement('div');
+    lbl.className = 'dur';
+    lbl.textContent = mm.name.length > 14 ? mm.name.slice(0, 13) + '…' : mm.name;
+    d.appendChild(lbl);
+    d.onclick = () => addMeme(mm);
+    box.appendChild(d);
+  });
+  if (!list.length) box.innerHTML = '<div class="hint">No memes matched that search.</div>';
+}
+function addMeme(mm) {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    media.push({ type: 'image', el: img, dur: 3 });
+    addClipFrom(media.length - 1);
+    renderBin();
+    document.getElementById('memeStatus').textContent = 'Added "' + mm.name + '" to the timeline ✅';
+  };
+  img.onerror = () => {
+    // retry without CORS (it will still preview, but export may be blocked)
+    const im2 = new Image();
+    im2.onload = () => { media.push({ type: 'image', el: im2, dur: 3 }); addClipFrom(media.length - 1); renderBin(); document.getElementById('memeStatus').textContent = 'Added "' + mm.name + '" (preview only — may not export)'; };
+    im2.onerror = () => { document.getElementById('memeStatus').textContent = 'Could not load that meme, try another.'; };
+    im2.src = mm.url;
+  };
+  img.src = mm.url;
+}
+function loadMemes() {
+  if (memesLoaded) return;
+  memesLoaded = true;
+  fetch('https://api.imgflip.com/get_memes')
+    .then(r => r.json())
+    .then(d => {
+      if (d && d.success && d.data && d.data.memes) {
+        MEMES = d.data.memes;
+        document.getElementById('memeStatus').textContent = MEMES.length + ' memes ready — type to search.';
+        showMemes(MEMES);
+      } else { throw new Error('bad response'); }
+    })
+    .catch(() => {
+      memesLoaded = false;
+      document.getElementById('memeStatus').textContent = 'Could not reach the meme library. Check your connection and reopen this tab.';
+    });
+}
+document.getElementById('memeSearch').oninput = (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  showMemes(q ? MEMES.filter(m => m.name.toLowerCase().includes(q)) : MEMES);
+};
 
 document.getElementById('mediaInput').onchange = (e) => {
   [...e.target.files].forEach(file => {
