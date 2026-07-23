@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v20 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v21 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -314,8 +314,36 @@ function init() {
     gunGroup = buildWeapon(WEAPONS[curWeap].model);
     scene.add(gunGroup);
   }
-  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon) { loadCustomModels(buildActors); }
-  else { buildActors(); }
+  // ALWAYS build the game immediately with the built-in models, so the match is
+  // playable no matter what happens with a custom file. If a .glb is configured,
+  // it loads in the background and is swapped in only once it is safely ready.
+  buildActors();
+  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon) {
+    let swapped = false;
+    const swapIn = () => {
+      if (swapped) return; swapped = true;
+      try {
+        if (loadedCharGLB && playerMesh) {
+          const wasVisible = playerMesh.visible;
+          scene.remove(playerMesh);
+          playerMesh = makeFighter(playerColor, true);
+          playerMesh.visible = wasVisible;
+          scene.add(playerMesh);
+          console.log('custom character loaded');
+        }
+        if (loadedWeapGLB && gunGroup) {
+          const wasVisible = gunGroup.visible;
+          scene.remove(gunGroup);
+          gunGroup = buildWeapon(WEAPONS[curWeap].model);
+          gunGroup.visible = wasVisible;
+          scene.add(gunGroup);
+          console.log('custom weapon loaded');
+        }
+      } catch (e) { console.warn('custom model swap failed — keeping built-in', e); }
+    };
+    loadCustomModels(swapIn);
+    setTimeout(() => { if (!swapped) console.warn('custom model timed out — keeping built-in models'); swapped = true; }, 20000);
+  }
 
   window.addEventListener('resize', () => {
     camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
