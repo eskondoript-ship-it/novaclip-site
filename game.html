@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v21 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v22 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -570,13 +570,6 @@ function makeFighter(color, useGLB) {
       model.position.set(offX, offY + (CUSTOM_MODELS.characterYOffset || 0), offZ);
       model.traverse(o => { if (o.isMesh) o.castShadow = true; });
       g.add(model);
-      // coloured team band so you can still tell fighters apart at a glance
-      const band = new THREE.Mesh(
-        new THREE.BoxGeometry(0.52, 0.12, 0.38),
-        new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.85 })
-      );
-      band.position.set(0, 1.28, 0);
-      g.add(band);
       const fl = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
       fl.position.set(0.26, 1.1, -0.7); g.add(fl); g.userData.flash = fl;
       return g;
@@ -1030,12 +1023,7 @@ function updateCamera(dt) {
   if (thirdPerson) {
     playerMesh.visible = true;
     playerMesh.position.set(player.x, player.y - 1.7, player.z); playerMesh.rotation.y = player.yaw;
-    // show the weapon in the player's hands in third person
-    gunGroup.visible = true;
-    const hand = new THREE.Vector3(0.26, 1.12, -0.30);
-    hand.applyEuler(new THREE.Euler(0, player.yaw, 0, 'YXZ'));
-    gunGroup.position.set(player.x + hand.x, (player.y - 1.7) + hand.y, player.z + hand.z);
-    gunGroup.rotation.set(0, player.yaw, 0);
+    gunGroup.visible = false;   // character model carries its own weapon
     const d = camDir(); camera.position.set(player.x - d.x*6, player.y + 2.6, player.z - d.z*6);
     camera.rotation.set(player.pitch*0.6 + kick, player.yaw, 0);
   } else {
