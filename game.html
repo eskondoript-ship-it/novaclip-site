@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v8 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v9 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -716,6 +716,11 @@ document.getElementById('startBtn').onclick = () => {
   document.querySelector('.topbar .mode').textContent = '⚔️ ' + MODES[mode].label;
   if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
   running = true; c4Ready = false; c4Timer = 20; setPts(pts());
+  // find a clear spawn point so we never start inside a building
+  for (let a = 0; a < 60; a++) {
+    const sx = (Math.random()-0.5)*90, sz = (Math.random()-0.5)*90;
+    if (!blockedAt(sx, sz)) { player.x = sx; player.z = sz; break; }
+  }
   switchWeap(curWeap);
   if (gunGroup) gunGroup.visible = true;
   timerId = setInterval(tick, 1000);
@@ -959,13 +964,30 @@ function damagePlayer(amt, from) {
 }
 
 // ---------- player + camera ----------
+function blockedAt(x, z) {
+  // stop the player walking inside buildings/crates (bullets already collide)
+  for (let i = 0; i < obstacles.length; i++) {
+    const o = obstacles[i];
+    if (!o.geometry || !o.geometry.parameters) continue;
+    const p = o.geometry.parameters;
+    const hw = (p.width || 1)/2 + 0.35, hd = (p.depth || 1)/2 + 0.35;
+    const h = (p.height || 1);
+    if (o.position.y + h/2 < 1.0) continue;            // low enough to walk over
+    if (Math.abs(x - o.position.x) < hw && Math.abs(z - o.position.z) < hd) return true;
+  }
+  return false;
+}
+
 function updatePlayer(dt) {
   const speed = (player.sprint ? 12 : 6.5) * dt;
   let fx = 0, fz = 0; const sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
   if (keys['KeyW']) { fx -= sy; fz -= cy; } if (keys['KeyS']) { fx += sy; fz += cy; }
   if (keys['KeyA']) { fx -= cy; fz += sy; } if (keys['KeyD']) { fx += cy; fz -= sy; }
   const len = Math.hypot(fx, fz) || 1;
-  player.x += (fx/len)*speed; player.z += (fz/len)*speed;
+  const nx = player.x + (fx/len)*speed, nz = player.z + (fz/len)*speed;
+  // slide along walls instead of stopping dead
+  if (!blockedAt(nx, player.z)) player.x = nx;
+  if (!blockedAt(player.x, nz)) player.z = nz;
   player.x = Math.max(-78, Math.min(78, player.x)); player.z = Math.max(-78, Math.min(78, player.z));
   const GROUND = 1.7;
   if (keys['Space'] && player.onGround) { player.vy = 6.4; player.onGround = false; }
@@ -1020,7 +1042,23 @@ function updateCamera(dt) {
   skyMesh.position.set(player.x, 0, player.z);
 }
 
-function tick() { timeLeft -= 1; const m = Math.floor(timeLeft/60), s = timeLeft % 60; document.getElementById('timer').textContent = m + ':' + (s < 10 ? '0'+s : s); if (timeLeft <= 0) endMatch(); }
+function tick() {
+  timeLeft -= 1;
+  const m = Math.floor(timeLeft/60), s = timeLeft % 60;
+  document.getElementById('timer').textContent = m + ':' + (s < 10 ? '0'+s : s);
+  // DIAGNOSTIC readout — tells us exactly what the gun and camera are doing
+  try {
+    const vt = document.getElementById('viewTag');
+    const gs = gunGroup ? gunGroup.scale.x.toFixed(2) : 'none';
+    const gi = (gunGroup && gunGroup.children[0]) ? gunGroup.children[0].scale.x.toFixed(2) : '?';
+    const gp = gunGroup ? [gunGroup.position.x.toFixed(2), gunGroup.position.y.toFixed(2), gunGroup.position.z.toFixed(2)].join(',') : '-';
+    const cp = [camera.position.x.toFixed(0), camera.position.y.toFixed(1), camera.position.z.toFixed(0)].join(',');
+    const wc = weaponScene ? weaponScene.children.length : -1;
+    vt.textContent = 'v9 | cam(' + cp + ') | gunPos(' + gp + ') outerScale=' + gs + ' innerScale=' + gi +
+                     ' vis=' + (gunGroup ? gunGroup.visible : '-') + ' | wScene=' + wc + ' | 3rdP=' + thirdPerson;
+  } catch (e) {}
+  if (timeLeft <= 0) endMatch();
+}
 function endMatch() {
   running = false; clearInterval(timerId); document.exitPointerLock();
   const all = [{ name: 'YOU', kills: player.kills, me: true }].concat(bots.map(b => ({ name: b.name, kills: b.kills })));
