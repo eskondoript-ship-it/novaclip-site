@@ -230,7 +230,7 @@ function loadCustomModels(done) {
 }
 
 // ---------- state ----------
-let scene, camera, renderer, skyMesh;
+let scene, camera, renderer, skyMesh, weaponScene, weaponCam;
 let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true };
 const keys = {};
 let bots = [], tracers = [], obstacles = [], planted = [];
@@ -297,6 +297,16 @@ function init() {
   scene.add(sun);
   scene.add(new THREE.HemisphereLight(0xbfe6f0, 0x5a7a3a, 0.9));
 
+  // ===== WEAPON OVERLAY LAYER =====
+  // The first-person weapon lives in its OWN scene, rendered on top of the world.
+  // This guarantees it is always in view and can never end up sitting in the ground.
+  weaponScene = new THREE.Scene();
+  weaponCam = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.01, 20);
+  weaponCam.position.set(0, 0, 0);
+  weaponScene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  const wl = new THREE.DirectionalLight(0xffffff, 1.1); wl.position.set(1.5, 2, 2); weaponScene.add(wl);
+  const wl2 = new THREE.DirectionalLight(0x99bbff, 0.5); wl2.position.set(-2, -1, 1); weaponScene.add(wl2);
+
   buildWorld();
   buildShop();
 
@@ -307,12 +317,16 @@ function init() {
     playerMesh.visible = false;
     scene.add(playerMesh);
     gunGroup = buildWeaponModel(WEAPONS[curWeap].model);
-    scene.add(gunGroup);
+    weaponScene.add(gunGroup);
   }
   if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon) { loadCustomModels(buildActors); }
   else { buildActors(); }
 
-  window.addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+  window.addEventListener('resize', () => {
+    camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+    weaponCam.aspect = innerWidth/innerHeight; weaponCam.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
 }
 
 function box(w,h,d,color,x,y,z,solid,rot) {
@@ -742,7 +756,7 @@ function switchWeap(w) {
   document.getElementById('weapname').textContent = WEAPONS[w].name;
   document.getElementById('mag').textContent = WEAPONS[w].mag === Infinity ? '∞' : player.mag;
   document.getElementById('magmax').textContent = WEAPONS[w].mag === Infinity ? '' : '/' + WEAPONS[w].mag;
-  if (gunGroup && scene) { const vis = gunGroup.visible; scene.remove(gunGroup); gunGroup = buildWeaponModel(WEAPONS[w].model); gunGroup.visible = vis; scene.add(gunGroup); }
+  if (gunGroup && weaponScene) { const vis = gunGroup.visible; weaponScene.remove(gunGroup); gunGroup = buildWeaponModel(WEAPONS[w].model); gunGroup.visible = vis; weaponScene.add(gunGroup); }
   buildLoadoutHUD();
 }
 function reload() {
@@ -780,7 +794,9 @@ function shoot() {
   let end;
   if (blocked) { end = origin.clone().add(dir.clone().multiplyScalar(blockDist)); hit = null; }
   else if (hit) end = hitPt; else end = origin.clone().add(dir.clone().multiplyScalar(RANGE));
-  const mw = new THREE.Vector3(); gunGroup.userData.flash.getWorldPosition(mw);
+  // muzzle point in world space (gun lives in the overlay scene, so derive it from the camera)
+  const right = new THREE.Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+  const mw = origin.clone().add(dir.clone().multiplyScalar(1.4)).add(right.multiplyScalar(0.25)).add(new THREE.Vector3(0, -0.15, 0));
   spawnTracer(mw, end, 0x9fe8ff);
   if (hit) {
     // shotgun falloff: full damage only very close, scales down over its short range
@@ -954,18 +970,20 @@ function updateCamera(dt) {
     if (player.reloading) {
       const prog = Math.min(1, (performance.now() - player.reloadStart) / player.reloadDur);
       const s = Math.sin(prog * Math.PI);
-      rl = -s * 0.3; rlrot = s * 0.8;
+      rl = -s * 0.35; rlrot = s * 0.9;
     }
-    // place the gun in WORLD space, offset from the camera along its facing direction
-    const off = (scoped && !player.reloading)
-      ? { x: 0, y: -0.12, z: -0.35 }
-      : { x: 0.26, y: -0.24 + rl + Math.sin(t*1.6)*0.006, z: -0.55 + kick*0.2 };
-    const pos = new THREE.Vector3(off.x, off.y, off.z);
-    pos.applyEuler(camera.rotation);
-    gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
-    gunGroup.rotation.copy(camera.rotation);
-    gunGroup.rotation.z += Math.sin(t*1.4)*0.008;
-    gunGroup.rotation.x += Math.sin(t*1.1)*0.006 - kick*0.6 + rlrot;
+    // gun sits in the weapon overlay scene at fixed coords in front of weaponCam
+    if (scoped && !player.reloading) {
+      gunGroup.position.set(0, -0.11, -0.55);
+      gunGroup.rotation.set(0, 0, 0);
+    } else {
+      gunGroup.position.set(
+        0.3 + Math.sin(t*1.2)*0.008,
+        -0.28 + rl + Math.sin(t*1.6)*0.008 - kick*0.2,
+        -0.85 + kick*0.3
+      );
+      gunGroup.rotation.set(-0.04 + Math.sin(t*1.1)*0.012 - kick*0.6 + rlrot, 0.06, Math.sin(t*1.4)*0.01);
+    }
   }
   skyMesh.position.set(player.x, 0, player.z);
 }
@@ -987,7 +1005,15 @@ function animate() {
   const now = performance.now(); let dt = (now - gclock.last)/1000; gclock.last = now; if (dt > 0.1) dt = 0.1;
   if (running && !shopOpen) { updatePlayer(dt); updateBots(dt); updateNades(dt); if (mouseHeld && WEAPONS[curWeap].auto && !equippedNade) shoot(); }
   updateCamera(dt); updateTracers(dt);
+  // render the world, then draw the weapon on top so it is never occluded
+  renderer.autoClear = true;
   renderer.render(scene, camera);
+  if (gunGroup && gunGroup.visible && weaponScene && weaponCam) {
+    renderer.autoClear = false;
+    renderer.clearDepth();
+    renderer.render(weaponScene, weaponCam);
+    renderer.autoClear = true;
+  }
 }
 
 try {
