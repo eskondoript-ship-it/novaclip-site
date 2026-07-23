@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v7 · 1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -316,7 +316,7 @@ function init() {
     playerMesh = makeFighter(playerColor);
     playerMesh.visible = false;
     scene.add(playerMesh);
-    gunGroup = buildWeaponModel(WEAPONS[curWeap].model);
+    gunGroup = buildWeapon(WEAPONS[curWeap].model);
     weaponScene.add(gunGroup);
   }
   if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon) { loadCustomModels(buildActors); }
@@ -610,6 +610,25 @@ function makeFighter(color) {
 }
 
 // ---------- per-weapon first-person models ----------
+// Wrap a weapon model so it is auto-centered and auto-scaled to a sensible
+// on-screen size. Works for the built-in models AND any uploaded .glb.
+function fitWeapon(inner) {
+  const wrapper = new THREE.Group();
+  const bbox = new THREE.Box3().setFromObject(inner);
+  const size = new THREE.Vector3(), center = new THREE.Vector3();
+  bbox.getSize(size); bbox.getCenter(center);
+  const longest = Math.max(size.x, size.y, size.z) || 1;
+  const scale = 0.62 / longest;            // target overall length in view
+  inner.position.sub(center);              // centre the model on the origin
+  inner.position.multiplyScalar(scale);
+  inner.scale.setScalar(scale);
+  wrapper.add(inner);
+  wrapper.userData = inner.userData;       // keep muzzle flash refs accessible
+  return wrapper;
+}
+
+function buildWeapon(type) { return fitWeapon(buildWeaponModel(type)); }
+
 function buildWeaponModel(type) {
   // if a custom .glb weapon is loaded, use it for all guns (not the knife)
   if (loadedWeapGLB && type !== 'knife') {
@@ -756,7 +775,7 @@ function switchWeap(w) {
   document.getElementById('weapname').textContent = WEAPONS[w].name;
   document.getElementById('mag').textContent = WEAPONS[w].mag === Infinity ? '∞' : player.mag;
   document.getElementById('magmax').textContent = WEAPONS[w].mag === Infinity ? '' : '/' + WEAPONS[w].mag;
-  if (gunGroup && weaponScene) { const vis = gunGroup.visible; weaponScene.remove(gunGroup); gunGroup = buildWeaponModel(WEAPONS[w].model); gunGroup.visible = vis; weaponScene.add(gunGroup); }
+  if (gunGroup && weaponScene) { const vis = gunGroup.visible; weaponScene.remove(gunGroup); gunGroup = buildWeapon(WEAPONS[w].model); gunGroup.visible = vis; weaponScene.add(gunGroup); }
   buildLoadoutHUD();
 }
 function reload() {
@@ -962,6 +981,9 @@ function updateCamera(dt) {
     camera.rotation.set(player.pitch*0.6 + kick, player.yaw, 0);
   } else {
     playerMesh.visible = false; gunGroup.visible = true;
+    // keep the body with the player even while hidden, so nothing is stranded at the map centre
+    playerMesh.position.set(player.x, player.y - 1.7, player.z);
+    playerMesh.rotation.y = player.yaw;
     camera.position.set(player.x, player.y, player.z);
     camera.rotation.set(player.pitch + kick, player.yaw, 0);
     const t = performance.now()/1000;
@@ -974,15 +996,15 @@ function updateCamera(dt) {
     }
     // gun sits in the weapon overlay scene at fixed coords in front of weaponCam
     if (scoped && !player.reloading) {
-      gunGroup.position.set(0, -0.11, -0.55);
+      gunGroup.position.set(0, -0.06, -0.5);
       gunGroup.rotation.set(0, 0, 0);
     } else {
       gunGroup.position.set(
-        0.3 + Math.sin(t*1.2)*0.008,
-        -0.28 + rl + Math.sin(t*1.6)*0.008 - kick*0.2,
-        -0.85 + kick*0.3
+        0.22 + Math.sin(t*1.2)*0.006,
+        -0.17 + rl + Math.sin(t*1.6)*0.006 - kick*0.12,
+        -0.62 + kick*0.18
       );
-      gunGroup.rotation.set(-0.04 + Math.sin(t*1.1)*0.012 - kick*0.6 + rlrot, 0.06, Math.sin(t*1.4)*0.01);
+      gunGroup.rotation.set(-0.03 + Math.sin(t*1.1)*0.012 - kick*0.5 + rlrot, 0.12, Math.sin(t*1.4)*0.01);
     }
   }
   skyMesh.position.set(player.x, 0, player.z);
