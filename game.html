@@ -130,7 +130,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>1-9 / Scroll: switch weapon · Hold LMB: auto-fire · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · E: shop · V: view</div>
+<div id='viewTag'>1 AWP · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -171,7 +171,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
   </div>
 
   <button id='startBtn'>▶️ Deploy</button>
-  <div class='keyshint'>WASD move · Mouse aim · Click fire · Right-click scope · Space jump · Shift sprint · R reload · 1-9 switch weapon · V first/third person</div>
+  <div class='keyshint'>WASD move · Mouse aim · Click fire · Right-click scope · Space jump · Shift sprint · R reload · 1/2 or scroll to switch weapon · V first/third person</div>
 </div>
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'></script>
@@ -188,21 +188,11 @@ const MODES = {
 let mode = 'medium';
 
 const WEAPONS = {
-  glock:   { name: 'GLOCK 19', slot: 1, mag: 15, dmg: 30, scopedDmg: 30, rate: 150, cost: 30, scope: false, auto: false, range: 300, model: 'pistol' },
-  sniper:  { name: 'AWP',      slot: 2, mag: 10, dmg: 55, scopedDmg: 100, rate: 700, cost: 0,  scope: true,  auto: false, range: 400, model: 'sniper' },
-  knife:   { name: 'KNIFE',    slot: 3, mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, cost: 20, scope: false, auto: false, range: 3, model: 'knife' },
-  smg:     { name: 'MP5',      slot: 4, mag: 30, dmg: 20, scopedDmg: 20, rate: 90,  cost: 60, scope: false, auto: true,  range: 200, model: 'smg' },
-  ak47:    { name: 'AK-47',    slot: 5, mag: 30, dmg: 36, scopedDmg: 42, rate: 120, cost: 75, scope: false, auto: true,  range: 300, model: 'rifle' },
-  m4:      { name: 'M4',       slot: 5, mag: 30, dmg: 32, scopedDmg: 40, rate: 110, cost: 70, scope: true,  auto: true,  range: 300, model: 'rifle' },
-  shotgun: { name: 'M870',     slot: 6, mag: 6,  dmg: 110, scopedDmg: 110, rate: 650, cost: 80, scope: false, auto: false, range: 22, model: 'shotgun' },
-  lmg:     { name: 'M249 LMG', slot: 7, mag: 80, dmg: 28, scopedDmg: 28, rate: 85,  cost: 100, scope: false, auto: true,  range: 320, model: 'lmg' },
-  dmr:     { name: 'M18 DMR',  slot: 8, mag: 15, dmg: 48, scopedDmg: 70, rate: 240, cost: 90, scope: true,  auto: false, range: 400, model: 'dmr' },
-  revolver:{ name: 'DEAGLE',   slot: 9, mag: 7,  dmg: 72, scopedDmg: 72, rate: 480, cost: 55, scope: false, auto: false, range: 300, model: 'revolver' }
+  sniper: { name: 'AWP',   slot: 1, mag: 10, dmg: 55, scopedDmg: 100, rate: 700, cost: 0, scope: true,  auto: false, range: 400, model: 'sniper', owned: true },
+  knife:  { name: 'KNIFE', slot: 2, mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, cost: 0, scope: false, auto: false, range: 3, model: 'knife', owned: true }
 };
-function ownedWeapons() { try { return JSON.parse(localStorage.getItem('nc_weapons') || '["sniper"]'); } catch (e) { return ['sniper']; } }
-function saveOwned(l) { localStorage.setItem('nc_weapons', JSON.stringify([...new Set(l)])); }
-ownedWeapons().forEach(w => { if (WEAPONS[w]) WEAPONS[w].owned = true; });
-WEAPONS.sniper.owned = true;
+function ownedWeapons() { return ['sniper', 'knife']; }
+function saveOwned(l) { /* weapons are no longer purchasable */ }
 
 const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Echo','Rogue'];
 
@@ -216,7 +206,7 @@ const CUSTOM_MODELS = {
   character: 'military_tactical_suit_lowpolygameready.glb',        // e.g. 'soldier.glb'  — used for you AND the bots
   characterScale: 1.0,  // shrink/grow to fit (try 1.0, adjust if too big/small)
   characterYOffset: 0,  // nudge up/down if feet aren't on the ground
-  weapon: 'rpg7_rocket_launcher.glb'            // e.g. 'rifle.glb'    — first-person gun model
+  weapon: 'low-poly_just_right_carbine.glb'            // e.g. 'rifle.glb'    — first-person gun model
 };
 let loadedCharGLB = null, loadedWeapGLB = null;
 
@@ -317,13 +307,10 @@ function init() {
     playerMesh.visible = false;
     scene.add(playerMesh);
     gunGroup = buildWeaponModel(WEAPONS[curWeap].model);
-    scene.add(camera);
-    camera.add(gunGroup);
+    scene.add(gunGroup);
   }
   if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon) { loadCustomModels(buildActors); }
   else { buildActors(); }
-  // ensure the gun starts in the correct hand position relative to camera
-  if (gunGroup) gunGroup.position.set(0.42, -0.42, -0.9);
 
   window.addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 }
@@ -627,7 +614,6 @@ function buildWeaponModel(type) {
   const grip = new THREE.MeshStandardMaterial({ color: 0x3a2f22, roughness: 0.8 });
   const steel = new THREE.MeshStandardMaterial({ color: 0xb8c0cc, roughness: 0.25, metalness: 0.95 });
   const accent = new THREE.MeshStandardMaterial({ color: 0x00F0FF, emissive: 0x0088aa, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.8 });
-  const wood = new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.7 });
   const CY = THREE.CylinderGeometry, BX = THREE.BoxGeometry;
   function part(geo, mat, x, y, z, rx) { const m = new THREE.Mesh(geo, mat); m.position.set(x,y,z); if (rx) m.rotation.x = rx; g.add(m); return m; }
 
@@ -635,36 +621,6 @@ function buildWeaponModel(type) {
     const blade = new THREE.Mesh(new BX(0.05, 0.16, 0.7), steel); blade.position.set(0,0,-0.5); g.add(blade);
     const tip = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.3, 4), steel); tip.rotation.x = -Math.PI/2; tip.rotation.z = Math.PI/4; tip.position.set(0,0,-0.95); g.add(tip);
     part(new BX(0.07,0.1,0.28), grip, 0,-0.02,-0.05); part(new BX(0.12,0.04,0.05), black, 0,0,-0.2);
-  } else if (type === 'pistol' || type === 'revolver') {
-    part(new CY(0.035,0.035,0.5,10), dark, 0,0.05,-0.35, Math.PI/2);
-    part(new BX(0.11,0.18,0.34), dark, 0,0,-0.1);
-    part(new BX(0.09,0.26,0.12), grip, 0,-0.2,0.02).rotation.x = 0.3;
-    if (type === 'revolver') part(new CY(0.09,0.09,0.14,8), steel, 0,0.02,-0.12, Math.PI/2);
-  } else if (type === 'shotgun') {
-    part(new CY(0.055,0.055,1.3,12), dark, 0,0.02,-0.9, Math.PI/2);
-    part(new CY(0.05,0.05,1.1,12), black, 0,-0.08,-0.8, Math.PI/2);
-    part(new BX(0.13,0.16,0.5), wood, 0,-0.02,-0.15); part(new BX(0.11,0.2,0.4), wood, 0,-0.06,0.28);
-    part(new BX(0.1,0.13,0.22), black, 0,-0.14,-0.55);
-  } else if (type === 'smg') {
-    part(new CY(0.04,0.04,0.6,10), dark, 0,0.03,-0.45, Math.PI/2);
-    part(new BX(0.12,0.18,0.55), dark, 0,0,-0.15);
-    part(new BX(0.09,0.28,0.13), black, 0,-0.22,-0.05).rotation.x = 0.25;
-    part(new BX(0.09,0.2,0.1), grip, 0,-0.18,0.12).rotation.x = 0.4;
-    part(new BX(0.06,0.1,0.35), black, 0,0.02,0.3);
-  } else if (type === 'lmg') {
-    part(new CY(0.05,0.05,1.4,12), dark, 0,0.05,-1.0, Math.PI/2);
-    part(new BX(0.18,0.24,0.9), dark, 0,-0.02,-0.4);
-    part(new BX(0.22,0.3,0.3), black, 0,-0.22,-0.4);
-    part(new BX(0.11,0.24,0.45), black, 0,-0.05,0.3);
-  } else if (type === 'dmr' || type === 'rifle') {
-    part(new CY(0.045,0.045,1.3,12), dark, 0,0.04,-0.95, Math.PI/2);
-    part(new BX(0.14,0.2,0.85), dark, 0,-0.02,-0.45);
-    part(new BX(0.05,0.05,1.2), accent, 0,0.13,-0.7);
-    part(new CY(0.06,0.06,0.35,10), black, 0,0.17,-0.55, Math.PI/2);
-    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.05,12), new THREE.MeshBasicMaterial({ color: 0x66d9ff })); lens.position.set(0,0.17,-0.74); g.add(lens);
-    part(new BX(0.1,0.28,0.16), black, 0,-0.24,-0.42).rotation.x = -0.12;
-    part(new BX(0.11,0.2,0.4), grip, 0,-0.05,0.25);
-    part(new BX(0.09,0.26,0.12), grip, 0,-0.2,-0.02).rotation.x = 0.35;
   } else {
     // sniper
     part(new CY(0.05,0.05,1.5,12), dark, 0,0,-1.1, Math.PI/2);
@@ -687,7 +643,10 @@ function buildWeaponModel(type) {
 function spawnBot(i) {
   const cols = [0xff6b6b, 0xff8a5b, 0xffa94d, 0xe05555];
   const g = makeFighter(cols[i % 4]);
-  g.position.set((Math.random()-0.5)*120, 0, (Math.random()-0.5)*120);
+  // spawn in a ring 12-45 units out so they're visible around the player
+  const ang = (i / 9) * Math.PI * 2 + Math.random()*0.5;
+  const dist = 12 + Math.random()*33;
+  g.position.set(Math.cos(ang)*dist, 0, Math.sin(ang)*dist);
   scene.add(g);
   bots.push({ mesh: g, name: BOT_NAMES[i] || ('Bot'+i), hp: 100, kills: 0, alive: true, tx: g.position.x, tz: g.position.z, cooldown: 1+Math.random()*2, retarget: 0 });
 }
@@ -715,27 +674,9 @@ document.getElementById('startBtn').onclick = () => {
   if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
   running = true; c4Ready = false; c4Timer = 20; setPts(pts());
   switchWeap(curWeap);
-  // guarantee the gun is attached to the camera and visible
-  if (gunGroup) {
-    if (gunGroup.parent !== camera) { if (gunGroup.parent) gunGroup.parent.remove(gunGroup); camera.add(gunGroup); }
-    gunGroup.visible = true;
-    gunGroup.position.set(0.42, -0.42, -0.9);
-  }
+  if (gunGroup) gunGroup.visible = true;
   timerId = setInterval(tick, 1000);
   setInterval(updateBoard, 1500);
-  // temporary diagnostic — confirms gun is attached (remove later)
-  setTimeout(() => {
-    const b = document.getElementById('errbox');
-    if (b && gunGroup) {
-      const attached = gunGroup.parent === camera;
-      const camInScene = camera.parent === scene;
-      const botsVisible = bots.filter(x => x.mesh.visible).length;
-      b.style.display = 'block';
-      b.style.background = '#0a0c';
-      b.textContent = 'gun→camera: ' + attached + ' · cam→scene: ' + camInScene + ' · gun.visible: ' + gunGroup.visible + ' · bots shown: ' + botsVisible;
-      setTimeout(() => { b.style.display = 'none'; }, 6000);
-    }
-  }, 500);
 };
 document.addEventListener('mousemove', (e) => {
   if (document.pointerLockElement !== renderer.domElement) return;
@@ -780,7 +721,7 @@ document.addEventListener('keydown', (e) => {
   if (e.code === 'KeyR') reload();
   if (e.code === 'KeyV') { thirdPerson = !thirdPerson; if (scoped) { scoped = false; document.getElementById('scope').style.display = 'none'; } }
   if (e.code === 'ShiftLeft') player.sprint = true;
-  if (/^Digit[1-9]$/.test(e.code)) { const slot = parseInt(e.code.slice(5)); const list = Object.keys(WEAPONS).filter(k => WEAPONS[k].slot === slot && WEAPONS[k].owned); if (list.length) { const cur = list.indexOf(curWeap); switchWeap(list[(cur + 1) % list.length]); equippedNade = null; } }
+  if (/^Digit[1-9]$/.test(e.code)) { const slot = parseInt(e.code.slice(5)); const w = Object.keys(WEAPONS).find(k => WEAPONS[k].slot === slot); if (w) { switchWeap(w); equippedNade = null; } }
   if (e.code === 'KeyG') { equippedNade = inv.frag > 0 ? 'frag' : null; if (!inv.frag) addFeed('No frags — buy in shop (E)'); updateNadeHint(); }
   if (e.code === 'KeyB') { equippedNade = inv.sticky > 0 ? 'sticky' : null; if (!inv.sticky) addFeed('No stickies — buy in shop (E)'); updateNadeHint(); }
   if (e.code === 'KeyC') plantC4();
@@ -801,7 +742,7 @@ function switchWeap(w) {
   document.getElementById('weapname').textContent = WEAPONS[w].name;
   document.getElementById('mag').textContent = WEAPONS[w].mag === Infinity ? '∞' : player.mag;
   document.getElementById('magmax').textContent = WEAPONS[w].mag === Infinity ? '' : '/' + WEAPONS[w].mag;
-  if (gunGroup && camera) { const vis = gunGroup.visible; camera.remove(gunGroup); gunGroup = buildWeaponModel(WEAPONS[w].model); gunGroup.visible = vis; camera.add(gunGroup); }
+  if (gunGroup && scene) { const vis = gunGroup.visible; scene.remove(gunGroup); gunGroup = buildWeaponModel(WEAPONS[w].model); gunGroup.visible = vis; scene.add(gunGroup); }
   buildLoadoutHUD();
 }
 function reload() {
@@ -819,7 +760,7 @@ function shoot() {
   if (W.mag !== Infinity && player.mag <= 0) { reload(); return; }
   lastShot = now;
   if (W.mag !== Infinity) { player.mag--; document.getElementById('mag').textContent = player.mag; }
-  recoil = W.auto ? 0.6 : (curWeap === 'glock' ? 0.5 : 1);
+  recoil = 1;
   gunGroup.userData.flashLight.intensity = 3; gunGroup.userData.flash.material.opacity = 0.9;
   setTimeout(() => { gunGroup.userData.flashLight.intensity = 0; gunGroup.userData.flash.material.opacity = 0; }, 55);
 
@@ -844,7 +785,6 @@ function shoot() {
   if (hit) {
     // shotgun falloff: full damage only very close, scales down over its short range
     let dmg = scoped ? W.scopedDmg : W.dmg;
-    if (curWeap === 'shotgun') dmg = dmg * Math.max(0.25, 1 - hitDist / RANGE);
     hit.hp -= dmg; if (hit.hp <= 0) killBot(hit);
   }
 }
@@ -909,15 +849,6 @@ function updateNades(dt) {
 
 // ---------- shop ----------
 const SHOP_ITEMS = [
-  { id: 'glock', name: '🔫 Glock 19', desc: 'Fast sidearm — slot 1', cost: 30, weap: true },
-  { id: 'knife', name: '🔪 Knife', desc: 'One-hit melee — slot 3', cost: 20, weap: true },
-  { id: 'smg', name: '💨 MP5', desc: 'Full-auto SMG — slot 4', cost: 60, weap: true },
-  { id: 'ak47', name: '🎖️ AK-47', desc: 'Full-auto, high damage — slot 5', cost: 75, weap: true },
-  { id: 'm4', name: '🎯 M4', desc: 'Full-auto, scoped — slot 5', cost: 70, weap: true },
-  { id: 'shotgun', name: '💥 M870 Shotgun', desc: 'Deadly SHORT range — slot 6', cost: 80, weap: true },
-  { id: 'lmg', name: '🔩 M249 LMG', desc: 'Full-auto, 80 rounds — slot 7', cost: 100, weap: true },
-  { id: 'dmr', name: '🎯 M18 DMR', desc: 'Marksman rifle — slot 8', cost: 90, weap: true },
-  { id: 'revolver', name: '🤠 Deagle', desc: 'Heavy pistol — slot 9', cost: 55, weap: true },
   { id: 'frag', name: '💣 Frags ×3', desc: 'Equip with G, throw with LMB', cost: 40 },
   { id: 'sticky', name: '🧨 Stickies ×2', desc: 'Equip with B, throw with LMB, X detonate', cost: 50 },
   { id: 'heavy', name: '⚡ Heavy AWP rounds', desc: 'Unscoped one-hit (permanent)', cost: 80, once: true }
@@ -926,14 +857,13 @@ if (heavyRounds) WEAPONS.sniper.dmg = 100;
 function renderShop() {
   document.getElementById('shopbal').textContent = pts();
   document.getElementById('shopitems').innerHTML = SHOP_ITEMS.map(it => {
-    const owned = (it.weap && WEAPONS[it.id] && WEAPONS[it.id].owned) || (it.id === 'heavy' && heavyRounds);
+    const owned = (it.id === 'heavy' && heavyRounds);
     return '<div class="item"><div><b>' + it.name + '</b><small>' + it.desc + '</small></div><button ' + (owned || pts() < it.cost ? 'disabled' : '') + ' onclick="buyItem(\'' + it.id + '\')">' + (owned ? '✅ OWNED' : it.cost + ' pts') + '</button></div>';
   }).join('');
 }
 window.buyItem = function(id) {
   const it = SHOP_ITEMS.find(x => x.id === id); if (!it || pts() < it.cost) return;
   setPts(pts() - it.cost);
-  if (it.weap) { WEAPONS[id].owned = true; saveOwned([...ownedWeapons(), id]); }
   if (id === 'heavy') { heavyRounds = true; WEAPONS.sniper.dmg = 100; localStorage.setItem('nc_heavy','1'); }
   if (id === 'frag') inv.frag += 3;
   if (id === 'sticky') inv.sticky += 2;
@@ -958,7 +888,7 @@ function updateBots(dt) {
   bots.forEach(b => {
     if (!b.alive) return;
     b.retarget -= dt;
-    if (b.retarget <= 0) { b.tx = (Math.random()-0.5)*120; b.tz = (Math.random()-0.5)*120; b.retarget = 1.6 + Math.random()*2.4; }
+    if (b.retarget <= 0) { b.tx = (Math.random()-0.5)*80; b.tz = (Math.random()-0.5)*80; b.retarget = 1.6 + Math.random()*2.4; }
     const dx = b.tx - b.mesh.position.x, dz = b.tz - b.mesh.position.z, dist = Math.hypot(dx, dz);
     if (dist > 0.5) { b.mesh.position.x += (dx/dist)*dt*5; b.mesh.position.z += (dz/dist)*dt*5; }
     b.cooldown -= dt;
@@ -1023,12 +953,19 @@ function updateCamera(dt) {
     let rl = 0, rlrot = 0;
     if (player.reloading) {
       const prog = Math.min(1, (performance.now() - player.reloadStart) / player.reloadDur);
-      const s = Math.sin(prog * Math.PI); // 0->1->0
-      rl = -s * 0.28; rlrot = s * 0.7;
+      const s = Math.sin(prog * Math.PI);
+      rl = -s * 0.3; rlrot = s * 0.8;
     }
-    if (scoped && !player.reloading) gunGroup.position.set(0, -0.14, -0.4);
-    else gunGroup.position.set(0.42 + Math.sin(t*1.2)*0.006, -0.42 + rl + Math.sin(t*1.6)*0.006 - kick*0.15, -0.9 + kick*0.25);
-    gunGroup.rotation.set(Math.sin(t*1.1)*0.01 - kick*0.5 + rlrot, 0.04, Math.sin(t*1.4)*0.008);
+    // place the gun in WORLD space, offset from the camera along its facing direction
+    const off = (scoped && !player.reloading)
+      ? { x: 0, y: -0.12, z: -0.35 }
+      : { x: 0.26, y: -0.24 + rl + Math.sin(t*1.6)*0.006, z: -0.55 + kick*0.2 };
+    const pos = new THREE.Vector3(off.x, off.y, off.z);
+    pos.applyEuler(camera.rotation);
+    gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
+    gunGroup.rotation.copy(camera.rotation);
+    gunGroup.rotation.z += Math.sin(t*1.4)*0.008;
+    gunGroup.rotation.x += Math.sin(t*1.1)*0.006 - kick*0.6 + rlrot;
   }
   skyMesh.position.set(player.x, 0, player.z);
 }
