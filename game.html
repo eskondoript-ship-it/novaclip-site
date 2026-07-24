@@ -179,7 +179,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v39 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v42 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -746,6 +746,21 @@ function buildShop() {
 }
 function insideShop() { return Math.abs(player.x - SHOP.x) < SHOP.w/2 - 0.3 && Math.abs(player.z - SHOP.z) < SHOP.d/2 - 0.3; }
 
+function crouchNow() { return !!keys[BINDS.crouch]; }
+function buildSimpleBody(color) {
+  const g = new THREE.Group();
+  const bodyMat = new THREE.MeshLambertMaterial({ color });
+  const darkMat = new THREE.MeshLambertMaterial({ color: 0x3c4048 });
+  const skinMat = new THREE.MeshLambertMaterial({ color: 0xf0c090 });
+  const B = THREE.BoxGeometry;
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
+  add(new B(0.2,0.75,0.22), darkMat, -0.14, 0.4, 0); add(new B(0.2,0.75,0.22), darkMat, 0.14, 0.4, 0);
+  add(new B(0.54,0.75,0.32), bodyMat, 0, 1.15, 0);
+  add(new B(0.16,0.62,0.18), bodyMat, -0.36, 1.12, 0.02); add(new B(0.16,0.62,0.18), bodyMat, 0.36, 1.12, 0.02);
+  add(new THREE.SphereGeometry(0.19,12,10), skinMat, 0, 1.72, 0);
+  add(new B(0.4,0.18,0.4), darkMat, 0, 1.86, 0);
+  return g;
+}
 function makeFighter(color, useGLB, isPlayer) {
   try {
     // --- uploaded .glb character ---
@@ -778,6 +793,10 @@ function makeFighter(color, useGLB, isPlayer) {
         if (!isPlayer && o.material) { o.material = o.material.clone(); if (o.material.color) o.material.color.lerp(new THREE.Color(color), 0.45); }
       }});
       g.add(model);
+      // safety: if the GLB produced no real geometry, add a simple visible body too
+      let hasMesh = false;
+      model.traverse(o => { if (o.isMesh) hasMesh = true; });
+      if (!hasMesh) { g.add(buildSimpleBody(color)); }
       // if the model shipped with animations, play one on a loop
       if ((loadedCharAnims && loadedCharAnims.length) || Object.keys(extraClips).length) {
         try {
@@ -1013,10 +1032,13 @@ function startMatch() {
   document.getElementById('enbar').style.background = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].css;
   if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
   running = true; c4Ready = false; c4Timer = 20; shopVisits = 0; setPts(pts());
-  // spawn at your team's base
+  // spawn in open ground just in FRONT of your team's base (never inside the walls)
   const HB = BASES[PLAYER_TEAM];
-  player.x = HB.x + (Math.random()-0.5)*16;
-  player.z = HB.z + (PLAYER_TEAM === 'ct' ? 6 : -6);
+  const facing = PLAYER_TEAM === 'ct' ? 1 : -1;   // CT faces +z, T faces -z
+  player.x = HB.x + (Math.random()-0.5)*10;
+  player.z = HB.z + facing * 16;                  // 16 units out, clear of the base walls
+  player.yaw = PLAYER_TEAM === 'ct' ? 0 : Math.PI; // look toward the enemy
+  player.pitch = 0; player.y = 1.7; player.vy = 0; player.onGround = true;
   switchWeap(curWeap);
   if (gunGroup) gunGroup.visible = true;
   timerId = setInterval(tick, 1000);
@@ -1393,7 +1415,12 @@ function updateCamera(dt) {
   if (Math.abs(camera.fov - fov) > 0.5) { camera.fov += (fov - camera.fov)*0.2; camera.updateProjectionMatrix(); }
   recoil = Math.max(0, recoil - dt*6); const kick = recoil*0.03;
   if (thirdPerson) {
-    if (playerMesh) { playerMesh.visible = true; playerMesh.position.set(player.x, player.y - 1.7, player.z); playerMesh.rotation.y = player.yaw; }
+    if (playerMesh) {
+      playerMesh.visible = true;
+      playerMesh.traverse(o => { if (o.isMesh) o.visible = true; });
+      playerMesh.position.set(player.x, player.y - (crouchNow() ? 1.15 : 1.7), player.z);
+      playerMesh.rotation.y = player.yaw + Math.PI;   // face the same way the camera looks
+    }
     gunGroup.visible = false;   // character model carries its own weapon
     const d = camDir();
     camera.position.set(player.x - d.x*4.5, player.y + 0.5, player.z - d.z*4.5);
@@ -1416,14 +1443,16 @@ function updateCamera(dt) {
       rl = -s * 0.35; rlrot = s * 0.9;
     }
     // Position the gun relative to the camera (method from the original working build)
-    const off = { x: 0.20, y: -0.20 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -0.55 + kick*0.10 };
+    const off = { x: 0.20, y: -0.16 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -0.55 + kick*0.10 };
     const pos = new THREE.Vector3(off.x, off.y, off.z);
     pos.applyEuler(camera.rotation);
     gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
     gunGroup.rotation.copy(camera.rotation);
+    // lift the rifle upright and point the barrel forward (built-in model lies flat otherwise)
+    gunGroup.rotateX(-Math.PI / 2);
     if (!scoped) {
-      // keep the rifle level with the view — only recoil and reload move it
-      gunGroup.rotation.x += Math.sin(t*1.1)*0.006 - kick*0.35 + rlrot;
+      gunGroup.rotation.z += Math.sin(t*1.1)*0.006;
+      gunGroup.rotateX(-kick*0.35 + rlrot);
     }
   }
   skyMesh.position.set(player.x, 0, player.z);
