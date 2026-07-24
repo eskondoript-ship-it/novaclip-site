@@ -179,7 +179,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v34 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v35 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -305,7 +305,7 @@ const CUSTOM_MODELS = {
   character: 'military_tactical_suit_lowpolygameready.glb',
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
+  weapon: 'low-poly_colt_c7a2.glb',           // your rifle .glb filename, if you have one
 
   weaponRotX: -90, weaponRotY: 0, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
 
@@ -319,7 +319,7 @@ const CUSTOM_MODELS = {
     reload:  '',                        // pack has no reload — add 'reloading.glb' if you grab one
     death:   'death from the front.glb',
     grenade: '',                        // add 'throw grenade.glb' if you grab one
-    emote:   'Hip Hop Dancing.glb'                         // add 'dance.glb' + emoteSound for an emote
+    emote:   ''                         // add 'dance.glb' + emoteSound for an emote
   },
   emoteSound: ''
 };
@@ -1365,8 +1365,9 @@ function updateCamera(dt) {
   if (thirdPerson) {
     if (playerMesh) { playerMesh.visible = true; playerMesh.position.set(player.x, player.y - 1.7, player.z); playerMesh.rotation.y = player.yaw; }
     gunGroup.visible = false;   // character model carries its own weapon
-    const d = camDir(); camera.position.set(player.x - d.x*6, player.y + 2.6, player.z - d.z*6);
-    camera.rotation.set(player.pitch*0.6 + kick, player.yaw, 0);
+    const d = camDir();
+    camera.position.set(player.x - d.x*4.5, player.y + 0.5, player.z - d.z*4.5);
+    camera.rotation.set(player.pitch + kick, player.yaw, 0);
   } else {
     gunGroup.visible = !scoped;
     if (playerMesh) {
