@@ -121,11 +121,9 @@ function refreshPanels() {
 window.addEventListener('DOMContentLoaded', () => {
   const badge = document.createElement('div'); badge.id = 'ncpts'; badge.textContent = '🏆 ' + getPts() + ' pts'; document.body.appendChild(badge);
   const t = document.createElement('div'); t.id = 'nctoast'; document.body.appendChild(t);
-  const pick = document.getElementById('themepick');
-  if (pick) { for (const name in THEMES) { const o = document.createElement('option'); o.value = name; o.textContent = name; pick.appendChild(o); } pick.value = localStorage.getItem('nc_theme') || 'Dark'; pick.onchange = () => applyTheme(pick.value); }
   const lpick = document.getElementById('langpick');
   if (lpick) { for (const c in LANGS) { const o = document.createElement('option'); o.value = c; o.textContent = LANGS[c]; lpick.appendChild(o); } lpick.value = lang(); lpick.onchange = () => applyLang(lpick.value); }
-  applyTheme(localStorage.getItem('nc_theme') || 'Dark');
+  applyTheme('Dark');   // fixed dark theme — background switcher removed
   applyLang(lang());
   refreshPanels();
 
