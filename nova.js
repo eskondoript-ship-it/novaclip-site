@@ -36,6 +36,21 @@ const T = {
   t_duel: { en:"⚔️ Duel a channel", zh:"⚔️ 频道对决", hi:"⚔️ चैनल से ड्यूल", es:"⚔️ Duelo con un canal", ar:"⚔️ نازل قناة", fr:"⚔️ Défier une chaîne", bn:"⚔️ চ্যানেল ডুয়েল", pt:"⚔️ Desafiar um canal", ru:"⚔️ Дуэль с каналом", ur:"⚔️ چینل سے ڈوئل", id:"⚔️ Duel dengan kanal", de:"⚔️ Kanal herausfordern", ja:"⚔️ チャンネル対決", tr:"⚔️ Bir kanalla düello", ko:"⚔️ 채널과 대결", fa:"⚔️ دوئل با یک کانال", uk:"⚔️ Дуель із каналом", it:"⚔️ Sfida un canale", pl:"⚔️ Pojedynek z kanałem", vi:"⚔️ Đấu với một kênh" },
   t_trend: { en:"🔥 Trending topics", zh:"🔥 热门话题", hi:"🔥 ट्रेंडिंग टॉपिक्स", es:"🔥 Temas en tendencia", ar:"🔥 المواضيع الرائجة", fr:"🔥 Sujets tendance", bn:"🔥 ট্রেন্ডিং টপিক", pt:"🔥 Tópicos em tendência", ru:"🔥 В тренде", ur:"🔥 ٹرینڈنگ موضوعات", id:"🔥 Topik tren", de:"🔥 Trend-Themen", ja:"🔥 トレンドの話題", tr:"🔥 Trend konular", ko:"🔥 인기 주제", fa:"🔥 موضوعات پرطرفدار", uk:"🔥 У тренді", it:"🔥 Argomenti di tendenza", pl:"🔥 Popularne tematy", vi:"🔥 Chủ đề thịnh hành" },
   studio_h: { en:"NovaClip Studio", zh:"NovaClip 工作室", hi:"NovaClip स्टूडियो", es:"Estudio NovaClip", ar:"استوديو NovaClip", fr:"Studio NovaClip", bn:"NovaClip স্টুডিও", pt:"Estúdio NovaClip", ru:"Студия NovaClip", ur:"NovaClip اسٹوڈیو", id:"Studio NovaClip", de:"NovaClip Studio", ja:"NovaClipスタジオ", tr:"NovaClip Stüdyo", ko:"NovaClip 스튜디오", fa:"استودیو NovaClip", uk:"Студія NovaClip", it:"Studio NovaClip", pl:"Studio NovaClip", vi:"Studio NovaClip" },
+  e_media: { en:"Media", zh:"媒体", hi:"मीडिया", es:"Medios", ar:"الوسائط", fr:"Médias", bn:"মিডিয়া", pt:"Média", ru:"Медиа", ur:"میڈیا", id:"Media", de:"Medien", ja:"メディア", tr:"Medya", ko:"미디어", fa:"رسانه", uk:"Медіа", it:"Media", pl:"Media", vi:"Phương tiện" },
+  e_effects: { en:"Effects", zh:"特效", hi:"प्रभाव", es:"Efectos", ar:"التأثيرات", fr:"Effets", bn:"ইফেক্ট", pt:"Efeitos", ru:"Эффекты", ur:"ایفیکٹس", id:"Efek", de:"Effekte", ja:"エフェクト", tr:"Efektler", ko:"효과", fa:"جلوه‌ها", uk:"Ефекти", it:"Effetti", pl:"Efekty", vi:"Hiệu ứng" },
+  e_audio: { en:"Audio", zh:"音频", hi:"ऑडियो", es:"Audio", ar:"الصوت", fr:"Audio", bn:"অডিও", pt:"Áudio", ru:"Аудио", ur:"آڈیو", id:"Audio", de:"Audio", ja:"オーディオ", tr:"Ses", ko:"오디오", fa:"صدا", uk:"Аудіо", it:"Audio", pl:"Dźwięk", vi:"Âm thanh" },
+  e_memes: { en:"Memes", zh:"表情包", hi:"मीम", es:"Memes", ar:"ميمز", fr:"Mèmes", bn:"মিম", pt:"Memes", ru:"Мемы", ur:"میمز", id:"Meme", de:"Memes", ja:"ミーム", tr:"Meme", ko:"밈", fa:"میم", uk:"Меми", it:"Meme", pl:"Memy", vi:"Meme" },
+  e_text: { en:"Text", zh:"文字", hi:"टेक्स्ट", es:"Texto", ar:"النص", fr:"Texte", bn:"টেক্সট", pt:"Texto", ru:"Текст", ur:"متن", id:"Teks", de:"Text", ja:"テキスト", tr:"Metin", ko:"텍스트", fa:"متن", uk:"Текст", it:"Testo", pl:"Tekst", vi:"Văn bản" },
+  e_voice: { en:"Voice", zh:"配音", hi:"आवाज़", es:"Voz", ar:"الصوت", fr:"Voix", bn:"ভয়েস", pt:"Voz", ru:"Голос", ur:"آواز", id:"Suara", de:"Stimme", ja:"音声", tr:"Ses", ko:"음성", fa:"صدا", uk:"Голос", it:"Voce", pl:"Głos", vi:"Giọng nói" },
+  e_import: { en:"⊕ Import media", zh:"⊕ 导入媒体", hi:"⊕ मीडिया आयात करें", es:"⊕ Importar medios", ar:"⊕ استيراد الوسائط", fr:"⊕ Importer des médias", bn:"⊕ মিডিয়া ইমপোর্ট", pt:"⊕ Importar média", ru:"⊕ Импорт медиа", ur:"⊕ میڈیا درآمد", id:"⊕ Impor media", de:"⊕ Medien importieren", ja:"⊕ メディアを読み込む", tr:"⊕ Medya içe aktar", ko:"⊕ 미디어 가져오기", fa:"⊕ وارد کردن رسانه", uk:"⊕ Імпорт медіа", it:"⊕ Importa media", pl:"⊕ Importuj media", vi:"⊕ Nhập phương tiện" },
+  e_effects_h: { en:"Effects & filters", zh:"特效与滤镜", hi:"प्रभाव और फ़िल्टर", es:"Efectos y filtros", ar:"التأثيرات والفلاتر", fr:"Effets et filtres", bn:"ইফেক্ট ও ফিল্টার", pt:"Efeitos e filtros", ru:"Эффекты и фильтры", ur:"ایفیکٹس اور فلٹرز", id:"Efek & filter", de:"Effekte & Filter", ja:"エフェクトとフィルター", tr:"Efektler ve filtreler", ko:"효과 및 필터", fa:"جلوه‌ها و فیلترها", uk:"Ефекти та фільтри", it:"Effetti e filtri", pl:"Efekty i filtry", vi:"Hiệu ứng & bộ lọc" },
+  e_memes_h: { en:"Meme search", zh:"表情包搜索", hi:"मीम खोज", es:"Buscar memes", ar:"بحث الميمز", fr:"Recherche de mèmes", bn:"মিম সার্চ", pt:"Pesquisa de memes", ru:"Поиск мемов", ur:"میم تلاش", id:"Cari meme", de:"Meme-Suche", ja:"ミーム検索", tr:"Meme arama", ko:"밈 검색", fa:"جستجوی میم", uk:"Пошук мемів", it:"Ricerca meme", pl:"Szukaj memów", vi:"Tìm meme" },
+  e_text_h: { en:"Text overlay", zh:"文字叠加", hi:"टेक्स्ट ओवरले", es:"Superposición de texto", ar:"تراكب النص", fr:"Superposition de texte", bn:"টেক্সট ওভারলে", pt:"Sobreposição de texto", ru:"Наложение текста", ur:"ٹیکسٹ اوورلے", id:"Overlay teks", de:"Text-Overlay", ja:"テキストオーバーレイ", tr:"Metin katmanı", ko:"텍스트 오버레이", fa:"لایه متن", uk:"Накладення тексту", it:"Sovrapposizione testo", pl:"Nakładka tekstowa", vi:"Lớp văn bản" },
+  e_voice_h: { en:"AI voiceover", zh:"AI 配音", hi:"AI वॉयसओवर", es:"Voz en off IA", ar:"تعليق صوتي بالذكاء الاصطناعي", fr:"Voix off IA", bn:"এআই ভয়েসওভার", pt:"Narração de IA", ru:"ИИ озвучка", ur:"اے آئی وائس اوور", id:"Sulih suara AI", de:"KI-Sprachausgabe", ja:"AIナレーション", tr:"AI seslendirme", ko:"AI 보이스오버", fa:"صداگذاری هوش مصنوعی", uk:"ШІ озвучення", it:"Voce fuori campo IA", pl:"Lektor AI", vi:"Lồng tiếng AI" },
+  e_clip_h: { en:"Selected clip", zh:"已选片段", hi:"चयनित क्लिप", es:"Clip seleccionado", ar:"المقطع المحدد", fr:"Clip sélectionné", bn:"নির্বাচিত ক্লিপ", pt:"Clipe selecionado", ru:"Выбранный клип", ur:"منتخب کلپ", id:"Klip terpilih", de:"Ausgewählter Clip", ja:"選択中のクリップ", tr:"Seçili klip", ko:"선택한 클립", fa:"کلیپ انتخابی", uk:"Вибраний кліп", it:"Clip selezionata", pl:"Wybrany klip", vi:"Clip đã chọn" },
+  e_filter: { en:"Filter", zh:"滤镜", hi:"फ़िल्टर", es:"Filtro", ar:"فلتر", fr:"Filtre", bn:"ফিল্টার", pt:"Filtro", ru:"Фильтр", ur:"فلٹر", id:"Filter", de:"Filter", ja:"フィルター", tr:"Filtre", ko:"필터", fa:"فیلتر", uk:"Фільтр", it:"Filtro", pl:"Filtr", vi:"Bộ lọc" },
+  e_trans: { en:"Transition in", zh:"入场转场", hi:"ट्रांज़िशन इन", es:"Transición de entrada", ar:"انتقال الدخول", fr:"Transition d’entrée", bn:"ট্রানজিশন", pt:"Transição de entrada", ru:"Переход на входе", ur:"ٹرانزیشن", id:"Transisi masuk", de:"Übergang", ja:"切り替え", tr:"Geçiş", ko:"전환", fa:"ترنزیشن ورود", uk:"Перехід", it:"Transizione", pl:"Przejście", vi:"Chuyển cảnh" },
+  e_export: { en:"⬆ Export", zh:"⬆ 导出", hi:"⬆ निर्यात", es:"⬆ Exportar", ar:"⬆ تصدير", fr:"⬆ Exporter", bn:"⬆ এক্সপোর্ট", pt:"⬆ Exportar", ru:"⬆ Экспорт", ur:"⬆ برآمد", id:"⬆ Ekspor", de:"⬆ Exportieren", ja:"⬆ 書き出し", tr:"⬆ Dışa aktar", ko:"⬆ 내보내기", fa:"⬆ خروجی", uk:"⬆ Експорт", it:"⬆ Esporta", pl:"⬆ Eksportuj", vi:"⬆ Xuất" },
   analytics: { en:"📊 Analytics", zh:"📊 分析", hi:"📊 एनालिटिक्स", es:"📊 Analíticas", ar:"📊 التحليلات", fr:"📊 Analytique", bn:"📊 অ্যানালিটিক্স", pt:"📊 Análises", ru:"📊 Аналитика", ur:"📊 تجزیات", id:"📊 Analitik", de:"📊 Analysen", ja:"📊 分析", tr:"📊 Analizler", ko:"📊 분석", fa:"📊 تحلیل‌ها", uk:"📊 Аналітика", it:"📊 Analisi", pl:"📊 Analityka", vi:"📊 Phân tích" },
   analytics_h: { en:"Analytics", zh:"分析", hi:"एनालिटिक्स", es:"Analíticas", ar:"التحليلات", fr:"Analytique", bn:"অ্যানালিটিক্স", pt:"Análises", ru:"Аналитика", ur:"تجزیات", id:"Analitik", de:"Analysen", ja:"分析", tr:"Analizler", ko:"분석", fa:"تحلیل‌ها", uk:"Аналітика", it:"Analisi", pl:"Analityka", vi:"Phân tích" },
   analytics_sub: { en:"Deep charts comparing your channel to your closest rivals.", zh:"将你的频道与最接近的对手进行深入图表对比。", hi:"अपने चैनल की तुलना करीबी प्रतिद्वंद्वियों से करें।", es:"Gráficos detallados comparando tu canal con tus rivales más cercanos.", ar:"رسوم بيانية معمّقة تقارن قناتك بأقرب منافسيك.", fr:"Des graphiques détaillés comparant ta chaîne à tes rivaux les plus proches.", bn:"আপনার চ্যানেলকে নিকটতম প্রতিদ্বন্দ্বীদের সাথে তুলনা করুন।", pt:"Gráficos detalhados a comparar o teu canal com os rivais mais próximos.", ru:"Подробные графики сравнения твоего канала с ближайшими соперниками.", ur:"اپنے چینل کا قریبی حریفوں سے تفصیلی موازنہ۔", id:"Grafik mendalam membandingkan kanalmu dengan rival terdekat.", de:"Detaillierte Diagramme, die deinen Kanal mit den nächsten Rivalen vergleichen.", ja:"あなたのチャンネルを最接近のライバルと比較する詳細なグラフ。", tr:"Kanalını en yakın rakiplerinle karşılaştıran ayrıntılı grafikler.", ko:"내 채널을 가장 가까운 라이벌과 비교하는 심층 차트.", fa:"نمودارهای عمیق برای مقایسه کانال شما با نزدیک‌ترین رقبا.", uk:"Детальні графіки порівняння твого каналу з найближчими суперниками.", it:"Grafici dettagliati che confrontano il tuo canale con i rivali più vicini.", pl:"Szczegółowe wykresy porównujące Twój kanał z najbliższymi rywalami.", vi:"Biểu đồ chi tiết so sánh kênh của bạn với đối thủ gần nhất." },
@@ -185,3 +200,112 @@ function applySeason() {
   st.textContent = '@keyframes ncfall { from { transform: translateY(0) rotate(0deg); } to { transform: translateY(110vh) rotate(360deg); } }';
   document.head.appendChild(st);
 }
+
+/* ============================================================
+   NOVACLIP SAFETY & MODERATION
+   Client-side detection + suspension. In production these
+   decisions must be enforced server-side (Firebase Auth +
+   Firestore rules) — a browser-only ban can be cleared by
+   wiping local storage.
+   ============================================================ */
+(function () {
+  const SLURS_AND_ABUSE = ['idiot','stupid','loser','ugly','fat','dumb','hate you','kill yourself','kys','shut up','freak','worthless','nobody likes you','trash','moron','pathetic','disgusting','retard','noob'];
+  const SWEARS = ['fuck','shit','bitch','asshole','bastard','dick','cunt','whore','slut','piss','damn','crap','wank','prick'];
+
+  function normalise(s) {
+    return (s || '').toLowerCase()
+      .replace(/[3]/g, 'e').replace(/[1!|]/g, 'i').replace(/[0]/g, 'o')
+      .replace(/[4@]/g, 'a').replace(/[5$]/g, 's').replace(/[7]/g, 't')
+      .replace(/[^a-z\s]/g, ' ');
+  }
+
+  // returns { ok, severity: 'clean'|'swear'|'abuse', hits: [] }
+  window.ncModerate = function (text) {
+    const t = normalise(text);
+    const hits = [];
+    let severity = 'clean';
+    SWEARS.forEach(w => { if (t.includes(w)) { hits.push(w); severity = 'swear'; } });
+    SLURS_AND_ABUSE.forEach(w => { if (t.includes(w)) { hits.push(w); severity = 'abuse'; } });
+    return { ok: severity === 'clean', severity, hits };
+  };
+
+  // ---- suspensions ----
+  function now() { return Date.now(); }
+  window.ncSuspend = function (days, reason) {
+    const until = now() + days * 24 * 60 * 60 * 1000;
+    localStorage.setItem('nc_suspended_until', String(until));
+    localStorage.setItem('nc_suspend_reason', reason || 'Community guidelines violation');
+    const log = JSON.parse(localStorage.getItem('nc_mod_log') || '[]');
+    log.push({ at: now(), days, reason });
+    localStorage.setItem('nc_mod_log', JSON.stringify(log.slice(-40)));
+    window.ncCheckSuspension();
+  };
+  window.ncStrike = function (reason) {
+    const n = parseInt(localStorage.getItem('nc_strikes') || '0') + 1;
+    localStorage.setItem('nc_strikes', String(n));
+    const log = JSON.parse(localStorage.getItem('nc_mod_log') || '[]');
+    log.push({ at: now(), strike: n, reason });
+    localStorage.setItem('nc_mod_log', JSON.stringify(log.slice(-40)));
+    if (n >= 3) { ncSuspend(7, 'Three strikes: ' + reason); return { suspended: true, strikes: n }; }
+    return { suspended: false, strikes: n };
+  };
+  window.ncSuspendedFor = function () {
+    const until = parseInt(localStorage.getItem('nc_suspended_until') || '0');
+    return until > now() ? until - now() : 0;
+  };
+  window.ncCheckSuspension = function () {
+    const left = ncSuspendedFor();
+    if (!left) return false;
+    const days = Math.ceil(left / 86400000);
+    const reason = localStorage.getItem('nc_suspend_reason') || 'Community guidelines violation';
+    let o = document.getElementById('ncSuspendScreen');
+    if (!o) {
+      o = document.createElement('div');
+      o.id = 'ncSuspendScreen';
+      o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#05060A;color:#EAF2FF;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:Segoe UI,sans-serif;';
+      o.innerHTML = '<div style="max-width:520px"><div style="font-size:3rem;margin-bottom:12px">⛔</div>' +
+        '<h1 style="font-size:1.8rem;margin-bottom:10px">Account suspended</h1>' +
+        '<p style="color:#7E8AA6;line-height:1.7;margin-bottom:14px">Your access to NovaClip is paused for <b style="color:#FF2E97">' + days + ' day' + (days>1?'s':'') + '</b>.</p>' +
+        '<div style="background:rgba(255,46,151,0.08);border-left:3px solid #FF2E97;border-radius:10px;padding:12px 16px;text-align:left;color:#b8bccb;font-size:0.9rem">Reason: ' + reason + '</div>' +
+        '<p style="color:#7E8AA6;font-size:0.85rem;margin-top:16px">If you believe this is a mistake, ask a parent or guardian to contact support.</p></div>';
+      document.body.appendChild(o);
+    }
+    return true;
+  };
+
+  // ---- age gate (13-18) ----
+  window.ncAge = function () { return parseInt(localStorage.getItem('nc_user_age') || '0'); };
+  window.ncControlsRelaxed = function () { const a = ncAge(); return a >= 16 && a <= 18; };
+
+  window.ncAgeGate = function () {
+    if (ncAge()) return;
+    const o = document.createElement('div');
+    o.id = 'ncAgeGate';
+    o.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(5,6,10,0.96);color:#EAF2FF;display:flex;align-items:center;justify-content:center;padding:24px;font-family:Segoe UI,sans-serif;backdrop-filter:blur(8px);';
+    o.innerHTML = '<div style="max-width:460px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px">' +
+      '<div style="font-size:2.4rem;margin-bottom:10px">👋</div>' +
+      '<h2 style="margin-bottom:8px">How old are you?</h2>' +
+      '<p style="color:#7E8AA6;font-size:0.92rem;line-height:1.6;margin-bottom:16px">NovaClip is built for creators aged 13–18. Your answer sets the right safety level for your account.</p>' +
+      '<input id="ncAgeInput" type="text" inputmode="numeric" maxlength="2" placeholder="Your age" style="width:100%;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:#0A0C14;color:#EAF2FF;font-size:1.05rem;text-align:center;margin-bottom:12px">' +
+      '<button id="ncAgeGo" style="width:100%;padding:14px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;font-size:1rem">Continue</button>' +
+      '<div id="ncAgeMsg" style="color:#FF2E97;font-size:0.85rem;margin-top:10px;min-height:20px"></div></div>';
+    document.body.appendChild(o);
+    document.getElementById('ncAgeGo').onclick = () => {
+      const a = parseInt(document.getElementById('ncAgeInput').value, 10);
+      const msg = document.getElementById('ncAgeMsg');
+      if (isNaN(a) || a < 1 || a > 120) { msg.textContent = 'Please enter a valid age.'; return; }
+      if (a < 13) { msg.innerHTML = 'Sorry — NovaClip is for ages 13 and over. Under-13 accounts need verified parental consent (COPPA/GDPR-K).'; return; }
+      if (a > 18) { msg.innerHTML = 'NovaClip is designed for teen creators aged 13–18.'; return; }
+      localStorage.setItem('nc_user_age', String(a));
+      o.remove();
+      if (a >= 16) {
+        localStorage.setItem('nc_controls_relaxed', '1');
+        alert('You are 16+, so monitoring is lighter: your chats are no longer logged for your parent.\n\nParental controls can only be fully removed by your parent from the Family Dashboard.');
+      }
+    };
+  };
+
+  // run on every page
+  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); });
+  if (document.readyState !== 'loading') ncCheckSuspension();
+})();
