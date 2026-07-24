@@ -179,7 +179,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v28 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v33 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -300,31 +300,103 @@ const PLAYER_TEAM = TEAM_CT;
 //  export as .glb, upload to your repo (Add file > Upload files).
 // ============================================================
 const CUSTOM_MODELS = {
-  character: 'ct_urban.glb',  // must be uploaded to your repo
+  // ===== MIXAMO SHOOTER PACK (converted to .glb) =====
+  // The rigged character with skin. If you kept the original name it is Ch15_nonPBR.
+  character: 'Ch15_nonPBR.glb',
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_m4a1.glb'            // your rifle .glb filename, if you have one
+  weapon: '',           // your rifle .glb filename, if you have one
+
+  weaponRotX: -90, weaponRotY: 0, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
+
+  // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
+  characterAnims: {
+    idle:    'idle.glb',
+    walk:    'walk forward.glb',
+    run:     'run forward.glb',
+    jump:    'jump loop.glb',
+    crouch:  'walk crouching forward.glb',
+    reload:  '',                        // pack has no reload — add 'reloading.glb' if you grab one
+    death:   'death from the front.glb',
+    grenade: '',                        // add 'throw grenade.glb' if you grab one
+    emote:   'Hip Hop Dancing.glb'                         // add 'dance.glb' + emoteSound for an emote
+  },
+  emoteSound: ''
 };
 let loadedCharGLB = null, loadedWeapGLB = null, loadedCharAnims = [];
+const extraClips = {};   // animations loaded from separate files
 const mixers = [];   // animation players, ticked every frame
+
+function isFBX(name) { return /\.fbx$/i.test(name || ''); }
 
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
   if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon) { done(); return; }
-  // dynamically load GLTFLoader, then the models — never blocks the base game
-  const s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-  s.onload = () => {
-    if (!THREE.GLTFLoader) { console.warn('GLTFLoader missing — using built-in models'); done(); return; }
-    const loader = new THREE.GLTFLoader();
+  const needFBX = isFBX(CUSTOM_MODELS.character) || isFBX(CUSTOM_MODELS.weapon);
+
+  // load the right loader(s): GLTFLoader for .glb/.gltf, FBXLoader for Mixamo .fbx
+  function addScript(src) {
+    return new Promise(res => {
+      const el = document.createElement('script');
+      el.src = src; el.onload = () => res(true); el.onerror = () => res(false);
+      document.head.appendChild(el);
+    });
+  }
+
+  const base = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/';
+  const jobs = [addScript(base + 'loaders/GLTFLoader.js')];
+  if (needFBX) {
+    // FBXLoader needs these two helpers
+    jobs.push(addScript('https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.js')
+      .then(() => addScript(base + 'loaders/FBXLoader.js')));
+  }
+
+  Promise.all(jobs).then(() => {
+    const gltf = THREE.GLTFLoader ? new THREE.GLTFLoader() : null;
+    const fbx  = THREE.FBXLoader  ? new THREE.FBXLoader()  : null;
+    if (!gltf && !fbx) { console.warn('no model loader available — using built-in models'); done(); return; }
+
+    // one call that picks the right loader by file extension
+    const loader = {
+      load: function (rawUrl, ok, prog, err) {
+        // filenames can contain spaces ("walk forward.glb") — encode them for the URL
+        const url = encodeURI(rawUrl);
+        if (isFBX(url)) {
+          if (!fbx) { err && err(new Error('FBXLoader unavailable')); return; }
+          // FBXLoader returns a Group; wrap it to look like a glTF result
+          fbx.load(url, obj => ok({ scene: obj, animations: obj.animations || [] }), prog, err);
+        } else {
+          if (!gltf) { err && err(new Error('GLTFLoader unavailable')); return; }
+          gltf.load(url, ok, prog, err);
+        }
+      }
+    };
     let pending = 0, fired = false;
     const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
     if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; loadedCharAnims = g.animations || []; if (loadedCharAnims.length) console.log('character has ' + loadedCharAnims.length + ' animation clip(s):', loadedCharAnims.map(a => a.name).join(', ')); pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); }); }
+    // extra animation files — each one contributes a single clip
+    const AN = CUSTOM_MODELS.characterAnims || {};
+    Object.keys(AN).forEach(key => {
+      const file = AN[key];
+      if (!file) return;
+      pending++;
+      loader.load(file, res => {
+        const clips = (res.animations && res.animations.length) ? res.animations : (res.scene && res.scene.animations) || [];
+        if (clips.length) {
+          const clip = clips[0];
+          clip.name = key;                 // rename so the state machine finds it
+          extraClips[key] = clip;
+          console.log('loaded "' + key + '" animation from ' + file);
+        } else {
+          console.warn('no animation clip found in ' + file);
+        }
+        pending--; finish();
+      }, undefined, e => { console.warn('animation file failed: ' + file, e); pending--; finish(); });
+    });
+
     if (pending === 0) done();
-  };
-  s.onerror = () => { console.warn('GLTFLoader unavailable — using built-in models'); done(); };
-  document.head.appendChild(s);
+  });
 }
 
 // ---------- state ----------
@@ -332,8 +404,8 @@ let scene, camera, renderer, skyMesh;
 let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true };
 const keys = {};
 // ---- rebindable controls ----
-const DEFAULT_BINDS = { forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', sprint:'ShiftLeft', reload:'KeyR', nade:'KeyG', sticky:'KeyB', plant:'KeyC', detonate:'KeyX', shop:'KeyE', view:'KeyV' };
-const BIND_LABELS = { forward:'Move forward', back:'Move back', left:'Strafe left', right:'Strafe right', jump:'Jump', sprint:'Sprint', reload:'Reload', nade:'Equip grenade', sticky:'Equip sticky', plant:'Plant C4', detonate:'Detonate', shop:'Open shop', view:'First/third person' };
+const DEFAULT_BINDS = { forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', sprint:'ShiftLeft', crouch:'ControlLeft', emote:'KeyT', reload:'KeyR', nade:'KeyG', sticky:'KeyB', plant:'KeyC', detonate:'KeyX', shop:'KeyE', view:'KeyV' };
+const BIND_LABELS = { forward:'Move forward', back:'Move back', left:'Strafe left', right:'Strafe right', jump:'Jump', sprint:'Sprint', crouch:'Crouch', emote:'Emote / dance', reload:'Reload', nade:'Equip grenade', sticky:'Equip sticky', plant:'Plant C4', detonate:'Detonate', shop:'Open shop', view:'First/third person' };
 let BINDS = (function () {
   try { return Object.assign({}, DEFAULT_BINDS, JSON.parse(localStorage.getItem('nc_binds') || '{}')); }
   catch (e) { return Object.assign({}, DEFAULT_BINDS); }
@@ -674,13 +746,29 @@ function makeFighter(color, useGLB) {
       model.traverse(o => { if (o.isMesh) o.castShadow = true; });
       g.add(model);
       // if the model shipped with animations, play one on a loop
-      if (loadedCharAnims && loadedCharAnims.length) {
+      if ((loadedCharAnims && loadedCharAnims.length) || Object.keys(extraClips).length) {
         try {
           const mixer = new THREE.AnimationMixer(model);
-          const pick = loadedCharAnims.find(a => /idle|stand|breath/i.test(a.name)) || loadedCharAnims[0];
-          mixer.clipAction(pick).play();
+          const find = (re) => loadedCharAnims.find(a => re.test(a.name));
+          // clips from separate files take priority, then anything inside the model
+          const acts = {
+            idle:   extraClips.idle   || find(/idle|stand|breath/i) || loadedCharAnims[0],
+            run:    extraClips.run    || find(/run|sprint/i),
+            walk:   extraClips.walk   || find(/walk|jog/i),
+            jump:   extraClips.jump   || find(/jump|leap/i),
+            crouch:  extraClips.crouch  || find(/crouch|croach|duck|kneel/i),
+            reload:  extraClips.reload  || find(/reload/i),
+            death:   extraClips.death   || find(/death|dying|die|fall/i),
+            grenade: extraClips.grenade || find(/grenade|throw|toss/i),
+            emote:   extraClips.emote   || find(/emote|dance|taunt|celebrat/i)
+          };
+          const made = {};
+          for (const k in acts) if (acts[k]) { made[k] = mixer.clipAction(acts[k]); }
+          if (made.idle) made.idle.play();
           mixers.push(mixer);
           g.userData.mixer = mixer;
+          g.userData.acts = made;
+          g.userData.cur = 'idle';
         } catch (e) { console.warn('animation failed', e); }
       }
       const fl = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
@@ -749,11 +837,17 @@ function autoFitGLB(inner) {
   let bbox = new THREE.Box3().setFromObject(inner);
   let size = new THREE.Vector3(); bbox.getSize(size);
 
-  // AUTO-ORIENT: a rifle should be longest along Z (pointing away from you).
-  // Models exported barrel-up (long on Y) or sideways (long on X) get rotated.
+  // ORIENT: use the explicit settings from CUSTOM_MODELS unless auto is on.
   const spin = new THREE.Group();
-  if (size.y > size.z && size.y > size.x)      spin.rotation.x = -Math.PI / 2;  // barrel-up -> forward
-  else if (size.x > size.z && size.x > size.y) spin.rotation.y =  Math.PI / 2;  // sideways -> forward
+  const D = Math.PI / 180;
+  if (CUSTOM_MODELS.weaponAutoOrient) {
+    if (size.y > size.z && size.y > size.x)      spin.rotation.x = -Math.PI / 2;
+    else if (size.x > size.z && size.x > size.y) spin.rotation.y =  Math.PI / 2;
+  } else {
+    spin.rotation.set((CUSTOM_MODELS.weaponRotX || 0) * D,
+                      (CUSTOM_MODELS.weaponRotY || 0) * D,
+                      (CUSTOM_MODELS.weaponRotZ || 0) * D);
+  }
   spin.add(inner);
 
   // re-measure after rotating, then centre and scale
@@ -763,6 +857,7 @@ function autoFitGLB(inner) {
   const longest = Math.max(size.x, size.y, size.z);
   let scale = 0.6 / longest;
   if (!isFinite(scale) || scale <= 0.0001 || scale > 100) scale = 1;
+  scale *= (CUSTOM_MODELS.weaponScale || 1);
   spin.scale.setScalar(scale);
   spin.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
   wrapper.add(spin);
@@ -787,11 +882,11 @@ function buildArms() {
     return m;
   }
   // right arm along the stock
-  limb(sleeve, 0.055, 0.055, 0.20, 0.045, -0.075, 0.10, 0.35, 0);
-  limb(glove,  0.050, 0.050, 0.070, 0.035, -0.045, 0.005, 0, 0);
+  limb(sleeve, 0.042, 0.042, 0.17, 0.055, -0.062, 0.09, 0.30, 0);
+  limb(glove,  0.040, 0.040, 0.055, 0.042, -0.038, 0.002, 0, 0);
   // left arm forward on the handguard
-  limb(sleeve, 0.050, 0.050, 0.22, -0.050, -0.070, -0.14, -0.30, 0.25);
-  limb(glove,  0.048, 0.048, 0.065, -0.035, -0.042, -0.235, 0, 0);
+  limb(sleeve, 0.038, 0.038, 0.18, -0.045, -0.058, -0.13, -0.26, 0.22);
+  limb(glove,  0.038, 0.038, 0.052, -0.032, -0.036, -0.215, 0, 0);
   return g;
 }
 
@@ -944,6 +1039,7 @@ document.addEventListener('keydown', (e) => {
   if (/^Digit[1-9]$/.test(e.code)) { const slot = parseInt(e.code.slice(5)); const w = Object.keys(WEAPONS).find(k => WEAPONS[k].slot === slot); if (w) { switchWeap(w); equippedNade = null; } }
   if (e.code === BINDS.nade) { equippedNade = inv.frag > 0 ? 'frag' : null; if (!inv.frag) addFeed('No frags — buy in shop (E)'); updateNadeHint(); }
   if (e.code === BINDS.sticky) { equippedNade = inv.sticky > 0 ? 'sticky' : null; if (!inv.sticky) addFeed('No stickies — buy in shop (E)'); updateNadeHint(); }
+  if (e.code === BINDS.emote) playEmote();
   if (e.code === BINDS.plant) plantC4();
   if (e.code === BINDS.detonate) detonate();
   if (e.code === BINDS.shop) { if (shopOpen) closeShop(); else if (insideShop()) openShop(); }
@@ -969,6 +1065,7 @@ function reload() {
   const W = WEAPONS[curWeap];
   if (W.mag === Infinity || player.reloading || player.mag === W.mag) return;
   player.reloading = true; player.reloadStart = performance.now(); player.reloadDur = 1100;
+  playOneShot('reload', 1100);
   document.getElementById('mag').textContent = '..';
   setTimeout(() => { player.mag = W.mag; player.reloading = false; document.getElementById('mag').textContent = player.mag; }, 1100);
 }
@@ -1051,6 +1148,7 @@ function updateBoard() {
 
 // ---------- explosives ----------
 function throwNade(kind) {
+  playOneShot('grenade', 900);
   if (inv[kind] <= 0) { addFeed('No ' + kind + ' — buy in shop (E)'); return; }
   inv[kind]--;
   const dir = camDir(), start = new THREE.Vector3(player.x, player.y, player.z);
@@ -1159,7 +1257,7 @@ function damagePlayer(amt, from) {
   if (inShop) return;
   player.hp -= amt; document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
   const df = document.getElementById('dmgflash'); df.style.opacity = '1'; setTimeout(() => df.style.opacity = '0', 120);
-  if (player.hp <= 0) { player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' ➜ You (respawned)'); player.x = (Math.random()-0.5)*120; player.z = (Math.random()-0.5)*120; c4Ready = false; c4Timer = 20; }
+  if (player.hp <= 0) { playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' ➜ You (respawned)'); player.x = (Math.random()-0.5)*120; player.z = (Math.random()-0.5)*120; c4Ready = false; c4Timer = 20; }
 }
 
 // ---------- player + camera ----------
@@ -1178,7 +1276,8 @@ function blockedAt(x, z) {
 }
 
 function updatePlayer(dt) {
-  const speed = (player.sprint ? 12 : 6.5) * dt;
+  const crouching = !!keys[BINDS.crouch];
+  const speed = (crouching ? 3.2 : (player.sprint ? 12 : 6.5)) * dt;
   let fx = 0, fz = 0; const sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
   if (keys[BINDS.forward]) { fx -= sy; fz -= cy; } if (keys[BINDS.back]) { fx += sy; fz += cy; }
   if (keys[BINDS.left]) { fx -= cy; fz += sy; } if (keys[BINDS.right]) { fx += cy; fz -= sy; }
@@ -1188,7 +1287,7 @@ function updatePlayer(dt) {
   if (!blockedAt(nx, player.z)) player.x = nx;
   if (!blockedAt(player.x, nz)) player.z = nz;
   player.x = Math.max(-78, Math.min(78, player.x)); player.z = Math.max(-78, Math.min(78, player.z));
-  const GROUND = 1.7;
+  const GROUND = crouching ? 1.15 : 1.7;
   if (keys[BINDS.jump] && player.onGround) { player.vy = 6.4; player.onGround = false; }
   player.vy -= 18*dt; player.y += player.vy*dt;
   if (player.y <= GROUND) { player.y = GROUND; player.vy = 0; player.onGround = true; }
@@ -1204,6 +1303,60 @@ function updatePlayer(dt) {
   if (inShop) { safeLeft -= dt; document.getElementById('safetime').textContent = Math.max(0, Math.ceil(safeLeft)); if (safeLeft <= 0) { inShop = false; document.getElementById('safebadge').style.display = 'none'; } }
   if (!c4Ready) { c4Timer -= dt; if (c4Timer <= 0) { c4Ready = true; document.getElementById('c4stat').textContent = 'READY — C to plant'; } else document.getElementById('c4stat').textContent = 'arming ' + Math.ceil(c4Timer) + 's…'; }
 }
+// play a one-shot clip (reload, death, grenade, emote) over the movement states
+let oneShotUntil = 0;
+function playOneShot(name, holdMs) {
+  if (!playerMesh || !playerMesh.userData.acts) return;
+  const A = playerMesh.userData.acts;
+  if (!A[name]) return;
+  const prev = A[playerMesh.userData.cur];
+  if (prev) prev.fadeOut(0.12);
+  A[name].reset();
+  A[name].setLoop(THREE.LoopOnce, 1);
+  A[name].clampWhenFinished = true;
+  A[name].fadeIn(0.12).play();
+  playerMesh.userData.cur = name;
+  oneShotUntil = performance.now() + (holdMs || 1100);
+}
+
+// ---- EMOTE (T key) ----
+let emoteAudio = null;
+function playEmote() {
+  if (!running) return;
+  playOneShot('emote', 4000);
+  addFeed('🕺 Emote!');
+  if (CUSTOM_MODELS.emoteSound) {
+    try {
+      if (!emoteAudio) { emoteAudio = new Audio(CUSTOM_MODELS.emoteSound); emoteAudio.volume = 0.8; }
+      emoteAudio.currentTime = 0;
+      emoteAudio.play().catch(() => {});
+    } catch (e) {}
+  }
+  // emoting shows your character, so swing to third person to actually see it
+  if (!thirdPerson) {
+    thirdPerson = true;
+    setTimeout(() => { thirdPerson = false; }, 4000);
+  }
+}
+
+// pick the right animation clip for what the player is doing
+function updatePlayerAnim() {
+  if (!playerMesh || !playerMesh.userData.acts) return;
+  if (performance.now() < oneShotUntil) return;   // let one-shots finish
+  const A = playerMesh.userData.acts;
+  const moving = keys[BINDS.forward] || keys[BINDS.back] || keys[BINDS.left] || keys[BINDS.right];
+  let want = 'idle';
+  if (!player.onGround && A.jump) want = 'jump';
+  else if (keys[BINDS.crouch] && A.crouch) want = 'crouch';
+  else if (moving && player.sprint && A.run) want = 'run';
+  else if (moving) want = A.walk ? 'walk' : (A.run ? 'run' : 'idle');
+  if (want === playerMesh.userData.cur || !A[want]) return;
+  const prev = A[playerMesh.userData.cur];
+  if (prev) prev.fadeOut(0.18);
+  A[want].reset().fadeIn(0.18).play();
+  playerMesh.userData.cur = want;
+}
+
 function updateCamera(dt) {
   if (!gunGroup) return;
   const fov = scoped ? 25 : 72;
@@ -1288,6 +1441,7 @@ function animate() {
   const now = performance.now(); let dt = (now - gclock.last)/1000; gclock.last = now; if (dt > 0.1) dt = 0.1;
   if (running && !shopOpen) { updatePlayer(dt); updateBots(dt); updateNades(dt); if (mouseHeld && WEAPONS[curWeap].auto && !equippedNade) shoot(); }
   for (let i = 0; i < mixers.length; i++) mixers[i].update(dt);
+  updatePlayerAnim();
   updateCamera(dt); updateTracers(dt);
   renderer.render(scene, camera);
 }
