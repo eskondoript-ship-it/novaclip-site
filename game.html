@@ -178,7 +178,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v26 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v27 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -292,12 +292,13 @@ const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Ech
 //  export as .glb, upload to your repo (Add file > Upload files).
 // ============================================================
 const CUSTOM_MODELS = {
-  character: 'ct_urban.glb',  // must be uploaded to your repo
+  character: 'military_tactical_suit_lowpolygameready.glb',  // must be uploaded to your repo
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_c7a2.glb'            // your rifle .glb filename, if you have one
+  weapon: ''            // your rifle .glb filename, if you have one
 };
-let loadedCharGLB = null, loadedWeapGLB = null;
+let loadedCharGLB = null, loadedWeapGLB = null, loadedCharAnims = [];
+const mixers = [];   // animation players, ticked every frame
 
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
@@ -310,7 +311,7 @@ function loadCustomModels(done) {
     const loader = new THREE.GLTFLoader();
     let pending = 0, fired = false;
     const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
-    if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; loadedCharAnims = g.animations || []; if (loadedCharAnims.length) console.log('character has ' + loadedCharAnims.length + ' animation clip(s):', loadedCharAnims.map(a => a.name).join(', ')); pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); }); }
     if (pending === 0) done();
   };
@@ -664,6 +665,16 @@ function makeFighter(color, useGLB) {
       model.position.set(offX, offY + (CUSTOM_MODELS.characterYOffset || 0), offZ);
       model.traverse(o => { if (o.isMesh) o.castShadow = true; });
       g.add(model);
+      // if the model shipped with animations, play one on a loop
+      if (loadedCharAnims && loadedCharAnims.length) {
+        try {
+          const mixer = new THREE.AnimationMixer(model);
+          const pick = loadedCharAnims.find(a => /idle|stand|breath/i.test(a.name)) || loadedCharAnims[0];
+          mixer.clipAction(pick).play();
+          mixers.push(mixer);
+          g.userData.mixer = mixer;
+        } catch (e) { console.warn('animation failed', e); }
+      }
       const fl = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
       fl.position.set(0.26, 1.1, -0.7); g.add(fl); g.userData.flash = fl;
       return g;
@@ -727,23 +738,60 @@ function makeFighter(color, useGLB) {
 // anywhere, so a bad scale value can never corrupt the transform.
 function autoFitGLB(inner) {
   const wrapper = new THREE.Group();
-  const bbox = new THREE.Box3().setFromObject(inner);
-  const size = new THREE.Vector3(), center = new THREE.Vector3();
-  bbox.getSize(size); bbox.getCenter(center);
+  let bbox = new THREE.Box3().setFromObject(inner);
+  let size = new THREE.Vector3(); bbox.getSize(size);
+
+  // AUTO-ORIENT: a rifle should be longest along Z (pointing away from you).
+  // Models exported barrel-up (long on Y) or sideways (long on X) get rotated.
+  const spin = new THREE.Group();
+  if (size.y > size.z && size.y > size.x)      spin.rotation.x = -Math.PI / 2;  // barrel-up -> forward
+  else if (size.x > size.z && size.x > size.y) spin.rotation.y =  Math.PI / 2;  // sideways -> forward
+  spin.add(inner);
+
+  // re-measure after rotating, then centre and scale
+  bbox = new THREE.Box3().setFromObject(spin);
+  size = new THREE.Vector3(); bbox.getSize(size);
+  const center = new THREE.Vector3(); bbox.getCenter(center);
   const longest = Math.max(size.x, size.y, size.z);
   let scale = 0.6 / longest;
   if (!isFinite(scale) || scale <= 0.0001 || scale > 100) scale = 1;
-  inner.position.sub(center).multiplyScalar(scale);
-  inner.scale.setScalar(scale);
-  wrapper.add(inner);
+  spin.scale.setScalar(scale);
+  spin.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+  wrapper.add(spin);
+
+  // first-person arms so the weapon is actually held
+  wrapper.add(buildArms());
   wrapper.userData = inner.userData;
   return wrapper;
+}
+
+// simple gloved arms holding the weapon, sized to the 0.6-unit viewmodel
+function buildArms() {
+  const g = new THREE.Group();
+  const sleeve = new THREE.MeshStandardMaterial({ color: 0x6f7358, roughness: 0.9 });
+  const glove  = new THREE.MeshStandardMaterial({ color: 0x2b2f28, roughness: 0.8 });
+  function limb(mat, w, hgt, d, x, y, z, rx, rz) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, hgt, d), mat);
+    m.position.set(x, y, z);
+    if (rx) m.rotation.x = rx;
+    if (rz) m.rotation.z = rz;
+    g.add(m);
+    return m;
+  }
+  // right arm along the stock
+  limb(sleeve, 0.055, 0.055, 0.20, 0.045, -0.075, 0.10, 0.35, 0);
+  limb(glove,  0.050, 0.050, 0.070, 0.035, -0.045, 0.005, 0, 0);
+  // left arm forward on the handguard
+  limb(sleeve, 0.050, 0.050, 0.22, -0.050, -0.070, -0.14, -0.30, 0.25);
+  limb(glove,  0.048, 0.048, 0.065, -0.035, -0.042, -0.235, 0, 0);
+  return g;
 }
 
 function buildWeapon(type) {
   const m = buildWeaponModel(type);
   if (loadedWeapGLB && type !== 'knife') return autoFitGLB(m);
-  return m;   // already the right size — no scaling
+  if (type !== 'knife') m.add(buildArms());   // hands on the built-in rifle too
+  return m;
 }
 
 function buildWeaponModel(type) {
@@ -1188,6 +1236,7 @@ function animate() {
   requestAnimationFrame(animate);
   const now = performance.now(); let dt = (now - gclock.last)/1000; gclock.last = now; if (dt > 0.1) dt = 0.1;
   if (running && !shopOpen) { updatePlayer(dt); updateBots(dt); updateNades(dt); if (mouseHeld && WEAPONS[curWeap].auto && !equippedNade) shoot(); }
+  for (let i = 0; i < mixers.length; i++) mixers[i].update(dt);
   updateCamera(dt); updateTracers(dt);
   renderer.render(scene, camera);
 }
