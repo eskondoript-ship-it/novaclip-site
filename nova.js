@@ -309,3 +309,67 @@ function applySeason() {
   document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); });
   if (document.readyState !== 'loading') ncCheckSuspension();
 })();
+
+/* ============================================================
+   GEN-Z / NORMAL TEXT TOGGLE
+   ============================================================ */
+(function () {
+  const GENZ = {
+    hero_line1:'run ur channel', hero_line2:'like a game fr',
+    startchannel:'lock in 🔒', seerewards:'peep the rewards 👀',
+    home:'🏠 Home', studio:'📈 Studio', analytics:'📊 Stats', trends:'🛰️ Whats Hot',
+    editor:'🎬 Editor', sniper:'🎯 Arena', ai:'✨ NovaClip AI',
+    studio_h:'NovaClip Studio', studio_sub:'link ur channel n scope the competition 👁️',
+    analytics_h:'Stats', analytics_sub:'ur numbers vs the ops — no cap 📈',
+    analytics_hint:'link ur channel to pull the stats.',
+    t_comp:'closest ops', t_comp_d:'channels ur size — full stats, no cap.',
+    t_duel:'1v1 a channel', t_duel_d:'run it with a channel within 20k subs n bag points.',
+    t_analytics:'full stats', t_analytics_d:'deep charts vs the ops — own page.',
+    e_media:'Media', e_effects:'FX', e_audio:'Sound', e_memes:'Memes', e_text:'Text', e_voice:'Voice',
+    e_effects_h:'fx n filters', e_memes_h:'meme search', e_text_h:'text on screen',
+    e_voice_h:'AI voiceover', e_clip_h:'selected clip', e_filter:'filter', e_trans:'transition',
+    e_import:'⊕ drop ur media', e_export:'⬆ export',
+    language:'Language'
+  };
+
+  window.ncGenZ = function () { return localStorage.getItem('nc_genz') === '1'; };
+
+  window.ncApplyGenZ = function () {
+    if (!ncGenZ()) return;                       // normal mode: leave translations alone
+    const lang = localStorage.getItem('nc_lang') || 'en';
+    if (lang !== 'en') return;                   // slang only makes sense in English
+    document.querySelectorAll('[data-t]').forEach(el => {
+      const k = el.getAttribute('data-t');
+      if (GENZ[k]) el.textContent = GENZ[k];
+    });
+  };
+
+  window.ncSetGenZ = function (on) {
+    localStorage.setItem('nc_genz', on ? '1' : '0');
+    location.reload();
+  };
+
+  // toggle switch, injected into every sidebar
+  window.ncBuildGenZToggle = function () {
+    const wrap = document.querySelector('.themewrap');
+    if (!wrap || document.getElementById('genzwrap')) return;
+    const on = ncGenZ();
+    const d = document.createElement('div');
+    d.id = 'genzwrap';
+    d.style.cssText = 'margin-bottom:14px;';
+    d.innerHTML =
+      '<label style="display:block;font-size:0.78rem;opacity:0.6;margin-bottom:6px;">Vibe</label>' +
+      '<div id="genzToggle" style="display:flex;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:10px;overflow:hidden;cursor:pointer;font-size:0.8rem;font-weight:700;">' +
+      '<div data-v="0" style="flex:1;text-align:center;padding:8px 4px;transition:.2s;' + (!on ? 'background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;' : 'color:#7E8AA6;') + '">Normal</div>' +
+      '<div data-v="1" style="flex:1;text-align:center;padding:8px 4px;transition:.2s;' + (on ? 'background:linear-gradient(90deg,#F72585,#7209B7);color:#fff;' : 'color:#7E8AA6;') + '">Gen&nbsp;Z</div>' +
+      '</div>';
+    wrap.insertBefore(d, wrap.firstChild);
+    d.querySelectorAll('[data-v]').forEach(b => {
+      b.onclick = () => ncSetGenZ(b.dataset.v === '1');
+    });
+  };
+
+  function boot() { ncBuildGenZToggle(); setTimeout(ncApplyGenZ, 60); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
