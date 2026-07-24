@@ -179,7 +179,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v37 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v38 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -302,7 +302,7 @@ const PLAYER_TEAM = TEAM_CT;
 const CUSTOM_MODELS = {
   // ===== MIXAMO SHOOTER PACK (converted to .glb) =====
   // Your working 18 MB suit as the character (the 112 MB Ch15 file was too big).
-  character: 'ct_urban.glb',
+  character: 'military_tactical_suit_lowpolygameready.glb',
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
   weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
@@ -323,7 +323,7 @@ const CUSTOM_MODELS = {
   },
   emoteSound: '',
 
-  botsUseModel: true   // true = bots wear your character model too (heavier). false = built-in soldiers.
+  botsUseModel: false  // OFF: cloning a rigged model corrupts it. Bots use the reliable built-in soldiers.
 };
 let loadedCharGLB = null, loadedWeapGLB = null, loadedCharAnims = [];
 const extraClips = {};   // animations loaded from separate files
