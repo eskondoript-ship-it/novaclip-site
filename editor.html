@@ -47,6 +47,9 @@ a { color: inherit; text-decoration: none; }
 .thumbs .th img, .thumbs .th video { width: 100%; height: 100%; object-fit: cover; }
 .thumbs .th .dur { position: absolute; bottom: 3px; right: 5px; font-size: 0.62rem; background: #000c; padding: 1px 6px; border-radius: 4px; }
 .fxgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mcat { padding: 6px 11px; border-radius: 20px; border: 1px solid var(--line2); background: var(--panel2); color: var(--dim); font-size: 0.74rem; cursor: pointer; transition: .2s; font-weight: 600; }
+.mcat:hover { border-color: var(--cyan); color: var(--txt); }
+.mcat.on { background: rgba(0,240,255,0.14); border-color: var(--cyan); color: var(--cyan); }
 .fxchip { padding: 12px 8px; border-radius: 9px; background: var(--panel2); border: 1px solid var(--line); text-align: center; font-size: 0.8rem; cursor: pointer; transition: .15s; }
 .fxchip:hover { border-color: var(--cyan); } .fxchip.on { border-color: var(--cyan); background: rgba(0,240,255,0.1); color: var(--cyan); }
 
@@ -204,6 +207,57 @@ body::before {
 .exportbtn:hover { transform: translateY(-3px) scale(1.05); }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+/* ===== FORM CONTROLS — no white boxes anywhere ===== */
+.railpanel input[type=text],
+.railpanel input[type=email],
+.railpanel input[type=number],
+.railpanel textarea,
+.railpanel select,
+.prop input[type=text],
+.prop textarea,
+.prop select {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: #0e1118;
+  color: var(--txt);
+  font-size: 0.86rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  margin-bottom: 10px;
+  display: block;
+}
+.railpanel input:focus, .railpanel textarea:focus, .railpanel select:focus,
+.prop input:focus, .prop textarea:focus, .prop select:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,240,255,0.12);
+}
+.railpanel input::placeholder, .railpanel textarea::placeholder { color: #6b7284; }
+.railpanel select option, .prop select option { background: #0e1118; color: var(--txt); }
+.railpanel textarea { resize: vertical; min-height: 78px; }
+.railpanel label.sm { display: block; font-size: .72rem; color: var(--dim); margin: 4px 0 5px; letter-spacing: .5px; }
+
+/* file inputs — style the ugly default button */
+.railpanel input[type=file] {
+  width: 100%; font-size: .8rem; color: var(--dim);
+  background: #0e1118; border: 1px dashed var(--line2); border-radius: 10px;
+  padding: 10px; margin-bottom: 10px;
+}
+.railpanel input[type=file]::file-selector-button {
+  background: linear-gradient(90deg, var(--cyan), #4CC9F0);
+  color: #04121a; border: none; border-radius: 8px;
+  padding: 7px 14px; font-weight: 700; cursor: pointer; margin-right: 10px;
+  font-family: inherit; font-size: .78rem;
+}
+.railpanel input[type=file]::file-selector-button:hover { filter: brightness(1.12); }
+
+/* keep the panel sections tidy */
+.railpanel .sect { display: none; }
+.railpanel .sect.show { display: block; }
+.railpanel .minibtn { margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -253,7 +307,13 @@ body::before {
     </div>
     <div class='sect' id='sect-memes'>
       <h4 data-t='e_memes_h'>Meme search</h4>
-      <input type='text' id='memeSearch' placeholder='Search memes… (drake, doge, cat)' style='width:100%; padding:10px; border-radius:8px; border:1px solid var(--line2); background:#0e1118; color:var(--txt); font-size:0.85rem; margin-bottom:10px;'>
+      <input type='text' id='memeSearch' placeholder='Search memes… (drake, doge, cat)' style='width:100%; padding:10px; border-radius:8px; border:1px solid var(--line2); background:#0e1118; color:var(--txt); font-size:0.85rem; margin-bottom:8px;'>
+      <div id='memeCats' style='display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;'>
+        <button class='mcat on' data-cat='popular'>🔥 Popular</button>
+        <button class='mcat' data-cat='latest'>🆕 Latest</button>
+        <button class='mcat' data-cat='classic'>📼 Classic</button>
+        <button class='mcat' data-cat='all'>All</button>
+      </div>
       <div id='memeStatus' class='hint' style='margin-bottom:8px;'>Loading meme library…</div>
       <div class='thumbs' id='memeResults'></div>
       <div class='hint'>Click any meme to drop it straight onto your timeline.</div>
@@ -268,7 +328,7 @@ body::before {
     <div class='sect' id='sect-voice'>
       <h4 data-t='e_voice_h'>AI voiceover</h4>
       <textarea id='voScript' rows='3' placeholder='What should the voice say?'></textarea>
-      <label class='sm'>Voice</label>
+      <label class='sm'>Voice character</label>
       <select id='voVoice'></select>
       <button class='minibtn' id='voPlay'>🔊 Preview voice</button>
       <div class='hint'>Plays during export too. Free browser voices.</div>
@@ -438,7 +498,80 @@ Object.keys(FX_LABELS).forEach(key => {
 });
 
 // ---------- MEME SEARCH ----------
-let MEMES = [], memesLoaded = false;
+let MEMES = [], ALL_MEMES = [], memesLoaded = false, memeCat = 'popular';
+
+// ---- SAFETY FILTER: nothing suggestive, violent or adult reaches a 13-18 audience ----
+const MEME_BLOCK_WORDS = [
+  'sex','sexy','sexual','hot girl','boob','thicc','onlyfans','porn','nude','naked','strip','thirst',
+  'distracted boyfriend','cheating','cheat','affair','girlfriend','side chick','simp',
+  'beer','wine','drunk','vodka','alcohol','weed','drug','smoke','cigarette','blunt','high',
+  'kill','death','dead','die','suicide','hang','gun','shoot','shot','blood','gore','murder','corpse','coffin','funeral',
+  'nazi','hitler','racist','slave','terror','isis','war crime',
+  'fat','ugly','stupid','idiot','loser','trash','hate',
+  'gender','religion','jesus','church','satan','devil','hell',
+  'gambl','casino','bet','vape'
+];
+function memeIsSafe(name) {
+  const n = (name || '').toLowerCase();
+  return !MEME_BLOCK_WORDS.some(w => n.includes(w));
+}
+
+
+// ---- EXTRA CURATED TEMPLATES ----
+// Imgflip hosts far more templates than the public API returns. These are
+// hand-picked safe ones. Any ID that fails to load is removed automatically,
+// so a wrong entry simply disappears rather than showing a broken image.
+const EXTRA_MEMES = [
+  ['181913649','Drake Hotline Bling'],['87743020','Two Buttons'],['217743513','UNO Draw 25 Cards'],
+  ['131087935','Running Away Balloon'],['124822590','Left Exit 12 Off Ramp'],['129242436','Change My Mind'],
+  ['4087833','Waiting Skeleton'],['102156234','Mocking Spongebob'],['438680','Batman Slapping Robin'],
+  ['61579','One Does Not Simply'],['5496396','Leonardo Dicaprio Cheers'],['61532','The Most Interesting Man'],
+  ['8072285','Doge'],['101470','Ancient Aliens'],['61520','Futurama Fry'],['155067746','Surprised Pikachu'],
+  ['91538330','X X Everywhere'],['21735','The Rock Driving'],['61546','Brace Yourselves'],
+  ['1035805','Boardroom Meeting Suggestion'],['6235864','Finding Neverland'],['28251713','Oprah You Get A'],
+  ['226297822','Panik Kalm Panik'],['247375501','Buff Doge vs Cheems'],['252600902','Always Has Been'],
+  ['178591752','Tuxedo Winnie The Pooh'],['89370399','Roll Safe Think About It'],['27813981','Hide The Pain Harold'],
+  ['93895088','Expanding Brain'],['119139145','Blank Nut Button'],['148909805','Monkey Puppet'],
+  ['135256802','Epic Handshake'],['55311130','This Is Fine'],['84341851','Evil Kermit'],
+  ['16464531','But Thats None Of My Business'],['79132341','Bike Fall'],['132769734','Hard To Swallow Pills'],
+  ['1509839','Captain Picard Facepalm'],['100947','Matrix Morpheus'],['14371066','Star Wars Yoda'],
+  ['24557067','Spongebob Ight Imma Head Out'],['188390779','Woman Yelling At Cat'],['259237855','Laughing Leo'],
+  ['175540452','Unsettled Tom'],['563423','That Would Be Great'],['23752','The Scroll Of Truth'],
+  ['61539','First World Problems'],['61585','Bad Luck Brian'],['61556','Grandma Finds The Internet'],
+  ['101287','Third World Success Kid'],['61544','Success Kid'],['101511','Dont You Squidward'],
+  ['6531067','See Nobody Cares'],['101716','Yall Got Any More Of That'],['74191766','Arthur Fist'],
+  ['195515965','Clown Applying Makeup'],['180190441','Theyre The Same Picture'],['61533','X All The Y'],
+  ['61582','Creepy Condescending Wonka'],['101910402','Marked Safe From'],['134797956','American Chopper Argument'],
+  ['4173692','Bad Pun Dog'],['259680','Am I The Only One Around Here'],['405658','Grandma Finds The Internet 2'],
+  ['1367068','Sudden Clarity Clarence'],['3218037','This Is Fine Classic'],['40945639','Dr Evil Laser'],
+  ['9440985','Baby Godfather'],['245898','Picard Wtf'],['356183','Bird Box'],['460541','Jack Sparrow Being Chased'],
+  ['61527','Y U No'],['61580','Too Damn High'],['12403754','Bad Luck Brian 2'],['61581','Put It Somewhere Else Patrick'],
+  ['101288','Third World Skeptical Kid'],['61568','Aliens Guy'],['444501','Maury Lie Detector'],
+  ['196652226','Spongebob Ight'],['114585149','Trade Offer'],['370867422','Anime Girl Hiding'],
+  ['119215120','Soldier Protecting Sleeping Child'],['163573','Imagination Spongebob'],['110163934','I Bet Hes Thinking About Other Women'],
+  ['61585','Bad Luck Brian 3'],['1232104','Confession Bear'],['5872970','Insanity Wolf'],
+  ['58087204','Boardroom Suggestion 2'],['80707627','Sad Pablo Escobar'],['142009471','Blank Transparent Square'],
+  ['62319497','Wanna Come In No'],['52403859','Kermit Sipping Tea'],['67452763','Wolf Of Wall Street'],
+  ['99683372','Sleeping Shaq'],['155067746','Surprised Pikachu 2'],['114010443','Aint Nobody Got Time For That'],
+  ['77045868','Pawn Stars Best I Can Do'],['61556','Grandma Internet'],['21604248','So Trendy Right Now'],
+  ['170715','Yo Dawg Heard You'],['1367068','Sudden Clarity'],['101440','Member Berries'],
+  ['16-9','placeholder']
+];
+function extraMemeList() {
+  const seen = {};
+  return EXTRA_MEMES.filter(m => {
+    if (!/^\d+$/.test(m[0]) || seen[m[0]]) return false;
+    seen[m[0]] = 1;
+    return memeIsSafe(m[1]);
+  }).map(m => ({ id: m[0], name: m[1], url: 'https://i.imgflip.com/' + m[0] + '.jpg' }));
+}
+
+// Well-known older templates, used to build the "Classic" shelf
+const CLASSIC_HINTS = ['doge','bad luck brian','success kid','philosoraptor','y u no','one does not simply','ancient aliens','first world problems','grumpy','futurama fry','condescending wonka','most interesting man','all the things','rage','trollface','pepe','yo dawg','third world','picard','boromir','sparta','forever alone','me gusta','okay guy','joseph ducreux','scumbag steve','good guy greg','overly attached','sudden clarity','insanity wolf','courage wolf','socially awkward','confession bear','pigeon','disaster girl','hide the pain','roll safe','arthur fist','evil kermit','salt bae'];
+function isClassic(name) {
+  const n = (name || '').toLowerCase();
+  return CLASSIC_HINTS.some(w => n.includes(w));
+}
 function showMemes(list) {
   const box = document.getElementById('memeResults');
   box.innerHTML = '';
@@ -447,7 +580,9 @@ function showMemes(list) {
     d.className = 'th';
     d.title = mm.name;
     const im = document.createElement('img');
-    im.src = mm.url; im.loading = 'lazy';
+    im.loading = 'lazy';
+    im.onerror = () => { d.remove(); ALL_MEMES = ALL_MEMES.filter(x => x.url !== mm.url); };
+    im.src = mm.url;
     d.appendChild(im);
     const lbl = document.createElement('div');
     lbl.className = 'dur';
@@ -459,6 +594,7 @@ function showMemes(list) {
   if (!list.length) box.innerHTML = '<div class="hint">No memes matched that search.</div>';
 }
 function addMeme(mm) {
+  if (!memeIsSafe(mm.name)) { document.getElementById('memeStatus').textContent = 'That meme is not available on NovaClip.'; return; }
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
@@ -483,9 +619,19 @@ function loadMemes() {
     .then(r => r.json())
     .then(d => {
       if (d && d.success && d.data && d.data.memes) {
-        MEMES = d.data.memes;
-        document.getElementById('memeStatus').textContent = MEMES.length + ' memes ready — type to search.';
-        showMemes(MEMES);
+        const raw = d.data.memes;
+        const blocked = raw.length;
+        const apiSafe = raw.filter(m => memeIsSafe(m.name));
+        const names = {};
+        apiSafe.forEach(m => { names[m.name.toLowerCase()] = 1; });
+        const extras = extraMemeList().filter(m => !names[m.name.toLowerCase()]);
+        ALL_MEMES = apiSafe.concat(extras);
+        MEMES = ALL_MEMES;
+        const removed = blocked - ALL_MEMES.length;
+        document.getElementById('memeStatus').innerHTML =
+          '<b style="color:var(--cyan)">' + ALL_MEMES.length + '</b> family-friendly memes ready' +
+          (removed ? ' &nbsp;·&nbsp; <span style="color:#8a8f9c">' + removed + ' filtered out as inappropriate</span>' : '');
+        applyCat();
       } else { throw new Error('bad response'); }
     })
     .catch(() => {
@@ -493,9 +639,30 @@ function loadMemes() {
       document.getElementById('memeStatus').textContent = 'Could not reach the meme library. Check your connection and reopen this tab.';
     });
 }
-document.getElementById('memeSearch').oninput = (e) => {
-  const q = e.target.value.trim().toLowerCase();
-  showMemes(q ? MEMES.filter(m => m.name.toLowerCase().includes(q)) : MEMES);
+function applyCat() {
+  let list = ALL_MEMES;
+  if (memeCat === 'popular') list = ALL_MEMES.slice(0, 40);                 // API returns most-used first
+  else if (memeCat === 'latest') list = ALL_MEMES.slice(-40).reverse();     // newest additions sit at the end
+  else if (memeCat === 'classic') {
+    const c = ALL_MEMES.filter(m => isClassic(m.name));
+    list = c.length ? c : ALL_MEMES.slice(40, 80);
+  }
+  MEMES = list;
+  const q = (document.getElementById('memeSearch').value || '').trim().toLowerCase();
+  showMemes(q ? list.filter(m => m.name.toLowerCase().includes(q)) : list);
+}
+document.querySelectorAll('.mcat').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.mcat').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    memeCat = btn.dataset.cat;
+    applyCat();
+  };
+});
+document.getElementById('memeSearch').oninput = () => {
+  const q = document.getElementById('memeSearch').value.trim().toLowerCase();
+  // searching looks across the whole safe library, not just the open category
+  showMemes(q ? ALL_MEMES.filter(m => m.name.toLowerCase().includes(q)) : MEMES);
 };
 
 document.getElementById('mediaInput').onchange = (e) => {
@@ -590,20 +757,77 @@ document.getElementById('txtBtn').onclick = () => {
 document.getElementById('txtClear').onclick = () => { overlays = []; };
 
 let voices = [];
+
+/* ---- CapCut-style voice characters ----
+   Browser TTS only exposes plain system voices, so each character is a preset:
+   a preferred base voice plus pitch and speed. That is how you get distinct
+   personalities rather than a list of "Microsoft George" entries. */
+const VOICE_PRESETS = [
+  { id:'nova',      name:'✨ Nova',            pitch:1.05, rate:1.00, prefer:['female','zira','samantha','aria','jenny'] },
+  { id:'storyteller',name:'📖 Storyteller',    pitch:0.92, rate:0.88, prefer:['male','george','daniel','guy'] },
+  { id:'hype',      name:'🔥 Hype Man',        pitch:1.15, rate:1.28, prefer:['male','guy','mark','david'] },
+  { id:'chill',     name:'🌙 Chill',           pitch:0.95, rate:0.86, prefer:['female','aria','samantha'] },
+  { id:'narrator',  name:'🎬 Deep Narrator',   pitch:0.62, rate:0.84, prefer:['male','david','george','daniel'] },
+  { id:'chipmunk',  name:'🐿️ Chipmunk',        pitch:1.95, rate:1.42, prefer:[] },
+  { id:'robot',     name:'🤖 Robot',           pitch:0.42, rate:0.72, prefer:['male'] },
+  { id:'announcer', name:'📢 Announcer',       pitch:0.80, rate:1.06, prefer:['male','mark','guy'] },
+  { id:'whisper',   name:'🤫 Whisper',         pitch:1.10, rate:0.78, prefer:['female','zira'], volume:0.45 },
+  { id:'sassy',     name:'💅 Sassy',           pitch:1.35, rate:1.12, prefer:['female','zira','aria'] },
+  { id:'grumpy',    name:'😤 Grumpy',          pitch:0.55, rate:0.94, prefer:['male','david'] },
+  { id:'kid',       name:'🧒 Kid',             pitch:1.62, rate:1.14, prefer:['female','zira'] },
+  { id:'newsreader',name:'📰 Newsreader',      pitch:0.98, rate:1.02, prefer:['male','george','daniel'] },
+  { id:'villain',   name:'😈 Villain',         pitch:0.48, rate:0.80, prefer:['male','david','george'] },
+  { id:'speedrun',  name:'⚡ Speedrun',        pitch:1.20, rate:1.75, prefer:[] },
+  { id:'slowmo',    name:'🐢 Slow-mo',         pitch:0.70, rate:0.58, prefer:[] },
+  { id:'alien',     name:'👽 Alien',           pitch:1.80, rate:0.70, prefer:[] },
+  { id:'giant',     name:'🗿 Giant',           pitch:0.35, rate:0.66, prefer:['male'] }
+];
+
+function pickBaseVoice(prefer) {
+  if (!voices.length) return null;
+  const en = voices.filter(v => /^en/i.test(v.lang));
+  const pool = en.length ? en : voices;
+  for (const key of (prefer || [])) {
+    const hit = pool.find(v => v.name.toLowerCase().includes(key));
+    if (hit) return hit;
+    if (key === 'female') { const f = pool.find(v => /zira|samantha|aria|jenny|female|hazel|susan/i.test(v.name)); if (f) return f; }
+    if (key === 'male')   { const m = pool.find(v => /david|george|guy|mark|daniel|male|james/i.test(v.name)); if (m) return m; }
+  }
+  return pool[0];
+}
+
 function loadVoices() {
   voices = speechSynthesis.getVoices();
   const sel = document.getElementById('voVoice');
+  if (!sel) return;
+  const keep = sel.value;
   sel.innerHTML = '';
-  voices.forEach((v, i) => { const o = document.createElement('option'); o.value = i; o.textContent = v.name + ' (' + v.lang + ')'; sel.appendChild(o); });
+  VOICE_PRESETS.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = p.name;
+    sel.appendChild(o);
+  });
+  if (keep) sel.value = keep;
 }
 speechSynthesis.onvoiceschanged = loadVoices;
 loadVoices();
+
+function currentPreset() {
+  const id = document.getElementById('voVoice').value;
+  return VOICE_PRESETS.find(p => p.id === id) || VOICE_PRESETS[0];
+}
+
 function speak(text) {
   if (!text) return;
   speechSynthesis.cancel();
+  const p = currentPreset();
   const u = new SpeechSynthesisUtterance(text);
-  const vi = document.getElementById('voVoice').value;
-  if (voices[vi]) u.voice = voices[vi];
+  const base = pickBaseVoice(p.prefer);
+  if (base) u.voice = base;
+  u.pitch  = Math.max(0, Math.min(2, p.pitch));
+  u.rate   = Math.max(0.1, Math.min(10, p.rate));
+  u.volume = p.volume != null ? p.volume : 1;
   speechSynthesis.speak(u);
 }
 document.getElementById('voPlay').onclick = () => speak(document.getElementById('voScript').value);
