@@ -89,6 +89,54 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 .keyshint { font-size: 0.78rem; color: #7E8AA6; margin-top: 14px; line-height: 1.8; max-width: 620px; }
 #overlay button.again { pointer-events: auto; padding: 14px 42px; border: none; border-radius: 40px; font-size: 1.05rem; font-weight: 800; cursor: pointer; background: linear-gradient(90deg,#6cc3ff,#4a9fe0); color: #04121a; }
 
+/* loading screen — technical / industrial */
+#loader { position: fixed; inset: 0; z-index: 40; display: none; flex-direction: column; justify-content: space-between;
+  background: #0a0a0c; color: #e8e8e8; font-family: 'Courier New', monospace; padding: 34px clamp(20px,6vw,80px);
+  transition: opacity .45s; overflow: hidden; }
+#loader.show { display: flex; }
+#loader.done { opacity: 0; pointer-events: none; }
+.ldnoise { position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px);
+  animation: scan 7s linear infinite; }
+@keyframes scan { to { background-position: 0 100px; } }
+.ldghost { position: absolute; left: 50%; top: 46%; transform: translate(-50%,-50%);
+  font-size: clamp(6rem, 22vw, 17rem); font-weight: 900; letter-spacing: -6px; color: #ffffff;
+  opacity: .035; white-space: nowrap; pointer-events: none; }
+.ldtop { display: flex; justify-content: space-between; font-size: .68rem; letter-spacing: 2.5px; color: #9a9a9a; position: relative; z-index: 2; }
+.ldtop .dim { color: #5c5c5c; }
+.ldtop .right { color: #6a6a6a; }
+.ldmain { position: relative; z-index: 2; margin: auto 0; }
+.ldhead { font-size: clamp(1.5rem, 4.4vw, 2.5rem); letter-spacing: 7px; font-weight: 700; margin-bottom: 22px; color: #f2f2f2; }
+.ldrow { display: flex; align-items: center; gap: 22px; max-width: 680px; }
+.ldbarwrap { flex: 1; height: 34px; border: 1px solid #e01e37; padding: 4px; position: relative; }
+.ldbar { height: 100%; width: 0%; transition: width .3s linear;
+  background-image: repeating-linear-gradient(115deg, #e01e37 0 11px, #8d0d20 11px 22px);
+  background-size: 200% 100%; animation: stripes 1.1s linear infinite; }
+@keyframes stripes { to { background-position: -44px 0; } }
+.ldpct { font-size: clamp(1.3rem, 3.2vw, 2rem); font-weight: 700; color: #e01e37; letter-spacing: 2px; min-width: 92px; }
+.ldstatus { margin-top: 26px; border-left: 3px solid #e01e37; padding-left: 14px; }
+.ldlabel { color: #e01e37; font-size: .82rem; letter-spacing: 4px; font-weight: 700; }
+.ldsub { color: #9a9a9a; font-size: .8rem; letter-spacing: 3px; margin-top: 3px; }
+.ldfoot { position: relative; z-index: 2; text-align: center; }
+.ldnext { font-size: .78rem; letter-spacing: 5px; color: #8a8a8a; }
+.ldtitle { font-size: clamp(2rem, 7vw, 4rem); font-weight: 900; color: #e01e37; letter-spacing: 2px; line-height: 1.05; }
+.ldsubtitle { font-size: .78rem; letter-spacing: 7px; color: #cfcfcf; margin-top: 4px; }
+.ldtip { margin-top: 16px; font-size: .74rem; letter-spacing: 1.5px; color: #6a6a6a; min-height: 18px; }
+
+/* controls panel *//* controls panel */
+#controlsPanel { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; background: rgba(5,10,20,0.88); backdrop-filter: blur(6px); }
+.cpbox { background: #101725; border: 1px solid rgba(108,195,255,0.35); border-radius: 18px; padding: 26px; width: min(460px, 92vw); max-height: 86vh; overflow-y: auto; }
+.cpbox h2 { margin-bottom: 4px; }
+.cphint { color: #7E8AA6; font-size: 0.86rem; margin-bottom: 16px; }
+.bindrow { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; margin-bottom: 7px; font-size: 0.88rem; }
+.bindkey { background: #1a1f2c; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 5px 14px; font-family: monospace; color: #6cc3ff; cursor: pointer; min-width: 74px; text-align: center; transition: .15s; }
+.bindkey:hover { border-color: #6cc3ff; }
+.bindkey.listening { background: #ffd24a; color: #04121a; border-color: #ffd24a; }
+.cpbtn { width: 100%; margin-top: 10px; padding: 12px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(90deg,#6cc3ff,#4a9fe0); color: #04121a; }
+.cpbtn.alt { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+#controlsBtn { pointer-events: auto; padding: 16px 30px; border: 1px solid rgba(255,255,255,0.25); border-radius: 40px; font-size: 1rem; font-weight: 800; cursor: pointer; background: rgba(255,255,255,0.05); color: #fff; }
+#controlsBtn:hover { border-color: #6cc3ff; color: #6cc3ff; }
+
 #shopui { position: fixed; inset: 0; z-index: 19; display: none; align-items: center; justify-content: center; background: rgba(5,10,20,0.82); backdrop-filter: blur(6px); }
 .shopbox { background: #101725; border: 1px solid rgba(108,195,255,0.4); border-radius: 18px; padding: 26px; width: min(540px, 92vw); max-height: 88vh; overflow-y: auto; box-shadow: 0 0 60px rgba(108,195,255,0.2); }
 .shopbox h2 { margin-bottom: 4px; } .shopbox .bal { color: #ffd24a; font-weight: 800; margin-bottom: 14px; }
@@ -130,14 +178,52 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v22 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v26 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
     <h2>🛒 Armory</h2>
-    <div class='bal'>Your points: <span id='shopbal'>0</span></div>
+    <div class='bal'>Your points: <span id='shopbal'>0</span> &nbsp;·&nbsp; <span style='color:#7E8AA6;font-size:0.85rem'>Visits this round: <span id='shopvisits'>0 / 13</span></span></div>
     <div id='shopitems'></div>
     <button class='close' onclick='closeShop()'>Close (E)</button>
+  </div>
+</div>
+
+<div id='loader'>
+  <div class='ldnoise'></div>
+  <div class='ldghost'>STRIKE</div>
+  <div class='ldtop'>
+    <div>NOVACLIP SYSTEMS<br><span class='dim'>// COMBAT DEPLOYMENT</span></div>
+    <div class='right'>NVC // 2026</div>
+  </div>
+
+  <div class='ldmain'>
+    <div class='ldhead' id='ldhead'>INITIALIZING...</div>
+    <div class='ldrow'>
+      <div class='ldbarwrap'><div class='ldbar' id='ldbar'></div></div>
+      <div class='ldpct' id='ldpct'>0%</div>
+    </div>
+    <div class='ldstatus'>
+      <div class='ldlabel' id='ldlabel'>ENGINE</div>
+      <div class='ldsub' id='ldsub'>LOADING...</div>
+    </div>
+  </div>
+
+  <div class='ldfoot'>
+    <div class='ldnext'>NEXT MATCH</div>
+    <div class='ldtitle'>STRIKE ARENA</div>
+    <div class='ldsubtitle'>NOVACLIP COMBAT GAMES</div>
+    <div class='ldtip' id='ldtip'></div>
+  </div>
+</div>
+
+<div id='controlsPanel'>
+  <div class='cpbox'>
+    <h2>⌨️ Controls</h2>
+    <p class='cphint'>Click a key, then press the new one you want.</p>
+    <div id='bindlist'></div>
+    <button class='cpbtn alt' id='bindReset'>Reset to defaults</button>
+    <button class='cpbtn' id='bindClose'>Done</button>
   </div>
 </div>
 
@@ -170,7 +256,10 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
     <div class='wsel' id='wsel'></div>
   </div>
 
-  <button id='startBtn'>▶️ Deploy</button>
+  <div style='display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:center'>
+    <button id='startBtn'>▶️ Deploy</button>
+    <button id='controlsBtn'>⌨️ Controls</button>
+  </div>
   <div class='keyshint'>WASD move · Mouse aim · Click fire · Right-click scope · Space jump · Shift sprint · R reload · 1/2 or scroll to switch weapon · V first/third person</div>
 </div>
 
@@ -203,7 +292,7 @@ const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Ech
 //  export as .glb, upload to your repo (Add file > Upload files).
 // ============================================================
 const CUSTOM_MODELS = {
-  character: '',  // must be uploaded to your repo
+  character: 'ct_urban.glb',  // must be uploaded to your repo
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
   weapon: 'low-poly_colt_c7a2.glb'            // your rifle .glb filename, if you have one
@@ -233,9 +322,22 @@ function loadCustomModels(done) {
 let scene, camera, renderer, skyMesh;
 let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true };
 const keys = {};
+// ---- rebindable controls ----
+const DEFAULT_BINDS = { forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', sprint:'ShiftLeft', reload:'KeyR', nade:'KeyG', sticky:'KeyB', plant:'KeyC', detonate:'KeyX', shop:'KeyE', view:'KeyV' };
+const BIND_LABELS = { forward:'Move forward', back:'Move back', left:'Strafe left', right:'Strafe right', jump:'Jump', sprint:'Sprint', reload:'Reload', nade:'Equip grenade', sticky:'Equip sticky', plant:'Plant C4', detonate:'Detonate', shop:'Open shop', view:'First/third person' };
+let BINDS = (function () {
+  try { return Object.assign({}, DEFAULT_BINDS, JSON.parse(localStorage.getItem('nc_binds') || '{}')); }
+  catch (e) { return Object.assign({}, DEFAULT_BINDS); }
+})();
+function saveBinds() { localStorage.setItem('nc_binds', JSON.stringify(BINDS)); }
+function keyName(code) {
+  if (!code) return '—';
+  return code.replace('Key','').replace('Digit','').replace('Arrow','').replace('Left','L ').replace('Right','R ').replace('Space','SPACE').toUpperCase();
+}
 let bots = [], tracers = [], obstacles = [], planted = [];
 let thirdPerson = false, scoped = false, running = false, shopOpen = false, inShop = false;
 let timeLeft = 300, safeLeft = 60, enemyScore = 0;
+const SHOP_MAX_VISITS = 13; let shopVisits = 0;
 let curWeap = 'sniper', playerColor = parseInt(localStorage.getItem('nc_char') || '0xFF2E97');
 let inv = { frag: 0, sticky: 0 };
 let lastShot = 0, recoil = 0, c4Ready = false, c4Timer = 20, heavyRounds = localStorage.getItem('nc_heavy') === '1';
@@ -314,35 +416,27 @@ function init() {
     gunGroup = buildWeapon(WEAPONS[curWeap].model);
     scene.add(gunGroup);
   }
-  // ALWAYS build the game immediately with the built-in models, so the match is
-  // playable no matter what happens with a custom file. If a .glb is configured,
-  // it loads in the background and is swapped in only once it is safely ready.
-  buildActors();
+  // v20 order (known-good): load the model first, then build everything once.
+  // A safety timer builds anyway if the download stalls, so the map can never
+  // be left unbuilt.
+  let built = false;
+  const buildOnce = () => {
+    if (built) return;
+    built = true;
+    try { buildActors(); }
+    catch (e) {
+      console.error('buildActors failed, retrying with built-in models', e);
+      loadedCharGLB = null; loadedWeapGLB = null;
+      try { buildActors(); } catch (e2) { console.error('fatal', e2); }
+    }
+  };
   if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon) {
-    let swapped = false;
-    const swapIn = () => {
-      if (swapped) return; swapped = true;
-      try {
-        if (loadedCharGLB && playerMesh) {
-          const wasVisible = playerMesh.visible;
-          scene.remove(playerMesh);
-          playerMesh = makeFighter(playerColor, true);
-          playerMesh.visible = wasVisible;
-          scene.add(playerMesh);
-          console.log('custom character loaded');
-        }
-        if (loadedWeapGLB && gunGroup) {
-          const wasVisible = gunGroup.visible;
-          scene.remove(gunGroup);
-          gunGroup = buildWeapon(WEAPONS[curWeap].model);
-          gunGroup.visible = wasVisible;
-          scene.add(gunGroup);
-          console.log('custom weapon loaded');
-        }
-      } catch (e) { console.warn('custom model swap failed — keeping built-in', e); }
-    };
-    loadCustomModels(swapIn);
-    setTimeout(() => { if (!swapped) console.warn('custom model timed out — keeping built-in models'); swapped = true; }, 20000);
+    loadCustomModels(buildOnce);
+    setTimeout(() => {
+      if (!built) { console.warn('model load stalled — building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
+    }, 12000);
+  } else {
+    buildOnce();
   }
 
   window.addEventListener('resize', () => {
@@ -727,9 +821,14 @@ function camDir() { return new THREE.Vector3(-Math.sin(player.yaw)*Math.cos(play
 // ---------- controls ----------
 document.getElementById('startBtn').onclick = () => {
   document.getElementById('overlay').style.display = 'none';
+  // run the deployment loading sequence, then drop into the match
+  runDeploySequence(startMatch);
+};
+
+function startMatch() {
   document.querySelector('.topbar .mode').textContent = '⚔️ ' + MODES[mode].label;
   if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
-  running = true; c4Ready = false; c4Timer = 20; setPts(pts());
+  running = true; c4Ready = false; c4Timer = 20; shopVisits = 0; setPts(pts());
   // find a clear spawn point so we never start inside a building
   for (let a = 0; a < 60; a++) {
     const sx = (Math.random()-0.5)*90, sz = (Math.random()-0.5)*90;
@@ -739,7 +838,7 @@ document.getElementById('startBtn').onclick = () => {
   if (gunGroup) gunGroup.visible = true;
   timerId = setInterval(tick, 1000);
   setInterval(updateBoard, 1500);
-};
+}
 document.addEventListener('mousemove', (e) => {
   if (document.pointerLockElement !== renderer.domElement) return;
   const sens = scoped ? 0.0009 : 0.0022;
@@ -778,19 +877,19 @@ function updateNadeHint() {
 
 document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
-  if (e.code === 'Space' && running) e.preventDefault();
+  if (e.code === BINDS.jump && running) e.preventDefault();
   if (!running) return;
-  if (e.code === 'KeyR') reload();
-  if (e.code === 'KeyV') { thirdPerson = !thirdPerson; if (scoped) { scoped = false; document.getElementById('scope').style.display = 'none'; } }
-  if (e.code === 'ShiftLeft') player.sprint = true;
+  if (e.code === BINDS.reload) reload();
+  if (e.code === BINDS.view) { thirdPerson = !thirdPerson; if (scoped) { scoped = false; document.getElementById('scope').style.display = 'none'; } }
+  if (e.code === BINDS.sprint) player.sprint = true;
   if (/^Digit[1-9]$/.test(e.code)) { const slot = parseInt(e.code.slice(5)); const w = Object.keys(WEAPONS).find(k => WEAPONS[k].slot === slot); if (w) { switchWeap(w); equippedNade = null; } }
-  if (e.code === 'KeyG') { equippedNade = inv.frag > 0 ? 'frag' : null; if (!inv.frag) addFeed('No frags — buy in shop (E)'); updateNadeHint(); }
-  if (e.code === 'KeyB') { equippedNade = inv.sticky > 0 ? 'sticky' : null; if (!inv.sticky) addFeed('No stickies — buy in shop (E)'); updateNadeHint(); }
-  if (e.code === 'KeyC') plantC4();
-  if (e.code === 'KeyX') detonate();
-  if (e.code === 'KeyE') { if (shopOpen) closeShop(); else if (insideShop()) openShop(); }
+  if (e.code === BINDS.nade) { equippedNade = inv.frag > 0 ? 'frag' : null; if (!inv.frag) addFeed('No frags — buy in shop (E)'); updateNadeHint(); }
+  if (e.code === BINDS.sticky) { equippedNade = inv.sticky > 0 ? 'sticky' : null; if (!inv.sticky) addFeed('No stickies — buy in shop (E)'); updateNadeHint(); }
+  if (e.code === BINDS.plant) plantC4();
+  if (e.code === BINDS.detonate) detonate();
+  if (e.code === BINDS.shop) { if (shopOpen) closeShop(); else if (insideShop()) openShop(); }
 });
-document.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'ShiftLeft') player.sprint = false; });
+document.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === BINDS.sprint) player.sprint = false; });
 
 function buildLoadoutHUD() {
   document.getElementById('loadout').innerHTML = Object.keys(WEAPONS).filter(k => WEAPONS[k].owned).map(k => {
@@ -933,7 +1032,15 @@ window.buyItem = function(id) {
   if (id === 'sticky') inv.sticky += 2;
   addFeed('🛒 Bought ' + it.name); renderShop(); buildLoadoutHUD();
 };
-function openShop() { shopOpen = true; document.getElementById('shopui').style.display = 'flex'; renderShop(); document.exitPointerLock(); }
+function openShop() {
+  if (shopVisits >= SHOP_MAX_VISITS) { addFeed('🛒 Shop limit reached (' + SHOP_MAX_VISITS + '/round)'); return; }
+  shopVisits++;
+  shopOpen = true;
+  document.getElementById('shopui').style.display = 'flex';
+  document.getElementById('shopvisits').textContent = shopVisits + ' / ' + SHOP_MAX_VISITS;
+  renderShop();
+  document.exitPointerLock();
+}
 window.closeShop = function() { shopOpen = false; document.getElementById('shopui').style.display = 'none'; if (running) renderer.domElement.requestPointerLock(); };
 
 // ---------- bot AI ----------
@@ -995,8 +1102,8 @@ function blockedAt(x, z) {
 function updatePlayer(dt) {
   const speed = (player.sprint ? 12 : 6.5) * dt;
   let fx = 0, fz = 0; const sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
-  if (keys['KeyW']) { fx -= sy; fz -= cy; } if (keys['KeyS']) { fx += sy; fz += cy; }
-  if (keys['KeyA']) { fx -= cy; fz += sy; } if (keys['KeyD']) { fx += cy; fz -= sy; }
+  if (keys[BINDS.forward]) { fx -= sy; fz -= cy; } if (keys[BINDS.back]) { fx += sy; fz += cy; }
+  if (keys[BINDS.left]) { fx -= cy; fz += sy; } if (keys[BINDS.right]) { fx += cy; fz -= sy; }
   const len = Math.hypot(fx, fz) || 1;
   const nx = player.x + (fx/len)*speed, nz = player.z + (fz/len)*speed;
   // slide along walls instead of stopping dead
@@ -1004,33 +1111,38 @@ function updatePlayer(dt) {
   if (!blockedAt(player.x, nz)) player.z = nz;
   player.x = Math.max(-78, Math.min(78, player.x)); player.z = Math.max(-78, Math.min(78, player.z));
   const GROUND = 1.7;
-  if (keys['Space'] && player.onGround) { player.vy = 6.4; player.onGround = false; }
+  if (keys[BINDS.jump] && player.onGround) { player.vy = 6.4; player.onGround = false; }
   player.vy -= 18*dt; player.y += player.vy*dt;
   if (player.y <= GROUND) { player.y = GROUND; player.vy = 0; player.onGround = true; }
 
   const nowIn = insideShop();
-  document.getElementById('shopprompt').style.display = (nowIn && !shopOpen) ? 'block' : 'none';
+  const sp = document.getElementById('shopprompt');
+  sp.style.display = (nowIn && !shopOpen) ? 'block' : 'none';
+  if (nowIn && !shopOpen) sp.innerHTML = shopVisits >= SHOP_MAX_VISITS
+    ? '🚫 Shop limit reached for this round'
+    : 'Press E to open the shop 🛒 <span style="opacity:0.7">(' + (SHOP_MAX_VISITS - shopVisits) + ' left)</span>';
   if (nowIn && !inShop) { inShop = true; safeLeft = 60; document.getElementById('safebadge').style.display = 'block'; }
   if (!nowIn && inShop) { inShop = false; document.getElementById('safebadge').style.display = 'none'; if (shopOpen) closeShop(); }
   if (inShop) { safeLeft -= dt; document.getElementById('safetime').textContent = Math.max(0, Math.ceil(safeLeft)); if (safeLeft <= 0) { inShop = false; document.getElementById('safebadge').style.display = 'none'; } }
   if (!c4Ready) { c4Timer -= dt; if (c4Timer <= 0) { c4Ready = true; document.getElementById('c4stat').textContent = 'READY — C to plant'; } else document.getElementById('c4stat').textContent = 'arming ' + Math.ceil(c4Timer) + 's…'; }
 }
 function updateCamera(dt) {
-  if (!gunGroup || !playerMesh) return;
+  if (!gunGroup) return;
   const fov = scoped ? 25 : 72;
   if (Math.abs(camera.fov - fov) > 0.5) { camera.fov += (fov - camera.fov)*0.2; camera.updateProjectionMatrix(); }
   recoil = Math.max(0, recoil - dt*6); const kick = recoil*0.03;
   if (thirdPerson) {
-    playerMesh.visible = true;
-    playerMesh.position.set(player.x, player.y - 1.7, player.z); playerMesh.rotation.y = player.yaw;
+    if (playerMesh) { playerMesh.visible = true; playerMesh.position.set(player.x, player.y - 1.7, player.z); playerMesh.rotation.y = player.yaw; }
     gunGroup.visible = false;   // character model carries its own weapon
     const d = camDir(); camera.position.set(player.x - d.x*6, player.y + 2.6, player.z - d.z*6);
     camera.rotation.set(player.pitch*0.6 + kick, player.yaw, 0);
   } else {
-    playerMesh.visible = false; gunGroup.visible = !scoped;
-    // keep the body with the player even while hidden, so nothing is stranded at the map centre
-    playerMesh.position.set(player.x, player.y - 1.7, player.z);
-    playerMesh.rotation.y = player.yaw;
+    gunGroup.visible = !scoped;
+    if (playerMesh) {
+      playerMesh.visible = false;
+      playerMesh.position.set(player.x, player.y - 1.7, player.z);
+      playerMesh.rotation.y = player.yaw;
+    }
     camera.position.set(player.x, player.y, player.z);
     camera.rotation.set(player.pitch + kick, player.yaw, 0);
     const t = performance.now()/1000;
@@ -1079,6 +1191,89 @@ function animate() {
   updateCamera(dt); updateTracers(dt);
   renderer.render(scene, camera);
 }
+
+// ---------- DEPLOY LOADING SEQUENCE ----------
+const LD_TIPS = [
+  'HOLD LMB — THE ASSAULT RIFLE IS FULLY AUTOMATIC',
+  'PRESS V TO SWITCH FIRST / THIRD PERSON',
+  'CRATES AND SANDBAGS STOP BULLETS — USE THEM',
+  'ARMORY ACCESS LIMITED TO 13 VISITS PER ROUND',
+  'PRESS G TO EQUIP A GRENADE, LMB TO THROW',
+  'EVERY KILL BANKS NOVACLIP POINTS',
+  'TOP THE BOARD TO EARN THE MVP BONUS',
+  'PLANT C4 WITH C — DETONATE WITH X',
+  'REBIND ANY KEY FROM THE CONTROLS MENU'
+];
+const BOOT_STAGES = [
+  { at: 0,   label: 'ENGINE',    sub: 'LOADING...' },
+  { at: 22,  label: 'TERRAIN',   sub: 'GENERATING...' },
+  { at: 44,  label: 'ARMORY',    sub: 'SYNCING...' },
+  { at: 62,  label: 'OPERATORS', sub: 'SPAWNING...' },
+  { at: 80,  label: 'NETWORK',   sub: 'LINKING...' },
+  { at: 94,  label: 'DEPLOY',    sub: 'STAND BY...' }
+];
+function runDeploySequence(done) {
+  const el   = document.getElementById('loader');
+  const bar  = document.getElementById('ldbar');
+  const pct  = document.getElementById('ldpct');
+  const head = document.getElementById('ldhead');
+  const lab  = document.getElementById('ldlabel');
+  const sub  = document.getElementById('ldsub');
+  const tip  = document.getElementById('ldtip');
+
+  el.classList.remove('done');
+  el.classList.add('show');
+  tip.textContent = LD_TIPS[Math.floor(Math.random() * LD_TIPS.length)];
+  const tipTimer = setInterval(() => { tip.textContent = LD_TIPS[Math.floor(Math.random() * LD_TIPS.length)]; }, 1400);
+
+  let p = 0;
+  const timer = setInterval(() => {
+    // fast, slightly uneven progress so it feels like real loading
+    p += 0.42 + Math.random() * 1.05;   // ~6 seconds total
+    if (p > 100) p = 100;
+    bar.style.width = p + '%';
+    pct.textContent = Math.floor(p) + '%';
+    let st = BOOT_STAGES[0];
+    for (const s of BOOT_STAGES) if (p >= s.at) st = s;
+    lab.textContent = st.label;
+    sub.textContent = st.sub;
+    if (p >= 100) {
+      clearInterval(timer); clearInterval(tipTimer);
+      head.textContent = 'DEPLOYMENT READY';
+      setTimeout(() => {
+        el.classList.add('done');
+        setTimeout(() => { el.classList.remove('show'); el.classList.remove('done'); done(); }, 460);
+      }, 380);
+    }
+  }, 55);
+}
+
+// ---------- CONTROLS PANEL ----------
+function renderBinds() {
+  const box = document.getElementById('bindlist');
+  box.innerHTML = Object.keys(BIND_LABELS).map(k =>
+    '<div class="bindrow"><span>' + BIND_LABELS[k] + '</span>' +
+    '<span class="bindkey" data-bind="' + k + '">' + keyName(BINDS[k]) + '</span></div>'
+  ).join('');
+  box.querySelectorAll('.bindkey').forEach(el => {
+    el.onclick = function () {
+      box.querySelectorAll('.bindkey').forEach(x => x.classList.remove('listening'));
+      el.classList.add('listening');
+      el.textContent = 'press…';
+      const grab = (ev) => {
+        ev.preventDefault();
+        BINDS[el.dataset.bind] = ev.code;
+        saveBinds();
+        window.removeEventListener('keydown', grab, true);
+        renderBinds();
+      };
+      window.addEventListener('keydown', grab, true);
+    };
+  });
+}
+document.getElementById('controlsBtn').onclick = () => { renderBinds(); document.getElementById('controlsPanel').style.display = 'flex'; };
+document.getElementById('bindClose').onclick = () => { document.getElementById('controlsPanel').style.display = 'none'; };
+document.getElementById('bindReset').onclick = () => { BINDS = Object.assign({}, DEFAULT_BINDS); saveBinds(); renderBinds(); };
 
 try {
   init();
