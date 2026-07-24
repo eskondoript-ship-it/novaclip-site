@@ -32,6 +32,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 
 #board { position: fixed; top: 14px; right: 14px; z-index: 11; background: rgba(0,0,0,0.42); border-radius: 12px; padding: 12px 14px; min-width: 200px; font-size: 0.85rem; backdrop-filter: blur(8px); }
 #board h4 { color: #ffd24a; margin-bottom: 6px; font-size: 0.78rem; letter-spacing: 1px; }
+#board .tmhead { font-size:.72rem; letter-spacing:1px; font-weight:800; margin:6px 0 4px; border-bottom:1px solid rgba(255,255,255,0.12); padding-bottom:3px; }
 #board .r { display: flex; justify-content: space-between; padding: 2px 0; }
 #board .me { color: #6cc3ff; font-weight: 800; }
 #ammo { position: fixed; bottom: 22px; right: 26px; z-index: 11; text-align: right; text-shadow: 0 2px 8px #000; }
@@ -157,15 +158,15 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 
 <div class='topbar'>
   <div class='mode'>⚔️ DOMINATION</div>
-  <div class='sub'>Rack up kills — climb the board</div>
+  <div class='sub'>5v5 · Eliminate the enemy team</div>
   <div class='scorewrap'>
-    <span class='tm me'>YOU</span>
+    <span class='tm me' id='tmMine'>CT</span>
     <div class='bar'><div id='mebar' style='width:50%;background:#6cc3ff'></div></div>
     <span class='num' id='mescore'>0</span>
     <span id='timer'>5:00</span>
     <span class='num' id='enscore'>0</span>
     <div class='bar'><div id='enbar' style='width:50%;background:#ff6b6b'></div></div>
-    <span class='tm en'>BOTS</span>
+    <span class='tm en' id='tmTheirs'>T</span>
   </div>
 </div>
 
@@ -178,7 +179,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v27 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
+<div id='viewTag'>v28 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -284,6 +285,13 @@ function ownedWeapons() { return ['sniper', 'knife']; }
 function saveOwned(l) { /* weapons are no longer purchasable */ }
 
 const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Echo','Rogue'];
+// CS2-style teams: you + 4 allies vs 5 enemies. Friendly fire is disabled.
+const TEAM_CT = 'ct', TEAM_T = 't';
+const TEAM_INFO = {
+  ct: { name: 'COUNTER-TERRORISTS', short: 'CT', color: 0x4a90d9, css: '#6cc3ff' },
+  t:  { name: 'TERRORISTS',         short: 'T',  color: 0xd98a3a, css: '#ffa94d' }
+};
+const PLAYER_TEAM = TEAM_CT;
 
 // ============================================================
 //  CUSTOM 3D MODELS (optional) — drop a .glb in your repo and
@@ -292,10 +300,10 @@ const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Ech
 //  export as .glb, upload to your repo (Add file > Upload files).
 // ============================================================
 const CUSTOM_MODELS = {
-  character: 'military_tactical_suit_lowpolygameready.glb',  // must be uploaded to your repo
+  character: 'ct_urban.glb',  // must be uploaded to your repo
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: ''            // your rifle .glb filename, if you have one
+  weapon: 'low-poly_colt_c7a2.glb'            // your rifle .glb filename, if you have one
 };
 let loadedCharGLB = null, loadedWeapGLB = null, loadedCharAnims = [];
 const mixers = [];   // animation players, ticked every frame
@@ -346,9 +354,9 @@ let playerMesh, gunGroup, timerId;
 const gclock = { last: performance.now() };
 const SHOP = { x: 0, z: -30, w: 14, d: 11 };
 
-function pts() { return parseInt(localStorage.getItem('nc_points') || '0'); }
-function setPts(v) { localStorage.setItem('nc_points', v); const g = document.getElementById('gamepts'); if (g) g.textContent = v; const s = document.getElementById('shopbal'); if (s) s.textContent = v; }
-function earn(n, why) { setPts(pts() + n); addFeed('+' + n + ' pts — ' + why); }
+function pts() { const v = parseInt(localStorage.getItem('nc_points'), 10); return isFinite(v) && v >= 0 ? v : 0; }
+function setPts(v) { v = Math.max(0, Math.round(isFinite(v) ? v : 0)); localStorage.setItem('nc_points', String(v)); const g = document.getElementById('gamepts'); if (g) g.textContent = v; const s = document.getElementById('shopbal'); if (s) s.textContent = v; }
+function earn(n, why) { n = Math.max(0, Math.round(n || 0)); if (!n) return; setPts(pts() + n); addFeed('+' + n + ' pts — ' + why); }
 
 // ---------- menu wiring ----------
 document.querySelectorAll('.diff').forEach(d => d.onclick = () => { document.querySelectorAll('.diff').forEach(x => x.classList.remove('sel')); d.classList.add('sel'); mode = d.dataset.mode; });
@@ -840,14 +848,13 @@ function buildWeaponModel(type) {
 }
 
 function spawnBot(i) {
-  const cols = [0xff6b6b, 0xff8a5b, 0xffa94d, 0xe05555];
-  const g = makeFighter(cols[i % 4]);
+  const team = i < 4 ? TEAM_CT : TEAM_T;
+  const g = makeFighter(TEAM_INFO[team].color);
   // spawn in a ring 12-45 units out so they're visible around the player
-  const ang = (i / 9) * Math.PI * 2 + Math.random()*0.5;
-  const dist = 12 + Math.random()*33;
-  g.position.set(Math.cos(ang)*dist, 0, Math.sin(ang)*dist);
+  const side = team === PLAYER_TEAM ? -1 : 1;
+  g.position.set((Math.random()-0.5)*50, 0, side * (18 + Math.random()*26));
   scene.add(g);
-  bots.push({ mesh: g, name: BOT_NAMES[i] || ('Bot'+i), hp: 100, kills: 0, alive: true, tx: g.position.x, tz: g.position.z, cooldown: 1+Math.random()*2, retarget: 0 });
+  bots.push({ mesh: g, team: team, name: BOT_NAMES[i] || ('Bot'+i), hp: 100, kills: 0, alive: true, tx: g.position.x, tz: g.position.z, cooldown: 1+Math.random()*2, retarget: 0 });
 }
 
 // ---------- tracers ----------
@@ -875,6 +882,10 @@ document.getElementById('startBtn').onclick = () => {
 
 function startMatch() {
   document.querySelector('.topbar .mode').textContent = '⚔️ ' + MODES[mode].label;
+  document.getElementById('tmMine').textContent = TEAM_INFO[PLAYER_TEAM].short;
+  document.getElementById('tmTheirs').textContent = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].short;
+  document.getElementById('mebar').style.background = TEAM_INFO[PLAYER_TEAM].css;
+  document.getElementById('enbar').style.background = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].css;
   if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
   running = true; c4Ready = false; c4Timer = 20; shopVisits = 0; setPts(pts());
   // find a clear spawn point so we never start inside a building
@@ -977,14 +988,14 @@ function shoot() {
   const RANGE = W.range || 300;
   if (curWeap === 'knife') {
     let best = null, bd = 3;
-    bots.forEach(b => { if (!b.alive) return; const d = Math.hypot(b.mesh.position.x - player.x, b.mesh.position.z - player.z); if (d < bd) { bd = d; best = b; } });
+    bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const d = Math.hypot(b.mesh.position.x - player.x, b.mesh.position.z - player.z); if (d < bd) { bd = d; best = b; } });
     if (best) { best.hp = 0; killBot(best); }
     return;
   }
   const blockDist = coverDistance(origin, dir, RANGE);
   const ray = new THREE.Raycaster(origin, dir.clone().normalize(), 0, RANGE);
   let hit = null, hitDist = Infinity, hitPt = null;
-  bots.forEach(b => { if (!b.alive) return; const bx = new THREE.Box3().setFromObject(b.mesh); const pt = ray.ray.intersectBox(bx, new THREE.Vector3()); if (pt) { const d = origin.distanceTo(pt); if (d < hitDist && d <= RANGE) { hitDist = d; hit = b; hitPt = pt.clone(); } } });
+  bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const bx = new THREE.Box3().setFromObject(b.mesh); const pt = ray.ray.intersectBox(bx, new THREE.Vector3()); if (pt) { const d = origin.distanceTo(pt); if (d < hitDist && d <= RANGE) { hitDist = d; hit = b; hitPt = pt.clone(); } } });
   const blocked = blockDist < hitDist;
   let end;
   if (blocked) { end = origin.clone().add(dir.clone().multiplyScalar(blockDist)); hit = null; }
@@ -1001,6 +1012,7 @@ function shoot() {
 }
 
 function killBot(b) {
+  if (b.team === PLAYER_TEAM) return;   // friendly fire is off
   b.alive = false; b.mesh.visible = false; player.kills++;
   document.getElementById('mescore').textContent = player.kills;
   earn(MODES[mode].perKill, 'kill'); addFeed('You ➜ ' + b.name); updateBoard();
@@ -1008,15 +1020,33 @@ function killBot(b) {
 }
 function respawnBot(b) { if (timeLeft <= 0) return; b.hp = 100; b.alive = true; b.mesh.visible = true; b.mesh.position.set((Math.random()-0.5)*120, 0, (Math.random()-0.5)*120); }
 function addFeed(txt) { const f = document.getElementById('feed'); const d = document.createElement('div'); d.textContent = (txt[0] === '+' || txt[0] === '🛒' || txt[0] === '💣') ? txt : '💀 ' + txt; f.appendChild(d); setTimeout(() => d.remove(), 4000); }
+function teamScore(team) {
+  let s = 0;
+  if (team === PLAYER_TEAM) s += player.kills;
+  bots.forEach(b => { if (b.team === team) s += b.kills; });
+  return s;
+}
 function updateBoard() {
-  const all = [{ name: 'YOU', kills: player.kills, me: true }].concat(bots.map(b => ({ name: b.name, kills: b.kills })));
-  all.sort((a,b) => b.kills - a.kills);
-  document.getElementById('rows').innerHTML = all.slice(0,10).map(p => '<div class="r ' + (p.me?'me':'') + '"><span>' + p.name + '</span><span>' + p.kills + '</span></div>').join('');
-  enemyScore = bots.reduce((s,b) => s + b.kills, 0);
-  document.getElementById('enscore').textContent = enemyScore;
-  const tot = Math.max(player.kills + enemyScore, 1);
-  document.getElementById('mebar').style.width = (player.kills/tot*100) + '%';
-  document.getElementById('enbar').style.width = (enemyScore/tot*100) + '%';
+  const ct = [], t = [];
+  (PLAYER_TEAM === TEAM_CT ? ct : t).push({ name: 'YOU', kills: player.kills, me: true });
+  bots.forEach(b => (b.team === TEAM_CT ? ct : t).push({ name: b.name, kills: b.kills, dead: !b.alive }));
+  ct.sort((a, b) => b.kills - a.kills); t.sort((a, b) => b.kills - a.kills);
+
+  function block(list, team) {
+    const info = TEAM_INFO[team];
+    return '<div class="tmhead" style="color:' + info.css + '">' + info.short + ' · ' + info.name + ' <span style="float:right">' + teamScore(team) + '</span></div>' +
+      list.map(p => '<div class="r ' + (p.me ? 'me' : '') + '" style="' + (p.dead ? 'opacity:.42' : '') + '">' +
+        '<span>' + (p.dead ? '💀 ' : '') + p.name + '</span><span>' + p.kills + '</span></div>').join('');
+  }
+  document.getElementById('rows').innerHTML = block(ct, TEAM_CT) + '<div style="height:8px"></div>' + block(t, TEAM_T);
+
+  const mine = teamScore(PLAYER_TEAM), theirs = teamScore(PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT);
+  enemyScore = theirs;
+  document.getElementById('mescore').textContent = mine;
+  document.getElementById('enscore').textContent = theirs;
+  const tot = Math.max(mine + theirs, 1);
+  document.getElementById('mebar').style.width = (mine / tot * 100) + '%';
+  document.getElementById('enbar').style.width = (theirs / tot * 100) + '%';
 }
 
 // ---------- explosives ----------
@@ -1048,7 +1078,7 @@ function explode(pos, radius) {
   const fl = new THREE.PointLight(0xffaa33, 6, radius*3); fl.position.copy(pos); fl.position.y += 1; scene.add(fl);
   const ball = new THREE.Mesh(new THREE.SphereGeometry(0.5,10,10), new THREE.MeshBasicMaterial({ color: 0xffcc55, transparent: true, opacity: 0.95 })); ball.position.copy(pos); scene.add(ball);
   let s = 0.5; const iv = setInterval(() => { s += radius/6; ball.scale.set(s,s,s); ball.material.opacity -= 0.16; if (ball.material.opacity <= 0) { clearInterval(iv); scene.remove(ball); scene.remove(fl); } }, 40);
-  bots.forEach(b => { if (!b.alive) return; const d = b.mesh.position.distanceTo(pos); if (d < radius) { b.hp -= 120*(1-d/radius)+30; if (b.hp <= 0) killBot(b); } });
+  bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const d = b.mesh.position.distanceTo(pos); if (d < radius) { b.hp -= 120*(1-d/radius)+30; if (b.hp <= 0) killBot(b); } });
 }
 function updateNades(dt) {
   planted.forEach(p => {
@@ -1112,14 +1142,14 @@ function updateBots(dt) {
     if (dist > 0.5) { b.mesh.position.x += (dx/dist)*dt*5; b.mesh.position.z += (dz/dist)*dt*5; }
     b.cooldown -= dt;
     if (b.cooldown <= 0) {
-      const tgtPlayer = Math.random() < 0.65 && !inShop;
+      const tgtPlayer = b.team !== PLAYER_TEAM && Math.random() < 0.65 && !inShop;
       if (tgtPlayer) {
         const pd = Math.hypot(player.x - b.mesh.position.x, player.z - b.mesh.position.z);
         if (pd > 0.5) b.mesh.lookAt(player.x, 1.5, player.z);
         if (pd < 90) for (let s = 0; s < M.burst; s++) setTimeout(() => { if (!b.alive || !running || inShop) return; botFire(b, new THREE.Vector3(player.x, 1.5, player.z), M.botHit, () => damagePlayer(8 + Math.random()*8, b)); }, s*140);
       } else {
-        const others = bots.filter(o => o !== b && o.alive);
-        if (others.length) { const o = others[Math.floor(Math.random()*others.length)]; const od = Math.hypot(o.mesh.position.x - b.mesh.position.x, o.mesh.position.z - b.mesh.position.z); if (od > 0.5) b.mesh.lookAt(o.mesh.position.x, 1.2, o.mesh.position.z); botFire(b, o.mesh.position.clone().setY(1.2), 0.28, () => { o.hp -= 45; if (o.hp <= 0) { o.alive = false; o.mesh.visible = false; b.kills++; addFeed(b.name + ' ➜ ' + o.name); updateBoard(); setTimeout(() => respawnBot(o), 3500); } }); }
+        const others = bots.filter(o => o !== b && o.alive && o.team !== b.team);
+        if (others.length) { const o = others[Math.floor(Math.random()*others.length)]; const od = Math.hypot(o.mesh.position.x - b.mesh.position.x, o.mesh.position.z - b.mesh.position.z); if (od > 0.5) b.mesh.lookAt(o.mesh.position.x, 1.2, o.mesh.position.z); botFire(b, o.mesh.position.clone().setY(1.2), 0.30, () => { o.hp -= 45; if (o.hp <= 0) { o.alive = false; o.mesh.visible = false; b.kills++; addFeed(b.name + ' ➜ ' + o.name); updateBoard(); setTimeout(() => respawnBot(o), 3500); } }); }
       }
       b.cooldown = M.cool[0] + Math.random()*(M.cool[1]-M.cool[0]);
     }
@@ -1223,13 +1253,34 @@ function tick() {
 }
 function endMatch() {
   running = false; clearInterval(timerId); document.exitPointerLock();
+  const mine = teamScore(PLAYER_TEAM);
+  const theirs = teamScore(PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT);
+  const won = mine > theirs, draw = mine === theirs;
+
+  // personal placing across everyone
   const all = [{ name: 'YOU', kills: player.kills, me: true }].concat(bots.map(b => ({ name: b.name, kills: b.kills })));
-  all.sort((a,b) => b.kills - a.kills);
+  all.sort((a, b) => b.kills - a.kills);
   const rank = all.findIndex(p => p.me) + 1;
-  let bonus = '';
-  if (rank === 1) { const bp = MODES[mode].mvp; setPts(pts() + bp); bonus = '<p class="sub">🏆 MVP! +' + bp + ' points banked.</p>'; }
-  const ov = document.getElementById('overlay'); ov.style.display = 'flex';
-  ov.innerHTML = '<div class="mtag">Match complete — ' + MODES[mode].label + '</div><h1>⏱️ <span class="c">Match</span> <span class="y">Over</span></h1><p class="sub">You placed <b style="color:#6cc3ff">#' + rank + '</b> of 10 with <b>' + player.kills + '</b> kills.</p>' + bonus + '<div class="keyshint">' + all.slice(0,5).map((p,i) => (i+1) + '. ' + p.name + ' — ' + p.kills).join('<br>') + '</div><button class="again" onclick="location.reload()">▶️ Play again</button>';
+
+  let bonus = 0, lines = [];
+  if (won)       { bonus += MODES[mode].mvp;                 lines.push('🏆 Team victory: +' + MODES[mode].mvp + ' pts'); }
+  else if (draw) { bonus += Math.round(MODES[mode].mvp / 2); lines.push('🤝 Draw: +' + Math.round(MODES[mode].mvp / 2) + ' pts'); }
+  if (rank === 1) { const t = Math.round(MODES[mode].mvp / 2); bonus += t; lines.push('⭐ Top scorer: +' + t + ' pts'); }
+  if (bonus) setPts(pts() + bonus);
+
+  const tCol = TEAM_INFO[PLAYER_TEAM].css;
+  const eCol = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].css;
+  const ov = document.getElementById('overlay');
+  ov.style.display = 'flex';
+  ov.innerHTML =
+    '<div class="mtag">Match complete — ' + MODES[mode].label + '</div>' +
+    '<h1>' + (won ? '🏆 <span class="c">Victory</span>' : draw ? '🤝 <span class="c">Draw</span>' : '💀 <span class="y">Defeat</span>') + '</h1>' +
+    '<p class="sub"><b style="color:' + tCol + '">' + TEAM_INFO[PLAYER_TEAM].short + ' ' + mine + '</b> — <b style="color:' + eCol + '">' +
+      TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].short + ' ' + theirs + '</b></p>' +
+    '<p class="sub">You scored <b>' + player.kills + '</b> kills · placed <b>#' + rank + '</b> of 10.</p>' +
+    (lines.length ? '<p class="sub" style="color:#B6FF3C">' + lines.join('<br>') + '</p>' : '') +
+    '<div class="keyshint">' + all.slice(0, 5).map((p, i) => (i + 1) + '. ' + p.name + ' — ' + p.kills).join('<br>') + '</div>' +
+    '<button class="again" onclick="location.reload()">▶️ Play again</button>';
 }
 
 function animate() {
