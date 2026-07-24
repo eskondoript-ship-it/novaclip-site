@@ -179,7 +179,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v35 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v37 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -302,10 +302,10 @@ const PLAYER_TEAM = TEAM_CT;
 const CUSTOM_MODELS = {
   // ===== MIXAMO SHOOTER PACK (converted to .glb) =====
   // Your working 18 MB suit as the character (the 112 MB Ch15 file was too big).
-  character: 'military_tactical_suit_lowpolygameready.glb',
+  character: 'ct_urban.glb',
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_c7a2.glb',           // your rifle .glb filename, if you have one
+  weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
 
   weaponRotX: -90, weaponRotY: 0, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
 
@@ -321,7 +321,9 @@ const CUSTOM_MODELS = {
     grenade: '',                        // add 'throw grenade.glb' if you grab one
     emote:   ''                         // add 'dance.glb' + emoteSound for an emote
   },
-  emoteSound: ''
+  emoteSound: '',
+
+  botsUseModel: true   // true = bots wear your character model too (heavier). false = built-in soldiers.
 };
 let loadedCharGLB = null, loadedWeapGLB = null, loadedCharAnims = [];
 const extraClips = {};   // animations loaded from separate files
@@ -699,6 +701,33 @@ function buildWorld() {
   }
 }
 
+const BASES = {
+  ct: { x: 0, z: -62, color: 0x4a90d9 },
+  t:  { x: 0, z:  62, color: 0xd98a3a }
+};
+function buildBases() {
+  for (const team in BASES) {
+    const B = BASES[team], info = TEAM_INFO[team];
+    // raised platform
+    const plat = new THREE.Mesh(new THREE.BoxGeometry(26, 1, 20), new THREE.MeshStandardMaterial({ color: 0x3a3f48, roughness: 0.9 }));
+    plat.position.set(B.x, 0.5, B.z); plat.receiveShadow = true; scene.add(plat);
+    // back wall + two side walls (cover)
+    box(26, 7, 1, 0x2b2f36, B.x, 3.5, B.z + (team === 'ct' ? -10 : 10), true);
+    box(1, 7, 20, 0x2b2f36, B.x - 13, 3.5, B.z, true);
+    box(1, 7, 20, 0x2b2f36, B.x + 13, 3.5, B.z, true);
+    // team-colored roof strip + banner
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(26, 0.5, 20), new THREE.MeshStandardMaterial({ color: info.color, roughness: 0.6 }));
+    roof.position.set(B.x, 7.3, B.z); scene.add(roof);
+    const banner = new THREE.Mesh(new THREE.BoxGeometry(12, 3, 0.4), new THREE.MeshBasicMaterial({ color: info.color }));
+    banner.position.set(B.x, 5, B.z + (team === 'ct' ? -9.7 : 9.7)); scene.add(banner);
+    // glowing beacon so you can find your base
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 40, 8), new THREE.MeshBasicMaterial({ color: info.color, transparent: true, opacity: 0.35 }));
+    beam.position.set(B.x, 20, B.z); scene.add(beam);
+    const glow = new THREE.PointLight(info.color, 1.2, 40); glow.position.set(B.x, 8, B.z); scene.add(glow);
+    // supply crates on the platform
+    for (let i = 0; i < 3; i++) box(2, 2, 2, 0x6b7358, B.x - 8 + i*8, 1.5, B.z + (team === 'ct' ? -4 : 4), true);
+  }
+}
 function buildShop() {
   const wall = 0x2a3a4a;
   box(SHOP.w, 5, 0.4, wall, SHOP.x, 2.5, SHOP.z - SHOP.d/2, true);
@@ -719,10 +748,13 @@ function insideShop() { return Math.abs(player.x - SHOP.x) < SHOP.w/2 - 0.3 && M
 
 function makeFighter(color, useGLB) {
   try {
-    // --- uploaded .glb character (player only — 10 copies would exhaust GPU memory) ---
+    // --- uploaded .glb character ---
     if (loadedCharGLB && useGLB) {
       const g = new THREE.Group();
-      const model = loadedCharGLB;   // used once, by the player — never cloned
+      // player uses the original; bots get a clone so they can move independently
+      const isPlayer = !makeFighter._playerMade;
+      makeFighter._playerMade = true;
+      const model = isPlayer ? loadedCharGLB : loadedCharGLB.clone(true);
       // ---- fully guarded auto-fit: never let a bad number reach the scene ----
       let s = 1, offX = 0, offY = 0, offZ = 0;
       try {
@@ -743,7 +775,10 @@ function makeFighter(color, useGLB) {
       if (!isFinite(offZ)) offZ = 0;
       model.scale.setScalar(s);
       model.position.set(offX, offY + (CUSTOM_MODELS.characterYOffset || 0), offZ);
-      model.traverse(o => { if (o.isMesh) o.castShadow = true; });
+      model.traverse(o => { if (o.isMesh) {
+        o.castShadow = true;
+        if (!isPlayer && o.material) { o.material = o.material.clone(); if (o.material.color) o.material.color.lerp(new THREE.Color(color), 0.45); }
+      }});
       g.add(model);
       // if the model shipped with animations, play one on a loop
       if ((loadedCharAnims && loadedCharAnims.length) || Object.keys(extraClips).length) {
@@ -861,9 +896,6 @@ function autoFitGLB(inner) {
   spin.scale.setScalar(scale);
   spin.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
   wrapper.add(spin);
-
-  // first-person arms so the weapon is actually held
-  wrapper.add(buildArms());
   wrapper.userData = inner.userData;
   return wrapper;
 }
@@ -893,7 +925,6 @@ function buildArms() {
 function buildWeapon(type) {
   const m = buildWeaponModel(type);
   if (loadedWeapGLB && type !== 'knife') return autoFitGLB(m);
-  if (type !== 'knife') m.add(buildArms());   // hands on the built-in rifle too
   return m;
 }
 
@@ -944,10 +975,11 @@ function buildWeaponModel(type) {
 
 function spawnBot(i) {
   const team = i < 4 ? TEAM_CT : TEAM_T;
-  const g = makeFighter(TEAM_INFO[team].color);
+  const useModel = CUSTOM_MODELS.botsUseModel && !!loadedCharGLB;
+  const g = makeFighter(TEAM_INFO[team].color, useModel);
   // spawn in a ring 12-45 units out so they're visible around the player
-  const side = team === PLAYER_TEAM ? -1 : 1;
-  g.position.set((Math.random()-0.5)*50, 0, side * (18 + Math.random()*26));
+  const B = BASES[team];
+  g.position.set(B.x + (Math.random()-0.5)*20, 1, B.z + (Math.random()-0.5)*14);
   scene.add(g);
   bots.push({ mesh: g, team: team, name: BOT_NAMES[i] || ('Bot'+i), hp: 100, kills: 0, alive: true, tx: g.position.x, tz: g.position.z, cooldown: 1+Math.random()*2, retarget: 0 });
 }
@@ -983,11 +1015,10 @@ function startMatch() {
   document.getElementById('enbar').style.background = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].css;
   if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
   running = true; c4Ready = false; c4Timer = 20; shopVisits = 0; setPts(pts());
-  // find a clear spawn point so we never start inside a building
-  for (let a = 0; a < 60; a++) {
-    const sx = (Math.random()-0.5)*90, sz = (Math.random()-0.5)*90;
-    if (!blockedAt(sx, sz)) { player.x = sx; player.z = sz; break; }
-  }
+  // spawn at your team's base
+  const HB = BASES[PLAYER_TEAM];
+  player.x = HB.x + (Math.random()-0.5)*16;
+  player.z = HB.z + (PLAYER_TEAM === 'ct' ? 6 : -6);
   switchWeap(curWeap);
   if (gunGroup) gunGroup.visible = true;
   timerId = setInterval(tick, 1000);
@@ -1386,7 +1417,7 @@ function updateCamera(dt) {
       rl = -s * 0.35; rlrot = s * 0.9;
     }
     // Position the gun relative to the camera (method from the original working build)
-    const off = { x: 0.185, y: -0.155 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -0.46 + kick*0.10 };
+    const off = { x: 0.20, y: -0.20 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -0.55 + kick*0.10 };
     const pos = new THREE.Vector3(off.x, off.y, off.z);
     pos.applyEuler(camera.rotation);
     gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
