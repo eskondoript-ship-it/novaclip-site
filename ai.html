@@ -98,7 +98,12 @@ const PERSONAS = {
   space: 'You are NovaClip, a fun space tutor for teens, expert in asteroids, planets and NASA missions. ',
   business: 'You are NovaClip, a business and money tutor for teens, expert in side hustles, saving and entrepreneurship. '
 };
-function persona() { return PERSONAS[document.getElementById('subject').value] + SLANG + (typeof langInstruction === 'function' ? langInstruction() : ''); }
+const PLAIN = 'Write in clear, friendly, everyday English. No slang. Keep it short and genuinely useful. ';
+function persona() {
+  const genz = (typeof ncGenZ === 'function') ? ncGenZ() : true;
+  return PERSONAS[document.getElementById('subject').value] + (genz ? SLANG : PLAIN) +
+    (typeof langInstruction === 'function' ? langInstruction() : '');
+}
 function subjectName() { return document.getElementById('subject').selectedOptions[0].textContent; }
 
 document.getElementById('askbtn').onclick = async () => {
