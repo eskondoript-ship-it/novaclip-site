@@ -179,7 +179,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v38 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v39 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -493,7 +493,7 @@ function init() {
   // build fighters + gun. If custom .glb models are set, load them first; otherwise build immediately.
   function buildActors() {
     for (let i = 0; i < 9; i++) spawnBot(i);
-    playerMesh = makeFighter(playerColor, true);
+    playerMesh = makeFighter(playerColor, true, true);   // (color, useGLB, isPlayer)
     playerMesh.visible = false;
     scene.add(playerMesh);
     gunGroup = buildWeapon(WEAPONS[curWeap].model);
@@ -746,14 +746,12 @@ function buildShop() {
 }
 function insideShop() { return Math.abs(player.x - SHOP.x) < SHOP.w/2 - 0.3 && Math.abs(player.z - SHOP.z) < SHOP.d/2 - 0.3; }
 
-function makeFighter(color, useGLB) {
+function makeFighter(color, useGLB, isPlayer) {
   try {
     // --- uploaded .glb character ---
     if (loadedCharGLB && useGLB) {
       const g = new THREE.Group();
       // player uses the original; bots get a clone so they can move independently
-      const isPlayer = !makeFighter._playerMade;
-      makeFighter._playerMade = true;
       const model = isPlayer ? loadedCharGLB : loadedCharGLB.clone(true);
       // ---- fully guarded auto-fit: never let a bad number reach the scene ----
       let s = 1, offX = 0, offY = 0, offZ = 0;
@@ -979,7 +977,7 @@ function spawnBot(i) {
   const g = makeFighter(TEAM_INFO[team].color, useModel);
   // spawn in a ring 12-45 units out so they're visible around the player
   const B = BASES[team];
-  g.position.set(B.x + (Math.random()-0.5)*20, 1, B.z + (Math.random()-0.5)*14);
+  g.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
   scene.add(g);
   bots.push({ mesh: g, team: team, name: BOT_NAMES[i] || ('Bot'+i), hp: 100, kills: 0, alive: true, tx: g.position.x, tz: g.position.z, cooldown: 1+Math.random()*2, retarget: 0 });
 }
@@ -1269,6 +1267,7 @@ function updateBots(dt) {
     if (b.retarget <= 0) { b.tx = (Math.random()-0.5)*80; b.tz = (Math.random()-0.5)*80; b.retarget = 1.6 + Math.random()*2.4; }
     const dx = b.tx - b.mesh.position.x, dz = b.tz - b.mesh.position.z, dist = Math.hypot(dx, dz);
     if (dist > 0.5) { b.mesh.position.x += (dx/dist)*dt*5; b.mesh.position.z += (dz/dist)*dt*5; }
+    b.mesh.position.y = 0;   // stay on the ground
     b.cooldown -= dt;
     if (b.cooldown <= 0) {
       const tgtPlayer = b.team !== PLAYER_TEAM && Math.random() < 0.65 && !inShop;
