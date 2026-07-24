@@ -82,39 +82,42 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
   </div>
 </div>
 
-<script type='module'>
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-
-const firebaseConfig = { apiKey: 'PASTE_YOURS', authDomain: 'PASTE_YOURS', projectId: 'PASTE_YOURS', storageBucket: 'PASTE_YOURS', messagingSenderId: 'PASTE_YOURS', appId: 'PASTE_YOURS' };
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+<script>
+/* Analytics reuses the YouTube login that Studio already saved, so this page
+   needs no Firebase keys of its own — one less place to paste config. */
 let ytToken = null, myStats = null;
 const charts = {};
 
-function loadToken() { try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {} return null; }
-function saveToken(tok) { ytToken = tok; localStorage.setItem('nc_yt', JSON.stringify({ t: tok, exp: Date.now() + 50*60*1000 })); }
+function loadToken() {
+  try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {}
+  return null;
+}
 function yt(url) { return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json()); }
 
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const cached = loadToken();
-    if (cached) { ytToken = cached; try { const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true'); if (d.items && d.items.length) { myStats = d.items[0]; enterDash(); } } catch (e) {} }
+async function boot() {
+  const tok = loadToken();
+  const row = document.getElementById('connectrow');
+  if (!tok) {
+    row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">🔑 Connect in Studio</a>' +
+      '<p class="hint">Analytics uses the channel you connect in Studio. Connect once there, then come back — you will stay signed in for about an hour.</p>';
+    return;
   }
-});
-
-async function connect() {
-  const provider = new GoogleAuthProvider();
-  provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
-  const result = await signInWithPopup(auth, provider);
-  saveToken(GoogleAuthProvider.credentialFromResult(result).accessToken);
-  const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
-  if (d.items && d.items.length) { myStats = d.items[0]; enterDash(); }
+  ytToken = tok;
+  row.innerHTML = '<p class="hint">Loading your channel…</p>';
+  try {
+    const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
+    if (d.items && d.items.length) { myStats = d.items[0]; enterDash(); }
+    else {
+      row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">🔑 Reconnect in Studio</a>' +
+        '<p class="hint">That session expired. Reconnect in Studio and come back.</p>';
+    }
+  } catch (e) {
+    row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">🔑 Reconnect in Studio</a>' +
+      '<p class="hint">Could not reach YouTube. Reconnect in Studio and try again.</p>';
+  }
 }
-document.getElementById('gbtn').onclick = connect;
 
 function enterDash() { document.getElementById('connectrow').style.display = 'none'; document.getElementById('dash').style.display = 'block'; drawAll(); }
-document.getElementById('compToggle').onchange = drawAll;
 
 async function getCompetitors() {
   const seeds = [myStats.snippet.title.split(' ')[0], 'gaming channel', 'vlog channel', 'music channel'];
@@ -126,7 +129,8 @@ async function getCompetitors() {
   }
   const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + [...ids].slice(0, 40).join(','));
   const mySubs = parseInt(myStats.statistics.subscriberCount);
-  return cd.items.map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, 2).map(x => x.ch);
+  return (cd.items || []).map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) }))
+    .sort((a, b) => a.diff - b.diff).slice(0, 2).map(x => x.ch);
 }
 
 async function recentEngagement(channel) {
@@ -134,27 +138,27 @@ async function recentEngagement(channel) {
   if (!uploads) return { likes: 0, comments: 0, series: [] };
   const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=15');
   if (!pl.items || !pl.items.length) return { likes: 0, comments: 0, series: [] };
-  const ids = pl.items.map(i => i.contentDetails.videoId).join(',');
-  const vs = await yt('videos?part=statistics&id=' + ids);
+  const vs = await yt('videos?part=statistics&id=' + pl.items.map(i => i.contentDetails.videoId).join(','));
   let likes = 0, comments = 0; const series = [];
-  vs.items.forEach(v => { likes += parseInt(v.statistics.likeCount || 0); comments += parseInt(v.statistics.commentCount || 0); series.push(parseInt(v.statistics.viewCount || 0)); });
+  (vs.items || []).forEach(v => { likes += parseInt(v.statistics.likeCount || 0); comments += parseInt(v.statistics.commentCount || 0); series.push(parseInt(v.statistics.viewCount || 0)); });
   return { likes, comments, series: series.reverse() };
 }
 
 function mk(id, type, labels, datasets, extra) {
   if (charts[id]) charts[id].destroy();
   const txt = '#c8ccd8';
-  const scaleAxis = { ticks: { color: txt, font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } };
+  const ax = { ticks: { color: txt, font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } };
   charts[id] = new Chart(document.getElementById(id), {
-    type,
-    data: { labels, datasets },
+    type, data: { labels, datasets },
     options: Object.assign({
       responsive: true, maintainAspectRatio: true,
       plugins: { legend: { display: type === 'doughnut' || datasets.length > 1, labels: { color: txt, font: { size: 11 } } } },
-      scales: (type === 'radar' || type === 'doughnut') ? {} : { x: scaleAxis, y: scaleAxis }
+      scales: (type === 'radar' || type === 'doughnut') ? {} : { x: ax, y: ax }
     }, extra || {})
   });
 }
+function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; }
+function kpi(n, l) { return '<div class="kpi"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
 
 async function drawAll() {
   const withComp = document.getElementById('compToggle').checked;
@@ -168,7 +172,6 @@ async function drawAll() {
   const videos = channels.map(c => parseInt(c.statistics.videoCount || 0));
   const avg = channels.map((c, i) => Math.round(views[i] / Math.max(videos[i], 1)));
 
-  // KPIs (you)
   document.getElementById('kpis').innerHTML =
     kpi(subs[0].toLocaleString(), 'Subscribers') + kpi(views[0].toLocaleString(), 'Total views') +
     kpi(videos[0].toLocaleString(), 'Videos') + kpi(avg[0].toLocaleString(), 'Avg views/video');
@@ -184,26 +187,22 @@ async function drawAll() {
   mk('c_likes', 'bar', labels, [{ data: likes, backgroundColor: colors, borderRadius: 6 }]);
   mk('c_comments', 'bar', labels, [{ data: comments, backgroundColor: colors, borderRadius: 6 }]);
 
-  // line trend of your recent uploads
   const mine = eng[0].series || [];
   mk('c_trend', 'line', mine.map((_, i) => 'Video ' + (i + 1)), [{ label: 'Views', data: mine, borderColor: cyan, backgroundColor: 'rgba(0,240,255,0.15)', fill: true, tension: 0.35, pointRadius: 3 }]);
 
-  // radar: normalized profile
   const metrics = [subs, views, videos, likes, comments];
   const metricLabels = ['Subs', 'Views', 'Videos', 'Likes', 'Comments'];
-  const radarSets = channels.map((c, idx) => ({
+  mk('c_radar', 'radar', metricLabels, channels.map((c, idx) => ({
     label: labels[idx],
     data: metrics.map(arr => { const mx = Math.max(...arr, 1); return Math.round((arr[idx] / mx) * 100); }),
-    borderColor: colors[idx], backgroundColor: colors[idx].replace(')', ',0.15)').replace('#', 'rgba(') && hexA(colors[idx], 0.15), pointBackgroundColor: colors[idx]
-  }));
-  mk('c_radar', 'radar', metricLabels, radarSets, { scales: { r: { angleLines: { color: 'rgba(255,255,255,0.1)' }, grid: { color: 'rgba(255,255,255,0.1)' }, pointLabels: { color: '#c8ccd8', font: { size: 11 } }, ticks: { display: false } } } });
+    borderColor: colors[idx], backgroundColor: hexA(colors[idx], 0.15), pointBackgroundColor: colors[idx]
+  })), { scales: { r: { angleLines: { color: 'rgba(255,255,255,0.1)' }, grid: { color: 'rgba(255,255,255,0.1)' }, pointLabels: { color: '#c8ccd8', font: { size: 11 } }, ticks: { display: false } } } });
 
-  // doughnut: your engagement mix
   mk('c_dough', 'doughnut', ['Likes', 'Comments', 'Videos'], [{ data: [likes[0], comments[0], videos[0]], backgroundColor: [pink, cyan, lime], borderWidth: 0 }]);
 }
 
-function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; }
-function kpi(n, l) { return '<div class="kpi"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
+document.getElementById('compToggle').onchange = drawAll;
+boot();
 </script>
 <script src='nova.js'></script>
 </body>
