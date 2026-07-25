@@ -118,6 +118,24 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
 .pstreak i { width:26px; height:26px; border-radius:7px; background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; font-size:.7rem; font-style:normal; }
 .pstreak i.on { background:rgba(255,210,74,.18); border-color:#ffd24a; }
+
+.comprow { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.complabel { font-size:.9rem; color:#b8bccb; font-weight:600; }
+.switch { position:relative; display:inline-block; width:46px; height:26px; flex-shrink:0; }
+.switch input { opacity:0; width:0; height:0; }
+.switch .slider { position:absolute; inset:0; cursor:pointer; border-radius:26px;
+  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.2); transition:.25s; }
+.switch .slider::before { content:''; position:absolute; height:18px; width:18px; left:3px; top:3px;
+  border-radius:50%; background:#7E8AA6; transition:.25s; }
+.switch input:checked + .slider { background:linear-gradient(90deg,#00F0FF,#4CC9F0); border-color:transparent; }
+.switch input:checked + .slider::before { transform:translateX(20px); background:#04121a; }
+.compcount { display:flex; gap:4px; background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12); border-radius:22px; padding:4px; }
+.compcount button { width:30px; height:28px; border-radius:18px; border:none; cursor:pointer;
+  background:transparent; color:#7E8AA6; font-weight:800; font-size:.8rem; font-family:inherit; transition:.2s; }
+.compcount button:hover { color:#fff; }
+.compcount button.on { background:linear-gradient(90deg,#00F0FF,#4CC9F0); color:#04121a; }
+.compcount.off { opacity:.35; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -145,7 +163,17 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
   </div>
 
   <div id='dash' style='display:none;'>
-    <label class='toggle'><input type='checkbox' id='compToggle' checked> <span data-t='compare'>Compare with 2 competitors</span></label>
+    <div class='comprow'>
+      <label class='switch'>
+        <input type='checkbox' id='compToggle' checked>
+        <span class='slider'></span>
+      </label>
+      <span class='complabel' data-t='compare'>Compare with competitors</span>
+      <div class='compcount' id='compCount'>
+        <button data-n='1'>1</button><button data-n='2' class='on'>2</button>
+        <button data-n='3'>3</button><button data-n='4'>4</button><button data-n='5'>5</button>
+      </div>
+    </div>
     <div class='kpis' id='kpis'></div>
     <div class='grid'>
       <div class='chartcard'><h4>👥 Subscribers</h4><canvas id='c_subs' height='190'></canvas></div>
@@ -214,12 +242,12 @@ async function getCompetitors() {
   for (const q of seeds) {
     const sd = await yt('search?part=snippet&type=channel&maxResults=10&q=' + encodeURIComponent(q)).catch(() => null);
     if (sd && sd.items) sd.items.forEach(i => { if (i.snippet.channelId !== myStats.id) ids.add(i.snippet.channelId); });
-    if (ids.size >= 25) break;
+    if (ids.size >= 40) break;
   }
   const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + [...ids].slice(0, 40).join(','));
   const mySubs = parseInt(myStats.statistics.subscriberCount);
   return (cd.items || []).map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) }))
-    .sort((a, b) => a.diff - b.diff).slice(0, 2).map(x => x.ch);
+    .sort((a, b) => a.diff - b.diff).slice(0, compCount).map(x => x.ch);
 }
 
 async function recentEngagement(channel) {
@@ -255,7 +283,8 @@ async function drawAll() {
   if (withComp) { try { channels = channels.concat(await getCompetitors()); } catch (e) {} }
   const labels = channels.map((c, i) => i === 0 ? 'You' : c.snippet.title.slice(0, 12));
   const cyan = '#00F0FF', pink = '#F72585', lime = '#B6FF3C';
-  const colors = channels.map((c, i) => i === 0 ? pink : (i === 1 ? cyan : lime));
+  const PALETTE = [pink, cyan, lime, '#ffd24a', '#9d4edd', '#ff6b35'];
+  const colors = channels.map((c, i) => PALETTE[i % PALETTE.length]);
   const subs = channels.map(c => parseInt(c.statistics.subscriberCount || 0));
   const views = channels.map(c => parseInt(c.statistics.viewCount || 0));
   const videos = channels.map(c => parseInt(c.statistics.videoCount || 0));
@@ -295,6 +324,24 @@ async function drawAll() {
 //  PERIODIC REVIEWS + POSTING STREAK + AI REVIEW
 // ============================================================
 let periodDays = 1, myUploads = [], rivalUploads = [], rivalName = '';
+let compCount = parseInt(localStorage.getItem('nc_compcount') || '2');
+
+document.querySelectorAll('#compCount button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#compCount button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    compCount = parseInt(b.dataset.n);
+    localStorage.setItem('nc_compcount', String(compCount));
+    drawAll();
+  };
+});
+// reflect the saved choice and grey the picker out when comparison is off
+(function () {
+  document.querySelectorAll('#compCount button').forEach(x => x.classList.toggle('on', parseInt(x.dataset.n) === compCount));
+  const t = document.getElementById('compToggle'), box = document.getElementById('compCount');
+  const sync = () => box.classList.toggle('off', !t.checked);
+  t.addEventListener('change', sync); sync();
+})();
 
 // pull recent uploads with their dates so we can slice by period
 async function fetchUploads(channel, max) {
