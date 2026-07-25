@@ -171,6 +171,42 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 .esbank { margin-top: 10px; font-size: .8rem; color: #7E8AA6; }
 .esbank b { color: #ffd24a; }
 
+/* ===== GAME NAV ===== */
+#gamenav { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; gap: 6px;
+  background: rgba(0,0,0,0.5); padding: 5px; border-radius: 30px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.12); }
+.gnav { padding: 8px 18px; border-radius: 24px; border: none; cursor: pointer; font-weight: 800; font-size: .82rem;
+  background: transparent; color: #9fb0cc; transition: .22s; font-family: inherit; }
+.gnav:hover { color: #fff; }
+.gnav.active { background: linear-gradient(90deg,#6cc3ff,#4a9fe0); color: #04121a; box-shadow: 0 4px 16px rgba(108,195,255,0.35); }
+
+/* ===== NOVA FLAP ===== */
+#flappy { position: fixed; inset: 0; z-index: 45; display: none; background: linear-gradient(180deg,#0b1020,#132a45 55%,#1d3f5c); }
+#flappy.show { display: block; }
+#flapcv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#flaphud { position: absolute; top: 70px; left: 0; right: 0; text-align: center; pointer-events: none; z-index: 2; }
+.fscore { font-size: clamp(2.6rem,8vw,4.4rem); font-weight: 900; color: #fff; text-shadow: 0 4px 18px rgba(0,0,0,.6); line-height: 1; }
+.fbest { margin-top: 6px; font-size: .8rem; color: #9fb0cc; letter-spacing: 1px; }
+.fbest b { color: #ffd24a; }
+#flapstart, #flapover { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; padding: 20px; }
+#flapover { display: none; background: rgba(5,10,20,0.72); backdrop-filter: blur(6px); }
+#flapover.show { display: flex; }
+.fpanel { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); border-radius: 22px;
+  padding: 30px 28px; text-align: center; max-width: 400px; width: 100%; backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+.ftitle { font-size: 2.1rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
+.ftitle span { color: #ffd24a; }
+.fsub { color: #9fb0cc; font-size: .88rem; line-height: 1.7; margin-bottom: 18px; }
+#fplay, #fagain { width: 100%; padding: 14px; border: none; border-radius: 30px; font-weight: 800; font-size: 1rem; cursor: pointer;
+  background: linear-gradient(90deg,#ffd24a,#ffb02e); color: #2a1a00; font-family: inherit; transition: transform .2s; }
+#fplay:hover, #fagain:hover { transform: translateY(-3px) scale(1.03); }
+.fhint { margin-top: 12px; font-size: .74rem; color: #7E8AA6; letter-spacing: 1px; }
+.fover { font-size: 1.9rem; font-weight: 900; color: #ff6b6b; margin-bottom: 16px; letter-spacing: 2px; }
+.fstats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
+.fstats > div { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 6px; }
+.fstats b { display: block; font-size: 1.5rem; font-weight: 900; }
+.fstats span { font-size: .68rem; color: #7E8AA6; letter-spacing: 1px; text-transform: uppercase; }
+.fstats .hi { border-color: rgba(255,210,74,.45); background: rgba(255,210,74,.08); }
+.fstats .hi b { color: #ffd24a; }
+
 #shopui { position: fixed; inset: 0; z-index: 19; display: none; align-items: center; justify-content: center; background: rgba(5,10,20,0.82); backdrop-filter: blur(6px); }
 .shopbox { background: #101725; border: 1px solid rgba(108,195,255,0.4); border-radius: 18px; padding: 26px; width: min(540px, 92vw); max-height: 88vh; overflow-y: auto; box-shadow: 0 0 60px rgba(108,195,255,0.2); }
 .shopbox h2 { margin-bottom: 4px; } .shopbox .bal { color: #ffd24a; font-weight: 800; margin-bottom: 14px; }
@@ -184,6 +220,38 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <body>
 <div id='game'></div>
 <a id='backLink' href='index.html'>← Back to NovaClip</a>
+<div id='gamenav'>
+  <button class='gnav active' data-game='arena'>⚔️ Strike Arena</button>
+  <button class='gnav' data-game='flappy'>🐦 Nova Flap</button>
+</div>
+
+<!-- ===== NOVA FLAP ===== -->
+<div id='flappy'>
+  <canvas id='flapcv'></canvas>
+  <div id='flaphud'>
+    <div class='fscore'><span id='fscore'>0</span></div>
+    <div class='fbest'>BEST <b id='fbest'>0</b> · 🏆 <b id='fpts'>0</b> pts</div>
+  </div>
+  <div id='flapstart'>
+    <div class='fpanel'>
+      <div class='ftitle'>🐦 NOVA <span>FLAP</span></div>
+      <p class='fsub'>Tap, click or press SPACE to flap. Slip through the neon gates.<br>Every 5 gates banks NovaClip points.</p>
+      <button id='fplay'>▶️ Play</button>
+      <div class='fhint'>SPACE / click to flap</div>
+    </div>
+  </div>
+  <div id='flapover'>
+    <div class='fpanel'>
+      <div class='fover'>Game over</div>
+      <div class='fstats'>
+        <div><b id='foScore'>0</b><span>Score</span></div>
+        <div><b id='foBest'>0</b><span>Best</span></div>
+        <div class='hi'><b id='foPts'>+0</b><span>Points</span></div>
+      </div>
+      <button id='fagain'>🔁 Play again</button>
+    </div>
+  </div>
+</div>
 <div id='hud'><div id='crosshair'></div></div>
 <div id='scope'></div>
 <div id='dmgflash'></div>
@@ -212,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v48 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v50 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -263,7 +331,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 
 <div id='overlay'>
   <div class='mtag'>NovaClip Arcade</div>
-  <h1>⚔️ Strike <span class='c'>Arena</span> <span class='y'>COD</span></h1>
+  <h1>⚔️ Strike <span class='c'>Arena</span></h1>
   <p class='sub'>10 fighters. 5 minutes. Capture kills across a bright city battlefield. Earn NovaClip points and top the board for the MVP bonus.</p>
 
   <div class='diffgrid'>
@@ -335,10 +403,10 @@ const PLAYER_TEAM = TEAM_CT;
 const CUSTOM_MODELS = {
   // ===== MIXAMO SHOOTER PACK (converted to .glb) =====
   // Your working 18 MB suit as the character (the 112 MB Ch15 file was too big).
-  character: 'ct_urban.glb',
+  character: 'military_tactical_suit_lowpolygameready.glb',
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
+  weapon: '',           // your rifle .glb filename, if you have one
 
   weaponRotX: -90, weaponRotY: 0, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
 
@@ -1737,6 +1805,187 @@ function renderBinds() {
 document.getElementById('controlsBtn').onclick = () => { renderBinds(); document.getElementById('controlsPanel').style.display = 'flex'; };
 document.getElementById('bindClose').onclick = () => { document.getElementById('controlsPanel').style.display = 'none'; };
 document.getElementById('bindReset').onclick = () => { BINDS = Object.assign({}, DEFAULT_BINDS); saveBinds(); renderBinds(); };
+
+
+// ============================================================
+//  NOVA FLAP — second game on the same page
+// ============================================================
+(function () {
+  const cv = document.getElementById('flapcv');
+  const ctx = cv.getContext('2d');
+  let W = 0, H = 0;
+  function resize() { W = cv.width = cv.clientWidth * devicePixelRatio; H = cv.height = cv.clientHeight * devicePixelRatio; }
+  addEventListener('resize', resize);
+
+  const S = { menu: 0, playing: 1, dead: 2 };
+  let state = S.menu, raf = null;
+  let bird, gates, frame, score, banked;
+  let best = parseInt(localStorage.getItem('nc_flap_best') || '0') || 0;
+
+  const GAP = 0.30;        // gap height as a fraction of screen
+  const GRAV = 0.00092;
+  const FLAP = -0.0175;
+  const SPEED = 0.0052;
+
+  function reset() {
+    bird = { y: 0.45, v: 0, rot: 0 };
+    gates = [];
+    frame = 0; score = 0; banked = 0;
+    document.getElementById('fscore').textContent = '0';
+    document.getElementById('fbest').textContent = best;
+    document.getElementById('fpts').textContent = (typeof pts === 'function' ? pts() : 0);
+  }
+
+  function addGate() {
+    const margin = 0.14;
+    const top = margin + Math.random() * (1 - GAP - margin * 2);
+    gates.push({ x: 1.08, top: top, scored: false });
+  }
+
+  function flap() {
+    if (state === S.playing) { bird.v = FLAP; }
+  }
+
+  function start() {
+    reset();
+    state = S.playing;
+    document.getElementById('flapstart').style.display = 'none';
+    document.getElementById('flapover').classList.remove('show');
+    if (!raf) loop();
+  }
+
+  function die() {
+    state = S.dead;
+    if (score > best) { best = score; localStorage.setItem('nc_flap_best', String(best)); }
+    // bank points: 1 per 5 gates, plus a bonus for a new record
+    let earned = Math.floor(score / 5) * 2;
+    if (score === best && score > 0) earned += 5;
+    if (earned > 0 && typeof setPts === 'function') setPts(pts() + earned);
+    document.getElementById('foScore').textContent = score;
+    document.getElementById('foBest').textContent = best;
+    document.getElementById('foPts').textContent = '+' + earned;
+    document.getElementById('flapover').classList.add('show');
+  }
+
+  function update() {
+    frame++;
+    bird.v += GRAV;
+    bird.y += bird.v;
+    bird.rot = Math.max(-0.5, Math.min(1.2, bird.v * 26));
+
+    if (frame % 96 === 0) addGate();
+    for (const g of gates) g.x -= SPEED;
+    gates = gates.filter(g => g.x > -0.2);
+
+    for (const g of gates) {
+      if (!g.scored && g.x < 0.22) {
+        g.scored = true; score++;
+        document.getElementById('fscore').textContent = score;
+      }
+      // collision
+      const bx = 0.24, br = 0.028;
+      if (bx + br > g.x && bx - br < g.x + 0.13) {
+        if (bird.y - br < g.top || bird.y + br > g.top + GAP) { die(); return; }
+      }
+    }
+    if (bird.y > 0.97 || bird.y < -0.05) die();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const px = (v) => v * W, py = (v) => v * H;
+
+    // parallax city skyline
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    for (let i = 0; i < 14; i++) {
+      const bx = ((i * 0.14) - (frame * 0.0004) % 0.14 + 1) % 1.2 - 0.1;
+      const bh = 0.12 + ((i * 37) % 10) / 45;
+      ctx.fillRect(px(bx), py(1 - bh), px(0.075), py(bh));
+    }
+
+    // gates
+    for (const g of gates) {
+      const grd = ctx.createLinearGradient(px(g.x), 0, px(g.x + 0.13), 0);
+      grd.addColorStop(0, '#00F0FF'); grd.addColorStop(1, '#0090b8');
+      ctx.fillStyle = grd;
+      ctx.fillRect(px(g.x), 0, px(0.13), py(g.top));
+      ctx.fillRect(px(g.x), py(g.top + GAP), px(0.13), py(1 - g.top - GAP));
+      ctx.fillStyle = '#F72585';
+      ctx.fillRect(px(g.x) - px(0.008), py(g.top) - py(0.022), px(0.146), py(0.022));
+      ctx.fillRect(px(g.x) - px(0.008), py(g.top + GAP), px(0.146), py(0.022));
+    }
+
+    // ground
+    ctx.fillStyle = '#0b1020';
+    ctx.fillRect(0, py(0.97), W, py(0.03));
+
+    // bird
+    ctx.save();
+    ctx.translate(px(0.24), py(bird.y));
+    ctx.rotate(bird.rot);
+    const r = px(0.028);
+    ctx.fillStyle = '#ffd24a';
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffb02e';
+    ctx.beginPath(); ctx.ellipse(-r * 0.25, r * 0.15, r * 0.62, r * 0.42, -0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(r * 0.4, -r * 0.28, r * 0.30, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#122';
+    ctx.beginPath(); ctx.arc(r * 0.5, -r * 0.28, r * 0.15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ff8c1a';
+    ctx.beginPath(); ctx.moveTo(r * 0.85, 0); ctx.lineTo(r * 1.5, r * 0.16); ctx.lineTo(r * 0.85, r * 0.3); ctx.fill();
+    ctx.restore();
+  }
+
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    if (state === S.playing) update();
+    if (state !== S.menu || true) draw();
+  }
+
+  // controls
+  document.getElementById('fplay').onclick = start;
+  document.getElementById('fagain').onclick = start;
+  cv.addEventListener('mousedown', flap);
+  cv.addEventListener('touchstart', (e) => { e.preventDefault(); flap(); }, { passive: false });
+  addEventListener('keydown', (e) => {
+    if (!document.getElementById('flappy').classList.contains('show')) return;
+    if (e.code === 'Space') { e.preventDefault(); if (state === S.playing) flap(); else start(); }
+  });
+
+  // nav switching
+  window.ncShowFlappy = function (on) {
+    const f = document.getElementById('flappy');
+    f.classList.toggle('show', on);
+    if (on) {
+      resize(); reset();
+      state = S.menu;
+      document.getElementById('flapstart').style.display = 'flex';
+      document.getElementById('flapover').classList.remove('show');
+      if (!raf) loop();
+    } else {
+      state = S.menu;
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+    }
+  };
+})();
+
+document.querySelectorAll('.gnav').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.gnav').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const flappyOn = btn.dataset.game === 'flappy';
+    ncShowFlappy(flappyOn);
+    // hide the arena UI while playing the other game
+    ['hud','board','ptsbadge','ammo','hp','loadout','feed','c4badge','viewTag','safebadge','shopprompt'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = flappyOn ? 'none' : '';
+    });
+    const tb = document.querySelector('.topbar'); if (tb) tb.style.display = flappyOn ? 'none' : '';
+    const ov = document.getElementById('overlay');
+    if (flappyOn && ov) ov.style.display = 'none';
+    if (flappyOn) { running = false; document.exitPointerLock(); }
+  };
+});
 
 try {
   init();
