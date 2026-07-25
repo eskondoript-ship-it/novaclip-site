@@ -179,7 +179,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v42 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v43 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -787,7 +787,10 @@ function makeFighter(color, useGLB, isPlayer) {
       if (!isFinite(offY)) offY = 0;
       if (!isFinite(offZ)) offZ = 0;
       model.scale.setScalar(s);
-      model.position.set(offX, offY + (CUSTOM_MODELS.characterYOffset || 0), offZ);
+      const fitPos = new THREE.Vector3(offX, offY + (CUSTOM_MODELS.characterYOffset || 0), offZ);
+      model.position.copy(fitPos);
+      g.userData.fitPos = fitPos;      // used to cancel root motion each frame
+      g.userData.inner = model;
       model.traverse(o => { if (o.isMesh) {
         o.castShadow = true;
         if (!isPlayer && o.material) { o.material = o.material.clone(); if (o.material.color) o.material.color.lerp(new THREE.Color(color), 0.45); }
@@ -1443,16 +1446,13 @@ function updateCamera(dt) {
       rl = -s * 0.35; rlrot = s * 0.9;
     }
     // Position the gun relative to the camera (method from the original working build)
-    const off = { x: 0.20, y: -0.16 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -0.55 + kick*0.10 };
+    const off = { x: 0.17, y: -0.19 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -0.42 + kick*0.10 };
     const pos = new THREE.Vector3(off.x, off.y, off.z);
     pos.applyEuler(camera.rotation);
     gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
     gunGroup.rotation.copy(camera.rotation);
-    // lift the rifle upright and point the barrel forward (built-in model lies flat otherwise)
-    gunGroup.rotateX(-Math.PI / 2);
     if (!scoped) {
-      gunGroup.rotation.z += Math.sin(t*1.1)*0.006;
-      gunGroup.rotateX(-kick*0.35 + rlrot);
+      gunGroup.rotation.x += Math.sin(t*1.1)*0.006 - kick*0.35 + rlrot;
     }
   }
   skyMesh.position.set(player.x, 0, player.z);
@@ -1501,6 +1501,10 @@ function animate() {
   const now = performance.now(); let dt = (now - gclock.last)/1000; gclock.last = now; if (dt > 0.1) dt = 0.1;
   if (running && !shopOpen) { updatePlayer(dt); updateBots(dt); updateNades(dt); if (mouseHeld && WEAPONS[curWeap].auto && !equippedNade) shoot(); }
   for (let i = 0; i < mixers.length; i++) mixers[i].update(dt);
+  // cancel animation root motion so the character never drifts or flies off
+  if (playerMesh && playerMesh.userData.inner && playerMesh.userData.fitPos) {
+    playerMesh.userData.inner.position.copy(playerMesh.userData.fitPos);
+  }
   updatePlayerAnim();
   updateCamera(dt); updateTracers(dt);
   renderer.render(scene, camera);
