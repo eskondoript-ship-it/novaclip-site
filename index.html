@@ -253,6 +253,14 @@ h2 { animation: riseIn .8s cubic-bezier(.2,.9,.3,1.15) both; }
 .orb3d { will-change: transform; }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+h1 .hl1, h1 .hl2 { display:block; unicode-bidi:isolate; }
+h1 .hl1 b, h1 .hl2 b { font-weight:inherit; }
+h1 .n { color:#00F0FF; }
+h1 .m { color:#FF2E97; }
+/* in RTL keep each line internally correct and right-aligned */
+html[dir='rtl'] h1 .hl1, html[dir='rtl'] h1 .hl2 { direction:rtl; text-align:right; }
+html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 </style>
 </head>
 <body>
@@ -284,7 +292,7 @@ h2 { animation: riseIn .8s cubic-bezier(.2,.9,.3,1.15) both; }
 
 <header class='hero'>
   <span class='eyebrow' data-t='eyebrow'>For teen creators · 13–18</span>
-  <h1><span class='w1'>Run</span> <span class='w2'>your</span> <span class='n'>channel</span><br><span class='w1'>like</span> <span class='w2'>a</span> <span class='m'>game.</span></h1>
+  <h1><span class='hl1' data-t='hero_line1'>Run your <b class='n'>channel</b></span><br><span class='hl2' data-t='hero_line2'>like a <b class='m'>game.</b></span></h1>
   <div class='console'><span id='type'></span><span class='cursor'>▋</span></div>
   <div class='herobtns'>
     <a href='app.html'><button class='btn-primary' data-t='startchannel'>Start your channel →</button></a>
@@ -302,12 +310,12 @@ h2 { animation: riseIn .8s cubic-bezier(.2,.9,.3,1.15) both; }
 <section class='split' id='ai'>
   <div class='slideL'>
     <div class='sec-label'><span class='bar'></span> 01 — Learn &amp; build</div>
-    <h2 class='sec-h'>Smart<span class='thin'>Coaching</span></h2>
+    <h2 class='sec-h' data-t='sec1_h1'>Smart<span class='thin' data-t='sec1_h2'>Coaching</span></h2>
     <p class='lead' data-t='card_ai_d'>Three tutors — YouTube, Space and Business — spin up answers in your language, tuned to teen creators. Ask, learn, level up.</p>
     <div style='margin-top:22px'>
-      <div class='tool'><h4>🎬 Channel Coach</h4><span>Titles, hooks, growth that actually works.</span></div>
-      <div class='tool'><h4>☄️ Space Tutor</h4><span>Turn curiosity into content people watch.</span></div>
-      <div class='tool'><h4>💼 Money Tutor</h4><span>Side hustles and smart moves, explained simply.</span></div>
+      <div class='tool'><h4>🎬 <span data-t='coach1'>Channel Coach</span></h4><span><span data-t='coach1d'>Titles, hooks, growth that actually works</span>.</span></div>
+      <div class='tool'><h4>☄️ <span data-t='coach2'>Space Tutor</span></h4><span><span data-t='coach2d'>Turn curiosity into content people watch</span>.</span></div>
+      <div class='tool'><h4>💼 <span data-t='coach3'>Money Tutor</span></h4><span><span data-t='coach3d'>Side hustles and smart moves, explained simply</span>.</span></div>
     </div>
   </div>
   <div class='visual slideR'>
@@ -326,7 +334,7 @@ h2 { animation: riseIn .8s cubic-bezier(.2,.9,.3,1.15) both; }
   </div>
   <div class='slideR'>
     <div class='sec-label'><span class='bar'></span> 02 — Fight fair</div>
-    <h2 class='sec-h'>Fair<span class='thin'>Fights</span></h2>
+    <h2 class='sec-h' data-t='sec2_h1'>Fair<span class='thin' data-t='sec2_h2'>Fights</span></h2>
     <p class='lead' data-t='card_duel_d'>Only battle channels within 20k subs of you. Watch the bars clash — subs and views decide the winner. Win and bank points.</p>
   </div>
 </section>
