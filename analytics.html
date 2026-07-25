@@ -90,6 +90,34 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
 .gbtn:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 14px 30px rgba(0,240,255,0.3); }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+.periods { display:flex; gap:6px; margin-bottom:16px; background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1); border-radius:26px; padding:5px; width:fit-content; }
+.per { padding:8px 18px; border-radius:22px; border:none; cursor:pointer; font-weight:800; font-size:.82rem;
+  background:transparent; color:#7E8AA6; font-family:inherit; transition:.2s; }
+.per:hover { color:#fff; }
+.per.on { background:linear-gradient(90deg,#00F0FF,#4CC9F0); color:#04121a; }
+
+.reviewbox, .streakbox { background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.11); border-radius:18px; padding:20px; margin-bottom:16px; }
+.rvhead { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+.rvhead h3 { font-size:1rem; }
+#aiBtn { padding:9px 18px; border-radius:22px; border:none; cursor:pointer; font-weight:800; font-size:.82rem;
+  background:linear-gradient(90deg,#F72585,#7209B7); color:#fff; font-family:inherit; transition:transform .2s; }
+#aiBtn:hover { transform:translateY(-2px); }
+.rvgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+@media (max-width:760px){ .rvgrid{ grid-template-columns:repeat(2,1fr); } }
+.rvcell { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:13px; }
+.rvcell .n { font-size:1.3rem; font-weight:900; }
+.rvcell .l { font-size:.66rem; color:#7E8AA6; letter-spacing:1px; text-transform:uppercase; margin-top:4px; }
+.rvcell .d { font-size:.72rem; margin-top:5px; font-weight:700; }
+.rvcell .d.up { color:#4ade80; } .rvcell .d.down { color:#ff6b6b; } .rvcell .d.flat { color:#7E8AA6; }
+.aiout { margin-top:14px; padding:15px; border-radius:12px; background:rgba(247,37,133,.06);
+  border-left:3px solid #F72585; font-size:.88rem; line-height:1.8; color:#d8dcea; white-space:pre-wrap; }
+.pstreak { display:flex; gap:5px; flex-wrap:wrap; margin:12px 0 8px; }
+.pstreak i { width:26px; height:26px; border-radius:7px; background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; font-size:.7rem; font-style:normal; }
+.pstreak i.on { background:rgba(255,210,74,.18); border-color:#ffd24a; }
 </style>
 </head>
 <body>
@@ -168,7 +196,17 @@ async function boot() {
   }
 }
 
-function enterDash() { document.getElementById('connectrow').style.display = 'none'; document.getElementById('dash').style.display = 'block'; drawAll(); }
+async function enterDash() {
+  document.getElementById('connectrow').style.display = 'none';
+  document.getElementById('dash').style.display = 'block';
+  drawAll();
+  try {
+    myUploads = await fetchUploads(myStats, 50);
+    const rivals = await getCompetitors();
+    if (rivals && rivals.length) { rivalName = rivals[0].snippet.title; rivalUploads = await fetchUploads(rivals[0], 50); }
+  } catch (e) { console.warn('upload history unavailable', e); }
+  renderReview();
+}
 
 async function getCompetitors() {
   const seeds = [myStats.snippet.title.split(' ')[0], 'gaming channel', 'vlog channel', 'music channel'];
@@ -251,6 +289,152 @@ async function drawAll() {
 
   mk('c_dough', 'doughnut', ['Likes', 'Comments', 'Videos'], [{ data: [likes[0], comments[0], videos[0]], backgroundColor: [pink, cyan, lime], borderWidth: 0 }]);
 }
+
+
+// ============================================================
+//  PERIODIC REVIEWS + POSTING STREAK + AI REVIEW
+// ============================================================
+let periodDays = 1, myUploads = [], rivalUploads = [], rivalName = '';
+
+// pull recent uploads with their dates so we can slice by period
+async function fetchUploads(channel, max) {
+  const pl = channel.contentDetails && channel.contentDetails.relatedPlaylists
+    && channel.contentDetails.relatedPlaylists.uploads;
+  if (!pl) return [];
+  const items = await yt('playlistItems?part=contentDetails,snippet&playlistId=' + pl + '&maxResults=' + (max || 50));
+  if (!items.items) return [];
+  const ids = items.items.map(i => i.contentDetails.videoId).join(',');
+  const vs = await yt('videos?part=statistics,snippet&id=' + ids);
+  return (vs.items || []).map(v => ({
+    id: v.id,
+    title: v.snippet.title,
+    date: new Date(v.snippet.publishedAt),
+    views: parseInt(v.statistics.viewCount || 0),
+    likes: parseInt(v.statistics.likeCount || 0),
+    comments: parseInt(v.statistics.commentCount || 0)
+  }));
+}
+
+function slice(list, days) {
+  const cut = Date.now() - days * 86400000;
+  return list.filter(v => v.date.getTime() >= cut);
+}
+function sum(list, k) { return list.reduce((s, v) => s + v[k], 0); }
+
+function renderReview() {
+  const names = { 1:'Today', 7:'This week', 30:'This month', 365:'This year' };
+  document.getElementById('rvTitle').textContent = '📋 ' + names[periodDays] + ' — channel review';
+
+  const cur = slice(myUploads, periodDays);
+  const prev = myUploads.filter(v => {
+    const t = v.date.getTime();
+    return t < Date.now() - periodDays * 86400000 && t >= Date.now() - periodDays * 2 * 86400000;
+  });
+
+  function cell(label, now, before, suffix) {
+    let d = '<span class="d flat">no change</span>';
+    if (before > 0) {
+      const pc = Math.round((now - before) / before * 100);
+      if (pc > 0) d = '<span class="d up">▲ ' + pc + '% vs last</span>';
+      else if (pc < 0) d = '<span class="d down">▼ ' + Math.abs(pc) + '% vs last</span>';
+    } else if (now > 0) d = '<span class="d up">▲ new</span>';
+    return '<div class="rvcell"><div class="n">' + now.toLocaleString() + (suffix || '') + '</div>' +
+           '<div class="l">' + label + '</div>' + d + '</div>';
+  }
+
+  const rivalCur = slice(rivalUploads, periodDays);
+  document.getElementById('rvStats').innerHTML =
+    cell('Videos posted', cur.length, prev.length) +
+    cell('Views', sum(cur, 'views'), sum(prev, 'views')) +
+    cell('Likes', sum(cur, 'likes'), sum(prev, 'likes')) +
+    cell('Comments', sum(cur, 'comments'), sum(prev, 'comments')) +
+    (rivalName
+      ? '<div class="rvcell" style="grid-column:1/-1">' +
+        '<div class="l">Closest competitor · ' + rivalName + '</div>' +
+        '<div class="n" style="font-size:1rem;margin-top:6px">' +
+        rivalCur.length + ' videos · ' + sum(rivalCur, 'views').toLocaleString() + ' views' +
+        '</div>' +
+        '<div class="d ' + (sum(cur,'views') >= sum(rivalCur,'views') ? 'up' : 'down') + '">' +
+        (sum(cur,'views') >= sum(rivalCur,'views') ? '✅ You are ahead this period' : '⚠ They are ahead this period') +
+        '</div></div>'
+      : '');
+
+  renderPostStreak();
+}
+
+// posting streak — consecutive weeks with at least one upload
+function renderPostStreak() {
+  const box = document.getElementById('pstreak');
+  if (!box) return;
+  let html = '', streak = 0, broken = false;
+  for (let w = 0; w < 12; w++) {
+    const end = Date.now() - w * 7 * 86400000;
+    const start = end - 7 * 86400000;
+    const hit = myUploads.some(v => v.date.getTime() > start && v.date.getTime() <= end);
+    if (hit && !broken) streak++; else broken = true;
+    html = '<i class="' + (hit ? 'on' : '') + '" title="' + w + ' weeks ago">' + (hit ? '🔥' : '·') + '</i>' + html;
+  }
+  box.innerHTML = html;
+  document.getElementById('pstreakTxt').textContent = streak > 0
+    ? streak + ' week' + (streak === 1 ? '' : 's') + ' in a row with an upload — last 12 weeks shown.'
+    : 'No uploads in the last week. Post something to start a streak.';
+}
+
+// ---- AI review of the channel ----
+document.addEventListener('click', async (e) => {
+  if (!e.target || e.target.id !== 'aiBtn') return;
+  const out = document.getElementById('aiOut');
+  out.style.display = 'block';
+  out.textContent = '✨ Reading your numbers…';
+
+  const cur = slice(myUploads, periodDays);
+  const names = { 1:'today', 7:'this week', 30:'this month', 365:'this year' };
+  const top = myUploads.slice().sort((a,b) => b.views - a.views).slice(0,3);
+  const genz = (typeof ncGenZ === 'function') ? ncGenZ() : false;
+
+  const facts =
+    'Channel: ' + myStats.snippet.title + '\n' +
+    'Subscribers: ' + myStats.statistics.subscriberCount + '\n' +
+    'Total views: ' + myStats.statistics.viewCount + '\n' +
+    'Videos: ' + myStats.statistics.videoCount + '\n' +
+    'Period: ' + names[periodDays] + '\n' +
+    'Posted in period: ' + cur.length + '\n' +
+    'Views in period: ' + sum(cur,'views') + '\n' +
+    'Likes in period: ' + sum(cur,'likes') + '\n' +
+    'Comments in period: ' + sum(cur,'comments') + '\n' +
+    'Best videos ever: ' + top.map(v => '"' + v.title + '" (' + v.views + ' views)').join(', ') + '\n' +
+    (rivalName ? 'Closest competitor ' + rivalName + ' posted ' + slice(rivalUploads, periodDays).length +
+      ' videos with ' + sum(slice(rivalUploads, periodDays),'views') + ' views in the same period.\n' : '');
+
+  const prompt =
+    (genz
+      ? 'You are a gen-z creator coach for a teenager. Use heavy gen-z slang and emojis but stay genuinely useful. '
+      : 'You are a friendly creator coach for a teenager aged 13-18. Clear everyday English, no slang. ') +
+    'Review this channel for the period. Be specific and honest — if something is going badly, say so kindly. ' +
+    'Structure: 1) one-line verdict 2) what is working 3) what to fix 4) exactly three actions for next week. ' +
+    'Keep it under 200 words. Never invent numbers beyond what is given.\n\n' + facts;
+
+  try {
+    const r = await fetch('https://novaclip-ai.eskondori-pt.workers.dev', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+    });
+    const d = await r.json();
+    const txt = d.reply || d.choices?.[0]?.message?.content || '';
+    out.textContent = txt || 'Could not generate a review right now — try again shortly.';
+  } catch (err) {
+    out.textContent = 'Could not reach the AI. Check your connection and try again.';
+  }
+});
+
+document.querySelectorAll('.per').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.per').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    periodDays = parseInt(b.dataset.days);
+    renderReview();
+  };
+});
 
 document.getElementById('compToggle').onchange = drawAll;
 boot();
