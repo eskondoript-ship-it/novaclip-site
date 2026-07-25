@@ -12,10 +12,12 @@ a { color: #00F0FF; text-decoration: none; }
 h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; letter-spacing: -2px; }
 h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .sub { color: #7E8AA6; margin: 12px auto 40px; max-width: 560px; line-height: 1.7; }
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
-.plan { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 26px 20px; text-align: left; position: relative; transition: .3s; animation: up .6s both; }
+.plan { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 26px 20px; text-align: left; position: relative; transition: .3s; animation: up .6s both; display: flex; flex-direction: column; height: 100%; }
+.plan ul, .plan .feats { flex: 1; }
+.plan .btn, .plan button, .plan a.btn { margin-top: auto; }
 .plan:nth-child(2) { animation-delay: .1s; } .plan:nth-child(3) { animation-delay: .2s; } .plan:nth-child(4) { animation-delay: .3s; }
 @keyframes up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 .plan:hover { transform: translateY(-6px); border-color: rgba(0,240,255,0.5); box-shadow: 0 20px 50px rgba(0,240,255,0.12); }
@@ -32,6 +34,90 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 .cta:hover { transform: translateY(-2px); box-shadow: 0 0 24px rgba(0,240,255,0.35); }
 .note { margin-top: 30px; color: #7E8AA6; font-size: 0.85rem; max-width: 620px; margin-left: auto; margin-right: auto; line-height: 1.7; }
 .backlnk { display: inline-block; margin-bottom: 18px; color: #7E8AA6; }
+
+.billtoggle { display: flex; justify-content: center; gap: 6px; margin: 0 auto 22px; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 30px; padding: 5px; width: fit-content; }
+.bt { padding: 9px 22px; border-radius: 24px; border: none; cursor: pointer; font-weight: 800; font-size: .86rem;
+  background: transparent; color: #7E8AA6; transition: .22s; font-family: inherit; display: flex; align-items: center; gap: 8px; }
+.bt:hover { color: #fff; }
+.bt.active { background: linear-gradient(90deg,#00F0FF,#4CC9F0); color: #04121a; }
+.btsave { font-size: .66rem; background: #B6FF3C; color: #0a2000; padding: 2px 8px; border-radius: 20px; font-weight: 900; }
+.bt.active .btsave { background: #0a2a33; color: #B6FF3C; }
+
+#checkout { position: fixed; inset: 0; z-index: 999; display: none; align-items: center; justify-content: center;
+  background: rgba(5,6,10,0.86); backdrop-filter: blur(8px); padding: 20px; overflow-y: auto; }
+#checkout.show { display: flex; }
+.cobox { background: #101725; border: 1px solid rgba(0,240,255,0.32); border-radius: 22px; padding: 28px;
+  width: min(460px, 96vw); position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.coclose { position: absolute; top: 14px; right: 16px; background: none; border: none; color: #7E8AA6; font-size: 1.2rem; cursor: pointer; }
+.cobox h2 { margin-bottom: 16px; font-size: 1.35rem; }
+.coplan { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 13px 15px; margin-bottom: 16px; }
+.coplan small { display: block; color: #7E8AA6; font-size: .74rem; margin-top: 2px; }
+.coprice { font-size: 1.35rem; font-weight: 900; color: #00F0FF; }
+.colab { display: block; font-size: .74rem; color: #7E8AA6; margin: 10px 0 5px; letter-spacing: .5px; }
+#checkout input { width: 100%; padding: 11px 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.16);
+  background: #0A0C14; color: #EAF2FF; font-size: .92rem; font-family: inherit; outline: none; transition: border-color .2s; }
+#checkout input:focus { border-color: #00F0FF; box-shadow: 0 0 0 3px rgba(0,240,255,0.12); }
+.corow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.conotice { margin: 16px 0 14px; font-size: .78rem; color: #9fb0cc; line-height: 1.6;
+  background: rgba(255,210,74,0.08); border-left: 3px solid #ffd24a; border-radius: 8px; padding: 10px 12px; }
+.cobtn { width: 100%; padding: 14px; border: none; border-radius: 30px; font-weight: 800; font-size: 1rem; cursor: pointer;
+  background: linear-gradient(90deg,#00F0FF,#4CC9F0); color: #04121a; font-family: inherit; transition: transform .2s; }
+.cobtn:hover { transform: translateY(-2px); }
+.coerr { color: #FF2E97; font-size: .82rem; margin-top: 10px; min-height: 18px; text-align: center; }
+.cotick { font-size: 3rem; text-align: center; margin-bottom: 6px; }
+.cosub { color: #9fb0cc; font-size: .9rem; margin-bottom: 14px; text-align: center; }
+.cosummary { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 14px; font-size: .86rem; color: #b8bccb; margin-bottom: 16px; line-height: 1.9; }
+
+#cartbtn { position: fixed; top: 16px; right: 120px; z-index: 90; background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,240,255,0.4); color: #00F0FF; padding: 9px 18px; border-radius: 30px;
+  font-weight: 800; cursor: pointer; font-family: inherit; backdrop-filter: blur(8px); transition: .2s; font-size: .9rem; }
+#cartbtn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,240,255,0.28); }
+#cart { position: fixed; inset: 0; z-index: 998; display: none; align-items: center; justify-content: center;
+  background: rgba(5,6,10,0.86); backdrop-filter: blur(8px); padding: 20px; overflow-y: auto; }
+#cart.show { display: flex; }
+.cartbox { background: #101725; border: 1px solid rgba(0,240,255,0.3); border-radius: 22px; padding: 28px;
+  width: min(480px, 96vw); position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.cartbox h2 { margin-bottom: 16px; font-size: 1.3rem; }
+.citem { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.citem .cinfo { flex: 1; }
+.citem .cinfo b { display: block; font-size: .92rem; }
+.citem .cinfo small { color: #7E8AA6; font-size: .74rem; }
+.cqty { display: flex; align-items: center; gap: 6px; }
+.cqty button { width: 26px; height: 26px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06); color: #fff; cursor: pointer; font-weight: 800; font-family: inherit; }
+.cqty span { min-width: 20px; text-align: center; font-weight: 800; }
+.cprice { font-weight: 800; color: #00F0FF; min-width: 74px; text-align: right; font-size: .92rem; }
+.crm { background: none; border: none; color: #FF2E97; cursor: pointer; font-size: 1rem; padding: 0 2px; }
+.carttotal { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 6px; font-size: 1.05rem; }
+.carttotal b { font-size: 1.5rem; color: #00F0FF; }
+.cempty { color: #7E8AA6; text-align: center; padding: 26px 0; font-size: .9rem; }
+.cobtn.alt { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; margin-top: 8px; }
+
+.cardwrap { position: relative; display: flex; align-items: center; }
+.cardwrap input { padding-right: 48px !important; }
+#scanBtn { position: absolute; right: 6px; background: rgba(0,240,255,0.14); border: 1px solid rgba(0,240,255,0.4);
+  border-radius: 8px; width: 34px; height: 32px; cursor: pointer; font-size: 1rem; transition: .2s; }
+#scanBtn:hover { background: rgba(0,240,255,0.28); transform: scale(1.08); }
+.scanhint { font-size: .72rem; color: #7E8AA6; margin-top: 6px; }
+#scanner { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center;
+  background: rgba(5,6,10,0.92); backdrop-filter: blur(10px); padding: 20px; }
+#scanner.show { display: flex; }
+.scanbox { background: #101725; border: 1px solid rgba(0,240,255,0.35); border-radius: 22px; padding: 26px;
+  width: min(460px, 96vw); position: relative; }
+.scanbox h2 { margin-bottom: 6px; font-size: 1.25rem; }
+.scansub { color: #7E8AA6; font-size: .85rem; margin-bottom: 14px; line-height: 1.6; }
+.scanview { position: relative; border-radius: 14px; overflow: hidden; background: #000; aspect-ratio: 1.586;
+  border: 1px solid rgba(255,255,255,0.14); }
+#scanVideo { width: 100%; height: 100%; object-fit: cover; }
+.scanframe { position: absolute; inset: 9%; pointer-events: none; }
+.scanframe span { position: absolute; width: 26px; height: 26px; border: 3px solid #00F0FF; }
+.scanframe span:nth-child(1){ top:0; left:0; border-right:none; border-bottom:none; border-radius:8px 0 0 0; }
+.scanframe span:nth-child(2){ top:0; right:0; border-left:none; border-bottom:none; border-radius:0 8px 0 0; }
+.scanframe span:nth-child(3){ bottom:0; left:0; border-right:none; border-top:none; border-radius:0 0 0 8px; }
+.scanframe span:nth-child(4){ bottom:0; right:0; border-left:none; border-top:none; border-radius:0 0 8px 0; }
+.scanstatus { text-align: center; font-size: .85rem; color: #00F0FF; margin: 12px 0; min-height: 20px; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -53,7 +139,14 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
     </select>
   </div>
 
-  <div class='grid'>
+  <button id='cartbtn' onclick='openCart()'>🛒 <span id='cartcount'>0</span></button>
+
+<div class='billtoggle'>
+  <button class='bt active' data-cycle='month'>Monthly</button>
+  <button class='bt' data-cycle='year'>Yearly <span class='btsave'>2 months free</span></button>
+</div>
+
+<div class='grid'>
     <div class='plan'>
       <h3>👨‍👩‍👧 Family Dashboard</h3>
       <div class='price' data-eur='6.99' data-usd='7.99' data-gbp='5.99' data-cny='49.9' data-chf='6.90' data-inr='599' data-bdt='799'><small class='per'>/month</small></div>
@@ -162,22 +255,569 @@ function guessCurrency() {
   if (loc.endsWith('-us') || loc === 'en') return 'usd';
   return 'eur';
 }
+let billCycle = localStorage.getItem('nc_billcycle') || 'month';
 function renderPrices(cur) {
   localStorage.setItem('nc_currency', cur);
+  const yearly = billCycle === 'year';
   document.querySelectorAll('.price').forEach(p => {
-    const val = p.dataset[cur];
     const per = p.querySelector('.per');
-    const perTxt = per ? per.outerHTML : '';
-    p.innerHTML = fmt(cur, val) + perTxt;
+    if (!per) { p.innerHTML = fmt(cur, p.dataset[cur]); return; }   // one-time items unchanged
+    let val = parseFloat(p.dataset[cur]);
+    // yearly = 10x the monthly price, so two months are free
+    if (yearly) val = Math.round(val * 10 * 100) / 100;
+    const label = yearly ? '/year' : '/month';
+    p.innerHTML = fmt(cur, val) + '<small class="per">' + label + '</small>';
   });
   const sv = document.getElementById('saveline');
-  if (sv) sv.textContent = 'Save ' + fmt(cur, sv.dataset[cur]) + ' every month';
+  if (sv) {
+    const base = parseFloat(sv.dataset[cur]);
+    sv.textContent = yearly
+      ? 'Save ' + fmt(cur, Math.round(base * 10 * 100) / 100) + ' every year'
+      : 'Save ' + fmt(cur, base) + ' every month';
+  }
   document.getElementById('curpick').value = cur;
 }
+document.querySelectorAll('.bt').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.bt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    billCycle = btn.dataset.cycle;
+    localStorage.setItem('nc_billcycle', billCycle);
+    renderPrices(localStorage.getItem('nc_currency') || guessCurrency());
+  };
+});
 const startCur = guessCurrency();
 renderPrices(startCur);
 document.getElementById('curpick').onchange = (e) => renderPrices(e.target.value);
+
+
+// ============================================================
+//  CART + REAL PAYMENTS (Stripe Payment Links)
+// ============================================================
+// HOW TO TAKE REAL MONEY:
+//  1. Create a free Stripe account -> stripe.com
+//  2. Dashboard > Product catalogue > add each plan below
+//  3. For each product click "Create payment link", copy the URL
+//  4. Paste it here. Any plan with a link charges for real.
+//     Plans left as '' fall back to the demo checkout.
+const STRIPE_LINKS = {
+  'Family Dashboard':    { month: '', year: '' },
+  "Kids' Tools Upgrade": { month: '', year: '' },
+  'Family Bundle':       { month: '', year: '' },
+  'Basic Certificate':   { once: '' },
+  'Advanced Certificate':{ once: '' },
+  'Master Certificate':  { once: '' }
+};
+
+let CART = [];
+try { CART = JSON.parse(localStorage.getItem('nc_cart') || '[]'); } catch (e) { CART = []; }
+function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(CART)); updateCartCount(); }
+function updateCartCount() {
+  const n = CART.reduce((s, i) => s + i.qty, 0);
+  const el = document.getElementById('cartcount');
+  if (el) el.textContent = n;
+}
+
+function planUnitPrice(card) {
+  const p = card.querySelector('.price');
+  if (!p) return 0;
+  const cur = localStorage.getItem('nc_currency') || 'eur';
+  let v = parseFloat(p.dataset[cur]);
+  if (p.querySelector('.per') && billCycle === 'year') v = Math.round(v * 10 * 100) / 100;
+  return isFinite(v) ? v : 0;
+}
+
+function addToCart(card) {
+  const t = card.querySelector('h3');
+  const name = t ? t.textContent.trim() : 'Plan';
+  const isSub = !!(card.querySelector('.price') && card.querySelector('.price .per'));
+  const cycle = isSub ? billCycle : 'once';
+  const unit = planUnitPrice(card);
+  const found = CART.find(i => i.name === name && i.cycle === cycle);
+  if (found) found.qty++;
+  else CART.push({ name: name, cycle: cycle, unit: unit, qty: 1, sub: isSub });
+  saveCart();
+  openCart();
+}
+
+window.openCart = function () { renderCart(); document.getElementById('cart').classList.add('show'); };
+window.closeCart = function () { document.getElementById('cart').classList.remove('show'); };
+
+function renderCart() {
+  const cur = localStorage.getItem('nc_currency') || 'eur';
+  const box = document.getElementById('cartitems');
+  if (!CART.length) {
+    box.innerHTML = '<div class="cempty">Your cart is empty.</div>';
+    document.getElementById('carttotal').textContent = fmt(cur, 0);
+    document.getElementById('cartnote').innerHTML = '';
+    document.getElementById('cartpay').style.display = 'none';
+    return;
+  }
+  document.getElementById('cartpay').style.display = 'block';
+  box.innerHTML = CART.map((it, i) =>
+    '<div class="citem">' +
+      '<div class="cinfo"><b>' + it.name + '</b><small>' +
+        (it.sub ? (it.cycle === 'year' ? 'Billed yearly' : 'Billed monthly') : 'One-time payment') + '</small></div>' +
+      '<div class="cqty">' +
+        '<button onclick="cartQty(' + i + ',-1)">−</button>' +
+        '<span>' + it.qty + '</span>' +
+        '<button onclick="cartQty(' + i + ',1)">+</button>' +
+      '</div>' +
+      '<div class="cprice">' + fmt(cur, Math.round(it.unit * it.qty * 100) / 100) + '</div>' +
+      '<button class="crm" onclick="cartRemove(' + i + ')">✕</button>' +
+    '</div>').join('');
+  const total = CART.reduce((s, i) => s + i.unit * i.qty, 0);
+  document.getElementById('carttotal').textContent = fmt(cur, Math.round(total * 100) / 100);
+
+  // can this cart be paid for real?
+  const paid = CART.filter(it => stripeLinkFor(it));
+  const note = document.getElementById('cartnote');
+  if (!paid.length) {
+    note.innerHTML = '🔒 <b>Demo mode.</b> No Stripe links are configured yet, so checkout is a simulation. Add your Stripe Payment Links in the code to take real payments.';
+  } else if (CART.length === 1) {
+    note.innerHTML = '🔒 Secure payment handled by <b>Stripe</b>. You will be redirected to complete it.';
+  } else {
+    note.innerHTML = '🔒 Payments are taken by <b>Stripe</b>, one item at a time. You will complete ' + CART.length + ' secure checkouts in sequence.';
+  }
+}
+
+function stripeLinkFor(item) {
+  const entry = STRIPE_LINKS[item.name];
+  if (!entry) return '';
+  const key = item.sub ? item.cycle : 'once';
+  return entry[key] || '';
+}
+
+window.cartQty = function (i, d) {
+  if (!CART[i]) return;
+  CART[i].qty += d;
+  if (CART[i].qty <= 0) CART.splice(i, 1);
+  saveCart(); renderCart();
+};
+window.cartRemove = function (i) { CART.splice(i, 1); saveCart(); renderCart(); };
+
+function wireCartPay() {
+  const cp = document.getElementById('cartpay');
+  if (!cp) return;
+  cp.onclick = () => {
+  if (!CART.length) return;
+  const withLinks = CART.filter(it => stripeLinkFor(it));
+  if (withLinks.length) {
+    // real payment: send them to Stripe for the first item
+    const first = withLinks[0];
+    const url = stripeLinkFor(first);
+    const remaining = CART.filter(it => it !== first);
+    localStorage.setItem('nc_cart', JSON.stringify(remaining));
+    window.location.href = url;
+    return;
+  }
+  // no links configured -> demo checkout for the whole cart
+  const cur = localStorage.getItem('nc_currency') || 'eur';
+  const total = CART.reduce((s, i) => s + i.unit * i.qty, 0);
+  closeCart();
+  openCheckout(
+    CART.length === 1 ? CART[0].name : CART.length + ' items',
+    fmt(cur, Math.round(total * 100) / 100),
+    CART.some(i => i.sub) ? (billCycle === 'year' ? 'Yearly' : 'Monthly') : 'One-time payment'
+  );
+  };
+}
+
+// ---------- CHECKOUT ----------
+let coCurrent = null;
+function openCheckout(planName, priceText, cycle) {
+  coCurrent = { plan: planName, price: priceText, cycle: cycle };
+  document.getElementById('coName').textContent = planName;
+  document.getElementById('coCycle').textContent = cycle;
+  document.getElementById('coPrice').textContent = priceText;
+  document.getElementById('coStep1').style.display = 'block';
+  document.getElementById('coStep2').style.display = 'none';
+  document.getElementById('coErr').textContent = '';
+  document.getElementById('checkout').classList.add('show');
+}
+window.closeCheckout = function () { document.getElementById('checkout').classList.remove('show'); };
+
+function luhn(num) {
+  const d = num.replace(/\D/g, '');
+  if (d.length < 13) return false;
+  let sum = 0, alt = false;
+  for (let i = d.length - 1; i >= 0; i--) {
+    let n = parseInt(d[i], 10);
+    if (alt) { n *= 2; if (n > 9) n -= 9; }
+    sum += n; alt = !alt;
+  }
+  return sum % 10 === 0;
+}
+
+
+// ============================================================
+//  CARD CAMERA SCANNER
+//  Reads the card locally with OCR. Nothing is uploaded.
+// ============================================================
+let scanStream = null, scanTimer = null, ocrWorker = null, ocrReady = false;
+let scanFound = { number: '', exp: '', name: '' };
+let scanPass = 0;
+
+window.closeScanner = function () {
+  document.getElementById('scanner').classList.remove('show');
+  if (scanTimer) { clearInterval(scanTimer); scanTimer = null; }
+  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+};
+
+function setScanStatus(msg) { const el = document.getElementById('scanStatus'); if (el) el.textContent = msg; }
+
+async function loadOCR() {
+  if (ocrReady) return true;
+  setScanStatus('Loading reader…');
+  try {
+    if (!window.Tesseract) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+    ocrWorker = await Tesseract.createWorker('eng');
+    // letters AND digits so we can read the name and expiry too
+    await ocrWorker.setParameters({
+      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/ '
+    });
+    ocrReady = true;
+    return true;
+  } catch (e) {
+    console.warn('OCR unavailable', e);
+    return false;
+  }
+}
+
+async function openScanner() {
+  const box = document.getElementById('scanner');
+  box.classList.add('show');
+  setScanStatus('Starting camera…');
+  scanFound = { number: '', exp: '', name: '' };
+  scanPass = 0;
+  // must be a secure context (https) — cameras are blocked on plain http
+  if (!window.isSecureContext && location.protocol !== 'file:') {
+    setScanStatus('⚠ Camera needs a secure (https) connection.');
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setScanStatus('⚠ This browser does not support camera access.');
+    return;
+  }
+
+  // try the rear camera first, then any camera at all
+  const camModes = [
+    { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false },
+    { video: { facingMode: 'environment' }, audio: false },
+    { video: true, audio: false }
+  ];
+  let lastErr = null;
+  for (const c of camModes) {
+    try { scanStream = await navigator.mediaDevices.getUserMedia(c); break; }
+    catch (e) { lastErr = e; }
+  }
+
+  if (!scanStream) {
+    const n = lastErr && lastErr.name ? lastErr.name : '';
+    let msg = 'Camera unavailable — type the details instead.';
+    if (n === 'NotAllowedError' || n === 'SecurityError') {
+      msg = '🚫 Camera blocked. Allow camera access in your browser, then try again.';
+    } else if (n === 'NotFoundError' || n === 'DevicesNotFoundError') {
+      msg = '📷 No camera found on this device — type the details instead.';
+    } else if (n === 'NotReadableError' || n === 'TrackStartError') {
+      msg = '📷 Camera is in use by another app. Close it and try again.';
+    }
+    setScanStatus(msg);
+    return;
+  }
+
+  try {
+    const v = document.getElementById('scanVideo');
+    v.srcObject = scanStream;
+    await v.play();
+  } catch (e) {
+    setScanStatus('Could not start the camera preview — type the details instead.');
+    return;
+  }
+
+  const ok = await loadOCR();
+  if (!ok) { setScanStatus('Reader unavailable — type the details instead.'); return; }
+
+  setScanStatus('Hold the card steady…');
+  let attempts = 0;
+  scanTimer = setInterval(async () => {
+    attempts++;
+    await readWholeCard();
+
+    // report progress on each field as it is captured
+    const miss = [];
+    if (!scanFound.number) miss.push('number');
+    if (!scanFound.exp) miss.push('expiry');
+    if (!scanFound.name) miss.push('name');
+    if (miss.length && miss.length < 3) setScanStatus('Reading… still looking for ' + miss.join(' + '));
+    else if (!miss.length) setScanStatus('✅ Got everything');
+
+    // finish once we have the number plus at least one other field, or on timeout
+    const done = scanFound.number && scanFound.exp && scanFound.name;
+    if (done || (scanFound.number && attempts > 26) || attempts > 45) {
+      clearInterval(scanTimer); scanTimer = null;
+      if (!scanFound.number) { setScanStatus('Could not read it — try better lighting, or type it in.'); return; }
+      applyScan();
+    }
+  }, 900);
+}
+
+// fill whatever we managed to read into the form
+function applyScan() {
+  const parts = [];
+  if (scanFound.number) {
+    document.getElementById('coCard').value = scanFound.number.replace(/(.{4})/g, '$1 ').trim();
+    parts.push('number');
+  }
+  if (scanFound.exp) { document.getElementById('coExp').value = scanFound.exp; parts.push('expiry'); }
+  if (scanFound.name) { document.getElementById('coName2').value = scanFound.name; parts.push('name'); }
+  setScanStatus('✅ Captured ' + parts.join(', '));
+  setTimeout(closeScanner, 900);
+}
+
+// read the WHOLE card: number, expiry and cardholder name.
+// Cards vary hugely, so we try several crops and several contrast levels.
+function grab(v, cv, x0, y0, w0, h0, threshold, invert, scale) {
+  const cw = v.videoWidth * w0, ch = v.videoHeight * h0;
+  const sc = scale || 2;                       // upscale helps OCR on small print
+  cv.width = cw * sc; cv.height = ch * sc;
+  const g = cv.getContext('2d');
+  g.imageSmoothingEnabled = true;
+  g.drawImage(v, v.videoWidth * x0, v.videoHeight * y0, cw, ch, 0, 0, cv.width, cv.height);
+  const img = g.getImageData(0, 0, cv.width, cv.height);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const lum = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+    let b = lum > threshold ? 255 : 0;
+    if (invert) b = 255 - b;
+    d[i] = d[i+1] = d[i+2] = b;
+  }
+  g.putImageData(img, 0, 0);
+  return cv;
+}
+
+async function ocr(cv) {
+  try { const r = await ocrWorker.recognize(cv); return (r.data && r.data.text) || ''; }
+  catch (e) { return ''; }
+}
+
+function parseNumber(upper) {
+  const digits = upper.replace(/[^0-9]/g, '');
+  for (const len of [16, 15, 14, 13]) {
+    for (let i = 0; i + len <= digits.length; i++) {
+      const cand = digits.substr(i, len);
+      if (luhn(cand)) return cand;
+    }
+  }
+  return '';
+}
+
+function parseExpiry(upper) {
+  const thisYY = new Date().getFullYear() % 100;
+  // accept MM/YY, MM-YY, MM YY and MMYY
+  const pats = [/(0[1-9]|1[0-2])\s*[\/\-]\s*(\d{2,4})/g, /\b(0[1-9]|1[0-2])\s(\d{2})\b/g];
+  const found = [];
+  for (const p of pats) {
+    let m;
+    while ((m = p.exec(upper)) !== null) {
+      let yy = m[2];
+      if (yy.length === 4) yy = yy.slice(2);
+      const yn = parseInt(yy, 10);
+      if (yn >= thisYY && yn <= thisYY + 15) found.push({ mm: m[1], yy: yy, y: yn });
+    }
+  }
+  if (!found.length) return '';
+  // cards print "valid from" and "good thru" — the LATER date is the expiry
+  found.sort((a, b) => b.y - a.y);
+  return found[0].mm + '/' + found[0].yy;
+}
+
+function parseName(upper) {
+  const SKIP = ['VALID','THRU','FROM','GOOD','DEBIT','CREDIT','BANK','VISA','MASTERCARD','MAESTRO',
+    'AMERICAN','EXPRESS','ELECTRON','PLATINUM','CLASSIC','BUSINESS','MEMBER','SINCE','WORLD','GOLD',
+    'SIGNATURE','INFINITE','REWARDS','CARDHOLDER','CUSTOMER','ACCOUNT','NUMBER','EXPIRES','SECURE'];
+  const lines = upper.split(/[\n\r]+/).map(s => s.trim()).filter(Boolean);
+  const cands = [];
+  for (const line of lines) {
+    const clean = line.replace(/[^A-Z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    const words = clean.split(' ').filter(w => w.length >= 1);
+    if (words.length < 2 || words.length > 5) continue;
+    if (words.some(w => SKIP.includes(w))) continue;
+    // must contain at least one proper word, not just initials
+    if (!words.some(w => w.length >= 3)) continue;
+    if (clean.length < 5 || clean.length > 28) continue;
+    cands.push(words.join(' '));
+  }
+  // prefer a two-or-three word name of sensible length
+  cands.sort((a, b) => Math.abs(a.length - 14) - Math.abs(b.length - 14));
+  return cands[0] || '';
+}
+
+async function readWholeCard() {
+  const v = document.getElementById('scanVideo');
+  if (!v.videoWidth) return;
+  const cv = document.getElementById('scanCanvas');
+
+  // Cards differ in contrast, so sweep a few thresholds. Alternate each tick.
+  const T = [110, 140, 170];
+  const th = T[scanPass % T.length];
+  const inv = (scanPass % (T.length * 2)) >= T.length;   // also try inverted (dark cards)
+  scanPass++;
+
+  // --- pass 1: the whole card, for the number ---
+  if (!scanFound.number) {
+    const txt = (await ocr(grab(v, cv, 0.07, 0.10, 0.86, 0.80, th, inv, 2))).toUpperCase();
+    const n = parseNumber(txt);
+    if (n) scanFound.number = n;
+    if (!scanFound.exp) { const e = parseExpiry(txt); if (e) scanFound.exp = e; }
+    if (!scanFound.name) { const nm = parseName(txt); if (nm) scanFound.name = nm; }
+  }
+
+  // --- pass 2: BOTTOM HALF only, upscaled — where expiry and name live ---
+  if (!scanFound.exp || !scanFound.name) {
+    const txt2 = (await ocr(grab(v, cv, 0.07, 0.52, 0.86, 0.40, th, inv, 3))).toUpperCase();
+    if (!scanFound.exp) { const e = parseExpiry(txt2); if (e) scanFound.exp = e; }
+    if (!scanFound.name) { const nm = parseName(txt2); if (nm) scanFound.name = nm; }
+  }
+
+  // --- pass 3: BOTTOM STRIP, heavily upscaled — the printed name line ---
+  if (!scanFound.name) {
+    const txt3 = (await ocr(grab(v, cv, 0.07, 0.68, 0.70, 0.22, th, inv, 4))).toUpperCase();
+    const nm = parseName(txt3);
+    if (nm) scanFound.name = nm;
+  }
+}
+
+function wireScanner() {
+  const b = document.getElementById('scanBtn');
+  if (b) b.onclick = openScanner;
+  // hide the hint on desktops without a camera
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    const sb = document.getElementById('scanBtn'); if (sb) sb.style.display = 'none';
+    const sh = document.getElementById('scanHint'); if (sh) sh.style.display = 'none';
+  }
+}
+
+function initCheckout() {
+  wireCartPay();
+  wireScanner();
+  updateCartCount();
+  const cardEl = document.getElementById('coCard');
+  if (!cardEl) return;
+  cardEl.oninput = (e) => {
+    const v = e.target.value.replace(/\D/g, '').slice(0, 16);
+    e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+  };
+  document.getElementById('coExp').oninput = (e) => {
+    const v = e.target.value.replace(/\D/g, '').slice(0, 4);
+    e.target.value = v.length > 2 ? v.slice(0, 2) + '/' + v.slice(2) : v;
+  };
+  document.getElementById('coPay').onclick = () => {
+    const err = document.getElementById('coErr');
+    const email = document.getElementById('coEmail').value.trim();
+    const nm = document.getElementById('coName2').value.trim();
+    const card = document.getElementById('coCard').value.trim();
+    const exp = document.getElementById('coExp').value.trim();
+    const cvc = document.getElementById('coCvc').value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = 'Enter a valid parent email.'; return; }
+    if (nm.length < 3) { err.textContent = 'Enter the cardholder name.'; return; }
+    if (!luhn(card)) { err.textContent = 'That card number is not valid.'; return; }
+    if (!/^\d{2}\/\d{2}$/.test(exp)) { err.textContent = 'Expiry must be MM/YY.'; return; }
+    if (!/^\d{3,4}$/.test(cvc)) { err.textContent = 'CVC must be 3 or 4 digits.'; return; }
+    const sub = { plan: coCurrent.plan, price: coCurrent.price, cycle: coCurrent.cycle,
+      email: email, last4: card.replace(/\D/g, '').slice(-4), exp: exp, started: new Date().toISOString() };
+    localStorage.setItem('nc_subscription', JSON.stringify(sub));
+    document.getElementById('coSentTo').textContent = email;
+    document.getElementById('coSummary').innerHTML =
+      '<div><b>Plan:</b> ' + sub.plan + '</div>' +
+      '<div><b>Billing:</b> ' + sub.cycle + '</div>' +
+      '<div><b>Amount:</b> ' + sub.price + '</div>' +
+      '<div><b>Card:</b> \u2022\u2022\u2022\u2022 ' + sub.last4 + '</div>';
+    document.getElementById('coStep1').style.display = 'none';
+    document.getElementById('coStep2').style.display = 'block';
+  };
+  document.querySelectorAll('.plan').forEach(card => {
+    const btn = card.querySelector('button, .btn');
+    if (!btn) return;
+    btn.onclick = (e) => { e.preventDefault(); addToCart(card); };
+  });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCheckout);
+else initCheckout();
+
 </script>
+<div id='scanner'>
+  <div class='scanbox'>
+    <button class='coclose' onclick='closeScanner()'>✕</button>
+    <h2>📷 Scan your card</h2>
+    <p class='scansub'>Hold the front of the card inside the frame. We will read the <b>number, expiry and name</b> — keep it flat and well lit.</p>
+    <div class='scanview'>
+      <video id='scanVideo' autoplay playsinline muted></video>
+      <div class='scanframe'><span></span><span></span><span></span><span></span></div>
+    </div>
+    <div class='scanstatus' id='scanStatus'>Starting camera…</div>
+    <canvas id='scanCanvas' style='display:none'></canvas>
+    <div class='conotice'>🔒 The image never leaves your device — it is read locally in your browser and discarded immediately.</div>
+    <button class='cobtn alt' onclick='closeScanner()'>Type it manually instead</button>
+  </div>
+</div>
+
+<div id='cart'>
+  <div class='cartbox'>
+    <button class='coclose' onclick='closeCart()'>✕</button>
+    <h2>🛒 Your cart</h2>
+    <div id='cartitems'></div>
+    <div class='carttotal'><span>Total</span><b id='carttotal'>—</b></div>
+    <div id='cartnote' class='conotice'></div>
+    <button class='cobtn' id='cartpay'>Checkout</button>
+    <button class='cobtn alt' onclick='closeCart()'>Keep browsing</button>
+  </div>
+</div>
+
+<div id='checkout'>
+  <div class='cobox'>
+    <button class='coclose' onclick='closeCheckout()'>✕</button>
+    <div class='costep' id='coStep1'>
+      <h2>🛒 Checkout</h2>
+      <div class='coplan'>
+        <div><b id='coName'>Plan</b><small id='coCycle'>Monthly</small></div>
+        <div class='coprice' id='coPrice'>—</div>
+      </div>
+      <label class='colab'>Parent / guardian email</label>
+      <input type='email' id='coEmail' name='email' autocomplete='email' placeholder='parent@example.com'>
+      <label class='colab'>Cardholder name</label>
+      <input type='text' id='coName2' name='ccname' autocomplete='cc-name' placeholder='Name on card'>
+      <label class='colab'>Card number</label>
+      <div class='cardwrap'>
+        <input type='text' id='coCard' name='cardnumber' autocomplete='cc-number' inputmode='numeric' maxlength='19' placeholder='4242 4242 4242 4242'>
+        <button type='button' id='scanBtn' title='Scan your card with the camera'>📷</button>
+      </div>
+      <div class='scanhint' id='scanHint'>📷 Tap the camera to scan the whole card — number, expiry and name</div>
+      <div class='corow'>
+        <div><label class='colab'>Expiry</label><input type='text' id='coExp' name='ccexp' autocomplete='cc-exp' maxlength='5' placeholder='MM/YY'></div>
+        <div><label class='colab'>CVC</label><input type='text' id='coCvc' name='cvc' autocomplete='cc-csc' inputmode='numeric' maxlength='4' placeholder='123'></div>
+      </div>
+      <div class='conotice'>🔒 <b>Demo checkout.</b> This does not take real payment and no card details are stored or sent anywhere. Live payments require a Stripe account and a server.</div>
+      <button class='cobtn' id='coPay'>Confirm subscription</button>
+      <div class='coerr' id='coErr'></div>
+    </div>
+    <div class='costep' id='coStep2' style='display:none'>
+      <div class='cotick'>✅</div>
+      <h2>Subscription confirmed</h2>
+      <p class='cosub'>A confirmation has been sent to <b id='coSentTo'>—</b>.</p>
+      <div class='cosummary' id='coSummary'></div>
+      <button class='cobtn' onclick='closeCheckout()'>Done</button>
+    </div>
+  </div>
+</div>
+
 <script src='nova.js'></script>
 </body>
 </html>
