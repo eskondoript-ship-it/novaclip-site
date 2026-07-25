@@ -286,6 +286,18 @@ body::before {
 #tlbeats { position:absolute; inset:0; pointer-events:none; z-index:3; }
 #tlbeats i { position:absolute; top:0; bottom:0; width:1px; background:rgba(0,240,255,.42); }
 #tlbeats i.bar { width:2px; background:rgba(247,37,133,.75); }
+
+.fxchip { cursor: grab; }
+.fxchip:active { cursor: grabbing; }
+.fxchip.dragging { opacity:.45; transform:scale(.94); }
+.tclip.dropready { outline:2px dashed var(--cyan); outline-offset:2px; }
+.tclip.dropover { outline:2px solid var(--cyan); background:rgba(0,240,255,.18) !important;
+  box-shadow:0 0 24px rgba(0,240,255,.5) !important; transform:translateY(-4px) scale(1.06); }
+.draghint { position:fixed; bottom:96px; left:50%; transform:translateX(-50%); z-index:60;
+  background:rgba(0,240,255,.14); border:1px solid var(--cyan); color:var(--cyan);
+  padding:8px 18px; border-radius:22px; font-size:.8rem; font-weight:700; pointer-events:none;
+  opacity:0; transition:opacity .2s; }
+.draghint.show { opacity:1; }
 </style>
 </head>
 <body>
@@ -307,7 +319,7 @@ body::before {
     <div class='rbtn active' data-tab='media'><span class='ic'>🎞️</span><span data-t='e_media'>Media</span></div>
     <div class='rbtn' data-tab='fx'><span class='ic'>✨</span><span data-t='e_effects'>Effects</span></div>
     <div class='rbtn' data-tab='audio'><span class='ic'>🎵</span><span data-t='e_audio'>Audio</span></div>
-    <div class='rbtn' data-tab='learn'><span class='ic'>🎓</span><span data-t='e_learn'>Learn</span></div>
+    <div class='rbtn' data-tab='learn'><span class='ic'>🎓</span><span data-t='e_learn'>Edits</span></div>
     <div class='rbtn' data-tab='memes'><span class='ic'>😂</span><span data-t='e_memes'>Memes</span></div>
     <div class='rbtn' data-tab='text'><span class='ic'>🅰️</span><span data-t='e_text'>Text</span></div>
     <div class='rbtn' data-tab='voice'><span class='ic'>🎙️</span><span data-t='e_voice'>Voice</span></div>
@@ -346,7 +358,7 @@ body::before {
       <div id='beatBusy' class='hint' style='display:none'>🎧 Listening for beats…</div>
     </div>
     <div class='sect' id='sect-learn'>
-      <h4 data-t='e_learn_h'>How to make edits</h4>
+      <h4 data-t='e_learn_h'>Edit techniques</h4>
       <div class='lessons' id='lessons'></div>
     </div>
     <div class='sect' id='sect-memes'>
@@ -449,6 +461,7 @@ body::before {
 </div>
 
 <!-- TIMELINE -->
+<div class='draghint' id='dragHint'>Drop the effect on a clip 🎯</div>
 <div class='tl-wrap'>
   <div id='tlbeats'></div>
   <div class='tl-tools'><span>🎞 Timeline</span><span id='selinfo' style='color:var(--cyan)'></span><span class='sep'>drag clips to reorder · click to select</span></div>
@@ -537,13 +550,26 @@ document.querySelectorAll('.rail .rbtn').forEach(btn => {
 });
 
 // FX chip grid mirrors the clipFx <select>
-const FX_LABELS = { none:'None', bw:'B&W', sepia:'Sepia', vivid:'Vivid', punchy:'Punchy', blur:'Blur', neon:'Neon', glow:'Glow', vintage:'Vintage', invert:'Invert', cool:'Cool', warm:'Warm', dream:'Dream', noir:'Noir', fade:'Fade', pop:'Pop', cyber:'Cyber', sunset:'Sunset', ocean:'Ocean', forest:'Forest', candy:'Candy', mono:'Mono', crisp:'Crisp', soft:'Soft', dark:'Dark', bright:'Bright', hicon:'Hi-Con', lomo:'Lomo', frost:'Frost', ember:'Ember', violet:'Violet', emerald:'Emerald', gold:'Gold', ghost:'Ghost', xray:'X-Ray', toon:'Toon', faded70:'70s', moody:'Moody', radiant:'Radiant', matrix:'Matrix', blush:'Blush', steel:'Steel', honey:'Honey' };
+const FX_LABELS = { none:'None', velocity:'Velocity', teal:'Teal', goldhour:'Golden Hr', stadium:'Stadium', coldsteel:'Cold Steel', crushed:'Crushed', bleach:'Bleach', filmburn:'Film Burn', moonlight:'Moonlight', hypebeast:'Hypebeast', bw:'B&W', sepia:'Sepia', vivid:'Vivid', punchy:'Punchy', blur:'Blur', neon:'Neon', glow:'Glow', vintage:'Vintage', invert:'Invert', cool:'Cool', warm:'Warm', dream:'Dream', noir:'Noir', fade:'Fade', pop:'Pop', cyber:'Cyber', sunset:'Sunset', ocean:'Ocean', forest:'Forest', candy:'Candy', mono:'Mono', crisp:'Crisp', soft:'Soft', dark:'Dark', bright:'Bright', hicon:'Hi-Con', lomo:'Lomo', frost:'Frost', ember:'Ember', violet:'Violet', emerald:'Emerald', gold:'Gold', ghost:'Ghost', xray:'X-Ray', toon:'Toon', faded70:'70s', moody:'Moody', radiant:'Radiant', matrix:'Matrix', blush:'Blush', steel:'Steel', honey:'Honey' };
 const fxgrid = document.getElementById('fxgrid');
 Object.keys(FX_LABELS).forEach(key => {
   const c = document.createElement('div');
   c.className = 'fxchip' + (key === 'none' ? ' on' : '');
   c.textContent = FX_LABELS[key];
   c.dataset.fx = key;
+  c.draggable = true;
+  c.addEventListener('dragstart', ev => {
+    ev.dataTransfer.setData('text/plain', key);
+    ev.dataTransfer.effectAllowed = 'copy';
+    c.classList.add('dragging');
+    document.querySelectorAll('.tclip').forEach(t => t.classList.add('dropready'));
+    const hint = document.getElementById('dragHint'); if (hint) hint.classList.add('show');
+  });
+  c.addEventListener('dragend', () => {
+    c.classList.remove('dragging');
+    document.querySelectorAll('.tclip').forEach(t => t.classList.remove('dropready','dropover'));
+    const hint = document.getElementById('dragHint'); if (hint) hint.classList.remove('show');
+  });
   c.onclick = () => {
     document.querySelectorAll('.fxchip').forEach(x => x.classList.remove('on'));
     c.classList.add('on');
@@ -554,6 +580,33 @@ Object.keys(FX_LABELS).forEach(key => {
 });
 
 
+
+// ---- drop an effect straight onto a clip ----
+document.addEventListener('dragover', e => {
+  const t = e.target.closest && e.target.closest('.tclip');
+  if (!t) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  document.querySelectorAll('.tclip').forEach(x => x.classList.remove('dropover'));
+  t.classList.add('dropover');
+});
+document.addEventListener('drop', e => {
+  const t = e.target.closest && e.target.closest('.tclip');
+  if (!t) return;
+  e.preventDefault();
+  const fx = e.dataTransfer.getData('text/plain');
+  const i = parseInt(t.dataset.i, 10);
+  if (!FX[fx] || !clips[i]) return;
+  clips[i].fx = fx;
+  sel = i;                                   // select the clip we just dropped on
+  renderTimeline();
+  const s = document.getElementById('clipFx');
+  if (s) { s.value = fx; }
+  document.querySelectorAll('.fxchip').forEach(x => x.classList.toggle('on', x.dataset.fx === fx));
+  const hint = document.getElementById('dragHint');
+  if (hint) { hint.textContent = '✅ ' + (FX_LABELS[fx] || fx) + ' applied to clip ' + (i + 1); hint.classList.add('show');
+    setTimeout(() => { hint.classList.remove('show'); hint.textContent = 'Drop the effect on a clip 🎯'; }, 1600); }
+});
 
 // ============================================================
 //  BEAT DETECTION — finds the beats in a track, like CapCut
