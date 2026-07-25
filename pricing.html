@@ -118,6 +118,16 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 .scanframe span:nth-child(3){ bottom:0; left:0; border-right:none; border-top:none; border-radius:0 0 0 8px; }
 .scanframe span:nth-child(4){ bottom:0; right:0; border-left:none; border-top:none; border-radius:0 0 8px 0; }
 .scanstatus { text-align: center; font-size: .85rem; color: #00F0FF; margin: 12px 0; min-height: 20px; font-weight: 700; }
+
+#walletBtn { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer;
+  background: #000; color: #fff; font-size: 1.05rem; font-weight: 700; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform .2s, box-shadow .2s;
+  border: 1px solid rgba(255,255,255,0.22); }
+#walletBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.5); }
+#walletBtn.gpay { background: #fff; color: #3c4043; border-color: #dadce0; }
+.walletsub { font-size: .74rem; color: #7E8AA6; text-align: center; margin-top: 8px; line-height: 1.5; }
+.ordiv { display: flex; align-items: center; gap: 10px; margin: 18px 0 4px; color: #7E8AA6; font-size: .74rem; }
+.ordiv::before, .ordiv::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12); }
 </style>
 </head>
 <body>
@@ -423,6 +433,116 @@ function wireCartPay() {
   };
 }
 
+
+// ============================================================
+//  TAP TO PAY — Apple Pay / Google Pay
+//  Uses the Payment Request API. The card lives in the device
+//  wallet and is unlocked with Face ID / fingerprint, exactly
+//  like tapping a terminal in a shop.
+// ============================================================
+function walletAmount() {
+  const cur = (localStorage.getItem('nc_currency') || 'eur').toUpperCase();
+  const total = CART.reduce((s, i) => s + i.unit * i.qty, 0);
+  return { currency: cur, value: (Math.round(total * 100) / 100).toFixed(2) };
+}
+
+function buildPaymentRequest() {
+  if (!window.PaymentRequest) return null;
+  const amt = walletAmount();
+  const methods = [
+    {
+      supportedMethods: 'https://apple.com/apple-pay',
+      data: {
+        version: 3,
+        merchantIdentifier: 'merchant.com.novaclip',   // replace with your real Apple merchant ID
+        merchantCapabilities: ['supports3DS'],
+        supportedNetworks: ['visa', 'masterCard', 'amex'],
+        countryCode: 'PT'
+      }
+    },
+    {
+      supportedMethods: 'https://google.com/pay',
+      data: {
+        environment: 'TEST',
+        apiVersion: 2, apiVersionMinor: 0,
+        allowedPaymentMethods: [{
+          type: 'CARD',
+          parameters: { allowedAuthMethods: ['PAN_ONLY','CRYPTOGRAM_3DS'], allowedCardNetworks: ['VISA','MASTERCARD'] },
+          tokenizationSpecification: {
+            type: 'PAYMENT_GATEWAY',
+            parameters: { gateway: 'stripe', 'stripe:version': '2023-10-16', 'stripe:publishableKey': 'pk_test_REPLACE_ME' }
+          }
+        }],
+        merchantInfo: { merchantName: 'NovaClip' }
+      }
+    },
+    { supportedMethods: 'basic-card', data: { supportedNetworks: ['visa','mastercard','amex'] } }
+  ];
+  const details = {
+    total: { label: 'NovaClip', amount: { currency: amt.currency, value: amt.value } },
+    displayItems: CART.map(i => ({
+      label: i.name + (i.qty > 1 ? ' ×' + i.qty : ''),
+      amount: { currency: amt.currency, value: (Math.round(i.unit * i.qty * 100) / 100).toFixed(2) }
+    }))
+  };
+  try {
+    return new PaymentRequest(methods, details, { requestPayerEmail: true, requestPayerName: true });
+  } catch (e) { return null; }
+}
+
+async function setupWallet() {
+  const zone = document.getElementById('walletZone');
+  if (!zone) return;
+  zone.style.display = 'none';
+  if (!window.PaymentRequest || !CART.length) return;
+
+  const pr = buildPaymentRequest();
+  if (!pr) return;
+  let can = false;
+  try { can = await pr.canMakePayment(); } catch (e) { can = false; }
+  if (!can) return;                      // no wallet set up on this device
+
+  // label the button for the platform
+  const isApple = /iPhone|iPad|Macintosh/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
+  const btn = document.getElementById('walletBtn');
+  document.getElementById('walletIcon').textContent = isApple ? '\uf8ff' : 'G';
+  document.getElementById('walletLabel').textContent = isApple ? 'Pay' : 'Pay';
+  btn.classList.toggle('gpay', !isApple);
+  zone.style.display = 'block';
+
+  btn.onclick = async () => {
+    const req = buildPaymentRequest();
+    if (!req) return;
+    try {
+      const resp = await req.show();
+      // A real charge needs the token sent to Stripe from a server.
+      // Without that we accept it as a completed demo payment.
+      await resp.complete('success');
+      const amt = walletAmount();
+      const sub = {
+        plan: CART.length === 1 ? CART[0].name : CART.length + ' items',
+        price: amt.currency + ' ' + amt.value,
+        cycle: CART.some(i => i.sub) ? (billCycle === 'year' ? 'Yearly' : 'Monthly') : 'One-time payment',
+        email: resp.payerEmail || '(wallet)',
+        last4: 'wallet', exp: '—', method: 'Apple Pay / Google Pay',
+        started: new Date().toISOString()
+      };
+      localStorage.setItem('nc_subscription', JSON.stringify(sub));
+      CART = []; saveCart();
+      document.getElementById('coSentTo').textContent = sub.email;
+      document.getElementById('coSummary').innerHTML =
+        '<div><b>Plan:</b> ' + sub.plan + '</div>' +
+        '<div><b>Billing:</b> ' + sub.cycle + '</div>' +
+        '<div><b>Amount:</b> ' + sub.price + '</div>' +
+        '<div><b>Paid with:</b> ' + sub.method + '</div>';
+      document.getElementById('coStep1').style.display = 'none';
+      document.getElementById('coStep2').style.display = 'block';
+    } catch (e) {
+      // user cancelled — nothing to do
+    }
+  };
+}
+
 // ---------- CHECKOUT ----------
 let coCurrent = null;
 function openCheckout(planName, priceText, cycle) {
@@ -434,6 +554,7 @@ function openCheckout(planName, priceText, cycle) {
   document.getElementById('coStep2').style.display = 'none';
   document.getElementById('coErr').textContent = '';
   document.getElementById('checkout').classList.add('show');
+  setupWallet();
 }
 window.closeCheckout = function () { document.getElementById('checkout').classList.remove('show'); };
 
@@ -481,7 +602,8 @@ async function loadOCR() {
     ocrWorker = await Tesseract.createWorker('eng');
     // letters AND digits so we can read the name and expiry too
     await ocrWorker.setParameters({
-      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/ '
+      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/- ',
+      preserve_interword_spaces: '1'
     });
     ocrReady = true;
     return true;
@@ -584,80 +706,81 @@ function applyScan() {
 
 // read the WHOLE card: number, expiry and cardholder name.
 // Cards vary hugely, so we try several crops and several contrast levels.
-function grab(v, cv, x0, y0, w0, h0, threshold, invert, scale) {
+// Sharpen then ADAPTIVE-threshold a crop. Adaptive beats a single global cutoff
+// because cards have gradients, holograms and glare across their surface.
+function grab(v, cv, x0, y0, w0, h0, opts) {
+  opts = opts || {};
+  const scale = opts.scale || 3;
   const cw = v.videoWidth * w0, ch = v.videoHeight * h0;
-  const sc = scale || 2;                       // upscale helps OCR on small print
-  cv.width = cw * sc; cv.height = ch * sc;
-  const g = cv.getContext('2d');
+  cv.width = Math.round(cw * scale);
+  cv.height = Math.round(ch * scale);
+  const g = cv.getContext('2d', { willReadFrequently: true });
   g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = 'high';
   g.drawImage(v, v.videoWidth * x0, v.videoHeight * y0, cw, ch, 0, 0, cv.width, cv.height);
-  const img = g.getImageData(0, 0, cv.width, cv.height);
+
+  const W = cv.width, H = cv.height;
+  const img = g.getImageData(0, 0, W, H);
   const d = img.data;
-  for (let i = 0; i < d.length; i += 4) {
-    const lum = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-    let b = lum > threshold ? 255 : 0;
-    if (invert) b = 255 - b;
-    d[i] = d[i+1] = d[i+2] = b;
+
+  // 1) greyscale
+  const grey = new Float32Array(W * H);
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+    grey[p] = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+  }
+
+  // 2) unsharp mask — makes embossed digits stand out
+  if (opts.sharpen !== false) {
+    const sharp = new Float32Array(W * H);
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        const p = y * W + x;
+        const blur = (grey[p-1] + grey[p+1] + grey[p-W] + grey[p+W] + grey[p]) / 5;
+        sharp[p] = grey[p] + (grey[p] - blur) * 1.6;
+      }
+    }
+    grey.set(sharp);
+  }
+
+  // 3) adaptive threshold using a box mean over a local window
+  const win = Math.max(9, Math.round(Math.min(W, H) / 22)) | 1;
+  const half = (win - 1) / 2;
+  const bias = opts.bias != null ? opts.bias : 8;
+  // integral image for fast local means
+  const integ = new Float64Array((W + 1) * (H + 1));
+  for (let y = 0; y < H; y++) {
+    let rowSum = 0;
+    for (let x = 0; x < W; x++) {
+      rowSum += grey[y * W + x];
+      integ[(y + 1) * (W + 1) + (x + 1)] = integ[y * (W + 1) + (x + 1)] + rowSum;
+    }
+  }
+  for (let y = 0; y < H; y++) {
+    const y0i = Math.max(0, y - half), y1i = Math.min(H - 1, y + half);
+    for (let x = 0; x < W; x++) {
+      const x0i = Math.max(0, x - half), x1i = Math.min(W - 1, x + half);
+      const area = (y1i - y0i + 1) * (x1i - x0i + 1);
+      const sum = integ[(y1i+1)*(W+1) + (x1i+1)] - integ[y0i*(W+1) + (x1i+1)]
+                - integ[(y1i+1)*(W+1) + x0i]   + integ[y0i*(W+1) + x0i];
+      const mean = sum / area;
+      const p = y * W + x;
+      let val = grey[p] > (mean - bias) ? 255 : 0;
+      if (opts.invert) val = 255 - val;
+      const i4 = p * 4;
+      d[i4] = d[i4+1] = d[i4+2] = val; d[i4+3] = 255;
+    }
   }
   g.putImageData(img, 0, 0);
   return cv;
 }
 
-async function ocr(cv) {
-  try { const r = await ocrWorker.recognize(cv); return (r.data && r.data.text) || ''; }
-  catch (e) { return ''; }
-}
-
-function parseNumber(upper) {
-  const digits = upper.replace(/[^0-9]/g, '');
-  for (const len of [16, 15, 14, 13]) {
-    for (let i = 0; i + len <= digits.length; i++) {
-      const cand = digits.substr(i, len);
-      if (luhn(cand)) return cand;
-    }
-  }
-  return '';
-}
-
-function parseExpiry(upper) {
-  const thisYY = new Date().getFullYear() % 100;
-  // accept MM/YY, MM-YY, MM YY and MMYY
-  const pats = [/(0[1-9]|1[0-2])\s*[\/\-]\s*(\d{2,4})/g, /\b(0[1-9]|1[0-2])\s(\d{2})\b/g];
-  const found = [];
-  for (const p of pats) {
-    let m;
-    while ((m = p.exec(upper)) !== null) {
-      let yy = m[2];
-      if (yy.length === 4) yy = yy.slice(2);
-      const yn = parseInt(yy, 10);
-      if (yn >= thisYY && yn <= thisYY + 15) found.push({ mm: m[1], yy: yy, y: yn });
-    }
-  }
-  if (!found.length) return '';
-  // cards print "valid from" and "good thru" — the LATER date is the expiry
-  found.sort((a, b) => b.y - a.y);
-  return found[0].mm + '/' + found[0].yy;
-}
-
-function parseName(upper) {
-  const SKIP = ['VALID','THRU','FROM','GOOD','DEBIT','CREDIT','BANK','VISA','MASTERCARD','MAESTRO',
-    'AMERICAN','EXPRESS','ELECTRON','PLATINUM','CLASSIC','BUSINESS','MEMBER','SINCE','WORLD','GOLD',
-    'SIGNATURE','INFINITE','REWARDS','CARDHOLDER','CUSTOMER','ACCOUNT','NUMBER','EXPIRES','SECURE'];
-  const lines = upper.split(/[\n\r]+/).map(s => s.trim()).filter(Boolean);
-  const cands = [];
-  for (const line of lines) {
-    const clean = line.replace(/[^A-Z\s]/g, ' ').replace(/\s+/g, ' ').trim();
-    const words = clean.split(' ').filter(w => w.length >= 1);
-    if (words.length < 2 || words.length > 5) continue;
-    if (words.some(w => SKIP.includes(w))) continue;
-    // must contain at least one proper word, not just initials
-    if (!words.some(w => w.length >= 3)) continue;
-    if (clean.length < 5 || clean.length > 28) continue;
-    cands.push(words.join(' '));
-  }
-  // prefer a two-or-three word name of sensible length
-  cands.sort((a, b) => Math.abs(a.length - 14) - Math.abs(b.length - 14));
-  return cands[0] || '';
+// Tesseract page-segmentation modes: 6 = block of text, 7 = single line, 11 = sparse
+async function ocr(cv, psm) {
+  try {
+    if (psm != null) await ocrWorker.setParameters({ tessedit_pageseg_mode: String(psm) });
+    const r = await ocrWorker.recognize(cv);
+    return (r.data && r.data.text) || '';
+  } catch (e) { return ''; }
 }
 
 async function readWholeCard() {
@@ -665,32 +788,43 @@ async function readWholeCard() {
   if (!v.videoWidth) return;
   const cv = document.getElementById('scanCanvas');
 
-  // Cards differ in contrast, so sweep a few thresholds. Alternate each tick.
-  const T = [110, 140, 170];
-  const th = T[scanPass % T.length];
-  const inv = (scanPass % (T.length * 2)) >= T.length;   // also try inverted (dark cards)
+  // vary the threshold bias and polarity between ticks so different card
+  // finishes (matte, glossy, dark, metal) all get a fair attempt
+  const BIAS = [4, 10, 18];
+  const bias = BIAS[scanPass % BIAS.length];
+  const invert = (scanPass % (BIAS.length * 2)) >= BIAS.length;
   scanPass++;
 
-  // --- pass 1: the whole card, for the number ---
+  // --- NUMBER: the middle band, read as a single line ---
   if (!scanFound.number) {
-    const txt = (await ocr(grab(v, cv, 0.07, 0.10, 0.86, 0.80, th, inv, 2))).toUpperCase();
-    const n = parseNumber(txt);
+    const c1 = grab(v, cv, 0.06, 0.34, 0.88, 0.22, { scale: 3, bias: bias, invert: invert });
+    const t1 = (await ocr(c1, 7)).toUpperCase();
+    const n = parseNumber(t1);
     if (n) scanFound.number = n;
-    if (!scanFound.exp) { const e = parseExpiry(txt); if (e) scanFound.exp = e; }
-    if (!scanFound.name) { const nm = parseName(txt); if (nm) scanFound.name = nm; }
+    else {
+      // fall back to the whole card as a text block
+      const c2 = grab(v, cv, 0.06, 0.10, 0.88, 0.80, { scale: 2, bias: bias, invert: invert });
+      const t2 = (await ocr(c2, 6)).toUpperCase();
+      const n2 = parseNumber(t2);
+      if (n2) scanFound.number = n2;
+      if (!scanFound.exp) { const e = parseExpiry(t2); if (e) scanFound.exp = e; }
+      if (!scanFound.name) { const nm = parseName(t2); if (nm) scanFound.name = nm; }
+    }
   }
 
-  // --- pass 2: BOTTOM HALF only, upscaled — where expiry and name live ---
-  if (!scanFound.exp || !scanFound.name) {
-    const txt2 = (await ocr(grab(v, cv, 0.07, 0.52, 0.86, 0.40, th, inv, 3))).toUpperCase();
-    if (!scanFound.exp) { const e = parseExpiry(txt2); if (e) scanFound.exp = e; }
-    if (!scanFound.name) { const nm = parseName(txt2); if (nm) scanFound.name = nm; }
+  // --- EXPIRY: small print under the number, sparse-text mode ---
+  if (!scanFound.exp) {
+    const c3 = grab(v, cv, 0.30, 0.52, 0.50, 0.20, { scale: 4, bias: bias, invert: invert });
+    const t3 = (await ocr(c3, 11)).toUpperCase();
+    const e = parseExpiry(t3);
+    if (e) scanFound.exp = e;
   }
 
-  // --- pass 3: BOTTOM STRIP, heavily upscaled — the printed name line ---
+  // --- NAME: bottom strip, single line, heavily upscaled ---
   if (!scanFound.name) {
-    const txt3 = (await ocr(grab(v, cv, 0.07, 0.68, 0.70, 0.22, th, inv, 4))).toUpperCase();
-    const nm = parseName(txt3);
+    const c4 = grab(v, cv, 0.06, 0.70, 0.72, 0.18, { scale: 4, bias: bias, invert: invert });
+    const t4 = (await ocr(c4, 7)).toUpperCase();
+    const nm = parseName(t4);
     if (nm) scanFound.name = nm;
   }
 }
@@ -790,6 +924,12 @@ else initCheckout();
         <div><b id='coName'>Plan</b><small id='coCycle'>Monthly</small></div>
         <div class='coprice' id='coPrice'>—</div>
       </div>
+      <div id='walletZone' style='display:none'>
+        <button type='button' id='walletBtn'><span id='walletIcon'>􀣺</span> <span id='walletLabel'>Pay</span></button>
+        <div class='walletsub'>Tap to pay with your saved card — no typing, no card details entered here.</div>
+        <div class='ordiv'><span>or pay by card</span></div>
+      </div>
+
       <label class='colab'>Parent / guardian email</label>
       <input type='email' id='coEmail' name='email' autocomplete='email' placeholder='parent@example.com'>
       <label class='colab'>Cardholder name</label>
