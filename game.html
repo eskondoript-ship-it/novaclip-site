@@ -212,7 +212,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v47 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v48 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -338,7 +338,7 @@ const CUSTOM_MODELS = {
   character: 'ImageToStl.com_Y+Bot.glb',
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_c7a2.glb',           // your rifle .glb filename, if you have one
+  weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
 
   weaponRotX: -90, weaponRotY: 0, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
 
@@ -808,38 +808,57 @@ function makeFighter(color, useGLB, isPlayer) {
       const g = new THREE.Group();
       // player uses the original; bots get a clone so they can move independently
       const model = isPlayer ? loadedCharGLB : loadedCharGLB.clone(true);
-      // ---- fully guarded auto-fit: never let a bad number reach the scene ----
-      let s = 1, offX = 0, offY = 0, offZ = 0;
-      try {
-        const bb = new THREE.Box3().setFromObject(model);
+      // ---- ITERATIVE AUTO-FIT ----
+      // Bounding boxes on rigged models are unreliable, so measure -> scale ->
+      // re-measure, repeating until the character really is human-sized.
+      const TARGET_H = 1.8;
+      function measure(obj) {
+        obj.updateMatrixWorld(true);          // essential: stale matrices give wrong boxes
+        const bb = new THREE.Box3().setFromObject(obj);
         const sz = new THREE.Vector3(); bb.getSize(sz);
-        const ctr = new THREE.Vector3(); bb.getCenter(ctr);
-        if (isFinite(sz.y) && sz.y > 0.0001 && isFinite(ctr.x) && isFinite(bb.min.y)) {
-          const k = 1.8 / sz.y;
-          if (isFinite(k) && k > 0.0001 && k < 1000) {
-            s = k; offX = -ctr.x * k; offZ = -ctr.z * k; offY = -bb.min.y * k;
-          }
-        }
-      } catch (e) { console.warn('character auto-fit skipped', e); }
+        return { bb: bb, sz: sz };
+      }
+      model.scale.setScalar(1);
+      model.position.set(0, 0, 0);
+      let s = 1;
+      for (let pass = 0; pass < 6; pass++) {
+        const m = measure(model);
+        if (!isFinite(m.sz.y) || m.sz.y <= 0.0001) break;
+        if (Math.abs(m.sz.y - TARGET_H) < 0.05) break;    // close enough
+        const k = TARGET_H / m.sz.y;
+        if (!isFinite(k) || k <= 0) break;
+        s *= k;
+        if (!isFinite(s) || s <= 0 || s > 10000) { s = 1; break; }
+        model.scale.setScalar(s);
+      }
       s *= (CUSTOM_MODELS.characterScale || 1);
       if (!isFinite(s) || s <= 0) s = 1;
+      model.scale.setScalar(s);
+
+      // final hard clamp — a character must never be taller than 3 units
+      const fin = measure(model);
+      if (isFinite(fin.sz.y) && fin.sz.y > 3) {
+        const fix = TARGET_H / fin.sz.y;
+        if (isFinite(fix) && fix > 0) { s *= fix; model.scale.setScalar(s); }
+      }
+
+      // centre horizontally and stand the feet on the ground
+      const f2 = measure(model);
+      let offX = 0, offY = 0, offZ = 0;
+      if (isFinite(f2.bb.min.y)) {
+        const ctr = new THREE.Vector3(); f2.bb.getCenter(ctr);
+        if (isFinite(ctr.x)) offX = -ctr.x;
+        if (isFinite(ctr.z)) offZ = -ctr.z;
+        offY = -f2.bb.min.y;
+      }
       if (!isFinite(offX)) offX = 0;
       if (!isFinite(offY)) offY = 0;
       if (!isFinite(offZ)) offZ = 0;
-      model.scale.setScalar(s);
-      // safety clamp: re-measure and force the model to human size if the fit failed
-      try {
-        const chk = new THREE.Box3().setFromObject(model);
-        const csz = new THREE.Vector3(); chk.getSize(csz);
-        if (isFinite(csz.y) && csz.y > 3.5) {           // way too tall -> shrink it
-          const fix = 1.8 / csz.y;
-          if (isFinite(fix) && fix > 0) { s *= fix; model.scale.setScalar(s); offY = -chk.min.y * fix; offX *= fix; offZ *= fix; }
-        }
-      } catch (e) {}
       const fitPos = new THREE.Vector3(offX, offY + (CUSTOM_MODELS.characterYOffset || 0), offZ);
       model.position.copy(fitPos);
-      g.userData.fitPos = fitPos;      // used to cancel root motion each frame
+      g.userData.fitPos = fitPos;
       g.userData.inner = model;
+
       model.traverse(o => { if (o.isMesh) {
         o.castShadow = true;
         if (!isPlayer && o.material) { o.material = o.material.clone(); if (o.material.color) o.material.color.lerp(new THREE.Color(color), 0.45); }
