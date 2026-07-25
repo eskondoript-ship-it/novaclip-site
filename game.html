@@ -212,7 +212,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v45 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v47 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -338,7 +338,7 @@ const CUSTOM_MODELS = {
   character: 'ImageToStl.com_Y+Bot.glb',
   characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
+  weapon: 'low-poly_colt_c7a2.glb',           // your rifle .glb filename, if you have one
 
   weaponRotX: -90, weaponRotY: 0, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
 
@@ -525,6 +525,13 @@ function init() {
 
   // build fighters + gun. If custom .glb models are set, load them first; otherwise build immediately.
   function buildActors() {
+    // clear any previous actors so a retry can never leave a duplicate behind
+    if (playerMesh) { scene.remove(playerMesh); playerMesh = null; }
+    if (gunGroup) { scene.remove(gunGroup); gunGroup = null; }
+    bots.forEach(b => { if (b.mesh) scene.remove(b.mesh); });
+    bots.length = 0;
+    mixers.length = 0;
+
     for (let i = 0; i < 9; i++) spawnBot(i);
     playerMesh = makeFighter(playerColor, true, true);   // (color, useGLB, isPlayer)
     playerMesh.visible = false;
@@ -1211,7 +1218,12 @@ function killBot(b) {
   earn(MODES[mode].perKill, 'kill'); addFeed('You ➜ ' + b.name); updateBoard();
   setTimeout(() => respawnBot(b), 2500 + Math.random()*3000);
 }
-function respawnBot(b) { if (timeLeft <= 0) return; b.hp = 100; b.alive = true; b.mesh.visible = true; b.mesh.position.set((Math.random()-0.5)*120, 0, (Math.random()-0.5)*120); }
+function respawnBot(b) {
+  if (timeLeft <= 0) return;
+  b.hp = 100; b.alive = true; b.mesh.visible = true;
+  const B = BASES[b.team];
+  b.mesh.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
+}
 function addFeed(txt) { const f = document.getElementById('feed'); const d = document.createElement('div'); d.textContent = (txt[0] === '+' || txt[0] === '🛒' || txt[0] === '💣') ? txt : '💀 ' + txt; f.appendChild(d); setTimeout(() => d.remove(), 4000); }
 function teamScore(team) {
   let s = 0;
@@ -1350,11 +1362,26 @@ function updateBots(dt) {
     }
   });
 }
+// put the player back at their base, in open ground, never inside geometry
+function respawnPlayer() {
+  const HB = BASES[PLAYER_TEAM];
+  const facing = PLAYER_TEAM === 'ct' ? 1 : -1;
+  for (let a = 0; a < 40; a++) {
+    const sx = HB.x + (Math.random() - 0.5) * 18;
+    const sz = HB.z + facing * (14 + Math.random() * 10);
+    if (!blockedAt(sx, sz)) { player.x = sx; player.z = sz; break; }
+    if (a === 39) { player.x = HB.x; player.z = HB.z + facing * 18; }
+  }
+  player.y = 1.7; player.vy = 0; player.onGround = true;
+  player.yaw = PLAYER_TEAM === 'ct' ? 0 : Math.PI;
+  player.pitch = 0;
+}
+
 function damagePlayer(amt, from) {
   if (inShop) return;
   player.hp -= amt; document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
   const df = document.getElementById('dmgflash'); df.style.opacity = '1'; setTimeout(() => df.style.opacity = '0', 120);
-  if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' ➜ You (respawned)'); player.x = (Math.random()-0.5)*120; player.z = (Math.random()-0.5)*120; c4Ready = false; c4Timer = 20; }
+  if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' ➜ You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
 }
 
 // ---------- player + camera ----------
@@ -1388,6 +1415,20 @@ function updatePlayer(dt) {
   if (keys[BINDS.jump] && player.onGround) { player.vy = 6.4; player.onGround = false; }
   player.vy -= 18*dt; player.y += player.vy*dt;
   if (player.y <= GROUND) { player.y = GROUND; player.vy = 0; player.onGround = true; }
+
+  // safety: if we somehow end up inside solid geometry, nudge out to open ground
+  if (blockedAt(player.x, player.z)) {
+    let freed = false;
+    for (let r = 1; r <= 8 && !freed; r++) {
+      for (let a = 0; a < 8; a++) {
+        const ang = a / 8 * Math.PI * 2;
+        const tx = player.x + Math.cos(ang) * r * 1.5;
+        const tz = player.z + Math.sin(ang) * r * 1.5;
+        if (!blockedAt(tx, tz)) { player.x = tx; player.z = tz; freed = true; break; }
+      }
+    }
+    if (!freed) respawnPlayer();
+  }
 
   const nowIn = insideShop();
   const sp = document.getElementById('shopprompt');
@@ -1474,6 +1515,8 @@ function updateCamera(dt) {
     gunGroup.visible = !scoped;
     if (playerMesh) {
       playerMesh.visible = false;
+      // force every sub-mesh hidden too — third person force-shows them, so undo that
+      playerMesh.traverse(o => { if (o.isMesh) o.visible = false; });
       playerMesh.position.set(player.x, player.y - 1.7, player.z);
       playerMesh.rotation.y = player.yaw;
     }
