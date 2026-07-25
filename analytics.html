@@ -39,6 +39,57 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
 .toggle input { width: 18px; height: 18px; accent-color: #00F0FF; }
 .hint { color: #7E8AA6; font-size: 0.95rem; margin-top: 14px; }
 .loading { color: #7E8AA6; padding: 20px 0; }
+
+/* ===== ANALYTICS UI UPGRADE ===== */
+body { position: relative; }
+body::before {
+  content:''; position: fixed; inset: -20%; z-index: 0; pointer-events: none;
+  background: radial-gradient(circle at 12% 18%, rgba(0,240,255,0.10), transparent 45%),
+              radial-gradient(circle at 88% 78%, rgba(247,37,133,0.10), transparent 45%);
+  animation: anDrift 24s ease-in-out infinite alternate;
+}
+@keyframes anDrift { to { transform: translate(3%, -2%) scale(1.08); } }
+.wrap, .content { position: relative; z-index: 1; }
+
+h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
+@keyframes anIn { from { opacity:0; transform: translateY(-16px); } to { opacity:1; transform:none; } }
+
+/* KPI cards */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+@media (max-width: 800px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+.kpi {
+  background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 18px 16px;
+  position: relative; overflow: hidden; backdrop-filter: blur(12px);
+  transition: transform .3s cubic-bezier(.2,.9,.3,1.2), box-shadow .3s, border-color .3s;
+  animation: kpiRise .55s cubic-bezier(.2,.9,.3,1.15) both;
+}
+.kpi:nth-child(2){animation-delay:.07s} .kpi:nth-child(3){animation-delay:.14s} .kpi:nth-child(4){animation-delay:.21s}
+@keyframes kpiRise { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform:none; } }
+.kpi::after { content:''; position:absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent); transform: translateX(-120%); }
+.kpi:hover { transform: translateY(-6px) scale(1.03); border-color: rgba(0,240,255,0.45); box-shadow: 0 18px 40px rgba(0,0,0,0.5), 0 0 40px rgba(0,240,255,0.14); }
+.kpi:hover::after { animation: kpiShine .8s ease forwards; }
+@keyframes kpiShine { to { transform: translateX(120%); } }
+.kpi .n { font-size: 1.9rem; font-weight: 900; background: linear-gradient(90deg,#00F0FF,#F72585); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1.1; }
+.kpi .l { font-size: .72rem; color: #7E8AA6; letter-spacing: 1.4px; text-transform: uppercase; margin-top: 6px; }
+
+/* chart panels */
+.card, .chartbox {
+  background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 18px;
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 14px 36px rgba(0,0,0,0.35);
+  transition: transform .3s cubic-bezier(.2,.9,.3,1.2), border-color .3s, box-shadow .3s;
+  animation: kpiRise .6s cubic-bezier(.2,.9,.3,1.1) both;
+}
+.card:hover, .chartbox:hover { transform: translateY(-4px); border-color: rgba(0,240,255,0.3); box-shadow: 0 22px 50px rgba(0,0,0,0.45); }
+.card h3, .chartbox h3 { font-size: .82rem; letter-spacing: 1.6px; text-transform: uppercase; color: #9fb0cc; margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+.card h3::before, .chartbox h3::before { content:''; width: 3px; height: 14px; border-radius: 2px; background: linear-gradient(#00F0FF,#F72585); }
+
+.gbtn { transition: transform .25s cubic-bezier(.2,.9,.3,1.4), box-shadow .25s; }
+.gbtn:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 14px 30px rgba(0,240,255,0.3); }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
 <body>
