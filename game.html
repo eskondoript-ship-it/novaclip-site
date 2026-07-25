@@ -138,6 +138,39 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 #controlsBtn { pointer-events: auto; padding: 16px 30px; border: 1px solid rgba(255,255,255,0.25); border-radius: 40px; font-size: 1rem; font-weight: 800; cursor: pointer; background: rgba(255,255,255,0.05); color: #fff; }
 #controlsBtn:hover { border-color: #6cc3ff; color: #6cc3ff; }
 
+/* ===== END OF MATCH SCREEN ===== */
+.endwrap { width: min(880px, 94vw); text-align: center; }
+.esresult { font-size: clamp(2.6rem, 9vw, 5rem); font-weight: 900; letter-spacing: 6px; line-height: 1; margin: 6px 0 18px; animation: esPop .6s cubic-bezier(.2,.9,.3,1.4) both; }
+@keyframes esPop { from { opacity:0; transform: scale(.7); } to { opacity:1; transform:none; } }
+.esscore { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 1.05rem; font-weight: 800; margin-bottom: 20px; }
+.esscore b { font-size: 1.7rem; }
+.esbar { display: flex; width: min(300px, 40vw); height: 8px; border-radius: 5px; overflow: hidden; background: rgba(255,255,255,0.1); }
+.esbar > div { height: 100%; transition: width .6s; }
+.escards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+@media (max-width: 620px) { .escards { grid-template-columns: repeat(2, 1fr); } }
+.escard { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 8px; animation: esRise .5s cubic-bezier(.2,.9,.3,1.15) both; }
+.escard:nth-child(2){animation-delay:.06s} .escard:nth-child(3){animation-delay:.12s} .escard:nth-child(4){animation-delay:.18s}
+@keyframes esRise { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform:none; } }
+.escard.hi { border-color: rgba(255,210,74,0.5); background: rgba(255,210,74,0.08); }
+.escard.hi .esn { color: #ffd24a; }
+.escard .esn { font-size: 1.9rem; font-weight: 900; line-height: 1; }
+.escard .esl { font-size: .72rem; color: #7E8AA6; letter-spacing: 1.5px; margin-top: 5px; text-transform: uppercase; }
+.esgrid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; margin-bottom: 18px; text-align: left; }
+@media (max-width: 720px) { .esgrid { grid-template-columns: 1fr; } }
+.esbox { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 16px; }
+.esbox h4 { font-size: .74rem; letter-spacing: 2px; color: #7E8AA6; text-transform: uppercase; margin-bottom: 10px; }
+.esrow { display: flex; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 8px; font-size: .88rem; }
+.esrow.me { background: rgba(108,195,255,0.14); box-shadow: inset 2px 0 0 #6cc3ff; font-weight: 800; }
+.esrank { width: 20px; color: #7E8AA6; font-size: .78rem; }
+.esname { flex: 1; }
+.estag { font-size: .62rem; padding: 2px 7px; border-radius: 20px; font-weight: 800; letter-spacing: .5px; }
+.eskills { font-weight: 800; min-width: 24px; text-align: right; }
+.esptrow { display: flex; justify-content: space-between; padding: 6px 2px; font-size: .88rem; color: #b8bccb; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.esptrow span:last-child { color: #B6FF3C; font-weight: 800; }
+.esptrow.tot { border-bottom: none; margin-top: 4px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,0.18); font-weight: 800; color: #fff; }
+.esbank { margin-top: 10px; font-size: .8rem; color: #7E8AA6; }
+.esbank b { color: #ffd24a; }
+
 #shopui { position: fixed; inset: 0; z-index: 19; display: none; align-items: center; justify-content: center; background: rgba(5,10,20,0.82); backdrop-filter: blur(6px); }
 .shopbox { background: #101725; border: 1px solid rgba(108,195,255,0.4); border-radius: 18px; padding: 26px; width: min(540px, 92vw); max-height: 88vh; overflow-y: auto; box-shadow: 0 0 60px rgba(108,195,255,0.2); }
 .shopbox h2 { margin-bottom: 4px; } .shopbox .bal { color: #ffd24a; font-weight: 800; margin-bottom: 14px; }
@@ -179,7 +212,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v43 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v45 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -403,7 +436,7 @@ function loadCustomModels(done) {
 
 // ---------- state ----------
 let scene, camera, renderer, skyMesh;
-let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true };
+let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, deaths: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true };
 const keys = {};
 // ---- rebindable controls ----
 const DEFAULT_BINDS = { forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', sprint:'ShiftLeft', crouch:'ControlLeft', emote:'KeyT', reload:'KeyR', nade:'KeyG', sticky:'KeyB', plant:'KeyC', detonate:'KeyX', shop:'KeyE', view:'KeyV' };
@@ -787,6 +820,15 @@ function makeFighter(color, useGLB, isPlayer) {
       if (!isFinite(offY)) offY = 0;
       if (!isFinite(offZ)) offZ = 0;
       model.scale.setScalar(s);
+      // safety clamp: re-measure and force the model to human size if the fit failed
+      try {
+        const chk = new THREE.Box3().setFromObject(model);
+        const csz = new THREE.Vector3(); chk.getSize(csz);
+        if (isFinite(csz.y) && csz.y > 3.5) {           // way too tall -> shrink it
+          const fix = 1.8 / csz.y;
+          if (isFinite(fix) && fix > 0) { s *= fix; model.scale.setScalar(s); offY = -chk.min.y * fix; offX *= fix; offZ *= fix; }
+        }
+      } catch (e) {}
       const fitPos = new THREE.Vector3(offX, offY + (CUSTOM_MODELS.characterYOffset || 0), offZ);
       model.position.copy(fitPos);
       g.userData.fitPos = fitPos;      // used to cancel root motion each frame
@@ -1312,7 +1354,7 @@ function damagePlayer(amt, from) {
   if (inShop) return;
   player.hp -= amt; document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
   const df = document.getElementById('dmgflash'); df.style.opacity = '1'; setTimeout(() => df.style.opacity = '0', 120);
-  if (player.hp <= 0) { playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' ➜ You (respawned)'); player.x = (Math.random()-0.5)*120; player.z = (Math.random()-0.5)*120; c4Ready = false; c4Timer = 20; }
+  if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' ➜ You (respawned)'); player.x = (Math.random()-0.5)*120; player.z = (Math.random()-0.5)*120; c4Ready = false; c4Timer = 20; }
 }
 
 // ---------- player + camera ----------
@@ -1426,7 +1468,7 @@ function updateCamera(dt) {
     }
     gunGroup.visible = false;   // character model carries its own weapon
     const d = camDir();
-    camera.position.set(player.x - d.x*4.5, player.y + 0.5, player.z - d.z*4.5);
+    camera.position.set(player.x - d.x*7.5, player.y + 2.2, player.z - d.z*7.5);
     camera.rotation.set(player.pitch + kick, player.yaw, 0);
   } else {
     gunGroup.visible = !scoped;
@@ -1446,7 +1488,7 @@ function updateCamera(dt) {
       rl = -s * 0.35; rlrot = s * 0.9;
     }
     // Position the gun relative to the camera (method from the original working build)
-    const off = { x: 0.17, y: -0.19 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -0.42 + kick*0.10 };
+    const off = { x: 0.34, y: -0.30 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -1.05 + kick*0.18 };
     const pos = new THREE.Vector3(off.x, off.y, off.z);
     pos.applyEuler(camera.rotation);
     gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
@@ -1466,34 +1508,75 @@ function tick() {
 }
 function endMatch() {
   running = false; clearInterval(timerId); document.exitPointerLock();
-  const mine = teamScore(PLAYER_TEAM);
-  const theirs = teamScore(PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT);
+  const enemyTeam = PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT;
+  const mine = teamScore(PLAYER_TEAM), theirs = teamScore(enemyTeam);
   const won = mine > theirs, draw = mine === theirs;
 
-  // personal placing across everyone
-  const all = [{ name: 'YOU', kills: player.kills, me: true }].concat(bots.map(b => ({ name: b.name, kills: b.kills })));
+  const all = [{ name: 'YOU', kills: player.kills, me: true, team: PLAYER_TEAM }]
+    .concat(bots.map(b => ({ name: b.name, kills: b.kills, team: b.team })));
   all.sort((a, b) => b.kills - a.kills);
   const rank = all.findIndex(p => p.me) + 1;
 
-  let bonus = 0, lines = [];
-  if (won)       { bonus += MODES[mode].mvp;                 lines.push('🏆 Team victory: +' + MODES[mode].mvp + ' pts'); }
-  else if (draw) { bonus += Math.round(MODES[mode].mvp / 2); lines.push('🤝 Draw: +' + Math.round(MODES[mode].mvp / 2) + ' pts'); }
-  if (rank === 1) { const t = Math.round(MODES[mode].mvp / 2); bonus += t; lines.push('⭐ Top scorer: +' + t + ' pts'); }
+  // points
+  let bonus = 0; const lines = [];
+  const M = MODES[mode];
+  const killPts = player.kills * M.perKill;
+  if (killPts) lines.push(['Kills (' + player.kills + ' × ' + M.perKill + ')', killPts]);
+  if (won)       { bonus += M.mvp;                 lines.push(['Team victory', M.mvp]); }
+  else if (draw) { bonus += Math.round(M.mvp / 2); lines.push(['Draw', Math.round(M.mvp / 2)]); }
+  if (rank === 1) { const t = Math.round(M.mvp / 2); bonus += t; lines.push(['Top scorer', t]); }
   if (bonus) setPts(pts() + bonus);
+  const totalEarned = killPts + bonus;
 
-  const tCol = TEAM_INFO[PLAYER_TEAM].css;
-  const eCol = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].css;
+  const tI = TEAM_INFO[PLAYER_TEAM], eI = TEAM_INFO[enemyTeam];
+  const resultTxt = won ? 'VICTORY' : draw ? 'DRAW' : 'DEFEAT';
+  const resultCol = won ? '#4ade80' : draw ? '#ffd24a' : '#ff6b6b';
+  const total = Math.max(mine + theirs, 1);
+
+  const rows = all.map((p, i) =>
+    '<div class="esrow' + (p.me ? ' me' : '') + '">' +
+      '<span class="esrank">' + (i + 1) + '</span>' +
+      '<span class="esname" style="color:' + (p.me ? '#fff' : TEAM_INFO[p.team].css) + '">' + p.name + '</span>' +
+      '<span class="estag" style="background:' + TEAM_INFO[p.team].css + '22;color:' + TEAM_INFO[p.team].css + '">' + TEAM_INFO[p.team].short + '</span>' +
+      '<span class="eskills">' + p.kills + '</span>' +
+    '</div>').join('');
+
+  const ptRows = lines.map(l => '<div class="esptrow"><span>' + l[0] + '</span><span>+' + l[1] + '</span></div>').join('');
+
   const ov = document.getElementById('overlay');
   ov.style.display = 'flex';
   ov.innerHTML =
-    '<div class="mtag">Match complete — ' + MODES[mode].label + '</div>' +
-    '<h1>' + (won ? '🏆 <span class="c">Victory</span>' : draw ? '🤝 <span class="c">Draw</span>' : '💀 <span class="y">Defeat</span>') + '</h1>' +
-    '<p class="sub"><b style="color:' + tCol + '">' + TEAM_INFO[PLAYER_TEAM].short + ' ' + mine + '</b> — <b style="color:' + eCol + '">' +
-      TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].short + ' ' + theirs + '</b></p>' +
-    '<p class="sub">You scored <b>' + player.kills + '</b> kills · placed <b>#' + rank + '</b> of 10.</p>' +
-    (lines.length ? '<p class="sub" style="color:#B6FF3C">' + lines.join('<br>') + '</p>' : '') +
-    '<div class="keyshint">' + all.slice(0, 5).map((p, i) => (i + 1) + '. ' + p.name + ' — ' + p.kills).join('<br>') + '</div>' +
-    '<button class="again" onclick="location.reload()">▶️ Play again</button>';
+    '<div class="endwrap">' +
+      '<div class="mtag">Match complete · ' + M.label + '</div>' +
+      '<div class="esresult" style="color:' + resultCol + ';text-shadow:0 0 40px ' + resultCol + '55">' + resultTxt + '</div>' +
+
+      '<div class="esscore">' +
+        '<span style="color:' + tI.css + '">' + tI.short + '</span>' +
+        '<b style="color:' + tI.css + '">' + mine + '</b>' +
+        '<div class="esbar"><div style="width:' + (mine / total * 100) + '%;background:' + tI.css + '"></div>' +
+        '<div style="width:' + (theirs / total * 100) + '%;background:' + eI.css + '"></div></div>' +
+        '<b style="color:' + eI.css + '">' + theirs + '</b>' +
+        '<span style="color:' + eI.css + '">' + eI.short + '</span>' +
+      '</div>' +
+
+      '<div class="escards">' +
+        '<div class="escard"><div class="esn">' + player.kills + '</div><div class="esl">Kills</div></div>' +
+        '<div class="escard"><div class="esn">' + player.deaths + '</div><div class="esl">Deaths</div></div>' +
+        '<div class="escard"><div class="esn">#' + rank + '</div><div class="esl">Placement</div></div>' +
+        '<div class="escard hi"><div class="esn">+' + totalEarned + '</div><div class="esl">Points</div></div>' +
+      '</div>' +
+
+      '<div class="esgrid">' +
+        '<div class="esbox"><h4>Scoreboard</h4>' + rows + '</div>' +
+        '<div class="esbox"><h4>Points earned</h4>' +
+          (ptRows || '<div class="esptrow" style="opacity:.6"><span>No points this match</span><span>+0</span></div>') +
+          '<div class="esptrow tot"><span>Total</span><span>+' + totalEarned + '</span></div>' +
+          '<div class="esbank">Balance: <b>' + pts() + ' pts</b></div>' +
+        '</div>' +
+      '</div>' +
+
+      '<button class="again" onclick="location.reload()">▶️ Play again</button>' +
+    '</div>';
 }
 
 function animate() {
