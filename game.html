@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v50 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v53 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -838,15 +838,53 @@ function buildBases() {
 }
 function buildShop() {
   const wall = 0x2a3a4a;
-  box(SHOP.w, 5, 0.4, wall, SHOP.x, 2.5, SHOP.z - SHOP.d/2, true);
-  box(0.4, 5, SHOP.d, wall, SHOP.x - SHOP.w/2, 2.5, SHOP.z, true);
-  box(0.4, 5, SHOP.d, wall, SHOP.x + SHOP.w/2, 2.5, SHOP.z, true);
-  box(4, 5, 0.4, wall, SHOP.x - 4.5, 2.5, SHOP.z + SHOP.d/2, true);
-  box(4, 5, 0.4, wall, SHOP.x + 4.5, 2.5, SHOP.z + SHOP.d/2, true);
-  box(SHOP.w + 1, 0.4, SHOP.d + 1, 0x1a2530, SHOP.x, 5.2, SHOP.z, false);
+  const DOOR = 5;                                  // doorway width
+  const side = (SHOP.w - DOOR) / 2;                // each front panel fills to the corner
+  const off  = DOOR / 2 + side / 2;
+
+  box(SHOP.w, 5, 0.4, wall, SHOP.x, 2.5, SHOP.z - SHOP.d/2, true);          // back
+  box(0.4, 5, SHOP.d, wall, SHOP.x - SHOP.w/2, 2.5, SHOP.z, true);          // left
+  box(0.4, 5, SHOP.d, wall, SHOP.x + SHOP.w/2, 2.5, SHOP.z, true);          // right
+  box(side, 5, 0.4, wall, SHOP.x - off, 2.5, SHOP.z + SHOP.d/2, true);      // front-left (reaches the corner)
+  box(side, 5, 0.4, wall, SHOP.x + off, 2.5, SHOP.z + SHOP.d/2, true);      // front-right
+  box(DOOR, 1.2, 0.4, wall, SHOP.x, 4.4, SHOP.z + SHOP.d/2, false);         // lintel above the door
+
+  // floor and a slightly overhanging roof so there is no gap at the top edges
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(SHOP.w, 0.2, SHOP.d),
+    new THREE.MeshStandardMaterial({ color: 0x1c2630, roughness: 0.95 }));
+  floor.position.set(SHOP.x, 0.1, SHOP.z); floor.receiveShadow = true; scene.add(floor);
+  box(SHOP.w + 1.2, 0.5, SHOP.d + 1.2, 0x1a2530, SHOP.x, 5.15, SHOP.z, false);
+
+  // doorway frame so the entrance reads clearly
+  const fr = new THREE.MeshStandardMaterial({ color: 0xffd24a, roughness: 0.5 });
+  const fl = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.8, 0.5), fr);
+  fl.position.set(SHOP.x - DOOR/2, 1.9, SHOP.z + SHOP.d/2); scene.add(fl);
+  const frr = fl.clone(); frr.position.x = SHOP.x + DOOR/2; scene.add(frr);
   // glowing sign
   const sign = new THREE.Mesh(new THREE.BoxGeometry(9, 1.6, 0.3), new THREE.MeshBasicMaterial({ color: 0xffd24a }));
   sign.position.set(SHOP.x, 6.2, SHOP.z + SHOP.d/2); scene.add(sign);
+  // "SHOP" text painted in black on the yellow sign
+  const sc = document.createElement('canvas');
+  sc.width = 512; sc.height = 128;
+  const sg = sc.getContext('2d');
+  sg.fillStyle = '#ffd24a'; sg.fillRect(0, 0, 512, 128);
+  sg.fillStyle = '#000';
+  sg.font = 'bold 82px Arial, sans-serif';
+  sg.textAlign = 'center'; sg.textBaseline = 'middle';
+  sg.letterSpacing = '10px';
+  sg.fillText('SHOP', 256, 68);
+  const signTex = new THREE.CanvasTexture(sc);
+  const label = new THREE.Mesh(
+    new THREE.PlaneGeometry(8.6, 1.5),
+    new THREE.MeshBasicMaterial({ map: signTex, transparent: false })
+  );
+  label.position.set(SHOP.x, 6.2, SHOP.z + SHOP.d/2 + 0.17);
+  scene.add(label);
+  // and on the back so it reads from both sides
+  const labelB = label.clone();
+  labelB.position.set(SHOP.x, 6.2, SHOP.z + SHOP.d/2 - 0.17);
+  labelB.rotation.y = Math.PI;
+  scene.add(labelB);
   const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffd24a, transparent: true, opacity: 0.5 }));
   beacon.position.set(SHOP.x, 12, SHOP.z); scene.add(beacon);
   const glow = new THREE.PointLight(0xffd24a, 1.5, 26); glow.position.set(SHOP.x, 4, SHOP.z); scene.add(glow);
@@ -1129,6 +1167,49 @@ function buildWeaponModel(type) {
   return g;
 }
 
+// floating nametag + health bar drawn above a bot
+function makeTag(name, teamCss) {
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 72;
+  const g = cv.getContext('2d');
+  const tex = new THREE.CanvasTexture(cv);
+  tex.minFilter = THREE.LinearFilter;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(1.9, 0.54, 1);
+  sp.position.y = 2.25;
+  sp.renderOrder = 999;
+  sp.userData = { cv: cv, g: g, tex: tex, name: name, css: teamCss, hp: -1 };
+  return sp;
+}
+
+function drawTag(sp, hp) {
+  const u = sp.userData;
+  if (u.hp === hp) return;          // only redraw when health changes
+  u.hp = hp;
+  const g = u.g;
+  g.clearRect(0, 0, 256, 72);
+
+  // name with an outline so it reads against any background
+  g.font = 'bold 30px Segoe UI, Arial, sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.lineWidth = 6; g.strokeStyle = 'rgba(0,0,0,0.85)';
+  g.strokeText(u.name, 128, 22);
+  g.fillStyle = u.css;
+  g.fillText(u.name, 128, 22);
+
+  // health bar
+  const bw = 190, bh = 13, bx = (256 - bw) / 2, by = 44;
+  g.fillStyle = 'rgba(0,0,0,0.72)';
+  g.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
+  g.fillStyle = 'rgba(255,255,255,0.14)';
+  g.fillRect(bx, by, bw, bh);
+  const pct = Math.max(0, Math.min(1, hp / 100));
+  g.fillStyle = pct > 0.6 ? '#4ade80' : (pct > 0.3 ? '#ffd24a' : '#ff5a5a');
+  g.fillRect(bx, by, bw * pct, bh);
+  u.tex.needsUpdate = true;
+}
+
 function spawnBot(i) {
   const team = i < 4 ? TEAM_CT : TEAM_T;
   const useModel = CUSTOM_MODELS.botsUseModel && !!loadedCharGLB;
@@ -1136,8 +1217,10 @@ function spawnBot(i) {
   // spawn in a ring 12-45 units out so they're visible around the player
   const B = BASES[team];
   g.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
+  const tag = makeTag(BOT_NAMES[i] || ('Bot' + i), TEAM_INFO[team].css);
+  g.add(tag);
   scene.add(g);
-  bots.push({ mesh: g, team: team, name: BOT_NAMES[i] || ('Bot'+i), hp: 100, kills: 0, alive: true, tx: g.position.x, tz: g.position.z, cooldown: 1+Math.random()*2, retarget: 0 });
+  bots.push({ mesh: g, tag: tag, team: team, name: BOT_NAMES[i] || ('Bot'+i), hp: 100, kills: 0, alive: true, tx: g.position.x, tz: g.position.z, cooldown: 1+Math.random()*2, retarget: 0 });
 }
 
 // ---------- tracers ----------
@@ -1300,14 +1383,14 @@ function shoot() {
 
 function killBot(b) {
   if (b.team === PLAYER_TEAM) return;   // friendly fire is off
-  b.alive = false; b.mesh.visible = false; player.kills++;
+  b.alive = false; b.mesh.visible = false; if (b.tag) b.tag.visible = false; player.kills++;
   document.getElementById('mescore').textContent = player.kills;
   earn(MODES[mode].perKill, 'kill'); addFeed('You ➜ ' + b.name); updateBoard();
   setTimeout(() => respawnBot(b), 2500 + Math.random()*3000);
 }
 function respawnBot(b) {
   if (timeLeft <= 0) return;
-  b.hp = 100; b.alive = true; b.mesh.visible = true;
+  b.hp = 100; b.alive = true; b.mesh.visible = true; if (b.tag) { b.tag.visible = true; b.tag.userData.hp = -1; }
   const B = BASES[b.team];
   b.mesh.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
 }
@@ -1434,6 +1517,16 @@ function updateBots(dt) {
     const dx = b.tx - b.mesh.position.x, dz = b.tz - b.mesh.position.z, dist = Math.hypot(dx, dz);
     if (dist > 0.5) { b.mesh.position.x += (dx/dist)*dt*5; b.mesh.position.z += (dz/dist)*dt*5; }
     b.mesh.position.y = 0;   // stay on the ground
+    if (b.tag) {
+      const dist = Math.hypot(b.mesh.position.x - player.x, b.mesh.position.z - player.z);
+      b.tag.visible = b.alive && dist < 70;
+      if (b.tag.visible) {
+        drawTag(b.tag, Math.max(0, Math.round(b.hp)));
+        // shrink slightly with distance so nearby tags aren't overwhelming
+        const s = Math.max(0.75, Math.min(1.35, 1 + dist / 90));
+        b.tag.scale.set(1.9 * s, 0.54 * s, 1);
+      }
+    }
     b.cooldown -= dt;
     if (b.cooldown <= 0) {
       const tgtPlayer = b.team !== PLAYER_TEAM && Math.random() < 0.65 && !inShop;
