@@ -128,6 +128,65 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 .walletsub { font-size: .74rem; color: #7E8AA6; text-align: center; margin-top: 8px; line-height: 1.5; }
 .ordiv { display: flex; align-items: center; gap: 10px; margin: 18px 0 4px; color: #7E8AA6; font-size: .74rem; }
 .ordiv::before, .ordiv::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12); }
+
+#pingate { position: fixed; inset: 0; z-index: 1001; display: none; align-items: center; justify-content: center;
+  background: rgba(5,6,10,0.9); backdrop-filter: blur(10px); padding: 20px; overflow-y: auto; }
+#pingate.show { display: flex; }
+.pinbox { background: #101725; border: 1px solid rgba(255,210,74,0.4); border-radius: 22px; padding: 30px 28px;
+  width: min(430px, 96vw); position: relative; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.pinicon { font-size: 2.6rem; margin-bottom: 8px; }
+.pinbox h2 { font-size: 1.3rem; margin-bottom: 10px; }
+.pinsub { color: #9fb0cc; font-size: .9rem; line-height: 1.7; margin-bottom: 18px; }
+.pindots { display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; }
+.pindots span { width: 13px; height: 13px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); transition: .2s; }
+.pindots span.on { background: #ffd24a; border-color: #ffd24a; box-shadow: 0 0 12px rgba(255,210,74,.6); }
+#pinInput { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.18);
+  background: #0A0C14; color: #EAF2FF; font-size: 1.5rem; text-align: center; letter-spacing: 12px;
+  font-family: inherit; outline: none; margin-bottom: 12px; }
+#pinInput:focus { border-color: #ffd24a; box-shadow: 0 0 0 3px rgba(255,210,74,.14); }
+.pinerr { color: #FF2E97; font-size: .84rem; min-height: 20px; margin-bottom: 8px; }
+.pinlink { display: block; margin-top: 14px; color: #7E8AA6; font-size: .8rem; text-decoration: none; }
+.pinlink:hover { color: #00F0FF; }
+.pinsteps { text-align: left; margin-bottom: 18px; }
+.pinsteps > div { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; color: #b8bccb; font-size: .87rem; }
+.pinsteps b { background: rgba(255,210,74,.16); color: #ffd24a; width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: .76rem; flex-shrink: 0; }
+
+.certmini { --ac:#00F0FF; background:linear-gradient(150deg,#0d1420,#131c2e); border:2px solid var(--ac);
+  border-radius:14px; padding:24px 22px; position:relative; overflow:hidden; text-align:left; margin:16px 0 10px; }
+.certmini::after { content:''; position:absolute; top:-40%; right:-18%; width:60%; height:180%;
+  background:radial-gradient(circle, var(--ac) 0%, transparent 62%); opacity:.10; pointer-events:none; }
+.certmini .cbrand { font-size:.62rem; letter-spacing:4px; color:var(--ac); font-weight:800; margin-bottom:6px; }
+.certmini .ctitle { font-size:1.15rem; font-weight:900; line-height:1.2; margin-bottom:3px; }
+.certmini .clevel { font-size:.74rem; color:#7E8AA6; margin-bottom:14px; }
+.certmini .cfor { font-size:.62rem; letter-spacing:2px; color:#7E8AA6; text-transform:uppercase; }
+.certmini .cname { font-size:1.45rem; font-weight:900; margin:2px 0 12px;
+  background:linear-gradient(90deg,#fff,var(--ac)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.certmini .cskills { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:14px; }
+.certmini .cskills span { font-size:.64rem; padding:3px 9px; border-radius:14px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#b8bccb; }
+.certmini .cfoot { display:flex; justify-content:space-between; align-items:flex-end; gap:12px;
+  border-top:1px solid rgba(255,255,255,.12); padding-top:12px; }
+.certmini .cfoot div { font-size:.66rem; color:#7E8AA6; line-height:1.6; }
+.certmini .cfoot b { color:#EAF2FF; display:block; font-size:.76rem; }
+.certmini .ccode { font-family:monospace; color:var(--ac); letter-spacing:.5px; }
+.certmini .cseal { width:50px; height:50px; border-radius:50%; border:2px solid var(--ac);
+  display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;
+  background:radial-gradient(circle, rgba(255,255,255,.08), transparent); }
+.certacts { display:flex; gap:8px; margin-bottom:6px; }
+.certacts button { flex:1; padding:10px; border-radius:22px; cursor:pointer; font-weight:700; font-family:inherit;
+  font-size:.82rem; background:rgba(255,255,255,.07); color:#EAF2FF; border:1px solid rgba(255,255,255,.16); }
+.certacts button:hover { border-color:var(--cyan,#00F0FF); }
+@media print {
+  body > *:not(#checkout) { display:none !important; }
+  #checkout { position:static !important; background:#fff !important; backdrop-filter:none !important; }
+  .cobox { border:none !important; box-shadow:none !important; }
+  .cobox > .costep > *:not(#certIssued), .coclose, .certacts, .cotick, .cosub { display:none !important; }
+  .certmini { border-color:#333 !important; background:#fff !important; }
+  .certmini .ctitle, .certmini .cname { color:#000 !important; -webkit-text-fill-color:#000 !important; }
+  .certmini .cfoot div, .certmini .clevel { color:#333 !important; }
+  .certmini .cskills span { color:#333 !important; border-color:#999 !important; }
+}
 </style>
 </head>
 <body>
@@ -411,6 +470,9 @@ function wireCartPay() {
   if (!cp) return;
   cp.onclick = () => {
   if (!CART.length) return;
+  requireParent(() => doCheckout());
+  };
+  function doCheckout() {
   const withLinks = CART.filter(it => stripeLinkFor(it));
   if (withLinks.length) {
     // real payment: send them to Stripe for the first item
@@ -433,6 +495,86 @@ function wireCartPay() {
   };
 }
 
+
+
+// ============================================================
+//  PARENTAL APPROVAL GATE
+//  Nothing can be bought without the Family Dashboard PIN.
+// ============================================================
+let pinApproved = false, pinNext = null;
+
+async function hashPin(v) {
+  const data = new TextEncoder().encode('novaclip-salt-v1:' + v);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function hasParentalControls() { return !!localStorage.getItem('nc_parent_pin_h'); }
+window.closePinGate = function () { document.getElementById('pingate').classList.remove('show'); };
+
+// call this before any purchase; runs `next` only once a parent approves
+function requireParent(next) {
+  if (pinApproved) { next(); return; }
+  pinNext = next;
+  const gate = document.getElementById('pingate');
+  const has = hasParentalControls();
+  document.getElementById('pinHasPin').style.display = has ? 'block' : 'none';
+  document.getElementById('pinNoPin').style.display = has ? 'none' : 'block';
+  if (has) {
+    const inp = document.getElementById('pinInput');
+    inp.value = ''; document.getElementById('pinErr').textContent = '';
+    updatePinDots(0);
+    setTimeout(() => inp.focus(), 120);
+  }
+  gate.classList.add('show');
+}
+
+function updatePinDots(n) {
+  document.querySelectorAll('#pinDots span').forEach((d, i) => d.classList.toggle('on', i < n));
+}
+
+function wirePinGate() {
+  const inp = document.getElementById('pinInput');
+  if (!inp) return;
+  inp.oninput = () => {
+    inp.value = inp.value.replace(/\D/g, '').slice(0, 5);
+    updatePinDots(inp.value.length);
+    document.getElementById('pinErr').textContent = '';
+  };
+  inp.onkeydown = (e) => { if (e.key === 'Enter') document.getElementById('pinGo').click(); };
+
+  document.getElementById('pinGo').onclick = async () => {
+    const err = document.getElementById('pinErr');
+    const v = inp.value;
+    if (v.length !== 5) { err.textContent = 'Enter all 5 digits.'; return; }
+
+    // lockout after repeated wrong attempts
+    let lock = { fails: 0, until: 0 };
+    try { lock = JSON.parse(localStorage.getItem('nc_buy_lock') || '{"fails":0,"until":0}'); } catch (e) {}
+    if (lock.until > Date.now()) {
+      err.textContent = 'Too many attempts. Try again in ' + Math.ceil((lock.until - Date.now()) / 1000) + 's.';
+      return;
+    }
+
+    const ok = localStorage.getItem('nc_parent_pin_h') === await hashPin(v);
+    if (!ok) {
+      lock.fails++;
+      if (lock.fails >= 3) { lock.until = Date.now() + 30000; lock.fails = 0; err.textContent = 'Wrong PIN. Locked for 30 seconds.'; }
+      else err.textContent = 'Wrong PIN. ' + (3 - lock.fails) + ' attempt' + (3 - lock.fails === 1 ? '' : 's') + ' left.';
+      localStorage.setItem('nc_buy_lock', JSON.stringify(lock));
+      inp.value = ''; updatePinDots(0);
+      return;
+    }
+
+    localStorage.setItem('nc_buy_lock', JSON.stringify({ fails: 0, until: 0 }));
+    pinApproved = true;
+    // log the approval so a parent can see what was authorised
+    const log = JSON.parse(localStorage.getItem('nc_purchase_log') || '[]');
+    log.push({ at: Date.now(), items: CART.map(i => i.name + ' ×' + i.qty) });
+    localStorage.setItem('nc_purchase_log', JSON.stringify(log.slice(-30)));
+    closePinGate();
+    if (pinNext) { const n = pinNext; pinNext = null; n(); }
+  };
+}
 
 // ============================================================
 //  TAP TO PAY — Apple Pay / Google Pay
@@ -528,7 +670,9 @@ async function setupWallet() {
         started: new Date().toISOString()
       };
       localStorage.setItem('nc_subscription', JSON.stringify(sub));
+      const boughtItems = CART.slice();
       CART = []; saveCart();
+      issueCertificates(boughtItems);
       document.getElementById('coSentTo').textContent = sub.email;
       document.getElementById('coSummary').innerHTML =
         '<div><b>Plan:</b> ' + sub.plan + '</div>' +
@@ -542,6 +686,86 @@ async function setupWallet() {
     }
   };
 }
+
+
+// ============================================================
+//  CERTIFICATE ISSUING — shown right after a certificate is bought
+// ============================================================
+const CERTS = {
+  'Basic Certificate': {
+    tier:'BA', icon:'📗', accent:'#00F0FF', title:'NovaClip Creator Certificate', level:'Foundation level credential',
+    skills:['Video editing','Safe publishing','Thumbnails & titles','Audience basics']
+  },
+  'Advanced Certificate': {
+    tier:'AD', icon:'🥈', accent:'#B6FF3C', title:'NovaClip Advanced Creator', level:'Advanced level credential',
+    skills:['Analytics & growth','Advanced effects','Sound design','Portfolio review']
+  },
+  'Master Certificate': {
+    tier:'MA', icon:'🏆', accent:'#ffd24a', title:'NovaClip Master Creator', level:'Master level credential',
+    skills:['Creative direction','Growth strategy','Community & safety','Featured showcase']
+  }
+};
+
+function certCode(name, tier, iso) {
+  let hsh = 0; const s = name + '|' + tier + '|' + iso;
+  for (let i = 0; i < s.length; i++) hsh = ((hsh << 5) - hsh + s.charCodeAt(i)) | 0;
+  return 'NC-' + tier + '-' + Math.abs(hsh).toString(36).toUpperCase().padStart(6, '0').slice(0, 6);
+}
+
+function holderName() {
+  const typed = (document.getElementById('coName2').value || '').trim();
+  if (typed) return typed.toUpperCase();
+  try { const y = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (y && y.name) return y.name; } catch (e) {}
+  return 'NOVACLIP CREATOR';
+}
+
+// called after a successful purchase — shows a certificate if one was bought
+function certKeyFor(name) {
+  const n = (name || '').toLowerCase();
+  if (!n.includes('certificate')) return '';
+  if (n.includes('master')) return 'Master Certificate';
+  if (n.includes('advanced')) return 'Advanced Certificate';
+  if (n.includes('basic')) return 'Basic Certificate';
+  return '';
+}
+
+function issueCertificates(items) {
+  const box = document.getElementById('certIssued');
+  const bought = (items || []).map(i => certKeyFor(i.name)).filter(Boolean);
+  if (!bought.length) { box.style.display = 'none'; return; }
+
+  // highest tier wins if several were bought together
+  const order = ['Basic Certificate','Advanced Certificate','Master Certificate'];
+  bought.sort((a,b) => order.indexOf(b) - order.indexOf(a));
+  const c = CERTS[bought[0]];
+  const name = holderName();
+  const iso = new Date().toISOString();
+  const code = certCode(name, c.tier, iso);
+
+  // keep a record so it can be shown again later
+  let owned = [];
+  try { owned = JSON.parse(localStorage.getItem('nc_certs') || '[]'); } catch (e) {}
+  if (!owned.some(x => x.code === code)) owned.push({ title: c.title, name: name, iso: iso, code: code, tier: c.tier });
+  localStorage.setItem('nc_certs', JSON.stringify(owned));
+
+  const d = new Date(iso);
+  const el = document.getElementById('certMini');
+  el.style.setProperty('--ac', c.accent);
+  el.innerHTML =
+    '<div class="cbrand">NOVACLIP · CREATOR CERTIFICATION</div>' +
+    '<div class="ctitle">' + c.title + '</div>' +
+    '<div class="clevel">' + c.level + '</div>' +
+    '<div class="cfor">This certifies that</div>' +
+    '<div class="cname">' + name + '</div>' +
+    '<div class="cskills">' + c.skills.map(s => '<span>' + s + '</span>').join('') + '</div>' +
+    '<div class="cfoot">' +
+      '<div><b>' + d.toLocaleDateString(undefined, { day:'numeric', month:'long', year:'numeric' }) + '</b>Date of issue</div>' +
+      '<div><b class="ccode">' + code + '</b>Verification code</div>' +
+      '<div class="cseal">' + c.icon + '</div>' +
+    '</div>';
+  box.style.display = 'block';
+}
+window.printCert = function () { window.print(); };
 
 // ---------- CHECKOUT ----------
 let coCurrent = null;
@@ -841,6 +1065,7 @@ function wireScanner() {
 
 function initCheckout() {
   wireCartPay();
+  wirePinGate();
   wireScanner();
   updateCartCount();
   const cardEl = document.getElementById('coCard');
@@ -874,6 +1099,8 @@ function initCheckout() {
       '<div><b>Billing:</b> ' + sub.cycle + '</div>' +
       '<div><b>Amount:</b> ' + sub.price + '</div>' +
       '<div><b>Card:</b> \u2022\u2022\u2022\u2022 ' + sub.last4 + '</div>';
+    issueCertificates(CART);
+    CART = []; saveCart();
     document.getElementById('coStep1').style.display = 'none';
     document.getElementById('coStep2').style.display = 'block';
   };
@@ -887,6 +1114,34 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else initCheckout();
 
 </script>
+<div id='pingate'>
+  <div class='pinbox'>
+    <button class='coclose' onclick='closePinGate()'>✕</button>
+    <div id='pinHasPin'>
+      <div class='pinicon'>🔐</div>
+      <h2>Parent approval needed</h2>
+      <p class='pinsub'>Purchases must be approved by a parent or guardian. Enter the 5-digit Family Dashboard PIN to continue.</p>
+      <div class='pindots' id='pinDots'><span></span><span></span><span></span><span></span><span></span></div>
+      <input type='password' id='pinInput' inputmode='numeric' maxlength='5' autocomplete='off' placeholder='• • • • •'>
+      <div class='pinerr' id='pinErr'></div>
+      <button class='cobtn' id='pinGo'>Approve purchase</button>
+      <a class='pinlink' href='parent.html'>Forgot the PIN? Open the Family Dashboard</a>
+    </div>
+    <div id='pinNoPin' style='display:none'>
+      <div class='pinicon'>🛡️</div>
+      <h2>Set up parental controls first</h2>
+      <p class='pinsub'>NovaClip is built for creators aged 13–18, so <b>every purchase needs a parent or guardian</b>. No parental controls are set up on this account yet, so nothing can be bought.</p>
+      <div class='pinsteps'>
+        <div><b>1</b> A parent opens the Family Dashboard</div>
+        <div><b>2</b> They verify their email and create a 5-digit PIN</div>
+        <div><b>3</b> Come back here — the PIN approves purchases</div>
+      </div>
+      <a class='cobtn' href='parent.html' style='display:block;text-align:center;text-decoration:none;line-height:1.2'>Open the Family Dashboard</a>
+      <button class='cobtn alt' onclick='closePinGate()'>Not now</button>
+    </div>
+  </div>
+</div>
+
 <div id='scanner'>
   <div class='scanbox'>
     <button class='coclose' onclick='closeScanner()'>✕</button>
@@ -953,6 +1208,12 @@ else initCheckout();
       <h2>Subscription confirmed</h2>
       <p class='cosub'>A confirmation has been sent to <b id='coSentTo'>—</b>.</p>
       <div class='cosummary' id='coSummary'></div>
+      <div id='certIssued' style='display:none'>
+        <div class='certmini' id='certMini'></div>
+        <div class='certacts'>
+          <button onclick='printCert()'>🖨️ Print / save PDF</button>
+        </div>
+      </div>
       <button class='cobtn' onclick='closeCheckout()'>Done</button>
     </div>
   </div>
