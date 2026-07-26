@@ -241,3 +241,246 @@ document.getElementById('duelgo').onclick = async () => {
 <script src='nova.js'></script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip Studio</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
+body { background: #060608; color: #EAF2FF; overflow-x: hidden; }
+a { text-decoration: none; color: inherit; }
+
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 210px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 20px 0; gap: 4px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); }
+.sidebar a { font-size: 1rem; color: #EAF2FF; display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background 0.2s; }
+.sidebar a:hover { background: rgba(114,9,183,0.25); }
+.sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: 0.78rem; opacity: 0.6; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: 0.95rem; background: rgba(255,255,255,0.05); color: #EAF2FF; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px; }
+
+.main { margin-left: 210px; padding: 34px 40px 60px; position: relative; z-index: 2; }
+@media (max-width: 820px) { .main { margin-left: 0; padding: 20px; } .sidebar { position: static; width: 100%; flex-direction: row; flex-wrap: wrap; } .sidebar .themewrap { margin: 0; } }
+
+.head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
+h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -1.5px; }
+h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.subtitle { color: #7E8AA6; margin-bottom: 24px; font-size: 1.02rem; }
+
+.gbtn { padding: 13px 28px; border-radius: 40px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(90deg, #00F0FF, #4CC9F0); color: #04121a; font-size: 1rem; transition: transform 0.2s, box-shadow .2s; }
+.gbtn:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,240,255,0.4); }
+#uname { display: none; color: #4CC9F0; font-weight: 700; }
+
+.cardgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 10px; }
+.tool { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 22px; cursor: pointer; transition: 0.25s; }
+.tool:hover { transform: translateY(-5px); border-color: rgba(0,240,255,0.4); box-shadow: 0 16px 40px rgba(0,240,255,0.12); }
+.tool .ico { font-size: 1.8rem; margin-bottom: 10px; }
+.tool h3 { font-size: 1.1rem; margin-bottom: 6px; }
+.tool p { color: #7E8AA6; font-size: 0.9rem; line-height: 1.5; }
+
+#toolbar { display: none; }
+.panelbox { margin-top: 20px; text-align: left; display: none; background: rgba(255,255,255,0.04); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 22px; }
+#duelbox { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #EAF2FF; }
+.smallbtn { margin-top: 12px; padding: 11px 22px; border-radius: 24px; border: none; cursor: pointer; font-weight: 800; color: white; background: linear-gradient(90deg, #F72585, #7209B7); }
+.compcard { border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 16px; margin-bottom: 12px; background: rgba(255,255,255,0.02); }
+.compcard b { font-size: 1.05rem; }
+.compcard .row { display: flex; flex-wrap: wrap; gap: 16px; margin: 8px 0; font-size: 0.9rem; color: #b8bccb; }
+.compcard .row span b { color: #00F0FF; font-size: 0.9rem; }
+.compcard .desc { font-size: 0.85rem; color: #7E8AA6; line-height: 1.5; margin: 6px 0; }
+.orb { position: fixed; border-radius: 50%; filter: blur(90px); opacity: 0.25; z-index: 0; pointer-events: none; }
+.orb.a { width: 440px; height: 440px; background: #7209B7; top: -80px; right: 6%; }
+.orb.b { width: 380px; height: 380px; background: #F72585; bottom: -60px; left: 20%; }
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <a href='index.html' data-t='home'>🏠 Home</a>
+  <a href='app.html' data-t='studio'>📈 Studio</a>
+  <a href='analytics.html' data-t='analytics'>📊 Analytics</a>
+  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>🎬 Editor</a>
+  <a href='game.html' data-t='sniper'>🎯 Sniper</a>
+  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div class='orb a'></div><div class='orb b'></div>
+
+<div class='main'>
+  <div class='head'>
+    <div>
+      <h1><span class='grad' data-t='studio_h'>NovaClip Studio</span></h1>
+      <p class='subtitle' data-t='studio_sub'>Connect your channel and scout the competition.</p>
+    </div>
+    <div>
+      <button id='gbtn' class='gbtn' data-t='signin'>🔑 Sign in with Google</button>
+      <p id='uname'></p>
+    </div>
+  </div>
+
+  <div id='toolbar'>
+    <div class='cardgrid'>
+      <div class='tool' id='compbtn'><div class='ico'>🥊</div><h3 data-t='t_comp'>Closest competitors</h3><p data-t='t_comp_d'>Channels closest to your size — full stats and links.</p></div>
+      <div class='tool' id='duelbtn'><div class='ico'>⚔️</div><h3 data-t='t_duel'>Duel a channel</h3><p data-t='t_duel_d'>Challenge a channel within 20k subs and win points.</p></div>
+      <a class='tool' href='analytics.html'><div class='ico'>📊</div><h3 data-t='t_analytics'>Full analytics</h3><p data-t='t_analytics_d'>Deep charts comparing you to rivals — on its own page.</p></a>
+    </div>
+  </div>
+
+  <div id='duelsetup' class='panelbox'>
+    <b data-t='duel_label'>⚔️ Views and subs duel (max 20k subs difference between channels)</b><br><br>
+    <input id='duelbox' data-tph='opp_ph' placeholder='Opponent channel name...'>
+    <button id='duelgo' class='smallbtn' data-t='fight'>Fight!</button>
+  </div>
+  <div id='toolout' class='panelbox'></div>
+</div>
+
+<script type='module'>
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyCKJVKqArOofTZT4fiz18cs_-thLB1O2J4',
+  authDomain: 'novaclip-eaf8c.firebaseapp.com',
+  projectId: 'novaclip-eaf8c',
+  storageBucket: 'novaclip-eaf8c.firebasestorage.app',
+  messagingSenderId: '299962701489',
+  appId: '1:299962701489:web:766f4ea8632830c625b490'
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+let ytToken = null, myStats = null;
+
+function saveToken(tok, channel) {
+  ytToken = tok;
+  let prev = {};
+  try { prev = JSON.parse(localStorage.getItem('nc_yt') || '{}') || {}; } catch (e) {}
+  // keep the channel title — certificates are issued in the connected channel's name
+  const rec = { t: tok, exp: Date.now() + 50*60*1000, channel: channel || prev.channel || '' };
+  localStorage.setItem('nc_yt', JSON.stringify(rec));
+}
+function rememberChannel(title) {
+  if (!title) return;
+  let rec = {};
+  try { rec = JSON.parse(localStorage.getItem('nc_yt') || '{}') || {}; } catch (e) {}
+  if (rec.channel !== title) { rec.channel = title; localStorage.setItem('nc_yt', JSON.stringify(rec)); }
+  if (typeof logSkill === 'function' && !localStorage.getItem('nc_yt_logged')) {
+    localStorage.setItem('nc_yt_logged', '1');
+    logSkill('yt_connect');
+  }
+}
+function loadToken() { try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {} return null; }
+function signedInUI(name) {
+  document.getElementById('gbtn').style.display = 'none';
+  const p = document.getElementById('uname');
+  p.style.display = 'block';
+  p.innerHTML = '👤 ' + name + ' &nbsp; <a href="#" id="signoutlink" style="color:#7E8AA6;font-size:0.85rem;">Sign out</a>';
+  document.getElementById('toolbar').style.display = 'block';
+  const so = document.getElementById('signoutlink');
+  if (so) so.onclick = (e) => { e.preventDefault(); localStorage.removeItem('nc_yt'); auth.signOut().then(() => location.reload()); };
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    signedInUI(user.displayName);
+    const cached = loadToken();
+    if (cached) {
+      ytToken = cached;
+      try {
+        const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
+        if (data.items && data.items.length) { myStats = data.items[0]; rememberChannel(myStats.snippet.title); }
+        else { ytToken = null; localStorage.removeItem('nc_yt'); }
+      } catch (e) { ytToken = null; }
+    }
+  }
+});
+
+function yt(url) { return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json()); }
+function show(html) { const box = document.getElementById('toolout'); box.style.display = 'block'; box.innerHTML = html; }
+
+async function connect() {
+  const provider = new GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
+  const result = await signInWithPopup(auth, provider);
+  saveToken(GoogleAuthProvider.credentialFromResult(result).accessToken);
+  const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
+  if (data.items && data.items.length) { myStats = data.items[0]; rememberChannel(myStats.snippet.title); signedInUI(myStats.snippet.title); }
+}
+document.getElementById('gbtn').onclick = connect;
+async function ensureToken() {
+  if (ytToken && myStats) return;
+  const cached = loadToken();
+  if (cached && !ytToken) {
+    ytToken = cached;
+    try { const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true'); if (d.items && d.items.length) { myStats = d.items[0]; rememberChannel(myStats.snippet.title); return; } } catch (e) {}
+  }
+  await connect();
+}
+
+async function getCompetitors(n) {
+  const seeds = [myStats.snippet.title.split(' ')[0], 'gaming channel', 'vlog channel', 'music channel', 'shorts creator'];
+  let ids = new Set();
+  for (const q of seeds) {
+    const sd = await yt('search?part=snippet&type=channel&maxResults=12&q=' + encodeURIComponent(q)).catch(() => null);
+    if (sd && sd.items) sd.items.forEach(i => { if (i.snippet.channelId !== myStats.id) ids.add(i.snippet.channelId); });
+    if (ids.size >= 40) break;
+  }
+  const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + [...ids].slice(0, 50).join(','));
+  const mySubs = parseInt(myStats.statistics.subscriberCount);
+  return cd.items.map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, n || 3).map(x => x.ch);
+}
+
+document.getElementById('compbtn').onclick = async () => {
+  await ensureToken();
+  show('Scouting your rivals...');
+  const comps = await getCompetitors(3);
+  const mySubs = parseInt(myStats.statistics.subscriberCount);
+  show('<b style="font-size:1.15rem">🥊 Your closest competitors</b><br><span style="color:#7E8AA6;font-size:0.85rem">Matched purely by subscriber count — names are irrelevant.</span><br><br>' + comps.map((c, i) => {
+    const s = c.statistics;
+    const subs = parseInt(s.subscriberCount || 0), views = parseInt(s.viewCount || 0), vids = parseInt(s.videoCount || 1);
+    const avg = Math.round(views / Math.max(vids, 1));
+    const gap = subs - mySubs;
+    const created = c.snippet.publishedAt ? new Date(c.snippet.publishedAt).getFullYear() : '—';
+    return '<div class="compcard"><b>' + (i + 1) + '. ' + c.snippet.title + '</b>' + (c.snippet.country ? ' · ' + c.snippet.country : '') +
+      ' · since ' + created +
+      '<div class="row"><span>👥 <b>' + subs.toLocaleString() + '</b> subs</span>' +
+      '<span>👁️ <b>' + views.toLocaleString() + '</b> views</span>' +
+      '<span>🎬 <b>' + vids.toLocaleString() + '</b> videos</span>' +
+      '<span>📊 <b>~' + avg.toLocaleString() + '</b> views/video</span>' +
+      '<span>' + (gap >= 0 ? '📈 +' : '📉 ') + gap.toLocaleString() + ' vs you</span></div>' +
+      '<div class="desc">📝 ' + (c.snippet.description ? c.snippet.description.slice(0, 160).replace(/</g, '&lt;') + '…' : 'No description') + '</div>' +
+      '<a target="_blank" style="color:#00F0FF; font-size:0.88rem" href="https://www.youtube.com/channel/' + c.id + '">Open channel ↗</a></div>';
+  }).join(''));
+};
+
+document.getElementById('duelbtn').onclick = () => { const d = document.getElementById('duelsetup'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; };
+document.getElementById('duelgo').onclick = async () => {
+  await ensureToken();
+  const name = document.getElementById('duelbox').value;
+  if (!name) return;
+  show('Preparing the arena...');
+  const mySubs = parseInt(myStats.statistics.subscriberCount), myViews = parseInt(myStats.statistics.viewCount);
+  const sd = await yt('search?part=snippet&type=channel&maxResults=1&q=' + encodeURIComponent(name));
+  if (!sd.items || !sd.items.length) { show('Could not find that channel.'); return; }
+  const cd = await yt('channels?part=statistics,snippet&id=' + sd.items[0].snippet.channelId);
+  const opp = cd.items[0];
+  const oppSubs = parseInt(opp.statistics.subscriberCount || 0), oppViews = parseInt(opp.statistics.viewCount || 0);
+  const gap = Math.abs(mySubs - oppSubs);
+  if (gap > 20000) { show('⚔️ Unfair matchup! The gap is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer!'); return; }
+  let a = 0, b = 0;
+  if (mySubs >= oppSubs) a++; else b++;
+  if (myViews >= oppViews) a++; else b++;
+  const winner = a > b ? myStats.snippet.title : (b > a ? opp.snippet.title : 'It is a TIE');
+  show('<b>⚔️ DUEL RESULT</b><br><br>' + myStats.snippet.title + ': ' + mySubs.toLocaleString() + ' subs · ' + myViews.toLocaleString() + ' views<br>' + opp.snippet.title + ': ' + oppSubs.toLocaleString() + ' subs · ' + oppViews.toLocaleString() + ' views<br><br>🏆 <b>Winner: ' + winner + '</b>');
+  if (a > b && window.addPts) addPts(20);
+};
+
+
+</script>
+<script src='nova.js'></script>
+</body>
+</html>
