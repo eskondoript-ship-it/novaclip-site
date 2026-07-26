@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v54 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v55 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -404,7 +404,7 @@ const CUSTOM_MODELS = {
   // ===== MIXAMO SHOOTER PACK (converted to .glb) =====
   // Your working 18 MB suit as the character (the 112 MB Ch15 file was too big).
   character: 'ImageToStl.com_Y+Bot.glb',
-  characterScale: 1.0,  // auto-fitted to 1.8m tall; use this to fine-tune
+  characterScale: 1.25, // auto-fitted to 1.8m tall, then multiplied by this
   characterYOffset: 0,  // nudge up/down if the feet float or sink
   weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
 
@@ -436,6 +436,36 @@ const extraClips = {};   // animations loaded from separate files
 const mixers = [];   // animation players, ticked every frame
 
 function isFBX(name) { return /\.fbx$/i.test(name || ''); }
+
+/* The Mixamo animations were converted by an Assimp-based tool, which does two
+   things that stop them driving the character rig:
+     1. it splits one take into ~52 single-bone clips, so clips[0] is a fragment
+        (the idle file's first clip animates the head and nothing else);
+     2. it retargets each channel onto a helper node — "mixamorig:Spine" becomes
+        "mixamorig:Spine_$AssimpFbx$_Rotation" — which does not exist on the
+        character, so the track binds to nothing and the model stays in T-pose.
+   These exports carry only _Rotation channels (no PreRotation/Translation to
+   recompose), so flattening every clip into one and stripping the suffix maps
+   all 48 animated bones straight onto the character skeleton. */
+function mergeAnimClips(clips, name) {
+  const byName = new Map();
+  let dur = 0;
+  clips.forEach(c => {
+    if (isFinite(c.duration)) dur = Math.max(dur, c.duration);
+    c.tracks.forEach(t => {
+      let track;
+      try { track = t.clone(); } catch (e) { track = t; }
+      track.name = track.name.replace(/_\$AssimpFbx\$_(Rotation|PreRotation|Translation|Scaling)/, '');
+      // keep the richest track if a bone shows up in more than one split clip
+      const prev = byName.get(track.name);
+      if (!prev || (track.times && prev.times && track.times.length > prev.times.length)) {
+        byName.set(track.name, track);
+      }
+    });
+  });
+  const tracks = [...byName.values()];
+  return new THREE.AnimationClip(name, dur > 0 ? dur : -1, tracks);
+}
 
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
@@ -492,10 +522,10 @@ function loadCustomModels(done) {
       loader.load(file, res => {
         const clips = (res.animations && res.animations.length) ? res.animations : (res.scene && res.scene.animations) || [];
         if (clips.length) {
-          const clip = clips[0];
-          clip.name = key;                 // rename so the state machine finds it
+          const clip = mergeAnimClips(clips, key);   // name it so the state machine finds it
           extraClips[key] = clip;
-          console.log('loaded "' + key + '" animation from ' + file);
+          console.log('loaded "' + key + '" from ' + file +
+            ' — ' + clips.length + ' source clip(s) merged into ' + clip.tracks.length + ' tracks');
         } else {
           console.warn('no animation clip found in ' + file);
         }
@@ -1000,30 +1030,40 @@ function makeFighter(color, useGLB, isPlayer) {
          what the GPU actually draws for a skinned mesh, so measure the real thing:
          each geometry's own bounding box pushed through its world matrix. If that
          still says the character is wildly off human size, correct it outright. */
-      if (isPlayer) {
+      // True drawn extent: each geometry's own box pushed through its world matrix.
+      function realBox() {
         model.updateMatrixWorld(true);
-        const real = new THREE.Box3();
-        const gb = new THREE.Box3();
+        const bb = new THREE.Box3(), gb = new THREE.Box3();
         model.traverse(o => {
           if (!o.isMesh || !o.geometry) return;
           if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
           gb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
-          real.union(gb);
+          bb.union(gb);
         });
+        return bb;
+      }
+      if (isPlayer) {
+        const real = realBox();
+        // This clamp is doing the real work on the Y-Bot (the bone span measures
+        // ~0.003), so it has to aim at the requested height rather than a bare
+        // 1.8 — otherwise it silently cancels characterScale.
+        const wantH = TARGET_H * (CUSTOM_MODELS.characterScale || 1);
         const rh = real.max.y - real.min.y;
-        if (isFinite(rh) && rh > 0.01 && (rh < 0.9 || rh > 3.2)) {
-          const k = TARGET_H / rh;
+        if (isFinite(rh) && rh > 0.0001 && (rh < wantH * 0.5 || rh > wantH * 1.8)) {
+          const k = wantH / rh;
           if (isFinite(k) && k > 0) {
             s *= k;
             model.scale.setScalar(s);
-            model.updateMatrixWorld(true);
+            const after = realBox();          // stand the feet back on the ground
+            if (isFinite(after.min.y)) model.position.y -= after.min.y;
           }
         }
         // reported on screen so a wrong fit can be read off without a debugger
-        window.__ncFit = { bone: +(f2.sz.y).toFixed(3), rendered: +rh.toFixed(3), scale: +s.toFixed(4) };
+        const fin2 = realBox();
+        window.__ncFit = { height: +(fin2.max.y - fin2.min.y).toFixed(3), scale: +s.toFixed(4) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v54 · fit: measured ' + window.__ncFit.rendered +
-          'm → scale ' + window.__ncFit.scale + ' · ' + vt.textContent.replace(/^v54 · /, '');
+        if (vt) vt.textContent = 'v55 · fit: ' + window.__ncFit.height + 'm · scale ' +
+          window.__ncFit.scale + ' · ' + vt.textContent.replace(/^v5\d · /, '');
       }
 
       model.traverse(o => { if (o.isMesh) {
