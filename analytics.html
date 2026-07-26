@@ -278,6 +278,8 @@ function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return 'rgba(' + (
 function kpi(n, l) { return '<div class="kpi"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
 
 async function drawAll() {
+  // reviewing your numbers is a tracked skill — counted once per session
+  if (typeof logSkill === 'function' && !window.__ncAnalyticsLogged) { window.__ncAnalyticsLogged = true; logSkill('analytics'); }
   const withComp = document.getElementById('compToggle').checked;
   let channels = [myStats];
   if (withComp) { try { channels = channels.concat(await getCompetitors()); } catch (e) {} }

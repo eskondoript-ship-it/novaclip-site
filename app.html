@@ -112,7 +112,24 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 let ytToken = null, myStats = null;
 
-function saveToken(tok) { ytToken = tok; localStorage.setItem('nc_yt', JSON.stringify({ t: tok, exp: Date.now() + 50*60*1000 })); }
+function saveToken(tok, channel) {
+  ytToken = tok;
+  let prev = {};
+  try { prev = JSON.parse(localStorage.getItem('nc_yt') || '{}') || {}; } catch (e) {}
+  // keep the channel title — certificates are issued in the connected channel's name
+  const rec = { t: tok, exp: Date.now() + 50*60*1000, channel: channel || prev.channel || '' };
+  localStorage.setItem('nc_yt', JSON.stringify(rec));
+}
+function rememberChannel(title) {
+  if (!title) return;
+  let rec = {};
+  try { rec = JSON.parse(localStorage.getItem('nc_yt') || '{}') || {}; } catch (e) {}
+  if (rec.channel !== title) { rec.channel = title; localStorage.setItem('nc_yt', JSON.stringify(rec)); }
+  if (typeof logSkill === 'function' && !localStorage.getItem('nc_yt_logged')) {
+    localStorage.setItem('nc_yt_logged', '1');
+    logSkill('yt_connect');
+  }
+}
 function loadToken() { try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {} return null; }
 function signedInUI(name) {
   document.getElementById('gbtn').style.display = 'none';
@@ -132,7 +149,7 @@ onAuthStateChanged(auth, async (user) => {
       ytToken = cached;
       try {
         const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
-        if (data.items && data.items.length) { myStats = data.items[0]; }
+        if (data.items && data.items.length) { myStats = data.items[0]; rememberChannel(myStats.snippet.title); }
         else { ytToken = null; localStorage.removeItem('nc_yt'); }
       } catch (e) { ytToken = null; }
     }
@@ -148,7 +165,7 @@ async function connect() {
   const result = await signInWithPopup(auth, provider);
   saveToken(GoogleAuthProvider.credentialFromResult(result).accessToken);
   const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
-  if (data.items && data.items.length) { myStats = data.items[0]; signedInUI(myStats.snippet.title); }
+  if (data.items && data.items.length) { myStats = data.items[0]; rememberChannel(myStats.snippet.title); signedInUI(myStats.snippet.title); }
 }
 document.getElementById('gbtn').onclick = connect;
 async function ensureToken() {
@@ -156,7 +173,7 @@ async function ensureToken() {
   const cached = loadToken();
   if (cached && !ytToken) {
     ytToken = cached;
-    try { const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true'); if (d.items && d.items.length) { myStats = d.items[0]; return; } } catch (e) {}
+    try { const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true'); if (d.items && d.items.length) { myStats = d.items[0]; rememberChannel(myStats.snippet.title); return; } } catch (e) {}
   }
   await connect();
 }

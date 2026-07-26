@@ -113,6 +113,68 @@ function applyLang(code) {
 const QUESTS = [[100,'🎁 1 day free NovaClip Pro'],[450,'🎁 1 week free NovaClip Pro'],[700,'🎁 2 weeks free NovaClip Pro'],[1250,'🎁 1 month free NovaClip Pro']];
 const ACHIEVEMENTS = [[30,'🏅 Reached 30 points'],[100,'🏅 Reached 100 points'],[250,'🏅 Reached 250 points'],[500,'🏅 Reached 500 points']];
 
+/* ===== SKILL LEDGER =====
+   Certificates are credentials, so they have to be earned. Every skill below
+   is logged from the place where the learner actually does the work, and the
+   count is what the certificate requirements are checked against. */
+const SKILLS = {
+  yt_connect: { icon:'🔗', label:'Connect your YouTube channel' },
+  edit_export:{ icon:'🎬', label:'Export a video from the Editor' },
+  trend_scan: { icon:'🛰️', label:'Run a Trend Spotter scan' },
+  idea_save:  { icon:'💡', label:'Save a video idea to your shortlist' },
+  analytics:  { icon:'📊', label:'Review your channel analytics' },
+  ai_ask:     { icon:'✨', label:'Ask a NovaClip AI tutor' },
+  arena_mvp:  { icon:'🎯', label:'Top the Strike Arena scoreboard' }
+};
+
+/* Each tier needs points AND hands-on reps. Points alone can be farmed in the
+   arena, so the skill counts are what stop a certificate being bought outright. */
+const CERT_REQS = {
+  'Basic Certificate': {
+    pts: 150,
+    skills: { yt_connect:1, edit_export:3, trend_scan:3, ai_ask:5 }
+  },
+  'Advanced Certificate': {
+    pts: 600,
+    skills: { yt_connect:1, edit_export:10, trend_scan:10, idea_save:5, analytics:5, ai_ask:15 }
+  },
+  'Master Certificate': {
+    pts: 1500,
+    skills: { yt_connect:1, edit_export:25, trend_scan:20, idea_save:15, analytics:15, ai_ask:30, arena_mvp:3 }
+  }
+};
+
+function getSkills() { try { return JSON.parse(localStorage.getItem('nc_skills') || '{}') || {}; } catch (e) { return {}; } }
+function skillCount(id) { const n = getSkills()[id]; return typeof n === 'number' && n > 0 ? n : 0; }
+function logSkill(id, n) {
+  if (!SKILLS[id]) return;
+  const s = getSkills();
+  s[id] = (s[id] || 0) + (n > 0 ? Math.round(n) : 1);
+  localStorage.setItem('nc_skills', JSON.stringify(s));
+  refreshPanels();
+  if (typeof window.onSkillLogged === 'function') window.onSkillLogged(id, s[id]);
+}
+
+/* Returns what is still missing for a tier — empty `missing` means it is earned. */
+function certProgress(tier) {
+  const req = CERT_REQS[tier];
+  if (!req) return null;
+  const have = getPts(), missing = [];
+  let done = 0, total = 0;
+
+  total++; if (have >= req.pts) done++;
+  else missing.push({ label:'Reach ' + req.pts + ' points', have: have, need: req.pts, icon:'🏆' });
+
+  for (const id in req.skills) {
+    const need = req.skills[id], got = skillCount(id), meta = SKILLS[id] || { icon:'•', label:id };
+    total++;
+    if (got >= need) done++;
+    else missing.push({ label: meta.label, have: got, need: need, icon: meta.icon });
+  }
+  return { tier: tier, missing: missing, done: done, total: total, pct: Math.round(done / total * 100) };
+}
+function certEarned(tier) { const p = certProgress(tier); return !!p && p.missing.length === 0; }
+
 const style = document.createElement('style');
 style.textContent =
 /* dropdown fix: dark options everywhere (fixes white-on-white lists) */

@@ -116,6 +116,7 @@ document.getElementById('askbtn').onclick = async () => {
     setOut(data.candidates[0].content.parts[0].text);
     saveHist(subjectName(), q, data.candidates[0].content.parts[0].text);
     addPts(5);
+    if (typeof logSkill === 'function') logSkill('ai_ask');
   } else { setOut('The AI is cooked rn 💀 try again in a minute.'); }
 };
 
@@ -133,6 +134,7 @@ document.getElementById('thumbbtn').onclick = async () => {
         setOut('It ate. Right-click to save it 🔥');
         saveHist(subjectName(), 'Thumbnail: ' + q, 'image generated');
         addPts(10);
+        if (typeof logSkill === 'function') logSkill('ai_ask');
         done = true;
       }
     }
@@ -150,6 +152,7 @@ document.getElementById('vidbtn').onclick = async () => {
     setOut(data.candidates[0].content.parts[0].text);
     saveHist(subjectName(), 'Video plan: ' + q, data.candidates[0].content.parts[0].text);
     addPts(10);
+    if (typeof logSkill === 'function') logSkill('ai_ask');
   } else { setOut('The AI is cooked rn 💀 try again in a minute.'); }
 };
 </script>

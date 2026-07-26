@@ -173,6 +173,30 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 .certmini .cseal { width:50px; height:50px; border-radius:50%; border:2px solid var(--ac);
   display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;
   background:radial-gradient(circle, rgba(255,255,255,.08), transparent); }
+/* "My training" panel */
+.mtbox { text-align:left; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12);
+  border-radius:16px; padding:20px; margin-bottom:30px; }
+.mthead { font-weight:800; font-size:1.05rem; margin-bottom:6px; }
+.mtsub { font-size:.84rem; color:#7E8AA6; line-height:1.6; margin-bottom:16px; }
+.mtrow { padding:12px 0; border-top:1px solid rgba(255,255,255,.08); font-size:.9rem; }
+.mtrow.done { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.mtok { color:#4ade80; font-weight:700; font-size:.82rem; }
+.mtpct { float:right; font-size:.8rem; color:#7E8AA6; }
+.mtleft { font-size:.78rem; color:#7E8AA6; line-height:1.7; margin-top:8px; }
+.mtleft b { color:#EAF2FF; }
+.mtrow .cpgbar { margin-top:8px; }
+
+/* enrolled-but-not-yet-earned panel */
+.certprogress { --ac:#00F0FF; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12);
+  border-left:3px solid var(--ac); border-radius:14px; padding:18px; margin-bottom:14px; text-align:left; }
+.cpgtitle { font-weight:800; font-size:1rem; margin-bottom:6px; }
+.cpgsub { font-size:.82rem; color:#7E8AA6; line-height:1.6; margin-bottom:14px; }
+.cpgbar { height:8px; border-radius:6px; background:rgba(255,255,255,.08); overflow:hidden; }
+.cpgbar i { display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,var(--ac),#FF2E97); transition:width .5s ease; }
+.cpgpct { font-size:.78rem; color:#7E8AA6; margin:8px 0 12px; }
+.cpgrow { display:flex; justify-content:space-between; gap:12px; align-items:center;
+  font-size:.85rem; padding:8px 0; border-top:1px solid rgba(255,255,255,.07); }
+.cpgrow b { color:var(--ac); font-variant-numeric:tabular-nums; white-space:nowrap; }
 .certacts { display:flex; gap:8px; margin-bottom:6px; }
 .certacts button { flex:1; padding:10px; border-radius:22px; cursor:pointer; font-weight:700; font-family:inherit;
   font-size:.82rem; background:rgba(255,255,255,.07); color:#EAF2FF; border:1px solid rgba(255,255,255,.16); }
@@ -181,7 +205,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
   body > *:not(#checkout) { display:none !important; }
   #checkout { position:static !important; background:#fff !important; backdrop-filter:none !important; }
   .cobox { border:none !important; box-shadow:none !important; }
-  .cobox > .costep > *:not(#certIssued), .coclose, .certacts, .cotick, .cosub { display:none !important; }
+  .cobox > .costep > *:not(#certIssued), .coclose, .certacts, .cotick, .cosub, .certprogress { display:none !important; }
   .certmini { border-color:#333 !important; background:#fff !important; }
   .certmini .ctitle, .certmini .cname { color:#000 !important; -webkit-text-fill-color:#000 !important; }
   .certmini .cfoot div, .certmini .clevel { color:#333 !important; }
@@ -209,6 +233,9 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
   </div>
 
   <button id='cartbtn' onclick='openCart()'>🛒 <span id='cartcount'>0</span></button>
+
+  <!-- shown only once you are enrolled in a certificate -->
+  <div id='myTraining' style='display:none'></div>
 
 <div class='billtoggle'>
   <button class='bt active' data-cycle='month'>Monthly</button>
@@ -259,7 +286,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
       <div class='price' data-eur='24.99' data-usd='27.99' data-gbp='21.99' data-cny='199' data-chf='24.90' data-inr='1999' data-bdt='2799'><small class='per'> one-time</small></div>
       <ul>
         <li>Entry NovaClip Creator Certificate</li>
-        <li>Proof of completed creator training</li>
+        <li><b>Earned, not bought</b> — issues at 150 pts once you have exported 3 videos, run 3 trend scans and used the AI tutors</li>
         <li>Shareable on socials & CVs</li>
         <li>Verified badge on your profile</li>
       </ul>
@@ -271,7 +298,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
       <div class='price' data-eur='49.99' data-usd='54.99' data-gbp='44.99' data-cny='399' data-chf='49.90' data-inr='3999' data-bdt='5499'><small class='per'> one-time</small></div>
       <ul>
         <li>Everything in Basic</li>
-        <li>Advanced skills modules & assessment</li>
+        <li><b>Earned, not bought</b> — issues at 600 pts once you have exported 10 videos, saved 5 ideas and reviewed your analytics</li>
         <li>Portfolio review by a mentor</li>
         <li>Gold verified badge</li>
       </ul>
@@ -284,7 +311,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
       <div class='price' data-eur='99.99' data-usd='109.99' data-gbp='89.99' data-cny='799' data-chf='99.90' data-inr='7999' data-bdt='10999'><small class='per'> one-time</small></div>
       <ul>
         <li>Everything in Advanced</li>
-        <li>Full NovaClip Master credential</li>
+        <li><b>Earned, not bought</b> — issues at 1500 pts once you have exported 25 videos, run 20 scans and topped the Arena board 3 times</li>
         <li>Featured creator showcase</li>
         <li>Priority support & 1:1 session</li>
         <li>Platinum verified badge</li>
@@ -712,14 +739,19 @@ function certCode(name, tier, iso) {
   return 'NC-' + tier + '-' + Math.abs(hsh).toString(36).toUpperCase().padStart(6, '0').slice(0, 6);
 }
 
+/* The name on a credential has to be the name of the channel that did the work,
+   not whatever was typed at the till. The checkout field is only a fallback for
+   learners who have not connected YouTube yet. */
 function holderName() {
-  const typed = (document.getElementById('coName2').value || '').trim();
+  try {
+    const y = JSON.parse(localStorage.getItem('nc_yt') || 'null');
+    if (y && y.channel) return String(y.channel).toUpperCase();
+  } catch (e) {}
+  const typed = ((document.getElementById('coName2') || {}).value || '').trim();
   if (typed) return typed.toUpperCase();
-  try { const y = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (y && y.name) return y.name; } catch (e) {}
   return 'NOVACLIP CREATOR';
 }
 
-// called after a successful purchase — shows a certificate if one was bought
 function certKeyFor(name) {
   const n = (name || '').toLowerCase();
   if (!n.includes('certificate')) return '';
@@ -729,25 +761,47 @@ function certKeyFor(name) {
   return '';
 }
 
+/* ---- enrolment ----
+   Paying enrols you in the training. The certificate itself is only issued once
+   certProgress() says the work is done, so a bought credential is never a
+   credential you did not earn. */
+function enrolled() { try { return JSON.parse(localStorage.getItem('nc_cert_enrolled') || '[]') || []; } catch (e) { return []; } }
+function enrol(tier) {
+  const e = enrolled();
+  if (!e.includes(tier)) { e.push(tier); localStorage.setItem('nc_cert_enrolled', JSON.stringify(e)); }
+}
+function ownedCerts() { try { return JSON.parse(localStorage.getItem('nc_certs') || '[]') || []; } catch (e) { return []; } }
+
+// called after a successful purchase — enrols, and issues only if already earned
 function issueCertificates(items) {
-  const box = document.getElementById('certIssued');
   const bought = (items || []).map(i => certKeyFor(i.name)).filter(Boolean);
-  if (!bought.length) { box.style.display = 'none'; return; }
+  if (!bought.length) { const b = document.getElementById('certIssued'); if (b) b.style.display = 'none'; return; }
+  bought.forEach(enrol);
+  renderCertState();
+}
 
-  // highest tier wins if several were bought together
-  const order = ['Basic Certificate','Advanced Certificate','Master Certificate'];
-  bought.sort((a,b) => order.indexOf(b) - order.indexOf(a));
-  const c = CERTS[bought[0]];
-  const name = holderName();
-  const iso = new Date().toISOString();
-  const code = certCode(name, c.tier, iso);
+/* Issues every enrolled tier whose requirements are now met. Safe to call on
+   every page load — it is idempotent, keyed on the tier. */
+function issueEarned() {
+  const owned = ownedCerts();
+  let changed = false;
+  enrolled().forEach(tier => {
+    if (owned.some(x => x.tier === (CERTS[tier] || {}).tier)) return;   // already issued
+    if (typeof certEarned !== 'function' || !certEarned(tier)) return;  // not earned yet
+    const c = CERTS[tier];
+    const name = holderName(), iso = new Date().toISOString();
+    owned.push({ title: c.title, name: name, iso: iso, code: certCode(name, c.tier, iso), tier: c.tier });
+    changed = true;
+  });
+  if (changed) localStorage.setItem('nc_certs', JSON.stringify(owned));
+  return owned;
+}
 
-  // keep a record so it can be shown again later
-  let owned = [];
-  try { owned = JSON.parse(localStorage.getItem('nc_certs') || '[]'); } catch (e) {}
-  if (!owned.some(x => x.code === code)) owned.push({ title: c.title, name: name, iso: iso, code: code, tier: c.tier });
-  localStorage.setItem('nc_certs', JSON.stringify(owned));
-
+function renderCert(tier, rec) {
+  const box = document.getElementById('certIssued');
+  if (!box) return;
+  const c = CERTS[tier];
+  const name = rec.name, iso = rec.iso, code = rec.code;
   const d = new Date(iso);
   const el = document.getElementById('certMini');
   el.style.setProperty('--ac', c.accent);
@@ -765,7 +819,90 @@ function issueCertificates(items) {
     '</div>';
   box.style.display = 'block';
 }
+
+/* Shows the highest enrolled tier: the certificate if it is earned, otherwise a
+   checklist of exactly what is left to do to earn it. */
+function renderCertState() {
+  const box = document.getElementById('certIssued');
+  if (!box) return;
+  const order = ['Basic Certificate','Advanced Certificate','Master Certificate'];
+  const mine = enrolled().slice().sort((a,b) => order.indexOf(b) - order.indexOf(a));
+  if (!mine.length) { box.style.display = 'none'; return; }
+
+  const owned = issueEarned();
+  const prog = document.getElementById('certProgress');
+
+  // prefer showing an earned certificate; otherwise show progress on the top tier
+  const issuedTier = mine.find(t => owned.some(x => x.tier === (CERTS[t] || {}).tier));
+  if (issuedTier) {
+    const rec = owned.find(x => x.tier === CERTS[issuedTier].tier);
+    renderCert(issuedTier, rec);
+    if (prog) prog.style.display = 'none';
+    // still working towards a higher tier? show that underneath
+    const next = mine.find(t => t !== issuedTier && !owned.some(x => x.tier === (CERTS[t] || {}).tier));
+    if (next) renderCertProgress(next);
+    return;
+  }
+
+  const mini = document.getElementById('certMini');
+  if (mini) mini.innerHTML = '';
+  box.style.display = 'block';
+  renderCertProgress(mine[0]);
+}
+
+function renderCertProgress(tier) {
+  const prog = document.getElementById('certProgress');
+  if (!prog || typeof certProgress !== 'function') return;
+  const p = certProgress(tier);
+  if (!p) return;
+  const c = CERTS[tier] || { icon:'📜', accent:'#00F0FF' };
+  prog.style.setProperty('--ac', c.accent);
+  prog.style.display = 'block';
+  prog.innerHTML =
+    '<div class="cpgtitle">' + c.icon + ' ' + tier + ' — training in progress</div>' +
+    '<div class="cpgsub">You are enrolled. The certificate is issued the moment you finish the work below — nothing else to pay.</div>' +
+    '<div class="cpgbar"><i style="width:' + p.pct + '%"></i></div>' +
+    '<div class="cpgpct">' + p.done + ' of ' + p.total + ' requirements complete</div>' +
+    '<div class="cpglist">' + p.missing.map(m =>
+      '<div class="cpgrow"><span>' + m.icon + ' ' + m.label + '</span><b>' + m.have + ' / ' + m.need + '</b></div>'
+    ).join('') + '</div>';
+}
+
 window.printCert = function () { window.print(); };
+
+/* ---- "My training" panel on the pricing page itself ----
+   Enrolment has to be visible outside the checkout modal, otherwise a learner
+   who paid last week has no way to see how close they are. */
+function renderMyTraining() {
+  const host = document.getElementById('myTraining');
+  if (!host || typeof certProgress !== 'function') return;
+  const mine = enrolled();
+  if (!mine.length) { host.style.display = 'none'; return; }
+
+  const owned = issueEarned();
+  const order = ['Basic Certificate','Advanced Certificate','Master Certificate'];
+  const rows = mine.slice().sort((a,b) => order.indexOf(a) - order.indexOf(b)).map(tier => {
+    const c = CERTS[tier] || { icon:'📜', accent:'#00F0FF' };
+    const rec = owned.find(x => x.tier === (CERTS[tier] || {}).tier);
+    if (rec) {
+      return '<div class="mtrow done"><span>' + c.icon + ' <b>' + tier + '</b></span>' +
+             '<span class="mtok">✅ Issued · ' + rec.code + '</span></div>';
+    }
+    const p = certProgress(tier);
+    const left = p.missing.map(m => m.icon + ' ' + m.label + ' <b>' + m.have + '/' + m.need + '</b>').join(' · ');
+    return '<div class="mtrow"><span>' + c.icon + ' <b>' + tier + '</b></span>' +
+           '<span class="mtpct">' + p.done + '/' + p.total + ' done</span>' +
+           '<div class="cpgbar" style="--ac:' + c.accent + '"><i style="width:' + p.pct + '%"></i></div>' +
+           '<div class="mtleft">Still to do: ' + left + '</div></div>';
+  }).join('');
+
+  host.style.display = 'block';
+  host.innerHTML = '<div class="mtbox"><div class="mthead">🎓 My training</div>' +
+    '<div class="mtsub">You are enrolled. Certificates issue automatically the moment you meet the requirements — there is nothing more to pay.</div>' +
+    rows + '</div>';
+}
+
+window.addEventListener('DOMContentLoaded', () => { issueEarned(); renderMyTraining(); });
 
 // ---------- CHECKOUT ----------
 let coCurrent = null;
@@ -1210,6 +1347,7 @@ else initCheckout();
       <div class='cosummary' id='coSummary'></div>
       <div id='certIssued' style='display:none'>
         <div class='certmini' id='certMini'></div>
+        <div class='certprogress' id='certProgress' style='display:none'></div>
         <div class='certacts'>
           <button onclick='printCert()'>🖨️ Print / save PDF</button>
         </div>
