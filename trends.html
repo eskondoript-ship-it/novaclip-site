@@ -23,20 +23,74 @@ body { background: #060608; color: #f4f4f6; overflow-x: hidden; }
 @keyframes f1 { 0%,100% { transform: translate(0,0);} 50% { transform: translate(50px,60px);} }
 @keyframes f2 { 0%,100% { transform: translate(0,0);} 50% { transform: translate(-50px,-40px);} }
 
-.wrap { position: relative; z-index: 2; margin-left: 200px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 80px 20px; }
+.wrap { position: relative; z-index: 2; margin-left: 200px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 60px 20px 90px; }
+@media (max-width: 760px) { .wrap { margin-left: 0; } .sidebar { display: none; } #orbs { left: 0; } }
 h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -2px; }
 h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.lead { opacity: 0.8; max-width: 520px; margin: 16px 0 30px; line-height: 1.7; }
+.lead { opacity: 0.8; max-width: 540px; margin: 16px 0 22px; line-height: 1.7; }
 #niche { padding: 13px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #f4f4f6; font-size: 1rem; width: 340px; max-width: 90%; }
 #niche:focus { outline: none; border-color: #7209B7; }
 .toolbtn { margin-top: 20px; padding: 15px 34px; border-radius: 40px; font-weight: 700; cursor: pointer; background: linear-gradient(90deg, #F72585, #7209B7); color: white; border: none; font-size: 1.05rem; box-shadow: 0 8px 30px rgba(247,37,133,0.4); transition: transform 0.2s; }
 .toolbtn:hover { transform: translateY(-3px); }
-#out { margin-top: 26px; text-align: left; background: rgba(255,255,255,0.04); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 24px; max-width: 640px; width: 100%; display: none; line-height: 1.9; white-space: pre-wrap; }
 .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 14px; max-width: 560px; }
 .chip { padding: 8px 16px; border-radius: 30px; border: 1px solid rgba(0,240,255,0.35); background: rgba(0,240,255,0.06); font-size: 0.88rem; cursor: pointer; transition: 0.25s; }
 .chip:hover { background: rgba(0,240,255,0.18); box-shadow: 0 0 18px rgba(0,240,255,0.3); transform: translateY(-2px); }
+
+/* connection pill */
+.connpill { margin-top: 16px; font-size: 0.82rem; padding: 8px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: #7E8AA6; }
+.connpill.on { border-color: rgba(74,222,128,0.4); color: #4ade80; }
+.connpill a { color: #00F0FF; text-decoration: none; font-weight: 700; }
+
+/* results */
+.results { width: 100%; max-width: 940px; text-align: left; margin-top: 34px; display: none; }
+.sect { margin-bottom: 40px; }
+.secthead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.secthead h2 { font-size: 1.15rem; font-weight: 800; }
+.sectsub { font-size: 0.82rem; color: #7E8AA6; line-height: 1.6; margin-bottom: 16px; }
+
+.reachnote { font-size: 0.83rem; line-height: 1.65; color: #b9c2d6; background: rgba(0,240,255,0.05);
+  border: 1px solid rgba(0,240,255,0.22); border-left: 3px solid #00F0FF; border-radius: 12px; padding: 13px 16px; margin-bottom: 16px; }
+.reachnote b { color: #EAF2FF; }
+.vidgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.vcard { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; overflow: hidden; transition: 0.25s; display: flex; flex-direction: column; }
+.vcard:hover { border-color: rgba(0,240,255,0.45); transform: translateY(-3px); }
+.vthumb { position: relative; aspect-ratio: 16/9; background: #0a0c14; overflow: hidden; }
+.vthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vscore { position: absolute; top: 8px; right: 8px; font-size: 0.72rem; font-weight: 800; padding: 4px 9px; border-radius: 20px; background: rgba(5,6,10,0.85); backdrop-filter: blur(6px); }
+.vbody { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.vtitle { font-size: 0.9rem; font-weight: 700; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.vchan { font-size: 0.76rem; color: #7E8AA6; }
+.vstats { display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.72rem; color: #7E8AA6; margin-top: auto; }
+.vstats b { color: #EAF2FF; font-variant-numeric: tabular-nums; }
+.vflag { font-size: 0.72rem; padding: 3px 8px; border-radius: 12px; align-self: flex-start; font-weight: 700; }
+.vcard a.vlink { color: inherit; text-decoration: none; }
+
+/* AI idea cards */
+.ideagrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.icard { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-left: 3px solid #F72585; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: 0.25s; }
+.icard:hover { border-color: rgba(247,37,133,0.5); border-left-color: #F72585; transform: translateY(-3px); }
+.ititle { font-size: 0.98rem; font-weight: 800; line-height: 1.35; }
+.iwhy { font-size: 0.83rem; color: #b9c2d6; line-height: 1.6; }
+.imeta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.72rem; }
+.itag { padding: 4px 10px; border-radius: 14px; background: rgba(0,240,255,0.09); border: 1px solid rgba(0,240,255,0.3); }
+.savebtn { margin-top: auto; align-self: flex-start; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 0.8rem;
+  background: rgba(255,255,255,0.07); color: #EAF2FF; border: 1px solid rgba(255,255,255,0.18); transition: 0.2s; font-family: inherit; }
+.savebtn:hover { border-color: #00F0FF; }
+.savebtn.saved { background: rgba(74,222,128,0.14); border-color: rgba(74,222,128,0.5); color: #4ade80; cursor: default; }
+
+/* raw AI fallback */
+#rawout { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 20px; line-height: 1.9; white-space: pre-wrap; font-size: 0.9rem; }
+
+/* shortlist */
+.shortrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.88rem; }
+.shortrow:first-child { border-top: none; }
+.shortrow small { display: block; color: #7E8AA6; font-size: 0.76rem; margin-top: 3px; line-height: 1.5; }
+.delbtn { background: none; border: none; color: #7E8AA6; cursor: pointer; font-size: 1rem; padding: 4px 8px; border-radius: 8px; font-family: inherit; }
+.delbtn:hover { color: #ff6b6b; background: rgba(255,107,107,0.1); }
+
 .howgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 44px; max-width: 640px; width: 100%; }
-@media (max-width: 640px) { .howgrid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .howgrid { grid-template-columns: 1fr; } .vidgrid, .ideagrid { grid-template-columns: 1fr; } }
 .how { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 18px 14px; font-size: 0.92rem; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: 0.25s; }
 .how:hover { border-color: rgba(255,46,151,0.5); transform: translateY(-4px); }
 .hnum { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #FF2E97, #7209B7); display: flex; align-items: center; justify-content: center; font-weight: 800; }
@@ -46,6 +100,7 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
 .rc-list span:hover { border-color: #00F0FF; }
 
 #radarwrap { position: fixed; top: 0; left: 200px; right: 0; bottom: 0; background: radial-gradient(circle, #0a1520 0%, #05080d 100%); z-index: 900; display: none; flex-direction: column; align-items: center; justify-content: center; }
+@media (max-width: 760px) { #radarwrap { left: 0; } }
 body.navclosed #radarwrap { left: 0; }
 .bigradar { width: 60vmin; height: 60vmin; border-radius: 50%; position: relative; background: radial-gradient(circle, rgba(76,201,240,0.12) 0%, rgba(5,8,13,0.7) 70%); border: 2px solid rgba(76,201,240,0.5); box-shadow: 0 0 40px rgba(76,201,240,0.3) inset; overflow: hidden; }
 .bigradar::before, .bigradar::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(76,201,240,0.25); margin: 12%; }
@@ -55,6 +110,7 @@ body.navclosed #radarwrap { left: 0; }
 @keyframes ncsweep { to { transform: rotate(360deg); } }
 @keyframes blip { 0%, 100% { opacity: 0; } 15% { opacity: 1; } 55% { opacity: 0.3; } }
 .scanning { margin-top: 26px; font-size: 1.3rem; letter-spacing: 2px; color: #4CC9F0; font-weight: 700; }
+.scanstep { margin-top: 10px; font-size: 0.85rem; color: #7E8AA6; min-height: 1.2em; }
 </style>
 </head>
 <body>
@@ -82,7 +138,33 @@ body.navclosed #radarwrap { left: 0; }
     <span class='chip'>🎮 Minecraft</span><span class='chip'>🍳 Cooking</span><span class='chip'>⚽ Football</span><span class='chip'>💄 Beauty</span><span class='chip'>🎵 Music</span><span class='chip'>💪 Fitness</span><span class='chip'>📚 Study</span>
   </div>
   <button id='scanbtn' class='toolbtn' data-t='scan'>🛰️ Scan for trends</button>
-  <div id='out'></div>
+  <div id='connpill' class='connpill'></div>
+
+  <div class='results' id='results'>
+    <div class='sect' id='realsect' style='display:none'>
+      <div class='secthead'><h2>📡 Actually rising right now</h2><span class='sectsub' id='realcount'></span></div>
+      <p class='sectsub'>Real videos from the last 60 days, ranked by how fast they are picking up views — not by how big the channel is. A high score means the video is outrunning its own channel.</p>
+      <div class='reachnote' id='reachnote' style='display:none'></div>
+      <div class='vidgrid' id='vidgrid'></div>
+    </div>
+
+    <div class='sect' id='ideasect' style='display:none'>
+      <div class='secthead'><h2>💡 6 ideas for your channel</h2></div>
+      <p class='sectsub' id='ideasub'>Built from what the radar just found.</p>
+      <div class='ideagrid' id='ideagrid'></div>
+    </div>
+
+    <div class='sect' id='rawsect' style='display:none'>
+      <div class='secthead'><h2>💡 Ideas for your channel</h2></div>
+      <div id='rawout'></div>
+    </div>
+
+    <div class='sect' id='shortsect' style='display:none'>
+      <div class='secthead'><h2>⭐ Your idea shortlist</h2></div>
+      <p class='sectsub'>Saved ideas stay here so you can pick one up in the Editor later.</p>
+      <div id='shortlist'></div>
+    </div>
+  </div>
 
   <div class='howgrid'>
     <div class='how'><div class='hnum'>1</div><div data-t='how1'>Type your niche</div></div>
@@ -99,11 +181,293 @@ body.navclosed #radarwrap { left: 0; }
 <div id='radarwrap'>
   <div class='bigradar' id='bigradar'><div class='sweep'></div></div>
   <div class='scanning' data-t='scanning'>Scanning the airwaves...</div>
+  <div class='scanstep' id='scanstep'></div>
 </div>
 
 <script>
 const WORKER_URL = 'https://novaclip-ai.eskondori-pt.workers.dev';
 
+// ============================================================
+//  YOUTUBE DATA — reuses the token the Studio page already stored.
+//  No token just means we fall back to AI-only ideas.
+// ============================================================
+function ytToken() {
+  try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.t && s.exp > Date.now()) return s.t; } catch (e) {}
+  return null;
+}
+function ytChannel() {
+  try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); return (s && s.channel) || ''; } catch (e) { return ''; }
+}
+function yt(path) {
+  const t = ytToken();
+  if (!t) return Promise.reject(new Error('not connected'));
+  return fetch('https://www.googleapis.com/youtube/v3/' + path, { headers: { Authorization: 'Bearer ' + t } })
+    .then(r => r.json())
+    .then(d => { if (d.error) throw new Error(d.error.message || 'YouTube API error'); return d; });
+}
+
+function renderConnPill() {
+  const el = document.getElementById('connpill');
+  const ch = ytChannel();
+  if (ytToken()) {
+    el.className = 'connpill on';
+    el.innerHTML = '🟢 Live YouTube data on' + (ch ? ' · ' + ch : '');
+  } else {
+    el.className = 'connpill';
+    el.innerHTML = '⚪ AI-only mode — <a href="app.html">connect your channel in Studio</a> for real view data';
+  }
+}
+
+// ---------- metrics ----------
+function daysSince(iso) { return Math.max((Date.now() - new Date(iso).getTime()) / 86400000, 0.5); }
+function fmt(n) {
+  n = Number(n) || 0;
+  if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(Math.round(n));
+}
+
+/* Opportunity score, 0-100.
+   The useful signal for a small creator is not "which video has most views" —
+   that is always the biggest channel. It is "which video is beating the size of
+   the channel that made it", because that topic is carrying the video. */
+function scoreVideos(list) {
+  if (!list.length) return list;
+  const vels = list.map(v => v.velocity).sort((a, b) => a - b);
+  const outs = list.map(v => v.outlier).sort((a, b) => a - b);
+  const pct = (arr, x) => { let i = 0; while (i < arr.length && arr[i] < x) i++; return arr.length > 1 ? i / (arr.length - 1) : 1; };
+  list.forEach(v => {
+    const velScore = pct(vels, v.velocity);        // how fast it is moving
+    const outScore = pct(outs, v.outlier);         // how far it beats its channel
+    const engScore = Math.min(v.engagement / 0.08, 1);  // 8% engagement is excellent
+    v.score = Math.round((velScore * 0.4 + outScore * 0.4 + engScore * 0.2) * 100);
+  });
+  return list.sort((a, b) => b.score - a.score);
+}
+
+/* ---- REACHABILITY ----
+   vidIQ's blind spot: it will happily tell a 30-subscriber channel that its
+   "competitors" have 16 million subscribers. That is not a competitor, it is a
+   different sport, and nothing about how that channel wins transfers down.
+   NovaClip already refuses this in the duel system (±20k subs), so the radar
+   holds the same line: rank what a channel this size could realistically match. */
+let mySubs = null;
+async function fetchMySubs() {
+  if (mySubs !== null) return mySubs;
+  try {
+    const d = await yt('channels?part=statistics&mine=true');
+    const st = (((d.items || [])[0] || {}).statistics) || {};
+    mySubs = parseInt(st.subscriberCount || 0, 10) || 0;
+  } catch (e) { mySubs = 0; }
+  return mySubs;
+}
+/* The ceiling grows with you: tiny channels study other small channels, and the
+   band widens as you do. Never below 5k, or a brand-new channel sees nothing. */
+function reachableCeiling(subs) { return Math.max((subs || 0) * 100, 5000); }
+function isReachable(v, ceiling) { return v.subs > 0 && v.subs <= ceiling; }
+
+async function fetchRising(niche) {
+  const after = new Date(Date.now() - 60 * 86400000).toISOString();
+  const sd = await yt('search?part=snippet&type=video&order=viewCount&maxResults=25' +
+    '&publishedAfter=' + encodeURIComponent(after) + '&q=' + encodeURIComponent(niche));
+  const ids = (sd.items || []).map(i => i.id && i.id.videoId).filter(Boolean);
+  if (!ids.length) return [];
+
+  const vd = await yt('videos?part=statistics,snippet&id=' + ids.join(','));
+  const items = vd.items || [];
+
+  // channel sizes, so we can tell an outlier from a big channel being big
+  const chIds = [...new Set(items.map(v => v.snippet.channelId))].slice(0, 50);
+  let subsById = {};
+  if (chIds.length) {
+    try {
+      const cd = await yt('channels?part=statistics&id=' + chIds.join(','));
+      (cd.items || []).forEach(c => { subsById[c.id] = parseInt(c.statistics.subscriberCount || 0, 10) || 0; });
+    } catch (e) { /* hidden sub counts are fine — outlier just falls back to 1 */ }
+  }
+
+  const list = items.map(v => {
+    const views = parseInt(v.statistics.viewCount || 0, 10) || 0;
+    const likes = parseInt(v.statistics.likeCount || 0, 10) || 0;
+    const comments = parseInt(v.statistics.commentCount || 0, 10) || 0;
+    const age = daysSince(v.snippet.publishedAt);
+    const subs = subsById[v.snippet.channelId] || 0;
+    return {
+      id: v.id,
+      title: v.snippet.title,
+      channel: v.snippet.channelTitle,
+      thumb: (v.snippet.thumbnails.medium || v.snippet.thumbnails.default || {}).url || '',
+      views: views,
+      subs: subs,
+      age: age,
+      velocity: views / age,
+      outlier: subs > 0 ? views / subs : 1,
+      engagement: views > 0 ? (likes + comments) / views : 0
+    };
+  });
+
+  // Rank within your league first; only fall back to the giants if nothing is left.
+  const ceiling = reachableCeiling(await fetchMySubs());
+  const near = list.filter(v => isReachable(v, ceiling));
+  const scored = scoreVideos(near.length >= 3 ? near : list);
+  scored.forEach(v => { v.reachable = isReachable(v, ceiling); });
+  return { videos: scored.slice(0, 9), ceiling: ceiling, filtered: near.length >= 3, mySubs: mySubs };
+}
+
+function flagFor(v) {
+  if (v.outlier >= 5) return { txt: '🚀 Beating its channel ' + v.outlier.toFixed(1) + '×', bg: 'rgba(247,37,133,0.15)', col: '#ff7ab8' };
+  if (v.velocity >= 10000) return { txt: '🔥 ' + fmt(v.velocity) + ' views/day', bg: 'rgba(255,210,74,0.13)', col: '#ffd24a' };
+  if (v.engagement >= 0.05) return { txt: '💬 High engagement', bg: 'rgba(0,240,255,0.12)', col: '#00F0FF' };
+  return null;
+}
+
+function renderVideos(res) {
+  const list = res.videos, sect = document.getElementById('realsect');
+  if (!list.length) { sect.style.display = 'none'; return; }
+  document.getElementById('realcount').textContent = list.length + ' videos scanned';
+
+  const note = document.getElementById('reachnote');
+  if (res.filtered) {
+    note.style.display = 'block';
+    note.innerHTML = '🎯 <b>Your league only.</b> You have ' + fmt(res.mySubs) + ' subscribers, so the radar is ignoring ' +
+      'anything above ' + fmt(res.ceiling) + ' subs. A 16M-subscriber channel is not your competitor — it gets views ' +
+      'because it is 16M, and none of that transfers down to you.';
+  } else {
+    note.style.display = 'block';
+    note.innerHTML = '⚠️ <b>Not enough channels your size in this niche.</b> Showing bigger channels instead — read them ' +
+      'for topic ideas, not for tactics. Try a narrower search term to find creators closer to you.';
+  }
+  document.getElementById('vidgrid').innerHTML = list.map(v => {
+    const f = flagFor(v);
+    const col = v.score >= 70 ? '#4ade80' : v.score >= 45 ? '#ffd24a' : '#7E8AA6';
+    return '<div class="vcard">' +
+      '<a class="vlink" href="https://www.youtube.com/watch?v=' + v.id + '" target="_blank" rel="noopener">' +
+        '<div class="vthumb">' + (v.thumb ? '<img loading="lazy" src="' + v.thumb + '" alt="">' : '') +
+          '<span class="vscore" style="color:' + col + '">' + v.score + '</span></div>' +
+      '</a>' +
+      '<div class="vbody">' +
+        '<a class="vlink" href="https://www.youtube.com/watch?v=' + v.id + '" target="_blank" rel="noopener">' +
+          '<div class="vtitle">' + esc(v.title) + '</div></a>' +
+        '<div class="vchan">' + esc(v.channel) + (v.subs ? ' · ' + fmt(v.subs) + ' subs' : '') + '</div>' +
+        (f ? '<span class="vflag" style="background:' + f.bg + ';color:' + f.col + '">' + f.txt + '</span>' : '') +
+        '<div class="vstats">' +
+          '<span><b>' + fmt(v.views) + '</b> views</span>' +
+          '<span><b>' + fmt(v.velocity) + '</b>/day</span>' +
+          '<span><b>' + Math.round(v.age) + '</b>d old</span>' +
+        '</div>' +
+      '</div></div>';
+  }).join('');
+  sect.style.display = 'block';
+}
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+// ============================================================
+//  IDEA SHORTLIST
+// ============================================================
+function getIdeas() { try { return JSON.parse(localStorage.getItem('nc_ideas') || '[]') || []; } catch (e) { return []; } }
+function saveIdea(idea) {
+  const all = getIdeas();
+  if (all.some(x => x.title === idea.title)) return false;
+  all.unshift(idea);
+  localStorage.setItem('nc_ideas', JSON.stringify(all.slice(0, 50)));
+  if (typeof logSkill === 'function') logSkill('idea_save');
+  renderShortlist();
+  return true;
+}
+window.removeIdea = function (i) {
+  const all = getIdeas();
+  all.splice(i, 1);
+  localStorage.setItem('nc_ideas', JSON.stringify(all));
+  renderShortlist();
+};
+function renderShortlist() {
+  const all = getIdeas(), sect = document.getElementById('shortsect');
+  if (!all.length) { sect.style.display = 'none'; return; }
+  document.getElementById('shortlist').innerHTML = all.map((x, i) =>
+    '<div class="shortrow"><div><b>' + esc(x.title) + '</b>' +
+    (x.why ? '<small>' + esc(x.why) + '</small>' : '') + '</div>' +
+    '<button class="delbtn" onclick="removeIdea(' + i + ')" title="Remove">✕</button></div>'
+  ).join('');
+  sect.style.display = 'block';
+  document.getElementById('results').style.display = 'block';
+}
+
+// ============================================================
+//  AI IDEAS — grounded in the real videos when we have them
+// ============================================================
+function buildPrompt(niche, vids, subs) {
+  let p = 'You are the NovaClip trend analyst, talking to a teen YouTube creator (aged 13-18). ';
+  // The advice has to fit the channel that will act on it — a 30-sub creator
+  // cannot execute a 5M-sub channel's playbook, so say so up front.
+  if (typeof subs === 'number') {
+    p += 'This creator has ' + subs + ' subscribers. Only suggest things a channel that size can actually pull off ' +
+         'alone, with a phone and free software — no crew, no budget, no guests, no travel. ';
+  }
+  if (vids.length) {
+    p += 'Here is real YouTube data for the niche "' + niche + '" — videos from the last 60 days that are currently outperforming, with views per day:\n';
+    vids.slice(0, 8).forEach(v => {
+      p += '- "' + v.title + '" by ' + v.channel + ' (' + fmt(v.subs) + ' subs) — ' + Math.round(v.velocity) + ' views/day, ' +
+           v.outlier.toFixed(1) + 'x its channel size\n';
+    });
+    p += '\nUsing what these have in common, suggest 6 video ideas this creator could make next. ';
+  } else {
+    p += 'For the niche "' + niche + '", suggest 6 video topics that are rising right now. ';
+  }
+  p += 'Keep every idea safe and appropriate for teenagers. ' +
+       'Reply with ONLY a JSON array, no markdown fence, no commentary. Each element: ' +
+       '{"title": "catchy video title, max 60 chars", "why": "one sentence on why it works right now", ' +
+       '"format": "one of: Short, Long-form, Series", "effort": "one of: Easy, Medium, Ambitious"}.';
+  p += (typeof langInstruction === 'function' ? langInstruction() : '');
+  return p;
+}
+
+function parseIdeas(text) {
+  if (!text) return null;
+  let s = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  const a = s.indexOf('['), b = s.lastIndexOf(']');
+  if (a === -1 || b <= a) return null;
+  try {
+    const arr = JSON.parse(s.slice(a, b + 1));
+    if (!Array.isArray(arr) || !arr.length) return null;
+    return arr.filter(x => x && x.title).slice(0, 6);
+  } catch (e) { return null; }
+}
+
+function renderIdeas(ideas, niche) {
+  const saved = getIdeas();
+  document.getElementById('ideasub').textContent = ytToken()
+    ? 'Built from the real rising videos above.'
+    : 'Connect your channel in Studio to ground these in live view data.';
+  document.getElementById('ideagrid').innerHTML = ideas.map((x, i) => {
+    const already = saved.some(s => s.title === x.title);
+    return '<div class="icard">' +
+      '<div class="ititle">' + esc(x.title) + '</div>' +
+      (x.why ? '<div class="iwhy">' + esc(x.why) + '</div>' : '') +
+      '<div class="imeta">' +
+        (x.format ? '<span class="itag">🎬 ' + esc(x.format) + '</span>' : '') +
+        (x.effort ? '<span class="itag">⚡ ' + esc(x.effort) + '</span>' : '') +
+      '</div>' +
+      '<button class="savebtn' + (already ? ' saved' : '') + '" data-i="' + i + '"' + (already ? ' disabled' : '') + '>' +
+        (already ? '✓ Saved' : '⭐ Save idea') + '</button>' +
+    '</div>';
+  }).join('');
+
+  document.querySelectorAll('#ideagrid .savebtn').forEach(btn => {
+    btn.onclick = () => {
+      const x = ideas[parseInt(btn.dataset.i, 10)];
+      if (saveIdea({ title: x.title, why: x.why || '', niche: niche, at: Date.now() })) {
+        btn.classList.add('saved'); btn.disabled = true; btn.textContent = '✓ Saved';
+      }
+    };
+  });
+  document.getElementById('ideasect').style.display = 'block';
+}
+
+// ============================================================
+//  SCAN
+// ============================================================
 function dropBlips() {
   const r = document.getElementById('bigradar');
   r.querySelectorAll('.blip').forEach(b => b.remove());
@@ -116,16 +480,15 @@ function dropBlips() {
     r.appendChild(b);
   }
 }
+function step(msg) { document.getElementById('scanstep').textContent = msg; }
 
-// niche chips fill the input
 document.querySelectorAll('.chip').forEach(ch => {
   ch.onclick = () => { document.getElementById('niche').value = ch.textContent.replace(/^\S+\s/, ''); };
 });
-// recent scans
 function loadRecent() {
   const r = JSON.parse(localStorage.getItem('nc_recent_scans') || '[]');
   const el = document.getElementById('recentlist');
-  el.innerHTML = r.length ? r.map(n => '<span>' + n + '</span>').join('') : '<span style="opacity:0.5">No scans yet</span>';
+  el.innerHTML = r.length ? r.map(n => '<span>' + esc(n) + '</span>').join('') : '<span style="opacity:0.5">No scans yet</span>';
   el.querySelectorAll('span').forEach(s => { s.onclick = () => { document.getElementById('niche').value = s.textContent; }; });
 }
 function saveRecent(n) {
@@ -134,28 +497,64 @@ function saveRecent(n) {
   localStorage.setItem('nc_recent_scans', JSON.stringify(r));
   loadRecent();
 }
-loadRecent();
 
 document.getElementById('scanbtn').onclick = async () => {
-  const niche = document.getElementById('niche').value || 'YouTube';
+  const niche = (document.getElementById('niche').value || '').trim() || 'YouTube';
   saveRecent(niche);
-  const out = document.getElementById('out');
   const radar = document.getElementById('radarwrap');
-  out.style.display = 'none';
+  document.getElementById('realsect').style.display = 'none';
+  document.getElementById('ideasect').style.display = 'none';
+  document.getElementById('rawsect').style.display = 'none';
   radar.style.display = 'flex';
   dropBlips();
-  const prompt = 'You are NovaClip trend analyst. For the niche "' + niche + '", list 6 video topic trends rising right now and about to blow up. For each: a catchy title idea and one line on why it works. Use emojis. Be specific and punchy.' + (typeof langInstruction === 'function' ? langInstruction() : '');
+  step(ytToken() ? 'Pulling live YouTube data…' : 'Asking NovaClip AI…');
+
+  // real data first, so the AI can be grounded in it
+  let res = null, vids = [];
+  if (ytToken()) {
+    try { res = await fetchRising(niche); vids = res.videos; }
+    catch (e) { step('Live data unavailable — falling back to AI only'); }
+  }
+  if (vids.length) step('Found ' + vids.length + ' rising videos · asking the AI…');
+
   const aiPromise = fetch(WORKER_URL, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'gemini-2.5-flash', payload: { contents: [{ parts: [{ text: prompt }] }] } })
-  }).then(r => r.json()).then(data => (data.candidates && data.candidates[0] && data.candidates[0].content.parts[0].text) || null).catch(() => null);
-  const minWait = new Promise(res => setTimeout(res, 2500));
+    body: JSON.stringify({ model: 'gemini-2.5-flash', payload: { contents: [{ parts: [{ text: buildPrompt(niche, vids, res ? res.mySubs : null) }] }] } })
+  }).then(r => r.json())
+    .then(d => (d.candidates && d.candidates[0] && d.candidates[0].content.parts[0].text) || null)
+    .catch(() => null);
+
+  const minWait = new Promise(res => setTimeout(res, vids.length ? 900 : 2200));
   const [text] = await Promise.all([aiPromise, minWait]);
+
   radar.style.display = 'none';
-  out.style.display = 'block';
-  if (text) { out.textContent = text; if (typeof addPts === 'function') addPts(5); }
-  else { out.textContent = 'The trend radar could not reach the AI. If this keeps happening the free model may have rotated - tell your dev to swap the model line in the Worker.'; }
+  document.getElementById('results').style.display = 'block';
+
+  if (res && vids.length) renderVideos(res);
+
+  const ideas = parseIdeas(text);
+  if (ideas) {
+    renderIdeas(ideas, niche);
+  } else if (text) {
+    // model ignored the JSON instruction — show its answer rather than nothing
+    document.getElementById('rawout').textContent = text;
+    document.getElementById('rawsect').style.display = 'block';
+  } else if (!vids.length) {
+    document.getElementById('rawout').textContent =
+      'The trend radar could not reach the AI. If this keeps happening the free model may have rotated - tell your dev to swap the model line in the Worker.';
+    document.getElementById('rawsect').style.display = 'block';
+  }
+
+  if (text || vids.length) {
+    if (typeof addPts === 'function') addPts(5);
+    if (typeof logSkill === 'function') logSkill('trend_scan');
+  }
+  renderShortlist();
 };
+
+loadRecent();
+renderConnPill();
+renderShortlist();
 </script>
 <script src='nova.js'></script>
 </body>
