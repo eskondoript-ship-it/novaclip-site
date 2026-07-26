@@ -533,6 +533,15 @@ function pts() { const v = parseInt(localStorage.getItem('nc_points'), 10); retu
 function setPts(v) { v = Math.max(0, Math.round(isFinite(v) ? v : 0)); localStorage.setItem('nc_points', String(v)); const g = document.getElementById('gamepts'); if (g) g.textContent = v; const s = document.getElementById('shopbal'); if (s) s.textContent = v; }
 function earn(n, why) { n = Math.max(0, Math.round(n || 0)); if (!n) return; setPts(pts() + n); addFeed('+' + n + ' pts — ' + why); }
 
+/* The arena runs without nova.js (it has its own HUD), so it writes the shared
+   skill ledger directly — same nc_skills store the certificates read from. */
+function logSkill(id, n) {
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem('nc_skills') || '{}') || {}; } catch (e) {}
+  s[id] = (s[id] || 0) + (n > 0 ? Math.round(n) : 1);
+  localStorage.setItem('nc_skills', JSON.stringify(s));
+}
+
 // ---------- menu wiring ----------
 document.querySelectorAll('.diff').forEach(d => d.onclick = () => { document.querySelectorAll('.diff').forEach(x => x.classList.remove('sel')); d.classList.add('sel'); mode = d.dataset.mode; });
 document.querySelectorAll('.char').forEach(c => c.onclick = () => { document.querySelectorAll('.char').forEach(x => x.classList.remove('sel')); c.classList.add('sel'); playerColor = parseInt(c.dataset.color); localStorage.setItem('nc_char', c.dataset.color); });
@@ -1747,7 +1756,11 @@ function endMatch() {
   if (killPts) lines.push(['Kills (' + player.kills + ' × ' + M.perKill + ')', killPts]);
   if (won)       { bonus += M.mvp;                 lines.push(['Team victory', M.mvp]); }
   else if (draw) { bonus += Math.round(M.mvp / 2); lines.push(['Draw', Math.round(M.mvp / 2)]); }
-  if (rank === 1) { const t = Math.round(M.mvp / 2); bonus += t; lines.push(['Top scorer', t]); }
+  if (rank === 1) {
+    const t = Math.round(M.mvp / 2); bonus += t; lines.push(['Top scorer', t]);
+    // topping the board is a Master Certificate requirement
+    if (typeof logSkill === 'function') logSkill('arena_mvp');
+  }
   if (bonus) setPts(pts() + bonus);
   const totalEarned = killPts + bonus;
 
