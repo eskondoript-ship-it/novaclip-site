@@ -1294,6 +1294,9 @@ async function record() {
     a.href = URL.createObjectURL(blob);
     a.download = 'novaclip-video.' + (mime === 'video/mp4' ? 'mp4' : 'webm');
     a.click();
+    // a finished export is one of the reps that counts towards a certificate
+    if (typeof logSkill === 'function') logSkill('edit_export');
+    if (typeof addPts === 'function') addPts(15);
   };
   recorder.start();
   await playSequence();
