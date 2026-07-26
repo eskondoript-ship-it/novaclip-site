@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v55 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v56 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -962,26 +962,27 @@ function makeFighter(color, useGLB, isPlayer) {
       // Bounding boxes on rigged models are unreliable, so measure -> scale ->
       // re-measure, repeating until the character really is human-sized.
       const TARGET_H = 1.8;
-      /* Box3.setFromObject() reads a SkinnedMesh's bind-pose geometry, which ignores
-         the armature transform — this model's root Armature node carries scale 0.01,
-         so the plain box reported ~1.8 ("already correct") while the rendered
-         character was nothing like it, and the fit loop exited on its first pass.
-         Bone world positions do reflect the rendered pose, so measure those when the
-         model is rigged and keep the plain box for static meshes. */
+      /* Box3.setFromObject() reads a SkinnedMesh's bind-pose geometry and ignores the
+         armature transform — this model's root Armature node carries scale 0.01, so
+         the plain box reported ~1.8 ("already correct") and the fit loop exited on
+         its first pass without doing anything.
+         Measuring bone world positions fixed the height but not the placement: the
+         bone span for this rig is ~0.003, so the offsets derived from it put the
+         character somewhere off-screen. Each mesh's own bounding box pushed through
+         its world matrix is the honest measurement — it carries the armature scale
+         and it describes the geometry that actually gets drawn, so use it for the
+         height and the ground offset alike. */
       function measure(obj) {
         obj.updateMatrixWorld(true);          // essential: stale matrices give wrong boxes
-        const bones = new THREE.Box3();
-        let boned = false;
-        const v = new THREE.Vector3();
-        obj.traverse(o => { if (o.isBone) { bones.expandByPoint(o.getWorldPosition(v)); boned = true; } });
-
-        let bb;
-        if (boned && isFinite(bones.min.y) && (bones.max.y - bones.min.y) > 0.0001) {
-          // bones sit inside the silhouette — pad out to approximate skin height
-          bb = bones.clone().expandByScalar((bones.max.y - bones.min.y) * 0.06);
-        } else {
-          bb = new THREE.Box3().setFromObject(obj);
-        }
+        const bb = new THREE.Box3(), gb = new THREE.Box3();
+        let any = false;
+        obj.traverse(o => {
+          if (!o.isMesh || !o.geometry) return;
+          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+          gb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+          bb.union(gb); any = true;
+        });
+        if (!any) bb.setFromObject(obj);      // static props with no skinned meshes
         const sz = new THREE.Vector3(); bb.getSize(sz);
         return { bb: bb, sz: sz };
       }
@@ -1026,44 +1027,29 @@ function makeFighter(color, useGLB, isPlayer) {
       g.userData.fitPos = fitPos;
       g.userData.inner = model;
 
-      /* Last line of defence. Neither the bone span nor Box3 is guaranteed to match
-         what the GPU actually draws for a skinned mesh, so measure the real thing:
-         each geometry's own bounding box pushed through its world matrix. If that
-         still says the character is wildly off human size, correct it outright. */
-      // True drawn extent: each geometry's own box pushed through its world matrix.
-      function realBox() {
-        model.updateMatrixWorld(true);
-        const bb = new THREE.Box3(), gb = new THREE.Box3();
-        model.traverse(o => {
-          if (!o.isMesh || !o.geometry) return;
-          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-          gb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
-          bb.union(gb);
-        });
-        return bb;
-      }
-      if (isPlayer) {
-        const real = realBox();
-        // This clamp is doing the real work on the Y-Bot (the bone span measures
-        // ~0.003), so it has to aim at the requested height rather than a bare
-        // 1.8 — otherwise it silently cancels characterScale.
-        const wantH = TARGET_H * (CUSTOM_MODELS.characterScale || 1);
-        const rh = real.max.y - real.min.y;
-        if (isFinite(rh) && rh > 0.0001 && (rh < wantH * 0.5 || rh > wantH * 1.8)) {
-          const k = wantH / rh;
-          if (isFinite(k) && k > 0) {
-            s *= k;
-            model.scale.setScalar(s);
-            const after = realBox();          // stand the feet back on the ground
-            if (isFinite(after.min.y)) model.position.y -= after.min.y;
+      // Safety net: if anything above still left the character an unreasonable size,
+      // correct it against the requested height and reseat the feet.
+      const wantH = TARGET_H * (CUSTOM_MODELS.characterScale || 1);
+      const chk = measure(model);
+      if (isFinite(chk.sz.y) && chk.sz.y > 0.0001 && (chk.sz.y < wantH * 0.5 || chk.sz.y > wantH * 1.8)) {
+        const k = wantH / chk.sz.y;
+        if (isFinite(k) && k > 0) {
+          s *= k; model.scale.setScalar(s);
+          const after = measure(model);
+          if (isFinite(after.bb.min.y)) {
+            const c2 = new THREE.Vector3(); after.bb.getCenter(c2);
+            model.position.set(-c2.x, -after.bb.min.y + (CUSTOM_MODELS.characterYOffset || 0), -c2.z);
+            g.userData.fitPos.copy(model.position);
           }
         }
+      }
+      if (isPlayer) {
         // reported on screen so a wrong fit can be read off without a debugger
-        const fin2 = realBox();
-        window.__ncFit = { height: +(fin2.max.y - fin2.min.y).toFixed(3), scale: +s.toFixed(4) };
+        const fin2 = measure(model);
+        window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v55 · fit: ' + window.__ncFit.height + 'm · scale ' +
-          window.__ncFit.scale + ' · ' + vt.textContent.replace(/^v5\d · /, '');
+        if (vt) vt.textContent = 'v56 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+          ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
       model.traverse(o => { if (o.isMesh) {
@@ -1219,20 +1205,33 @@ function buildArms() {
 
 function buildWeapon(type) {
   const m = buildWeaponModel(type);
-  if (loadedWeapGLB && type !== 'knife') return autoFitGLB(m);
+  if (loadedWeapGLB && type !== 'knife') {
+    const w = autoFitGLB(m);
+    /* The muzzle flash used to be built inside the model group at z = -1.6, which
+       meant autoFitGLB measured it as part of the weapon: it inflated the bounding
+       box, so the gun came out mis-centred and scaled to fit a marker rather than
+       itself. Add it after fitting, at the front of the finished 0.6-unit
+       viewmodel, where it cannot affect the fit. */
+    const mz = -0.34;
+    const fl = new THREE.PointLight(0xffbb44, 0, 2);
+    fl.position.set(0, 0.02, mz); w.add(fl); w.userData.flashLight = fl;
+    const flash = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10),
+      new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
+    flash.position.set(0, 0.02, mz); w.add(flash); w.userData.flash = flash;
+    w.add(buildArms());   // buildArms existed but was never called — hence a floating rifle
+    return w;
+  }
   return m;
 }
 
 function buildWeaponModel(type) {
   // if a custom .glb weapon is loaded, use it for all guns (not the knife)
   if (loadedWeapGLB && type !== 'knife') {
+    // geometry only — the flash is attached by buildWeapon() after the fit
     const g = new THREE.Group();
     const model = loadedWeapGLB.clone(true);
     model.traverse(o => { if (o.isMesh) o.castShadow = true; });
     g.add(model);
-    const mz = -1.6;
-    const fl = new THREE.PointLight(0xffbb44, 0, 2); fl.position.set(0,0.01,mz); g.add(fl); g.userData.flashLight = fl;
-    const flash = new THREE.Mesh(new THREE.SphereGeometry(0.16,10,10), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 })); flash.position.set(0,0.02,mz); g.add(flash); g.userData.flash = flash;
     return g;
   }
   const g = new THREE.Group();
