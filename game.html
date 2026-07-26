@@ -408,7 +408,12 @@ const CUSTOM_MODELS = {
   characterYOffset: 0,  // nudge up/down if the feet float or sink
   weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
 
-  weaponRotX: -90, weaponRotY: 0, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
+  // The M4A1 mesh runs along its X axis (6.22 long vs 2.02 tall), with the barrel
+  // on -X — the thin end capped by a flash hider — and the buttstock on +X.
+  // Rotating about X only rolled it onto its side; turning -90° about Y swings
+  // -X round to -Z so the muzzle points where the camera is looking.
+  // If a replacement model ends up back-to-front, flip this to +90.
+  weaponRotX: 0, weaponRotY: -90, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
 
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
@@ -927,9 +932,26 @@ function makeFighter(color, useGLB, isPlayer) {
       // Bounding boxes on rigged models are unreliable, so measure -> scale ->
       // re-measure, repeating until the character really is human-sized.
       const TARGET_H = 1.8;
+      /* Box3.setFromObject() reads a SkinnedMesh's bind-pose geometry, which ignores
+         the armature transform — this model's root Armature node carries scale 0.01,
+         so the plain box reported ~1.8 ("already correct") while the rendered
+         character was nothing like it, and the fit loop exited on its first pass.
+         Bone world positions do reflect the rendered pose, so measure those when the
+         model is rigged and keep the plain box for static meshes. */
       function measure(obj) {
         obj.updateMatrixWorld(true);          // essential: stale matrices give wrong boxes
-        const bb = new THREE.Box3().setFromObject(obj);
+        const bones = new THREE.Box3();
+        let boned = false;
+        const v = new THREE.Vector3();
+        obj.traverse(o => { if (o.isBone) { bones.expandByPoint(o.getWorldPosition(v)); boned = true; } });
+
+        let bb;
+        if (boned && isFinite(bones.min.y) && (bones.max.y - bones.min.y) > 0.0001) {
+          // bones sit inside the silhouette — pad out to approximate skin height
+          bb = bones.clone().expandByScalar((bones.max.y - bones.min.y) * 0.06);
+        } else {
+          bb = new THREE.Box3().setFromObject(obj);
+        }
         const sz = new THREE.Vector3(); bb.getSize(sz);
         return { bb: bb, sz: sz };
       }
@@ -1697,8 +1719,19 @@ function updateCamera(dt) {
       playerMesh.rotation.y = player.yaw + Math.PI;   // face the same way the camera looks
     }
     gunGroup.visible = false;   // character model carries its own weapon
-    const d = camDir();
-    camera.position.set(player.x - d.x*7.5, player.y + 2.2, player.z - d.z*7.5);
+    // Orbit the camera on a fixed-length boom. Offsetting by only d.x/d.z used to
+    // collapse the boom as you looked up or down — camDir's horizontal parts are
+    // scaled by cos(pitch), so at the ±1.35 pitch limit 7.5 units became 1.6 and
+    // the camera ended up inside the character's head. Using the full vector keeps
+    // the distance constant at every pitch.
+    const d = camDir(), BOOM = 5.5, MIN_H = 2.6;
+    let hx = -d.x * BOOM, hz = -d.z * BOOM;                  // horizontal part of the boom
+    if (Math.hypot(hx, hz) < MIN_H) {                        // steep look — keep it off the model
+      hx = Math.sin(player.yaw) * MIN_H;
+      hz = Math.cos(player.yaw) * MIN_H;
+    }
+    const cy = Math.max(player.y - d.y * BOOM + 0.5, 0.8);   // never sink through the floor
+    camera.position.set(player.x + hx, cy, player.z + hz);
     camera.rotation.set(player.pitch + kick, player.yaw, 0);
   } else {
     gunGroup.visible = !scoped;
