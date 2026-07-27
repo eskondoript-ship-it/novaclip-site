@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v60 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v61 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -436,7 +436,8 @@ const CUSTOM_MODELS = {
   botsUseModel: false  // OFF: cloning a rigged model corrupts it. Bots use the reliable built-in soldiers.
 };
 let loadedCharGLB = null, loadedWeapGLB = null, loadedCharAnims = [];
-const extraClips = {};   // animations loaded from separate files
+const extraClips = {};   // retargeted clips, rebuilt per character in makeFighter
+const rawAnims = {};     // key -> { clips, scene } exactly as loaded, before retargeting
 const mixers = [];   // animation players, ticked every frame
 
 function isFBX(name) { return /\.fbx$/i.test(name || ''); }
@@ -451,6 +452,72 @@ function isFBX(name) { return /\.fbx$/i.test(name || ''); }
    These exports carry only _Rotation channels (no PreRotation/Translation to
    recompose), so flattening every clip into one and stripping the suffix maps
    all 48 animated bones straight onto the character skeleton. */
+/* Retarget the loaded clips onto a specific character.
+   The two rigs do not share a rest pose — the character's LeftUpLeg bind is a
+   180-degree turn about Z while the animation's rest for that bone is identity —
+   so writing the animation's rotation onto the bone (with or without its
+   PreRotation) throws limbs half a turn out and folds the body up. What transfers
+   between skeletons is the DELTA from each one's own rest:
+
+       q_out(t) = q_charBind * q_animRest⁻¹ * q_anim(t)
+
+   Note the PreRotation cancels out of that expression, since it sits in both the
+   rest and the animated term — which is why premultiplying it was never the fix. */
+function retargetClips(charRoot) {
+  const bind = new Map();          // character rest pose, sampled before anything plays
+  charRoot.traverse(o => { if (o.isBone && o.name) bind.set(o.name, o.quaternion.clone()); });
+
+  const out = {};
+  const q = new THREE.Quaternion(), inv = new THREE.Quaternion();
+  const identity = new THREE.Quaternion();
+
+  for (const key in rawAnims) {
+    const src = rawAnims[key];
+    if (!src || !src.clips || !src.clips.length) continue;
+
+    const rest = new Map();        // the source's own rest rotation per bone
+    if (src.scene) src.scene.traverse(o => {
+      const m = (o.name || '').match(/^(.*)_\$AssimpFbx\$_Rotation$/);
+      if (m) rest.set(m[1], o.quaternion.clone());
+    });
+
+    const byName = new Map();
+    let dur = 0;
+    src.clips.forEach(c => {
+      if (isFinite(c.duration)) dur = Math.max(dur, c.duration);
+      c.tracks.forEach(t => {
+        const m = (t.name || '').match(/^(.*)_\$AssimpFbx\$_(\w+)\.(\w+)$/);
+        if (!m) return;
+        const base = m[1], kind = m[2], prop = m[3];
+        if (kind !== 'Rotation' || prop !== 'quaternion') return;
+        // root motion is authored against a different origin; it slides the body
+        if (/(Hips|Root|Armature)$/i.test(base)) return;
+        const cb = bind.get(base);
+        if (!cb) return;                                   // bone the character lacks
+
+        let track; try { track = t.clone(); } catch (e) { return; }
+        const rr = rest.get(base) || identity;
+        inv.copy(rr);
+        if (inv.invert) inv.invert(); else inv.inverse();   // r128 renamed this
+        const v = track.values;
+        for (let i = 0; i + 3 < v.length; i += 4) {
+          q.set(v[i], v[i + 1], v[i + 2], v[i + 3]);
+          q.premultiply(inv).premultiply(cb);
+          v[i] = q.x; v[i + 1] = q.y; v[i + 2] = q.z; v[i + 3] = q.w;
+        }
+        track.name = base + '.' + prop;
+        const prev = byName.get(track.name);
+        if (!prev || (track.times && prev.times && track.times.length > prev.times.length)) {
+          byName.set(track.name, track);
+        }
+      });
+    });
+    const tracks = [...byName.values()];
+    if (tracks.length) out[key] = new THREE.AnimationClip(key, dur > 0 ? dur : -1, tracks);
+  }
+  return out;
+}
+
 function mergeAnimClips(clips, name, sceneRoot) {
   /* Each bone's real local transform in these files is
         Translation x PreRotation x Rotation
@@ -568,15 +635,10 @@ function loadCustomModels(done) {
       loader.load(file, res => {
         const clips = (res.animations && res.animations.length) ? res.animations : (res.scene && res.scene.animations) || [];
         if (clips.length) {
-          const clip = mergeAnimClips(clips, key, res.scene);   // named so the state machine finds it
-          if (clip) {
-            extraClips[key] = clip;
-            console.log('loaded "' + key + '" from ' + file +
-              ' — ' + clips.length + ' source clip(s) merged into ' + clip.tracks.length + ' tracks');
-          } else {
-            console.warn('"' + key + '" from ' + file + ' could not be retargeted — skipping it ' +
-              'so the character stays in a clean bind pose rather than a broken one');
-          }
+          // kept raw: retargeting needs the character's rest pose, which is only
+          // available once the character itself is built
+          rawAnims[key] = { clips: clips, scene: res.scene };
+          console.log('loaded "' + key + '" from ' + file + ' — ' + clips.length + ' source clip(s)');
         } else {
           console.warn('no animation clip found in ' + file);
         }
@@ -1116,7 +1178,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v60 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v61 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1140,8 +1202,13 @@ function makeFighter(color, useGLB, isPlayer) {
       model.traverse(o => { if (o.isMesh) hasMesh = true; });
       if (!hasMesh) { g.add(buildSimpleBody(color)); }
       // if the model shipped with animations, play one on a loop
-      if ((loadedCharAnims && loadedCharAnims.length) || Object.keys(extraClips).length) {
+      if ((loadedCharAnims && loadedCharAnims.length) || Object.keys(rawAnims).length) {
         try {
+          // retarget against THIS character's rest pose, sampled before anything plays
+          const EC = retargetClips(model);
+          for (const k in EC) extraClips[k] = EC[k];
+          if (isPlayer) console.log('retargeted ' + Object.keys(EC).length + ' clip(s) onto the character rig');
+
           const mixer = new THREE.AnimationMixer(model);
           const find = (re) => loadedCharAnims.find(a => re.test(a.name));
           // clips from separate files take priority, then anything inside the model
@@ -1542,7 +1609,8 @@ document.addEventListener('keydown', (e) => {
     if (thirdPerson) {
       // says why the character is not on screen, without needing a debugger
       if (!playerMesh) addFeed('3rd: no player model built');
-      else {
+      // sample after updateCamera has run, or the counts still describe first person
+      else requestAnimationFrame(() => requestAnimationFrame(() => {
         let meshes = 0, vis = 0;
         playerMesh.traverse(o => { if (o.isMesh) { meshes++; if (o.visible) vis++; } });
         const p = new THREE.Vector3(); playerMesh.getWorldPosition(p);
@@ -1550,7 +1618,7 @@ document.addEventListener('keydown', (e) => {
         addFeed('3rd: ' + vis + '/' + meshes + ' meshes · at y=' + p.y.toFixed(2) +
           ' · box ' + (isFinite(b.min.y) ? (b.max.y - b.min.y).toFixed(2) + 'm' : 'none') +
           ' · inScene=' + !!playerMesh.parent + ' · anim ' + (window.__ncAnim || 'none'));
-      }
+      }));
     }
   }
   if (e.code === BINDS.sprint) player.sprint = true;
