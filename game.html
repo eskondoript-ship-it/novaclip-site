@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v57 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v58 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -413,7 +413,7 @@ const CUSTOM_MODELS = {
   // Rotating about X only rolled it onto its side; turning -90° about Y swings
   // -X round to -Z so the muzzle points where the camera is looking.
   // If a replacement model ends up back-to-front, flip this to +90.
-  weaponRotX: 0, weaponRotY: -90, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
+  weaponRotX: 0, weaponRotY: 90, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
 
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
@@ -447,15 +447,50 @@ function isFBX(name) { return /\.fbx$/i.test(name || ''); }
    These exports carry only _Rotation channels (no PreRotation/Translation to
    recompose), so flattening every clip into one and stripping the suffix maps
    all 48 animated bones straight onto the character skeleton. */
-function mergeAnimClips(clips, name) {
+function mergeAnimClips(clips, name, sceneRoot) {
+  /* Each bone's real local transform in these files is
+        Translation x PreRotation x Rotation
+     spread across three helper nodes, and only Rotation is animated. Simply
+     renaming the Rotation track onto the bone drops the PreRotation — which is a
+     genuine orientation on 46 of the 48 bones here, not the identity — and the
+     resulting pose is distorted enough that the skinned mesh collapses and the
+     character stops being drawn at all. So read each PreRotation off the loaded
+     helper node and pre-multiply it back into every keyframe. Translation is a
+     static offset that the character's own bind pose already carries, so those
+     tracks are dropped rather than applied twice. */
+  const pre = new Map();
+  if (sceneRoot) {
+    sceneRoot.traverse(o => {
+      const m = (o.name || '').match(/^(.*)_\$AssimpFbx\$_PreRotation$/);
+      if (m) pre.set(m[1], o.quaternion.clone());
+    });
+  }
+  // Without the helper nodes the composition cannot be reconstructed, and applying
+  // the raw rotations would break the rig — better to leave the model in bind pose.
+  if (!pre.size) return null;
+
   const byName = new Map();
+  const q = new THREE.Quaternion();
   let dur = 0;
   clips.forEach(c => {
     if (isFinite(c.duration)) dur = Math.max(dur, c.duration);
     c.tracks.forEach(t => {
+      const m = (t.name || '').match(/^(.*)_\$AssimpFbx\$_(\w+)\.(\w+)$/);
       let track;
-      try { track = t.clone(); } catch (e) { track = t; }
-      track.name = track.name.replace(/_\$AssimpFbx\$_(Rotation|PreRotation|Translation|Scaling)/, '');
+      try { track = t.clone(); } catch (e) { return; }
+      if (m) {
+        const base = m[1], kind = m[2], prop = m[3];
+        if (kind !== 'Rotation' || prop !== 'quaternion') return;   // static helpers
+        const pq = pre.get(base);
+        if (pq && track.values) {
+          const v = track.values;
+          for (let i = 0; i + 3 < v.length; i += 4) {
+            q.set(v[i], v[i + 1], v[i + 2], v[i + 3]).premultiply(pq);
+            v[i] = q.x; v[i + 1] = q.y; v[i + 2] = q.z; v[i + 3] = q.w;
+          }
+        }
+        track.name = base + '.' + prop;
+      }
       // keep the richest track if a bone shows up in more than one split clip
       const prev = byName.get(track.name);
       if (!prev || (track.times && prev.times && track.times.length > prev.times.length)) {
@@ -464,6 +499,7 @@ function mergeAnimClips(clips, name) {
     });
   });
   const tracks = [...byName.values()];
+  if (!tracks.length) return null;
   return new THREE.AnimationClip(name, dur > 0 ? dur : -1, tracks);
 }
 
@@ -522,10 +558,15 @@ function loadCustomModels(done) {
       loader.load(file, res => {
         const clips = (res.animations && res.animations.length) ? res.animations : (res.scene && res.scene.animations) || [];
         if (clips.length) {
-          const clip = mergeAnimClips(clips, key);   // name it so the state machine finds it
-          extraClips[key] = clip;
-          console.log('loaded "' + key + '" from ' + file +
-            ' — ' + clips.length + ' source clip(s) merged into ' + clip.tracks.length + ' tracks');
+          const clip = mergeAnimClips(clips, key, res.scene);   // named so the state machine finds it
+          if (clip) {
+            extraClips[key] = clip;
+            console.log('loaded "' + key + '" from ' + file +
+              ' — ' + clips.length + ' source clip(s) merged into ' + clip.tracks.length + ' tracks');
+          } else {
+            console.warn('"' + key + '" from ' + file + ' could not be retargeted — skipping it ' +
+              'so the character stays in a clean bind pose rather than a broken one');
+          }
         } else {
           console.warn('no animation clip found in ' + file);
         }
@@ -1048,7 +1089,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v57 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v58 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1091,6 +1132,26 @@ function makeFighter(color, useGLB, isPlayer) {
           const made = {};
           for (const k in acts) if (acts[k]) { made[k] = mixer.clipAction(acts[k]); }
           if (made.idle) made.idle.play();
+
+          /* Safety net. A mis-retargeted clip can fold the skeleton in on itself, and
+             an invisible character is a far worse failure than a still one. Play a
+             single frame, re-measure, and if the pose is no longer human-shaped throw
+             the animation away and keep the bind pose. */
+          if (isPlayer) {
+            mixer.update(0.016);
+            const chk2 = measure(model);
+            const ok = isFinite(chk2.sz.y) && chk2.sz.y > wantH * 0.4 && chk2.sz.y < wantH * 2.5;
+            if (!ok) {
+              for (const k in made) made[k].stop();
+              mixer.stopAllAction();
+              console.warn('animation distorted the rig (height became ' +
+                (isFinite(chk2.sz.y) ? chk2.sz.y.toFixed(3) : 'invalid') +
+                'm) — reverting to bind pose so the character stays visible');
+              window.__ncAnim = 'reverted ' + (isFinite(chk2.sz.y) ? chk2.sz.y.toFixed(2) : '?') + 'm';
+            } else {
+              window.__ncAnim = 'ok ' + Object.keys(made).length + ' clips';
+            }
+          }
           mixers.push(mixer);
           g.userData.mixer = mixer;
           g.userData.acts = made;
@@ -1432,7 +1493,7 @@ document.addEventListener('keydown', (e) => {
         const b = new THREE.Box3().setFromObject(playerMesh);
         addFeed('3rd: ' + vis + '/' + meshes + ' meshes · at y=' + p.y.toFixed(2) +
           ' · box ' + (isFinite(b.min.y) ? (b.max.y - b.min.y).toFixed(2) + 'm' : 'none') +
-          ' · inScene=' + !!playerMesh.parent);
+          ' · inScene=' + !!playerMesh.parent + ' · anim ' + (window.__ncAnim || 'none'));
       }
     }
   }
