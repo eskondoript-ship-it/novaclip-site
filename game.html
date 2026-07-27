@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v58 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v59 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -414,6 +414,10 @@ const CUSTOM_MODELS = {
   // -X round to -Z so the muzzle points where the camera is looking.
   // If a replacement model ends up back-to-front, flip this to +90.
   weaponRotX: 0, weaponRotY: 90, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
+
+  // How the rifle sits in the character's right hand (third person). Nudge these
+  // if the grip looks off — scale is relative to the fitted 0.6-unit viewmodel.
+  handWeapon: { scale: 1.0, x: 0, y: 0, z: 0, rotX: 0, rotY: 0, rotZ: 0 },
 
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
@@ -1015,15 +1019,32 @@ function makeFighter(color, useGLB, isPlayer) {
          height and the ground offset alike. */
       function measure(obj) {
         obj.updateMatrixWorld(true);          // essential: stale matrices give wrong boxes
-        const bb = new THREE.Box3(), gb = new THREE.Box3();
-        let any = false;
-        obj.traverse(o => {
-          if (!o.isMesh || !o.geometry) return;
-          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-          gb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
-          bb.union(gb); any = true;
-        });
-        if (!any) bb.setFromObject(obj);      // static props with no skinned meshes
+        /* For a SkinnedMesh the GPU positions vertices from the BONE matrices, not
+           from the mesh's own world matrix, so geometry.boundingBox x matrixWorld
+           does not describe what gets drawn — on this rig it reports ~1.8 while the
+           skeleton (carried under an Armature scaled 0.01) draws something else
+           entirely. Bone world positions are what the render actually follows, and
+           sizing from them is what produced a correctly-scaled character. Geometry
+           bounds remain the fallback for static, unrigged props. */
+        const bones = new THREE.Box3();
+        let boned = false;
+        const v = new THREE.Vector3();
+        obj.traverse(o => { if (o.isBone) { bones.expandByPoint(o.getWorldPosition(v)); boned = true; } });
+
+        let bb;
+        if (boned && isFinite(bones.min.y) && (bones.max.y - bones.min.y) > 1e-9) {
+          // bones sit inside the silhouette — pad out to approximate skin height
+          bb = bones.clone().expandByScalar((bones.max.y - bones.min.y) * 0.06);
+        } else {
+          bb = new THREE.Box3(); const gb = new THREE.Box3(); let any = false;
+          obj.traverse(o => {
+            if (!o.isMesh || !o.geometry) return;
+            if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+            gb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+            bb.union(gb); any = true;
+          });
+          if (!any) bb.setFromObject(obj);
+        }
         const sz = new THREE.Vector3(); bb.getSize(sz);
         return { bb: bb, sz: sz };
       }
@@ -1089,7 +1110,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v58 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v59 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1158,6 +1179,34 @@ function makeFighter(color, useGLB, isPlayer) {
           g.userData.cur = 'idle';
         } catch (e) { console.warn('animation failed', e); }
       }
+      /* Put the rifle in the character's hand. The Mixamo rig names it
+         mixamorig:RightHand; parenting to that bone means the weapon inherits the
+         animation for free, with no IK needed. The bone's world scale is the
+         armature's, which is nowhere near 1, so the weapon is counter-scaled by it
+         to land at a sane size in world units. */
+      if (loadedWeapGLB) {
+        let hand = null;
+        model.traverse(o => { if (!hand && o.isBone && /RightHand$/i.test(o.name || '')) hand = o; });
+        if (!hand) model.traverse(o => { if (!hand && o.isBone && /RightHand/i.test(o.name || '')) hand = o; });
+        if (hand) {
+          try {
+            const held = autoFitGLB(buildWeaponModel('sniper'));   // ~0.6 units long
+            hand.updateMatrixWorld(true);
+            const ws = new THREE.Vector3(); hand.getWorldScale(ws);
+            const inv = (isFinite(ws.x) && Math.abs(ws.x) > 1e-9) ? 1 / ws.x : 1;
+            const HW = CUSTOM_MODELS.handWeapon || {};
+            held.scale.setScalar(inv * (HW.scale || 1));
+            held.position.set(HW.x || 0, HW.y || 0, HW.z || 0);
+            const D = Math.PI / 180;
+            held.rotation.set((HW.rotX || 0) * D, (HW.rotY || 0) * D, (HW.rotZ || 0) * D);
+            hand.add(held);
+            g.userData.heldWeapon = held;
+          } catch (e) { console.warn('could not attach weapon to hand', e); }
+        } else {
+          console.warn('no RightHand bone found — weapon not attached to the character');
+        }
+      }
+
       const fl = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
       fl.position.set(0.26, 1.1, -0.7); g.add(fl); g.userData.flash = fl;
       return g;
@@ -1453,7 +1502,8 @@ document.addEventListener('mousedown', (e) => {
     if (equippedNade) { throwNade(equippedNade); equippedNade = null; updateNadeHint(); }
     else { mouseHeld = true; shoot(); }
   }
-  if (e.button === 2 && WEAPONS[curWeap].scope) { scoped = true; if (!thirdPerson) document.getElementById('scope').style.display = 'block'; }
+  // no black scope ring any more — the weapon's own sights come up instead
+  if (e.button === 2 && WEAPONS[curWeap].scope) { scoped = true; }
 });
 document.addEventListener('mouseup', (e) => {
   if (e.button === 0) mouseHeld = false;
@@ -1892,7 +1942,9 @@ function updateCamera(dt) {
     camera.position.set(player.x + hx, cy, player.z + hz);
     camera.rotation.set(player.pitch + kick, player.yaw, 0);
   } else {
-    gunGroup.visible = !scoped;
+    // Aiming down the real sights: the weapon stays on screen and moves to the
+    // centre, instead of being hidden behind a drawn-on black scope ring.
+    gunGroup.visible = true;
     if (playerMesh) {
       playerMesh.visible = false;
       // force every sub-mesh hidden too — third person force-shows them, so undo that
@@ -1911,7 +1963,11 @@ function updateCamera(dt) {
       rl = -s * 0.35; rlrot = s * 0.9;
     }
     // Position the gun relative to the camera (method from the original working build)
-    const off = { x: 0.34, y: -0.30 + rl*0.35 + Math.sin(t*1.6)*0.004, z: -1.05 + kick*0.18 };
+    // hip-fire sits low and to the right; aiming brings the sights to eye centre
+    const sway = Math.sin(t*1.6) * (scoped ? 0.0012 : 0.004);
+    const off = scoped
+      ? { x: 0.001, y: -0.052 + rl*0.35 + sway, z: -0.30 + kick*0.06 }
+      : { x: 0.34,  y: -0.30  + rl*0.35 + sway, z: -1.05 + kick*0.18 };
     const pos = new THREE.Vector3(off.x, off.y, off.z);
     pos.applyEuler(camera.rotation);
     gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
