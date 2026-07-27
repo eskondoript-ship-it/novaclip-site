@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v59 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v60 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -485,6 +485,12 @@ function mergeAnimClips(clips, name, sceneRoot) {
       if (m) {
         const base = m[1], kind = m[2], prop = m[3];
         if (kind !== 'Rotation' || prop !== 'quaternion') return;   // static helpers
+        /* Skip the root/hips orientation. These clips were exported separately from
+           the character, and a Mixamo hips rotation authored against a different
+           bind orientation lays the whole body flat instead of turning it. Dropping
+           it keeps the character upright and lets the clip drive the limbs, which is
+           the part that actually reads as animation. */
+        if (/(Hips|Root|Armature)$/i.test(base)) return;
         const pq = pre.get(base);
         if (pq && track.values) {
           const v = track.values;
@@ -1110,7 +1116,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v59 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v60 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1965,9 +1971,12 @@ function updateCamera(dt) {
     // Position the gun relative to the camera (method from the original working build)
     // hip-fire sits low and to the right; aiming brings the sights to eye centre
     const sway = Math.sin(t*1.6) * (scoped ? 0.0012 : 0.004);
+    // Aiming pulls the weapon in front of the eye, but not into your face — at
+    // z -0.30 it filled the screen and sat high. Further out and lower sits the
+    // sights on the crosshair instead of over it.
     const off = scoped
-      ? { x: 0.001, y: -0.052 + rl*0.35 + sway, z: -0.30 + kick*0.06 }
-      : { x: 0.34,  y: -0.30  + rl*0.35 + sway, z: -1.05 + kick*0.18 };
+      ? { x: 0.0,  y: -0.105 + rl*0.35 + sway, z: -0.72 + kick*0.06 }
+      : { x: 0.34, y: -0.30  + rl*0.35 + sway, z: -1.05 + kick*0.18 };
     const pos = new THREE.Vector3(off.x, off.y, off.z);
     pos.applyEuler(camera.rotation);
     gunGroup.position.set(player.x + pos.x, player.y + pos.y, player.z + pos.z);
