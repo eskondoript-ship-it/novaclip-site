@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v56 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v57 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -1048,12 +1048,22 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v56 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v57 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
       model.traverse(o => { if (o.isMesh) {
         o.castShadow = true;
+        /* A SkinnedMesh keeps the bounding sphere of its bind pose. Once the merged
+           clips move the bones — and with this rig carried at a ~600x fit scale —
+           that sphere no longer describes where the vertices actually are, so the
+           renderer culls the character and it vanishes from every angle. Skinned
+           meshes have to opt out of frustum culling. */
+        o.frustumCulled = false;
+        if (o.isSkinnedMesh) {
+          if (o.geometry) { o.geometry.computeBoundingBox(); o.geometry.computeBoundingSphere(); }
+          o.matrixAutoUpdate = true;
+        }
         if (!isPlayer && o.material) { o.material = o.material.clone(); if (o.material.color) o.material.color.lerp(new THREE.Color(color), 0.45); }
       }});
       g.add(model);
@@ -1218,7 +1228,9 @@ function buildWeapon(type) {
     const flash = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10),
       new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
     flash.position.set(0, 0.02, mz); w.add(flash); w.userData.flash = flash;
-    w.add(buildArms());   // buildArms existed but was never called — hence a floating rifle
+    /* buildArms() is deliberately NOT attached here. Its limb positions were authored
+       around the built-in procedural gun, so against an arbitrary .glb the hands land
+       nowhere near the grip and read worse than no arms at all. */
     return w;
   }
   return m;
@@ -1407,7 +1419,23 @@ document.addEventListener('keydown', (e) => {
   if (e.code === BINDS.jump && running) e.preventDefault();
   if (!running) return;
   if (e.code === BINDS.reload) reload();
-  if (e.code === BINDS.view) { thirdPerson = !thirdPerson; if (scoped) { scoped = false; document.getElementById('scope').style.display = 'none'; } }
+  if (e.code === BINDS.view) {
+    thirdPerson = !thirdPerson;
+    if (scoped) { scoped = false; document.getElementById('scope').style.display = 'none'; }
+    if (thirdPerson) {
+      // says why the character is not on screen, without needing a debugger
+      if (!playerMesh) addFeed('3rd: no player model built');
+      else {
+        let meshes = 0, vis = 0;
+        playerMesh.traverse(o => { if (o.isMesh) { meshes++; if (o.visible) vis++; } });
+        const p = new THREE.Vector3(); playerMesh.getWorldPosition(p);
+        const b = new THREE.Box3().setFromObject(playerMesh);
+        addFeed('3rd: ' + vis + '/' + meshes + ' meshes · at y=' + p.y.toFixed(2) +
+          ' · box ' + (isFinite(b.min.y) ? (b.max.y - b.min.y).toFixed(2) + 'm' : 'none') +
+          ' · inScene=' + !!playerMesh.parent);
+      }
+    }
+  }
   if (e.code === BINDS.sprint) player.sprint = true;
   if (/^Digit[1-9]$/.test(e.code)) { const slot = parseInt(e.code.slice(5)); const w = Object.keys(WEAPONS).find(k => WEAPONS[k].slot === slot); if (w) { switchWeap(w); equippedNade = null; } }
   if (e.code === BINDS.nade) { equippedNade = inv.frag > 0 ? 'frag' : null; if (!inv.frag) addFeed('No frags — buy in shop (E)'); updateNadeHint(); }
