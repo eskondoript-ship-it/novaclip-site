@@ -19,6 +19,17 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 #tankprompt { position: fixed; left: 50%; bottom: 118px; transform: translateX(-50%); z-index: 12; display: none;
   background: rgba(6,10,16,0.82); border: 1px solid rgba(0,240,255,0.45); color: #EAF2FF;
   padding: 9px 18px; border-radius: 22px; font-weight: 700; font-size: 0.88rem; backdrop-filter: blur(8px); }
+#weatherTag { position: fixed; top: 14px; left: 14px; z-index: 12; background: rgba(6,10,16,0.7);
+  border: 1px solid rgba(255,255,255,0.14); color: #EAF2FF; padding: 6px 14px; border-radius: 18px;
+  font-weight: 700; font-size: 0.82rem; backdrop-filter: blur(8px); }
+#tablet { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center;
+  background: rgba(2,6,10,0.72); backdrop-filter: blur(6px); }
+.tabbox { background: #08131a; border: 1px solid rgba(0,240,255,0.35); border-radius: 18px; padding: 16px;
+  box-shadow: 0 20px 70px rgba(0,0,0,0.6); }
+.tabhead { display: flex; justify-content: space-between; gap: 20px; font-weight: 800; font-size: 0.86rem;
+  color: #00F0FF; letter-spacing: 1.5px; margin-bottom: 10px; }
+#tabletcv { display: block; border-radius: 10px; cursor: crosshair; max-width: 78vmin; max-height: 78vmin; }
+.tabfoot { margin-top: 10px; font-size: 0.76rem; color: #7E8AA6; text-align: center; }
 #dmgflash { position: fixed; inset: 0; z-index: 8; pointer-events: none; background: radial-gradient(circle, transparent 45%, rgba(255,20,40,0.5) 100%); opacity: 0; transition: opacity .1s; }
 
 /* COD-style top scorebar */
@@ -258,6 +269,14 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='hud'><div id='crosshair'></div></div>
 <div id='scope'></div>
 <div id='tankprompt'></div>
+<div id='weatherTag'>☀️ Sunny</div>
+<div id='tablet'>
+  <div class='tabbox'>
+    <div class='tabhead'><span>🛰️ STRIKE TABLET</span><span id='tabletstat'>READY</span></div>
+    <canvas id='tabletcv' width='560' height='560'></canvas>
+    <div class='tabfoot'>Tap the map to call a strike · Q or Esc to close</div>
+  </div>
+</div>
 <div id='dmgflash'></div>
 <div id='errbox'></div>
 
@@ -284,7 +303,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v65 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank</div>
+<div id='viewTag'>v66 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -691,8 +710,8 @@ let scene, camera, renderer, skyMesh;
 let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, deaths: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true };
 const keys = {};
 // ---- rebindable controls ----
-const DEFAULT_BINDS = { tank:'KeyF', forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', sprint:'ShiftLeft', crouch:'ControlLeft', emote:'KeyT', reload:'KeyR', nade:'KeyG', sticky:'KeyB', plant:'KeyC', detonate:'KeyX', shop:'KeyE', view:'KeyV' };
-const BIND_LABELS = { tank:'Enter / leave tank', forward:'Move forward', back:'Move back', left:'Strafe left', right:'Strafe right', jump:'Jump', sprint:'Sprint', crouch:'Crouch', emote:'Emote / dance', reload:'Reload', nade:'Equip grenade', sticky:'Equip sticky', plant:'Plant C4', detonate:'Detonate', shop:'Open shop', view:'First/third person' };
+const DEFAULT_BINDS = { tablet:'KeyQ', weather:'KeyM', tank:'KeyF', forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', sprint:'ShiftLeft', crouch:'ControlLeft', emote:'KeyT', reload:'KeyR', nade:'KeyG', sticky:'KeyB', plant:'KeyC', detonate:'KeyX', shop:'KeyE', view:'KeyV' };
+const BIND_LABELS = { tablet:'Strike tablet', weather:'Change weather', tank:'Enter / leave tank', forward:'Move forward', back:'Move back', left:'Strafe left', right:'Strafe right', jump:'Jump', sprint:'Sprint', crouch:'Crouch', emote:'Emote / dance', reload:'Reload', nade:'Equip grenade', sticky:'Equip sticky', plant:'Plant C4', detonate:'Detonate', shop:'Open shop', view:'First/third person' };
 let BINDS = (function () {
   try { return Object.assign({}, DEFAULT_BINDS, JSON.parse(localStorage.getItem('nc_binds') || '{}')); }
   catch (e) { return Object.assign({}, DEFAULT_BINDS); }
@@ -1233,7 +1252,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v65 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v66 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1790,6 +1809,9 @@ document.addEventListener('keydown', (e) => {
   if (!running) return;
   if (e.code === BINDS.reload) reload();
   if (e.code === BINDS.tank) { toggleTank(); }
+  if (e.code === BINDS.tablet) { tabletOpen ? closeTablet() : openTablet(); }
+  if (e.code === BINDS.weather) { cycleWeather(); }
+  if (e.code === 'Escape' && tabletOpen) closeTablet();
   if (e.code === BINDS.view) {
     thirdPerson = !thirdPerson;
     if (scoped) { scoped = false; document.getElementById('scope').style.display = 'none'; }
@@ -1891,6 +1913,7 @@ function killBot(b) {
 }
 function respawnBot(b) {
   if (timeLeft <= 0) return;
+  b.inVehicle = null;
   b.hp = b.maxhp || 100; b.alive = true; b.mesh.visible = true; if (b.tag) { b.tag.visible = true; b.tag.userData.hp = -1; }
   const B = BASES[b.team];
   b.mesh.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
@@ -2076,6 +2099,7 @@ function updateBots(dt) {
         b.tag.scale.set(1.9 * s, 0.54 * s, 1);
       }
     }
+    if (b.inVehicle) return;      // crewing something; the vehicle AI drives it
     b.cooldown -= dt;
     if (b.cooldown <= 0) {
       const tgtPlayer = b.team !== PLAYER_TEAM && Math.random() < 0.65 && !inShop;
@@ -2140,7 +2164,12 @@ function updatePlayer(dt) {
   // slide along walls instead of stopping dead
   if (!blockedAt(nx, player.z)) player.x = nx;
   if (!blockedAt(player.x, nz)) player.z = nz;
-  player.x = Math.max(-78, Math.min(78, player.x)); player.z = Math.max(-78, Math.min(78, player.z));
+  /* THE invisible wall. This was hard-coded to 78 for the old 80-unit arena and
+     never moved when the map grew to 150 — so you were snapped inside a box far
+     smaller than the world, with your own base at 125 and your tanks at 108
+     stranded outside it. Derive it from ARENA and it can never drift again. */
+  const LIM = ARENA - 2;
+  player.x = Math.max(-LIM, Math.min(LIM, player.x)); player.z = Math.max(-LIM, Math.min(LIM, player.z));
   const GROUND = crouching ? 1.15 : 1.7;
   if (keys[BINDS.jump] && player.onGround) { player.vy = 6.4; player.onGround = false; }
   player.vy -= 18*dt; player.y += player.vy*dt;
@@ -2208,6 +2237,40 @@ function playEmote() {
 }
 
 // pick the right animation clip for what the player is doing
+/* Bots get the same state machine as the player. They were being given a mixer
+   and left on idle forever, so seventeen fighters slid across the map without
+   moving their legs. Their clips are driven off how far they actually travelled
+   this frame, which is the honest signal for a bot that has no key presses. */
+function updateBotAnim(dt) {
+  bots.forEach(b => {
+    const A = b.mesh.userData && b.mesh.userData.acts;
+    if (!A) return;
+    if (!b.alive) {
+      if (A.death && b.mesh.userData.cur !== 'death') {
+        const prev = A[b.mesh.userData.cur];
+        if (prev) prev.fadeOut(0.15);
+        A.death.reset().fadeIn(0.15).setLoop(THREE.LoopOnce, 1).play();
+        A.death.clampWhenFinished = true;
+        b.mesh.userData.cur = 'death';
+      }
+      return;
+    }
+    const px = b.mesh.position.x, pz = b.mesh.position.z;
+    const moved = b._px === undefined ? 0 : Math.hypot(px - b._px, pz - b._pz);
+    b._px = px; b._pz = pz;
+    const speed = dt > 0 ? moved / dt : 0;
+
+    let want = 'idle';
+    if (speed > 6 && A.run) want = 'run';
+    else if (speed > 0.4) want = A.walk ? 'walk' : (A.run ? 'run' : 'idle');
+    if (want === b.mesh.userData.cur || !A[want]) return;
+    const prev = A[b.mesh.userData.cur];
+    if (prev) prev.fadeOut(0.2);
+    A[want].reset().fadeIn(0.2).play();
+    b.mesh.userData.cur = want;
+  });
+}
+
 function updatePlayerAnim() {
   if (!playerMesh || !playerMesh.userData.acts) return;
   if (performance.now() < oneShotUntil) return;   // let one-shots finish
@@ -2442,21 +2505,44 @@ function buildTankModel() {
   return g;
 }
 
-function buildTank(team) {
+function buildTruckModel(team) {
   const g = new THREE.Group();
-  g.add(buildTankModel());
+  const body = new THREE.MeshStandardMaterial({ color: team === TEAM_CT ? 0x4b5a52 : 0x6b5a3f, roughness: 0.85 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x24282c, roughness: 0.9 });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x8fb8cc, roughness: 0.25, metalness: 0.5 });
+  function part(w, h, d, mat, x, y, z) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z); m.castShadow = true; g.add(m); return m;
+  }
+  part(2.6, 1.0, 2.4, body, 0, 1.35, -1.6);     // cab
+  part(2.4, 0.7, 0.12, glass, 0, 1.62, -2.75);  // windscreen
+  part(2.8, 1.4, 4.6, body, 0, 1.35, 1.4);      // cargo bed
+  part(3.0, 0.5, 7.2, dark, 0, 0.62, 0);        // chassis
+  [-1.35, 1.35].forEach(sx => [-2.3, 0.4, 2.4].forEach(sz => {
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.45, 12), dark);
+    w.rotation.z = Math.PI / 2; w.position.set(sx, 0.62, sz); w.castShadow = true; g.add(w);
+  }));
+  return g;
+}
+
+function buildTank(team, kind) {
+  const g = new THREE.Group();
+  if (kind === 'truck') { g.add(buildTruckModel(team)); }
+  else g.add(buildTankModel());
 
   // turret pivots independently so it can aim while the hull drives
   const turret = new THREE.Group();
   turret.position.y = 1.35;
   const tmat = new THREE.MeshStandardMaterial({ color: team === TEAM_CT ? 0x3f5670 : 0x6b5535, roughness: 0.8, metalness: 0.3 });
-  if (!loadedTankGLB) {
+  if (!loadedTankGLB && kind !== 'truck') {
     const dome = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.85, 2.6), tmat);
     dome.castShadow = true; turret.add(dome);
   }
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 4.2, 10), tmat);
-  barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 0.1, -2.4);
-  barrel.castShadow = true; turret.add(barrel);
+  if (kind !== 'truck') {
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 4.2, 10), tmat);
+    barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 0.1, -2.4);
+    barrel.castShadow = true; turret.add(barrel);
+  }
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.1, -4.5); turret.add(muzzle);
   g.add(turret);
 
@@ -2479,8 +2565,10 @@ function buildTank(team) {
   }
 
   scene.add(g);
-  return { mesh: g, turret: turret, muzzle: muzzle, team: team, hp: TANK_HP,
-           driver: null, cool: 0, yaw: 0, speed: 0, dead: false };
+  return { mesh: g, turret: turret, muzzle: muzzle, team: team, kind: kind || 'tank',
+           hp: kind === 'truck' ? 260 : TANK_HP, maxhp: kind === 'truck' ? 260 : TANK_HP,
+           driver: null, cool: 0, yaw: 0, speed: 0, dead: false,
+           topSpeed: kind === 'truck' ? 26 : 16, turn: kind === 'truck' ? 1.5 : 1.1 };
 }
 
 function spawnTanks() {
@@ -2501,6 +2589,15 @@ function spawnTanks() {
     t.mesh.rotation.y = t.yaw;
     tanks.push(t);
   }
+  // one truck per side: quicker and tougher to catch, but no gun
+  [TEAM_CT, TEAM_T].forEach(team => {
+    const v = buildTank(team, 'truck');
+    const B = BASES[team], fwd = (team === TEAM_CT ? 1 : -1);
+    v.mesh.position.set(B.x + 20, 0, B.z + fwd * 12);
+    v.yaw = team === TEAM_CT ? 0 : Math.PI;
+    v.mesh.rotation.y = v.yaw;
+    tanks.push(v);
+  });
 }
 
 function nearestTank(x, z, maxD) {
@@ -2539,7 +2636,7 @@ window.toggleTank = function () {
 };
 
 function fireTankShell(t, targetPos) {
-  if (t.cool > 0 || t.dead) return;
+  if (t.cool > 0 || t.dead || t.kind === 'truck') return;
   t.cool = TANK_RELOAD;
   const from = new THREE.Vector3();
   t.muzzle.getWorldPosition(from);
@@ -2562,6 +2659,13 @@ function damageTank(t, amt, byPlayer) {
     explode(t.mesh.position.clone().setY(1.2), 11);
     t.mesh.visible = false;
     if (t.driver === 'player') { playerTank = null; damagePlayer(45, null); }
+    if (t.crew) {                      // the crew dies with it
+      const c = t.crew;
+      c.inVehicle = null; c.alive = false; c.mesh.visible = false;
+      if (c.tag) c.tag.visible = false;
+      setTimeout(() => respawnBot(c), 4000);
+      t.crew = null;
+    }
     t.driver = null;
     addFeed('💥 Tank destroyed');
     if (byPlayer) earn(40, 'tank kill');
@@ -2610,9 +2714,9 @@ function updateTanks(dt) {
       const acc = (keys[BINDS.forward] ? 26 : 0) - (keys[BINDS.back] ? 18 : 0);
       t.speed += acc * dt;
       t.speed *= 0.94;                                     // drag
-      t.speed = Math.max(-9, Math.min(16, t.speed));
-      if (keys[BINDS.left])  t.yaw += dt * 1.1 * (t.speed >= 0 ? 1 : -1);
-      if (keys[BINDS.right]) t.yaw -= dt * 1.1 * (t.speed >= 0 ? 1 : -1);
+      t.speed = Math.max(-9, Math.min(t.topSpeed, t.speed));
+      if (keys[BINDS.left])  t.yaw += dt * t.turn * (t.speed >= 0 ? 1 : -1);
+      if (keys[BINDS.right]) t.yaw -= dt * t.turn * (t.speed >= 0 ? 1 : -1);
       const nx = t.mesh.position.x - Math.sin(t.yaw) * t.speed * dt;
       const nz = t.mesh.position.z - Math.cos(t.yaw) * t.speed * dt;
       if (Math.abs(nx) < ARENA - 4) t.mesh.position.x = nx;
@@ -2640,6 +2744,32 @@ function updateTanks(dt) {
       }
       return;
     }
+
+    /* An enemy vehicle only works with someone in it. A bot has to walk over and
+       crew it first, and that bot leaves the infantry fight while it drives — so
+       an unmanned tank just sits there, and killing the crew stops it dead. */
+    if (!t.crew || !t.crew.alive) {
+      t.crew = null;
+      const free = bots.filter(b => b.alive && b.team === t.team && !b.inVehicle);
+      const near = free.map(b => ({ b: b, d: b.mesh.position.distanceTo(t.mesh.position) }))
+                       .sort((a, b) => a.d - b.d)[0];
+      if (!near) return;                       // nobody available — vehicle idles
+      if (near.d > 6) {                        // walk to it
+        const dx = t.mesh.position.x - near.b.mesh.position.x;
+        const dz = t.mesh.position.z - near.b.mesh.position.z;
+        const L = Math.hypot(dx, dz) || 1, step = 7 * dt;
+        near.b.mesh.position.x += dx / L * step;
+        near.b.mesh.position.z += dz / L * step;
+        near.b.mesh.lookAt(t.mesh.position.x, 1.2, t.mesh.position.z);
+        return;
+      }
+      t.crew = near.b;                         // aboard
+      near.b.inVehicle = t;
+      near.b.mesh.visible = false;
+      if (near.b.tag) near.b.tag.visible = false;
+    }
+    // the crew rides with the hull
+    t.crew.mesh.position.set(t.mesh.position.x, 0, t.mesh.position.z);
 
     // enemy crews: drive at the nearest target and shell it
     const foes = bots.filter(b => b.alive && b.team !== t.team);
@@ -2673,6 +2803,229 @@ function updateTanks(dt) {
   });
 }
 
+/* ============================================================
+   WEATHER
+   Sky tint, fog, light colour and intensity, plus a particle field for the wet
+   ones. Each preset drives the same knobs so switching is instant and total.
+   ============================================================ */
+const WEATHER = {
+  sunny:  { label: '☀️ Sunny',     sky: 0x87ceeb, fog: 0xbcd8ea, fogD: 0.0016, sun: 0xfff4e0, sunI: 1.05, amb: 0.72, particles: 0 },
+  cloudy: { label: '☁️ Cloudy',    sky: 0x9aa4ad, fog: 0xa8b2ba, fogD: 0.0042, sun: 0xd8dee4, sunI: 0.55, amb: 0.62, particles: 0 },
+  rain:   { label: '🌧️ Rain',      sky: 0x5a656e, fog: 0x6b757d, fogD: 0.0090, sun: 0xaeb8c0, sunI: 0.34, amb: 0.48, particles: 2600, pcol: 0x9fc4dd, pfall: 62, plen: 1.5 },
+  snow:   { label: '❄️ Snow',      sky: 0xc3ccd4, fog: 0xd6dde3, fogD: 0.0110, sun: 0xeef3f8, sunI: 0.62, amb: 0.80, particles: 1800, pcol: 0xffffff, pfall: 7,  plen: 0.12 },
+  blood:  { label: '🌑 Blood moon', sky: 0x2a0a0e, fog: 0x3d1014, fogD: 0.0070, sun: 0xff4a44, sunI: 0.60, amb: 0.30, particles: 0 },
+  eclipse:{ label: '🌘 Eclipse',    sky: 0x14161f, fog: 0x1b1f2b, fogD: 0.0060, sun: 0x8fa6d8, sunI: 0.26, amb: 0.22, particles: 0 }
+};
+const WEATHER_KEYS = Object.keys(WEATHER);
+let weatherNow = 'sunny', precip = null, precipVel = null;
+
+function clearPrecip() {
+  if (precip) { scene.remove(precip); if (precip.geometry) precip.geometry.dispose(); precip = null; precipVel = null; }
+}
+function setWeather(key) {
+  const W = WEATHER[key]; if (!W || !scene) return;
+  weatherNow = key;
+  scene.background = new THREE.Color(W.sky);
+  scene.fog = new THREE.FogExp2(W.fog, W.fogD);
+  if (skyMesh) skyMesh.visible = (key === 'sunny' || key === 'cloudy');
+  scene.traverse(o => {
+    if (o.isDirectionalLight) { o.color.setHex(W.sun); o.intensity = W.sunI; }
+    else if (o.isAmbientLight || o.isHemisphereLight) { o.intensity = W.amb; }
+  });
+
+  clearPrecip();
+  if (W.particles) {
+    // one point per drop/flake, recycled from the top when it lands
+    const n = W.particles, pos = new Float32Array(n * 3);
+    precipVel = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      pos[i*3]   = (Math.random() - 0.5) * 170;
+      pos[i*3+1] = Math.random() * 60;
+      pos[i*3+2] = (Math.random() - 0.5) * 170;
+      precipVel[i] = W.pfall * (0.75 + Math.random() * 0.5);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    precip = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: W.pcol, size: key === 'snow' ? 0.34 : 0.13,
+      transparent: true, opacity: key === 'snow' ? 0.95 : 0.65, depthWrite: false
+    }));
+    precip.frustumCulled = false;
+    scene.add(precip);
+  }
+  const hud = document.getElementById('weatherTag');
+  if (hud) hud.textContent = W.label;
+  addFeed(W.label);
+}
+function cycleWeather() {
+  const i = WEATHER_KEYS.indexOf(weatherNow);
+  setWeather(WEATHER_KEYS[(i + 1) % WEATHER_KEYS.length]);
+}
+function updateWeather(dt) {
+  if (!precip || !precipVel) return;
+  const p = precip.geometry.attributes.position, a = p.array;
+  const drift = weatherNow === 'snow' ? Math.sin(performance.now() / 1400) * 3 : 0;
+  for (let i = 0; i < precipVel.length; i++) {
+    a[i*3+1] -= precipVel[i] * dt;
+    if (drift) a[i*3] += drift * dt;
+    if (a[i*3+1] < 0) {                       // recycle around the camera
+      a[i*3]   = camera.position.x + (Math.random() - 0.5) * 170;
+      a[i*3+1] = 55 + Math.random() * 12;
+      a[i*3+2] = camera.position.z + (Math.random() - 0.5) * 170;
+    }
+  }
+  p.needsUpdate = true;
+}
+
+/* ============================================================
+   STRIKE TABLET
+   Q opens a top-down map of the arena. Click anywhere to call a missile onto
+   that spot; it falls from altitude after a short flight time, so a good call is
+   one that leads a target rather than lands on it.
+   ============================================================ */
+const STRIKE_COOLDOWN = 30, STRIKE_FLIGHT = 3.2, STRIKE_RADIUS = 16, STRIKE_DMG = 220;
+/* Designations are cosmetic and live here so they are easy to change. These are
+   real systems; on a 13-18 platform with a parent dashboard, tying a strike
+   weapon to a specific country's actual arsenal is worth a second thought —
+   swapping this array for invented names is a one-line change. */
+const MISSILES = ['Fateh-110', 'Zolfaghar', 'Qiam-1', 'Dezful', 'Sejjil', 'Khorramshahr'];
+let tabletOpen = false, strikeCool = 0, strikes = [];
+
+function openTablet() {
+  if (!running || playerTank) return;
+  tabletOpen = true;
+  document.getElementById('tablet').style.display = 'flex';
+  document.exitPointerLock();
+  drawTablet();
+}
+window.closeTablet = function () {
+  tabletOpen = false;
+  document.getElementById('tablet').style.display = 'none';
+  if (running) renderer.domElement.requestPointerLock();
+};
+
+function drawTablet() {
+  const cv = document.getElementById('tabletcv');
+  if (!cv) return;
+  const c = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const toPx = (x, z) => [(x + ARENA) / (ARENA * 2) * W, (z + ARENA) / (ARENA * 2) * H];
+
+  c.fillStyle = '#06131a'; c.fillRect(0, 0, W, H);
+  c.strokeStyle = 'rgba(0,240,255,0.13)'; c.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    const p = i / 10 * W;
+    c.beginPath(); c.moveTo(p, 0); c.lineTo(p, H); c.stroke();
+    c.beginPath(); c.moveTo(0, p); c.lineTo(W, p); c.stroke();
+  }
+  // bases
+  for (const team in BASES) {
+    const [bx, bz] = toPx(BASES[team].x, BASES[team].z);
+    c.fillStyle = team === PLAYER_TEAM ? 'rgba(74,144,217,0.30)' : 'rgba(217,138,58,0.30)';
+    c.fillRect(bx - 22, bz - 17, 44, 34);
+  }
+  // vehicles
+  tanks.forEach(t => {
+    if (t.dead) return;
+    const [x, y] = toPx(t.mesh.position.x, t.mesh.position.z);
+    c.fillStyle = t.team === PLAYER_TEAM ? '#6cc3ff' : '#ffa94d';
+    c.fillRect(x - 5, y - 5, 10, 10);
+  });
+  // fighters
+  bots.forEach(b => {
+    if (!b.alive || b.inVehicle) return;
+    const [x, y] = toPx(b.mesh.position.x, b.mesh.position.z);
+    c.fillStyle = b.team === PLAYER_TEAM ? 'rgba(108,195,255,0.75)' : '#ff5a5a';
+    c.beginPath(); c.arc(x, y, 3.2, 0, Math.PI * 2); c.fill();
+  });
+  // you
+  const [px, pz] = toPx(player.x, player.z);
+  c.strokeStyle = '#B6FF3C'; c.lineWidth = 2.5;
+  c.beginPath(); c.arc(px, pz, 6, 0, Math.PI * 2); c.stroke();
+  // inbound strikes
+  strikes.forEach(s => {
+    const [x, y] = toPx(s.x, s.z);
+    c.strokeStyle = '#ff3b3b'; c.lineWidth = 2;
+    const r = 10 + (1 - s.t / STRIKE_FLIGHT) * 14;
+    c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.stroke();
+  });
+
+  const st = document.getElementById('tabletstat');
+  if (st) st.textContent = strikeCool > 0
+    ? 'RELOADING — ' + Math.ceil(strikeCool) + 's'
+    : 'READY — tap the map to call a strike';
+}
+
+function callStrike(wx, wz) {
+  if (strikeCool > 0) return;
+  strikeCool = STRIKE_COOLDOWN;
+  const name = MISSILES[Math.floor(Math.random() * MISSILES.length)];
+
+  // the warhead itself, falling from altitude
+  const m = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.6, 10),
+    new THREE.MeshStandardMaterial({ color: 0xcfd6dd, emissive: 0x331100, metalness: 0.6, roughness: 0.4 }));
+  m.rotation.x = Math.PI;                 // nose down
+  m.position.set(wx, 190, wz);
+  scene.add(m);
+
+  // ground marker so the target area is obvious from the field
+  const ring = new THREE.Mesh(new THREE.RingGeometry(STRIKE_RADIUS - 1.2, STRIKE_RADIUS, 40),
+    new THREE.MeshBasicMaterial({ color: 0xff3b3b, transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.set(wx, 0.08, wz);
+  scene.add(ring);
+
+  strikes.push({ x: wx, z: wz, t: STRIKE_FLIGHT, mesh: m, ring: ring });
+  addFeed('🚀 ' + name + ' inbound — ' + STRIKE_FLIGHT.toFixed(1) + 's');
+}
+
+function updateStrikes(dt) {
+  if (strikeCool > 0) strikeCool -= dt;
+  for (let i = strikes.length - 1; i >= 0; i--) {
+    const s = strikes[i];
+    s.t -= dt;
+    const k = Math.max(0, s.t / STRIKE_FLIGHT);
+    s.mesh.position.y = 2 + k * k * 188;               // accelerating descent
+    s.ring.material.opacity = 0.35 + Math.sin(performance.now() / 90) * 0.25;
+    if (s.t > 0) continue;
+
+    explode(new THREE.Vector3(s.x, 1.2, s.z), STRIKE_RADIUS);
+    scene.remove(s.mesh); scene.remove(s.ring);
+    let killed = 0;
+    bots.forEach(b => {
+      if (!b.alive) return;
+      if (Math.hypot(b.mesh.position.x - s.x, b.mesh.position.z - s.z) > STRIKE_RADIUS) return;
+      b.hp -= STRIKE_DMG;
+      if (b.hp <= 0) {
+        b.alive = false; b.mesh.visible = false;
+        if (b.inVehicle) { b.inVehicle.crew = null; b.inVehicle = null; }
+        if (b.team !== PLAYER_TEAM) { player.kills++; killed++; }
+        setTimeout(() => respawnBot(b), 3500);
+      }
+    });
+    tanks.forEach(t => {
+      if (t.dead) return;
+      if (Math.hypot(t.mesh.position.x - s.x, t.mesh.position.z - s.z) < STRIKE_RADIUS)
+        damageTank(t, STRIKE_DMG, true);
+    });
+    // it does not care whose side you are on
+    if (Math.hypot(player.x - s.x, player.z - s.z) < STRIKE_RADIUS) damagePlayer(90, null);
+    if (killed) { earn(MODES[mode].perKill * killed, 'strike (' + killed + ')'); updateBoard(); }
+    strikes.splice(i, 1);
+  }
+}
+
+(function wireTablet() {
+  const cv = document.getElementById('tabletcv');
+  if (!cv) return;
+  cv.addEventListener('click', e => {
+    if (strikeCool > 0) return;
+    const r = cv.getBoundingClientRect();
+    // canvas is scaled by CSS, so map through the displayed size
+    const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+    callStrike(fx * ARENA * 2 - ARENA, fy * ARENA * 2 - ARENA);
+    drawTablet();
+  });
+})();
+
 function animate() {
   requestAnimationFrame(animate);
   const now = performance.now(); let dt = (now - gclock.last)/1000; gclock.last = now; if (dt > 0.1) dt = 0.1;
@@ -2683,7 +3036,11 @@ function animate() {
     playerMesh.userData.inner.position.copy(playerMesh.userData.fitPos);
   }
   updatePlayerAnim();
+  if (running) updateBotAnim(dt);
   updateWristMonitor(dt);
+  updateWeather(dt);
+  updateStrikes(dt);
+  if (tabletOpen) drawTablet();
   updateCamera(dt); updateTracers(dt);
   renderer.render(scene, camera);
 }
@@ -2954,6 +3311,7 @@ document.querySelectorAll('.gnav').forEach(btn => {
 
 try {
   init();
+  setWeather('sunny');
   updateBoard();
   setPts(pts());
   document.getElementById('hpbar').style.width = '100%';
