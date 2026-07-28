@@ -305,7 +305,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v69 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v70 · 1 Rifle · 2 Knife · 3 SMG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -406,15 +406,16 @@ const MODES = {
 };
 
 // arena half-width; bases sit near the far edges of it
-const ARENA = 150;
+const ARENA = 210;
 const BOT_COUNT = 17;          // 8 allies + 9 enemies, plus you = 18 fighters
 let mode = 'medium';
 
 const WEAPONS = {
   sniper: { name: 'ASSAULT RIFLE', slot: 1, mag: 30, dmg: 34, scopedDmg: 42, rate: 110, cost: 0, scope: true, auto: true, range: 320, model: 'sniper', owned: true },
+  smg:    { name: 'SMG', slot: 3, mag: 40, dmg: 21, scopedDmg: 26, rate: 68, cost: 0, scope: true, auto: true, range: 180, model: 'smg', owned: true },
   knife:  { name: 'KNIFE', slot: 2, mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, cost: 0, scope: false, auto: false, range: 3, model: 'knife', owned: true }
 };
-function ownedWeapons() { return ['sniper', 'knife']; }
+function ownedWeapons() { return ['sniper', 'smg', 'knife']; }
 function saveOwned(l) { /* weapons are no longer purchasable */ }
 
 const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Echo','Rogue',
@@ -474,6 +475,14 @@ const CUSTOM_MODELS = {
   // means the built-in blocky truck is used instead.
   truck: 'unimog_truck.glb', truckScale: 1.0, truckRotY: 0,
 
+  // Up to four house .glb files. Each one you fill in gets scattered around the
+  // map several times; any left empty are simply skipped, and if none are set
+  // the built-in blocky buildings are used instead.
+  houses: ['', '', '', ''], houseScale: 1.0, houseRotY: 0,
+
+  // Knife model, used for the melee weapon when set.
+  knife: '', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
+
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
     idle:    'idle.glb',
@@ -494,7 +503,8 @@ const CUSTOM_MODELS = {
   // independently. Falls back to the built-in soldiers if it cannot load.
   botsUseModel: true
 };
-let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruckGLB = null, loadedCharAnims = [];
+let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruckGLB = null, loadedKnifeGLB = null, loadedCharAnims = [];
+const loadedHouseGLB = [];
 const extraClips = {};   // retargeted clips, rebuilt per character in makeFighter
 const rawAnims = {};     // key -> { clips, scene } exactly as loaded, before retargeting
 const mixers = [];   // animation players, ticked every frame
@@ -641,7 +651,8 @@ function mergeAnimClips(clips, name, sceneRoot) {
 
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
-  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck) { done(); return; }
+  const anyHouse = (CUSTOM_MODELS.houses || []).some(Boolean);
+  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !anyHouse) { done(); return; }
   const needFBX = isFBX(CUSTOM_MODELS.character) || isFBX(CUSTOM_MODELS.weapon);
 
   // load the right loader(s): GLTFLoader for .glb/.gltf, FBXLoader for Mixamo .fbx
@@ -685,6 +696,13 @@ function loadCustomModels(done) {
     let pending = 0, fired = false;
     const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
     if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; loadedCharAnims = g.animations || []; if (loadedCharAnims.length) console.log('character has ' + loadedCharAnims.length + ' animation clip(s):', loadedCharAnims.map(a => a.name).join(', ')); pending--; finish(); }, undefined, e => { console.warn('character model failed \u2014 using built-in', e); pending--; finish(); }); }
+    (CUSTOM_MODELS.houses || []).forEach((f, hi) => {
+      if (!f) return;
+      pending++;
+      loader.load(f, g => { loadedHouseGLB[hi] = g.scene; pending--; finish(); },
+                  undefined, e => { console.warn('house model failed: ' + f, e); pending--; finish(); });
+    });
+    if (CUSTOM_MODELS.knife) { pending++; loader.load(CUSTOM_MODELS.knife, g => { loadedKnifeGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('knife model failed \u2014 using the built-in blade', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed \u2014 using the built-in truck', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed \u2014 using the built-in tank', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed \u2014 using built-in', e); pending--; finish(); }); }
@@ -841,7 +859,7 @@ function init() {
       try { buildActors(); } catch (e2) { console.error('fatal', e2); }
     }
   };
-  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck) {
+  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck || CUSTOM_MODELS.knife || (CUSTOM_MODELS.houses || []).some(Boolean)) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
       if (!built) { console.warn('model load stalled \u2014 building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
@@ -893,6 +911,48 @@ function buildWorld() {
   box(W, 2, 1.5, 0x8a7f70, 0, 1, -ARENA, true);
   box(1.5, 2, W, 0x8a7f70, ARENA, 1, 0, true);
   box(1.5, 2, W, 0x8a7f70, -ARENA, 1, 0, true);
+
+  /* Uploaded houses, scattered and kept clear of the bases and the shop. Each
+     is fitted to a sensible footprint and given a solid collision box, so they
+     are real cover rather than scenery you walk through. */
+  const HOUSES = (CUSTOM_MODELS.houses || []).filter(Boolean);
+  if (HOUSES.length && loadedHouseGLB.some(Boolean)) {
+    const per = 4;                       // copies of each model
+    let placed = 0;
+    loadedHouseGLB.forEach(src => {
+      if (!src) return;
+      for (let k = 0; k < per; k++) {
+        let hx, hz, tries = 0;
+        do {
+          hx = (Math.random() - 0.5) * (ARENA * 1.6);
+          hz = (Math.random() - 0.5) * (ARENA * 1.4);
+          tries++;
+        } while (tries < 30 && (Math.abs(hz) > ARENA - 45 || (Math.abs(hx) < 16 && Math.abs(hz - SHOP.z) < 16)));
+
+        const inst = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone) ? THREE.SkeletonUtils.clone(src) : src.clone(true);
+        inst.updateMatrixWorld(true);
+        const bb = new THREE.Box3().setFromObject(inst), sz = new THREE.Vector3();
+        bb.getSize(sz);
+        const longest = Math.max(sz.x, sz.z) || 1;
+        let sc = 12 / longest;                     // roughly a 12-unit footprint
+        if (!isFinite(sc) || sc <= 0) sc = 1;
+        sc *= (CUSTOM_MODELS.houseScale || 1);
+        inst.scale.setScalar(sc);
+        inst.rotation.y = (CUSTOM_MODELS.houseRotY || 0) * Math.PI / 180 + Math.random() * Math.PI * 2;
+        inst.updateMatrixWorld(true);
+        const bb2 = new THREE.Box3().setFromObject(inst);
+        inst.position.set(hx, isFinite(bb2.min.y) ? -bb2.min.y : 0, hz);
+        inst.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+        scene.add(inst);
+
+        // an invisible solid so bullets and bodies stop at the walls
+        const fw = Math.max(2, sz.x * sc), fd = Math.max(2, sz.z * sc), fh = Math.max(3, sz.y * sc);
+        box(fw, fh, fd, 0x000000, hx, fh / 2, hz, true).visible = false;
+        placed++;
+      }
+    });
+    console.log('placed ' + placed + ' house instance(s)');
+  }
 
   // cover crates and low walls  count scales with area so the bigger map does
   // not end up as empty field between the two bases
@@ -1259,7 +1319,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v69 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v70 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -1541,10 +1601,14 @@ function buildArms() {
   const A = CUSTOM_MODELS.viewArms || {};
   const S = A.scale || 1;
 
-  const sleeve = new THREE.MeshStandardMaterial({ color: 0x5d6348, roughness: 0.95 });
-  const cuff   = new THREE.MeshStandardMaterial({ color: 0x4a4f3a, roughness: 1.0 });
-  const glove  = new THREE.MeshStandardMaterial({ color: 0x24282a, roughness: 0.85 });
-  const skin   = new THREE.MeshStandardMaterial({ color: 0xc99070, roughness: 0.75 });
+  /* Materials lifted straight off the character's own glTF so the arms in view
+     are the same body you see in third person, not a different soldier. Its
+     baseColorFactor is linear (0.10, 0.42, 0.52) and (0.15, 0.21, 0.22); those
+     convert to 0x5aacbd for the body and 0x6c7d80 for the joints in sRGB. */
+  const sleeve = new THREE.MeshStandardMaterial({ color: 0x5aacbd, roughness: 0.55, metalness: 0.0 });
+  const cuff   = new THREE.MeshStandardMaterial({ color: 0x6c7d80, roughness: 0.55, metalness: 0.5 });
+  const glove  = new THREE.MeshStandardMaterial({ color: 0x6c7d80, roughness: 0.55, metalness: 0.5 });
+  const skin   = new THREE.MeshStandardMaterial({ color: 0x5aacbd, roughness: 0.55, metalness: 0.0 });
 
   const V = (x, y, z) => new THREE.Vector3(x*S, y*S, z*S);
   // a tapered segment from one joint to the next, oriented along the gap
@@ -1597,9 +1661,9 @@ function buildArms() {
 
   // ---- wrist monitor, strapped to the left forearm facing the eye ----
   const mon = buildWristMonitor();
-  mon.position.copy(lWrist.clone().lerp(lElbow, 0.30));
-  mon.rotation.set(-0.70, 0.55, 0.28);
-  mon.scale.setScalar(2.2 * S);      // big enough to actually read mid-fight
+  mon.position.copy(lWrist.clone().lerp(lElbow, 0.26));
+  mon.rotation.set(-0.78, 0.60, 0.30);
+  mon.scale.setScalar(3.4 * S);      // large enough to read at a glance mid-fight
   g.add(mon);
   g.userData.monitor = mon;
   return g;
@@ -1609,6 +1673,7 @@ function buildWeapon(type) {
   const m = buildWeaponModel(type);
   if (loadedWeapGLB && type !== 'knife') {
     const w = autoFitGLB(m);
+    if (type === 'smg') w.scale.setScalar(0.78);   // same model, carried shorter
     /* The muzzle flash used to be built inside the model group at z = -1.6, which
        meant autoFitGLB measured it as part of the weapon: it inflated the bounding
        box, so the gun came out mis-centred and scaled to fit a marker rather than
@@ -1630,6 +1695,24 @@ function buildWeapon(type) {
 }
 
 function buildWeaponModel(type) {
+  // uploaded knife model, when there is one
+  if (loadedKnifeGLB && type === 'knife') {
+    const g = new THREE.Group();
+    const inner = loadedKnifeGLB.clone(true);
+    inner.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3();
+    bb.getSize(sz);
+    const longest = Math.max(sz.x, sz.y, sz.z) || 1;
+    let k = 0.42 / longest;                       // a blade reads shorter than a rifle
+    if (!isFinite(k) || k <= 0) k = 1;
+    k *= (CUSTOM_MODELS.knifeScale || 1);
+    const D = Math.PI / 180;
+    inner.scale.setScalar(k);
+    inner.rotation.set((CUSTOM_MODELS.knifeRotX || 0) * D, (CUSTOM_MODELS.knifeRotY || 0) * D, (CUSTOM_MODELS.knifeRotZ || 0) * D);
+    inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    g.add(inner);
+    return g;
+  }
   // if a custom .glb weapon is loaded, use it for all guns (not the knife)
   if (loadedWeapGLB && type !== 'knife') {
     // geometry only  the flash is attached by buildWeapon() after the fit
@@ -2622,14 +2705,21 @@ function buildTank(team, kind) {
   /* Your own tanks get a beacon. They spawn about nine metres from where you
      start, but a low grey hull on a big map is genuinely hard to pick out  the
      problem was never reaching one, it was seeing where it was. */
+  /* Marker beacon so you can find your own vehicle. It is a column 26 units tall
+     centred at y=13, which means it runs straight up through the hull — and the
+     driver's eye sits at 2.5-3m, inside it. From that seat it reads as a second
+     barrel on the tank and fills the screen entirely in the truck. Both are hidden
+     the moment you climb in. */
   if (team === PLAYER_TEAM) {
+    const marker = new THREE.Group();
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 26, 8),
       new THREE.MeshBasicMaterial({ color: 0x00F0FF, transparent: true, opacity: 0.30 }));
-    beam.position.y = 13; g.add(beam);
+    beam.position.y = 13; marker.add(beam);
     const orb = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 10),
       new THREE.MeshBasicMaterial({ color: 0x00F0FF }));
-    orb.position.y = 4.2; g.add(orb);
-    g.userData.orb = orb;
+    orb.position.y = 4.2; marker.add(orb);
+    g.add(marker);
+    g.userData.marker = marker;
   }
 
   scene.add(g);
@@ -2787,6 +2877,8 @@ function updateTankPrompt() {
 function updateTanks(dt) {
   updateTankPrompt();
   tanks.forEach(t => {
+    // your own marker must not be inside your own eyeline
+    if (t.mesh.userData.marker) t.mesh.userData.marker.visible = (t !== playerTank && !t.dead);
     if (t.cool > 0) t.cool -= dt;
     if (t.dead) return;
 
@@ -2931,6 +3023,8 @@ const WEATHER = {
 };
 const WEATHER_KEYS = Object.keys(WEATHER);
 let weatherNow = 'sunny', precip = null, precipVel = null;
+const WEATHER_EVERY = 120;          // seconds between automatic changes
+let weatherT = WEATHER_EVERY;
 
 function clearPrecip() {
   if (precip) { scene.remove(precip); if (precip.geometry) precip.geometry.dispose(); precip = null; precipVel = null; }
@@ -2971,10 +3065,20 @@ function setWeather(key) {
   addFeed(W.label);
 }
 function cycleWeather() {
+  weatherT = WEATHER_EVERY;   // manual change restarts the clock
   const i = WEATHER_KEYS.indexOf(weatherNow);
   setWeather(WEATHER_KEYS[(i + 1) % WEATHER_KEYS.length]);
 }
 function updateWeather(dt) {
+  // rolls to a different preset on its own; M still forces one immediately
+  if (running) {
+    weatherT -= dt;
+    if (weatherT <= 0) {
+      weatherT = WEATHER_EVERY;
+      const others = WEATHER_KEYS.filter(k => k !== weatherNow);
+      setWeather(others[Math.floor(Math.random() * others.length)]);
+    }
+  }
   if (!precip || !precipVel) return;
   const p = precip.geometry.attributes.position, a = p.array;
   const drift = weatherNow === 'snow' ? Math.sin(performance.now() / 1400) * 3 : 0;
