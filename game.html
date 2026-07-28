@@ -305,7 +305,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v70 · 1 Rifle · 2 Knife · 3 SMG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v71 · 1 Rifle · 2 Knife · 3 SMG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -475,10 +475,14 @@ const CUSTOM_MODELS = {
   // means the built-in blocky truck is used instead.
   truck: '', truckScale: 1.0, truckRotY: 0,
 
-  // Up to four house .glb files. Each one you fill in gets scattered around the
-  // map several times; any left empty are simply skipped, and if none are set
-  // the built-in blocky buildings are used instead.
-  houses: ['', '', '', ''], houseScale: 1.0, houseRotY: 0,
+  /* House .glb files — add up to four filenames, for example:
+        houses: ['house1.glb', 'house2.glb'],
+     Four copies of each are scattered around the map. Leave the list empty and
+     the built-in blocky buildings are used instead.
+     (Written as an empty array rather than four placeholder strings: a run of
+     bare empty strings is exactly the shape that turns into "Unexpected string"
+     if a paste loses its commas.) */
+  houses: [], houseScale: 1.0, houseRotY: 0,
 
   // Knife model, used for the melee weapon when set.
   knife: '', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
@@ -1319,7 +1323,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v70 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v71 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
