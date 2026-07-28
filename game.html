@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v62 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank</div>
+<div id='viewTag'>v63 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -1136,8 +1136,15 @@ function makeFighter(color, useGLB, isPlayer) {
 
         let bb;
         if (boned && isFinite(bones.min.y) && (bones.max.y - bones.min.y) > 1e-9) {
-          // bones sit inside the silhouette — pad out to approximate skin height
-          bb = bones.clone().expandByScalar((bones.max.y - bones.min.y) * 0.06);
+          /* Pad the TOP only. The skull rises above the head bone so height needs a
+             little allowance, but the toe bones already sit at ground level — padding
+             downwards as well pushed min.y below the feet, and standing the model on
+             that lifted it clear of the ground. */
+          const span = bones.max.y - bones.min.y;
+          bb = bones.clone();
+          bb.max.y += span * 0.09;
+          bb.min.x -= span * 0.04; bb.max.x += span * 0.04;
+          bb.min.z -= span * 0.04; bb.max.z += span * 0.04;
         } else {
           bb = new THREE.Box3(); const gb = new THREE.Box3(); let any = false;
           obj.traverse(o => {
@@ -1213,7 +1220,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v62 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v63 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1477,40 +1484,72 @@ function updateWristMonitor(dt) {
 
 // simple gloved arms holding the weapon, sized to the 0.6-unit viewmodel
 function buildArms() {
+  /* Built the way a real viewmodel is: tapered limbs running between actual joint
+     positions, not axis-aligned boxes. The left arm sweeps in from the lower left
+     of the screen and the glove closes over the handguard; the right forearm comes
+     from the lower right to the grip. That is the read in a modern shooter — a
+     forearm crossing the frame with the hand wrapped on the rail. */
   const g = new THREE.Group();
-  const sleeve = new THREE.MeshStandardMaterial({ color: 0x6f7358, roughness: 0.9 });
-  const glove  = new THREE.MeshStandardMaterial({ color: 0x2b2f28, roughness: 0.8 });
-  function limb(mat, w, hgt, d, x, y, z, rx, rz) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, hgt, d), mat);
-    m.position.set(x, y, z);
-    if (rx) m.rotation.x = rx;
-    if (rz) m.rotation.z = rz;
-    g.add(m);
-    return m;
-  }
-  /* Both arms reach in from the bottom of the view towards the weapon, which is
-     centred on the origin at roughly 0.6 units long. The right hand sits back at
-     the grip, the left goes forward onto the handguard. Nudge with
-     CUSTOM_MODELS.viewArms if a different weapon model wants a different hold. */
   const A = CUSTOM_MODELS.viewArms || {};
   const S = A.scale || 1;
 
-  // right forearm running back to the grip, and the hand on it
-  limb(sleeve, 0.048*S, 0.048*S, 0.20*S,  0.062*S, -0.085*S,  0.115*S, 0.42, 0);
-  limb(glove,  0.046*S, 0.046*S, 0.062*S, 0.046*S, -0.046*S,  0.010*S, 0, 0);
+  const sleeve = new THREE.MeshStandardMaterial({ color: 0x5d6348, roughness: 0.95 });
+  const cuff   = new THREE.MeshStandardMaterial({ color: 0x4a4f3a, roughness: 1.0 });
+  const glove  = new THREE.MeshStandardMaterial({ color: 0x24282a, roughness: 0.85 });
+  const skin   = new THREE.MeshStandardMaterial({ color: 0xc99070, roughness: 0.75 });
 
-  // left forearm reaching forward under the handguard, and that hand
-  limb(sleeve, 0.044*S, 0.044*S, 0.22*S, -0.052*S, -0.082*S, -0.135*S, -0.34, 0.26);
-  const lhand = limb(glove, 0.044*S, 0.044*S, 0.058*S, -0.036*S, -0.040*S, -0.225*S, 0, 0);
+  const V = (x, y, z) => new THREE.Vector3(x*S, y*S, z*S);
+  // a tapered segment from one joint to the next, oriented along the gap
+  function bone(mat, from, to, r1, r2) {
+    const dir = new THREE.Vector3().subVectors(to, from);
+    const len = dir.length();
+    if (len < 1e-6) return null;
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r1*S, r2*S, len, 12), mat);
+    m.position.copy(from).addScaledVector(dir, 0.5);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    g.add(m);
+    return m;
+  }
+  function blob(mat, at, sx, sy, sz, rot) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 10), mat);
+    m.position.copy(at); m.scale.set(sx*S, sy*S, sz*S);
+    if (rot) m.rotation.set(rot[0], rot[1], rot[2]);
+    g.add(m);
+    return m;
+  }
 
-  // the monitor rides the left forearm, angled up so it faces the eye
+  // ---- LEFT ARM: in from the lower left, glove closing on the handguard ----
+  const lElbow = V(-0.30, -0.30,  0.16);
+  const lWrist = V(-0.075, -0.075, -0.145);
+  const lGrip  = V(-0.020, -0.036, -0.200);
+  bone(sleeve, lElbow, lWrist, 0.050, 0.034);        // forearm, tapering to the wrist
+  bone(cuff,   lWrist.clone().lerp(lElbow, 0.20), lWrist, 0.037, 0.035);   // cuff band
+  blob(skin,  lWrist.clone().lerp(lGrip, 0.35), 0.030, 0.026, 0.034);      // bare wrist
+  blob(glove, lGrip, 0.034, 0.030, 0.050);                                  // hand on the rail
+  // fingers wrapping over the top of the handguard
+  for (let i = 0; i < 4; i++) {
+    const t = lGrip.clone().add(V(0.012 + i*0.008, 0.020, -0.026 + i*0.014));
+    blob(glove, t, 0.010, 0.017, 0.010, [0.5, 0, 0]);
+  }
+  blob(glove, lGrip.clone().add(V(-0.026, 0.004, 0.014)), 0.012, 0.011, 0.020); // thumb
+
+  // ---- RIGHT ARM: in from the lower right, hand on the grip ----
+  const rElbow = V(0.26, -0.34, 0.30);
+  const rWrist = V(0.075, -0.100, 0.075);
+  const rGrip  = V(0.040, -0.058, 0.020);
+  bone(sleeve, rElbow, rWrist, 0.050, 0.034);
+  bone(cuff,   rWrist.clone().lerp(rElbow, 0.20), rWrist, 0.037, 0.035);
+  blob(skin,  rWrist.clone().lerp(rGrip, 0.40), 0.028, 0.025, 0.030);
+  blob(glove, rGrip, 0.030, 0.034, 0.040);
+  blob(glove, rGrip.clone().add(V(-0.014, 0.014, -0.024)), 0.011, 0.010, 0.020); // trigger finger
+
+  // ---- wrist monitor, strapped to the left forearm facing the eye ----
   const mon = buildWristMonitor();
-  mon.position.set(-0.050*S, -0.062*S, -0.075*S);
-  mon.rotation.set(-0.50, 0.32, 0.10);
-  mon.scale.setScalar(S);
+  mon.position.copy(lWrist.clone().lerp(lElbow, 0.34));
+  mon.rotation.set(-0.62, 0.42, 0.22);
+  mon.scale.setScalar(1.35 * S);
   g.add(mon);
   g.userData.monitor = mon;
-  g.userData.leftHand = lhand;
   return g;
 }
 
@@ -2419,8 +2458,17 @@ window.toggleTank = function () {
     addFeed('🚪 Out of the tank');
     return;
   }
-  const t = nearestTank(player.x, player.z, 7);
-  if (!t) { addFeed('No tank in reach — stand closer and press F'); return; }
+  const t = nearestTank(player.x, player.z, 12);
+  if (!t) {
+    // point at the closest one rather than just refusing
+    let best = null, bd = 1e9;
+    tanks.forEach(x => { if (x.dead || x.team !== PLAYER_TEAM) return;
+      const d = Math.hypot(x.mesh.position.x - player.x, x.mesh.position.z - player.z);
+      if (d < bd) { bd = d; best = x; } });
+    addFeed(best ? '🛡️ Nearest tank is ' + Math.round(bd) + 'm away — walk to it and press F'
+                 : 'No friendly tank available');
+    return;
+  }
   if (t.team !== PLAYER_TEAM) { addFeed('That is an enemy tank'); return; }
   t.driver = 'player'; playerTank = t;
   addFeed('🛡️ In the tank — W/S drive, A/D turn, LMB fire');
@@ -2486,7 +2534,24 @@ function updateTanks(dt) {
       return;
     }
 
-    // bot crews: drive at the nearest enemy and shell it
+    /* Your team's tanks are yours. They sit at base with the turret tracking
+       targets but never drive themselves off, so one is always there to climb
+       into — a friendly tank that wanders away is a tank you can never crew.
+       Enemy armour is fully AI and will come looking for you. */
+    if (t.team === PLAYER_TEAM) {
+      const near = bots.filter(b => b.alive && b.team !== t.team)
+        .map(b => ({ b: b, d: b.mesh.position.distanceTo(t.mesh.position) }))
+        .sort((a, b) => a.d - b.d)[0];
+      if (near && near.d < 120) {
+        const want = Math.atan2(-(near.b.mesh.position.x - t.mesh.position.x),
+                                -(near.b.mesh.position.z - t.mesh.position.z));
+        t.turret.rotation.y = want - t.yaw;
+        if (t.cool <= 0) fireTankShell(t, near.b.mesh.position.clone().setY(1.2));
+      }
+      return;
+    }
+
+    // enemy crews: drive at the nearest target and shell it
     const foes = bots.filter(b => b.alive && b.team !== t.team);
     const enemyTanks = tanks.filter(o => !o.dead && o.team !== t.team);
     let tx = null, tz = null;
