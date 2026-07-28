@@ -19,6 +19,8 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 #tankprompt { position: fixed; left: 50%; bottom: 118px; transform: translateX(-50%); z-index: 12; display: none;
   background: rgba(6,10,16,0.82); border: 1px solid rgba(0,240,255,0.45); color: #EAF2FF;
   padding: 9px 18px; border-radius: 22px; font-weight: 700; font-size: 0.88rem; backdrop-filter: blur(8px); }
+.slot.strikeslot.ready { border-color: rgba(182,255,60,0.55); color: #B6FF3C; }
+.slot.strikeslot.spent { opacity: 0.5; }
 #weatherTag { position: fixed; top: 14px; left: 14px; z-index: 12; background: rgba(6,10,16,0.7);
   border: 1px solid rgba(255,255,255,0.14); color: #EAF2FF; padding: 6px 14px; border-radius: 18px;
   font-weight: 700; font-size: 0.82rem; backdrop-filter: blur(8px); }
@@ -303,7 +305,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v66 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v67 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -468,6 +470,10 @@ const CUSTOM_MODELS = {
   // vehicles work before any asset is uploaded.
   tank: '', tankScale: 1.0, tankRotY: 0,
 
+  // Same deal for trucks — drop a .glb here once you have uploaded it. Empty
+  // means the built-in blocky truck is used instead.
+  truck: '', truckScale: 1.0, truckRotY: 0,
+
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
     idle:    'idle.glb',
@@ -488,7 +494,7 @@ const CUSTOM_MODELS = {
   // independently. Falls back to the built-in soldiers if it cannot load.
   botsUseModel: true
 };
-let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedCharAnims = [];
+let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruckGLB = null, loadedCharAnims = [];
 const extraClips = {};   // retargeted clips, rebuilt per character in makeFighter
 const rawAnims = {};     // key -> { clips, scene } exactly as loaded, before retargeting
 const mixers = [];   // animation players, ticked every frame
@@ -635,7 +641,7 @@ function mergeAnimClips(clips, name, sceneRoot) {
 
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
-  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank) { done(); return; }
+  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck) { done(); return; }
   const needFBX = isFBX(CUSTOM_MODELS.character) || isFBX(CUSTOM_MODELS.weapon);
 
   // load the right loader(s): GLTFLoader for .glb/.gltf, FBXLoader for Mixamo .fbx
@@ -679,6 +685,7 @@ function loadCustomModels(done) {
     let pending = 0, fired = false;
     const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
     if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; loadedCharAnims = g.animations || []; if (loadedCharAnims.length) console.log('character has ' + loadedCharAnims.length + ' animation clip(s):', loadedCharAnims.map(a => a.name).join(', ')); pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed — using the built-in truck', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed — using the built-in tank', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); }); }
     // extra animation files — each one contributes a single clip
@@ -834,7 +841,7 @@ function init() {
       try { buildActors(); } catch (e2) { console.error('fatal', e2); }
     }
   };
-  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank) {
+  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
       if (!built) { console.warn('model load stalled — building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
@@ -1252,7 +1259,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v66 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v67 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1842,10 +1849,16 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === BINDS.sprint) player.sprint = false; });
 
 function buildLoadoutHUD() {
-  document.getElementById('loadout').innerHTML = Object.keys(WEAPONS).filter(k => WEAPONS[k].owned).map(k => {
+  let html = Object.keys(WEAPONS).filter(k => WEAPONS[k].owned).map(k => {
     const W = WEAPONS[k];
     return '<div class="slot' + (k === curWeap ? ' active' : '') + '"><span class="key">' + W.slot + '</span>' + W.name + '</div>';
   }).join('');
+  // the strike sits in the loadout as a single charge you either have or do not
+  const ready = strikeAvailable();
+  html += '<div class="slot strikeslot' + (ready ? ' ready' : ' spent') + '">' +
+          '<span class="key">Q</span>🚀 MISSILE STRIKE ' +
+          (ready ? '×1' : '· ' + strikeWaitText()) + '</div>';
+  document.getElementById('loadout').innerHTML = html;
 }
 function switchWeap(w) {
   curWeap = w;
@@ -1995,9 +2008,19 @@ function updateNades(dt) {
 
       let hit = p.mesh.position.y <= 0.2 || p.t > 4;
       if (!hit) {
-        for (const t of tanks) {                      // enemy armour
+        /* Test against the hull's actual footprint, not a sphere around its origin.
+           A tank is roughly 3.4 across and 6.4 long with its origin on the ground,
+           so a 3.6 sphere centred there missed both ends of the vehicle and threw
+           in the shell's own height as if it were horizontal distance. Any vehicle
+           counts, trucks included — armour kills armour and transport alike. */
+        for (const t of tanks) {
           if (t.dead || t === p.owner || t.team === p.owner.team) continue;
-          if (p.mesh.position.distanceTo(t.mesh.position) < 3.6) {
+          const dx = Math.abs(p.mesh.position.x - t.mesh.position.x);
+          const dz = Math.abs(p.mesh.position.z - t.mesh.position.z);
+          const dy = p.mesh.position.y;
+          const halfW = t.kind === 'truck' ? 2.2 : 2.6;
+          const halfL = t.kind === 'truck' ? 4.2 : 3.9;
+          if (dx < halfW && dz < halfL && dy < 3.2) {
             damageTank(t, TANK_SHELL_DMG, p.owner.driver === 'player'); hit = true; break;
           }
         }
@@ -2506,6 +2529,26 @@ function buildTankModel() {
 }
 
 function buildTruckModel(team) {
+  if (loadedTruckGLB) {
+    const g = new THREE.Group();
+    const inner = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone)
+      ? THREE.SkeletonUtils.clone(loadedTruckGLB) : loadedTruckGLB.clone(true);
+    inner.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3();
+    bb.getSize(sz);
+    const longest = Math.max(sz.x, sz.y, sz.z) || 1;
+    let k = 7.5 / longest;                          // trucks read slightly longer than a tank
+    if (!isFinite(k) || k <= 0) k = 1;
+    k *= (CUSTOM_MODELS.truckScale || 1);
+    inner.scale.setScalar(k);
+    inner.rotation.y = (CUSTOM_MODELS.truckRotY || 0) * Math.PI / 180;
+    inner.updateMatrixWorld(true);
+    const bb2 = new THREE.Box3().setFromObject(inner);
+    if (isFinite(bb2.min.y)) inner.position.y -= bb2.min.y;
+    inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    g.add(inner);
+    return g;
+  }
   const g = new THREE.Group();
   const body = new THREE.MeshStandardMaterial({ color: team === TEAM_CT ? 0x4b5a52 : 0x6b5a3f, roughness: 0.85 });
   const dark = new THREE.MeshStandardMaterial({ color: 0x24282c, roughness: 0.9 });
@@ -2772,12 +2815,17 @@ function updateTanks(dt) {
     t.crew.mesh.position.set(t.mesh.position.x, 0, t.mesh.position.z);
 
     // enemy crews: drive at the nearest target and shell it
-    const foes = bots.filter(b => b.alive && b.team !== t.team);
-    const enemyTanks = tanks.filter(o => !o.dead && o.team !== t.team);
+    /* Vehicles are the priority target and the closest one wins — armour goes for
+       armour, and an unarmed truck is the easiest kill on the field. Only if there
+       is nothing on wheels does it turn on infantry. */
+    const foes = bots.filter(b => b.alive && b.team !== t.team && !b.inVehicle);
+    const enemyVeh = tanks.filter(o => !o.dead && o.team !== t.team)
+      .map(o => ({ o: o, d: o.mesh.position.distanceTo(t.mesh.position) }))
+      .sort((a, b) => a.d - b.d);
     let tx = null, tz = null;
-    if (t.team !== PLAYER_TEAM && !inShop) { tx = player.x; tz = player.z; }
-    if (enemyTanks.length) { tx = enemyTanks[0].mesh.position.x; tz = enemyTanks[0].mesh.position.z; }
-    else if (tx === null && foes.length) { tx = foes[0].mesh.position.x; tz = foes[0].mesh.position.z; }
+    if (enemyVeh.length) { tx = enemyVeh[0].o.mesh.position.x; tz = enemyVeh[0].o.mesh.position.z; }
+    else if (t.team !== PLAYER_TEAM && !inShop) { tx = player.x; tz = player.z; }
+    else if (foes.length) { tx = foes[0].mesh.position.x; tz = foes[0].mesh.position.z; }
     if (tx === null) return;
 
     const dx = tx - t.mesh.position.x, dz = tz - t.mesh.position.z;
@@ -2883,13 +2931,31 @@ function updateWeather(dt) {
    that spot; it falls from altitude after a short flight time, so a good call is
    one that leads a target rather than lands on it.
    ============================================================ */
-const STRIKE_COOLDOWN = 30, STRIKE_FLIGHT = 3.2, STRIKE_RADIUS = 16, STRIKE_DMG = 220;
+/* One strike, then a thirty minute lockout. That is deliberately far longer than
+   a match, so it is a once-a-session decision rather than a rotation — and it is
+   stored against the clock in localStorage, not a per-round timer, so leaving the
+   match or reloading the page does not hand you another one. */
+const STRIKE_COOLDOWN_MS = 30 * 60 * 1000;
+const STRIKE_FLIGHT = 3.2, STRIKE_RADIUS = 16, STRIKE_DMG = 220;
+
+function strikeReadyAt() {
+  const v = parseInt(localStorage.getItem('nc_strike_at') || '0', 10);
+  return isFinite(v) ? v : 0;
+}
+function strikeAvailable() { return Date.now() >= strikeReadyAt(); }
+function strikeWaitMs() { return Math.max(0, strikeReadyAt() - Date.now()); }
+function strikeWaitText() {
+  const ms = strikeWaitMs();
+  if (ms <= 0) return 'READY';
+  const m = Math.floor(ms / 60000), s = Math.ceil((ms % 60000) / 1000);
+  return m > 0 ? m + 'm ' + s + 's' : s + 's';
+}
 /* Designations are cosmetic and live here so they are easy to change. These are
    real systems; on a 13-18 platform with a parent dashboard, tying a strike
    weapon to a specific country's actual arsenal is worth a second thought —
    swapping this array for invented names is a one-line change. */
 const MISSILES = ['Fateh-110', 'Zolfaghar', 'Qiam-1', 'Dezful', 'Sejjil', 'Khorramshahr'];
-let tabletOpen = false, strikeCool = 0, strikes = [];
+let tabletOpen = false, strikes = [], strikeHudT = 0;
 
 function openTablet() {
   if (!running || playerTank) return;
@@ -2950,14 +3016,15 @@ function drawTablet() {
   });
 
   const st = document.getElementById('tabletstat');
-  if (st) st.textContent = strikeCool > 0
-    ? 'RELOADING — ' + Math.ceil(strikeCool) + 's'
-    : 'READY — tap the map to call a strike';
+  if (st) st.textContent = strikeAvailable()
+    ? 'READY ×1 — tap the map to call a strike'
+    : 'SPENT — recharges in ' + strikeWaitText();
 }
 
 function callStrike(wx, wz) {
-  if (strikeCool > 0) return;
-  strikeCool = STRIKE_COOLDOWN;
+  if (!strikeAvailable()) { addFeed('🚀 Strike on cooldown — ' + strikeWaitText()); return; }
+  localStorage.setItem('nc_strike_at', String(Date.now() + STRIKE_COOLDOWN_MS));
+  buildLoadoutHUD();
   const name = MISSILES[Math.floor(Math.random() * MISSILES.length)];
 
   // the warhead itself, falling from altitude
@@ -2978,7 +3045,6 @@ function callStrike(wx, wz) {
 }
 
 function updateStrikes(dt) {
-  if (strikeCool > 0) strikeCool -= dt;
   for (let i = strikes.length - 1; i >= 0; i--) {
     const s = strikes[i];
     s.t -= dt;
@@ -3017,7 +3083,7 @@ function updateStrikes(dt) {
   const cv = document.getElementById('tabletcv');
   if (!cv) return;
   cv.addEventListener('click', e => {
-    if (strikeCool > 0) return;
+    if (!strikeAvailable()) return;
     const r = cv.getBoundingClientRect();
     // canvas is scaled by CSS, so map through the displayed size
     const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
@@ -3041,6 +3107,9 @@ function animate() {
   updateWeather(dt);
   updateStrikes(dt);
   if (tabletOpen) drawTablet();
+  // refresh the loadout about once a second so the countdown ticks down
+  strikeHudT -= dt;
+  if (strikeHudT <= 0) { strikeHudT = 1; buildLoadoutHUD(); }
   updateCamera(dt); updateTracers(dt);
   renderer.render(scene, camera);
 }
