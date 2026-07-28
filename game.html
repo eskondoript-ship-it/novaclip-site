@@ -280,7 +280,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v61 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view</div>
+<div id='viewTag'>v62 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -370,12 +370,19 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 window.addEventListener('error', (e) => { const b = document.getElementById('errbox'); b.style.display = 'block'; b.textContent = '⚠ ' + e.message; });
 
 // ---------- config ----------
+/* Bots hit harder and think faster than they used to: higher accuracy, longer
+   bursts, shorter gaps between them, and real damage per round. dmg is per hit,
+   so a full burst from a ranked bot is genuinely lethal. */
 const MODES = {
-  easy:   { botHit: 0.09, burst: 2, cool: [2.0, 2.4], perKill: 2,  mvp: 10, label: 'EASY' },
-  medium: { botHit: 0.20, burst: 3, cool: [1.3, 1.7], perKill: 5,  mvp: 20, label: 'MEDIUM' },
-  hard:   { botHit: 0.30, burst: 4, cool: [1.0, 1.3], perKill: 10, mvp: 50, label: 'HARD' },
-  ranked: { botHit: 0.34, burst: 4, cool: [0.9, 1.2], perKill: 15, mvp: 80, label: 'RANKED' }
+  easy:   { botHit: 0.18, burst: 3, cool: [1.5, 1.9], dmg: 7,  hp: 100, perKill: 2,  mvp: 10, label: 'EASY' },
+  medium: { botHit: 0.34, burst: 4, cool: [0.9, 1.2], dmg: 10, hp: 120, perKill: 5,  mvp: 20, label: 'MEDIUM' },
+  hard:   { botHit: 0.50, burst: 6, cool: [0.6, 0.85], dmg: 13, hp: 140, perKill: 10, mvp: 50, label: 'HARD' },
+  ranked: { botHit: 0.62, burst: 7, cool: [0.45, 0.65], dmg: 16, hp: 170, perKill: 15, mvp: 80, label: 'RANKED' }
 };
+
+// arena half-width; bases sit near the far edges of it
+const ARENA = 150;
+const BOT_COUNT = 17;          // 8 allies + 9 enemies, plus you = 18 fighters
 let mode = 'medium';
 
 const WEAPONS = {
@@ -385,7 +392,8 @@ const WEAPONS = {
 function ownedWeapons() { return ['sniper', 'knife']; }
 function saveOwned(l) { /* weapons are no longer purchasable */ }
 
-const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Echo','Rogue'];
+const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Echo','Rogue',
+                   'Cinder','Drift','Havoc','Onyx','Quasar','Slate','Vex','Wraith','Zenith'];
 // CS2-style teams: you + 4 allies vs 5 enemies. Friendly fire is disabled.
 const TEAM_CT = 'ct', TEAM_T = 't';
 const TEAM_INFO = {
@@ -419,6 +427,15 @@ const CUSTOM_MODELS = {
   // if the grip looks off — scale is relative to the fitted 0.6-unit viewmodel.
   handWeapon: { scale: 1.0, x: 0, y: 0, z: 0, rotX: 0, rotY: 0, rotZ: 0 },
 
+  // First-person arms gripping the weapon. scale only — position is derived from
+  // the fitted 0.6-unit viewmodel so it follows whatever gun is loaded.
+  viewArms: { scale: 1.0 },
+
+  // Drop a tank .glb here (Add file > Upload files) and both you and the bots
+  // will use it. Left empty, a built-in blocky tank is used instead, so the
+  // vehicles work before any asset is uploaded.
+  tank: '', tankScale: 1.0, tankRotY: 0,
+
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
     idle:    'idle.glb',
@@ -433,9 +450,13 @@ const CUSTOM_MODELS = {
   },
   emoteSound: '',
 
-  botsUseModel: false  // OFF: cloning a rigged model corrupts it. Bots use the reliable built-in soldiers.
+  // ON: Object3D.clone() shares the skeleton between copies, which is what
+  // corrupted rigged bots before. SkeletonUtils.clone() rebuilds the bone
+  // hierarchy per copy, so every bot gets its own skeleton and animates
+  // independently. Falls back to the built-in soldiers if it cannot load.
+  botsUseModel: true
 };
-let loadedCharGLB = null, loadedWeapGLB = null, loadedCharAnims = [];
+let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedCharAnims = [];
 const extraClips = {};   // retargeted clips, rebuilt per character in makeFighter
 const rawAnims = {};     // key -> { clips, scene } exactly as loaded, before retargeting
 const mixers = [];   // animation players, ticked every frame
@@ -582,7 +603,7 @@ function mergeAnimClips(clips, name, sceneRoot) {
 
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
-  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon) { done(); return; }
+  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank) { done(); return; }
   const needFBX = isFBX(CUSTOM_MODELS.character) || isFBX(CUSTOM_MODELS.weapon);
 
   // load the right loader(s): GLTFLoader for .glb/.gltf, FBXLoader for Mixamo .fbx
@@ -595,7 +616,8 @@ function loadCustomModels(done) {
   }
 
   const base = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/';
-  const jobs = [addScript(base + 'loaders/GLTFLoader.js')];
+  // SkeletonUtils is what makes per-bot skeleton clones possible
+  const jobs = [addScript(base + 'loaders/GLTFLoader.js'), addScript(base + 'utils/SkeletonUtils.js')];
   if (needFBX) {
     // FBXLoader needs these two helpers
     jobs.push(addScript('https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.js')
@@ -625,6 +647,7 @@ function loadCustomModels(done) {
     let pending = 0, fired = false;
     const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
     if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; loadedCharAnims = g.animations || []; if (loadedCharAnims.length) console.log('character has ' + loadedCharAnims.length + ' animation clip(s):', loadedCharAnims.map(a => a.name).join(', ')); pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed — using the built-in tank', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); }); }
     // extra animation files — each one contributes a single clip
     const AN = CUSTOM_MODELS.characterAnims || {};
@@ -655,8 +678,8 @@ let scene, camera, renderer, skyMesh;
 let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, deaths: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true };
 const keys = {};
 // ---- rebindable controls ----
-const DEFAULT_BINDS = { forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', sprint:'ShiftLeft', crouch:'ControlLeft', emote:'KeyT', reload:'KeyR', nade:'KeyG', sticky:'KeyB', plant:'KeyC', detonate:'KeyX', shop:'KeyE', view:'KeyV' };
-const BIND_LABELS = { forward:'Move forward', back:'Move back', left:'Strafe left', right:'Strafe right', jump:'Jump', sprint:'Sprint', crouch:'Crouch', emote:'Emote / dance', reload:'Reload', nade:'Equip grenade', sticky:'Equip sticky', plant:'Plant C4', detonate:'Detonate', shop:'Open shop', view:'First/third person' };
+const DEFAULT_BINDS = { tank:'KeyF', forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', sprint:'ShiftLeft', crouch:'ControlLeft', emote:'KeyT', reload:'KeyR', nade:'KeyG', sticky:'KeyB', plant:'KeyC', detonate:'KeyX', shop:'KeyE', view:'KeyV' };
+const BIND_LABELS = { tank:'Enter / leave tank', forward:'Move forward', back:'Move back', left:'Strafe left', right:'Strafe right', jump:'Jump', sprint:'Sprint', crouch:'Crouch', emote:'Emote / dance', reload:'Reload', nade:'Equip grenade', sticky:'Equip sticky', plant:'Plant C4', detonate:'Detonate', shop:'Open shop', view:'First/third person' };
 let BINDS = (function () {
   try { return Object.assign({}, DEFAULT_BINDS, JSON.parse(localStorage.getItem('nc_binds') || '{}')); }
   catch (e) { return Object.assign({}, DEFAULT_BINDS); }
@@ -757,12 +780,13 @@ function init() {
     bots.length = 0;
     mixers.length = 0;
 
-    for (let i = 0; i < 9; i++) spawnBot(i);
+    for (let i = 0; i < BOT_COUNT; i++) spawnBot(i);
     playerMesh = makeFighter(playerColor, true, true);   // (color, useGLB, isPlayer)
     playerMesh.visible = false;
     scene.add(playerMesh);
     gunGroup = buildWeapon(WEAPONS[curWeap].model);
     scene.add(gunGroup);
+    spawnTanks();
   }
   // v20 order (known-good): load the model first, then build everything once.
   // A safety timer builds anyway if the download stalls, so the map can never
@@ -778,7 +802,7 @@ function init() {
       try { buildActors(); } catch (e2) { console.error('fatal', e2); }
     }
   };
-  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon) {
+  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
       if (!built) { console.warn('model load stalled — building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
@@ -824,18 +848,21 @@ function buildWorld() {
   const road2 = new THREE.Mesh(new THREE.PlaneGeometry(22, 500), new THREE.MeshStandardMaterial({ color: 0x555960, roughness: 1 }));
   road2.rotation.x = -Math.PI/2; road2.position.y = 0.02; road2.receiveShadow = true; scene.add(road2);
 
-  // play-area boundary walls (low)
-  box(160, 2, 1.5, 0x8a7f70, 0, 1, 80, true);
-  box(160, 2, 1.5, 0x8a7f70, 0, 1, -80, true);
-  box(1.5, 2, 160, 0x8a7f70, 80, 1, 0, true);
-  box(1.5, 2, 160, 0x8a7f70, -80, 1, 0, true);
+  // play-area boundary walls (low), scaled with the arena
+  const W = ARENA * 2;
+  box(W, 2, 1.5, 0x8a7f70, 0, 1, ARENA, true);
+  box(W, 2, 1.5, 0x8a7f70, 0, 1, -ARENA, true);
+  box(1.5, 2, W, 0x8a7f70, ARENA, 1, 0, true);
+  box(1.5, 2, W, 0x8a7f70, -ARENA, 1, 0, true);
 
-  // cover crates and low walls in the arena (bright, COD-ish)
+  // cover crates and low walls — count scales with area so the bigger map does
+  // not end up as empty field between the two bases
   const crateCols = [0xc2a878, 0xb0b4bb, 0x9aa17f];
-  for (let i = 0; i < 22; i++) {
+  const crates = Math.round(22 * Math.pow(ARENA / 80, 2));
+  for (let i = 0; i < crates; i++) {
     const s = 2 + Math.random()*1.5;
     let px, pz, tries = 0;
-    do { px = (Math.random()-0.5)*130; pz = (Math.random()-0.5)*130; tries++; }
+    do { px = (Math.random()-0.5)*(ARENA*1.7); pz = (Math.random()-0.5)*(ARENA*1.7); tries++; }
     while (tries < 20 && Math.abs(px) < 12 && Math.abs(pz - SHOP.z) < 11);
     box(s, s, s, crateCols[i % 3], px, s/2, pz, true, Math.random()*3);
   }
@@ -967,8 +994,8 @@ function buildWorld() {
 }
 
 const BASES = {
-  ct: { x: 0, z: -62, color: 0x4a90d9 },
-  t:  { x: 0, z:  62, color: 0xd98a3a }
+  ct: { x: 0, z: -(ARENA - 25), color: 0x4a90d9 },
+  t:  { x: 0, z:  (ARENA - 25), color: 0xd98a3a }
 };
 function buildBases() {
   for (const team in BASES) {
@@ -1070,7 +1097,15 @@ function makeFighter(color, useGLB, isPlayer) {
     if (loadedCharGLB && useGLB) {
       const g = new THREE.Group();
       // player uses the original; bots get a clone so they can move independently
-      const model = isPlayer ? loadedCharGLB : loadedCharGLB.clone(true);
+      /* Bots need a deep clone that rebuilds the skeleton — a plain clone() leaves
+         every copy pointing at the same bones, so they all animate as one and the
+         rig visibly breaks. SkeletonUtils does it properly; without it, fall back
+         to the built-in soldier rather than shipping a corrupted rig. */
+      let model;
+      if (isPlayer) model = loadedCharGLB;
+      else if (THREE.SkeletonUtils && THREE.SkeletonUtils.clone) model = THREE.SkeletonUtils.clone(loadedCharGLB);
+      else if (THREE.SkeletonUtils === undefined && window.SkeletonUtils && window.SkeletonUtils.clone) model = window.SkeletonUtils.clone(loadedCharGLB);
+      else return buildSimpleBody(color);
       // ---- ITERATIVE AUTO-FIT ----
       // Bounding boxes on rigged models are unreliable, so measure -> scale ->
       // re-measure, repeating until the character really is human-sized.
@@ -1178,7 +1213,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v61 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v62 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1374,6 +1409,72 @@ function autoFitGLB(inner) {
   return wrapper;
 }
 
+/* ---------- WRIST HEART MONITOR ----------
+   A small screen strapped to the left forearm, drawn to a canvas texture and
+   refreshed every frame. It rides the left arm, so it sits naturally in view
+   while the weapon is held and swings with it. */
+let hrCanvas = null, hrCtx = null, hrTex = null, hrTrace = [], hrPhase = 0, hrBeat = 0;
+function buildWristMonitor() {
+  hrCanvas = document.createElement('canvas');
+  hrCanvas.width = 256; hrCanvas.height = 128;
+  hrCtx = hrCanvas.getContext('2d');
+  hrTex = new THREE.CanvasTexture(hrCanvas);
+  hrTex.minFilter = THREE.LinearFilter;
+
+  const g = new THREE.Group();
+  // strap + casing so it reads as a device rather than a floating panel
+  const strap = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.052, 0.022),
+    new THREE.MeshStandardMaterial({ color: 0x1b1f26, roughness: 0.85 }));
+  g.add(strap);
+  const case_ = new THREE.Mesh(new THREE.BoxGeometry(0.056, 0.030, 0.006),
+    new THREE.MeshStandardMaterial({ color: 0x0c1016, roughness: 0.6, metalness: 0.3 }));
+  case_.position.set(0, 0.030, 0);
+  g.add(case_);
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.050, 0.025),
+    new THREE.MeshBasicMaterial({ map: hrTex, transparent: true }));
+  screen.position.set(0, 0.0305, 0.0035);
+  g.add(screen);
+  return g;
+}
+function updateWristMonitor(dt) {
+  if (!hrCtx) return;
+  const hp = Math.max(0, Math.min(100, player.hp));
+  // heart rate rises as health falls and while sprinting — it should feel alive
+  const bpm = 70 + (100 - hp) * 0.85 + (player.sprint ? 28 : 0);
+  hrPhase += dt * (bpm / 60);
+  while (hrPhase >= 1) { hrPhase -= 1; hrBeat = 1; }
+  hrBeat = Math.max(0, hrBeat - dt * 5);
+
+  // one new sample per frame, scrolling right to left
+  const spike = hrPhase < 0.06 ? 1 : (hrPhase < 0.12 ? -0.45 : 0);
+  hrTrace.push(spike + (Math.random() - 0.5) * 0.04);
+  if (hrTrace.length > 128) hrTrace.shift();
+
+  const c = hrCtx, W = hrCanvas.width, H = hrCanvas.height;
+  c.fillStyle = '#050a0c'; c.fillRect(0, 0, W, H);
+  const col = hp > 60 ? '#3ce07a' : hp > 30 ? '#ffd24a' : '#ff4d5e';
+
+  c.strokeStyle = 'rgba(255,255,255,0.07)'; c.lineWidth = 1;
+  for (let x = 0; x < W; x += 32) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); }
+
+  c.strokeStyle = col; c.lineWidth = 3; c.beginPath();
+  for (let i = 0; i < hrTrace.length; i++) {
+    const x = (i / 127) * W, y = H * 0.60 - hrTrace[i] * H * 0.34;
+    i ? c.lineTo(x, y) : c.moveTo(x, y);
+  }
+  c.stroke();
+
+  c.fillStyle = col; c.font = 'bold 34px monospace'; c.textBaseline = 'top';
+  c.fillText(Math.round(hp), 8, 4);
+  c.font = 'bold 16px monospace';
+  c.fillText('HP', 8 + c.measureText(Math.round(hp)).width + 46, 14);
+  c.textAlign = 'right';
+  c.fillText(Math.round(bpm) + ' BPM', W - 8, 14);
+  c.textAlign = 'left';
+  if (hrBeat > 0.5) { c.fillStyle = col; c.beginPath(); c.arc(W - 14, H - 14, 6, 0, Math.PI*2); c.fill(); }
+  hrTex.needsUpdate = true;
+}
+
 // simple gloved arms holding the weapon, sized to the 0.6-unit viewmodel
 function buildArms() {
   const g = new THREE.Group();
@@ -1387,12 +1488,29 @@ function buildArms() {
     g.add(m);
     return m;
   }
-  // right arm along the stock
-  limb(sleeve, 0.042, 0.042, 0.17, 0.055, -0.062, 0.09, 0.30, 0);
-  limb(glove,  0.040, 0.040, 0.055, 0.042, -0.038, 0.002, 0, 0);
-  // left arm forward on the handguard
-  limb(sleeve, 0.038, 0.038, 0.18, -0.045, -0.058, -0.13, -0.26, 0.22);
-  limb(glove,  0.038, 0.038, 0.052, -0.032, -0.036, -0.215, 0, 0);
+  /* Both arms reach in from the bottom of the view towards the weapon, which is
+     centred on the origin at roughly 0.6 units long. The right hand sits back at
+     the grip, the left goes forward onto the handguard. Nudge with
+     CUSTOM_MODELS.viewArms if a different weapon model wants a different hold. */
+  const A = CUSTOM_MODELS.viewArms || {};
+  const S = A.scale || 1;
+
+  // right forearm running back to the grip, and the hand on it
+  limb(sleeve, 0.048*S, 0.048*S, 0.20*S,  0.062*S, -0.085*S,  0.115*S, 0.42, 0);
+  limb(glove,  0.046*S, 0.046*S, 0.062*S, 0.046*S, -0.046*S,  0.010*S, 0, 0);
+
+  // left forearm reaching forward under the handguard, and that hand
+  limb(sleeve, 0.044*S, 0.044*S, 0.22*S, -0.052*S, -0.082*S, -0.135*S, -0.34, 0.26);
+  const lhand = limb(glove, 0.044*S, 0.044*S, 0.058*S, -0.036*S, -0.040*S, -0.225*S, 0, 0);
+
+  // the monitor rides the left forearm, angled up so it faces the eye
+  const mon = buildWristMonitor();
+  mon.position.set(-0.050*S, -0.062*S, -0.075*S);
+  mon.rotation.set(-0.50, 0.32, 0.10);
+  mon.scale.setScalar(S);
+  g.add(mon);
+  g.userData.monitor = mon;
+  g.userData.leftHand = lhand;
   return g;
 }
 
@@ -1411,9 +1529,10 @@ function buildWeapon(type) {
     const flash = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10),
       new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
     flash.position.set(0, 0.02, mz); w.add(flash); w.userData.flash = flash;
-    /* buildArms() is deliberately NOT attached here. Its limb positions were authored
-       around the built-in procedural gun, so against an arbitrary .glb the hands land
-       nowhere near the grip and read worse than no arms at all. */
+    // arms grip the fitted viewmodel, and carry the wrist monitor with them
+    const arms = buildArms();
+    w.add(arms);
+    w.userData.arms = arms;
     return w;
   }
   return m;
@@ -1506,16 +1625,18 @@ function drawTag(sp, hp) {
 }
 
 function spawnBot(i) {
-  const team = i < 4 ? TEAM_CT : TEAM_T;
+  const allies = Math.floor(BOT_COUNT / 2);          // you make up the difference
+  const team = i < allies ? TEAM_CT : TEAM_T;
   const useModel = CUSTOM_MODELS.botsUseModel && !!loadedCharGLB;
   const g = makeFighter(TEAM_INFO[team].color, useModel);
-  // spawn in a ring 12-45 units out so they're visible around the player
   const B = BASES[team];
-  g.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
+  g.position.set(B.x + (Math.random()-0.5)*46, 0, B.z + (Math.random()-0.5)*26);
   const tag = makeTag(BOT_NAMES[i] || ('Bot' + i), TEAM_INFO[team].css);
   g.add(tag);
   scene.add(g);
-  bots.push({ mesh: g, tag: tag, team: team, name: BOT_NAMES[i] || ('Bot'+i), hp: 100, kills: 0, alive: true, tx: g.position.x, tz: g.position.z, cooldown: 1+Math.random()*2, retarget: 0 });
+  const maxhp = MODES[mode].hp || 100;
+  bots.push({ mesh: g, tag: tag, team: team, name: BOT_NAMES[i] || ('Bot'+i), hp: maxhp, maxhp: maxhp,
+    kills: 0, alive: true, tx: g.position.x, tz: g.position.z, cooldown: 1+Math.random()*2, retarget: 0 });
 }
 
 // ---------- tracers ----------
@@ -1603,6 +1724,7 @@ document.addEventListener('keydown', (e) => {
   if (e.code === BINDS.jump && running) e.preventDefault();
   if (!running) return;
   if (e.code === BINDS.reload) reload();
+  if (e.code === BINDS.tank) { toggleTank(); }
   if (e.code === BINDS.view) {
     thirdPerson = !thirdPerson;
     if (scoped) { scoped = false; document.getElementById('scope').style.display = 'none'; }
@@ -1657,6 +1779,7 @@ function reload() {
 }
 
 function shoot() {
+  if (playerTank) { fireTankShell(playerTank, null); return; }
   if (!gunGroup) return;
   const W = WEAPONS[curWeap]; const now = performance.now();
   if (now - lastShot < W.rate || player.reloading) return;
@@ -1703,7 +1826,7 @@ function killBot(b) {
 }
 function respawnBot(b) {
   if (timeLeft <= 0) return;
-  b.hp = 100; b.alive = true; b.mesh.visible = true; if (b.tag) { b.tag.visible = true; b.tag.userData.hp = -1; }
+  b.hp = b.maxhp || 100; b.alive = true; b.mesh.visible = true; if (b.tag) { b.tag.visible = true; b.tag.userData.hp = -1; }
   const B = BASES[b.team];
   b.mesh.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
 }
@@ -1773,6 +1896,54 @@ function updateNades(dt) {
   planted.forEach(p => {
     if (p.kind === 'frag' && !p.done) { p.t += dt; p.vel.y -= 30*dt; p.mesh.position.x += p.vel.x*dt; p.mesh.position.y += p.vel.y*dt; p.mesh.position.z += p.vel.z*dt; if (p.mesh.position.y <= 0.15) { p.mesh.position.y = 0.15; p.vel.set(0,0,0); } if (p.t > 1.4) { p.done = true; explode(p.mesh.position, 6); scene.remove(p.mesh); } }
     if (p.kind === 'sticky' && !p.stuck) { p.vel.y -= 30*dt; p.mesh.position.x += p.vel.x*dt; p.mesh.position.y += p.vel.y*dt; p.mesh.position.z += p.vel.z*dt; if (p.mesh.position.y <= 0.15) { p.mesh.position.y = 0.15; p.stuck = true; } }
+
+    // tank shells: fast, shallow arc, detonate on the first thing they reach
+    if (p.kind === 'shell' && !p.done) {
+      p.t += dt;
+      p.vel.y -= 11 * dt;
+      p.mesh.position.x += p.vel.x * dt;
+      p.mesh.position.y += p.vel.y * dt;
+      p.mesh.position.z += p.vel.z * dt;
+
+      let hit = p.mesh.position.y <= 0.2 || p.t > 4;
+      if (!hit) {
+        for (const t of tanks) {                      // enemy armour
+          if (t.dead || t === p.owner || t.team === p.owner.team) continue;
+          if (p.mesh.position.distanceTo(t.mesh.position) < 3.6) {
+            damageTank(t, TANK_SHELL_DMG, p.owner.driver === 'player'); hit = true; break;
+          }
+        }
+      }
+      if (!hit) {
+        for (const b of bots) {                       // infantry caught in the open
+          if (!b.alive || b.team === p.owner.team) continue;
+          if (p.mesh.position.distanceTo(b.mesh.position) < 3.2) { hit = true; break; }
+        }
+      }
+      if (!hit && p.owner.team !== PLAYER_TEAM && !playerTank) {
+        if (p.mesh.position.distanceTo(new THREE.Vector3(player.x, 1.2, player.z)) < 3.2) hit = true;
+      }
+      if (hit) {
+        p.done = true;
+        explode(p.mesh.position.clone(), 9);
+        // splash: infantry near the blast go down, and you take a hit too
+        const bp = p.mesh.position;
+        bots.forEach(b => {
+          if (!b.alive || b.team === p.owner.team) return;
+          if (b.mesh.position.distanceTo(bp) < 9) {
+            b.hp -= TANK_SHELL_DMG;
+            if (b.hp <= 0) {
+              b.alive = false; b.mesh.visible = false;
+              if (p.owner.driver === 'player') { player.kills++; earn(MODES[mode].perKill, 'tank kill'); updateBoard(); }
+              setTimeout(() => respawnBot(b), 3500);
+            }
+          }
+        });
+        if (p.owner.team !== PLAYER_TEAM && !playerTank &&
+            bp.distanceTo(new THREE.Vector3(player.x, 1.2, player.z)) < 9) damagePlayer(70, null);
+        scene.remove(p.mesh);
+      }
+    }
   });
   planted = planted.filter(p => !p.done);
 }
@@ -1846,7 +2017,8 @@ function updateBots(dt) {
       if (tgtPlayer) {
         const pd = Math.hypot(player.x - b.mesh.position.x, player.z - b.mesh.position.z);
         if (pd > 0.5) b.mesh.lookAt(player.x, 1.5, player.z);
-        if (pd < 90) for (let s = 0; s < M.burst; s++) setTimeout(() => { if (!b.alive || !running || inShop) return; botFire(b, new THREE.Vector3(player.x, 1.5, player.z), M.botHit, () => damagePlayer(8 + Math.random()*8, b)); }, s*140);
+        // engage further out on the bigger map, and fire faster within the burst
+        if (pd < ARENA) for (let s = 0; s < M.burst; s++) setTimeout(() => { if (!b.alive || !running || inShop) return; botFire(b, new THREE.Vector3(player.x, 1.5, player.z), M.botHit, () => damagePlayer(M.dmg + Math.random()*M.dmg*0.5, b)); }, s*95);
       } else {
         const others = bots.filter(o => o !== b && o.alive && o.team !== b.team);
         if (others.length) { const o = others[Math.floor(Math.random()*others.length)]; const od = Math.hypot(o.mesh.position.x - b.mesh.position.x, o.mesh.position.z - b.mesh.position.z); if (od > 0.5) b.mesh.lookAt(o.mesh.position.x, 1.2, o.mesh.position.z); botFire(b, o.mesh.position.clone().setY(1.2), 0.30, () => { o.hp -= 45; if (o.hp <= 0) { o.alive = false; o.mesh.visible = false; b.kills++; addFeed(b.name + ' ➜ ' + o.name); updateBoard(); setTimeout(() => respawnBot(o), 3500); } }); }
@@ -2018,7 +2190,7 @@ function updateCamera(dt) {
   } else {
     // Aiming down the real sights: the weapon stays on screen and moves to the
     // centre, instead of being hidden behind a drawn-on black scope ring.
-    gunGroup.visible = true;
+    gunGroup.visible = !playerTank;   // no rifle in view while crewing a tank
     if (playerMesh) {
       playerMesh.visible = false;
       // force every sub-mesh hidden too — third person force-shows them, so undo that
@@ -2139,16 +2311,224 @@ function endMatch() {
     '</div>';
 }
 
+/* ============================================================
+   TANKS
+   Drivable by you and by bots. Uses CUSTOM_MODELS.tank when a .glb is present
+   and a built-in blocky tank otherwise, so the vehicles work before any asset
+   is uploaded. Press F near one to get in or out.
+   ============================================================ */
+const TANK_COUNT = 4;
+const TANK_HP = 500, TANK_SHELL_DMG = 120, TANK_RELOAD = 2.6;
+let tanks = [], playerTank = null;
+
+function buildTankModel() {
+  if (loadedTankGLB) {
+    const g = new THREE.Group();
+    const inner = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone)
+      ? THREE.SkeletonUtils.clone(loadedTankGLB) : loadedTankGLB.clone(true);
+    // fit to roughly 7 units long whatever the source scale is
+    inner.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3();
+    bb.getSize(sz);
+    const longest = Math.max(sz.x, sz.y, sz.z) || 1;
+    let k = 7 / longest;
+    if (!isFinite(k) || k <= 0) k = 1;
+    k *= (CUSTOM_MODELS.tankScale || 1);
+    inner.scale.setScalar(k);
+    inner.rotation.y = (CUSTOM_MODELS.tankRotY || 0) * Math.PI / 180;
+    inner.updateMatrixWorld(true);
+    const bb2 = new THREE.Box3().setFromObject(inner);
+    if (isFinite(bb2.min.y)) inner.position.y -= bb2.min.y;
+    inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    g.add(inner);
+    return g;
+  }
+  // built-in fallback so tanks exist without an uploaded model
+  const g = new THREE.Group();
+  const hull = new THREE.MeshStandardMaterial({ color: 0x4a5340, roughness: 0.85, metalness: 0.25 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x2b3128, roughness: 0.9 });
+  function part(w, h, d, mat, x, y, z) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z); m.castShadow = true; g.add(m); return m;
+  }
+  part(3.4, 0.9, 6.4, hull, 0, 0.85, 0);          // hull
+  part(3.8, 0.5, 6.6, dark, 0, 0.42, 0);          // track bed
+  part(0.7, 0.8, 6.6, dark, -1.75, 0.55, 0);      // left track
+  part(0.7, 0.8, 6.6, dark,  1.75, 0.55, 0);      // right track
+  return g;
+}
+
+function buildTank(team) {
+  const g = new THREE.Group();
+  g.add(buildTankModel());
+
+  // turret pivots independently so it can aim while the hull drives
+  const turret = new THREE.Group();
+  turret.position.y = 1.35;
+  const tmat = new THREE.MeshStandardMaterial({ color: team === TEAM_CT ? 0x3f5670 : 0x6b5535, roughness: 0.8, metalness: 0.3 });
+  if (!loadedTankGLB) {
+    const dome = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.85, 2.6), tmat);
+    dome.castShadow = true; turret.add(dome);
+  }
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 4.2, 10), tmat);
+  barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 0.1, -2.4);
+  barrel.castShadow = true; turret.add(barrel);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.1, -4.5); turret.add(muzzle);
+  g.add(turret);
+
+  // team stripe so you can tell friend from foe at range
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.14, 0.5),
+    new THREE.MeshBasicMaterial({ color: TEAM_INFO[team].color }));
+  stripe.position.set(0, 1.32, 2.9); g.add(stripe);
+
+  scene.add(g);
+  return { mesh: g, turret: turret, muzzle: muzzle, team: team, hp: TANK_HP,
+           driver: null, cool: 0, yaw: 0, speed: 0, dead: false };
+}
+
+function spawnTanks() {
+  tanks.forEach(t => scene.remove(t.mesh));
+  tanks = []; playerTank = null;
+  for (let i = 0; i < TANK_COUNT; i++) {
+    const team = i % 2 === 0 ? TEAM_CT : TEAM_T;
+    const t = buildTank(team);
+    const B = BASES[team];
+    t.mesh.position.set(B.x + (i - TANK_COUNT/2) * 16 + 8, 0, B.z + (team === TEAM_CT ? 18 : -18));
+    t.yaw = team === TEAM_CT ? 0 : Math.PI;
+    t.mesh.rotation.y = t.yaw;
+    tanks.push(t);
+  }
+}
+
+function nearestTank(x, z, maxD) {
+  let best = null, bd = maxD;
+  tanks.forEach(t => {
+    if (t.dead || t.driver) return;
+    const d = Math.hypot(t.mesh.position.x - x, t.mesh.position.z - z);
+    if (d < bd) { bd = d; best = t; }
+  });
+  return best;
+}
+
+window.toggleTank = function () {
+  if (playerTank) {                       // climb out beside the hull
+    playerTank.driver = null;
+    player.x = playerTank.mesh.position.x + Math.cos(playerTank.yaw) * 4.5;
+    player.z = playerTank.mesh.position.z + Math.sin(playerTank.yaw) * 4.5;
+    playerTank = null;
+    addFeed('🚪 Out of the tank');
+    return;
+  }
+  const t = nearestTank(player.x, player.z, 7);
+  if (!t) { addFeed('No tank in reach — stand closer and press F'); return; }
+  if (t.team !== PLAYER_TEAM) { addFeed('That is an enemy tank'); return; }
+  t.driver = 'player'; playerTank = t;
+  addFeed('🛡️ In the tank — W/S drive, A/D turn, LMB fire');
+};
+
+function fireTankShell(t, targetPos) {
+  if (t.cool > 0 || t.dead) return;
+  t.cool = TANK_RELOAD;
+  const from = new THREE.Vector3();
+  t.muzzle.getWorldPosition(from);
+  const dir = targetPos ? targetPos.clone().sub(from).normalize()
+                        : new THREE.Vector3(0, 0, -1).applyQuaternion(t.turret.getWorldQuaternion(new THREE.Quaternion()));
+  playOneShot('grenade', 900);
+  const shell = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8),
+    new THREE.MeshStandardMaterial({ color: 0xffcc55, emissive: 0x884400 }));
+  shell.position.copy(from); scene.add(shell);
+  planted.push({ mesh: shell, vel: dir.multiplyScalar(85), kind: 'shell', stuck: false, t: 0, owner: t });
+  // recoil kick on the hull
+  t.speed -= 2.5;
+}
+
+function damageTank(t, amt, byPlayer) {
+  if (t.dead) return;
+  t.hp -= amt;
+  if (t.hp <= 0) {
+    t.dead = true;
+    explode(t.mesh.position.clone().setY(1.2), 11);
+    t.mesh.visible = false;
+    if (t.driver === 'player') { playerTank = null; damagePlayer(45, null); }
+    t.driver = null;
+    addFeed('💥 Tank destroyed');
+    if (byPlayer) earn(40, 'tank kill');
+    setTimeout(() => {                     // rebuild it back at base
+      if (timeLeft <= 0) return;
+      const B = BASES[t.team];
+      t.mesh.position.set(B.x + (Math.random()-0.5)*30, 0, B.z + (t.team === TEAM_CT ? 18 : -18));
+      t.hp = TANK_HP; t.dead = false; t.mesh.visible = true; t.speed = 0;
+    }, 12000);
+  }
+}
+
+function updateTanks(dt) {
+  tanks.forEach(t => {
+    if (t.cool > 0) t.cool -= dt;
+    if (t.dead) return;
+
+    if (t.driver === 'player') {
+      // you drive: W/S throttle, A/D swing the hull, turret follows the camera
+      const acc = (keys[BINDS.forward] ? 26 : 0) - (keys[BINDS.back] ? 18 : 0);
+      t.speed += acc * dt;
+      t.speed *= 0.94;                                     // drag
+      t.speed = Math.max(-9, Math.min(16, t.speed));
+      if (keys[BINDS.left])  t.yaw += dt * 1.1 * (t.speed >= 0 ? 1 : -1);
+      if (keys[BINDS.right]) t.yaw -= dt * 1.1 * (t.speed >= 0 ? 1 : -1);
+      const nx = t.mesh.position.x - Math.sin(t.yaw) * t.speed * dt;
+      const nz = t.mesh.position.z - Math.cos(t.yaw) * t.speed * dt;
+      if (Math.abs(nx) < ARENA - 4) t.mesh.position.x = nx;
+      if (Math.abs(nz) < ARENA - 4) t.mesh.position.z = nz;
+      t.mesh.rotation.y = t.yaw;
+      t.turret.rotation.y = player.yaw - t.yaw;            // aim where you look
+      // ride along with it
+      player.x = t.mesh.position.x; player.z = t.mesh.position.z;
+      return;
+    }
+
+    // bot crews: drive at the nearest enemy and shell it
+    const foes = bots.filter(b => b.alive && b.team !== t.team);
+    const enemyTanks = tanks.filter(o => !o.dead && o.team !== t.team);
+    let tx = null, tz = null;
+    if (t.team !== PLAYER_TEAM && !inShop) { tx = player.x; tz = player.z; }
+    if (enemyTanks.length) { tx = enemyTanks[0].mesh.position.x; tz = enemyTanks[0].mesh.position.z; }
+    else if (tx === null && foes.length) { tx = foes[0].mesh.position.x; tz = foes[0].mesh.position.z; }
+    if (tx === null) return;
+
+    const dx = tx - t.mesh.position.x, dz = tz - t.mesh.position.z;
+    const dist = Math.hypot(dx, dz);
+    const want = Math.atan2(-dx, -dz);
+    let diff = want - t.yaw;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    t.yaw += Math.max(-dt * 0.8, Math.min(dt * 0.8, diff));
+    t.mesh.rotation.y = t.yaw;
+    t.turret.rotation.y = want - t.yaw;
+
+    if (dist > 26) {                                       // close the gap
+      const sp = 9 * dt;
+      const nx = t.mesh.position.x - Math.sin(t.yaw) * sp;
+      const nz = t.mesh.position.z - Math.cos(t.yaw) * sp;
+      if (Math.abs(nx) < ARENA - 4) t.mesh.position.x = nx;
+      if (Math.abs(nz) < ARENA - 4) t.mesh.position.z = nz;
+    }
+    if (dist < 130 && Math.abs(diff) < 0.5 && t.cool <= 0) {
+      fireTankShell(t, new THREE.Vector3(tx, 1.2, tz));
+    }
+  });
+}
+
 function animate() {
   requestAnimationFrame(animate);
   const now = performance.now(); let dt = (now - gclock.last)/1000; gclock.last = now; if (dt > 0.1) dt = 0.1;
-  if (running && !shopOpen) { updatePlayer(dt); updateBots(dt); updateNades(dt); if (mouseHeld && WEAPONS[curWeap].auto && !equippedNade) shoot(); }
+  if (running && !shopOpen) { if (!playerTank) updatePlayer(dt); updateBots(dt); updateTanks(dt); updateNades(dt); if (mouseHeld && WEAPONS[curWeap].auto && !equippedNade) shoot(); }
   for (let i = 0; i < mixers.length; i++) mixers[i].update(dt);
   // cancel animation root motion so the character never drifts or flies off
   if (playerMesh && playerMesh.userData.inner && playerMesh.userData.fitPos) {
     playerMesh.userData.inner.position.copy(playerMesh.userData.fitPos);
   }
   updatePlayerAnim();
+  updateWristMonitor(dt);
   updateCamera(dt); updateTracers(dt);
   renderer.render(scene, camera);
 }
