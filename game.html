@@ -284,7 +284,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v64 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank</div>
+<div id='viewTag'>v65 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -431,11 +431,14 @@ const CUSTOM_MODELS = {
   // if the grip looks off — scale is relative to the fitted 0.6-unit viewmodel.
   handWeapon: { scale: 1.0, x: 0, y: 0, z: 0, rotX: 0, rotY: 0, rotZ: 0 },
 
-  /* true  = first person looks out of the character's own head, so the arms you
-             see are the rigged model's real arms holding the real rifle, and they
-             move with whatever animation is playing.
-     false = the procedural viewmodel arms built by buildArms() instead. */
-  firstPersonBody: true,
+  /* false = the procedural viewmodel: arms, weapon and wrist monitor all built to
+             sit in frame where you can actually see them. This is how shooters do
+             it, and it is the default because it works.
+     true  = look out of the character's own head instead. Honest, but this rig's
+             arms hang at its sides rather than being posed for a camera in the
+             skull, so they fall out of view — and the viewmodel that carries the
+             monitor is hidden along with them. */
+  firstPersonBody: false,
 
   // First-person arms gripping the weapon. scale only — position is derived from
   // the fitted 0.6-unit viewmodel so it follows whatever gun is loaded.
@@ -1230,7 +1233,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v64 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v65 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1537,10 +1540,14 @@ function buildArms() {
     return m;
   }
 
+  /* The elbows sit well back and low, because the weapon group is already about a
+     unit in front of the camera — an elbow near the gun's own centre is still far
+     enough away to fall outside the frame. Pulling them back towards the viewer
+     is what makes a forearm actually cross the screen. */
   // ---- LEFT ARM: in from the lower left, glove closing on the handguard ----
-  const lElbow = V(-0.30, -0.30,  0.16);
-  const lWrist = V(-0.075, -0.075, -0.145);
-  const lGrip  = V(-0.020, -0.036, -0.200);
+  const lElbow = V(-0.34, -0.46,  0.62);
+  const lWrist = V(-0.085, -0.088, -0.130);
+  const lGrip  = V(-0.022, -0.040, -0.195);
   bone(sleeve, lElbow, lWrist, 0.050, 0.034);        // forearm, tapering to the wrist
   bone(cuff,   lWrist.clone().lerp(lElbow, 0.20), lWrist, 0.037, 0.035);   // cuff band
   blob(skin,  lWrist.clone().lerp(lGrip, 0.35), 0.030, 0.026, 0.034);      // bare wrist
@@ -1553,9 +1560,9 @@ function buildArms() {
   blob(glove, lGrip.clone().add(V(-0.026, 0.004, 0.014)), 0.012, 0.011, 0.020); // thumb
 
   // ---- RIGHT ARM: in from the lower right, hand on the grip ----
-  const rElbow = V(0.26, -0.34, 0.30);
-  const rWrist = V(0.075, -0.100, 0.075);
-  const rGrip  = V(0.040, -0.058, 0.020);
+  const rElbow = V(0.30, -0.50, 0.70);
+  const rWrist = V(0.082, -0.112, 0.090);
+  const rGrip  = V(0.042, -0.060, 0.022);
   bone(sleeve, rElbow, rWrist, 0.050, 0.034);
   bone(cuff,   rWrist.clone().lerp(rElbow, 0.20), rWrist, 0.037, 0.035);
   blob(skin,  rWrist.clone().lerp(rGrip, 0.40), 0.028, 0.025, 0.030);
@@ -1564,9 +1571,9 @@ function buildArms() {
 
   // ---- wrist monitor, strapped to the left forearm facing the eye ----
   const mon = buildWristMonitor();
-  mon.position.copy(lWrist.clone().lerp(lElbow, 0.34));
-  mon.rotation.set(-0.62, 0.42, 0.22);
-  mon.scale.setScalar(1.35 * S);
+  mon.position.copy(lWrist.clone().lerp(lElbow, 0.30));
+  mon.rotation.set(-0.70, 0.55, 0.28);
+  mon.scale.setScalar(2.2 * S);      // big enough to actually read mid-fight
   g.add(mon);
   g.userData.monitor = mon;
   return g;
@@ -2458,6 +2465,19 @@ function buildTank(team) {
     new THREE.MeshBasicMaterial({ color: TEAM_INFO[team].color }));
   stripe.position.set(0, 1.32, 2.9); g.add(stripe);
 
+  /* Your own tanks get a beacon. They spawn about nine metres from where you
+     start, but a low grey hull on a big map is genuinely hard to pick out — the
+     problem was never reaching one, it was seeing where it was. */
+  if (team === PLAYER_TEAM) {
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 26, 8),
+      new THREE.MeshBasicMaterial({ color: 0x00F0FF, transparent: true, opacity: 0.30 }));
+    beam.position.y = 13; g.add(beam);
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 10),
+      new THREE.MeshBasicMaterial({ color: 0x00F0FF }));
+    orb.position.y = 4.2; g.add(orb);
+    g.userData.orb = orb;
+  }
+
   scene.add(g);
   return { mesh: g, turret: turret, muzzle: muzzle, team: team, hp: TANK_HP,
            driver: null, cool: 0, yaw: 0, speed: 0, dead: false };
@@ -2559,8 +2579,24 @@ function updateTankPrompt() {
   if (!el) return;
   if (playerTank) { el.style.display = 'block'; el.textContent = '🛡️ F to get out · W/S drive · A/D turn · LMB fire'; return; }
   const t = nearestTank(player.x, player.z, 14);
-  if (t && t.team === PLAYER_TEAM) { el.style.display = 'block'; el.textContent = '🛡️ Press F to enter the tank'; }
-  else el.style.display = 'none';
+  if (t && t.team === PLAYER_TEAM) { el.style.display = 'block'; el.textContent = '🛡️ Press F to enter the tank'; return; }
+
+  // otherwise point at the closest one, so it is never a hunt
+  let best = null, bd = 1e9;
+  tanks.forEach(x => {
+    if (x.dead || x.driver || x.team !== PLAYER_TEAM) return;
+    const d = Math.hypot(x.mesh.position.x - player.x, x.mesh.position.z - player.z);
+    if (d < bd) { bd = d; best = x; }
+  });
+  if (!best) { el.style.display = 'none'; return; }
+  // which way to turn, relative to where you are facing
+  const ang = Math.atan2(best.mesh.position.x - player.x, best.mesh.position.z - player.z);
+  let rel = ang - (player.yaw + Math.PI);
+  while (rel > Math.PI) rel -= Math.PI * 2;
+  while (rel < -Math.PI) rel += Math.PI * 2;
+  const arrow = Math.abs(rel) < 0.4 ? '↑' : rel > 0 ? '↰ left' : '↱ right';
+  el.style.display = 'block';
+  el.textContent = '🛡️ Your tank: ' + Math.round(bd) + 'm ' + arrow;
 }
 
 function updateTanks(dt) {
