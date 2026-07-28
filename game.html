@@ -305,7 +305,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v67 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v68 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -468,7 +468,8 @@ const CUSTOM_MODELS = {
   // Drop a tank .glb here (Add file > Upload files) and both you and the bots
   // will use it. Left empty, a built-in blocky tank is used instead, so the
   // vehicles work before any asset is uploaded.
-  tank: 'm-84_yugoslavia.glb', tankScale: 1.0, tankRotY: 0,
+  tank: '
+m-84_yugoslavia.glb', tankScale: 1.0, tankRotY: 0,
 
   // Same deal for trucks — drop a .glb here once you have uploaded it. Empty
   // means the built-in blocky truck is used instead.
@@ -1259,7 +1260,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v67 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v68 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1787,12 +1788,14 @@ document.addEventListener('mousedown', (e) => {
     if (equippedNade) { throwNade(equippedNade); equippedNade = null; updateNadeHint(); }
     else { mouseHeld = true; shoot(); }
   }
+  // in a truck, right mouse leans you out of the window to shoot
+  if (e.button === 2 && playerTank && playerTank.kind === 'truck') { leaningOut = true; return; }
   // no black scope ring any more — the weapon's own sights come up instead
   if (e.button === 2 && WEAPONS[curWeap].scope) { scoped = true; }
 });
 document.addEventListener('mouseup', (e) => {
   if (e.button === 0) mouseHeld = false;
-  if (e.button === 2) { scoped = false; document.getElementById('scope').style.display = 'none'; }
+  if (e.button === 2) { leaningOut = false; scoped = false; document.getElementById('scope').style.display = 'none'; }
 });
 document.addEventListener('contextmenu', e => e.preventDefault());
 // scroll wheel cycles through owned weapons
@@ -1879,7 +1882,10 @@ function reload() {
 }
 
 function shoot() {
-  if (playerTank) { fireTankShell(playerTank, null); return; }
+  if (playerTank && playerTank.kind === 'truck') {
+    // trucks have no gun — you fire your own weapon from the window
+    if (!leaningOut) { addFeed('Hold right mouse to lean out and shoot'); return; }
+  } else if (playerTank) { fireTankShell(playerTank, null); return; }
   if (!gunGroup) return;
   const W = WEAPONS[curWeap]; const now = performance.now();
   if (now - lastShot < W.rate || player.reloading) return;
@@ -1902,10 +1908,30 @@ function shoot() {
   const ray = new THREE.Raycaster(origin, dir.clone().normalize(), 0, RANGE);
   let hit = null, hitDist = Infinity, hitPt = null;
   bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const bx = new THREE.Box3().setFromObject(b.mesh); const pt = ray.ray.intersectBox(bx, new THREE.Vector3()); if (pt) { const d = origin.distanceTo(pt); if (d < hitDist && d <= RANGE) { hitDist = d; hit = b; hitPt = pt.clone(); } } });
+  /* Rifles bite armour too, just barely. A hull is hundreds of health against a
+     shell worth 120, so small-arms fire chips rather than kills — but shooting a
+     tank should do something rather than pass straight through it. */
+  let vHit = null, vDist = Infinity, vPt = null;
+  tanks.forEach(t => {
+    if (t.dead || t.team === PLAYER_TEAM || t === playerTank) return;
+    const bx = new THREE.Box3().setFromObject(t.mesh);
+    const pt = ray.ray.intersectBox(bx, new THREE.Vector3());
+    if (pt) { const d = origin.distanceTo(pt); if (d < vDist && d <= RANGE) { vDist = d; vHit = t; vPt = pt.clone(); } }
+  });
+  if (vHit && vDist < hitDist) { hit = null; hitDist = vDist; } else { vHit = null; }
+
   const blocked = blockDist < hitDist;
   let end;
-  if (blocked) { end = origin.clone().add(dir.clone().multiplyScalar(blockDist)); hit = null; }
+  if (blocked) { end = origin.clone().add(dir.clone().multiplyScalar(blockDist)); hit = null; vHit = null; }
+  else if (vHit) end = vPt;
   else if (hit) end = hitPt; else end = origin.clone().add(dir.clone().multiplyScalar(RANGE));
+  if (vHit) {
+    damageTank(vHit, (scoped ? W.scopedDmg : W.dmg) * 0.25, true);
+    // a visible spark so you can tell you are actually hitting it
+    const sp = new THREE.PointLight(0xffd27a, 2.2, 6);
+    sp.position.copy(vPt); scene.add(sp);
+    setTimeout(() => scene.remove(sp), 70);
+  }
   const mw = new THREE.Vector3();
   if (gunGroup.userData.flash) gunGroup.userData.flash.getWorldPosition(mw);
   else mw.copy(origin).add(dir.clone().multiplyScalar(0.5));
@@ -2350,7 +2376,7 @@ function updateCamera(dt) {
     const bodyView = CUSTOM_MODELS.firstPersonBody && playerMesh &&
                      playerMesh.userData.headBone && !playerTank;
 
-    gunGroup.visible = !playerTank && !bodyView;   // the model carries its own rifle
+    gunGroup.visible = (!playerTank || (playerTank.kind === 'truck' && leaningOut)) && !bodyView;
     if (playerMesh) {
       const show = !!bodyView;
       playerMesh.visible = show;
@@ -2489,7 +2515,7 @@ function endMatch() {
    ============================================================ */
 const TANK_COUNT = 4;
 const TANK_HP = 500, TANK_SHELL_DMG = 120, TANK_RELOAD = 2.6;
-let tanks = [], playerTank = null;
+let tanks = [], playerTank = null, leaningOut = false;
 
 function buildTankModel() {
   if (loadedTankGLB) {
@@ -2630,6 +2656,8 @@ function spawnTanks() {
     t.mesh.position.set(B.x + side * 9, 0, B.z + fwd * 17);
     t.yaw = team === TEAM_CT ? 0 : Math.PI;
     t.mesh.rotation.y = t.yaw;
+    // the first tank on your side is yours alone; the second gets an ally crew
+    t.reserved = (team === PLAYER_TEAM && i === 0);
     tanks.push(t);
   }
   // one truck per side: quicker and tougher to catch, but no gun
@@ -2646,7 +2674,7 @@ function spawnTanks() {
 function nearestTank(x, z, maxD) {
   let best = null, bd = maxD;
   tanks.forEach(t => {
-    if (t.dead || t.driver) return;
+    if (t.dead || t.driver || t.crew) return;   // an ally is already in that one
     const d = Math.hypot(t.mesh.position.x - x, t.mesh.position.z - z);
     if (d < bd) { bd = d; best = t; }
   });
@@ -2658,8 +2686,9 @@ window.toggleTank = function () {
     playerTank.driver = null;
     player.x = playerTank.mesh.position.x + Math.cos(playerTank.yaw) * 4.5;
     player.z = playerTank.mesh.position.z + Math.sin(playerTank.yaw) * 4.5;
-    playerTank = null;
-    addFeed('🚪 Out of the tank');
+    playerTank = null; leaningOut = false;
+    player.y = 1.7;
+    addFeed('🚪 Out of the vehicle');
     return;
   }
   const t = nearestTank(player.x, player.z, 14);
@@ -2724,14 +2753,24 @@ function damageTank(t, amt, byPlayer) {
 function updateTankPrompt() {
   const el = document.getElementById('tankprompt');
   if (!el) return;
-  if (playerTank) { el.style.display = 'block'; el.textContent = '🛡️ F to get out · W/S drive · A/D turn · LMB fire'; return; }
+  if (playerTank) {
+    el.style.display = 'block';
+    el.textContent = playerTank.kind === 'truck'
+      ? '🚚 F to get out · W/S drive · A/D turn · hold RMB to lean out and shoot'
+      : '🛡️ F to get out · W/S drive · A/D turn · LMB fire';
+    return;
+  }
   const t = nearestTank(player.x, player.z, 14);
-  if (t && t.team === PLAYER_TEAM) { el.style.display = 'block'; el.textContent = '🛡️ Press F to enter the tank'; return; }
+  if (t && t.team === PLAYER_TEAM) {
+    el.style.display = 'block';
+    el.textContent = '🛡️ Press F to enter the ' + (t.kind === 'truck' ? 'truck' : 'tank');
+    return;
+  }
 
   // otherwise point at the closest one, so it is never a hunt
   let best = null, bd = 1e9;
   tanks.forEach(x => {
-    if (x.dead || x.driver || x.team !== PLAYER_TEAM) return;
+    if (x.dead || x.driver || x.crew || x.team !== PLAYER_TEAM) return;
     const d = Math.hypot(x.mesh.position.x - player.x, x.mesh.position.z - player.z);
     if (d < bd) { bd = d; best = x; }
   });
@@ -2743,7 +2782,7 @@ function updateTankPrompt() {
   while (rel < -Math.PI) rel += Math.PI * 2;
   const arrow = Math.abs(rel) < 0.4 ? '↑' : rel > 0 ? '↰ left' : '↱ right';
   el.style.display = 'block';
-  el.textContent = '🛡️ Your tank: ' + Math.round(bd) + 'm ' + arrow;
+  el.textContent = '🛡️ Your ' + (best.kind === 'truck' ? 'truck' : 'tank') + ': ' + Math.round(bd) + 'm ' + arrow;
 }
 
 function updateTanks(dt) {
@@ -2766,8 +2805,17 @@ function updateTanks(dt) {
       if (Math.abs(nz) < ARENA - 4) t.mesh.position.z = nz;
       t.mesh.rotation.y = t.yaw;
       t.turret.rotation.y = player.yaw - t.yaw;            // aim where you look
-      // ride along with it
+      /* Ride along, and sit ABOVE the hull. updatePlayer is skipped while crewing,
+         so player.y stayed at its 1.7 walking height — which is inside the cab of a
+         truck and behind the plating of a tank. That was the blank wall. */
       player.x = t.mesh.position.x; player.z = t.mesh.position.z;
+      player.y = (t.kind === 'truck' ? 2.55 : 3.05);
+      // leaning out of the truck window drops you to the side of the cab
+      if (t.kind === 'truck' && leaningOut) {
+        player.x += Math.cos(t.yaw) * 1.6;
+        player.z -= Math.sin(t.yaw) * 1.6;
+        player.y = 2.15;
+      }
       return;
     }
 
@@ -2775,23 +2823,41 @@ function updateTanks(dt) {
        targets but never drive themselves off, so one is always there to climb
        into — a friendly tank that wanders away is a tank you can never crew.
        Enemy armour is fully AI and will come looking for you. */
+    /* Of your two tanks, one is crewed by an ally and fights alongside you; the
+       other is reserved and never takes a bot, so there is always a seat waiting.
+       t.reserved is set at spawn. Trucks are always left for you. */
     if (t.team === PLAYER_TEAM) {
-      const near = bots.filter(b => b.alive && b.team !== t.team)
-        .map(b => ({ b: b, d: b.mesh.position.distanceTo(t.mesh.position) }))
-        .sort((a, b) => a.d - b.d)[0];
-      if (near && near.d < 120) {
-        const want = Math.atan2(-(near.b.mesh.position.x - t.mesh.position.x),
-                                -(near.b.mesh.position.z - t.mesh.position.z));
-        t.turret.rotation.y = want - t.yaw;
-        if (t.cool <= 0) fireTankShell(t, near.b.mesh.position.clone().setY(1.2));
+      if (t.reserved || t.kind === 'truck') {
+        // yours: hold position, turret idle, waiting for you
+        return;
       }
-      return;
+      // ally-crewed: needs a bot in it, then fights on its own
+      if (!t.crew || !t.crew.alive) {
+        t.crew = null;
+        const free = bots.filter(b => b.alive && b.team === t.team && !b.inVehicle);
+        const near = free.map(b => ({ b: b, d: b.mesh.position.distanceTo(t.mesh.position) }))
+                         .sort((a, b) => a.d - b.d)[0];
+        if (!near) return;
+        if (near.d > 6) {
+          const dx = t.mesh.position.x - near.b.mesh.position.x;
+          const dz = t.mesh.position.z - near.b.mesh.position.z;
+          const L = Math.hypot(dx, dz) || 1, step = 7 * dt;
+          near.b.mesh.position.x += dx / L * step;
+          near.b.mesh.position.z += dz / L * step;
+          return;
+        }
+        t.crew = near.b; near.b.inVehicle = t;
+        near.b.mesh.visible = false;
+        if (near.b.tag) near.b.tag.visible = false;
+      }
+      t.crew.mesh.position.set(t.mesh.position.x, 0, t.mesh.position.z);
+      // fall through to the normal hunt-and-shell behaviour below
     }
 
     /* An enemy vehicle only works with someone in it. A bot has to walk over and
        crew it first, and that bot leaves the infantry fight while it drives — so
        an unmanned tank just sits there, and killing the crew stops it dead. */
-    if (!t.crew || !t.crew.alive) {
+    if (t.team !== PLAYER_TEAM && (!t.crew || !t.crew.alive)) {
       t.crew = null;
       const free = bots.filter(b => b.alive && b.team === t.team && !b.inVehicle);
       const near = free.map(b => ({ b: b, d: b.mesh.position.distanceTo(t.mesh.position) }))
@@ -2812,7 +2878,7 @@ function updateTanks(dt) {
       if (near.b.tag) near.b.tag.visible = false;
     }
     // the crew rides with the hull
-    t.crew.mesh.position.set(t.mesh.position.x, 0, t.mesh.position.z);
+    if (t.crew) t.crew.mesh.position.set(t.mesh.position.x, 0, t.mesh.position.z);
 
     // enemy crews: drive at the nearest target and shell it
     /* Vehicles are the priority target and the closest one wins — armour goes for
@@ -2931,11 +2997,10 @@ function updateWeather(dt) {
    that spot; it falls from altitude after a short flight time, so a good call is
    one that leads a target rather than lands on it.
    ============================================================ */
-/* One strike, then a thirty minute lockout. That is deliberately far longer than
-   a match, so it is a once-a-session decision rather than a rotation — and it is
-   stored against the clock in localStorage, not a per-round timer, so leaving the
-   match or reloading the page does not hand you another one. */
-const STRIKE_COOLDOWN_MS = 30 * 60 * 1000;
+/* One strike, then a 1m30s lockout — a couple of uses per match rather than one
+   a session. Still stored against the wall clock in localStorage rather than a
+   per-round counter, so ending a match or reloading does not refill it early. */
+const STRIKE_COOLDOWN_MS = 90 * 1000;   // 1m 30s
 const STRIKE_FLIGHT = 3.2, STRIKE_RADIUS = 16, STRIKE_DMG = 220;
 
 function strikeReadyAt() {
