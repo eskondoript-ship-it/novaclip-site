@@ -107,19 +107,19 @@ document.getElementById('askbtn').onclick = async () => {
   const q = document.getElementById('askbox').value;
   if (!q) return;
   document.getElementById('aiimg').style.display = 'none';
-  setOut('Cooking... 🔥');
+  setOut('Cooking... \ud83d\udd25');
   const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Keep it under 200 words. Question: ' + q }] }] });
   if (data.candidates && data.candidates[0].content.parts[0].text) {
     setOut(data.candidates[0].content.parts[0].text);
     saveHist(subjectName(), q, data.candidates[0].content.parts[0].text);
     addPts(5);
     if (typeof logSkill === 'function') logSkill('ai_ask');
-  } else { setOut('The AI is cooked rn 💀 try again in a minute.'); }
+  } else { setOut('The AI is cooked rn \ud83d\udc80 try again in a minute.'); }
 };
 
 document.getElementById('thumbbtn').onclick = async () => {
   const q = document.getElementById('askbox').value || 'exciting gaming video';
-  setOut('Painting your thumbnail... (10-20s) 🎨');
+  setOut('Painting your thumbnail... (10-20s) \ud83c\udfa8');
   const data = await askGemini('gemini-2.5-flash-image', { contents: [{ parts: [{ text: 'Generate a bold YouTube thumbnail image, 16:9, vivid colors, high contrast, about: ' + q }] }] });
   let done = false;
   if (data.candidates) {
@@ -128,7 +128,7 @@ document.getElementById('thumbbtn').onclick = async () => {
         const img = document.getElementById('aiimg');
         img.src = 'data:image/png;base64,' + p.inlineData.data;
         img.style.display = 'block';
-        setOut('It ate. Right-click to save it 🔥');
+        setOut('It ate. Right-click to save it \ud83d\udd25');
         saveHist(subjectName(), 'Thumbnail: ' + q, 'image generated');
         addPts(10);
         if (typeof logSkill === 'function') logSkill('ai_ask');
@@ -136,21 +136,21 @@ document.getElementById('thumbbtn').onclick = async () => {
       }
     }
   }
-  if (!done) setOut('Could not generate the image rn 💀 (image model may be busy). Try again in a minute.');
+  if (!done) setOut('Could not generate the image rn \ud83d\udc80 (image model may be busy). Try again in a minute.');
 };
 
 document.getElementById('vidbtn').onclick = async () => {
   const q = document.getElementById('askbox').value;
-  if (!q) { setOut('Type your video idea first, then hit 🎬'); return; }
+  if (!q) { setOut('Type your video idea first, then hit \ud83c\udfac'); return; }
   document.getElementById('aiimg').style.display = 'none';
-  setOut('Directing your video... 🎬');
+  setOut('Directing your video... \ud83c\udfac');
   const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Create a complete video plan for this idea: ' + q + '. Give me: 1) A viral title, 2) A 3-second hook line, 3) Full script outline scene by scene, 4) Shot list with camera angles, 5) Music and sound effect suggestions, 6) A thumbnail concept. Format it clearly with the numbers.' }] }] });
   if (data.candidates && data.candidates[0].content.parts[0].text) {
     setOut(data.candidates[0].content.parts[0].text);
     saveHist(subjectName(), 'Video plan: ' + q, data.candidates[0].content.parts[0].text);
     addPts(10);
     if (typeof logSkill === 'function') logSkill('ai_ask');
-  } else { setOut('The AI is cooked rn 💀 try again in a minute.'); }
+  } else { setOut('The AI is cooked rn \ud83d\udc80 try again in a minute.'); }
 };
 </script>
 <script src='nova.js'></script>

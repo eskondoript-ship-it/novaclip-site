@@ -605,7 +605,7 @@ document.addEventListener('drop', e => {
   document.querySelectorAll('.fxchip').forEach(x => x.classList.toggle('on', x.dataset.fx === fx));
   const hint = document.getElementById('dragHint');
   if (hint) { hint.textContent = '✅ ' + (FX_LABELS[fx] || fx) + ' applied to clip ' + (i + 1); hint.classList.add('show');
-    setTimeout(() => { hint.classList.remove('show'); hint.textContent = 'Drop the effect on a clip 🎯'; }, 1600); }
+    setTimeout(() => { hint.classList.remove('show'); hint.textContent = 'Drop the effect on a clip \ud83c\udfaf'; }, 1600); }
 });
 
 // ============================================================
@@ -760,7 +760,7 @@ const LESSONS = [
     '<li><b>Hard transitions.</b> Use <b>Flash</b> or <b>Zoom</b> between clips, never Fade.</li></ol>'+
     '<div class="tip">Rule of thumb: if a clip is longer than the time it takes to say "goal", it is too long.</div>' },
 
-  { icon:'🎵', title:'Editing to the beat', body:
+  { icon:'\ud83c\udfb5', title:'Editing to the beat', body:
     '<p>Beat-matching is what separates an edit from a slideshow.</p><ol>'+
     '<li>Add music first, before any clips.</li>'+
     '<li>Play it and tap along — count how long between beats.</li>'+
@@ -768,7 +768,7 @@ const LESSONS = [
     '<li>Set every clip to that duration, then adjust the loud moments to land on a cut.</li></ol>'+
     '<div class="tip">Save the biggest moment for the beat drop. Build up to it with faster and faster cuts.</div>' },
 
-  { icon:'🔥', title:'Hooks — the first 3 seconds', body:
+  { icon:'\ud83d\udd25', title:'Hooks — the first 3 seconds', body:
     '<p>Most viewers leave in 3 seconds. Your first clip decides everything.</p><ol>'+
     '<li>Open on the <b>best</b> moment, not the build-up.</li>'+
     '<li>Add text in the first frame with a question or claim.</li>'+
@@ -776,14 +776,14 @@ const LESSONS = [
     '<li>Never open with a logo or intro.</li></ol>'+
     '<div class="tip">Try starting at the end: show the result, then rewind and explain.</div>' },
 
-  { icon:'🅰️', title:'Text that actually reads', body:
+  { icon:'\ud83c\udd70\ufe0f', title:'Text that actually reads', body:
     '<p>Text is read on a phone, at speed, often on mute.</p><ol>'+
     '<li>Keep it to <b>4–6 words</b> per screen.</li>'+
     '<li>Put it <b>Top</b> or <b>Bottom</b> — the centre covers the action.</li>'+
     '<li>Change it on every cut so it feels alive.</li>'+
     '<li>Say the same thing in the voiceover for anyone watching on mute.</li></ol>' },
 
-  { icon:'😂', title:'Using memes well', body:
+  { icon:'\ud83d\ude02', title:'Using memes well', body:
     '<p>Memes work as punctuation, not as the whole video.</p><ol>'+
     '<li>Open <b>Memes</b>, search, and click one to drop it on the timeline.</li>'+
     '<li>Use them as a <b>reaction</b> right after something surprising.</li>'+
@@ -791,14 +791,14 @@ const LESSONS = [
     '<li>One or two per video. More than that gets tiring.</li></ol>'+
     '<div class="tip">Every meme here is filtered for a 13–18 audience, so anything you find is safe to post.</div>' },
 
-  { icon:'🎙️', title:'Voiceover without a microphone', body:
+  { icon:'\ud83c\udf99\ufe0f', title:'Voiceover without a microphone', body:
     '<p>The <b>Voice</b> tab has 18 character voices built from pitch and speed.</p><ol>'+
     '<li>Write short lines — one sentence per clip.</li>'+
     '<li><b>Hype Man</b> suits sports edits, <b>Deep Narrator</b> suits stories.</li>'+
     '<li>Preview before exporting; speed matters more than the words.</li>'+
     '<li>Leave gaps so the music breathes.</li></ol>' },
 
-  { icon:'📤', title:'Exporting for TikTok and Shorts', body:
+  { icon:'\ud83d\udce4', title:'Exporting for TikTok and Shorts', body:
     '<p>Where a video is posted changes how you should cut it.</p><ol>'+
     '<li><b>Shorts / TikTok / Reels:</b> under 60s, fast cuts, text always on screen.</li>'+
     '<li><b>YouTube long-form:</b> slower, let moments land, use Fade transitions.</li>'+
@@ -1132,23 +1132,23 @@ let voices = [];
    personalities rather than a list of "Microsoft George" entries. */
 const VOICE_PRESETS = [
   { id:'nova',      name:'✨ Nova',            pitch:1.05, rate:1.00, prefer:['female','zira','samantha','aria','jenny'] },
-  { id:'storyteller',name:'📖 Storyteller',    pitch:0.92, rate:0.88, prefer:['male','george','daniel','guy'] },
-  { id:'hype',      name:'🔥 Hype Man',        pitch:1.15, rate:1.28, prefer:['male','guy','mark','david'] },
-  { id:'chill',     name:'🌙 Chill',           pitch:0.95, rate:0.86, prefer:['female','aria','samantha'] },
-  { id:'narrator',  name:'🎬 Deep Narrator',   pitch:0.62, rate:0.84, prefer:['male','david','george','daniel'] },
-  { id:'chipmunk',  name:'🐿️ Chipmunk',        pitch:1.95, rate:1.42, prefer:[] },
-  { id:'robot',     name:'🤖 Robot',           pitch:0.42, rate:0.72, prefer:['male'] },
-  { id:'announcer', name:'📢 Announcer',       pitch:0.80, rate:1.06, prefer:['male','mark','guy'] },
-  { id:'whisper',   name:'🤫 Whisper',         pitch:1.10, rate:0.78, prefer:['female','zira'], volume:0.45 },
-  { id:'sassy',     name:'💅 Sassy',           pitch:1.35, rate:1.12, prefer:['female','zira','aria'] },
-  { id:'grumpy',    name:'😤 Grumpy',          pitch:0.55, rate:0.94, prefer:['male','david'] },
-  { id:'kid',       name:'🧒 Kid',             pitch:1.62, rate:1.14, prefer:['female','zira'] },
-  { id:'newsreader',name:'📰 Newsreader',      pitch:0.98, rate:1.02, prefer:['male','george','daniel'] },
-  { id:'villain',   name:'😈 Villain',         pitch:0.48, rate:0.80, prefer:['male','david','george'] },
+  { id:'storyteller',name:'\ud83d\udcd6 Storyteller',    pitch:0.92, rate:0.88, prefer:['male','george','daniel','guy'] },
+  { id:'hype',      name:'\ud83d\udd25 Hype Man',        pitch:1.15, rate:1.28, prefer:['male','guy','mark','david'] },
+  { id:'chill',     name:'\ud83c\udf19 Chill',           pitch:0.95, rate:0.86, prefer:['female','aria','samantha'] },
+  { id:'narrator',  name:'\ud83c\udfac Deep Narrator',   pitch:0.62, rate:0.84, prefer:['male','david','george','daniel'] },
+  { id:'chipmunk',  name:'\ud83d\udc3f\ufe0f Chipmunk',        pitch:1.95, rate:1.42, prefer:[] },
+  { id:'robot',     name:'\ud83e\udd16 Robot',           pitch:0.42, rate:0.72, prefer:['male'] },
+  { id:'announcer', name:'\ud83d\udce2 Announcer',       pitch:0.80, rate:1.06, prefer:['male','mark','guy'] },
+  { id:'whisper',   name:'\ud83e\udd2b Whisper',         pitch:1.10, rate:0.78, prefer:['female','zira'], volume:0.45 },
+  { id:'sassy',     name:'\ud83d\udc85 Sassy',           pitch:1.35, rate:1.12, prefer:['female','zira','aria'] },
+  { id:'grumpy',    name:'\ud83d\ude24 Grumpy',          pitch:0.55, rate:0.94, prefer:['male','david'] },
+  { id:'kid',       name:'\ud83e\uddd2 Kid',             pitch:1.62, rate:1.14, prefer:['female','zira'] },
+  { id:'newsreader',name:'\ud83d\udcf0 Newsreader',      pitch:0.98, rate:1.02, prefer:['male','george','daniel'] },
+  { id:'villain',   name:'\ud83d\ude08 Villain',         pitch:0.48, rate:0.80, prefer:['male','david','george'] },
   { id:'speedrun',  name:'⚡ Speedrun',        pitch:1.20, rate:1.75, prefer:[] },
-  { id:'slowmo',    name:'🐢 Slow-mo',         pitch:0.70, rate:0.58, prefer:[] },
-  { id:'alien',     name:'👽 Alien',           pitch:1.80, rate:0.70, prefer:[] },
-  { id:'giant',     name:'🗿 Giant',           pitch:0.35, rate:0.66, prefer:['male'] }
+  { id:'slowmo',    name:'\ud83d\udc22 Slow-mo',         pitch:0.70, rate:0.58, prefer:[] },
+  { id:'alien',     name:'\ud83d\udc7d Alien',           pitch:1.80, rate:0.70, prefer:[] },
+  { id:'giant',     name:'\ud83d\uddff Giant',           pitch:0.35, rate:0.66, prefer:['male'] }
 ];
 
 function pickBaseVoice(prefer) {

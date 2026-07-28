@@ -205,7 +205,7 @@ async function boot() {
   const tok = loadToken();
   const row = document.getElementById('connectrow');
   if (!tok) {
-    row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">🔑 Connect in Studio</a>' +
+    row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">\ud83d\udd11 Connect in Studio</a>' +
       '<p class="hint">Analytics uses the channel you connect in Studio. Connect once there, then come back — you will stay signed in for about an hour.</p>';
     return;
   }
@@ -215,11 +215,11 @@ async function boot() {
     const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
     if (d.items && d.items.length) { myStats = d.items[0]; enterDash(); }
     else {
-      row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">🔑 Reconnect in Studio</a>' +
+      row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">\ud83d\udd11 Reconnect in Studio</a>' +
         '<p class="hint">That session expired. Reconnect in Studio and come back.</p>';
     }
   } catch (e) {
-    row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">🔑 Reconnect in Studio</a>' +
+    row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">\ud83d\udd11 Reconnect in Studio</a>' +
       '<p class="hint">Could not reach YouTube. Reconnect in Studio and try again.</p>';
   }
 }
@@ -372,7 +372,7 @@ function sum(list, k) { return list.reduce((s, v) => s + v[k], 0); }
 
 function renderReview() {
   const names = { 1:'Today', 7:'This week', 30:'This month', 365:'This year' };
-  document.getElementById('rvTitle').textContent = '📋 ' + names[periodDays] + ' — channel review';
+  document.getElementById('rvTitle').textContent = '\ud83d\udccb ' + names[periodDays] + ' — channel review';
 
   const cur = slice(myUploads, periodDays);
   const prev = myUploads.filter(v => {
@@ -421,7 +421,7 @@ function renderPostStreak() {
     const start = end - 7 * 86400000;
     const hit = myUploads.some(v => v.date.getTime() > start && v.date.getTime() <= end);
     if (hit && !broken) streak++; else broken = true;
-    html = '<i class="' + (hit ? 'on' : '') + '" title="' + w + ' weeks ago">' + (hit ? '🔥' : '·') + '</i>' + html;
+    html = '<i class="' + (hit ? 'on' : '') + '" title="' + w + ' weeks ago">' + (hit ? '\ud83d\udd25' : '·') + '</i>' + html;
   }
   box.innerHTML = html;
   document.getElementById('pstreakTxt').textContent = streak > 0

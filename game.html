@@ -305,7 +305,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v68 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v69 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -392,7 +392,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'></script>
 <script>
-window.addEventListener('error', (e) => { const b = document.getElementById('errbox'); b.style.display = 'block'; b.textContent = '⚠ ' + e.message; });
+window.addEventListener('error', (e) => { const b = document.getElementById('errbox'); b.style.display = 'block'; b.textContent = '\u26a0 ' + e.message; });
 
 // ---------- config ----------
 /* Bots hit harder and think faster than they used to: higher accuracy, longer
@@ -428,7 +428,7 @@ const TEAM_INFO = {
 const PLAYER_TEAM = TEAM_CT;
 
 // ============================================================
-//  CUSTOM 3D MODELS (optional) — drop a .glb in your repo and
+//  CUSTOM 3D MODELS (optional)  drop a .glb in your repo and
 //  put its filename here. Leave '' to use the built-in models.
 //  Get free rigged models from Mixamo, Sketchfab, or Kenney,
 //  export as .glb, upload to your repo (Add file > Upload files).
@@ -442,14 +442,14 @@ const CUSTOM_MODELS = {
   weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
 
   // The M4A1 mesh runs along its X axis (6.22 long vs 2.02 tall), with the barrel
-  // on -X — the thin end capped by a flash hider — and the buttstock on +X.
-  // Rotating about X only rolled it onto its side; turning -90° about Y swings
+  // on -X  the thin end capped by a flash hider  and the buttstock on +X.
+  // Rotating about X only rolled it onto its side; turning -90 about Y swings
   // -X round to -Z so the muzzle points where the camera is looking.
   // If a replacement model ends up back-to-front, flip this to +90.
   weaponRotX: 0, weaponRotY: 90, weaponRotZ: 0, weaponScale: 1.0, weaponAutoOrient: false,
 
   // How the rifle sits in the character's right hand (third person). Nudge these
-  // if the grip looks off — scale is relative to the fitted 0.6-unit viewmodel.
+  // if the grip looks off  scale is relative to the fitted 0.6-unit viewmodel.
   handWeapon: { scale: 1.0, x: 0, y: 0, z: 0, rotX: 0, rotY: 0, rotZ: 0 },
 
   /* false = the procedural viewmodel: arms, weapon and wrist monitor all built to
@@ -457,11 +457,11 @@ const CUSTOM_MODELS = {
              it, and it is the default because it works.
      true  = look out of the character's own head instead. Honest, but this rig's
              arms hang at its sides rather than being posed for a camera in the
-             skull, so they fall out of view — and the viewmodel that carries the
+             skull, so they fall out of view  and the viewmodel that carries the
              monitor is hidden along with them. */
   firstPersonBody: false,
 
-  // First-person arms gripping the weapon. scale only — position is derived from
+  // First-person arms gripping the weapon. scale only  position is derived from
   // the fitted 0.6-unit viewmodel so it follows whatever gun is loaded.
   viewArms: { scale: 1.0 },
 
@@ -470,7 +470,7 @@ const CUSTOM_MODELS = {
   // vehicles work before any asset is uploaded.
   tank: '', tankScale: 1.0, tankRotY: 0,
 
-  // Same deal for trucks — drop a .glb here once you have uploaded it. Empty
+  // Same deal for trucks  drop a .glb here once you have uploaded it. Empty
   // means the built-in blocky truck is used instead.
   truck: '', truckScale: 1.0, truckRotY: 0,
 
@@ -481,7 +481,7 @@ const CUSTOM_MODELS = {
     run:     'run forward.glb',
     jump:    'jump loop.glb',
     crouch:  'walk crouching forward.glb',
-    reload:  '',                        // pack has no reload — add 'reloading.glb' if you grab one
+    reload:  '',                        // pack has no reload  add 'reloading.glb' if you grab one
     death:   'death from the front.glb',
     grenade: '',                        // add 'throw grenade.glb' if you grab one
     emote:   ''                         // add 'dance.glb' + emoteSound for an emote
@@ -505,23 +505,23 @@ function isFBX(name) { return /\.fbx$/i.test(name || ''); }
    things that stop them driving the character rig:
      1. it splits one take into ~52 single-bone clips, so clips[0] is a fragment
         (the idle file's first clip animates the head and nothing else);
-     2. it retargets each channel onto a helper node — "mixamorig:Spine" becomes
-        "mixamorig:Spine_$AssimpFbx$_Rotation" — which does not exist on the
+     2. it retargets each channel onto a helper node  "mixamorig:Spine" becomes
+        "mixamorig:Spine_$AssimpFbx$_Rotation"  which does not exist on the
         character, so the track binds to nothing and the model stays in T-pose.
    These exports carry only _Rotation channels (no PreRotation/Translation to
    recompose), so flattening every clip into one and stripping the suffix maps
    all 48 animated bones straight onto the character skeleton. */
 /* Retarget the loaded clips onto a specific character.
-   The two rigs do not share a rest pose — the character's LeftUpLeg bind is a
-   180-degree turn about Z while the animation's rest for that bone is identity —
+   The two rigs do not share a rest pose  the character's LeftUpLeg bind is a
+   180-degree turn about Z while the animation's rest for that bone is identity 
    so writing the animation's rotation onto the bone (with or without its
    PreRotation) throws limbs half a turn out and folds the body up. What transfers
    between skeletons is the DELTA from each one's own rest:
 
-       q_out(t) = q_charBind * q_animRest⁻¹ * q_anim(t)
+       q_out(t) = q_charBind * q_animRest * q_anim(t)
 
    Note the PreRotation cancels out of that expression, since it sits in both the
-   rest and the animated term — which is why premultiplying it was never the fix. */
+   rest and the animated term  which is why premultiplying it was never the fix. */
 function retargetClips(charRoot) {
   const bind = new Map();          // character rest pose, sampled before anything plays
   charRoot.traverse(o => { if (o.isBone && o.name) bind.set(o.name, o.quaternion.clone()); });
@@ -581,8 +581,8 @@ function mergeAnimClips(clips, name, sceneRoot) {
   /* Each bone's real local transform in these files is
         Translation x PreRotation x Rotation
      spread across three helper nodes, and only Rotation is animated. Simply
-     renaming the Rotation track onto the bone drops the PreRotation — which is a
-     genuine orientation on 46 of the 48 bones here, not the identity — and the
+     renaming the Rotation track onto the bone drops the PreRotation  which is a
+     genuine orientation on 46 of the 48 bones here, not the identity  and the
      resulting pose is distorted enough that the skinned mesh collapses and the
      character stops being drawn at all. So read each PreRotation off the loaded
      helper node and pre-multiply it back into every keyframe. Translation is a
@@ -596,7 +596,7 @@ function mergeAnimClips(clips, name, sceneRoot) {
     });
   }
   // Without the helper nodes the composition cannot be reconstructed, and applying
-  // the raw rotations would break the rig — better to leave the model in bind pose.
+  // the raw rotations would break the rig  better to leave the model in bind pose.
   if (!pre.size) return null;
 
   const byName = new Map();
@@ -665,12 +665,12 @@ function loadCustomModels(done) {
   Promise.all(jobs).then(() => {
     const gltf = THREE.GLTFLoader ? new THREE.GLTFLoader() : null;
     const fbx  = THREE.FBXLoader  ? new THREE.FBXLoader()  : null;
-    if (!gltf && !fbx) { console.warn('no model loader available — using built-in models'); done(); return; }
+    if (!gltf && !fbx) { console.warn('no model loader available \u2014 using built-in models'); done(); return; }
 
     // one call that picks the right loader by file extension
     const loader = {
       load: function (rawUrl, ok, prog, err) {
-        // filenames can contain spaces ("walk forward.glb") — encode them for the URL
+        // filenames can contain spaces ("walk forward.glb")  encode them for the URL
         const url = encodeURI(rawUrl);
         if (isFBX(url)) {
           if (!fbx) { err && err(new Error('FBXLoader unavailable')); return; }
@@ -684,11 +684,11 @@ function loadCustomModels(done) {
     };
     let pending = 0, fired = false;
     const finish = () => { if (!fired && pending === 0) { fired = true; done(); } };
-    if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; loadedCharAnims = g.animations || []; if (loadedCharAnims.length) console.log('character has ' + loadedCharAnims.length + ' animation clip(s):', loadedCharAnims.map(a => a.name).join(', ')); pending--; finish(); }, undefined, e => { console.warn('character model failed — using built-in', e); pending--; finish(); }); }
-    if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed — using the built-in truck', e); pending--; finish(); }); }
-    if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed — using the built-in tank', e); pending--; finish(); }); }
-    if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed — using built-in', e); pending--; finish(); }); }
-    // extra animation files — each one contributes a single clip
+    if (CUSTOM_MODELS.character) { pending++; loader.load(CUSTOM_MODELS.character, g => { loadedCharGLB = g.scene; loadedCharAnims = g.animations || []; if (loadedCharAnims.length) console.log('character has ' + loadedCharAnims.length + ' animation clip(s):', loadedCharAnims.map(a => a.name).join(', ')); pending--; finish(); }, undefined, e => { console.warn('character model failed \u2014 using built-in', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed \u2014 using the built-in truck', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed \u2014 using the built-in tank', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed \u2014 using built-in', e); pending--; finish(); }); }
+    // extra animation files  each one contributes a single clip
     const AN = CUSTOM_MODELS.characterAnims || {};
     Object.keys(AN).forEach(key => {
       const file = AN[key];
@@ -700,7 +700,7 @@ function loadCustomModels(done) {
           // kept raw: retargeting needs the character's rest pose, which is only
           // available once the character itself is built
           rawAnims[key] = { clips: clips, scene: res.scene };
-          console.log('loaded "' + key + '" from ' + file + ' — ' + clips.length + ' source clip(s)');
+          console.log('loaded "' + key + '" from ' + file + ' \u2014 ' + clips.length + ' source clip(s)');
         } else {
           console.warn('no animation clip found in ' + file);
         }
@@ -725,7 +725,7 @@ let BINDS = (function () {
 })();
 function saveBinds() { localStorage.setItem('nc_binds', JSON.stringify(BINDS)); }
 function keyName(code) {
-  if (!code) return '—';
+  if (!code) return '\u2014';
   return code.replace('Key','').replace('Digit','').replace('Arrow','').replace('Left','L ').replace('Right','R ').replace('Space','SPACE').toUpperCase();
 }
 let bots = [], tracers = [], obstacles = [], planted = [];
@@ -741,10 +741,10 @@ const SHOP = { x: 0, z: -30, w: 14, d: 11 };
 
 function pts() { const v = parseInt(localStorage.getItem('nc_points'), 10); return isFinite(v) && v >= 0 ? v : 0; }
 function setPts(v) { v = Math.max(0, Math.round(isFinite(v) ? v : 0)); localStorage.setItem('nc_points', String(v)); const g = document.getElementById('gamepts'); if (g) g.textContent = v; const s = document.getElementById('shopbal'); if (s) s.textContent = v; }
-function earn(n, why) { n = Math.max(0, Math.round(n || 0)); if (!n) return; setPts(pts() + n); addFeed('+' + n + ' pts — ' + why); }
+function earn(n, why) { n = Math.max(0, Math.round(n || 0)); if (!n) return; setPts(pts() + n); addFeed('+' + n + ' pts \u2014 ' + why); }
 
 /* The arena runs without nova.js (it has its own HUD), so it writes the shared
-   skill ledger directly — same nc_skills store the certificates read from. */
+   skill ledger directly  same nc_skills store the certificates read from. */
 function logSkill(id, n) {
   let s = {};
   try { s = JSON.parse(localStorage.getItem('nc_skills') || '{}') || {}; } catch (e) {}
@@ -758,7 +758,7 @@ document.querySelectorAll('.char').forEach(c => c.onclick = () => { document.que
 function renderWSel() {
   document.getElementById('wsel').innerHTML = Object.keys(WEAPONS).map(k => {
     const W = WEAPONS[k], owned = W.owned;
-    return '<div class="w ' + (k === curWeap ? 'equipped' : (owned ? 'owned' : 'locked')) + '" data-w="' + k + '">' + W.name + (owned ? '' : ' 🔒') + '</div>';
+    return '<div class="w ' + (k === curWeap ? 'equipped' : (owned ? 'owned' : 'locked')) + '" data-w="' + k + '">' + W.name + (owned ? '' : ' \ud83d\udd12') + '</div>';
   }).join('');
   document.querySelectorAll('#wsel .w').forEach(el => el.onclick = () => { if (WEAPONS[el.dataset.w].owned) { curWeap = el.dataset.w; renderWSel(); } });
 }
@@ -781,7 +781,7 @@ function init() {
   renderer.domElement.addEventListener('webglcontextlost', (e) => {
     e.preventDefault();
     const b = document.getElementById('errbox');
-    if (b) { b.style.display = 'block'; b.textContent = '⚠ Graphics memory ran out (WebGL context lost). The character model is too heavy — set CUSTOM_MODELS.character back to \'\' to recover.'; }
+    if (b) { b.style.display = 'block'; b.textContent = '\u26a0 Graphics memory ran out (WebGL context lost). The character model is too heavy \u2014 set CUSTOM_MODELS.character back to \'\' to recover.'; }
   }, false);
 
   // bright sky dome with clouds
@@ -844,7 +844,7 @@ function init() {
   if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
-      if (!built) { console.warn('model load stalled — building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
+      if (!built) { console.warn('model load stalled \u2014 building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
     }, 12000);
   } else {
     buildOnce();
@@ -894,7 +894,7 @@ function buildWorld() {
   box(1.5, 2, W, 0x8a7f70, ARENA, 1, 0, true);
   box(1.5, 2, W, 0x8a7f70, -ARENA, 1, 0, true);
 
-  // cover crates and low walls — count scales with area so the bigger map does
+  // cover crates and low walls  count scales with area so the bigger map does
   // not end up as empty field between the two bases
   const crateCols = [0xc2a878, 0xb0b4bb, 0x9aa17f];
   const crates = Math.round(22 * Math.pow(ARENA / 80, 2));
@@ -1136,7 +1136,7 @@ function makeFighter(color, useGLB, isPlayer) {
     if (loadedCharGLB && useGLB) {
       const g = new THREE.Group();
       // player uses the original; bots get a clone so they can move independently
-      /* Bots need a deep clone that rebuilds the skeleton — a plain clone() leaves
+      /* Bots need a deep clone that rebuilds the skeleton  a plain clone() leaves
          every copy pointing at the same bones, so they all animate as one and the
          rig visibly breaks. SkeletonUtils does it properly; without it, fall back
          to the built-in soldier rather than shipping a corrupted rig. */
@@ -1150,20 +1150,20 @@ function makeFighter(color, useGLB, isPlayer) {
       // re-measure, repeating until the character really is human-sized.
       const TARGET_H = 1.8;
       /* Box3.setFromObject() reads a SkinnedMesh's bind-pose geometry and ignores the
-         armature transform — this model's root Armature node carries scale 0.01, so
+         armature transform  this model's root Armature node carries scale 0.01, so
          the plain box reported ~1.8 ("already correct") and the fit loop exited on
          its first pass without doing anything.
          Measuring bone world positions fixed the height but not the placement: the
          bone span for this rig is ~0.003, so the offsets derived from it put the
          character somewhere off-screen. Each mesh's own bounding box pushed through
-         its world matrix is the honest measurement — it carries the armature scale
+         its world matrix is the honest measurement  it carries the armature scale
          and it describes the geometry that actually gets drawn, so use it for the
          height and the ground offset alike. */
       function measure(obj) {
         obj.updateMatrixWorld(true);          // essential: stale matrices give wrong boxes
         /* For a SkinnedMesh the GPU positions vertices from the BONE matrices, not
            from the mesh's own world matrix, so geometry.boundingBox x matrixWorld
-           does not describe what gets drawn — on this rig it reports ~1.8 while the
+           does not describe what gets drawn  on this rig it reports ~1.8 while the
            skeleton (carried under an Armature scaled 0.01) draws something else
            entirely. Bone world positions are what the render actually follows, and
            sizing from them is what produced a correctly-scaled character. Geometry
@@ -1176,7 +1176,7 @@ function makeFighter(color, useGLB, isPlayer) {
         let bb;
         if (boned && isFinite(bones.min.y) && (bones.max.y - bones.min.y) > 1e-9) {
           /* Pad the TOP only. The skull rises above the head bone so height needs a
-             little allowance, but the toe bones already sit at ground level — padding
+             little allowance, but the toe bones already sit at ground level  padding
              downwards as well pushed min.y below the feet, and standing the model on
              that lifted it clear of the ground. */
           const span = bones.max.y - bones.min.y;
@@ -1214,7 +1214,7 @@ function makeFighter(color, useGLB, isPlayer) {
       if (!isFinite(s) || s <= 0) s = 1;
       model.scale.setScalar(s);
 
-      // final hard clamp — a character must never be taller than 3 units
+      // final hard clamp  a character must never be taller than 3 units
       const fin = measure(model);
       if (isFinite(fin.sz.y) && fin.sz.y > 3) {
         const fix = TARGET_H / fin.sz.y;
@@ -1259,14 +1259,14 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v68 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
-          ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
+        if (vt) vt.textContent = 'v69 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+          ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
       model.traverse(o => { if (o.isMesh) {
         o.castShadow = true;
         /* A SkinnedMesh keeps the bounding sphere of its bind pose. Once the merged
-           clips move the bones — and with this rig carried at a ~600x fit scale —
+           clips move the bones  and with this rig carried at a ~600x fit scale 
            that sphere no longer describes where the vertices actually are, so the
            renderer culls the character and it vanishes from every angle. Skinned
            meshes have to opt out of frustum culling. */
@@ -1321,7 +1321,7 @@ function makeFighter(color, useGLB, isPlayer) {
               mixer.stopAllAction();
               console.warn('animation distorted the rig (height became ' +
                 (isFinite(chk2.sz.y) ? chk2.sz.y.toFixed(3) : 'invalid') +
-                'm) — reverting to bind pose so the character stays visible');
+                'm) \u2014 reverting to bind pose so the character stays visible');
               window.__ncAnim = 'reverted ' + (isFinite(chk2.sz.y) ? chk2.sz.y.toFixed(2) : '?') + 'm';
             } else {
               window.__ncAnim = 'ok ' + Object.keys(made).length + ' clips';
@@ -1344,7 +1344,7 @@ function makeFighter(color, useGLB, isPlayer) {
         model.traverse(o => { if (!head && o.isBone && /Head$/i.test(o.name || '')) head = o; });
         if (!head) model.traverse(o => { if (!head && o.isBone && /Neck$/i.test(o.name || '')) head = o; });
         g.userData.headBone = head;
-        if (!head) console.warn('no head bone found — first person falls back to the viewmodel arms');
+        if (!head) console.warn('no head bone found \u2014 first person falls back to the viewmodel arms');
       }
 
       if (loadedWeapGLB) {
@@ -1366,7 +1366,7 @@ function makeFighter(color, useGLB, isPlayer) {
             g.userData.heldWeapon = held;
           } catch (e) { console.warn('could not attach weapon to hand', e); }
         } else {
-          console.warn('no RightHand bone found — weapon not attached to the character');
+          console.warn('no RightHand bone found \u2014 weapon not attached to the character');
         }
       }
 
@@ -1415,7 +1415,7 @@ function makeFighter(color, useGLB, isPlayer) {
     g.userData.flash = flash;
     return g;
   } catch (err) {
-    // absolute fallback — a bright marker so a fighter is NEVER invisible
+    // absolute fallback  a bright marker so a fighter is NEVER invisible
     console.error('makeFighter failed, using fallback', err);
     const g = new THREE.Group();
     const box = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.8, 0.4), new THREE.MeshBasicMaterial({ color: color }));
@@ -1429,7 +1429,7 @@ function makeFighter(color, useGLB, isPlayer) {
 
 // ---------- per-weapon first-person models ----------
 // Known-good sizes for the built-in models (measured by hand, no guesswork).
-// Weapons are built at their FINAL size directly — no scaling is applied
+// Weapons are built at their FINAL size directly  no scaling is applied
 // anywhere, so a bad scale value can never corrupt the transform.
 function autoFitGLB(inner) {
   const wrapper = new THREE.Group();
@@ -1494,7 +1494,7 @@ function buildWristMonitor() {
 function updateWristMonitor(dt) {
   if (!hrCtx) return;
   const hp = Math.max(0, Math.min(100, player.hp));
-  // heart rate rises as health falls and while sprinting — it should feel alive
+  // heart rate rises as health falls and while sprinting  it should feel alive
   const bpm = 70 + (100 - hp) * 0.85 + (player.sprint ? 28 : 0);
   hrPhase += dt * (bpm / 60);
   while (hrPhase >= 1) { hrPhase -= 1; hrBeat = 1; }
@@ -1535,7 +1535,7 @@ function buildArms() {
   /* Built the way a real viewmodel is: tapered limbs running between actual joint
      positions, not axis-aligned boxes. The left arm sweeps in from the lower left
      of the screen and the glove closes over the handguard; the right forearm comes
-     from the lower right to the grip. That is the read in a modern shooter — a
+     from the lower right to the grip. That is the read in a modern shooter  a
      forearm crossing the frame with the hand wrapped on the rail. */
   const g = new THREE.Group();
   const A = CUSTOM_MODELS.viewArms || {};
@@ -1567,7 +1567,7 @@ function buildArms() {
   }
 
   /* The elbows sit well back and low, because the weapon group is already about a
-     unit in front of the camera — an elbow near the gun's own centre is still far
+     unit in front of the camera  an elbow near the gun's own centre is still far
      enough away to fall outside the frame. Pulling them back towards the viewer
      is what makes a forearm actually cross the screen. */
   // ---- LEFT ARM: in from the lower left, glove closing on the handguard ----
@@ -1632,7 +1632,7 @@ function buildWeapon(type) {
 function buildWeaponModel(type) {
   // if a custom .glb weapon is loaded, use it for all guns (not the knife)
   if (loadedWeapGLB && type !== 'knife') {
-    // geometry only — the flash is attached by buildWeapon() after the fit
+    // geometry only  the flash is attached by buildWeapon() after the fit
     const g = new THREE.Group();
     const model = loadedWeapGLB.clone(true);
     model.traverse(o => { if (o.isMesh) o.castShadow = true; });
@@ -1754,7 +1754,7 @@ document.getElementById('startBtn').onclick = () => {
 };
 
 function startMatch() {
-  document.querySelector('.topbar .mode').textContent = '⚔️ ' + MODES[mode].label;
+  document.querySelector('.topbar .mode').textContent = '\u2694\ufe0f ' + MODES[mode].label;
   document.getElementById('tmMine').textContent = TEAM_INFO[PLAYER_TEAM].short;
   document.getElementById('tmTheirs').textContent = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].short;
   document.getElementById('mebar').style.background = TEAM_INFO[PLAYER_TEAM].css;
@@ -1789,7 +1789,7 @@ document.addEventListener('mousedown', (e) => {
   }
   // in a truck, right mouse leans you out of the window to shoot
   if (e.button === 2 && playerTank && playerTank.kind === 'truck') { leaningOut = true; return; }
-  // no black scope ring any more — the weapon's own sights come up instead
+  // no black scope ring any more  the weapon's own sights come up instead
   if (e.button === 2 && WEAPONS[curWeap].scope) { scoped = true; }
 });
 document.addEventListener('mouseup', (e) => {
@@ -1808,7 +1808,7 @@ document.addEventListener('wheel', (e) => {
 
 function updateNadeHint() {
   const el = document.getElementById('weapname');
-  if (equippedNade) el.textContent = (equippedNade === 'frag' ? '💣 FRAG' : '🧨 STICKY') + ' — LMB to throw';
+  if (equippedNade) el.textContent = (equippedNade === 'frag' ? '\ud83d\udca3 FRAG' : '\ud83e\udde8 STICKY') + ' \u2014 LMB to throw';
   else el.textContent = WEAPONS[curWeap].name;
 }
 
@@ -1833,16 +1833,16 @@ document.addEventListener('keydown', (e) => {
         playerMesh.traverse(o => { if (o.isMesh) { meshes++; if (o.visible) vis++; } });
         const p = new THREE.Vector3(); playerMesh.getWorldPosition(p);
         const b = new THREE.Box3().setFromObject(playerMesh);
-        addFeed('3rd: ' + vis + '/' + meshes + ' meshes · at y=' + p.y.toFixed(2) +
-          ' · box ' + (isFinite(b.min.y) ? (b.max.y - b.min.y).toFixed(2) + 'm' : 'none') +
-          ' · inScene=' + !!playerMesh.parent + ' · anim ' + (window.__ncAnim || 'none'));
+        addFeed('3rd: ' + vis + '/' + meshes + ' meshes \u00b7 at y=' + p.y.toFixed(2) +
+          ' \u00b7 box ' + (isFinite(b.min.y) ? (b.max.y - b.min.y).toFixed(2) + 'm' : 'none') +
+          ' \u00b7 inScene=' + !!playerMesh.parent + ' \u00b7 anim ' + (window.__ncAnim || 'none'));
       }));
     }
   }
   if (e.code === BINDS.sprint) player.sprint = true;
   if (/^Digit[1-9]$/.test(e.code)) { const slot = parseInt(e.code.slice(5)); const w = Object.keys(WEAPONS).find(k => WEAPONS[k].slot === slot); if (w) { switchWeap(w); equippedNade = null; } }
-  if (e.code === BINDS.nade) { equippedNade = inv.frag > 0 ? 'frag' : null; if (!inv.frag) addFeed('No frags — buy in shop (E)'); updateNadeHint(); }
-  if (e.code === BINDS.sticky) { equippedNade = inv.sticky > 0 ? 'sticky' : null; if (!inv.sticky) addFeed('No stickies — buy in shop (E)'); updateNadeHint(); }
+  if (e.code === BINDS.nade) { equippedNade = inv.frag > 0 ? 'frag' : null; if (!inv.frag) addFeed('No frags \u2014 buy in shop (E)'); updateNadeHint(); }
+  if (e.code === BINDS.sticky) { equippedNade = inv.sticky > 0 ? 'sticky' : null; if (!inv.sticky) addFeed('No stickies \u2014 buy in shop (E)'); updateNadeHint(); }
   if (e.code === BINDS.emote) playEmote();
   if (e.code === BINDS.plant) plantC4();
   if (e.code === BINDS.detonate) detonate();
@@ -1858,15 +1858,15 @@ function buildLoadoutHUD() {
   // the strike sits in the loadout as a single charge you either have or do not
   const ready = strikeAvailable();
   html += '<div class="slot strikeslot' + (ready ? ' ready' : ' spent') + '">' +
-          '<span class="key">Q</span>🚀 MISSILE STRIKE ' +
-          (ready ? '×1' : '· ' + strikeWaitText()) + '</div>';
+          '<span class="key">Q</span>\ud83d\ude80 MISSILE STRIKE ' +
+          (ready ? '\u00d71' : '\u00b7 ' + strikeWaitText()) + '</div>';
   document.getElementById('loadout').innerHTML = html;
 }
 function switchWeap(w) {
   curWeap = w;
   player.mag = WEAPONS[w].mag === Infinity ? Infinity : WEAPONS[w].mag;
   document.getElementById('weapname').textContent = WEAPONS[w].name;
-  document.getElementById('mag').textContent = WEAPONS[w].mag === Infinity ? '∞' : player.mag;
+  document.getElementById('mag').textContent = WEAPONS[w].mag === Infinity ? '\u221e' : player.mag;
   document.getElementById('magmax').textContent = WEAPONS[w].mag === Infinity ? '' : '/' + WEAPONS[w].mag;
   if (gunGroup && scene) { const vis = gunGroup.visible; scene.remove(gunGroup); gunGroup = buildWeapon(WEAPONS[w].model); gunGroup.visible = vis; scene.add(gunGroup); }
   buildLoadoutHUD();
@@ -1882,7 +1882,7 @@ function reload() {
 
 function shoot() {
   if (playerTank && playerTank.kind === 'truck') {
-    // trucks have no gun — you fire your own weapon from the window
+    // trucks have no gun  you fire your own weapon from the window
     if (!leaningOut) { addFeed('Hold right mouse to lean out and shoot'); return; }
   } else if (playerTank) { fireTankShell(playerTank, null); return; }
   if (!gunGroup) return;
@@ -1908,7 +1908,7 @@ function shoot() {
   let hit = null, hitDist = Infinity, hitPt = null;
   bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const bx = new THREE.Box3().setFromObject(b.mesh); const pt = ray.ray.intersectBox(bx, new THREE.Vector3()); if (pt) { const d = origin.distanceTo(pt); if (d < hitDist && d <= RANGE) { hitDist = d; hit = b; hitPt = pt.clone(); } } });
   /* Rifles bite armour too, just barely. A hull is hundreds of health against a
-     shell worth 120, so small-arms fire chips rather than kills — but shooting a
+     shell worth 120, so small-arms fire chips rather than kills  but shooting a
      tank should do something rather than pass straight through it. */
   let vHit = null, vDist = Infinity, vPt = null;
   tanks.forEach(t => {
@@ -1946,7 +1946,7 @@ function killBot(b) {
   if (b.team === PLAYER_TEAM) return;   // friendly fire is off
   b.alive = false; b.mesh.visible = false; if (b.tag) b.tag.visible = false; player.kills++;
   document.getElementById('mescore').textContent = player.kills;
-  earn(MODES[mode].perKill, 'kill'); addFeed('You ➜ ' + b.name); updateBoard();
+  earn(MODES[mode].perKill, 'kill'); addFeed('You \u279c ' + b.name); updateBoard();
   setTimeout(() => respawnBot(b), 2500 + Math.random()*3000);
 }
 function respawnBot(b) {
@@ -1956,7 +1956,7 @@ function respawnBot(b) {
   const B = BASES[b.team];
   b.mesh.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
 }
-function addFeed(txt) { const f = document.getElementById('feed'); const d = document.createElement('div'); d.textContent = (txt[0] === '+' || txt[0] === '🛒' || txt[0] === '💣') ? txt : '💀 ' + txt; f.appendChild(d); setTimeout(() => d.remove(), 4000); }
+function addFeed(txt) { const f = document.getElementById('feed'); const d = document.createElement('div'); d.textContent = (txt[0] === '+' || txt[0] === '\ud83d\uded2' || txt[0] === '\ud83d\udca3') ? txt : '\ud83d\udc80 ' + txt; f.appendChild(d); setTimeout(() => d.remove(), 4000); }
 function teamScore(team) {
   let s = 0;
   if (team === PLAYER_TEAM) s += player.kills;
@@ -1971,9 +1971,9 @@ function updateBoard() {
 
   function block(list, team) {
     const info = TEAM_INFO[team];
-    return '<div class="tmhead" style="color:' + info.css + '">' + info.short + ' · ' + info.name + ' <span style="float:right">' + teamScore(team) + '</span></div>' +
+    return '<div class="tmhead" style="color:' + info.css + '">' + info.short + ' \u00b7 ' + info.name + ' <span style="float:right">' + teamScore(team) + '</span></div>' +
       list.map(p => '<div class="r ' + (p.me ? 'me' : '') + '" style="' + (p.dead ? 'opacity:.42' : '') + '">' +
-        '<span>' + (p.dead ? '💀 ' : '') + p.name + '</span><span>' + p.kills + '</span></div>').join('');
+        '<span>' + (p.dead ? '\ud83d\udc80 ' : '') + p.name + '</span><span>' + p.kills + '</span></div>').join('');
   }
   document.getElementById('rows').innerHTML = block(ct, TEAM_CT) + '<div style="height:8px"></div>' + block(t, TEAM_T);
 
@@ -1989,7 +1989,7 @@ function updateBoard() {
 // ---------- explosives ----------
 function throwNade(kind) {
   playOneShot('grenade', 900);
-  if (inv[kind] <= 0) { addFeed('No ' + kind + ' — buy in shop (E)'); return; }
+  if (inv[kind] <= 0) { addFeed('No ' + kind + ' \u2014 buy in shop (E)'); return; }
   inv[kind]--;
   const dir = camDir(), start = new THREE.Vector3(player.x, player.y, player.z);
   const m = new THREE.Mesh(new THREE.SphereGeometry(0.16,8,8), new THREE.MeshStandardMaterial({ color: kind === 'frag' ? 0x3a5a2a : 0xcc3355 }));
@@ -1998,13 +1998,13 @@ function throwNade(kind) {
   planted.push({ mesh: m, vel, kind, stuck: false, t: 0 });
 }
 function plantC4() {
-  if (!c4Ready) { addFeed('💣 C4 arming… ' + Math.ceil(c4Timer) + 's'); return; }
-  c4Ready = false; c4Timer = 20; document.getElementById('c4stat').textContent = 'arming 20s…';
+  if (!c4Ready) { addFeed('\ud83d\udca3 C4 arming\u2026 ' + Math.ceil(c4Timer) + 's'); return; }
+  c4Ready = false; c4Timer = 20; document.getElementById('c4stat').textContent = 'arming 20s\u2026';
   const m = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.2,0.35), new THREE.MeshStandardMaterial({ color: 0x882222 }));
   const led = new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6), new THREE.MeshBasicMaterial({ color: 0xff2222 })); led.position.set(0.15,0.14,0); m.add(led);
   m.position.set(player.x, 0.12, player.z); scene.add(m);
   planted.push({ mesh: m, kind: 'c4', stuck: true, t: 0 });
-  addFeed('💣 C4 planted — X to detonate');
+  addFeed('\ud83d\udca3 C4 planted \u2014 X to detonate');
 }
 function detonate() {
   const blow = planted.filter(p => p.kind === 'c4' || (p.kind === 'sticky' && p.stuck));
@@ -2037,7 +2037,7 @@ function updateNades(dt) {
            A tank is roughly 3.4 across and 6.4 long with its origin on the ground,
            so a 3.6 sphere centred there missed both ends of the vehicle and threw
            in the shell's own height as if it were horizontal distance. Any vehicle
-           counts, trucks included — armour kills armour and transport alike. */
+           counts, trucks included  armour kills armour and transport alike. */
         for (const t of tanks) {
           if (t.dead || t === p.owner || t.team === p.owner.team) continue;
           const dx = Math.abs(p.mesh.position.x - t.mesh.position.x);
@@ -2086,16 +2086,16 @@ function updateNades(dt) {
 
 // ---------- shop ----------
 const SHOP_ITEMS = [
-  { id: 'frag', name: '💣 Frags ×3', desc: 'Equip with G, throw with LMB', cost: 40 },
-  { id: 'sticky', name: '🧨 Stickies ×2', desc: 'Equip with B, throw with LMB, X detonate', cost: 50 },
-  { id: 'heavy', name: '⚡ Armour-piercing rounds', desc: 'Much higher damage (permanent)', cost: 80, once: true }
+  { id: 'frag', name: '\ud83d\udca3 Frags \u00d73', desc: 'Equip with G, throw with LMB', cost: 40 },
+  { id: 'sticky', name: '\ud83e\udde8 Stickies \u00d72', desc: 'Equip with B, throw with LMB, X detonate', cost: 50 },
+  { id: 'heavy', name: '\u26a1 Armour-piercing rounds', desc: 'Much higher damage (permanent)', cost: 80, once: true }
 ];
 if (heavyRounds) WEAPONS.sniper.dmg = 60;
 function renderShop() {
   document.getElementById('shopbal').textContent = pts();
   document.getElementById('shopitems').innerHTML = SHOP_ITEMS.map(it => {
     const owned = (it.id === 'heavy' && heavyRounds);
-    return '<div class="item"><div><b>' + it.name + '</b><small>' + it.desc + '</small></div><button ' + (owned || pts() < it.cost ? 'disabled' : '') + ' onclick="buyItem(\'' + it.id + '\')">' + (owned ? '✅ OWNED' : it.cost + ' pts') + '</button></div>';
+    return '<div class="item"><div><b>' + it.name + '</b><small>' + it.desc + '</small></div><button ' + (owned || pts() < it.cost ? 'disabled' : '') + ' onclick="buyItem(\'' + it.id + '\')">' + (owned ? '\u2705 OWNED' : it.cost + ' pts') + '</button></div>';
   }).join('');
 }
 window.buyItem = function(id) {
@@ -2104,10 +2104,10 @@ window.buyItem = function(id) {
   if (id === 'heavy') { heavyRounds = true; WEAPONS.sniper.dmg = 60; localStorage.setItem('nc_heavy','1'); }
   if (id === 'frag') inv.frag += 3;
   if (id === 'sticky') inv.sticky += 2;
-  addFeed('🛒 Bought ' + it.name); renderShop(); buildLoadoutHUD();
+  addFeed('\ud83d\uded2 Bought ' + it.name); renderShop(); buildLoadoutHUD();
 };
 function openShop() {
-  if (shopVisits >= SHOP_MAX_VISITS) { addFeed('🛒 Shop limit reached (' + SHOP_MAX_VISITS + '/round)'); return; }
+  if (shopVisits >= SHOP_MAX_VISITS) { addFeed('\ud83d\uded2 Shop limit reached (' + SHOP_MAX_VISITS + '/round)'); return; }
   shopVisits++;
   shopOpen = true;
   document.getElementById('shopui').style.display = 'flex';
@@ -2158,7 +2158,7 @@ function updateBots(dt) {
         if (pd < ARENA) for (let s = 0; s < M.burst; s++) setTimeout(() => { if (!b.alive || !running || inShop) return; botFire(b, new THREE.Vector3(player.x, 1.5, player.z), M.botHit, () => damagePlayer(M.dmg + Math.random()*M.dmg*0.5, b)); }, s*95);
       } else {
         const others = bots.filter(o => o !== b && o.alive && o.team !== b.team);
-        if (others.length) { const o = others[Math.floor(Math.random()*others.length)]; const od = Math.hypot(o.mesh.position.x - b.mesh.position.x, o.mesh.position.z - b.mesh.position.z); if (od > 0.5) b.mesh.lookAt(o.mesh.position.x, 1.2, o.mesh.position.z); botFire(b, o.mesh.position.clone().setY(1.2), 0.30, () => { o.hp -= 45; if (o.hp <= 0) { o.alive = false; o.mesh.visible = false; b.kills++; addFeed(b.name + ' ➜ ' + o.name); updateBoard(); setTimeout(() => respawnBot(o), 3500); } }); }
+        if (others.length) { const o = others[Math.floor(Math.random()*others.length)]; const od = Math.hypot(o.mesh.position.x - b.mesh.position.x, o.mesh.position.z - b.mesh.position.z); if (od > 0.5) b.mesh.lookAt(o.mesh.position.x, 1.2, o.mesh.position.z); botFire(b, o.mesh.position.clone().setY(1.2), 0.30, () => { o.hp -= 45; if (o.hp <= 0) { o.alive = false; o.mesh.visible = false; b.kills++; addFeed(b.name + ' \u279c ' + o.name); updateBoard(); setTimeout(() => respawnBot(o), 3500); } }); }
       }
       b.cooldown = M.cool[0] + Math.random()*(M.cool[1]-M.cool[0]);
     }
@@ -2183,7 +2183,7 @@ function damagePlayer(amt, from) {
   if (inShop) return;
   player.hp -= amt; document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
   const df = document.getElementById('dmgflash'); df.style.opacity = '1'; setTimeout(() => df.style.opacity = '0', 120);
-  if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' ➜ You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
+  if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' \u279c You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
 }
 
 // ---------- player + camera ----------
@@ -2213,7 +2213,7 @@ function updatePlayer(dt) {
   if (!blockedAt(nx, player.z)) player.x = nx;
   if (!blockedAt(player.x, nz)) player.z = nz;
   /* THE invisible wall. This was hard-coded to 78 for the old 80-unit arena and
-     never moved when the map grew to 150 — so you were snapped inside a box far
+     never moved when the map grew to 150  so you were snapped inside a box far
      smaller than the world, with your own base at 125 and your tanks at 108
      stranded outside it. Derive it from ARENA and it can never drift again. */
   const LIM = ARENA - 2;
@@ -2241,12 +2241,12 @@ function updatePlayer(dt) {
   const sp = document.getElementById('shopprompt');
   sp.style.display = (nowIn && !shopOpen) ? 'block' : 'none';
   if (nowIn && !shopOpen) sp.innerHTML = shopVisits >= SHOP_MAX_VISITS
-    ? '🚫 Shop limit reached for this round'
-    : 'Press E to open the shop 🛒 <span style="opacity:0.7">(' + (SHOP_MAX_VISITS - shopVisits) + ' left)</span>';
+    ? '\ud83d\udeab Shop limit reached for this round'
+    : 'Press E to open the shop \ud83d\uded2 <span style="opacity:0.7">(' + (SHOP_MAX_VISITS - shopVisits) + ' left)</span>';
   if (nowIn && !inShop) { inShop = true; safeLeft = 60; document.getElementById('safebadge').style.display = 'block'; }
   if (!nowIn && inShop) { inShop = false; document.getElementById('safebadge').style.display = 'none'; if (shopOpen) closeShop(); }
   if (inShop) { safeLeft -= dt; document.getElementById('safetime').textContent = Math.max(0, Math.ceil(safeLeft)); if (safeLeft <= 0) { inShop = false; document.getElementById('safebadge').style.display = 'none'; } }
-  if (!c4Ready) { c4Timer -= dt; if (c4Timer <= 0) { c4Ready = true; document.getElementById('c4stat').textContent = 'READY — C to plant'; } else document.getElementById('c4stat').textContent = 'arming ' + Math.ceil(c4Timer) + 's…'; }
+  if (!c4Ready) { c4Timer -= dt; if (c4Timer <= 0) { c4Ready = true; document.getElementById('c4stat').textContent = 'READY \u2014 C to plant'; } else document.getElementById('c4stat').textContent = 'arming ' + Math.ceil(c4Timer) + 's\u2026'; }
 }
 // play a one-shot clip (reload, death, grenade, emote) over the movement states
 let oneShotUntil = 0;
@@ -2269,7 +2269,7 @@ let emoteAudio = null;
 function playEmote() {
   if (!running) return;
   playOneShot('emote', 4000);
-  addFeed('🕺 Emote!');
+  addFeed('\ud83d\udd7a Emote!');
   if (CUSTOM_MODELS.emoteSound) {
     try {
       if (!emoteAudio) { emoteAudio = new Audio(CUSTOM_MODELS.emoteSound); emoteAudio.volume = 0.8; }
@@ -2350,13 +2350,13 @@ function updateCamera(dt) {
     }
     gunGroup.visible = false;   // character model carries its own weapon
     // Orbit the camera on a fixed-length boom. Offsetting by only d.x/d.z used to
-    // collapse the boom as you looked up or down — camDir's horizontal parts are
-    // scaled by cos(pitch), so at the ±1.35 pitch limit 7.5 units became 1.6 and
+    // collapse the boom as you looked up or down  camDir's horizontal parts are
+    // scaled by cos(pitch), so at the 1.35 pitch limit 7.5 units became 1.6 and
     // the camera ended up inside the character's head. Using the full vector keeps
     // the distance constant at every pitch.
     const d = camDir(), BOOM = 5.5, MIN_H = 2.6;
     let hx = -d.x * BOOM, hz = -d.z * BOOM;                  // horizontal part of the boom
-    if (Math.hypot(hx, hz) < MIN_H) {                        // steep look — keep it off the model
+    if (Math.hypot(hx, hz) < MIN_H) {                        // steep look  keep it off the model
       hx = Math.sin(player.yaw) * MIN_H;
       hz = Math.cos(player.yaw) * MIN_H;
     }
@@ -2368,7 +2368,7 @@ function updateCamera(dt) {
     // centre, instead of being hidden behind a drawn-on black scope ring.
     /* First person out of the character's own head. The body stays drawn and the
        camera sits at the head bone, so the arms in view are the rigged model's
-       real arms — holding the real rifle parented to its right hand, moving with
+       real arms  holding the real rifle parented to its right hand, moving with
        whatever clip is playing. The head itself ends up behind the near plane, so
        it does not block the view. Falls back to the procedural viewmodel when
        there is no rigged character or the option is off. */
@@ -2406,7 +2406,7 @@ function updateCamera(dt) {
     // Position the gun relative to the camera (method from the original working build)
     // hip-fire sits low and to the right; aiming brings the sights to eye centre
     const sway = Math.sin(t*1.6) * (scoped ? 0.0012 : 0.004);
-    // Aiming pulls the weapon in front of the eye, but not into your face — at
+    // Aiming pulls the weapon in front of the eye, but not into your face  at
     // z -0.30 it filled the screen and sat high. Further out and lower sits the
     // sights on the crosshair instead of over it.
     const off = scoped
@@ -2444,7 +2444,7 @@ function endMatch() {
   let bonus = 0; const lines = [];
   const M = MODES[mode];
   const killPts = player.kills * M.perKill;
-  if (killPts) lines.push(['Kills (' + player.kills + ' × ' + M.perKill + ')', killPts]);
+  if (killPts) lines.push(['Kills (' + player.kills + ' \u00d7 ' + M.perKill + ')', killPts]);
   if (won)       { bonus += M.mvp;                 lines.push(['Team victory', M.mvp]); }
   else if (draw) { bonus += Math.round(M.mvp / 2); lines.push(['Draw', Math.round(M.mvp / 2)]); }
   if (rank === 1) {
@@ -2474,7 +2474,7 @@ function endMatch() {
   ov.style.display = 'flex';
   ov.innerHTML =
     '<div class="endwrap">' +
-      '<div class="mtag">Match complete · ' + M.label + '</div>' +
+      '<div class="mtag">Match complete \u00b7 ' + M.label + '</div>' +
       '<div class="esresult" style="color:' + resultCol + ';text-shadow:0 0 40px ' + resultCol + '55">' + resultTxt + '</div>' +
 
       '<div class="esscore">' +
@@ -2502,7 +2502,7 @@ function endMatch() {
         '</div>' +
       '</div>' +
 
-      '<button class="again" onclick="location.reload()">▶️ Play again</button>' +
+      '<button class="again" onclick="location.reload()">\u25b6\ufe0f Play again</button>' +
     '</div>';
 }
 
@@ -2620,7 +2620,7 @@ function buildTank(team, kind) {
   stripe.position.set(0, 1.32, 2.9); g.add(stripe);
 
   /* Your own tanks get a beacon. They spawn about nine metres from where you
-     start, but a low grey hull on a big map is genuinely hard to pick out — the
+     start, but a low grey hull on a big map is genuinely hard to pick out  the
      problem was never reaching one, it was seeing where it was. */
   if (team === PLAYER_TEAM) {
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 26, 8),
@@ -2644,7 +2644,7 @@ function spawnTanks() {
   tanks = []; playerTank = null;
   /* Park them in the open just past the front of the base. The base has solid
      side walls at x = +/-13 running 20 deep, so a tank sitting level with the
-     platform is behind them — you walk into a wall you cannot see reaching for it.
+     platform is behind them  you walk into a wall you cannot see reaching for it.
      Out front and off to either side, the approach is clear. */
   for (let i = 0; i < TANK_COUNT; i++) {
     const team = i % 2 === 0 ? TEAM_CT : TEAM_T;
@@ -2687,7 +2687,7 @@ window.toggleTank = function () {
     player.z = playerTank.mesh.position.z + Math.sin(playerTank.yaw) * 4.5;
     playerTank = null; leaningOut = false;
     player.y = 1.7;
-    addFeed('🚪 Out of the vehicle');
+    addFeed('\ud83d\udeaa Out of the vehicle');
     return;
   }
   const t = nearestTank(player.x, player.z, 14);
@@ -2697,13 +2697,13 @@ window.toggleTank = function () {
     tanks.forEach(x => { if (x.dead || x.team !== PLAYER_TEAM) return;
       const d = Math.hypot(x.mesh.position.x - player.x, x.mesh.position.z - player.z);
       if (d < bd) { bd = d; best = x; } });
-    addFeed(best ? '🛡️ Nearest tank is ' + Math.round(bd) + 'm away — walk to it and press F'
+    addFeed(best ? '\ud83d\udee1\ufe0f Nearest tank is ' + Math.round(bd) + 'm away \u2014 walk to it and press F'
                  : 'No friendly tank available');
     return;
   }
   if (t.team !== PLAYER_TEAM) { addFeed('That is an enemy tank'); return; }
   t.driver = 'player'; playerTank = t;
-  addFeed('🛡️ In the tank — W/S drive, A/D turn, LMB fire');
+  addFeed('\ud83d\udee1\ufe0f In the tank \u2014 W/S drive, A/D turn, LMB fire');
 };
 
 function fireTankShell(t, targetPos) {
@@ -2738,7 +2738,7 @@ function damageTank(t, amt, byPlayer) {
       t.crew = null;
     }
     t.driver = null;
-    addFeed('💥 Tank destroyed');
+    addFeed('\ud83d\udca5 Tank destroyed');
     if (byPlayer) earn(40, 'tank kill');
     setTimeout(() => {                     // rebuild it back at base
       if (timeLeft <= 0) return;
@@ -2755,14 +2755,14 @@ function updateTankPrompt() {
   if (playerTank) {
     el.style.display = 'block';
     el.textContent = playerTank.kind === 'truck'
-      ? '🚚 F to get out · W/S drive · A/D turn · hold RMB to lean out and shoot'
-      : '🛡️ F to get out · W/S drive · A/D turn · LMB fire';
+      ? '\ud83d\ude9a F to get out \u00b7 W/S drive \u00b7 A/D turn \u00b7 hold RMB to lean out and shoot'
+      : '\ud83d\udee1\ufe0f F to get out \u00b7 W/S drive \u00b7 A/D turn \u00b7 LMB fire';
     return;
   }
   const t = nearestTank(player.x, player.z, 14);
   if (t && t.team === PLAYER_TEAM) {
     el.style.display = 'block';
-    el.textContent = '🛡️ Press F to enter the ' + (t.kind === 'truck' ? 'truck' : 'tank');
+    el.textContent = '\ud83d\udee1\ufe0f Press F to enter the ' + (t.kind === 'truck' ? 'truck' : 'tank');
     return;
   }
 
@@ -2779,9 +2779,9 @@ function updateTankPrompt() {
   let rel = ang - (player.yaw + Math.PI);
   while (rel > Math.PI) rel -= Math.PI * 2;
   while (rel < -Math.PI) rel += Math.PI * 2;
-  const arrow = Math.abs(rel) < 0.4 ? '↑' : rel > 0 ? '↰ left' : '↱ right';
+  const arrow = Math.abs(rel) < 0.4 ? '\u2191' : rel > 0 ? '\u21b0 left' : '\u21b1 right';
   el.style.display = 'block';
-  el.textContent = '🛡️ Your ' + (best.kind === 'truck' ? 'truck' : 'tank') + ': ' + Math.round(bd) + 'm ' + arrow;
+  el.textContent = '\ud83d\udee1\ufe0f Your ' + (best.kind === 'truck' ? 'truck' : 'tank') + ': ' + Math.round(bd) + 'm ' + arrow;
 }
 
 function updateTanks(dt) {
@@ -2805,7 +2805,7 @@ function updateTanks(dt) {
       t.mesh.rotation.y = t.yaw;
       t.turret.rotation.y = player.yaw - t.yaw;            // aim where you look
       /* Ride along, and sit ABOVE the hull. updatePlayer is skipped while crewing,
-         so player.y stayed at its 1.7 walking height — which is inside the cab of a
+         so player.y stayed at its 1.7 walking height  which is inside the cab of a
          truck and behind the plating of a tank. That was the blank wall. */
       player.x = t.mesh.position.x; player.z = t.mesh.position.z;
       player.y = (t.kind === 'truck' ? 2.55 : 3.05);
@@ -2820,7 +2820,7 @@ function updateTanks(dt) {
 
     /* Your team's tanks are yours. They sit at base with the turret tracking
        targets but never drive themselves off, so one is always there to climb
-       into — a friendly tank that wanders away is a tank you can never crew.
+       into  a friendly tank that wanders away is a tank you can never crew.
        Enemy armour is fully AI and will come looking for you. */
     /* Of your two tanks, one is crewed by an ally and fights alongside you; the
        other is reserved and never takes a bot, so there is always a seat waiting.
@@ -2854,14 +2854,14 @@ function updateTanks(dt) {
     }
 
     /* An enemy vehicle only works with someone in it. A bot has to walk over and
-       crew it first, and that bot leaves the infantry fight while it drives — so
+       crew it first, and that bot leaves the infantry fight while it drives  so
        an unmanned tank just sits there, and killing the crew stops it dead. */
     if (t.team !== PLAYER_TEAM && (!t.crew || !t.crew.alive)) {
       t.crew = null;
       const free = bots.filter(b => b.alive && b.team === t.team && !b.inVehicle);
       const near = free.map(b => ({ b: b, d: b.mesh.position.distanceTo(t.mesh.position) }))
                        .sort((a, b) => a.d - b.d)[0];
-      if (!near) return;                       // nobody available — vehicle idles
+      if (!near) return;                       // nobody available  vehicle idles
       if (near.d > 6) {                        // walk to it
         const dx = t.mesh.position.x - near.b.mesh.position.x;
         const dz = t.mesh.position.z - near.b.mesh.position.z;
@@ -2880,7 +2880,7 @@ function updateTanks(dt) {
     if (t.crew) t.crew.mesh.position.set(t.mesh.position.x, 0, t.mesh.position.z);
 
     // enemy crews: drive at the nearest target and shell it
-    /* Vehicles are the priority target and the closest one wins — armour goes for
+    /* Vehicles are the priority target and the closest one wins  armour goes for
        armour, and an unarmed truck is the easiest kill on the field. Only if there
        is nothing on wheels does it turn on infantry. */
     const foes = bots.filter(b => b.alive && b.team !== t.team && !b.inVehicle);
@@ -2922,12 +2922,12 @@ function updateTanks(dt) {
    ones. Each preset drives the same knobs so switching is instant and total.
    ============================================================ */
 const WEATHER = {
-  sunny:  { label: '☀️ Sunny',     sky: 0x87ceeb, fog: 0xbcd8ea, fogD: 0.0016, sun: 0xfff4e0, sunI: 1.05, amb: 0.72, particles: 0 },
-  cloudy: { label: '☁️ Cloudy',    sky: 0x9aa4ad, fog: 0xa8b2ba, fogD: 0.0042, sun: 0xd8dee4, sunI: 0.55, amb: 0.62, particles: 0 },
-  rain:   { label: '🌧️ Rain',      sky: 0x5a656e, fog: 0x6b757d, fogD: 0.0090, sun: 0xaeb8c0, sunI: 0.34, amb: 0.48, particles: 2600, pcol: 0x9fc4dd, pfall: 62, plen: 1.5 },
-  snow:   { label: '❄️ Snow',      sky: 0xc3ccd4, fog: 0xd6dde3, fogD: 0.0110, sun: 0xeef3f8, sunI: 0.62, amb: 0.80, particles: 1800, pcol: 0xffffff, pfall: 7,  plen: 0.12 },
-  blood:  { label: '🌑 Blood moon', sky: 0x2a0a0e, fog: 0x3d1014, fogD: 0.0070, sun: 0xff4a44, sunI: 0.60, amb: 0.30, particles: 0 },
-  eclipse:{ label: '🌘 Eclipse',    sky: 0x14161f, fog: 0x1b1f2b, fogD: 0.0060, sun: 0x8fa6d8, sunI: 0.26, amb: 0.22, particles: 0 }
+  sunny:  { label: '\u2600\ufe0f Sunny',     sky: 0x87ceeb, fog: 0xbcd8ea, fogD: 0.0016, sun: 0xfff4e0, sunI: 1.05, amb: 0.72, particles: 0 },
+  cloudy: { label: '\u2601\ufe0f Cloudy',    sky: 0x9aa4ad, fog: 0xa8b2ba, fogD: 0.0042, sun: 0xd8dee4, sunI: 0.55, amb: 0.62, particles: 0 },
+  rain:   { label: '\ud83c\udf27\ufe0f Rain',      sky: 0x5a656e, fog: 0x6b757d, fogD: 0.0090, sun: 0xaeb8c0, sunI: 0.34, amb: 0.48, particles: 2600, pcol: 0x9fc4dd, pfall: 62, plen: 1.5 },
+  snow:   { label: '\u2744\ufe0f Snow',      sky: 0xc3ccd4, fog: 0xd6dde3, fogD: 0.0110, sun: 0xeef3f8, sunI: 0.62, amb: 0.80, particles: 1800, pcol: 0xffffff, pfall: 7,  plen: 0.12 },
+  blood:  { label: '\ud83c\udf11 Blood moon', sky: 0x2a0a0e, fog: 0x3d1014, fogD: 0.0070, sun: 0xff4a44, sunI: 0.60, amb: 0.30, particles: 0 },
+  eclipse:{ label: '\ud83c\udf18 Eclipse',    sky: 0x14161f, fog: 0x1b1f2b, fogD: 0.0060, sun: 0x8fa6d8, sunI: 0.26, amb: 0.22, particles: 0 }
 };
 const WEATHER_KEYS = Object.keys(WEATHER);
 let weatherNow = 'sunny', precip = null, precipVel = null;
@@ -2996,7 +2996,7 @@ function updateWeather(dt) {
    that spot; it falls from altitude after a short flight time, so a good call is
    one that leads a target rather than lands on it.
    ============================================================ */
-/* One strike, then a 1m30s lockout — a couple of uses per match rather than one
+/* One strike, then a 1m30s lockout  a couple of uses per match rather than one
    a session. Still stored against the wall clock in localStorage rather than a
    per-round counter, so ending a match or reloading does not refill it early. */
 const STRIKE_COOLDOWN_MS = 90 * 1000;   // 1m 30s
@@ -3016,7 +3016,7 @@ function strikeWaitText() {
 }
 /* Designations are cosmetic and live here so they are easy to change. These are
    real systems; on a 13-18 platform with a parent dashboard, tying a strike
-   weapon to a specific country's actual arsenal is worth a second thought —
+   weapon to a specific country's actual arsenal is worth a second thought 
    swapping this array for invented names is a one-line change. */
 const MISSILES = ['Fateh-110', 'Zolfaghar', 'Qiam-1', 'Dezful', 'Sejjil', 'Khorramshahr'];
 let tabletOpen = false, strikes = [], strikeHudT = 0;
@@ -3081,12 +3081,12 @@ function drawTablet() {
 
   const st = document.getElementById('tabletstat');
   if (st) st.textContent = strikeAvailable()
-    ? 'READY ×1 — tap the map to call a strike'
-    : 'SPENT — recharges in ' + strikeWaitText();
+    ? 'READY \u00d71 \u2014 tap the map to call a strike'
+    : 'SPENT \u2014 recharges in ' + strikeWaitText();
 }
 
 function callStrike(wx, wz) {
-  if (!strikeAvailable()) { addFeed('🚀 Strike on cooldown — ' + strikeWaitText()); return; }
+  if (!strikeAvailable()) { addFeed('\ud83d\ude80 Strike on cooldown \u2014 ' + strikeWaitText()); return; }
   localStorage.setItem('nc_strike_at', String(Date.now() + STRIKE_COOLDOWN_MS));
   buildLoadoutHUD();
   const name = MISSILES[Math.floor(Math.random() * MISSILES.length)];
@@ -3105,7 +3105,7 @@ function callStrike(wx, wz) {
   scene.add(ring);
 
   strikes.push({ x: wx, z: wz, t: STRIKE_FLIGHT, mesh: m, ring: ring });
-  addFeed('🚀 ' + name + ' inbound — ' + STRIKE_FLIGHT.toFixed(1) + 's');
+  addFeed('\ud83d\ude80 ' + name + ' inbound \u2014 ' + STRIKE_FLIGHT.toFixed(1) + 's');
 }
 
 function updateStrikes(dt) {
@@ -3180,14 +3180,14 @@ function animate() {
 
 // ---------- DEPLOY LOADING SEQUENCE ----------
 const LD_TIPS = [
-  'HOLD LMB — THE ASSAULT RIFLE IS FULLY AUTOMATIC',
+  'HOLD LMB \u2014 THE ASSAULT RIFLE IS FULLY AUTOMATIC',
   'PRESS V TO SWITCH FIRST / THIRD PERSON',
-  'CRATES AND SANDBAGS STOP BULLETS — USE THEM',
+  'CRATES AND SANDBAGS STOP BULLETS \u2014 USE THEM',
   'ARMORY ACCESS LIMITED TO 13 VISITS PER ROUND',
   'PRESS G TO EQUIP A GRENADE, LMB TO THROW',
   'EVERY KILL BANKS NOVACLIP POINTS',
   'TOP THE BOARD TO EARN THE MVP BONUS',
-  'PLANT C4 WITH C — DETONATE WITH X',
+  'PLANT C4 WITH C \u2014 DETONATE WITH X',
   'REBIND ANY KEY FROM THE CONTROLS MENU'
 ];
 const BOOT_STAGES = [
@@ -3245,7 +3245,7 @@ function renderBinds() {
     el.onclick = function () {
       box.querySelectorAll('.bindkey').forEach(x => x.classList.remove('listening'));
       el.classList.add('listening');
-      el.textContent = 'press…';
+      el.textContent = 'press\u2026';
       const grab = (ev) => {
         ev.preventDefault();
         BINDS[el.dataset.bind] = ev.code;
@@ -3263,7 +3263,7 @@ document.getElementById('bindReset').onclick = () => { BINDS = Object.assign({},
 
 
 // ============================================================
-//  NOVA FLAP — second game on the same page
+//  NOVA FLAP  second game on the same page
 // ============================================================
 (function () {
   const cv = document.getElementById('flapcv');
@@ -3452,7 +3452,7 @@ try {
   animate();
 } catch (err) {
   const b = document.getElementById('errbox');
-  if (b) { b.style.display = 'block'; b.textContent = '⚠ Game init error: ' + err.message; }
+  if (b) { b.style.display = 'block'; b.textContent = '\u26a0 Game init error: ' + err.message; }
   console.error(err);
 }
 </script>

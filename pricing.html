@@ -469,11 +469,11 @@ function renderCart() {
   const paid = CART.filter(it => stripeLinkFor(it));
   const note = document.getElementById('cartnote');
   if (!paid.length) {
-    note.innerHTML = '🔒 <b>Demo mode.</b> No Stripe links are configured yet, so checkout is a simulation. Add your Stripe Payment Links in the code to take real payments.';
+    note.innerHTML = '\ud83d\udd12 <b>Demo mode.</b> No Stripe links are configured yet, so checkout is a simulation. Add your Stripe Payment Links in the code to take real payments.';
   } else if (CART.length === 1) {
-    note.innerHTML = '🔒 Secure payment handled by <b>Stripe</b>. You will be redirected to complete it.';
+    note.innerHTML = '\ud83d\udd12 Secure payment handled by <b>Stripe</b>. You will be redirected to complete it.';
   } else {
-    note.innerHTML = '🔒 Payments are taken by <b>Stripe</b>, one item at a time. You will complete ' + CART.length + ' secure checkouts in sequence.';
+    note.innerHTML = '\ud83d\udd12 Payments are taken by <b>Stripe</b>, one item at a time. You will complete ' + CART.length + ' secure checkouts in sequence.';
   }
 }
 
@@ -720,15 +720,15 @@ async function setupWallet() {
 // ============================================================
 const CERTS = {
   'Basic Certificate': {
-    tier:'BA', icon:'📗', accent:'#00F0FF', title:'NovaClip Creator Certificate', level:'Foundation level credential',
+    tier:'BA', icon:'\ud83d\udcd7', accent:'#00F0FF', title:'NovaClip Creator Certificate', level:'Foundation level credential',
     skills:['Video editing','Safe publishing','Thumbnails & titles','Audience basics']
   },
   'Advanced Certificate': {
-    tier:'AD', icon:'🥈', accent:'#B6FF3C', title:'NovaClip Advanced Creator', level:'Advanced level credential',
+    tier:'AD', icon:'\ud83e\udd48', accent:'#B6FF3C', title:'NovaClip Advanced Creator', level:'Advanced level credential',
     skills:['Analytics & growth','Advanced effects','Sound design','Portfolio review']
   },
   'Master Certificate': {
-    tier:'MA', icon:'🏆', accent:'#ffd24a', title:'NovaClip Master Creator', level:'Master level credential',
+    tier:'MA', icon:'\ud83c\udfc6', accent:'#ffd24a', title:'NovaClip Master Creator', level:'Master level credential',
     skills:['Creative direction','Growth strategy','Community & safety','Featured showcase']
   }
 };
@@ -855,7 +855,7 @@ function renderCertProgress(tier) {
   if (!prog || typeof certProgress !== 'function') return;
   const p = certProgress(tier);
   if (!p) return;
-  const c = CERTS[tier] || { icon:'📜', accent:'#00F0FF' };
+  const c = CERTS[tier] || { icon:'\ud83d\udcdc', accent:'#00F0FF' };
   prog.style.setProperty('--ac', c.accent);
   prog.style.display = 'block';
   prog.innerHTML =
@@ -882,7 +882,7 @@ function renderMyTraining() {
   const owned = issueEarned();
   const order = ['Basic Certificate','Advanced Certificate','Master Certificate'];
   const rows = mine.slice().sort((a,b) => order.indexOf(a) - order.indexOf(b)).map(tier => {
-    const c = CERTS[tier] || { icon:'📜', accent:'#00F0FF' };
+    const c = CERTS[tier] || { icon:'\ud83d\udcdc', accent:'#00F0FF' };
     const rec = owned.find(x => x.tier === (CERTS[tier] || {}).tier);
     if (rec) {
       return '<div class="mtrow done"><span>' + c.icon + ' <b>' + tier + '</b></span>' +
@@ -897,7 +897,7 @@ function renderMyTraining() {
   }).join('');
 
   host.style.display = 'block';
-  host.innerHTML = '<div class="mtbox"><div class="mthead">🎓 My training</div>' +
+  host.innerHTML = '<div class="mtbox"><div class="mthead">\ud83c\udf93 My training</div>' +
     '<div class="mtsub">You are enrolled. Certificates issue automatically the moment you meet the requirements — there is nothing more to pay.</div>' +
     rows + '</div>';
 }
@@ -1006,11 +1006,11 @@ async function openScanner() {
     const n = lastErr && lastErr.name ? lastErr.name : '';
     let msg = 'Camera unavailable — type the details instead.';
     if (n === 'NotAllowedError' || n === 'SecurityError') {
-      msg = '🚫 Camera blocked. Allow camera access in your browser, then try again.';
+      msg = '\ud83d\udeab Camera blocked. Allow camera access in your browser, then try again.';
     } else if (n === 'NotFoundError' || n === 'DevicesNotFoundError') {
-      msg = '📷 No camera found on this device — type the details instead.';
+      msg = '\ud83d\udcf7 No camera found on this device — type the details instead.';
     } else if (n === 'NotReadableError' || n === 'TrackStartError') {
-      msg = '📷 Camera is in use by another app. Close it and try again.';
+      msg = '\ud83d\udcf7 Camera is in use by another app. Close it and try again.';
     }
     setScanStatus(msg);
     return;

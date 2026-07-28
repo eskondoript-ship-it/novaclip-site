@@ -570,8 +570,8 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
       if (res.suspended) { ncCheckSuspension(); return; }
       msg.style.color = '#FF2E97';
       msg.textContent = check.severity === 'abuse'
-        ? '🚫 Blocked — that looks like bullying. Strike ' + res.strikes + ' of 3.'
-        : '🚫 Blocked — please keep it clean. Strike ' + res.strikes + ' of 3.';
+        ? '\ud83d\udeab Blocked — that looks like bullying. Strike ' + res.strikes + ' of 3.'
+        : '\ud83d\udeab Blocked — please keep it clean. Strike ' + res.strikes + ' of 3.';
       return;
     }
     const list = load();
