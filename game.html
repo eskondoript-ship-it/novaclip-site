@@ -16,6 +16,9 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 #scope { position: fixed; inset: 0; z-index: 9; display: none; background: radial-gradient(circle at center, transparent 0, transparent 26%, #000 28%, #000 100%); }
 #scope::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #000; }
 #scope::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #000; }
+#tankprompt { position: fixed; left: 50%; bottom: 118px; transform: translateX(-50%); z-index: 12; display: none;
+  background: rgba(6,10,16,0.82); border: 1px solid rgba(0,240,255,0.45); color: #EAF2FF;
+  padding: 9px 18px; border-radius: 22px; font-weight: 700; font-size: 0.88rem; backdrop-filter: blur(8px); }
 #dmgflash { position: fixed; inset: 0; z-index: 8; pointer-events: none; background: radial-gradient(circle, transparent 45%, rgba(255,20,40,0.5) 100%); opacity: 0; transition: opacity .1s; }
 
 /* COD-style top scorebar */
@@ -254,6 +257,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 </div>
 <div id='hud'><div id='crosshair'></div></div>
 <div id='scope'></div>
+<div id='tankprompt'></div>
 <div id='dmgflash'></div>
 <div id='errbox'></div>
 
@@ -280,7 +284,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v63 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank</div>
+<div id='viewTag'>v64 · 1 Rifle · 2 Knife · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -426,6 +430,12 @@ const CUSTOM_MODELS = {
   // How the rifle sits in the character's right hand (third person). Nudge these
   // if the grip looks off — scale is relative to the fitted 0.6-unit viewmodel.
   handWeapon: { scale: 1.0, x: 0, y: 0, z: 0, rotX: 0, rotY: 0, rotZ: 0 },
+
+  /* true  = first person looks out of the character's own head, so the arms you
+             see are the rigged model's real arms holding the real rifle, and they
+             move with whatever animation is playing.
+     false = the procedural viewmodel arms built by buildArms() instead. */
+  firstPersonBody: true,
 
   // First-person arms gripping the weapon. scale only — position is derived from
   // the fitted 0.6-unit viewmodel so it follows whatever gun is loaded.
@@ -1220,7 +1230,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v63 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v64 · fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' · ' + vt.textContent.replace(/^v5\d[^·]*· (fit:[^·]*· )?/, '');
       }
 
@@ -1299,6 +1309,15 @@ function makeFighter(color, useGLB, isPlayer) {
          animation for free, with no IK needed. The bone's world scale is the
          armature's, which is nowhere near 1, so the weapon is counter-scaled by it
          to land at a sane size in world units. */
+      // the head bone is where the first-person camera sits
+      if (isPlayer) {
+        let head = null;
+        model.traverse(o => { if (!head && o.isBone && /Head$/i.test(o.name || '')) head = o; });
+        if (!head) model.traverse(o => { if (!head && o.isBone && /Neck$/i.test(o.name || '')) head = o; });
+        g.userData.headBone = head;
+        if (!head) console.warn('no head bone found — first person falls back to the viewmodel arms');
+      }
+
       if (loadedWeapGLB) {
         let hand = null;
         model.traverse(o => { if (!hand && o.isBone && /RightHand$/i.test(o.name || '')) hand = o; });
@@ -2229,15 +2248,34 @@ function updateCamera(dt) {
   } else {
     // Aiming down the real sights: the weapon stays on screen and moves to the
     // centre, instead of being hidden behind a drawn-on black scope ring.
-    gunGroup.visible = !playerTank;   // no rifle in view while crewing a tank
+    /* First person out of the character's own head. The body stays drawn and the
+       camera sits at the head bone, so the arms in view are the rigged model's
+       real arms — holding the real rifle parented to its right hand, moving with
+       whatever clip is playing. The head itself ends up behind the near plane, so
+       it does not block the view. Falls back to the procedural viewmodel when
+       there is no rigged character or the option is off. */
+    const bodyView = CUSTOM_MODELS.firstPersonBody && playerMesh &&
+                     playerMesh.userData.headBone && !playerTank;
+
+    gunGroup.visible = !playerTank && !bodyView;   // the model carries its own rifle
     if (playerMesh) {
-      playerMesh.visible = false;
-      // force every sub-mesh hidden too — third person force-shows them, so undo that
-      playerMesh.traverse(o => { if (o.isMesh) o.visible = false; });
-      playerMesh.position.set(player.x, player.y - 1.7, player.z);
-      playerMesh.rotation.y = player.yaw;
+      const show = !!bodyView;
+      playerMesh.visible = show;
+      playerMesh.traverse(o => { if (o.isMesh) o.visible = show; });
+      playerMesh.position.set(player.x, player.y - (crouchNow() ? 1.15 : 1.7), player.z);
+      playerMesh.rotation.y = player.yaw + Math.PI;
     }
-    camera.position.set(player.x, player.y, player.z);
+
+    if (bodyView) {
+      const hp2 = new THREE.Vector3();
+      playerMesh.updateMatrixWorld(true);
+      playerMesh.userData.headBone.getWorldPosition(hp2);
+      const d = camDir();
+      // just forward of the head so we look out of it rather than through it
+      camera.position.set(hp2.x + d.x * 0.16, hp2.y + 0.06, hp2.z + d.z * 0.16);
+    } else {
+      camera.position.set(player.x, player.y, player.z);
+    }
     camera.rotation.set(player.pitch + kick, player.yaw, 0);
     const t = performance.now()/1000;
     // reload animation: dip the gun down and rock it
@@ -2428,11 +2466,17 @@ function buildTank(team) {
 function spawnTanks() {
   tanks.forEach(t => scene.remove(t.mesh));
   tanks = []; playerTank = null;
+  /* Park them in the open just past the front of the base. The base has solid
+     side walls at x = +/-13 running 20 deep, so a tank sitting level with the
+     platform is behind them — you walk into a wall you cannot see reaching for it.
+     Out front and off to either side, the approach is clear. */
   for (let i = 0; i < TANK_COUNT; i++) {
     const team = i % 2 === 0 ? TEAM_CT : TEAM_T;
     const t = buildTank(team);
     const B = BASES[team];
-    t.mesh.position.set(B.x + (i - TANK_COUNT/2) * 16 + 8, 0, B.z + (team === TEAM_CT ? 18 : -18));
+    const side = (i < 2 ? -1 : 1);                 // one either side of the exit
+    const fwd  = (team === TEAM_CT ? 1 : -1);      // "forward" is towards midfield
+    t.mesh.position.set(B.x + side * 9, 0, B.z + fwd * 17);
     t.yaw = team === TEAM_CT ? 0 : Math.PI;
     t.mesh.rotation.y = t.yaw;
     tanks.push(t);
@@ -2458,7 +2502,7 @@ window.toggleTank = function () {
     addFeed('🚪 Out of the tank');
     return;
   }
-  const t = nearestTank(player.x, player.z, 12);
+  const t = nearestTank(player.x, player.z, 14);
   if (!t) {
     // point at the closest one rather than just refusing
     let best = null, bd = 1e9;
@@ -2510,7 +2554,17 @@ function damageTank(t, amt, byPlayer) {
   }
 }
 
+function updateTankPrompt() {
+  const el = document.getElementById('tankprompt');
+  if (!el) return;
+  if (playerTank) { el.style.display = 'block'; el.textContent = '🛡️ F to get out · W/S drive · A/D turn · LMB fire'; return; }
+  const t = nearestTank(player.x, player.z, 14);
+  if (t && t.team === PLAYER_TEAM) { el.style.display = 'block'; el.textContent = '🛡️ Press F to enter the tank'; }
+  else el.style.display = 'none';
+}
+
 function updateTanks(dt) {
+  updateTankPrompt();
   tanks.forEach(t => {
     if (t.cool > 0) t.cool -= dt;
     if (t.dead) return;
