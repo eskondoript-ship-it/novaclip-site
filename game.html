@@ -305,7 +305,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v73 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v74 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -1335,7 +1335,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v73 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v74 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2498,6 +2498,28 @@ function updateCamera(dt) {
      truck window still drops to a close view so you can aim. */
   if (playerTank && !(playerTank.kind === 'truck' && leaningOut)) {
     const t = playerTank;
+    /* Sit in the cab by default. This was only unusable before because vehicles
+       could drive inside walls; now that they collide, the driver's seat is a real
+       view again. V swaps to the chase camera, which is still the better angle for
+       manoeuvring. The seat is offset forward and to the left, where a driver
+       actually sits, rather than the centre of the hull. */
+    if (!thirdPerson) {
+      const seatF = (t.kind === 'truck' ? 1.9 : 0.7);    // forward from hull centre
+      const seatL = (t.kind === 'truck' ? 0.7 : 0.0);    // towards the left seat
+      const seatY = (t.kind === 'truck' ? 2.25 : 2.55);
+      const fx = -Math.sin(t.yaw), fz = -Math.cos(t.yaw);
+      const rx =  Math.cos(t.yaw), rz = -Math.sin(t.yaw);
+      camera.position.set(
+        t.mesh.position.x + fx * seatF - rx * seatL,
+        t.mesh.position.y + seatY,
+        t.mesh.position.z + fz * seatF - rz * seatL
+      );
+      camera.rotation.set(player.pitch + kick, player.yaw, 0);
+      gunGroup.visible = false;
+      if (playerMesh) { playerMesh.visible = false; playerMesh.traverse(o => { if (o.isMesh) o.visible = false; }); }
+      if (t.mesh.userData.marker) t.mesh.userData.marker.visible = false;
+      return;
+    }
     const back = (t.kind === 'truck' ? 13 : 15);
     const up   = (t.kind === 'truck' ? 5.6 : 6.4);
     const d = camDir();
@@ -2690,6 +2712,22 @@ const TANK_COUNT = 4;
 const TANK_HP = 500, TANK_SHELL_DMG = 120, TANK_RELOAD = 2.6;
 let tanks = [], playerTank = null, leaningOut = false;
 
+/* A vehicle drives along its -Z axis, because that is the direction the hull is
+   moved in. An uploaded model is just as likely to be built along X, in which case
+   it looks like it is crabbing sideways down the road. A vehicle is always longer
+   than it is wide, so the long horizontal axis IS its length: if that axis is X,
+   turn it a quarter turn so its length lines up with travel. Beats asking anyone
+   to guess a rotation by hand, and tankRotY / truckRotY still stack on top. */
+function orientVehicle(inner, extraDeg) {
+  inner.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3();
+  bb.getSize(sz);
+  let deg = (extraDeg || 0);
+  if (sz.x > sz.z * 1.15) deg += 90;          // built along X, needs turning
+  inner.rotation.y = deg * Math.PI / 180;
+  return sz;
+}
+
 function buildTankModel() {
   if (loadedTankGLB) {
     const g = new THREE.Group();
@@ -2704,7 +2742,7 @@ function buildTankModel() {
     if (!isFinite(k) || k <= 0) k = 1;
     k *= (CUSTOM_MODELS.tankScale || 1);
     inner.scale.setScalar(k);
-    inner.rotation.y = (CUSTOM_MODELS.tankRotY || 0) * Math.PI / 180;
+    orientVehicle(inner, CUSTOM_MODELS.tankRotY || 0);
     inner.updateMatrixWorld(true);
     const bb2 = new THREE.Box3().setFromObject(inner);
     if (isFinite(bb2.min.y)) inner.position.y -= bb2.min.y;
@@ -2740,7 +2778,7 @@ function buildTruckModel(team) {
     if (!isFinite(k) || k <= 0) k = 1;
     k *= (CUSTOM_MODELS.truckScale || 1);
     inner.scale.setScalar(k);
-    inner.rotation.y = (CUSTOM_MODELS.truckRotY || 0) * Math.PI / 180;
+    orientVehicle(inner, CUSTOM_MODELS.truckRotY || 0);
     inner.updateMatrixWorld(true);
     const bb2 = new THREE.Box3().setFromObject(inner);
     if (isFinite(bb2.min.y)) inner.position.y -= bb2.min.y;
@@ -2943,7 +2981,7 @@ function updateTankPrompt() {
     el.style.display = 'block';
     el.textContent = playerTank.kind === 'truck'
       ? '\ud83d\ude9a F to get out \u00b7 W/S drive \u00b7 A/D turn \u00b7 hold RMB to lean out and shoot'
-      : '\ud83d\udee1\ufe0f F to get out \u00b7 W/S drive \u00b7 A/D turn \u00b7 LMB fire';
+      : '\ud83d\udee1\ufe0f F out \u00b7 W/S drive \u00b7 A/D turn \u00b7 LMB fire \u00b7 V view';
     return;
   }
   const t = nearestTank(player.x, player.z, 14);
@@ -2971,6 +3009,38 @@ function updateTankPrompt() {
   el.textContent = '\ud83d\udee1\ufe0f Your ' + (best.kind === 'truck' ? 'truck' : 'tank') + ': ' + Math.round(bd) + 'm ' + arrow;
 }
 
+/* Getting hit by several tonnes of moving vehicle should not take three passes.
+   There was no ram code at all, so anything that died under a hull died to
+   something else. A hull moving with any real speed kills outright; a slow nudge
+   only shoves. Scaled by the footprint so a truck's longer body reaches further. */
+function ramDamage(t, dt) {
+  const sp = Math.abs(t.speed !== undefined ? t.speed : 9);
+  if (sp < 3) return;                                   // barely rolling, just a shove
+  const halfW = t.kind === 'truck' ? 2.0 : 2.4;
+  const halfL = t.kind === 'truck' ? 4.0 : 3.7;
+  const cy = Math.cos(t.yaw), sy = Math.sin(t.yaw);
+  bots.forEach(b => {
+    if (!b.alive || b.inVehicle) return;
+    if (b.team === t.team) return;                       // no running over your own side
+    const dx = b.mesh.position.x - t.mesh.position.x;
+    const dz = b.mesh.position.z - t.mesh.position.z;
+    // rotate into the hull's own frame so the box test follows the vehicle
+    const lx =  dx * cy - dz * sy;
+    const lz =  dx * sy + dz * cy;
+    if (Math.abs(lx) > halfW || Math.abs(lz) > halfL) return;
+    b.hp -= 400;                                         // a hit at speed is fatal
+    if (b.hp <= 0) {
+      b.alive = false; b.mesh.visible = false;
+      if (b.tag) b.tag.visible = false;
+      if (t.driver === 'player') {
+        player.kills++; earn(MODES[mode].perKill, 'roadkill'); updateBoard();
+        addFeed('\ud83d\ude9b You ran down ' + b.name);
+      }
+      setTimeout(() => respawnBot(b), 3500);
+    }
+  });
+}
+
 function updateTanks(dt) {
   updateTankPrompt();
   tanks.forEach(t => {
@@ -2978,6 +3048,7 @@ function updateTanks(dt) {
     if (t.mesh.userData.marker) t.mesh.userData.marker.visible = (t !== playerTank && !t.dead);
     if (t.cool > 0) t.cool -= dt;
     if (t.dead) return;
+    ramDamage(t, dt);
 
     if (t.driver === 'player') {
       // you drive: W/S throttle, A/D swing the hull, turret follows the camera
