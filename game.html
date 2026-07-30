@@ -305,7 +305,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v72 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v73 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -1335,7 +1335,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v72 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v73 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2018,7 +2018,12 @@ function shoot() {
   }
   if (playerTank && playerTank.kind === 'truck') {
     // trucks have no gun  you fire your own weapon from the window
-    if (!leaningOut) { addFeed('Hold right mouse to lean out and shoot'); return; }
+    if (!leaningOut) {
+      // throttled: automatic fire would otherwise print this every single frame
+      const now3 = performance.now();
+      if (now3 - (window.__leanHint || 0) > 2500) { window.__leanHint = now3; addFeed('Hold right mouse to lean out and shoot'); }
+      return;
+    }
   } else if (playerTank) { fireTankShell(playerTank, null); return; }
   if (!gunGroup) return;
   const W = WEAPONS[curWeap]; const now = performance.now();
@@ -2483,6 +2488,33 @@ function updateCamera(dt) {
   const fov = scoped ? 25 : (playerTank && playerTank.kind === 'truck' ? 82 : 72);
   if (Math.abs(camera.fov - fov) > 0.5) { camera.fov += (fov - camera.fov)*0.2; camera.updateProjectionMatrix(); }
   recoil = Math.max(0, recoil - dt*6); const kick = recoil*0.03;
+
+  /* ---- CREWING A VEHICLE: pull the camera outside the hull ----
+     Sitting the eye inside the vehicle was never going to work. At 2.95 it was
+     above the truck's own bodywork, but vehicles never tested collision, so
+     driving into the shop or a building put the camera inside the walls — that is
+     the boxed-in view. A chase camera behind and above the hull cannot end up
+     inside its own vehicle, and it is how driving reads anyway. Leaning out of a
+     truck window still drops to a close view so you can aim. */
+  if (playerTank && !(playerTank.kind === 'truck' && leaningOut)) {
+    const t = playerTank;
+    const back = (t.kind === 'truck' ? 13 : 15);
+    const up   = (t.kind === 'truck' ? 5.6 : 6.4);
+    const d = camDir();
+    let hx = -d.x * back, hz = -d.z * back;
+    if (Math.hypot(hx, hz) < back * 0.45) {        // looking steeply up or down
+      hx = Math.sin(player.yaw) * back * 0.45;
+      hz = Math.cos(player.yaw) * back * 0.45;
+    }
+    const cy = Math.max(t.mesh.position.y + up - d.y * back * 0.5, 2.2);
+    camera.position.set(t.mesh.position.x + hx, cy, t.mesh.position.z + hz);
+    camera.rotation.set(player.pitch + kick, player.yaw, 0);
+    gunGroup.visible = false;
+    if (playerMesh) { playerMesh.visible = false; playerMesh.traverse(o => { if (o.isMesh) o.visible = false; }); }
+    if (t.mesh.userData.marker) t.mesh.userData.marker.visible = false;
+    return;
+  }
+
   if (thirdPerson) {
     if (playerMesh) {
       playerMesh.visible = true;
@@ -2955,10 +2987,16 @@ function updateTanks(dt) {
       t.speed = Math.max(-9, Math.min(t.topSpeed, t.speed));
       if (keys[BINDS.left])  t.yaw += dt * t.turn * (t.speed >= 0 ? 1 : -1);
       if (keys[BINDS.right]) t.yaw -= dt * t.turn * (t.speed >= 0 ? 1 : -1);
+      /* Vehicles were never tested against solid geometry, so you could drive
+         clean through the shop and the buildings. Check each axis separately so a
+         hull slides along a wall instead of stopping dead against it, and bleed
+         off speed on contact. */
       const nx = t.mesh.position.x - Math.sin(t.yaw) * t.speed * dt;
       const nz = t.mesh.position.z - Math.cos(t.yaw) * t.speed * dt;
-      if (Math.abs(nx) < ARENA - 4) t.mesh.position.x = nx;
-      if (Math.abs(nz) < ARENA - 4) t.mesh.position.z = nz;
+      let bumped = false;
+      if (Math.abs(nx) < ARENA - 4 && !blockedAt(nx, t.mesh.position.z)) t.mesh.position.x = nx; else bumped = true;
+      if (Math.abs(nz) < ARENA - 4 && !blockedAt(t.mesh.position.x, nz)) t.mesh.position.z = nz; else bumped = true;
+      if (bumped) t.speed *= 0.35;
       t.mesh.rotation.y = t.yaw;
       t.turret.rotation.y = player.yaw - t.yaw;            // aim where you look
       /* Ride along, and sit ABOVE the hull. updatePlayer is skipped while crewing,
@@ -3064,8 +3102,11 @@ function updateTanks(dt) {
       const sp = 9 * dt;
       const nx = t.mesh.position.x - Math.sin(t.yaw) * sp;
       const nz = t.mesh.position.z - Math.cos(t.yaw) * sp;
-      if (Math.abs(nx) < ARENA - 4) t.mesh.position.x = nx;
-      if (Math.abs(nz) < ARENA - 4) t.mesh.position.z = nz;
+      let hitWall = false;
+      if (Math.abs(nx) < ARENA - 4 && !blockedAt(nx, t.mesh.position.z)) t.mesh.position.x = nx; else hitWall = true;
+      if (Math.abs(nz) < ARENA - 4 && !blockedAt(t.mesh.position.x, nz)) t.mesh.position.z = nz; else hitWall = true;
+      // nudge the hull round so it works its way past whatever it met
+      if (hitWall) t.yaw += dt * 1.4;
     }
     if (dist < 130 && Math.abs(diff) < 0.5 && t.cool <= 0) {
       fireTankShell(t, new THREE.Vector3(tx, 1.2, tz));
