@@ -305,7 +305,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v71 · 1 Rifle · 2 Knife · 3 SMG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v72 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -366,6 +366,18 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
     <div class='diff ranked' data-mode='ranked'><h3>🏆 RANKED</h3><small>Elite bots · 15 pts/kill · MVP +80</small></div>
   </div>
 
+  <div class='charpick'>
+    <div class='charlabel'>🎭 CHOOSE YOUR OPERATOR</div>
+    <div class='chargrid'>
+      <div class='char sel' data-color='0xFF2E97' style='--cc:#FF2E97'>🦸</div>
+      <div class='char' data-color='0x6cc3ff' style='--cc:#6cc3ff'>🥷</div>
+      <div class='char' data-color='0x4ade80' style='--cc:#4ade80'>🤖</div>
+      <div class='char' data-color='0xffd24a' style='--cc:#ffd24a'>👑</div>
+      <div class='char' data-color='0xff6b35' style='--cc:#ff6b35'>🔥</div>
+      <div class='char' data-color='0x9d4edd' style='--cc:#9d4edd'>🎮</div>
+    </div>
+  </div>
+
   <div class='loadoutpick'>
     <div class='ll'>🔫 EQUIP YOUR STARTING WEAPON <span style='opacity:0.6'>(buy more in the in-match armory)</span></div>
     <div class='wsel' id='wsel'></div>
@@ -400,10 +412,11 @@ let mode = 'medium';
 
 const WEAPONS = {
   sniper: { name: 'ASSAULT RIFLE', slot: 1, mag: 30, dmg: 34, scopedDmg: 42, rate: 110, cost: 0, scope: true, auto: true, range: 320, model: 'sniper', owned: true },
+  rpg:    { name: 'RPG', slot: 4, mag: 1, dmg: 0, scopedDmg: 0, rate: 900, cost: 0, scope: true, auto: false, range: 400, model: 'rpg', owned: true, rocket: true },
   smg:    { name: 'SMG', slot: 3, mag: 40, dmg: 21, scopedDmg: 26, rate: 68, cost: 0, scope: true, auto: true, range: 180, model: 'smg', owned: true },
   knife:  { name: 'KNIFE', slot: 2, mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, cost: 0, scope: false, auto: false, range: 3, model: 'knife', owned: true }
 };
-function ownedWeapons() { return ['sniper', 'smg', 'knife']; }
+function ownedWeapons() { return ['sniper', 'smg', 'rpg', 'knife']; }
 function saveOwned(l) { /* weapons are no longer purchasable */ }
 
 const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Echo','Rogue',
@@ -457,11 +470,11 @@ const CUSTOM_MODELS = {
   // Drop a tank .glb here (Add file > Upload files) and both you and the bots
   // will use it. Left empty, a built-in blocky tank is used instead, so the
   // vehicles work before any asset is uploaded.
-  tank: 'm-84_yugoslavia.glb', tankScale: 1.0, tankRotY: 0,
+  tank: '', tankScale: 1.0, tankRotY: 0,
 
   // Same deal for trucks  drop a .glb here once you have uploaded it. Empty
   // means the built-in blocky truck is used instead.
-  truck: 'unimog_truck.glb', truckScale: 1.0, truckRotY: 0,
+  truck: '', truckScale: 1.0, truckRotY: 0,
 
   /* House .glb files — add up to four filenames, for example:
         houses: ['house1.glb', 'house2.glb'],
@@ -470,10 +483,14 @@ const CUSTOM_MODELS = {
      (Written as an empty array rather than four placeholder strings: a run of
      bare empty strings is exactly the shape that turns into "Unexpected string"
      if a paste loses its commas.) */
-  houses: ['desert_houses.glb'], houseScale: 1.0, houseRotY: 0,
+  houses: [], houseScale: 1.0, houseRotY: 0,
 
   // Knife model, used for the melee weapon when set.
-  knife: 'knife_animated.glb', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
+  knife: '', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
+
+  // Rocket launcher. The repo already ships this one, so the RPG has a model
+  // out of the box; swap the filename for anything else you upload.
+  rpg: 'rpg7_rocket_launcher.glb', rpgScale: 1.0, rpgRotX: 0, rpgRotY: 90, rpgRotZ: 0,
 
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
@@ -482,7 +499,7 @@ const CUSTOM_MODELS = {
     run:     'run forward.glb',
     jump:    'jump loop.glb',
     crouch:  'walk crouching forward.glb',
-    reload:  'Reload.glb',                        // pack has no reload  add 'reloading.glb' if you grab one
+    reload:  '',                        // pack has no reload  add 'reloading.glb' if you grab one
     death:   'death from the front.glb',
     grenade: '',                        // add 'throw grenade.glb' if you grab one
     emote:   ''                         // add 'dance.glb' + emoteSound for an emote
@@ -495,7 +512,7 @@ const CUSTOM_MODELS = {
   // independently. Falls back to the built-in soldiers if it cannot load.
   botsUseModel: true
 };
-let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruckGLB = null, loadedKnifeGLB = null, loadedCharAnims = [];
+let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruckGLB = null, loadedKnifeGLB = null, loadedRpgGLB = null, loadedCharAnims = [];
 const loadedHouseGLB = [];
 const extraClips = {};   // retargeted clips, rebuilt per character in makeFighter
 const rawAnims = {};     // key -> { clips, scene } exactly as loaded, before retargeting
@@ -644,7 +661,7 @@ function mergeAnimClips(clips, name, sceneRoot) {
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
   const anyHouse = (CUSTOM_MODELS.houses || []).some(Boolean);
-  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !anyHouse) { done(); return; }
+  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse) { done(); return; }
   const needFBX = isFBX(CUSTOM_MODELS.character) || isFBX(CUSTOM_MODELS.weapon);
 
   // load the right loader(s): GLTFLoader for .glb/.gltf, FBXLoader for Mixamo .fbx
@@ -694,6 +711,7 @@ function loadCustomModels(done) {
       loader.load(f, g => { loadedHouseGLB[hi] = g.scene; pending--; finish(); },
                   undefined, e => { console.warn('house model failed: ' + f, e); pending--; finish(); });
     });
+    if (CUSTOM_MODELS.rpg) { pending++; loader.load(CUSTOM_MODELS.rpg, g => { loadedRpgGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('rpg model failed \u2014 using the built-in launcher', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.knife) { pending++; loader.load(CUSTOM_MODELS.knife, g => { loadedKnifeGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('knife model failed \u2014 using the built-in blade', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed \u2014 using the built-in truck', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed \u2014 using the built-in tank', e); pending--; finish(); }); }
@@ -851,7 +869,7 @@ function init() {
       try { buildActors(); } catch (e2) { console.error('fatal', e2); }
     }
   };
-  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck || CUSTOM_MODELS.knife || (CUSTOM_MODELS.houses || []).some(Boolean)) {
+  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck || CUSTOM_MODELS.knife || CUSTOM_MODELS.rpg || (CUSTOM_MODELS.houses || []).some(Boolean)) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
       if (!built) { console.warn('model load stalled \u2014 building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
@@ -914,12 +932,18 @@ function buildWorld() {
     loadedHouseGLB.forEach(src => {
       if (!src) return;
       for (let k = 0; k < per; k++) {
+        /* Placed as a village around the middle of the map rather than scattered
+           to the edges: the centre is where both teams actually meet, so that is
+           where cover changes the fight. Laid out on a ring with jitter so it
+           reads as a settlement, and kept off the shop. */
         let hx, hz, tries = 0;
+        const ring = 34 + Math.random() * 46;          // 34-80 units from centre
         do {
-          hx = (Math.random() - 0.5) * (ARENA * 1.6);
-          hz = (Math.random() - 0.5) * (ARENA * 1.4);
+          const a = Math.random() * Math.PI * 2;
+          hx = Math.cos(a) * ring + (Math.random() - 0.5) * 14;
+          hz = Math.sin(a) * ring + (Math.random() - 0.5) * 14;
           tries++;
-        } while (tries < 30 && (Math.abs(hz) > ARENA - 45 || (Math.abs(hx) < 16 && Math.abs(hz - SHOP.z) < 16)));
+        } while (tries < 30 && Math.abs(hx - SHOP.x) < 18 && Math.abs(hz - SHOP.z) < 18);
 
         const inst = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone) ? THREE.SkeletonUtils.clone(src) : src.clone(true);
         inst.updateMatrixWorld(true);
@@ -1311,7 +1335,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v71 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v72 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -1687,6 +1711,24 @@ function buildWeapon(type) {
 }
 
 function buildWeaponModel(type) {
+  // rocket launcher
+  if (loadedRpgGLB && type === 'rpg') {
+    const g = new THREE.Group();
+    const inner = loadedRpgGLB.clone(true);
+    inner.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3();
+    bb.getSize(sz);
+    const longest = Math.max(sz.x, sz.y, sz.z) || 1;
+    let k = 0.95 / longest;                      // a launcher is longer than a rifle
+    if (!isFinite(k) || k <= 0) k = 1;
+    k *= (CUSTOM_MODELS.rpgScale || 1);
+    const D = Math.PI / 180;
+    inner.scale.setScalar(k);
+    inner.rotation.set((CUSTOM_MODELS.rpgRotX || 0) * D, (CUSTOM_MODELS.rpgRotY || 0) * D, (CUSTOM_MODELS.rpgRotZ || 0) * D);
+    inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    g.add(inner);
+    return g;
+  }
   // uploaded knife model, when there is one
   if (loadedKnifeGLB && type === 'knife') {
     const g = new THREE.Group();
@@ -1956,6 +1998,24 @@ function reload() {
 }
 
 function shoot() {
+  if (WEAPONS[curWeap] && WEAPONS[curWeap].rocket && !playerTank) {
+    const now2 = performance.now();
+    if (now2 - lastShot < WEAPONS.rpg.rate || player.reloading) return;
+    if (player.mag <= 0) { reload(); return; }
+    lastShot = now2; player.mag--;
+    const magEl = document.getElementById('mag'); if (magEl) magEl.textContent = player.mag;
+    recoil = 1;
+    const d = camDir();
+    const from = new THREE.Vector3(player.x, player.y - 0.1, player.z).addScaledVector(d, 1.2);
+    const rk = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.8, 10),
+      new THREE.MeshStandardMaterial({ color: 0x8d9a6a, emissive: 0x442200 }));
+    rk.position.copy(from); scene.add(rk);
+    playOneShot('grenade', 900);
+    // owner marked as a player-team vehicle so the existing shell code treats it right
+    planted.push({ mesh: rk, vel: d.clone().multiplyScalar(58), kind: 'shell', stuck: false, t: 0,
+                   owner: { team: PLAYER_TEAM, driver: 'player' } });
+    return;
+  }
   if (playerTank && playerTank.kind === 'truck') {
     // trucks have no gun  you fire your own weapon from the window
     if (!leaningOut) { addFeed('Hold right mouse to lean out and shoot'); return; }
@@ -2256,6 +2316,11 @@ function respawnPlayer() {
 
 function damagePlayer(amt, from) {
   if (inShop) return;
+  /* Inside a vehicle the hull takes the hit, not you. Small-arms fire that would
+     have wounded you is applied to the armour instead, so a tank is only beaten
+     by killing the tank. Leaning out of a truck window gives that protection up
+     for as long as you are exposed. */
+  if (playerTank && !leaningOut) { damageTank(playerTank, amt * 0.6, false); return; }
   player.hp -= amt; document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
   const df = document.getElementById('dmgflash'); df.style.opacity = '1'; setTimeout(() => df.style.opacity = '0', 120);
   if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' \u279c You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
@@ -2413,7 +2478,9 @@ function updatePlayerAnim() {
 
 function updateCamera(dt) {
   if (!gunGroup) return;
-  const fov = scoped ? 25 : 72;
+  /* A touch wider in a truck: the cab sits high and close, so the standard 72
+     leaves you peering over the dash. Aiming still narrows to 25. */
+  const fov = scoped ? 25 : (playerTank && playerTank.kind === 'truck' ? 82 : 72);
   if (Math.abs(camera.fov - fov) > 0.5) { camera.fov += (fov - camera.fov)*0.2; camera.updateProjectionMatrix(); }
   recoil = Math.max(0, recoil - dt*6); const kick = recoil*0.03;
   if (thirdPerson) {
@@ -2811,7 +2878,13 @@ function damageTank(t, amt, byPlayer) {
     t.dead = true;
     explode(t.mesh.position.clone().setY(1.2), 11);
     t.mesh.visible = false;
-    if (t.driver === 'player') { playerTank = null; damagePlayer(45, null); }
+    if (t.driver === 'player') {
+      // the hull going up takes whoever is inside it with it
+      playerTank = null; leaningOut = false; player.y = 1.7;
+      player.hp = 1;                       // ensure the blast is fatal, not survivable
+      damagePlayer(999, null);
+      addFeed('\ud83d\udca5 Your vehicle was destroyed');
+    }
     if (t.crew) {                      // the crew dies with it
       const c = t.crew;
       c.inVehicle = null; c.alive = false; c.mesh.visible = false;
@@ -2892,7 +2965,7 @@ function updateTanks(dt) {
          so player.y stayed at its 1.7 walking height  which is inside the cab of a
          truck and behind the plating of a tank. That was the blank wall. */
       player.x = t.mesh.position.x; player.z = t.mesh.position.z;
-      player.y = (t.kind === 'truck' ? 2.55 : 3.05);
+      player.y = (t.kind === 'truck' ? 2.95 : 3.05);
       // leaning out of the truck window drops you to the side of the cab
       if (t.kind === 'truck' && leaningOut) {
         player.x += Math.cos(t.yaw) * 1.6;
@@ -3023,9 +3096,14 @@ function clearPrecip() {
 }
 function setWeather(key) {
   const W = WEATHER[key]; if (!W || !scene) return;
+  /* Fog densities were authored against a 150-unit arena. The map is 210 now, so
+     the same numbers make the wet presets an opaque wall a hundred metres out —
+     which is what filled the screen inside the truck. Scale the density down by
+     the same factor the map grew, so visibility stays proportional to the map. */
+  const fogScale = 150 / ARENA;
   weatherNow = key;
   scene.background = new THREE.Color(W.sky);
-  scene.fog = new THREE.FogExp2(W.fog, W.fogD);
+  scene.fog = new THREE.FogExp2(W.fog, W.fogD * fogScale);
   if (skyMesh) skyMesh.visible = (key === 'sunny' || key === 'cloudy');
   scene.traverse(o => {
     if (o.isDirectionalLight) { o.color.setHex(W.sun); o.intensity = W.sunI; }
