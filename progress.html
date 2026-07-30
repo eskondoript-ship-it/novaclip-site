@@ -56,13 +56,13 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
 </head>
 <body>
 <div class='sidebar'>
-  <a href='index.html' data-t='home'>🏠 Home</a>
-  <a href='app.html' data-t='studio'>📈 Studio</a>
-  <a href='analytics.html' data-t='analytics'>📊 Analytics</a>
-  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
-  <a href='editor.html' data-t='editor'>🎬 Editor</a>
-  <a href='game.html' data-t='sniper'>🎯 Sniper</a>
-  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <a href='index.html' data-t='home'>Home</a>
+  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='analytics'>Analytics</a>
+  <a href='trends.html' data-t='trends'>Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>Editor</a>
+  <a href='game.html' data-t='sniper'>Games</a>
+  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
   <div class='themewrap'>
     <label data-t='language'>Language</label>
     <select id='langpick'></select>
@@ -72,7 +72,7 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
 <div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
 
 <div class='wrap'>
-  <h1><span class='grad' data-t='prog_h'>🏆 Your progress</span></h1>
+  <h1><span class='grad' data-t='prog_h'>Your progress</span></h1>
   <p class='sub' data-t='prog_sub'>Everything you have earned in one place — points, rewards, achievements, the skills that count towards a certificate, and your AI chat history.</p>
 
   <div class='xpcard'>
@@ -86,25 +86,25 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
 
   <div class='grid'>
     <div class='card'>
-      <h2 data-t='quests'>🎁 Rewards</h2>
+      <h2 data-t='quests'>Rewards</h2>
       <div class='hint' data-t='prog_rewards_d'>Free NovaClip Pro time, unlocked by points.</div>
       <div class='body' id='questlist'></div>
     </div>
 
     <div class='card'>
-      <h2 data-t='achievements'>🏅 Achievements</h2>
+      <h2 data-t='achievements'>Achievements</h2>
       <div class='hint' data-t='prog_ach_d'>Milestones you have passed.</div>
       <div class='body' id='achlist'></div>
     </div>
 
     <div class='card wide'>
-      <h2 data-t='prog_skills'>🎓 Certificate skills</h2>
+      <h2 data-t='prog_skills'>Certificate skills</h2>
       <div class='hint' data-t='prog_skills_d'>Hands-on work counts towards a NovaClip Creator Certificate. Points alone are not enough — these are the reps.</div>
       <div class='body' id='skilllist'></div>
     </div>
 
     <div class='card wide'>
-      <h2 data-t='history'>📜 History</h2>
+      <h2 data-t='history'>History</h2>
       <div class='hint' data-t='prog_hist_d'>Your recent questions to the AI tutors.</div>
       <div class='body' id='histlist'></div>
     </div>
@@ -128,10 +128,10 @@ function renderProgress() {
   if (fill && note) {
     if (next) {
       fill.style.width = Math.max(2, Math.min(100, pts / next[0] * 100)) + '%';
-      note.textContent = (next[0] - pts) + ' points to ' + next[1].replace(/^🎁\s*/, '');
+      note.textContent = (next[0] - pts) + ' points to ' + next[1].replace(/^\s*/, '');
     } else {
       fill.style.width = '100%';
-      note.textContent = 'Every reward unlocked. \ud83c\udf89';
+      note.textContent = 'Every reward unlocked.';
     }
   }
 

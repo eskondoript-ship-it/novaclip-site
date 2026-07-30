@@ -100,12 +100,6 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 .diff h3 { font-size: 1.05rem; margin-bottom: 5px; }
 .diff small { color: #7E8AA6; font-size: 0.76rem; line-height: 1.4; display: block; }
 .diff.easy h3 { color: #4ade80; } .diff.med h3 { color: #6cc3ff; } .diff.hard h3 { color: #ff6b6b; } .diff.ranked h3 { color: #ffd24a; }
-.charpick { margin-bottom: 18px; }
-.charlabel { font-size: 0.82rem; color: #9fb0cc; margin-bottom: 8px; letter-spacing: 1px; }
-.chargrid { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.char { width: 56px; height: 56px; border-radius: 14px; border: 2px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; cursor: pointer; transition: 0.2s; }
-.char:hover { transform: translateY(-3px); }
-.char.sel { border-color: var(--cc); box-shadow: 0 0 18px var(--cc); }
 .loadoutpick { margin-bottom: 18px; max-width: 560px; }
 .loadoutpick .ll { font-size: 0.82rem; color: #9fb0cc; margin-bottom: 8px; letter-spacing: 1px; }
 .wsel { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
@@ -278,8 +272,8 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='game'></div>
 <a id='backLink' href='index.html'>← Back to NovaClip</a>
 <div id='gamenav'>
-  <button class='gnav active' data-game='arena'>⚔️ Strike Arena</button>
-  <button class='gnav' data-game='flappy'>🐦 Nova Flap</button>
+  <button class='gnav active' data-game='arena'>Strike Arena</button>
+  <button class='gnav' data-game='flappy'>Nova Flap</button>
 </div>
 
 <!-- ===== NOVA FLAP ===== -->
@@ -287,11 +281,11 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
   <canvas id='flapcv'></canvas>
   <div id='flaphud'>
     <div class='fscore'><span id='fscore'>0</span></div>
-    <div class='fbest'>BEST <b id='fbest'>0</b> · 🏆 <b id='fpts'>0</b> pts</div>
+    <div class='fbest'>BEST <b id='fbest'>0</b> · <b id='fpts'>0</b> pts</div>
   </div>
   <div id='flapstart'>
     <div class='fpanel'>
-      <div class='ftitle'>🐦 NOVA <span>FLAP</span></div>
+      <div class='ftitle'>NOVA <span>FLAP</span></div>
       <p class='fsub'>Tap, click or press SPACE to flap. Slip through the neon gates.<br>Every 5 gates banks NovaClip points.</p>
       <button id='fplay'>▶️ Play</button>
       <div class='fhint'>SPACE / click to flap</div>
@@ -305,17 +299,17 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
         <div><b id='foBest'>0</b><span>Best</span></div>
         <div class='hi'><b id='foPts'>+0</b><span>Points</span></div>
       </div>
-      <button id='fagain'>🔁 Play again</button>
+      <button id='fagain'>Play again</button>
     </div>
   </div>
 </div>
 <div id='hud'><div id='crosshair'></div></div>
 <div id='scope'></div>
 <div id='tankprompt'></div>
-<div id='weatherTag'>☀️ Sunny</div>
+<div id='weatherTag'>Sunny</div>
 <div id='tablet'>
   <div class='tabbox'>
-    <div class='tabhead'><span>🛰️ STRIKE TABLET</span><span id='tabletstat'>READY</span></div>
+    <div class='tabhead'><span>STRIKE TABLET</span><span id='tabletstat'>READY</span></div>
     <canvas id='tabletcv' width='560' height='560'></canvas>
     <div class='tabfoot'>Tap the map to call a strike · Q or Esc to close</div>
   </div>
@@ -324,7 +318,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='errbox'></div>
 
 <div class='topbar'>
-  <div class='mode'>⚔️ DOMINATION</div>
+  <div class='mode'>DOMINATION</div>
   <div class='sub'>5v5 · Eliminate the enemy team</div>
   <div class='scorewrap'>
     <span class='tm me' id='tmMine'>CT</span>
@@ -337,21 +331,21 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
   </div>
 </div>
 
-<div id='board'><h4>🏆 SCOREBOARD</h4><div id='rows'></div></div>
-<div id='ptsbadge'>🏆 <b id='gamepts'>0</b> pts</div>
+<div id='board'><h4>SCOREBOARD</h4><div id='rows'></div></div>
+<div id='ptsbadge'><b id='gamepts'>0</b> pts</div>
 <div id='ammo'><div id='weapname'>SNIPER</div><div id='magbig'><span id='mag'>10</span><small id='magmax'>/10</small></div><div id='ammores'></div></div>
-<div id='hp'><div class='lbl'>❤️ HEALTH</div><div class='track'><div id='hpbar'></div></div></div>
+<div id='hp'><div class='lbl'>HEALTH</div><div class='track'><div id='hpbar'></div></div></div>
 <div id='loadout'></div>
 <div id='feed'></div>
-<div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
-<div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
-<div id='shopprompt'>Press E to open the shop 🛒</div>
-<button id='shopbtn'>🛒 SHOP <span class='k'>E</span></button>
+<div id='c4badge'>C4: <span id='c4stat'>arming…</span></div>
+<div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
+<div id='shopprompt'>Press E to open the shop</div>
+<button id='shopbtn'>SHOP <span class='k'>E</span></button>
 <div id='viewTag'>v80 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
-    <h2>🛒 Armory</h2>
+    <h2>Armory</h2>
     <div class='bal'>Your points: <span id='shopbal'>0</span> &nbsp;·&nbsp; <span style='color:#7E8AA6;font-size:0.85rem'>Visits this round: <span id='shopvisits'>0 / 13</span></span></div>
     <div id='shopitems'></div>
     <button class='close' onclick='closeShop()'>Close (E)</button>
@@ -398,43 +392,31 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 
 <div id='overlay'>
   <div class='mtag'>NovaClip Arcade</div>
-  <h1>⚔️ Strike <span class='c'>Arena</span></h1>
+  <h1>Strike <span class='c'>Arena</span></h1>
   <p class='sub'>10 fighters. 5 minutes. Capture kills across a bright city battlefield. Earn NovaClip points and top the board for the MVP bonus.</p>
 
   <div class='diffgrid'>
-    <div class='diff easy' data-mode='easy'><h3>😌 EASY</h3><small>Chill bots · 2 pts/kill · MVP +10</small></div>
-    <div class='diff med sel' data-mode='medium'><h3>⚡ MEDIUM</h3><small>Tough bots · 5 pts/kill · MVP +20</small></div>
-    <div class='diff hard' data-mode='hard'><h3>💀 HARD</h3><small>Deadly bots · 10 pts/kill · MVP +50</small></div>
-    <div class='diff ranked' data-mode='ranked'><h3>🏆 RANKED</h3><small>Elite bots · 15 pts/kill · MVP +80</small></div>
-  </div>
-
-  <div class='charpick'>
-    <div class='charlabel'>🎭 CHOOSE YOUR OPERATOR</div>
-    <div class='chargrid'>
-      <div class='char sel' data-color='0xFF2E97' style='--cc:#FF2E97'>🦸</div>
-      <div class='char' data-color='0x6cc3ff' style='--cc:#6cc3ff'>🥷</div>
-      <div class='char' data-color='0x4ade80' style='--cc:#4ade80'>🤖</div>
-      <div class='char' data-color='0xffd24a' style='--cc:#ffd24a'>👑</div>
-      <div class='char' data-color='0xff6b35' style='--cc:#ff6b35'>🔥</div>
-      <div class='char' data-color='0x9d4edd' style='--cc:#9d4edd'>🎮</div>
-    </div>
+    <div class='diff easy' data-mode='easy'><h3>EASY</h3><small>Chill bots · 2 pts/kill · MVP +10</small></div>
+    <div class='diff med sel' data-mode='medium'><h3>MEDIUM</h3><small>Tough bots · 5 pts/kill · MVP +20</small></div>
+    <div class='diff hard' data-mode='hard'><h3>HARD</h3><small>Deadly bots · 10 pts/kill · MVP +50</small></div>
+    <div class='diff ranked' data-mode='ranked'><h3>RANKED</h3><small>Elite bots · 15 pts/kill · MVP +80</small></div>
   </div>
 
   <div class='mappick'>
-    <div class='charlabel'>🗺️ CHOOSE YOUR MAP</div>
+    <div class='charlabel'>CHOOSE YOUR MAP</div>
     <div class='mapgrid' id='mapgrid'></div>
   </div>
 
   <div class='loadoutpick'>
-    <div class='ll'>🔫 EQUIP YOUR STARTING WEAPON <span style='opacity:0.6'>(buy more in the in-match armory)</span></div>
+    <div class='ll'>EQUIP YOUR STARTING WEAPON <span style='opacity:0.6'>(buy more in the in-match armory)</span></div>
     <div class='wsel' id='wsel'></div>
   </div>
 
   <div class='lbwrap'>
     <div class='lbhead'>
       <div class='lbtabs'>
-        <button class='lbtab sel' data-lb='world'>🌍 World</button>
-        <button class='lbtab' data-lb='local'>💾 This device</button>
+        <button class='lbtab sel' data-lb='world'>World</button>
+        <button class='lbtab' data-lb='local'>This device</button>
       </div>
       <div class='lbmeta' id='lbmeta'></div>
     </div>
@@ -450,7 +432,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'></script>
 <script>
-window.addEventListener('error', (e) => { const b = document.getElementById('errbox'); b.style.display = 'block'; b.textContent = '\u26a0 ' + e.message; });
+window.addEventListener('error', (e) => { const b = document.getElementById('errbox'); b.style.display = 'block'; b.textContent = e.message; });
 
 // ---------- config ----------
 /* Bots hit harder and think faster than they used to: higher accuracy, longer
@@ -1005,7 +987,9 @@ document.querySelectorAll('.diff').forEach(d => d.onclick = () => {
   lbWorld = null; lbNextAt = Date.now() + LB_REFRESH_MS;
   if (typeof lbFetchWorld === 'function') { if (lbTab === 'world' && LEADERBOARD_URL) lbFetchWorld(); else lbRender(); }
 });
-document.querySelectorAll('.char').forEach(c => c.onclick = () => { document.querySelectorAll('.char').forEach(x => x.classList.remove('sel')); c.classList.add('sel'); playerColor = parseInt(c.dataset.color); localStorage.setItem('nc_char', c.dataset.color); });
+/* The operator picker is gone from the lobby — every fighter wears the uploaded
+   character model, so a colour swatch chose nothing you could see. playerColor
+   keeps whatever was saved, and is still used for the built-in fallback body. */
 /* ============================================================
    MAP PICKER
    Picking a map saves it and reloads the lobby, because the world is built once
@@ -1164,7 +1148,7 @@ function lbInit() {
 function renderWSel() {
   document.getElementById('wsel').innerHTML = Object.keys(WEAPONS).map(k => {
     const W = WEAPONS[k], owned = W.owned;
-    return '<div class="w ' + (k === curWeap ? 'equipped' : (owned ? 'owned' : 'locked')) + '" data-w="' + k + '">' + W.name + (owned ? '' : ' \ud83d\udd12') + '</div>';
+    return '<div class="w ' + (k === curWeap ? 'equipped' : (owned ? 'owned' : 'locked')) + '" data-w="' + k + '">' + W.name + (owned ? '' : '') + '</div>';
   }).join('');
   document.querySelectorAll('#wsel .w').forEach(el => el.onclick = () => { if (WEAPONS[el.dataset.w].owned) { curWeap = el.dataset.w; renderWSel(); } });
 }
@@ -1189,7 +1173,7 @@ function init() {
   renderer.domElement.addEventListener('webglcontextlost', (e) => {
     e.preventDefault();
     const b = document.getElementById('errbox');
-    if (b) { b.style.display = 'block'; b.textContent = '\u26a0 Graphics memory ran out (WebGL context lost). The character model is too heavy \u2014 set CUSTOM_MODELS.character back to \'\' to recover.'; }
+    if (b) { b.style.display = 'block'; b.textContent = 'Graphics memory ran out (WebGL context lost). The character model is too heavy \u2014 set CUSTOM_MODELS.character back to \'\' to recover.'; }
   }, false);
 
   // bright sky dome with clouds
@@ -2366,7 +2350,7 @@ function bumpWFix(axis) {
     const vis = gunGroup.visible; scene.remove(gunGroup);
     gunGroup = buildWeapon(WEAPONS[curWeap].model); gunGroup.visible = vis; scene.add(gunGroup);
   }
-  addFeed('🔧 ' + WEAPONS[k].name + ' turned — rotY +' + f.y + ', rotZ +' + f.z + ' (saved)');
+  addFeed(WEAPONS[k].name + ' turned — rotY +' + f.y + ', rotZ +' + f.z + ' (saved)');
   console.log('weapon fix for ' + k + ': rotY += ' + f.y + ', rotZ += ' + f.z +
               '  — paste into EXTRA_WEAPONS if you want it in the file');
 }
@@ -2898,7 +2882,7 @@ document.getElementById('startBtn').onclick = () => {
 };
 
 function startMatch() {
-  document.querySelector('.topbar .mode').textContent = '\u2694\ufe0f ' + MODES[mode].label;
+  document.querySelector('.topbar .mode').textContent = MODES[mode].label;
   document.getElementById('tmMine').textContent = TEAM_INFO[PLAYER_TEAM].short;
   document.getElementById('tmTheirs').textContent = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].short;
   document.getElementById('mebar').style.background = TEAM_INFO[PLAYER_TEAM].css;
@@ -2953,7 +2937,7 @@ document.addEventListener('wheel', (e) => {
 
 function updateNadeHint() {
   const el = document.getElementById('weapname');
-  if (equippedNade) el.textContent = (equippedNade === 'frag' ? '\ud83d\udca3 FRAG' : '\ud83e\udde8 STICKY') + ' \u2014 LMB to throw';
+  if (equippedNade) el.textContent = (equippedNade === 'frag' ? 'FRAG' : 'STICKY') + ' \u2014 LMB to throw';
   else el.textContent = WEAPONS[curWeap].name;
 }
 
@@ -3008,7 +2992,7 @@ function buildLoadoutHUD() {
   // the strike sits in the loadout as a single charge you either have or do not
   const ready = strikeAvailable();
   html += '<div class="slot strikeslot' + (ready ? ' ready' : ' spent') + '">' +
-          '<span class="key">Q</span>\ud83d\ude80 MISSILE STRIKE ' +
+          '<span class="key">Q</span>MISSILE STRIKE ' +
           (ready ? '\u00d71' : '\u00b7 ' + strikeWaitText()) + '</div>';
   document.getElementById('loadout').innerHTML = html;
 }
@@ -3031,7 +3015,7 @@ function switchWeap(w) {
      letting someone wonder why their gun faces backwards. Once per weapon. */
   const o = WORIENT[w];
   if (running && o && !o.called && !WFIX[w] && !o.told) { o.told = true;
-    addFeed('🔧 ' + W.name + ': press Y if it points the wrong way, U if it is upside down'); }
+    addFeed(W.name + ': press Y if it points the wrong way, U if it is upside down'); }
   if (gunGroup && scene) { const vis = gunGroup.visible; scene.remove(gunGroup); gunGroup = buildWeapon(WEAPONS[w].model); gunGroup.visible = vis; scene.add(gunGroup); }
   buildLoadoutHUD();
 }
@@ -3067,7 +3051,7 @@ function reload() {
   const type = W.ammo;
   const need = W.mag - player.mag;
   const have = type ? ammoLeft(type) : need;
-  if (type && have <= 0) { addFeed('🚫 Out of ' + AMMO[type].name + ' — buy more in the shop (E)'); return; }
+  if (type && have <= 0) { addFeed('Out of ' + AMMO[type].name + ' — buy more in the shop (E)'); return; }
   const take = Math.min(need, have);
   player.reloading = true; player.reloadStart = performance.now(); player.reloadDur = 1100;
   playOneShot('reload', 1100);
@@ -3202,7 +3186,7 @@ function killBot(b) {
   if (b.team === PLAYER_TEAM) return;   // friendly fire is off
   b.alive = false; b.mesh.visible = false; if (b.tag) b.tag.visible = false; player.kills++;
   document.getElementById('mescore').textContent = player.kills;
-  earn(MODES[mode].perKill, 'kill'); addFeed('You \u279c ' + b.name); updateBoard();
+  earn(MODES[mode].perKill, 'kill'); addFeed('You ' + b.name); updateBoard();
   setTimeout(() => respawnBot(b), 2500 + Math.random()*3000);
 }
 function respawnBot(b) {
@@ -3212,7 +3196,7 @@ function respawnBot(b) {
   const B = BASES[b.team];
   b.mesh.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
 }
-function addFeed(txt) { const f = document.getElementById('feed'); const d = document.createElement('div'); d.textContent = (txt[0] === '+' || txt[0] === '\ud83d\uded2' || txt[0] === '\ud83d\udca3') ? txt : '\ud83d\udc80 ' + txt; f.appendChild(d); setTimeout(() => d.remove(), 4000); }
+function addFeed(txt) { const f = document.getElementById('feed'); const d = document.createElement('div'); d.textContent = txt; f.appendChild(d); setTimeout(() => d.remove(), 4000); }
 function teamScore(team) {
   let s = 0;
   if (team === PLAYER_TEAM) s += player.kills;
@@ -3229,7 +3213,7 @@ function updateBoard() {
     const info = TEAM_INFO[team];
     return '<div class="tmhead" style="color:' + info.css + '">' + info.short + ' \u00b7 ' + info.name + ' <span style="float:right">' + teamScore(team) + '</span></div>' +
       list.map(p => '<div class="r ' + (p.me ? 'me' : '') + '" style="' + (p.dead ? 'opacity:.42' : '') + '">' +
-        '<span>' + (p.dead ? '\ud83d\udc80 ' : '') + p.name + '</span><span>' + p.kills + '</span></div>').join('');
+        '<span>' + (p.dead ? '' : '') + p.name + '</span><span>' + p.kills + '</span></div>').join('');
   }
   document.getElementById('rows').innerHTML = block(ct, TEAM_CT) + '<div style="height:8px"></div>' + block(t, TEAM_T);
 
@@ -3254,13 +3238,13 @@ function throwNade(kind) {
   planted.push({ mesh: m, vel, kind, stuck: false, t: 0 });
 }
 function plantC4() {
-  if (!c4Ready) { addFeed('\ud83d\udca3 C4 arming\u2026 ' + Math.ceil(c4Timer) + 's'); return; }
+  if (!c4Ready) { addFeed('C4 arming\u2026 ' + Math.ceil(c4Timer) + 's'); return; }
   c4Ready = false; c4Timer = 20; document.getElementById('c4stat').textContent = 'arming 20s\u2026';
   const m = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.2,0.35), new THREE.MeshStandardMaterial({ color: 0x882222 }));
   const led = new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6), new THREE.MeshBasicMaterial({ color: 0xff2222 })); led.position.set(0.15,0.14,0); m.add(led);
   m.position.set(player.x, 0.12, player.z); scene.add(m);
   planted.push({ mesh: m, kind: 'c4', stuck: true, t: 0 });
-  addFeed('\ud83d\udca3 C4 planted \u2014 X to detonate');
+  addFeed('C4 planted \u2014 X to detonate');
 }
 function detonate() {
   const blow = planted.filter(p => p.kind === 'c4' || (p.kind === 'sticky' && p.stuck));
@@ -3342,9 +3326,9 @@ function updateNades(dt) {
 
 // ---------- shop ----------
 const SHOP_ITEMS = [
-  { id: 'frag', name: '\ud83d\udca3 Frags \u00d73', desc: 'Equip with G, throw with LMB', cost: 40 },
-  { id: 'sticky', name: '\ud83e\udde8 Stickies \u00d72', desc: 'Equip with B, throw with LMB, X detonate', cost: 50 },
-  { id: 'heavy', name: '\u26a1 Armour-piercing rounds', desc: 'Much higher damage (permanent)', cost: 80, once: true }
+  { id: 'frag', name: 'Frags \u00d73', desc: 'Equip with G, throw with LMB', cost: 40 },
+  { id: 'sticky', name: 'Stickies \u00d72', desc: 'Equip with B, throw with LMB, X detonate', cost: 50 },
+  { id: 'heavy', name: 'Armour-piercing rounds', desc: 'Much higher damage (permanent)', cost: 80, once: true }
 ];
 /* Ammunition on the shelf, one line per calibre, listing which of your weapons
    eats it so it is obvious what you are buying. */
@@ -3352,7 +3336,7 @@ for (const t in AMMO) {
   const A = AMMO[t];
   const guns = Object.keys(WEAPONS).filter(k => WEAPONS[k].ammo === t).map(k => WEAPONS[k].name.toLowerCase());
   SHOP_ITEMS.push({ id: 'ammo_' + t, ammo: t,
-    name: '\ud83d\udd2b ' + A.name + ' \u00d7' + A.buy,
+    name: A.name + ' \u00d7' + A.buy,
     desc: 'Feeds the ' + (guns.join(', ') || 'nothing yet'), cost: A.cost });
 }
 if (heavyRounds) WEAPONS.sniper.dmg = 60;
@@ -3361,7 +3345,7 @@ function renderShop() {
   document.getElementById('shopitems').innerHTML = SHOP_ITEMS.map(it => {
     const owned = (it.id === 'heavy' && heavyRounds);
     const carry = it.ammo ? ' <span style="opacity:.6">(carrying ' + ammoLeft(it.ammo) + ')</span>' : '';
-    return '<div class="item"><div><b>' + it.name + '</b><small>' + it.desc + carry + '</small></div><button ' + (owned || pts() < it.cost ? 'disabled' : '') + ' onclick="buyItem(\'' + it.id + '\')">' + (owned ? '\u2705 OWNED' : it.cost + ' pts') + '</button></div>';
+    return '<div class="item"><div><b>' + it.name + '</b><small>' + it.desc + carry + '</small></div><button ' + (owned || pts() < it.cost ? 'disabled' : '') + ' onclick="buyItem(\'' + it.id + '\')">' + (owned ? 'OWNED' : it.cost + ' pts') + '</button></div>';
   }).join('');
 }
 window.buyItem = function(id) {
@@ -3371,10 +3355,10 @@ window.buyItem = function(id) {
   if (id === 'frag') inv.frag += 3;
   if (id === 'sticky') inv.sticky += 2;
   if (it.ammo) addAmmo(it.ammo, AMMO[it.ammo].buy);
-  addFeed('\ud83d\uded2 Bought ' + it.name); renderShop(); buildLoadoutHUD();
+  addFeed('Bought ' + it.name); renderShop(); buildLoadoutHUD();
 };
 function openShop() {
-  if (shopVisits >= SHOP_MAX_VISITS) { addFeed('\ud83d\uded2 Shop limit reached (' + SHOP_MAX_VISITS + '/round)'); return; }
+  if (shopVisits >= SHOP_MAX_VISITS) { addFeed('Shop limit reached (' + SHOP_MAX_VISITS + '/round)'); return; }
   shopVisits++;
   shopOpen = true;
   document.getElementById('shopui').style.display = 'flex';
@@ -3442,7 +3426,7 @@ function updateBots(dt) {
         if (pd < ARENA) for (let s = 0; s < M.burst; s++) setTimeout(() => { if (!b.alive || !running || inShop) return; botFire(b, new THREE.Vector3(player.x, 1.5, player.z), M.botHit, () => damagePlayer(M.dmg + Math.random()*M.dmg*0.5, b)); }, s*95);
       } else {
         const others = bots.filter(o => o !== b && o.alive && o.team !== b.team);
-        if (others.length) { const o = others[Math.floor(Math.random()*others.length)]; const od = Math.hypot(o.mesh.position.x - b.mesh.position.x, o.mesh.position.z - b.mesh.position.z); if (od > 0.5) b.mesh.lookAt(o.mesh.position.x, 1.2, o.mesh.position.z); botFire(b, o.mesh.position.clone().setY(1.2), 0.30, () => { o.hp -= 45; if (o.hp <= 0) { o.alive = false; o.mesh.visible = false; b.kills++; addFeed(b.name + ' \u279c ' + o.name); updateBoard(); setTimeout(() => respawnBot(o), 3500); } }); }
+        if (others.length) { const o = others[Math.floor(Math.random()*others.length)]; const od = Math.hypot(o.mesh.position.x - b.mesh.position.x, o.mesh.position.z - b.mesh.position.z); if (od > 0.5) b.mesh.lookAt(o.mesh.position.x, 1.2, o.mesh.position.z); botFire(b, o.mesh.position.clone().setY(1.2), 0.30, () => { o.hp -= 45; if (o.hp <= 0) { o.alive = false; o.mesh.visible = false; b.kills++; addFeed(b.name + ' ' + o.name); updateBoard(); setTimeout(() => respawnBot(o), 3500); } }); }
       }
       b.cooldown = M.cool[0] + Math.random()*(M.cool[1]-M.cool[0]);
     }
@@ -3472,7 +3456,7 @@ function damagePlayer(amt, from) {
   if (playerTank && !leaningOut) { damageTank(playerTank, amt * 0.6, false); return; }
   player.hp -= amt; document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
   const df = document.getElementById('dmgflash'); df.style.opacity = '1'; setTimeout(() => df.style.opacity = '0', 120);
-  if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' \u279c You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
+  if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
 }
 
 // ---------- player + camera ----------
@@ -3538,12 +3522,12 @@ function updatePlayer(dt) {
   if (sb) {
     sb.style.display = (shopIsButton() && running && !shopOpen) ? 'flex' : 'none';
     sb.innerHTML = shopVisits >= SHOP_MAX_VISITS
-      ? '🚫 Shop limit reached'
-      : '🛒 SHOP <span class="k">E</span> <span class="left">' + (SHOP_MAX_VISITS - shopVisits) + ' left</span>';
+      ? 'Shop limit reached'
+      : 'SHOP <span class="k">E</span> <span class="left">' + (SHOP_MAX_VISITS - shopVisits) + ' left</span>';
   }
   if (nowIn && !shopOpen) sp.innerHTML = shopVisits >= SHOP_MAX_VISITS
-    ? '\ud83d\udeab Shop limit reached for this round'
-    : 'Press E to open the shop \ud83d\uded2 <span style="opacity:0.7">(' + (SHOP_MAX_VISITS - shopVisits) + ' left)</span>';
+    ? 'Shop limit reached for this round'
+    : 'Press E to open the shop <span style="opacity:0.7">(' + (SHOP_MAX_VISITS - shopVisits) + ' left)</span>';
   if (nowIn && !inShop) { inShop = true; safeLeft = 60; document.getElementById('safebadge').style.display = 'block'; }
   if (!nowIn && inShop) { inShop = false; document.getElementById('safebadge').style.display = 'none'; if (shopOpen) closeShop(); }
   if (inShop) { safeLeft -= dt; document.getElementById('safetime').textContent = Math.max(0, Math.ceil(safeLeft)); if (safeLeft <= 0) { inShop = false; document.getElementById('safebadge').style.display = 'none'; } }
@@ -3570,7 +3554,7 @@ let emoteAudio = null;
 function playEmote() {
   if (!running) return;
   playOneShot('emote', 4000);
-  addFeed('\ud83d\udd7a Emote!');
+  addFeed('Emote!');
   if (CUSTOM_MODELS.emoteSound) {
     try {
       if (!emoteAudio) { emoteAudio = new Audio(CUSTOM_MODELS.emoteSound); emoteAudio.volume = 0.8; }
@@ -3860,7 +3844,7 @@ function endMatch() {
         '</div>' +
       '</div>' +
 
-      '<button class="again" onclick="location.reload()">\u25b6\ufe0f Play again</button>' +
+      '<button class="again" onclick="location.reload()">\u25b6Play again</button>' +
     '</div>';
 }
 
@@ -4085,7 +4069,7 @@ window.toggleTank = function () {
     player.z = playerTank.mesh.position.z + Math.sin(playerTank.yaw) * 4.5;
     playerTank = null; leaningOut = false;
     player.y = 1.7;
-    addFeed('\ud83d\udeaa Out of the vehicle');
+    addFeed('Out of the vehicle');
     return;
   }
   const t = nearestTank(player.x, player.z, 14);
@@ -4095,14 +4079,14 @@ window.toggleTank = function () {
     tanks.forEach(x => { if (x.dead || x.team !== PLAYER_TEAM) return;
       const d = Math.hypot(x.mesh.position.x - player.x, x.mesh.position.z - player.z);
       if (d < bd) { bd = d; best = x; } });
-    addFeed(!mapHasVehicles() ? '\ud83d\udeb6 ' + curMap().name + ' is infantry only \u2014 no vehicles here'
-                 : best ? '\ud83d\udee1\ufe0f Nearest tank is ' + Math.round(bd) + 'm away \u2014 walk to it and press F'
+    addFeed(!mapHasVehicles() ? curMap().name + ' is infantry only \u2014 no vehicles here'
+                 : best ? 'Nearest tank is ' + Math.round(bd) + 'm away \u2014 walk to it and press F'
                  : 'No friendly tank available');
     return;
   }
   if (t.team !== PLAYER_TEAM) { addFeed('That is an enemy tank'); return; }
   t.driver = 'player'; playerTank = t;
-  addFeed('\ud83d\udee1\ufe0f In the tank \u2014 W/S drive, A/D turn, LMB fire');
+  addFeed('In the tank \u2014 W/S drive, A/D turn, LMB fire');
 };
 
 function fireTankShell(t, targetPos) {
@@ -4133,7 +4117,7 @@ function damageTank(t, amt, byPlayer) {
       playerTank = null; leaningOut = false; player.y = 1.7;
       player.hp = 1;                       // ensure the blast is fatal, not survivable
       damagePlayer(999, null);
-      addFeed('\ud83d\udca5 Your vehicle was destroyed');
+      addFeed('Your vehicle was destroyed');
     }
     if (t.crew) {                      // the crew dies with it
       const c = t.crew;
@@ -4143,7 +4127,7 @@ function damageTank(t, amt, byPlayer) {
       t.crew = null;
     }
     t.driver = null;
-    addFeed('\ud83d\udca5 Tank destroyed');
+    addFeed('Tank destroyed');
     if (byPlayer) earn(40, 'tank kill');
     setTimeout(() => {                     // rebuild it back at base
       if (timeLeft <= 0) return;
@@ -4160,14 +4144,14 @@ function updateTankPrompt() {
   if (playerTank) {
     el.style.display = 'block';
     el.textContent = playerTank.kind === 'truck'
-      ? '\ud83d\ude9a F to get out \u00b7 W/S drive \u00b7 A/D turn \u00b7 hold RMB to lean out and shoot'
-      : '\ud83d\udee1\ufe0f F out \u00b7 W/S drive \u00b7 A/D turn \u00b7 LMB fire \u00b7 V view';
+      ? 'F to get out \u00b7 W/S drive \u00b7 A/D turn \u00b7 hold RMB to lean out and shoot'
+      : 'F out \u00b7 W/S drive \u00b7 A/D turn \u00b7 LMB fire \u00b7 V view';
     return;
   }
   const t = nearestTank(player.x, player.z, 14);
   if (t && t.team === PLAYER_TEAM) {
     el.style.display = 'block';
-    el.textContent = '\ud83d\udee1\ufe0f Press F to enter the ' + (t.kind === 'truck' ? 'truck' : 'tank');
+    el.textContent = 'Press F to enter the ' + (t.kind === 'truck' ? 'truck' : 'tank');
     return;
   }
 
@@ -4186,7 +4170,7 @@ function updateTankPrompt() {
   while (rel < -Math.PI) rel += Math.PI * 2;
   const arrow = Math.abs(rel) < 0.4 ? '\u2191' : rel > 0 ? '\u21b0 left' : '\u21b1 right';
   el.style.display = 'block';
-  el.textContent = '\ud83d\udee1\ufe0f Your ' + (best.kind === 'truck' ? 'truck' : 'tank') + ': ' + Math.round(bd) + 'm ' + arrow;
+  el.textContent = 'Your ' + (best.kind === 'truck' ? 'truck' : 'tank') + ': ' + Math.round(bd) + 'm ' + arrow;
 }
 
 /* Getting hit by several tonnes of moving vehicle should not take three passes.
@@ -4214,7 +4198,7 @@ function ramDamage(t, dt) {
       if (b.tag) b.tag.visible = false;
       if (t.driver === 'player') {
         player.kills++; earn(MODES[mode].perKill, 'roadkill'); updateBoard();
-        addFeed('\ud83d\ude9b You ran down ' + b.name);
+        addFeed('You ran down ' + b.name);
       }
       setTimeout(() => respawnBot(b), 3500);
     }
@@ -4385,12 +4369,12 @@ function updateTanks(dt) {
    ones. Each preset drives the same knobs so switching is instant and total.
    ============================================================ */
 const WEATHER = {
-  sunny:  { label: '\u2600\ufe0f Sunny',     sky: 0x87ceeb, fog: 0xbcd8ea, fogD: 0.0016, sun: 0xfff4e0, sunI: 1.05, amb: 0.72, particles: 0 },
-  cloudy: { label: '\u2601\ufe0f Cloudy',    sky: 0x9aa4ad, fog: 0xa8b2ba, fogD: 0.0042, sun: 0xd8dee4, sunI: 0.55, amb: 0.62, particles: 0 },
-  rain:   { label: '\ud83c\udf27\ufe0f Rain',      sky: 0x5a656e, fog: 0x6b757d, fogD: 0.0090, sun: 0xaeb8c0, sunI: 0.34, amb: 0.48, particles: 2600, pcol: 0x9fc4dd, pfall: 62, plen: 1.5 },
-  snow:   { label: '\u2744\ufe0f Snow',      sky: 0xc3ccd4, fog: 0xd6dde3, fogD: 0.0110, sun: 0xeef3f8, sunI: 0.62, amb: 0.80, particles: 1800, pcol: 0xffffff, pfall: 7,  plen: 0.12 },
-  blood:  { label: '\ud83c\udf11 Blood moon', sky: 0x2a0a0e, fog: 0x3d1014, fogD: 0.0070, sun: 0xff4a44, sunI: 0.60, amb: 0.30, particles: 0 },
-  eclipse:{ label: '\ud83c\udf18 Eclipse',    sky: 0x14161f, fog: 0x1b1f2b, fogD: 0.0060, sun: 0x8fa6d8, sunI: 0.26, amb: 0.22, particles: 0 }
+  sunny:  { label: 'Sunny',     sky: 0x87ceeb, fog: 0xbcd8ea, fogD: 0.0016, sun: 0xfff4e0, sunI: 1.05, amb: 0.72, particles: 0 },
+  cloudy: { label: 'Cloudy',    sky: 0x9aa4ad, fog: 0xa8b2ba, fogD: 0.0042, sun: 0xd8dee4, sunI: 0.55, amb: 0.62, particles: 0 },
+  rain:   { label: 'Rain',      sky: 0x5a656e, fog: 0x6b757d, fogD: 0.0090, sun: 0xaeb8c0, sunI: 0.34, amb: 0.48, particles: 2600, pcol: 0x9fc4dd, pfall: 62, plen: 1.5 },
+  snow:   { label: 'Snow',      sky: 0xc3ccd4, fog: 0xd6dde3, fogD: 0.0110, sun: 0xeef3f8, sunI: 0.62, amb: 0.80, particles: 1800, pcol: 0xffffff, pfall: 7,  plen: 0.12 },
+  blood:  { label: 'Blood moon', sky: 0x2a0a0e, fog: 0x3d1014, fogD: 0.0070, sun: 0xff4a44, sunI: 0.60, amb: 0.30, particles: 0 },
+  eclipse:{ label: 'Eclipse',    sky: 0x14161f, fog: 0x1b1f2b, fogD: 0.0060, sun: 0x8fa6d8, sunI: 0.26, amb: 0.22, particles: 0 }
 };
 const WEATHER_KEYS = Object.keys(WEATHER);
 let weatherNow = 'sunny', precip = null, precipVel = null;
@@ -4569,7 +4553,7 @@ function drawTablet() {
 }
 
 function callStrike(wx, wz) {
-  if (!strikeAvailable()) { addFeed('\ud83d\ude80 Strike on cooldown \u2014 ' + strikeWaitText()); return; }
+  if (!strikeAvailable()) { addFeed('Strike on cooldown \u2014 ' + strikeWaitText()); return; }
   localStorage.setItem('nc_strike_at', String(Date.now() + STRIKE_COOLDOWN_MS));
   buildLoadoutHUD();
   const name = MISSILES[Math.floor(Math.random() * MISSILES.length)];
@@ -4588,7 +4572,7 @@ function callStrike(wx, wz) {
   scene.add(ring);
 
   strikes.push({ x: wx, z: wz, t: STRIKE_FLIGHT, mesh: m, ring: ring });
-  addFeed('\ud83d\ude80 ' + name + ' inbound \u2014 ' + STRIKE_FLIGHT.toFixed(1) + 's');
+  addFeed(name + ' inbound \u2014 ' + STRIKE_FLIGHT.toFixed(1) + 's');
 }
 
 function updateStrikes(dt) {
@@ -4936,7 +4920,7 @@ try {
   animate();
 } catch (err) {
   const b = document.getElementById('errbox');
-  if (b) { b.style.display = 'block'; b.textContent = '\u26a0 Game init error: ' + err.message; }
+  if (b) { b.style.display = 'block'; b.textContent = 'Game init error: ' + err.message; }
   console.error(err);
 }
 </script>

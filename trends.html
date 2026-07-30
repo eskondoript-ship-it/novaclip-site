@@ -115,13 +115,13 @@ body.navclosed #radarwrap { left: 0; }
 </head>
 <body>
 <div class='sidebar'>
-  <a href='index.html' data-t='home'>🏠 Home</a>
-  <a href='app.html' data-t='studio'>📈 Studio</a>
-  <a href='analytics.html' data-t='analytics'>📊 Analytics</a>
-  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
-  <a href='editor.html' data-t='editor'>🎬 Editor</a>
-  <a href='game.html' data-t='sniper'>🎯 Sniper</a>
-  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <a href='index.html' data-t='home'>Home</a>
+  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='analytics'>Analytics</a>
+  <a href='trends.html' data-t='trends'>Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>Editor</a>
+  <a href='game.html' data-t='sniper'>Games</a>
+  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
   <div class='themewrap'>
     <label data-t='language'>Language</label>
     <select id='langpick'></select>
@@ -131,36 +131,36 @@ body.navclosed #radarwrap { left: 0; }
 <div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
 
 <div class='wrap'>
-  <h1><span class='grad' data-t='trend_h'>🛰️ Trend Spotter</span></h1>
+  <h1><span class='grad' data-t='trend_h'>Trend Spotter</span></h1>
   <p class='lead' data-t='trend_p'>Type your niche and drop the radar - NovaClip AI predicts what's about to blow up.</p>
   <input id='niche' data-tph='niche_ph' placeholder='Your niche (e.g. Minecraft, cooking, football)'>
   <div class='chips'>
-    <span class='chip'>🎮 Minecraft</span><span class='chip'>🍳 Cooking</span><span class='chip'>⚽ Football</span><span class='chip'>💄 Beauty</span><span class='chip'>🎵 Music</span><span class='chip'>💪 Fitness</span><span class='chip'>📚 Study</span>
+    <span class='chip'>Minecraft</span><span class='chip'>Cooking</span><span class='chip'>Football</span><span class='chip'>Beauty</span><span class='chip'>Music</span><span class='chip'>Fitness</span><span class='chip'>Study</span>
   </div>
-  <button id='scanbtn' class='toolbtn' data-t='scan'>🛰️ Scan for trends</button>
+  <button id='scanbtn' class='toolbtn' data-t='scan'>Scan for trends</button>
   <div id='connpill' class='connpill'></div>
 
   <div class='results' id='results'>
     <div class='sect' id='realsect' style='display:none'>
-      <div class='secthead'><h2>📡 Actually rising right now</h2><span class='sectsub' id='realcount'></span></div>
+      <div class='secthead'><h2>Actually rising right now</h2><span class='sectsub' id='realcount'></span></div>
       <p class='sectsub'>Real videos from the last 60 days, ranked by how fast they are picking up views — not by how big the channel is. A high score means the video is outrunning its own channel.</p>
       <div class='reachnote' id='reachnote' style='display:none'></div>
       <div class='vidgrid' id='vidgrid'></div>
     </div>
 
     <div class='sect' id='ideasect' style='display:none'>
-      <div class='secthead'><h2>💡 6 ideas for your channel</h2></div>
+      <div class='secthead'><h2>6 ideas for your channel</h2></div>
       <p class='sectsub' id='ideasub'>Built from what the radar just found.</p>
       <div class='ideagrid' id='ideagrid'></div>
     </div>
 
     <div class='sect' id='rawsect' style='display:none'>
-      <div class='secthead'><h2>💡 Ideas for your channel</h2></div>
+      <div class='secthead'><h2>Ideas for your channel</h2></div>
       <div id='rawout'></div>
     </div>
 
     <div class='sect' id='shortsect' style='display:none'>
-      <div class='secthead'><h2>⭐ Your idea shortlist</h2></div>
+      <div class='secthead'><h2>Your idea shortlist</h2></div>
       <p class='sectsub'>Saved ideas stay here so you can pick one up in the Editor later.</p>
       <div id='shortlist'></div>
     </div>
@@ -211,10 +211,10 @@ function renderConnPill() {
   const ch = ytChannel();
   if (ytToken()) {
     el.className = 'connpill on';
-    el.innerHTML = '\ud83d\udfe2 Live YouTube data on' + (ch ? ' · ' + ch : '');
+    el.innerHTML = 'Live YouTube data on' + (ch ? ' · ' + ch : '');
   } else {
     el.className = 'connpill';
-    el.innerHTML = '⚪ AI-only mode — <a href="app.html">connect your channel in Studio</a> for real view data';
+    el.innerHTML = 'AI-only mode — <a href="app.html">connect your channel in Studio</a> for real view data';
   }
 }
 
@@ -316,9 +316,9 @@ async function fetchRising(niche) {
 }
 
 function flagFor(v) {
-  if (v.outlier >= 5) return { txt: '\ud83d\ude80 Beating its channel ' + v.outlier.toFixed(1) + '×', bg: 'rgba(247,37,133,0.15)', col: '#ff7ab8' };
-  if (v.velocity >= 10000) return { txt: '\ud83d\udd25 ' + fmt(v.velocity) + ' views/day', bg: 'rgba(255,210,74,0.13)', col: '#ffd24a' };
-  if (v.engagement >= 0.05) return { txt: '\ud83d\udcac High engagement', bg: 'rgba(0,240,255,0.12)', col: '#00F0FF' };
+  if (v.outlier >= 5) return { txt: 'Beating its channel ' + v.outlier.toFixed(1) + '×', bg: 'rgba(247,37,133,0.15)', col: '#ff7ab8' };
+  if (v.velocity >= 10000) return { txt: fmt(v.velocity) + ' views/day', bg: 'rgba(255,210,74,0.13)', col: '#ffd24a' };
+  if (v.engagement >= 0.05) return { txt: 'High engagement', bg: 'rgba(0,240,255,0.12)', col: '#00F0FF' };
   return null;
 }
 
@@ -330,12 +330,12 @@ function renderVideos(res) {
   const note = document.getElementById('reachnote');
   if (res.filtered) {
     note.style.display = 'block';
-    note.innerHTML = '\ud83c\udfaf <b>Your league only.</b> You have ' + fmt(res.mySubs) + ' subscribers, so the radar is ignoring ' +
+    note.innerHTML = '<b>Your league only.</b> You have ' + fmt(res.mySubs) + ' subscribers, so the radar is ignoring ' +
       'anything above ' + fmt(res.ceiling) + ' subs. A 16M-subscriber channel is not your competitor — it gets views ' +
       'because it is 16M, and none of that transfers down to you.';
   } else {
     note.style.display = 'block';
-    note.innerHTML = '⚠\ufe0f <b>Not enough channels your size in this niche.</b> Showing bigger channels instead — read them ' +
+    note.innerHTML = '<b>Not enough channels your size in this niche.</b> Showing bigger channels instead — read them ' +
       'for topic ideas, not for tactics. Try a narrower search term to find creators closer to you.';
   }
   document.getElementById('vidgrid').innerHTML = list.map(v => {
@@ -388,7 +388,7 @@ function renderShortlist() {
   document.getElementById('shortlist').innerHTML = all.map((x, i) =>
     '<div class="shortrow"><div><b>' + esc(x.title) + '</b>' +
     (x.why ? '<small>' + esc(x.why) + '</small>' : '') + '</div>' +
-    '<button class="delbtn" onclick="removeIdea(' + i + ')" title="Remove">✕</button></div>'
+    '<button class="delbtn" onclick="removeIdea(' + i + ')" title="Remove"></button></div>'
   ).join('');
   sect.style.display = 'block';
   document.getElementById('results').style.display = 'block';
@@ -446,11 +446,11 @@ function renderIdeas(ideas, niche) {
       '<div class="ititle">' + esc(x.title) + '</div>' +
       (x.why ? '<div class="iwhy">' + esc(x.why) + '</div>' : '') +
       '<div class="imeta">' +
-        (x.format ? '<span class="itag">\ud83c\udfac ' + esc(x.format) + '</span>' : '') +
-        (x.effort ? '<span class="itag">⚡ ' + esc(x.effort) + '</span>' : '') +
+        (x.format ? '<span class="itag">' + esc(x.format) + '</span>' : '') +
+        (x.effort ? '<span class="itag">' + esc(x.effort) + '</span>' : '') +
       '</div>' +
       '<button class="savebtn' + (already ? ' saved' : '') + '" data-i="' + i + '"' + (already ? ' disabled' : '') + '>' +
-        (already ? '✓ Saved' : '⭐ Save idea') + '</button>' +
+        (already ? 'Saved' : 'Save idea') + '</button>' +
     '</div>';
   }).join('');
 
@@ -458,7 +458,7 @@ function renderIdeas(ideas, niche) {
     btn.onclick = () => {
       const x = ideas[parseInt(btn.dataset.i, 10)];
       if (saveIdea({ title: x.title, why: x.why || '', niche: niche, at: Date.now() })) {
-        btn.classList.add('saved'); btn.disabled = true; btn.textContent = '✓ Saved';
+        btn.classList.add('saved'); btn.disabled = true; btn.textContent = 'Saved';
       }
     };
   });

@@ -52,13 +52,13 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
 </head>
 <body>
 <div class='sidebar'>
-  <a href='index.html' data-t='home'>🏠 Home</a>
-  <a href='app.html' data-t='studio'>📈 Studio</a>
-  <a href='analytics.html' data-t='analytics'>📊 Analytics</a>
-  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
-  <a href='editor.html' data-t='editor'>🎬 Editor</a>
-  <a href='game.html' data-t='sniper'>🎯 Sniper</a>
-  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <a href='index.html' data-t='home'>Home</a>
+  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='analytics'>Analytics</a>
+  <a href='trends.html' data-t='trends'>Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>Editor</a>
+  <a href='game.html' data-t='sniper'>Games</a>
+  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
   <div class='themewrap'>
     <label data-t='language'>Language</label>
     <select id='langpick'></select>
@@ -74,21 +74,21 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
       <p class='subtitle' data-t='studio_sub'>Connect your channel and scout the competition.</p>
     </div>
     <div>
-      <button id='gbtn' class='gbtn' data-t='signin'>🔑 Sign in with Google</button>
+      <button id='gbtn' class='gbtn' data-t='signin'>Sign in with Google</button>
       <p id='uname'></p>
     </div>
   </div>
 
   <div id='toolbar'>
     <div class='cardgrid'>
-      <div class='tool' id='compbtn'><div class='ico'>🥊</div><h3 data-t='t_comp'>Closest competitors</h3><p data-t='t_comp_d'>Channels closest to your size — full stats and links.</p></div>
-      <div class='tool' id='duelbtn'><div class='ico'>⚔️</div><h3 data-t='t_duel'>Duel a channel</h3><p data-t='t_duel_d'>Challenge a channel within 20k subs and win points.</p></div>
-      <a class='tool' href='analytics.html'><div class='ico'>📊</div><h3 data-t='t_analytics'>Full analytics</h3><p data-t='t_analytics_d'>Deep charts comparing you to rivals — on its own page.</p></a>
+      <div class='tool' id='compbtn'><div class='ico'></div><h3 data-t='t_comp'>Closest competitors</h3><p data-t='t_comp_d'>Channels closest to your size — full stats and links.</p></div>
+      <div class='tool' id='duelbtn'><div class='ico'></div><h3 data-t='t_duel'>Duel a channel</h3><p data-t='t_duel_d'>Challenge a channel within 20k subs and win points.</p></div>
+      <a class='tool' href='analytics.html'><div class='ico'></div><h3 data-t='t_analytics'>Full analytics</h3><p data-t='t_analytics_d'>Deep charts comparing you to rivals — on its own page.</p></a>
     </div>
   </div>
 
   <div id='duelsetup' class='panelbox'>
-    <b data-t='duel_label'>⚔️ Views and subs duel (max 20k subs difference between channels)</b><br><br>
+    <b data-t='duel_label'>Views and subs duel (max 20k subs difference between channels)</b><br><br>
     <input id='duelbox' data-tph='opp_ph' placeholder='Opponent channel name...'>
     <button id='duelgo' class='smallbtn' data-t='fight'>Fight!</button>
   </div>
@@ -135,7 +135,7 @@ function signedInUI(name) {
   document.getElementById('gbtn').style.display = 'none';
   const p = document.getElementById('uname');
   p.style.display = 'block';
-  p.innerHTML = '\ud83d\udc64 ' + name + ' &nbsp; <a href="#" id="signoutlink" style="color:#7E8AA6;font-size:0.85rem;">Sign out</a>';
+  p.innerHTML = name + ' &nbsp; <a href="#" id="signoutlink" style="color:#7E8AA6;font-size:0.85rem;">Sign out</a>';
   document.getElementById('toolbar').style.display = 'block';
   const so = document.getElementById('signoutlink');
   if (so) so.onclick = (e) => { e.preventDefault(); localStorage.removeItem('nc_yt'); auth.signOut().then(() => location.reload()); };
@@ -196,7 +196,7 @@ document.getElementById('compbtn').onclick = async () => {
   show('Scouting your rivals...');
   const comps = await getCompetitors(3);
   const mySubs = parseInt(myStats.statistics.subscriberCount);
-  show('<b style="font-size:1.15rem">\ud83e\udd4a Your closest competitors</b><br><span style="color:#7E8AA6;font-size:0.85rem">Matched purely by subscriber count — names are irrelevant.</span><br><br>' + comps.map((c, i) => {
+  show('<b style="font-size:1.15rem">Your closest competitors</b><br><span style="color:#7E8AA6;font-size:0.85rem">Matched purely by subscriber count — names are irrelevant.</span><br><br>' + comps.map((c, i) => {
     const s = c.statistics;
     const subs = parseInt(s.subscriberCount || 0), views = parseInt(s.viewCount || 0), vids = parseInt(s.videoCount || 1);
     const avg = Math.round(views / Math.max(vids, 1));
@@ -204,12 +204,12 @@ document.getElementById('compbtn').onclick = async () => {
     const created = c.snippet.publishedAt ? new Date(c.snippet.publishedAt).getFullYear() : '—';
     return '<div class="compcard"><b>' + (i + 1) + '. ' + c.snippet.title + '</b>' + (c.snippet.country ? ' · ' + c.snippet.country : '') +
       ' · since ' + created +
-      '<div class="row"><span>\ud83d\udc65 <b>' + subs.toLocaleString() + '</b> subs</span>' +
-      '<span>\ud83d\udc41\ufe0f <b>' + views.toLocaleString() + '</b> views</span>' +
-      '<span>\ud83c\udfac <b>' + vids.toLocaleString() + '</b> videos</span>' +
-      '<span>\ud83d\udcca <b>~' + avg.toLocaleString() + '</b> views/video</span>' +
-      '<span>' + (gap >= 0 ? '\ud83d\udcc8 +' : '\ud83d\udcc9 ') + gap.toLocaleString() + ' vs you</span></div>' +
-      '<div class="desc">\ud83d\udcdd ' + (c.snippet.description ? c.snippet.description.slice(0, 160).replace(/</g, '&lt;') + '…' : 'No description') + '</div>' +
+      '<div class="row"><span><b>' + subs.toLocaleString() + '</b> subs</span>' +
+      '<span><b>' + views.toLocaleString() + '</b> views</span>' +
+      '<span><b>' + vids.toLocaleString() + '</b> videos</span>' +
+      '<span><b>~' + avg.toLocaleString() + '</b> views/video</span>' +
+      '<span>' + (gap >= 0 ? '+' : '') + gap.toLocaleString() + ' vs you</span></div>' +
+      '<div class="desc">' + (c.snippet.description ? c.snippet.description.slice(0, 160).replace(/</g, '&lt;') + '…' : 'No description') + '</div>' +
       '<a target="_blank" style="color:#00F0FF; font-size:0.88rem" href="https://www.youtube.com/channel/' + c.id + '">Open channel ↗</a></div>';
   }).join(''));
 };
@@ -227,12 +227,12 @@ document.getElementById('duelgo').onclick = async () => {
   const opp = cd.items[0];
   const oppSubs = parseInt(opp.statistics.subscriberCount || 0), oppViews = parseInt(opp.statistics.viewCount || 0);
   const gap = Math.abs(mySubs - oppSubs);
-  if (gap > 20000) { show('⚔\ufe0f Unfair matchup! The gap is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer!'); return; }
+  if (gap > 20000) { show('Unfair matchup! The gap is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer!'); return; }
   let a = 0, b = 0;
   if (mySubs >= oppSubs) a++; else b++;
   if (myViews >= oppViews) a++; else b++;
   const winner = a > b ? myStats.snippet.title : (b > a ? opp.snippet.title : 'It is a TIE');
-  show('<b>⚔\ufe0f DUEL RESULT</b><br><br>' + myStats.snippet.title + ': ' + mySubs.toLocaleString() + ' subs · ' + myViews.toLocaleString() + ' views<br>' + opp.snippet.title + ': ' + oppSubs.toLocaleString() + ' subs · ' + oppViews.toLocaleString() + ' views<br><br>\ud83c\udfc6 <b>Winner: ' + winner + '</b>');
+  show('<b>DUEL RESULT</b><br><br>' + myStats.snippet.title + ': ' + mySubs.toLocaleString() + ' subs · ' + myViews.toLocaleString() + ' views<br>' + opp.snippet.title + ': ' + oppSubs.toLocaleString() + ' subs · ' + oppViews.toLocaleString() + ' views<br><br><b>Winner: ' + winner + '</b>');
   if (a > b && window.addPts) addPts(20);
 };
 

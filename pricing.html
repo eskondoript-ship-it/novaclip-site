@@ -28,7 +28,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 .price small { font-size: 0.85rem; color: #7E8AA6; font-weight: 400; }
 .plan ul { list-style: none; margin: 14px 0 18px; }
 .plan li { font-size: 0.88rem; color: #b8bccb; padding: 5px 0; line-height: 1.5; }
-.plan li::before { content: '✓ '; color: #B6FF3C; font-weight: 800; }
+.plan li::before { content: ''; color: #B6FF3C; font-weight: 800; }
 .cta { width: 100%; padding: 12px; border-radius: 30px; border: none; font-weight: 800; cursor: pointer; background: rgba(255,255,255,0.08); color: #EAF2FF; border: 1px solid rgba(255,255,255,0.2); transition: .25s; }
 .plan.best .cta { background: linear-gradient(90deg,#FF2E97,#7209B7); border: none; }
 .cta:hover { transform: translateY(-2px); box-shadow: 0 0 24px rgba(0,240,255,0.35); }
@@ -220,7 +220,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
   <p class='sub'>The kid's core experience is free. Paid plans fund the platform — and every ad or offer lives on the <a href='parent.html'>parent dashboard</a>, never in front of the kids.</p>
 
   <div style='margin-bottom:30px'>
-    <label style='font-size:0.85rem; color:#7E8AA6; margin-right:8px'>💱 Currency</label>
+    <label style='font-size:0.85rem; color:#7E8AA6; margin-right:8px'>Currency</label>
     <select id='curpick' style='padding:9px 14px; border-radius:10px; background:#0A0C14; color:#EAF2FF; border:1px solid rgba(0,240,255,0.4); font-size:0.95rem;'>
       <option value='eur'>€ Euro</option>
       <option value='usd'>$ US Dollar</option>
@@ -232,7 +232,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
     </select>
   </div>
 
-  <button id='cartbtn' onclick='openCart()'>🛒 <span id='cartcount'>0</span></button>
+  <button id='cartbtn' onclick='openCart()'><span id='cartcount'>0</span></button>
 
   <!-- shown only once you are enrolled in a certificate -->
   <div id='myTraining' style='display:none'></div>
@@ -244,7 +244,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 
 <div class='grid'>
     <div class='plan'>
-      <h3>👨‍👩‍👧 Family Dashboard</h3>
+      <h3>Family Dashboard</h3>
       <div class='price' data-eur='6.99' data-usd='7.99' data-gbp='5.99' data-cny='49.9' data-chf='6.90' data-inr='599' data-bdt='799'><small class='per'>/month</small></div>
       <ul>
         <li>Parental controls & PIN access</li>
@@ -257,7 +257,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
     </div>
 
     <div class='plan'>
-      <h3>🛠️ Kids' Tools Upgrade</h3>
+      <h3>Kids' Tools Upgrade</h3>
       <div class='price' data-eur='4.99' data-usd='5.99' data-gbp='4.49' data-cny='39.9' data-chf='4.90' data-inr='449' data-bdt='599'><small class='per'>/month</small></div>
       <ul>
         <li>Priority AI answers</li>
@@ -270,7 +270,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 
     <div class='plan best'>
       <span class='tag'>BEST VALUE</span>
-      <h3>🎁 Family Bundle</h3>
+      <h3>Family Bundle</h3>
       <div class='price' data-eur='9.99' data-usd='10.99' data-gbp='8.99' data-cny='79.9' data-chf='9.90' data-inr='899' data-bdt='1199'><small class='per'>/month</small></div>
       <ul>
         <li>Family Dashboard included</li>
@@ -282,7 +282,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
     </div>
 
     <div class='plan'>
-      <h3>📜 Basic Certificate</h3>
+      <h3>Basic Certificate</h3>
       <div class='price' data-eur='24.99' data-usd='27.99' data-gbp='21.99' data-cny='199' data-chf='24.90' data-inr='1999' data-bdt='2799'><small class='per'> one-time</small></div>
       <ul>
         <li>Entry NovaClip Creator Certificate</li>
@@ -294,7 +294,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
     </div>
 
     <div class='plan'>
-      <h3>🥈 Advanced Certificate</h3>
+      <h3>Advanced Certificate</h3>
       <div class='price' data-eur='49.99' data-usd='54.99' data-gbp='44.99' data-cny='399' data-chf='49.90' data-inr='3999' data-bdt='5499'><small class='per'> one-time</small></div>
       <ul>
         <li>Everything in Basic</li>
@@ -307,7 +307,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 
     <div class='plan best'>
       <span class='tag'>TOP TIER</span>
-      <h3>🏆 Master Certificate</h3>
+      <h3>Master Certificate</h3>
       <div class='price' data-eur='99.99' data-usd='109.99' data-gbp='89.99' data-cny='799' data-chf='99.90' data-inr='7999' data-bdt='10999'><small class='per'> one-time</small></div>
       <ul>
         <li>Everything in Advanced</li>
@@ -460,7 +460,7 @@ function renderCart() {
         '<button onclick="cartQty(' + i + ',1)">+</button>' +
       '</div>' +
       '<div class="cprice">' + fmt(cur, Math.round(it.unit * it.qty * 100) / 100) + '</div>' +
-      '<button class="crm" onclick="cartRemove(' + i + ')">✕</button>' +
+      '<button class="crm" onclick="cartRemove(' + i + ')"></button>' +
     '</div>').join('');
   const total = CART.reduce((s, i) => s + i.unit * i.qty, 0);
   document.getElementById('carttotal').textContent = fmt(cur, Math.round(total * 100) / 100);
@@ -469,11 +469,11 @@ function renderCart() {
   const paid = CART.filter(it => stripeLinkFor(it));
   const note = document.getElementById('cartnote');
   if (!paid.length) {
-    note.innerHTML = '\ud83d\udd12 <b>Demo mode.</b> No Stripe links are configured yet, so checkout is a simulation. Add your Stripe Payment Links in the code to take real payments.';
+    note.innerHTML = '<b>Demo mode.</b> No Stripe links are configured yet, so checkout is a simulation. Add your Stripe Payment Links in the code to take real payments.';
   } else if (CART.length === 1) {
-    note.innerHTML = '\ud83d\udd12 Secure payment handled by <b>Stripe</b>. You will be redirected to complete it.';
+    note.innerHTML = 'Secure payment handled by <b>Stripe</b>. You will be redirected to complete it.';
   } else {
-    note.innerHTML = '\ud83d\udd12 Payments are taken by <b>Stripe</b>, one item at a time. You will complete ' + CART.length + ' secure checkouts in sequence.';
+    note.innerHTML = 'Payments are taken by <b>Stripe</b>, one item at a time. You will complete ' + CART.length + ' secure checkouts in sequence.';
   }
 }
 
@@ -720,15 +720,15 @@ async function setupWallet() {
 // ============================================================
 const CERTS = {
   'Basic Certificate': {
-    tier:'BA', icon:'\ud83d\udcd7', accent:'#00F0FF', title:'NovaClip Creator Certificate', level:'Foundation level credential',
+    tier:'BA', icon:'', accent:'#00F0FF', title:'NovaClip Creator Certificate', level:'Foundation level credential',
     skills:['Video editing','Safe publishing','Thumbnails & titles','Audience basics']
   },
   'Advanced Certificate': {
-    tier:'AD', icon:'\ud83e\udd48', accent:'#B6FF3C', title:'NovaClip Advanced Creator', level:'Advanced level credential',
+    tier:'AD', icon:'', accent:'#B6FF3C', title:'NovaClip Advanced Creator', level:'Advanced level credential',
     skills:['Analytics & growth','Advanced effects','Sound design','Portfolio review']
   },
   'Master Certificate': {
-    tier:'MA', icon:'\ud83c\udfc6', accent:'#ffd24a', title:'NovaClip Master Creator', level:'Master level credential',
+    tier:'MA', icon:'', accent:'#ffd24a', title:'NovaClip Master Creator', level:'Master level credential',
     skills:['Creative direction','Growth strategy','Community & safety','Featured showcase']
   }
 };
@@ -855,7 +855,7 @@ function renderCertProgress(tier) {
   if (!prog || typeof certProgress !== 'function') return;
   const p = certProgress(tier);
   if (!p) return;
-  const c = CERTS[tier] || { icon:'\ud83d\udcdc', accent:'#00F0FF' };
+  const c = CERTS[tier] || { icon:'', accent:'#00F0FF' };
   prog.style.setProperty('--ac', c.accent);
   prog.style.display = 'block';
   prog.innerHTML =
@@ -882,11 +882,11 @@ function renderMyTraining() {
   const owned = issueEarned();
   const order = ['Basic Certificate','Advanced Certificate','Master Certificate'];
   const rows = mine.slice().sort((a,b) => order.indexOf(a) - order.indexOf(b)).map(tier => {
-    const c = CERTS[tier] || { icon:'\ud83d\udcdc', accent:'#00F0FF' };
+    const c = CERTS[tier] || { icon:'', accent:'#00F0FF' };
     const rec = owned.find(x => x.tier === (CERTS[tier] || {}).tier);
     if (rec) {
       return '<div class="mtrow done"><span>' + c.icon + ' <b>' + tier + '</b></span>' +
-             '<span class="mtok">✅ Issued · ' + rec.code + '</span></div>';
+             '<span class="mtok">Issued · ' + rec.code + '</span></div>';
     }
     const p = certProgress(tier);
     const left = p.missing.map(m => m.icon + ' ' + m.label + ' <b>' + m.have + '/' + m.need + '</b>').join(' · ');
@@ -897,7 +897,7 @@ function renderMyTraining() {
   }).join('');
 
   host.style.display = 'block';
-  host.innerHTML = '<div class="mtbox"><div class="mthead">\ud83c\udf93 My training</div>' +
+  host.innerHTML = '<div class="mtbox"><div class="mthead">My training</div>' +
     '<div class="mtsub">You are enrolled. Certificates issue automatically the moment you meet the requirements — there is nothing more to pay.</div>' +
     rows + '</div>';
 }
@@ -982,11 +982,11 @@ async function openScanner() {
   scanPass = 0;
   // must be a secure context (https) — cameras are blocked on plain http
   if (!window.isSecureContext && location.protocol !== 'file:') {
-    setScanStatus('⚠ Camera needs a secure (https) connection.');
+    setScanStatus('Camera needs a secure (https) connection.');
     return;
   }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    setScanStatus('⚠ This browser does not support camera access.');
+    setScanStatus('This browser does not support camera access.');
     return;
   }
 
@@ -1006,11 +1006,11 @@ async function openScanner() {
     const n = lastErr && lastErr.name ? lastErr.name : '';
     let msg = 'Camera unavailable — type the details instead.';
     if (n === 'NotAllowedError' || n === 'SecurityError') {
-      msg = '\ud83d\udeab Camera blocked. Allow camera access in your browser, then try again.';
+      msg = 'Camera blocked. Allow camera access in your browser, then try again.';
     } else if (n === 'NotFoundError' || n === 'DevicesNotFoundError') {
-      msg = '\ud83d\udcf7 No camera found on this device — type the details instead.';
+      msg = 'No camera found on this device — type the details instead.';
     } else if (n === 'NotReadableError' || n === 'TrackStartError') {
-      msg = '\ud83d\udcf7 Camera is in use by another app. Close it and try again.';
+      msg = 'Camera is in use by another app. Close it and try again.';
     }
     setScanStatus(msg);
     return;
@@ -1040,7 +1040,7 @@ async function openScanner() {
     if (!scanFound.exp) miss.push('expiry');
     if (!scanFound.name) miss.push('name');
     if (miss.length && miss.length < 3) setScanStatus('Reading… still looking for ' + miss.join(' + '));
-    else if (!miss.length) setScanStatus('✅ Got everything');
+    else if (!miss.length) setScanStatus('Got everything');
 
     // finish once we have the number plus at least one other field, or on timeout
     const done = scanFound.number && scanFound.exp && scanFound.name;
@@ -1061,7 +1061,7 @@ function applyScan() {
   }
   if (scanFound.exp) { document.getElementById('coExp').value = scanFound.exp; parts.push('expiry'); }
   if (scanFound.name) { document.getElementById('coName2').value = scanFound.name; parts.push('name'); }
-  setScanStatus('✅ Captured ' + parts.join(', '));
+  setScanStatus('Captured ' + parts.join(', '));
   setTimeout(closeScanner, 900);
 }
 
@@ -1253,9 +1253,9 @@ else initCheckout();
 </script>
 <div id='pingate'>
   <div class='pinbox'>
-    <button class='coclose' onclick='closePinGate()'>✕</button>
+    <button class='coclose' onclick='closePinGate()'></button>
     <div id='pinHasPin'>
-      <div class='pinicon'>🔐</div>
+      <div class='pinicon'></div>
       <h2>Parent approval needed</h2>
       <p class='pinsub'>Purchases must be approved by a parent or guardian. Enter the 5-digit Family Dashboard PIN to continue.</p>
       <div class='pindots' id='pinDots'><span></span><span></span><span></span><span></span><span></span></div>
@@ -1265,7 +1265,7 @@ else initCheckout();
       <a class='pinlink' href='parent.html'>Forgot the PIN? Open the Family Dashboard</a>
     </div>
     <div id='pinNoPin' style='display:none'>
-      <div class='pinicon'>🛡️</div>
+      <div class='pinicon'></div>
       <h2>Set up parental controls first</h2>
       <p class='pinsub'>NovaClip is built for creators aged 13–18, so <b>every purchase needs a parent or guardian</b>. No parental controls are set up on this account yet, so nothing can be bought.</p>
       <div class='pinsteps'>
@@ -1281,8 +1281,8 @@ else initCheckout();
 
 <div id='scanner'>
   <div class='scanbox'>
-    <button class='coclose' onclick='closeScanner()'>✕</button>
-    <h2>📷 Scan your card</h2>
+    <button class='coclose' onclick='closeScanner()'></button>
+    <h2>Scan your card</h2>
     <p class='scansub'>Hold the front of the card inside the frame. We will read the <b>number, expiry and name</b> — keep it flat and well lit.</p>
     <div class='scanview'>
       <video id='scanVideo' autoplay playsinline muted></video>
@@ -1290,15 +1290,15 @@ else initCheckout();
     </div>
     <div class='scanstatus' id='scanStatus'>Starting camera…</div>
     <canvas id='scanCanvas' style='display:none'></canvas>
-    <div class='conotice'>🔒 The image never leaves your device — it is read locally in your browser and discarded immediately.</div>
+    <div class='conotice'>The image never leaves your device — it is read locally in your browser and discarded immediately.</div>
     <button class='cobtn alt' onclick='closeScanner()'>Type it manually instead</button>
   </div>
 </div>
 
 <div id='cart'>
   <div class='cartbox'>
-    <button class='coclose' onclick='closeCart()'>✕</button>
-    <h2>🛒 Your cart</h2>
+    <button class='coclose' onclick='closeCart()'></button>
+    <h2>Your cart</h2>
     <div id='cartitems'></div>
     <div class='carttotal'><span>Total</span><b id='carttotal'>—</b></div>
     <div id='cartnote' class='conotice'></div>
@@ -1309,9 +1309,9 @@ else initCheckout();
 
 <div id='checkout'>
   <div class='cobox'>
-    <button class='coclose' onclick='closeCheckout()'>✕</button>
+    <button class='coclose' onclick='closeCheckout()'></button>
     <div class='costep' id='coStep1'>
-      <h2>🛒 Checkout</h2>
+      <h2>Checkout</h2>
       <div class='coplan'>
         <div><b id='coName'>Plan</b><small id='coCycle'>Monthly</small></div>
         <div class='coprice' id='coPrice'>—</div>
@@ -1329,19 +1329,19 @@ else initCheckout();
       <label class='colab'>Card number</label>
       <div class='cardwrap'>
         <input type='text' id='coCard' name='cardnumber' autocomplete='cc-number' inputmode='numeric' maxlength='19' placeholder='4242 4242 4242 4242'>
-        <button type='button' id='scanBtn' title='Scan your card with the camera'>📷</button>
+        <button type='button' id='scanBtn' title='Scan your card with the camera'></button>
       </div>
-      <div class='scanhint' id='scanHint'>📷 Tap the camera to scan the whole card — number, expiry and name</div>
+      <div class='scanhint' id='scanHint'>Tap the camera to scan the whole card — number, expiry and name</div>
       <div class='corow'>
         <div><label class='colab'>Expiry</label><input type='text' id='coExp' name='ccexp' autocomplete='cc-exp' maxlength='5' placeholder='MM/YY'></div>
         <div><label class='colab'>CVC</label><input type='text' id='coCvc' name='cvc' autocomplete='cc-csc' inputmode='numeric' maxlength='4' placeholder='123'></div>
       </div>
-      <div class='conotice'>🔒 <b>Demo checkout.</b> This does not take real payment and no card details are stored or sent anywhere. Live payments require a Stripe account and a server.</div>
+      <div class='conotice'><b>Demo checkout.</b> This does not take real payment and no card details are stored or sent anywhere. Live payments require a Stripe account and a server.</div>
       <button class='cobtn' id='coPay'>Confirm subscription</button>
       <div class='coerr' id='coErr'></div>
     </div>
     <div class='costep' id='coStep2' style='display:none'>
-      <div class='cotick'>✅</div>
+      <div class='cotick'></div>
       <h2>Subscription confirmed</h2>
       <p class='cosub'>A confirmation has been sent to <b id='coSentTo'>—</b>.</p>
       <div class='cosummary' id='coSummary'></div>
@@ -1349,7 +1349,7 @@ else initCheckout();
         <div class='certmini' id='certMini'></div>
         <div class='certprogress' id='certProgress' style='display:none'></div>
         <div class='certacts'>
-          <button onclick='printCert()'>🖨️ Print / save PDF</button>
+          <button onclick='printCert()'>Print / save PDF</button>
         </div>
       </div>
       <button class='cobtn' onclick='closeCheckout()'>Done</button>

@@ -37,17 +37,17 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 <body>
 <div class='wrap'>
   <a class='backlnk' href='index.html'>← Back to NovaClip</a>
-  <h1>👨‍👩‍👧 <span class='g'>Family Dashboard</span></h1>
+  <h1><span class='g'>Family Dashboard</span></h1>
   <p class='sub'>Parental controls for NovaClip. See what your kid is working on, get alerts if harassment shows up in their YouTube comments, and keep ads away from them — ads and offers only ever appear here, on the parent side, never in the kid's tools.</p>
 
   <!-- PIN GATE -->
   <div class='card' id='gate'>
-    <h3>🔒 Parent access <small>First time: set a 5-digit PIN and a security question. You'll need the PIN every visit; the question recovers access if you forget it. The kid's pages never show this dashboard.</small></h3>
+    <h3>Parent access <small>First time: set a 5-digit PIN and a security question. You'll need the PIN every visit; the question recovers access if you forget it. The kid's pages never show this dashboard.</small></h3>
     <div id='setupfields'>
       <div id='setuponly'>
-        <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06); margin-bottom:14px;'>👋 <b>Parents only.</b> This one-time setup confirms it's really you — not your child — before parental controls are created.</div>
+        <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06); margin-bottom:14px;'><b>Parents only.</b> This one-time setup confirms it's really you — not your child — before parental controls are created.</div>
         <input type='email' id='parentSetupEmail' placeholder='Parent email address'>
-        <button class='btn' id='sendcodebtn' style='margin-bottom:12px;'>📧 Send confirmation code</button>
+        <button class='btn' id='sendcodebtn' style='margin-bottom:12px;'>Send confirmation code</button>
         <div id='codebox' style='display:none;'>
           <input type='text' id='confcode' placeholder='6-digit code from your email' maxlength='6' inputmode='numeric'>
           <label class='sm' style='display:block; font-size:0.85rem; color:#7E8AA6; margin:6px 0 3px;'>Your child's age</label>
@@ -82,7 +82,7 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
   <div id='dash'>
     <!-- ACTIVITY -->
     <div class='card'>
-      <h3>📊 Activity overview <small>Live from this device's NovaClip usage.</small></h3>
+      <h3>Activity overview <small>Live from this device's NovaClip usage.</small></h3>
       <div class='stat'><b id='s_pts'>0</b><span>points earned</span></div>
       <div class='stat'><b id='s_chats'>0</b><span>AI chats</span></div>
       <div class='stat'><b id='s_scans'>0</b><span>trend scans</span></div>
@@ -93,22 +93,22 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 
     <!-- HARASSMENT SCANNER -->
     <div class='card'>
-      <h3>🛡️ Comment safety scanner <small>Scans the newest comments on your kid's uploads for harassment or bullying. Uses the YouTube connection made in Studio.</small></h3>
+      <h3>Comment safety scanner <small>Scans the newest comments on your kid's uploads for harassment or bullying. Uses the YouTube connection made in Studio.</small></h3>
       <input type='email' id='parentEmail' placeholder='Parent alert email (used for the report draft)'>
-      <button class='btn pink' id='scanBtn'>🔍 Scan latest comments</button>
+      <button class='btn pink' id='scanBtn'>Scan latest comments</button>
       <div id='scanout' style='margin-top:12px'></div>
       <div class='notice'>How reporting works: flagged comments appear here instantly for the parent. "Report to YouTube" opens YouTube's official reporting flow for that exact comment (YouTube doesn't allow apps to file reports directly — a human must confirm). "Email me this" opens a pre-written alert to your email so there's a record.</div>
     </div>
 
     <!-- ADS -->
     <div class='card'>
-      <h3>📢 Ads & offers <small>This is the only place ads exist in NovaClip.</small></h3>
+      <h3>Ads & offers <small>This is the only place ads exist in NovaClip.</small></h3>
       <p style='color:#b8bccb; font-size:0.95rem; line-height:1.7'>NovaClip never shows advertising inside the kid's tools, games, or editor. Sponsored offers and plan upgrades appear only on this parent dashboard.</p>
     </div>
 
     <!-- BILLING / PLANS (PIN-protected because it lives inside the dashboard) -->
     <div class='card'>
-      <h3>💳 Plans & billing <small>Manage your NovaClip subscription. Everything here sits behind your parent PIN.</small></h3>
+      <h3>Plans & billing <small>Manage your NovaClip subscription. Everything here sits behind your parent PIN.</small></h3>
       <div id='planpick' style='display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:16px;'></div>
 
       <h3 style='margin-top:10px'>Saved card</h3>
@@ -129,7 +129,7 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
         </label>
         <button class='btn' id='savecardbtn'>Save payment method</button>
       </div>
-      <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06);'>⚠️ Pitch build — do not enter a real card. This demonstrates the billing flow only. In production, card data would go straight to a certified payment processor (Stripe/Adyen) and never touch NovaClip's servers — we'd store only a token, never the real number.</div>
+      <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06);'>Pitch build — do not enter a real card. This demonstrates the billing flow only. In production, card data would go straight to a certified payment processor (Stripe/Adyen) and never touch NovaClip's servers — we'd store only a token, never the real number.</div>
     </div>
   </div>
 </div>
@@ -208,15 +208,15 @@ document.getElementById('sendcodebtn').onclick = async () => {
   // FOOLPROOFING CHECK: parent email must NOT be the kid's own YouTube/Google account
   const kidEmail = await kidAccountEmail();
   if (kidEmail && kidEmail === email) {
-    msg.innerHTML = '🚫 That email is the one signed in to the kid\u0027s YouTube account. The parent email must be different from the child\u0027s account.';
+    msg.innerHTML = 'That email is the one signed in to the kid\u0027s YouTube account. The parent email must be different from the child\u0027s account.';
     return;
   }
 
-  CONF_CODE = ('' + Math.floor(100000 + Math.random()*900000));
+  CONF_CODE = String(Math.floor(100000 + Math.random()*900000));
   localStorage.setItem('nc_parent_email', email);
   document.getElementById('codebox').style.display = 'block';
   // DEMO: show the code on screen. In production this is emailed and never shown.
-  msg.innerHTML = '📧 (Demo) Your confirmation code is <b style="color:#00F0FF">' + CONF_CODE + '</b> — in the real product this is emailed to the parent, not shown here.';
+  msg.innerHTML = '(Demo) Your confirmation code is <b style="color:#00F0FF">' + CONF_CODE + '</b> — in the real product this is emailed to the parent, not shown here.';
 };
 
 document.getElementById('confcode').oninput = (e) => {
@@ -227,7 +227,7 @@ document.getElementById('confcode').oninput = (e) => {
     document.getElementById('setuponly2').style.display = 'block';
     document.getElementById('pinbtn').style.display = 'inline-block';
     document.getElementById('pinbtn').textContent = 'Set up & unlock';
-    document.getElementById('pinmsg').innerHTML = '✅ Email confirmed. Now set your parent PIN and security question.';
+    document.getElementById('pinmsg').innerHTML = 'Email confirmed. Now set your parent PIN and security question.';
   }
 };
 
@@ -235,7 +235,7 @@ document.getElementById('pinbtn').onclick = async () => {
   const v = document.getElementById('pin').value.trim();
   const msg = document.getElementById('pinmsg');
   const ls = lockState();
-  if (ls.until > Date.now()) { msg.textContent = '🔒 Too many wrong tries. Locked for ' + Math.ceil((ls.until - Date.now())/1000) + 's.'; return; }
+  if (ls.until > Date.now()) { msg.textContent = 'Too many wrong tries. Locked for ' + Math.ceil((ls.until - Date.now())/1000) + 's.'; return; }
   if (!/^\d{5}$/.test(v)) { msg.textContent = 'PIN must be exactly 5 digits.'; return; }
 
   // first-time setup — requires confirmed email code
@@ -245,7 +245,7 @@ document.getElementById('pinbtn').onclick = async () => {
     }
     const age = parseInt(document.getElementById('kidage').value, 10);
     if (isNaN(age) || age < 13 || age > 18) {
-      msg.innerHTML = '⚠️ NovaClip is for ages 13–18. For younger children, verified parental consent (COPPA/GDPR-K) is required — see our roadmap.';
+      msg.innerHTML = 'NovaClip is for ages 13–18. For younger children, verified parental consent (COPPA/GDPR-K) is required — see our roadmap.';
       return;
     }
     const q = document.getElementById('secq').value;
@@ -268,8 +268,8 @@ document.getElementById('pinbtn').onclick = async () => {
     setLock({ fails: 0, until: 0 }); msg.textContent = ''; unlock();
   } else {
     const fails = ls.fails + 1;
-    if (fails >= 3) { setLock({ fails: 0, until: Date.now() + 30000 }); msg.textContent = '🔒 3 wrong tries — locked for 30 seconds. Or use "Forgot PIN?"'; }
-    else { setLock({ fails, until: 0 }); msg.textContent = '❌ Wrong PIN. ' + (3 - fails) + ' tries left.'; }
+    if (fails >= 3) { setLock({ fails: 0, until: Date.now() + 30000 }); msg.textContent = '3 wrong tries — locked for 30 seconds. Or use "Forgot PIN?"'; }
+    else { setLock({ fails, until: 0 }); msg.textContent = 'Wrong PIN. ' + (3 - fails) + ' tries left.'; }
     document.getElementById('pin').value = '';
   }
 };
@@ -279,7 +279,7 @@ document.getElementById('forgotbtn').onclick = () => {
   const q = localStorage.getItem('nc_secq');
   if (!q) { document.getElementById('pinmsg').textContent = 'No security question on file.'; return; }
   document.getElementById('recoverbox').style.display = 'block';
-  document.getElementById('secqlabel').textContent = '🔑 ' + q;
+  document.getElementById('secqlabel').textContent = q;
 };
 
 // reset via security answer
@@ -292,10 +292,10 @@ document.getElementById('resetbtn').onclick = async () => {
     localStorage.setItem('nc_parent_pin_h', await hashPin(np));
     setLock({ fails: 0, until: 0 });
     document.getElementById('recoverbox').style.display = 'none';
-    msg.textContent = '✅ PIN reset. Unlocking…';
+    msg.textContent = 'PIN reset. Unlocking…';
     setTimeout(unlock, 600);
   } else {
-    msg.textContent = '❌ Security answer is incorrect.';
+    msg.textContent = 'Security answer is incorrect.';
   }
 };
 function unlock() {
@@ -314,12 +314,12 @@ function unlock() {
 
 // --- Plans & billing (inside PIN-gated dashboard) ---
 const PLANS = [
-  { id: 'dash', name: '👨‍👩‍👧 Family Dashboard', price: '€6.99/mo' },
-  { id: 'tools', name: '🛠️ Kids\u0027 Tools', price: '€4.99/mo' },
-  { id: 'bundle', name: '🎁 Family Bundle', price: '€9.99/mo' },
-  { id: 'cert_basic', name: '📜 Basic Certificate', price: '€24.99' },
-  { id: 'cert_adv', name: '🥈 Advanced Certificate', price: '€49.99' },
-  { id: 'cert_master', name: '🏆 Master Certificate', price: '€99.99' }
+  { id: 'dash', name: 'Family Dashboard', price: '€6.99/mo' },
+  { id: 'tools', name: 'Kids\u0027 Tools', price: '€4.99/mo' },
+  { id: 'bundle', name: 'Family Bundle', price: '€9.99/mo' },
+  { id: 'cert_basic', name: 'Basic Certificate', price: '€24.99' },
+  { id: 'cert_adv', name: 'Advanced Certificate', price: '€49.99' },
+  { id: 'cert_master', name: 'Master Certificate', price: '€99.99' }
 ];
 function renderPlans() {
   const active = localStorage.getItem('nc_plan') || '';
@@ -327,7 +327,7 @@ function renderPlans() {
     '<div style="border:1px solid ' + (active===p.id?'#00F0FF':'rgba(255,255,255,0.12)') + '; border-radius:12px; padding:12px; text-align:center;">' +
     '<div style="font-weight:700; font-size:0.9rem;">' + p.name + '</div>' +
     '<div style="color:#B6FF3C; margin:6px 0; font-weight:800;">' + p.price + '</div>' +
-    '<button class="btn" style="width:100%; font-size:0.8rem; padding:8px;" onclick="choosePlan(\'' + p.id + '\')">' + (active===p.id?'✓ Active':'Choose') + '</button></div>'
+    '<button class="btn" style="width:100%; font-size:0.8rem; padding:8px;" onclick="choosePlan(\'' + p.id + '\')">' + (active===p.id?'Active':'Choose') + '</button></div>'
   ).join('');
 }
 window.choosePlan = function(id) {
@@ -371,7 +371,7 @@ async function yt(url, tok) { const r = await fetch('https://www.googleapis.com/
 document.getElementById('scanBtn').onclick = async () => {
   const out = document.getElementById('scanout');
   const tok = tokenOK();
-  if (!tok) { out.innerHTML = '<div class="flag">⚠ No active YouTube connection. Ask your kid to open <a href="app.html">Studio</a> and connect YouTube first (the connection stays active about an hour).</div>'; return; }
+  if (!tok) { out.innerHTML = '<div class="flag">No active YouTube connection. Ask your kid to open <a href="app.html">Studio</a> and connect YouTube first (the connection stays active about an hour).</div>'; return; }
   out.innerHTML = 'Scanning…';
   try {
     const ch = await yt('channels?part=contentDetails,snippet&mine=true', tok);
@@ -393,13 +393,13 @@ document.getElementById('scanBtn').onclick = async () => {
         }
       });
     }
-    if (!flags.length) { out.innerHTML = '<span class="ok">✅ Scanned ' + checked + ' recent comments — nothing harmful found.</span>'; return; }
+    if (!flags.length) { out.innerHTML = '<span class="ok">Scanned ' + checked + ' recent comments — nothing harmful found.</span>'; return; }
     const email = document.getElementById('parentEmail').value || '';
-    out.innerHTML = '<b style="color:#FF2E97">⚠ ' + flags.length + ' flagged comment(s) of ' + checked + ' scanned:</b>' + flags.map(f => {
+    out.innerHTML = '<b style="color:#FF2E97">' + flags.length + ' flagged comment(s) of ' + checked + ' scanned:</b>' + flags.map(f => {
       const mailto = 'mailto:' + email + '?subject=' + encodeURIComponent('NovaClip alert: harmful comment on your kid\u0027s video') + '&body=' + encodeURIComponent('Flagged comment by ' + f.author + ':\n\n"' + f.text + '"\n\nVideo: https://www.youtube.com/watch?v=' + f.vid);
       return '<div class="flag"><span class="who">' + f.author.replace(/</g,'&lt;') + ':</span> ' + f.text.replace(/</g,'&lt;') +
-        '<div class="actions"><a target="_blank" href="https://www.youtube.com/watch?v=' + f.vid + '&lc=' + f.cid + '">🚩 Report to YouTube</a>' +
-        '<a href="' + mailto + '">📧 Email me this</a></div></div>';
+        '<div class="actions"><a target="_blank" href="https://www.youtube.com/watch?v=' + f.vid + '&lc=' + f.cid + '">Report to YouTube</a>' +
+        '<a href="' + mailto + '">Email me this</a></div></div>';
     }).join('');
   } catch (e) {
     out.innerHTML = '<div class="flag">Scan failed — the YouTube connection may have expired. Reconnect in <a href="app.html">Studio</a>.</div>';
