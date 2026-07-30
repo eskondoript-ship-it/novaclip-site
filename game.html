@@ -305,7 +305,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v74 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v75 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -476,10 +476,18 @@ const CUSTOM_MODELS = {
   // means the built-in blocky truck is used instead.
   truck: 'unimog_truck.glb', truckScale: 1.0, truckRotY: 0,
 
+  /* A hull drives along its own -Z. The auto-turn lines a model's LENGTH up with
+     travel, but it cannot tell which end is the nose, so a truck can end up
+     driving out of its tailgate. These flip the hull 180 degrees. Set the one
+     that matches what you see: if W drives your vehicle backwards, flip it. */
+  truckFlip: true,
+  tankFlip: false,
+
   /* House .glb files — add up to four filenames, for example:
         houses: ['house1.glb', 'house2.glb'],
-     Four copies of each are scattered around the map. Leave the list empty and
-     the built-in blocky buildings are used instead.
+     Four copies of each are placed as a village around the middle of the map.
+     Leave the list empty and a built-in village is built there instead
+     (proper houses  walls, pitched roof, door, windows, chimney  not grey slabs).
      (Written as an empty array rather than four placeholder strings: a run of
      bare empty strings is exactly the shape that turns into "Unexpected string"
      if a paste loses its commas.) */
@@ -892,6 +900,71 @@ function box(w,h,d,color,x,y,z,solid,rot) {
   return m;
 }
 
+/* A real house instead of a grey slab: walls, a pitched roof that overhangs, a
+   door, glass windows with frames, and a chimney. Built as one group so it can be
+   dropped anywhere and turned, with a single invisible solid for collision so you
+   cannot walk or shoot through the walls. Three colour sets keep a street from
+   looking like one house copied. */
+const HOUSE_LOOKS = [
+  { wall: 0xd9cbb2, trim: 0xf1eadd, roof: 0x8c4a3a },
+  { wall: 0xc3d2d8, trim: 0xeef4f6, roof: 0x445a6b },
+  { wall: 0xcfc0a0, trim: 0xece2cd, roof: 0x5c5347 }
+];
+function makeHouse(x, z, rotDeg, look, storeys) {
+  const L = HOUSE_LOOKS[look % HOUSE_LOOKS.length];
+  const g = new THREE.Group();
+  const W = 9, D = 7.5, H = storeys > 1 ? 6.4 : 3.6;
+  const wallMat  = new THREE.MeshStandardMaterial({ color: L.wall, roughness: 0.95 });
+  const trimMat  = new THREE.MeshStandardMaterial({ color: L.trim, roughness: 0.9 });
+  const roofMat  = new THREE.MeshStandardMaterial({ color: L.roof, roughness: 0.85 });
+  const glassMat = new THREE.MeshStandardMaterial({ color: 0x7fa8bd, roughness: 0.2, metalness: 0.6 });
+  const doorMat  = new THREE.MeshStandardMaterial({ color: 0x6b4a30, roughness: 0.8 });
+
+  function add(geo, mat, px, py, pz, rx, ry, rz) {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(px, py, pz);
+    if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry; if (rz) m.rotation.z = rz;
+    m.castShadow = true; m.receiveShadow = true; g.add(m); return m;
+  }
+
+  add(new THREE.BoxGeometry(W, H, D), wallMat, 0, H / 2, 0);
+  // plinth and a band under the roofline so the walls are not one flat colour
+  add(new THREE.BoxGeometry(W + 0.5, 0.45, D + 0.5), trimMat, 0, 0.22, 0);
+  add(new THREE.BoxGeometry(W + 0.35, 0.3, D + 0.35), trimMat, 0, H - 0.15, 0);
+
+  /* Pitched roof: a 4-sided cone is a pyramid, and turned 45 degrees its flat
+     faces line up with the walls. Scaled on X/Z to match the rectangular plan. */
+  const roof = add(new THREE.ConeGeometry(1, 1, 4), roofMat, 0, H + 1.5, 0, 0, Math.PI / 4, 0);
+  roof.scale.set(W * 0.79, 3.0, D * 0.79);
+  add(new THREE.BoxGeometry(1.1, 2.4, 1.1), trimMat, W * 0.28, H + 1.9, -D * 0.22);   // chimney
+
+  // front door with a step, on the -Z face
+  add(new THREE.BoxGeometry(1.5, 2.3, 0.16), doorMat, -W * 0.22, 1.15, -D / 2 - 0.06);
+  add(new THREE.BoxGeometry(2.2, 0.22, 0.9), trimMat, -W * 0.22, 0.11, -D / 2 - 0.4);
+  // windows: front pair, and one on each side
+  const win = [[ W * 0.22, 1.9, -D / 2 - 0.05, 0 ],
+               [ -W / 2 - 0.05, 1.9, 0, Math.PI / 2 ], [ W / 2 + 0.05, 1.9, 0.6, Math.PI / 2 ],
+               [ 0, 1.9, D / 2 + 0.05, 0 ]];
+  if (H > 5) {                                        // upstairs, on a two-storey only
+    win.push([ W * 0.22, H - 1.4, -D / 2 - 0.05, 0 ], [ -W * 0.22, H - 1.4, -D / 2 - 0.05, 0 ],
+             [ W / 2 + 0.05, H - 1.4, 0, Math.PI / 2 ], [ 0, H - 1.4, D / 2 + 0.05, 0 ],
+             [ -W / 2 - 0.05, H - 1.4, 0.6, Math.PI / 2 ]);
+  }
+  win.forEach(w => {
+    add(new THREE.BoxGeometry(1.9, 1.5, 0.14), trimMat, w[0], w[1], w[2], 0, w[3], 0);
+    add(new THREE.BoxGeometry(1.55, 1.15, 0.2), glassMat, w[0], w[1], w[2], 0, w[3], 0);
+  });
+
+  g.position.set(x, 0, z);
+  g.rotation.y = (rotDeg || 0) * Math.PI / 180;
+  scene.add(g);
+
+  // one invisible solid covering the footprint  bodies and bullets stop at it
+  const c = Math.abs(Math.cos(g.rotation.y)), s = Math.abs(Math.sin(g.rotation.y));
+  box(W * c + D * s, H + 1.2, D * c + W * s, 0x000000, x, (H + 1.2) / 2, z, true).visible = false;
+  return g;
+}
+
 function makeTree(x, z) {
   const g = new THREE.Group();
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 4, 7), new THREE.MeshStandardMaterial({ color: 0x8a6a42, roughness: 0.9 }));
@@ -925,6 +998,8 @@ function buildWorld() {
   /* Uploaded houses, scattered and kept clear of the bases and the shop. Each
      is fitted to a sensible footprint and given a solid collision box, so they
      are real cover rather than scenery you walk through. */
+  const houseSpots = [];
+  const nearHouse = (x, z, r) => houseSpots.some(h => Math.hypot(x - h[0], z - h[1]) < r);
   const HOUSES = (CUSTOM_MODELS.houses || []).filter(Boolean);
   if (HOUSES.length && loadedHouseGLB.some(Boolean)) {
     const per = 4;                       // copies of each model
@@ -964,10 +1039,24 @@ function buildWorld() {
         // an invisible solid so bullets and bodies stop at the walls
         const fw = Math.max(2, sz.x * sc), fd = Math.max(2, sz.z * sc), fh = Math.max(3, sz.y * sc);
         box(fw, fh, fd, 0x000000, hx, fh / 2, hz, true).visible = false;
+        houseSpots.push([hx, hz]);
         placed++;
       }
     });
     console.log('placed ' + placed + ' house instance(s)');
+  }
+
+  /* Built-in village, used when no house .glb is uploaded. It sits around the
+     middle of the map, because the middle is where the two teams actually meet —
+     the old dressing put four grey concrete slabs out near the bases instead,
+     which is cover nobody ever fought over. Kept off both roads (the strips are
+     22 wide, so |x| and |z| stay past 16) and clear of the shop. */
+  if (!houseSpots.length) {
+    const village = [[-26, -20, 25, 0, 2], [22, -30, -70, 1, 1], [34, 18, 110, 2, 2],
+                     [-30, 26, -25, 1, 1], [-46, -20, 90, 2, 1], [48, -22, -95, 0, 2],
+                     [18, 44, 15, 1, 2], [-20, -46, 195, 2, 1], [-44, 44, 60, 0, 1],
+                     [44, 44, -40, 1, 2]];
+    village.forEach(h => { makeHouse(h[0], h[1], h[2], h[3], h[4]); houseSpots.push([h[0], h[1]]); });
   }
 
   // cover crates and low walls  count scales with area so the bigger map does
@@ -978,13 +1067,9 @@ function buildWorld() {
     const s = 2 + Math.random()*1.5;
     let px, pz, tries = 0;
     do { px = (Math.random()-0.5)*(ARENA*1.7); pz = (Math.random()-0.5)*(ARENA*1.7); tries++; }
-    while (tries < 20 && Math.abs(px) < 12 && Math.abs(pz - SHOP.z) < 11);
+    while (tries < 20 && ((Math.abs(px) < 12 && Math.abs(pz - SHOP.z) < 11) || nearHouse(px, pz, 9)));
+    if (nearHouse(px, pz, 8)) continue;                 // no crates inside a wall
     box(s, s, s, crateCols[i % 3], px, s/2, pz, true, Math.random()*3);
-  }
-  // a couple of low concrete buildings
-  for (const b of [[-40, 20], [45, -25], [30, 40], [-35, -40]]) {
-    box(14, 6, 10, 0xd8d4c8, b[0], 3, b[1], true);
-    box(15, 0.5, 11, 0xb8b4a8, b[0], 6.2, b[1], false);
   }
 
   // trees scattered around (like the reference)
@@ -992,13 +1077,18 @@ function buildWorld() {
     let tx, tz;
     do { tx = (Math.random()-0.5)*150; tz = (Math.random()-0.5)*150; }
     while (Math.abs(tx) < 14 && Math.abs(tz - SHOP.z) < 13);
-    if (Math.hypot(tx, tz) > 22) makeTree(tx, tz);
+    if (Math.hypot(tx, tz) > 22 && !nearHouse(tx, tz, 9)) makeTree(tx, tz);
   }
 
-  // distant city skyline (backlit buildings, bright)
+  /* Distant city skyline. These are 30-140m towers meant to sit outside the map
+     as backdrop, and they were placed at radius 180-250 — which was outside the
+     old 80-unit arena but is INSIDE the 210 one, so they were standing on the
+     pitch, right on top of the spawns: the "bad houses at the spawn point" were
+     these. The bases sit at z = +/-168, so the ring has to clear that by a long
+     way before a 140m tower reads as horizon instead of as next door. */
   const cityCols = [0xaeb8c4, 0xc4ccd6, 0x9aa4b0, 0xb8c0cc];
   for (let ring = 0; ring < 2; ring++) {
-    const count = 40, radius = 180 + ring*70;
+    const count = 40, radius = ARENA + 190 + ring*110;
     for (let i = 0; i < count; i++) {
       const ang = (i/count)*Math.PI*2 + Math.random()*0.08;
       const dist = radius + (Math.random()-0.5)*40;
@@ -1036,6 +1126,7 @@ function buildWorld() {
     const s = 0.3 + Math.random()*1.0;
     let px = (Math.random()-0.5)*150, pz = (Math.random()-0.5)*150;
     if (Math.abs(px) < 12 && Math.abs(pz - SHOP.z) < 12) continue;
+    if (nearHouse(px, pz, 7)) continue;
     const chunk = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), rubbleMat);
     chunk.position.set(px, s*0.4, pz); chunk.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
     chunk.castShadow = true; chunk.receiveShadow = true; scene.add(chunk);
@@ -1045,6 +1136,7 @@ function buildWorld() {
   const ruins = [[-48, 34], [50, 38], [38, -46], [-44, -34], [58, -8], [-58, 12]];
   for (const r of ruins) {
     const bx = r[0], bz = r[1];
+    if (nearHouse(bx, bz, 12)) continue;               // a ruin growing out of a house
     // broken wall segments at varying heights
     for (let w = 0; w < 5; w++) {
       const h = 2 + Math.random()*6;
@@ -1335,7 +1427,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v74 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v75 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2742,12 +2834,15 @@ function buildTankModel() {
     if (!isFinite(k) || k <= 0) k = 1;
     k *= (CUSTOM_MODELS.tankScale || 1);
     inner.scale.setScalar(k);
-    orientVehicle(inner, CUSTOM_MODELS.tankRotY || 0);
+    orientVehicle(inner, (CUSTOM_MODELS.tankRotY || 0) + (CUSTOM_MODELS.tankFlip ? 180 : 0));
     inner.updateMatrixWorld(true);
     const bb2 = new THREE.Box3().setFromObject(inner);
     if (isFinite(bb2.min.y)) inner.position.y -= bb2.min.y;
     inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
     g.add(inner);
+    // the fitted, post-rotation dimensions, so the muzzle can sit at the model's nose
+    const fin = new THREE.Vector3(); new THREE.Box3().setFromObject(inner).getSize(fin);
+    g.userData.vsize = fin;
     return g;
   }
   // built-in fallback so tanks exist without an uploaded model
@@ -2778,12 +2873,14 @@ function buildTruckModel(team) {
     if (!isFinite(k) || k <= 0) k = 1;
     k *= (CUSTOM_MODELS.truckScale || 1);
     inner.scale.setScalar(k);
-    orientVehicle(inner, CUSTOM_MODELS.truckRotY || 0);
+    orientVehicle(inner, (CUSTOM_MODELS.truckRotY || 0) + (CUSTOM_MODELS.truckFlip ? 180 : 0));
     inner.updateMatrixWorld(true);
     const bb2 = new THREE.Box3().setFromObject(inner);
     if (isFinite(bb2.min.y)) inner.position.y -= bb2.min.y;
     inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
     g.add(inner);
+    const fin = new THREE.Vector3(); new THREE.Box3().setFromObject(inner).getSize(fin);
+    g.userData.vsize = fin;
     return g;
   }
   const g = new THREE.Group();
@@ -2807,46 +2904,51 @@ function buildTruckModel(team) {
 
 function buildTank(team, kind) {
   const g = new THREE.Group();
-  if (kind === 'truck') { g.add(buildTruckModel(team)); }
-  else g.add(buildTankModel());
+  const hull = (kind === 'truck') ? buildTruckModel(team) : buildTankModel();
+  g.add(hull);
+  const vs = hull.userData.vsize || null;              // set only for uploaded models
 
   // turret pivots independently so it can aim while the hull drives
   const turret = new THREE.Group();
   turret.position.y = 1.35;
   const tmat = new THREE.MeshStandardMaterial({ color: team === TEAM_CT ? 0x3f5670 : 0x6b5535, roughness: 0.8, metalness: 0.3 });
+  /* An uploaded tank arrives with its own turret and its own gun, so building a
+     dome and a barrel on top of it is where the second barrel came from. The
+     turret group still exists — it is what the aim is taken from — it just has
+     nothing drawn in it, and the shell leaves from the model's own nose. */
   if (!loadedTankGLB && kind !== 'truck') {
     const dome = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.85, 2.6), tmat);
     dome.castShadow = true; turret.add(dome);
-  }
-  if (kind !== 'truck') {
     const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 4.2, 10), tmat);
     barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 0.1, -2.4);
     barrel.castShadow = true; turret.add(barrel);
   }
-  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.1, -4.5); turret.add(muzzle);
+  const muzzle = new THREE.Object3D();
+  muzzle.position.set(0, 0.1, vs ? -(vs.z / 2 + 0.6) : -4.5);
+  turret.add(muzzle);
   g.add(turret);
 
   // team stripe so you can tell friend from foe at range
-  const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.14, 0.5),
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(vs ? Math.min(3.5, vs.x * 0.8) : 3.5, 0.14, 0.5),
     new THREE.MeshBasicMaterial({ color: TEAM_INFO[team].color }));
-  stripe.position.set(0, 1.32, 2.9); g.add(stripe);
+  stripe.position.set(0, vs ? Math.min(1.5, vs.y * 0.5) : 1.32, vs ? vs.z / 2 - 0.2 : 2.9);
+  g.add(stripe);
 
   /* Your own tanks get a beacon. They spawn about nine metres from where you
      start, but a low grey hull on a big map is genuinely hard to pick out  the
      problem was never reaching one, it was seeing where it was. */
-  /* Marker beacon so you can find your own vehicle. It is a column 26 units tall
-     centred at y=13, which means it runs straight up through the hull — and the
-     driver's eye sits at 2.5-3m, inside it. From that seat it reads as a second
-     barrel on the tank and fills the screen entirely in the truck. Both are hidden
-     the moment you climb in. */
+  /* Marker beacon so you can find your own vehicle. It used to be a 26-unit
+     column sitting on the hull, which is a rod growing out of the turret when you
+     are stood next to it. It only has a job at range, so it starts above the
+     roofline and switches off inside 30 metres — by then the HUD arrow has it. */
   if (team === PLAYER_TEAM) {
     const marker = new THREE.Group();
-    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 26, 8),
-      new THREE.MeshBasicMaterial({ color: 0x00F0FF, transparent: true, opacity: 0.30 }));
-    beam.position.y = 13; marker.add(beam);
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 18, 8),
+      new THREE.MeshBasicMaterial({ color: 0x00F0FF, transparent: true, opacity: 0.28 }));
+    beam.position.y = 14; marker.add(beam);                 // spans 5 to 23, clear of the hull
     const orb = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 10),
       new THREE.MeshBasicMaterial({ color: 0x00F0FF }));
-    orb.position.y = 4.2; marker.add(orb);
+    orb.position.y = 5.2; marker.add(orb);
     g.add(marker);
     g.userData.marker = marker;
   }
@@ -2855,7 +2957,7 @@ function buildTank(team, kind) {
   return { mesh: g, turret: turret, muzzle: muzzle, team: team, kind: kind || 'tank',
            hp: kind === 'truck' ? 260 : TANK_HP, maxhp: kind === 'truck' ? 260 : TANK_HP,
            driver: null, cool: 0, yaw: 0, speed: 0, dead: false,
-           topSpeed: kind === 'truck' ? 26 : 16, turn: kind === 'truck' ? 1.5 : 1.1 };
+           topSpeed: kind === 'truck' ? 36 : 22, turn: kind === 'truck' ? 1.7 : 1.25 };
 }
 
 function spawnTanks() {
@@ -3044,18 +3146,27 @@ function ramDamage(t, dt) {
 function updateTanks(dt) {
   updateTankPrompt();
   tanks.forEach(t => {
-    // your own marker must not be inside your own eyeline
-    if (t.mesh.userData.marker) t.mesh.userData.marker.visible = (t !== playerTank && !t.dead);
+    // your own marker must not be inside your own eyeline, or clutter it up close
+    if (t.mesh.userData.marker) {
+      const far = Math.hypot(player.x - t.mesh.position.x, player.z - t.mesh.position.z) > 30;
+      t.mesh.userData.marker.visible = (t !== playerTank && !t.dead && far);
+    }
     if (t.cool > 0) t.cool -= dt;
     if (t.dead) return;
     ramDamage(t, dt);
 
     if (t.driver === 'player') {
-      // you drive: W/S throttle, A/D swing the hull, turret follows the camera
-      const acc = (keys[BINDS.forward] ? 26 : 0) - (keys[BINDS.back] ? 18 : 0);
+      /* You drive: W/S throttle, A/D swing the hull, turret follows the camera.
+         Drag used to be `speed *= 0.94` once per FRAME, which at 60fps is a 97%
+         bleed every second — it settled at about 7 u/s and never came near the
+         26 top speed, so a truck crawled. Now it is a proper per-second
+         coefficient: terminal speed is acc/DRAG, and topSpeed is just a cap. */
+      const DRAG = 1.5;
+      const pull = t.kind === 'truck' ? 56 : 34;
+      const acc = (keys[BINDS.forward] ? pull : 0) - (keys[BINDS.back] ? pull * 0.55 : 0);
       t.speed += acc * dt;
-      t.speed *= 0.94;                                     // drag
-      t.speed = Math.max(-9, Math.min(t.topSpeed, t.speed));
+      t.speed -= t.speed * DRAG * dt;
+      t.speed = Math.max(t.kind === 'truck' ? -14 : -9, Math.min(t.topSpeed, t.speed));
       if (keys[BINDS.left])  t.yaw += dt * t.turn * (t.speed >= 0 ? 1 : -1);
       if (keys[BINDS.right]) t.yaw -= dt * t.turn * (t.speed >= 0 ? 1 : -1);
       /* Vehicles were never tested against solid geometry, so you could drive
@@ -3170,7 +3281,12 @@ function updateTanks(dt) {
     t.turret.rotation.y = want - t.yaw;
 
     if (dist > 26) {                                       // close the gap
-      const sp = 9 * dt;
+      /* Crewed vehicles keep t.speed up to date now, because that is what the ram
+         check reads — with it left at 0 an enemy hull could drive straight over
+         someone and nothing happened. */
+      const rate = t.kind === 'truck' ? 15 : 11;
+      t.speed = rate;
+      const sp = rate * dt;
       const nx = t.mesh.position.x - Math.sin(t.yaw) * sp;
       const nz = t.mesh.position.z - Math.cos(t.yaw) * sp;
       let hitWall = false;
@@ -3178,7 +3294,7 @@ function updateTanks(dt) {
       if (Math.abs(nz) < ARENA - 4 && !blockedAt(t.mesh.position.x, nz)) t.mesh.position.z = nz; else hitWall = true;
       // nudge the hull round so it works its way past whatever it met
       if (hitWall) t.yaw += dt * 1.4;
-    }
+    } else t.speed = 0;                                    // parked up and shooting
     if (dist < 130 && Math.abs(diff) < 0.5 && t.cool <= 0) {
       fireTankShell(t, new THREE.Vector3(tx, 1.2, tz));
     }
