@@ -341,7 +341,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop</div>
 <button id='shopbtn'>SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v80 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v83 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -412,6 +412,16 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
     <div class='wsel' id='wsel'></div>
   </div>
 
+  <div class='mappick' id='mproom' style='display:none'>
+    <div class='charlabel'>PLAY WITH FRIENDS</div>
+    <div style='display:flex; gap:8px; justify-content:center; flex-wrap:wrap'>
+      <input id='roomcode' maxlength='12' placeholder='Room code (e.g. NOVA-7K2P)'
+             style='padding:9px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:#fff; font:inherit; font-size:0.85rem; width:230px; text-align:center'>
+      <button id='roomrand' class='lbtab' type='button'>New code</button>
+    </div>
+    <div class='lbnote' style='text-align:center; margin-top:8px'>Share the code and deploy at the same time to land in the same match. Leave it empty to join the open room.</div>
+  </div>
+
   <div class='lbwrap'>
     <div class='lbhead'>
       <div class='lbtabs'>
@@ -462,17 +472,18 @@ const MODES = {
             number to force it (e.g. 1 = use the model's own scale).
    ============================================================ */
 const MAPS = [
-  { id: 'arena', name: 'Strike Arena', tag: '',
+  { id: 'arena', name: 'Strike Arena', tag: 'Built in',
     desc: 'Full battlefield — village, shop, tanks and trucks',
     file: '', arena: 210, vehicles: true },
 
-  { id: 'map2', name: 'Warehouse', tag: '',
+  { id: 'map2', name: 'Warehouse', tag: 'Your upload',
     desc: 'Tight indoor fight — infantry only',
     file: 'warehouse_map_chicken_gun.glb', scale: 0, rotY: 0, arena: 95, vehicles: false, ground: 0x6f7a63 },
 
-  { id: 'map3', name: 'Skyscraper', tag: '',
+  { id: 'map3', name: 'Skyscraper', tag: 'Your upload',
     desc: 'Rooftops and stairwells — infantry only',
-    file: 'chicken_gun_fruzer_skyscraper.glb', scale: 0, rotY: 0, arena: 120, vehicles: false, ground: 0x7a7266 }
+    file: 'chicken_gun_fruzer_skyscraper.glb', scale: 0, rotY: 0, arena: 120, vehicles: false,
+    ground: 0x7a7266, floorMode: 'top' }
 ];
 let mapId = localStorage.getItem('nc_map') || 'arena';
 if (!MAPS.some(m => m.id === mapId)) mapId = 'arena';
@@ -542,7 +553,7 @@ const AMMO = {
   '9mm':    { name: '9 mm',      start: 120, buy: 75, cost: 25, tracer: 0xffe08a,
               file: '9mm_bullet.glb', scale: 1, size: 0.11, rotX: 0, rotY: 0, rotZ: 0 },
   '762':    { name: '7.62 mm',   start: 80,  buy: 50, cost: 40, tracer: 0xffb066,
-              file: '', scale: 1, size: 0.16, rotX: 0, rotY: 0, rotZ: 0 },
+              file: '7.62.glb', scale: 1, size: 0.16, rotX: 0, rotY: 0, rotZ: 0 },
   '12ga':   { name: '12 gauge',  start: 32,  buy: 24, cost: 35, tracer: 0xff8f6a,
               file: '12_gauge.glb', scale: 1, size: 0.13, rotX: 0, rotY: 0, rotZ: 0 },
   'rocket': { name: 'PG-7 rocket', start: 2, buy: 1,  cost: 60, tracer: 0xffcc55,
@@ -626,7 +637,7 @@ const CUSTOM_MODELS = {
      it: armsX is right, armsY is up, armsZ is forward (negative is away from you).
      The wrist monitor rides along, positioned by monitorX/Y/Z, because an uploaded
      arm has no bone this code can find. */
-  arms: '',
+  arms: 'free_fps_arms_gameready_-_rigged.glb',
   armsScale: 1.0, armsX: 0, armsY: 0, armsZ: 0,
   armsRotX: 0, armsRotY: 0, armsRotZ: 0,
   monitorX: -0.15, monitorY: -0.10, monitorZ: 0.10, monitorScale: 1.0,
@@ -658,7 +669,7 @@ const CUSTOM_MODELS = {
   houses: ['desert_houses.glb'], houseScale: 1.0, houseRotY: 0,
 
   // Knife model, used for the melee weapon when set.
-  knife: 'knife_animated.glb', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
+  knife: '', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
 
   // Rocket launcher. The repo already ships this one, so the RPG has a model
   // out of the box; swap the filename for anything else you upload.
@@ -1029,6 +1040,11 @@ function renderMapPick() {
    Both boards refresh every 60 seconds while the lobby is open.
    ============================================================ */
 const LEADERBOARD_URL = '';        // e.g. 'https://novaclip-scores.YOURNAME.workers.dev'
+/* Multiplayer relay (mp-server.js). Declared up here with the other endpoints
+   because the lobby reads it while the page is still executing — a const touched
+   above its own declaration throws, and everything below it never initialises. */
+const NC_MP_URL = '';              // e.g. 'wss://novaclip-mp.deno.dev'
+const MP_SEND_HZ = 15;
 const LB_REFRESH_MS = 60000;
 let lbTab = 'world', lbWorld = null, lbState = 'idle', lbNextAt = 0;
 
@@ -1155,6 +1171,21 @@ function renderWSel() {
 renderWSel();
 renderMapPick();
 lbInit();
+(function () {
+  // the room box only means something once NC_MP_URL points at a relay
+  const box = document.getElementById('mproom');
+  if (!box || !NC_MP_URL) return;
+  box.style.display = '';
+  const code = document.getElementById('roomcode');
+  code.value = localStorage.getItem('nc_room') || '';
+  code.oninput = () => localStorage.setItem('nc_room', code.value.toUpperCase());
+  document.getElementById('roomrand').onclick = () => {
+    const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let c = 'NOVA-';
+    for (let i = 0; i < 4; i++) c += A[Math.floor(Math.random() * A.length)];
+    code.value = c; localStorage.setItem('nc_room', c);
+  };
+})();
 
 // ---------- init ----------
 function init() {
@@ -1520,7 +1551,14 @@ function buildMapWorld(m) {
   }
   if (samples.length >= 4) {
     samples.sort((a, b) => a - b);
-    const floor = samples[Math.floor(samples.length / 2)];
+    /* Which surface is the floor depends on the map. On a street map most of the
+       model IS the ground, so the median lands on it. On a tower you are meant to
+       be on the ROOF, and the median puts you in the street looking up — which is
+       what happened on the skyscraper. floorMode:'top' takes the upper quartile
+       instead, so the play surface is the roofline the map was built for. */
+    const floor = (m.floorMode === 'top')
+      ? samples[Math.floor(samples.length * 0.75)]
+      : samples[Math.floor(samples.length / 2)];
     inner.position.y -= floor;
     inner.updateMatrixWorld(true);
     console.log('map floor found at y=' + floor.toFixed(2) + ' from ' + samples.length +
@@ -2096,7 +2134,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v80 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v83 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2776,6 +2814,235 @@ function spawnBot(i) {
 }
 
 // ---------- tracers ----------
+/* ============================================================
+   SOUND
+   Two sources, on purpose.
+
+   Your explosion clip (explosion.aac, pulled out of the mp4 you sent) is loaded
+   once and played for anything that goes bang. Everything else — the rifle, the
+   reload, a hit landing, a death — is SYNTHESISED here with Web Audio: an
+   oscillator and a noise burst per shot. That is a deliberate choice over
+   shipping a dozen sound files: nothing to download, nothing to license, nothing
+   to credit, and no delay the first time a gun goes off.
+
+   Browsers refuse to make noise until the user has interacted with the page, so
+   the audio context is created on the first click or key — before that every
+   call here is a no-op rather than an error.
+   ============================================================ */
+const SFX_NAMES = { sniper:'rifle', smg:'smg', pistol:'pistol', shotgun:'shotgun',
+                    lmg:'lmg', dmr:'dmr', knife:'knife', rpg:'rpgfire' };
+const SFX_FILE = 'explosion.aac';        // your clip; leave empty for a synth boom
+let actx = null, sfxGain = null, boomBuf = null, sfxReady = false;
+
+function sfxInit() {
+  if (actx) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  actx = new AC();
+  sfxGain = actx.createGain();
+  sfxGain.gain.value = 0.55;
+  sfxGain.connect(actx.destination);
+  sfxReady = true;
+  if (SFX_FILE) {
+    fetch(SFX_FILE).then(r => r.arrayBuffer())
+      .then(b => actx.decodeAudioData(b))
+      .then(buf => { boomBuf = buf; console.log('explosion clip loaded, ' + buf.duration.toFixed(2) + 's'); })
+      .catch(e => console.warn('explosion clip unavailable, using the synth boom', e));
+  }
+}
+// one gate for the whole page: the first real input unlocks audio
+['pointerdown', 'keydown'].forEach(ev =>
+  window.addEventListener(ev, () => { sfxInit(); if (actx && actx.state === 'suspended') actx.resume(); }, { once: false }));
+
+function noiseBuffer(seconds) {
+  const n = Math.floor(actx.sampleRate * seconds);
+  const buf = actx.createBuffer(1, n, actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  return buf;
+}
+function blip(type, freq, dur, vol, sweepTo) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, actx.currentTime);
+  if (sweepTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, sweepTo), actx.currentTime + dur);
+  g.gain.setValueAtTime(vol, actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0008, actx.currentTime + dur);
+  o.connect(g); g.connect(sfxGain); o.start(); o.stop(actx.currentTime + dur);
+}
+function burst(dur, vol, cutoff) {
+  const src = actx.createBufferSource(), g = actx.createGain(), f = actx.createBiquadFilter();
+  src.buffer = noiseBuffer(dur);
+  f.type = 'lowpass'; f.frequency.value = cutoff || 4000;
+  g.gain.setValueAtTime(vol, actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0008, actx.currentTime + dur);
+  src.connect(f); f.connect(g); g.connect(sfxGain); src.start();
+}
+function playBoom(vol) {
+  if (boomBuf) {
+    const src = actx.createBufferSource(), g = actx.createGain();
+    src.buffer = boomBuf; g.gain.value = vol;
+    src.connect(g); g.connect(sfxGain); src.start();
+  } else {                                   // synth fallback: thump plus rumble
+    blip('sine', 120, 0.5, vol, 30);
+    burst(0.6, vol * 0.8, 900);
+  }
+}
+
+/* One entry point. Everything in the game calls sfx('name'). */
+function sfx(name) {
+  if (!sfxReady || !actx || actx.state !== 'running') return;
+  try {
+    switch (name) {
+      case 'rifle':   blip('square', 320, 0.06, 0.25, 90); burst(0.10, 0.30, 6000); break;
+      case 'smg':     blip('square', 380, 0.04, 0.20, 120); burst(0.07, 0.24, 7000); break;
+      case 'pistol':  blip('square', 300, 0.06, 0.24, 100); burst(0.09, 0.26, 5000); break;
+      case 'shotgun': blip('square', 150, 0.14, 0.32, 50);  burst(0.22, 0.40, 3000); break;
+      case 'lmg':     blip('square', 260, 0.05, 0.26, 80);  burst(0.09, 0.30, 5000); break;
+      case 'dmr':     blip('square', 220, 0.10, 0.30, 60);  burst(0.16, 0.34, 4000); break;
+      case 'knife':   burst(0.09, 0.22, 9000); break;
+      case 'rpgfire': blip('sawtooth', 180, 0.35, 0.30, 60); burst(0.40, 0.35, 2200); break;
+      case 'boom':    playBoom(0.9); break;
+      case 'reload':  blip('square', 900, 0.03, 0.12, 500);
+                      setTimeout(() => { if (sfxReady) blip('square', 600, 0.05, 0.12, 300); }, 260); break;
+      case 'hit':     blip('triangle', 700, 0.05, 0.16, 300); break;
+      case 'hurt':    blip('sawtooth', 200, 0.16, 0.22, 80); break;
+      case 'death':   blip('sawtooth', 160, 0.5, 0.26, 40); burst(0.4, 0.2, 1200); break;
+      case 'pickup':  blip('sine', 660, 0.09, 0.16, 990); break;
+    }
+  } catch (e) { /* never let a sound break a frame */ }
+}
+window.sfx = sfx;
+
+/* ============================================================
+   MULTIPLAYER
+   Real people in the same match, over a WebSocket to mp-server.js. Leave
+   NC_MP_URL empty and none of this runs: the game stays exactly as it is, bots
+   only, with no socket and no cost.
+
+   Every player owns their own position and reports their own hits — see the note
+   at the top of mp-server.js for why, and what that does and does not protect
+   against. Peers are drawn with the same character model the bots use, moved by
+   interpolation between the last two updates rather than snapped, because a
+   position that arrives 15 times a second looks like a slideshow if you snap it.
+   ============================================================ */
+let mpSock = null, mpId = null, mpTeam = null, mpPeers = {}, mpLastSend = 0, mpRoom = '';
+function mpLive() { return !!(mpSock && mpSock.readyState === 1); }
+
+function mpConnect(room, name) {
+  if (!NC_MP_URL) return;
+  try { if (mpSock) mpSock.close(); } catch (e) {}
+  mpRoom = (room || 'OPEN').toUpperCase();
+  const url = NC_MP_URL.replace(/\/$/, '') + '/?room=' + encodeURIComponent(mpRoom) +
+              '&name=' + encodeURIComponent((name || 'Player').slice(0, 16));
+  addFeed('Connecting to ' + mpRoom + '...');
+  mpSock = new WebSocket(url);
+  mpSock.onopen = () => addFeed('In room ' + mpRoom);
+  mpSock.onclose = () => { addFeed('Left the room'); mpClearPeers(); };
+  mpSock.onerror = () => addFeed('Could not reach the multiplayer server');
+  mpSock.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch (err) { return; } mpHandle(m); };
+}
+function mpSend(o) { if (mpLive()) { try { mpSock.send(JSON.stringify(o)); } catch (e) {} } }
+function mpClearPeers() {
+  for (const id in mpPeers) { if (mpPeers[id].mesh) scene.remove(mpPeers[id].mesh); }
+  mpPeers = {};
+}
+
+function mpSpawnPeer(id, name, team) {
+  const colour = team === PLAYER_TEAM ? 0x6cc3ff : 0xff8a5c;
+  const mesh = makeFighter(colour, true, false);
+  scene.add(mesh);
+  mpPeers[id] = { id: id, name: name || 'Player', team: team || 't', mesh: mesh,
+                  hp: 100, alive: true,
+                  from: new THREE.Vector3(), to: new THREE.Vector3(), yawFrom: 0, yawTo: 0, t: 1 };
+  return mpPeers[id];
+}
+function mpHandle(m) {
+  switch (m.t) {
+    case 'welcome':
+      mpId = m.id; mpTeam = m.team;
+      (m.players || []).forEach(p => { if (p.id !== mpId && !mpPeers[p.id]) mpSpawnPeer(p.id, p.name, p.team); });
+      addFeed('You are ' + (m.team === 'ct' ? 'CT' : 'T') + ' in ' + m.room);
+      break;
+    case 'joined':
+      if (m.id !== mpId && !mpPeers[m.id]) { mpSpawnPeer(m.id, m.name, m.team); addFeed(m.name + ' joined'); }
+      break;
+    case 'left':
+      if (mpPeers[m.id]) { scene.remove(mpPeers[m.id].mesh); delete mpPeers[m.id]; }
+      break;
+    case 'p': {
+      const p = mpPeers[m.id] || mpSpawnPeer(m.id, 'Player', 't');
+      p.from.copy(p.mesh.position); p.to.set(m.x, 0, m.z);
+      p.yawFrom = p.mesh.rotation.y; p.yawTo = m.yaw;
+      p.t = 0; p.hp = m.hp;
+      p.alive = m.hp > 0;
+      p.mesh.visible = p.alive;
+      break;
+    }
+    case 'shot':
+      spawnTracer(new THREE.Vector3(m.x, m.y, m.z), new THREE.Vector3(m.ex, m.ey, m.ez), 0xffc46a);
+      break;
+    case 'hit': {
+      // somebody says they hit you; your client is what decides you are hurt
+      const from = mpPeers[m.from];
+      damagePlayer(m.dmg, null);
+      if (player.hp <= 0 && from) mpSend({ t: 'died', by: m.from });
+      break;
+    }
+    case 'died': {
+      const p = mpPeers[m.id];
+      if (p) { p.alive = false; p.mesh.visible = false; setTimeout(() => { if (mpPeers[m.id]) { p.alive = true; p.mesh.visible = true; } }, 2500); }
+      if (m.by === mpId) { player.kills++; earn(MODES[mode].perKill, 'kill'); updateBoard(); }
+      addFeed((p ? p.name : 'Someone') + ' was killed');
+      break;
+    }
+    case 'roster':
+      (m.players || []).forEach(r => { if (mpPeers[r.id]) { mpPeers[r.id].kills = r.kills; mpPeers[r.id].name = r.name; } });
+      break;
+    case 'error': addFeed('Server: ' + m.why); break;
+  }
+}
+
+function mpUpdate(dt) {
+  if (!NC_MP_URL) return;
+  // my state, 15 times a second
+  const now = performance.now();
+  if (mpLive() && running && now - mpLastSend > 1000 / MP_SEND_HZ) {
+    mpLastSend = now;
+    mpSend({ t: 'p', x: +player.x.toFixed(2), y: +player.y.toFixed(2), z: +player.z.toFixed(2),
+             yaw: +player.yaw.toFixed(2), anim: player.sprint ? 'run' : 'walk',
+             hp: Math.max(0, Math.round(player.hp)), weap: curWeap,
+             veh: playerTank ? playerTank.kind : '' });
+  }
+  // peers slide to where they said they were, over one send interval
+  const span = 1 / MP_SEND_HZ;
+  for (const id in mpPeers) {
+    const p = mpPeers[id];
+    if (p.t >= 1) continue;
+    p.t = Math.min(1, p.t + dt / span);
+    p.mesh.position.lerpVectors(p.from, p.to, p.t);
+    let d = p.yawTo - p.yawFrom;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    p.mesh.rotation.y = p.yawFrom + d * p.t;
+  }
+}
+/* Peers are shootable exactly like bots: same box test, same range, but the
+   damage is a message rather than a subtraction. */
+function mpHitTest(ray, origin, RANGE) {
+  let best = null, bd = Infinity, bp = null;
+  for (const id in mpPeers) {
+    const p = mpPeers[id];
+    if (!p.alive || p.team === (mpTeam || PLAYER_TEAM)) continue;
+    const bx = new THREE.Box3().setFromObject(p.mesh);
+    const pt = ray.ray.intersectBox(bx, new THREE.Vector3());
+    if (!pt) continue;
+    const d = origin.distanceTo(pt);
+    if (d < bd && d <= RANGE) { bd = d; best = p; bp = pt.clone(); }
+  }
+  return best ? { peer: best, dist: bd, point: bp } : null;
+}
+window.mpConnect = mpConnect;
+
 function spawnTracer(from, to, color) {
   const dir = new THREE.Vector3().subVectors(to, from); const len = dir.length(); if (len < 0.01) return;
   const m = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,len,4), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }));
@@ -2901,6 +3168,7 @@ function startMatch() {
   if (gunGroup) gunGroup.visible = true;
   timerId = setInterval(tick, 1000);
   setInterval(updateBoard, 1500);
+  if (NC_MP_URL) mpConnect(localStorage.getItem('nc_room') || 'OPEN', lbName());
 }
 document.addEventListener('mousemove', (e) => {
   if (document.pointerLockElement !== renderer.domElement) return;
@@ -3054,6 +3322,7 @@ function reload() {
   if (type && have <= 0) { addFeed('Out of ' + AMMO[type].name + ' — buy more in the shop (E)'); return; }
   const take = Math.min(need, have);
   player.reloading = true; player.reloadStart = performance.now(); player.reloadDur = 1100;
+  sfx('reload');
   playOneShot('reload', 1100);
   document.getElementById('mag').textContent = '..';
   setTimeout(() => {
@@ -3077,11 +3346,25 @@ function shoot() {
     /* Your uploaded rocket, if there is one — the same model the rocket calibre
        uses, flown as a real projectile rather than the built-in cone. */
     let rk = loadedAmmoGLB['rocket'] ? buildRound('rocket') : null;
-    if (!rk) rk = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.8, 10),
-      new THREE.MeshStandardMaterial({ color: 0x8d9a6a, emissive: 0x442200 }));
+    if (!rk) {
+      /* A ConeGeometry points along +Y and lookAt() aims +Z, so the built-in
+         rocket flew nose-up like a firework. Tip it into the group's forward
+         axis once, here, and it points where it is going. */
+      rk = new THREE.Group();
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.8, 10),
+        new THREE.MeshStandardMaterial({ color: 0x8d9a6a, emissive: 0x442200 }));
+      cone.rotation.x = Math.PI / 2;
+      rk.add(cone);
+    }
     rk.position.copy(from);
     rk.lookAt(from.clone().add(d));
     scene.add(rk);
+    /* A rocket leaves the tube with a bang and a light. Without this the only
+       feedback was the mag counter going down. */
+    sfx('rpgfire');
+    const mflash = new THREE.PointLight(0xffb057, 6, 14);
+    mflash.position.copy(from); scene.add(mflash);
+    setTimeout(() => scene.remove(mflash), 90);
     playOneShot('grenade', 900);
     // owner marked as a player-team vehicle so the existing shell code treats it right
     /* A rocket is not a mortar round. At 58 m/s with a tank shell's gravity it
@@ -3109,6 +3392,7 @@ function shoot() {
   lastShot = now;
   if (W.mag !== Infinity) { player.mag--; updateAmmoHUD(); }
   recoil = 1;
+  sfx(curWeap === 'sniper' ? 'rifle' : (SFX_NAMES[curWeap] || 'rifle'));
   gunGroup.userData.flashLight.intensity = 3; gunGroup.userData.flash.material.opacity = 0.9;
   setTimeout(() => { gunGroup.userData.flashLight.intensity = 0; gunGroup.userData.flash.material.opacity = 0; }, 55);
 
@@ -3157,9 +3441,19 @@ function shoot() {
       if (gunGroup.userData.flash) gunGroup.userData.flash.getWorldPosition(mw);
       else mw.copy(origin).add(rdir.clone().multiplyScalar(0.5));
       spawnRound(W.ammo, mw, end, (W.ammo && AMMO[W.ammo]) ? AMMO[W.ammo].tracer : 0x9fe8ff);
+      if (mpLive()) mpSend({ t: 'shot', x: +mw.x.toFixed(1), y: +mw.y.toFixed(1), z: +mw.z.toFixed(1),
+                             ex: +end.x.toFixed(1), ey: +end.y.toFixed(1), ez: +end.z.toFixed(1), weap: curWeap });
+    }
+    /* A real player standing where a bot would have been takes the round the same
+       way — nearest thing wins, and the damage is sent rather than applied. */
+    const mpHit = mpHitTest(ray, origin, RANGE);
+    if (mpHit && mpHit.dist < hitDist && mpHit.dist < blockDist) {
+      mpSend({ t: 'hit', id: mpHit.peer.id, dmg: Math.round(scoped ? W.scopedDmg : W.dmg) });
+      hit = null;
     }
     if (hit) {
       let dmg = scoped ? W.scopedDmg : W.dmg;
+      sfx('hit');
       hit.hp -= dmg; if (hit.hp <= 0) killBot(hit);
     }
   }
@@ -3196,7 +3490,20 @@ function respawnBot(b) {
   const B = BASES[b.team];
   b.mesh.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
 }
-function addFeed(txt) { const f = document.getElementById('feed'); const d = document.createElement('div'); d.textContent = txt; f.appendChild(d); setTimeout(() => d.remove(), 4000); }
+/* The kill feed used to append a node per event and wait 4s to remove each one.
+   A busy round pushes several a second, and every one of them is a layout pass on
+   a growing column while the frame loop is trying to run — that is the "lagging"
+   kill chat. Capped at five lines, oldest dropped immediately. */
+const FEED_MAX = 5;
+function addFeed(txt) {
+  const f = document.getElementById('feed');
+  if (!f) return;
+  const d = document.createElement('div');
+  d.textContent = txt;
+  f.appendChild(d);
+  while (f.childElementCount > FEED_MAX) f.removeChild(f.firstElementChild);
+  setTimeout(() => { if (d.parentNode) d.remove(); }, 3500);
+}
 function teamScore(team) {
   let s = 0;
   if (team === PLAYER_TEAM) s += player.kills;
@@ -3272,6 +3579,18 @@ function updateNades(dt) {
       p.mesh.position.z += p.vel.z * dt;
 
       let hit = p.mesh.position.y <= 0.2 || p.t > (p.rocket ? 6 : 4);
+      /* It never tested the world, so a rocket that met a wall carried on through
+         it and only ever went off on the floor, a body or a hull — which is why
+         the RPG looked like it had no explosion. Sweep the step just travelled
+         against cover and stop at the first thing in the way. */
+      if (!hit) {
+        const step = new THREE.Vector3(p.vel.x, p.vel.y, p.vel.z).multiplyScalar(dt);
+        const len = step.length();
+        if (len > 0.01) {
+          const back = p.mesh.position.clone().addScaledVector(step, -1);
+          if (coverDistance(back, step.clone().normalize(), len + 0.6) < len + 0.6) hit = true;
+        }
+      }
       if (!hit) {
         /* Test against the hull's actual footprint, not a sphere around its origin.
            A tank is roughly 3.4 across and 6.4 long with its origin on the ground,
@@ -3301,6 +3620,7 @@ function updateNades(dt) {
       }
       if (hit) {
         p.done = true;
+        sfx('boom');
         explode(p.mesh.position.clone(), p.blast || 9);
         // splash: infantry near the blast go down, and you take a hit too
         const bp = p.mesh.position;
@@ -3454,9 +3774,9 @@ function damagePlayer(amt, from) {
      by killing the tank. Leaning out of a truck window gives that protection up
      for as long as you are exposed. */
   if (playerTank && !leaningOut) { damageTank(playerTank, amt * 0.6, false); return; }
-  player.hp -= amt; document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
+  player.hp -= amt; sfx('hurt'); document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
   const df = document.getElementById('dmgflash'); df.style.opacity = '1'; setTimeout(() => df.style.opacity = '0', 120);
-  if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
+  if (player.hp <= 0) { player.deaths++; sfx('death'); playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
 }
 
 // ---------- player + camera ----------
@@ -4641,7 +4961,7 @@ function animate() {
   // refresh the loadout about once a second so the countdown ticks down
   strikeHudT -= dt;
   if (strikeHudT <= 0) { strikeHudT = 1; buildLoadoutHUD(); }
-  updateCamera(dt); updateTracers(dt); updateRounds(dt);
+  updateCamera(dt); updateTracers(dt); updateRounds(dt); mpUpdate(dt);
   if (mapLamp) mapLamp.position.set(camera.position.x, camera.position.y + 1.2, camera.position.z);
   renderer.render(scene, camera);
 }
