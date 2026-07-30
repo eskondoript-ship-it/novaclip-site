@@ -101,6 +101,35 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 .wsel .w.owned { border-color: rgba(108,195,255,0.4); }
 .wsel .w.equipped { border-color: #ffd24a; background: rgba(255,210,74,0.12); color: #ffd24a; }
 .wsel .w.locked { opacity: 0.4; }
+
+/* ---- map picker ---- */
+.mappick { margin-bottom: 18px; }
+.mapgrid { display: grid; grid-template-columns: repeat(3, minmax(150px, 200px)); gap: 12px; justify-content: center; }
+@media (max-width: 720px) { .mapgrid { grid-template-columns: 1fr; } }
+.mapcard { text-align: left; padding: 11px 13px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); cursor: pointer; transition: 0.2s; color: inherit; font: inherit; }
+.mapcard:hover { border-color: rgba(108,195,255,0.6); }
+.mapcard.sel { border-color: #6cc3ff; background: rgba(108,195,255,0.12); }
+.mapcard.empty { opacity: 0.45; cursor: not-allowed; }
+.mapcard .mn { font-weight: 800; font-size: 0.92rem; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.mapcard .mt { font-size: 0.6rem; letter-spacing: 1.5px; text-transform: uppercase; color: #7E8AA6; }
+.mapcard .md { font-size: 0.72rem; color: #9fb0cc; margin-top: 4px; line-height: 1.45; }
+
+/* ---- leaderboard ---- */
+.lbwrap { margin: 4px auto 20px; max-width: 620px; width: 100%; text-align: left; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 16px; }
+.lbhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.lbtabs { display: flex; gap: 6px; }
+.lbtab { padding: 6px 13px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: #cfe0f5; font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+.lbtab.sel { border-color: #B6FF3C; color: #B6FF3C; background: rgba(182,255,60,0.12); }
+.lbmeta { margin-left: auto; font-size: 0.7rem; color: #7E8AA6; font-variant-numeric: tabular-nums; }
+.lbrow { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid rgba(255,255,255,0.07); font-size: 0.84rem; }
+.lbrow:first-child { border-top: none; }
+.lbrow .lr { width: 24px; color: #7E8AA6; font-variant-numeric: tabular-nums; }
+.lbrow .ln2 { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lbrow .lk { font-weight: 800; font-variant-numeric: tabular-nums; }
+.lbrow .lm2 { font-size: 0.68rem; color: #7E8AA6; }
+.lbrow.me { color: #ffd24a; }
+.lbnote { font-size: 0.76rem; color: #9fb0cc; line-height: 1.6; }
+.lbnote code { background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px; font-size: 0.72rem; }
 #startBtn { pointer-events: auto; padding: 16px 48px; border: none; border-radius: 40px; font-size: 1.15rem; font-weight: 800; cursor: pointer; background: linear-gradient(90deg,#6cc3ff,#4a9fe0); color: #04121a; transition: transform .2s, box-shadow .2s; }
 #startBtn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 0 40px rgba(108,195,255,0.6); }
 .keyshint { font-size: 0.78rem; color: #7E8AA6; margin-top: 14px; line-height: 1.8; max-width: 620px; }
@@ -305,7 +334,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v75 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v76 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · 5 Shotgun · 6 Pistol · 7 LMG · 8 Marksman · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -378,9 +407,25 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
     </div>
   </div>
 
+  <div class='mappick'>
+    <div class='charlabel'>🗺️ CHOOSE YOUR MAP</div>
+    <div class='mapgrid' id='mapgrid'></div>
+  </div>
+
   <div class='loadoutpick'>
     <div class='ll'>🔫 EQUIP YOUR STARTING WEAPON <span style='opacity:0.6'>(buy more in the in-match armory)</span></div>
     <div class='wsel' id='wsel'></div>
+  </div>
+
+  <div class='lbwrap'>
+    <div class='lbhead'>
+      <div class='lbtabs'>
+        <button class='lbtab sel' data-lb='world'>🌍 World</button>
+        <button class='lbtab' data-lb='local'>💾 This device</button>
+      </div>
+      <div class='lbmeta' id='lbmeta'></div>
+    </div>
+    <div id='lbbody'></div>
   </div>
 
   <div style='display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:center'>
@@ -405,8 +450,63 @@ const MODES = {
   ranked: { botHit: 0.62, burst: 7, cool: [0.45, 0.65], dmg: 16, hp: 170, perKill: 15, mvp: 80, label: 'RANKED' }
 };
 
-// arena half-width; bases sit near the far edges of it
-const ARENA = 210;
+/* ============================================================
+   MAPS
+   Three slots. The first is the built-in battlefield — village, shop, bases,
+   tanks and trucks. The other two load a .glb you upload (Fab / Sketchfab):
+   drop the filename in `file` and that map appears in the picker.
+
+   Uploaded maps are infantry only. A downloaded environment is not built to a
+   scale that a 7-metre hull can drive through — no roads wide enough, doorways
+   and stairs everywhere — so `vehicles: false` keeps armour out of them instead
+   of spawning tanks that immediately wedge themselves in the scenery.
+
+   arena  = half-width of the play area in metres, so a small map fences you in
+            close and the bases sit at its ends. 210 is the big built-in one.
+   scale  = 0 means "fit the model to the play area automatically". Set a real
+            number to force it (e.g. 1 = use the model's own scale).
+   ============================================================ */
+const MAPS = [
+  { id: 'arena', name: 'Strike Arena', tag: 'Built in',
+    desc: 'Full battlefield — village, shop, tanks and trucks',
+    file: '', arena: 210, vehicles: true },
+
+  { id: 'map2', name: 'Skyscraper', tag: 'Your upload',
+    desc: 'Infantry only — no vehicles',
+    file: 'chicken_gun_fruzer_skyscraper.glb', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x6f7a63 },
+
+  { id: 'map3', name: 'Warehouse', tag: 'Your upload',
+    desc: 'Infantry only — no vehicles',
+    file: 'warehouse_map_chicken_gun.glb', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x7a7266 }
+];
+let mapId = localStorage.getItem('nc_map') || 'arena';
+if (!MAPS.some(m => m.id === mapId)) mapId = 'arena';
+function curMap() { return MAPS.find(m => m.id === mapId) || MAPS[0]; }
+/* An uploaded map with no filename yet cannot be played, so it falls back rather
+   than dropping you into an empty void. */
+if (curMap().id !== 'arena' && !curMap().file) mapId = 'arena';
+function mapHasVehicles() { return curMap().vehicles !== false; }
+
+/* Extra weapons, each with its own model from Fab / Sketchfab. Paste the .glb
+   filename into `file` and the weapon appears in the inventory on its number
+   key — no other wiring needed. Leave `file` empty and it still works, using the
+   built-in gun mesh, so the stats are playable before the art arrives.
+     rotX/rotY/rotZ  turn the model so the muzzle points forward (-Z)
+     scale           multiplies the auto-fit, in case it reads too big or small
+     pellets         fires a spread of that many rounds (a shotgun) */
+const EXTRA_WEAPONS = {
+  shotgun: { name: 'SHOTGUN', slot: 5, mag: 8,   dmg: 17, scopedDmg: 19, rate: 780, range: 46,  auto: false, scope: false, pellets: 8,
+             file: '', scale: 1.0, rotX: 0, rotY: 90, rotZ: 0 },
+  pistol:  { name: 'PISTOL',  slot: 6, mag: 15,  dmg: 27, scopedDmg: 33, rate: 190, range: 95,  auto: false, scope: true,
+             file: '', scale: 0.8, rotX: 0, rotY: 90, rotZ: 0 },
+  lmg:     { name: 'LMG',     slot: 7, mag: 100, dmg: 26, scopedDmg: 30, rate: 82,  range: 240, auto: true,  scope: true,
+             file: 'vector_smg.glb', scale: 1.15, rotX: 0, rotY: 90, rotZ: 0 },
+  dmr:     { name: 'MARKSMAN', slot: 8, mag: 10, dmg: 62, scopedDmg: 88, rate: 420, range: 420, auto: false, scope: true,
+             file: '', scale: 1.05, rotX: 0, rotY: 90, rotZ: 0 }
+};
+
+// arena half-width; bases sit near the far edges of it. Set by the chosen map.
+let ARENA = curMap().arena || 210;
 const BOT_COUNT = 17;          // 8 allies + 9 enemies, plus you = 18 fighters
 let mode = 'medium';
 
@@ -416,7 +516,16 @@ const WEAPONS = {
   smg:    { name: 'SMG', slot: 3, mag: 40, dmg: 21, scopedDmg: 26, rate: 68, cost: 0, scope: true, auto: true, range: 180, model: 'smg', owned: true },
   knife:  { name: 'KNIFE', slot: 2, mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, cost: 0, scope: false, auto: false, range: 3, model: 'knife', owned: true }
 };
-function ownedWeapons() { return ['sniper', 'smg', 'rpg', 'knife']; }
+/* Fold the uploaded weapons in. They are ordinary WEAPONS entries from here on,
+   so the number keys, the scroll wheel, the loadout strip and the lobby picker
+   all pick them up without knowing anything about them. */
+for (const k in EXTRA_WEAPONS) {
+  const E = EXTRA_WEAPONS[k];
+  WEAPONS[k] = { name: E.name, slot: E.slot, mag: E.mag, dmg: E.dmg, scopedDmg: E.scopedDmg,
+                 rate: E.rate, cost: 0, scope: !!E.scope, auto: !!E.auto, range: E.range,
+                 pellets: E.pellets || 0, model: k, owned: true };
+}
+function ownedWeapons() { return Object.keys(WEAPONS).filter(k => WEAPONS[k].owned); }
 function saveOwned(l) { /* weapons are no longer purchasable */ }
 
 const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Echo','Rogue',
@@ -522,6 +631,8 @@ const CUSTOM_MODELS = {
 };
 let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruckGLB = null, loadedKnifeGLB = null, loadedRpgGLB = null, loadedCharAnims = [];
 const loadedHouseGLB = [];
+const loadedWeapModels = {};   // weapon id -> its own uploaded model
+let loadedMapGLB = null;       // the chosen map, when it is an uploaded one
 const extraClips = {};   // retargeted clips, rebuilt per character in makeFighter
 const rawAnims = {};     // key -> { clips, scene } exactly as loaded, before retargeting
 const mixers = [];   // animation players, ticked every frame
@@ -669,7 +780,9 @@ function mergeAnimClips(clips, name, sceneRoot) {
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
   const anyHouse = (CUSTOM_MODELS.houses || []).some(Boolean);
-  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse) { done(); return; }
+  const anyExtraWeap = Object.keys(EXTRA_WEAPONS).some(k => EXTRA_WEAPONS[k].file);
+  const mapFile = (curMap().id !== 'arena') ? (curMap().file || '') : '';
+  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse && !anyExtraWeap && !mapFile) { done(); return; }
   const needFBX = isFBX(CUSTOM_MODELS.character) || isFBX(CUSTOM_MODELS.weapon);
 
   // load the right loader(s): GLTFLoader for .glb/.gltf, FBXLoader for Mixamo .fbx
@@ -724,6 +837,17 @@ function loadCustomModels(done) {
     if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed \u2014 using the built-in truck', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed \u2014 using the built-in tank', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed \u2014 using built-in', e); pending--; finish(); }); }
+    // one model per extra weapon, so each gun in the inventory can look like itself
+    Object.keys(EXTRA_WEAPONS).forEach(k => {
+      const f = EXTRA_WEAPONS[k].file;
+      if (!f) return;
+      pending++;
+      loader.load(f, g => { loadedWeapModels[k] = g.scene; console.log('loaded ' + k + ' model from ' + f); pending--; finish(); },
+                  undefined, e => { console.warn(k + ' model failed \u2014 using the built-in gun', e); pending--; finish(); });
+    });
+    // only the map you picked is downloaded, never all three
+    if (mapFile) { pending++; loader.load(mapFile, g => { loadedMapGLB = g.scene; pending--; finish(); },
+                   undefined, e => { console.warn('map model failed \u2014 falling back to Strike Arena', e); mapId = 'arena'; ARENA = 210; pending--; finish(); }); }
     // extra animation files  each one contributes a single clip
     const AN = CUSTOM_MODELS.characterAnims || {};
     Object.keys(AN).forEach(key => {
@@ -789,8 +913,169 @@ function logSkill(id, n) {
 }
 
 // ---------- menu wiring ----------
-document.querySelectorAll('.diff').forEach(d => d.onclick = () => { document.querySelectorAll('.diff').forEach(x => x.classList.remove('sel')); d.classList.add('sel'); mode = d.dataset.mode; });
+document.querySelectorAll('.diff').forEach(d => d.onclick = () => {
+  document.querySelectorAll('.diff').forEach(x => x.classList.remove('sel'));
+  d.classList.add('sel'); mode = d.dataset.mode;
+  // each difficulty keeps its own board, so switching one reloads the other
+  lbWorld = null; lbNextAt = Date.now() + LB_REFRESH_MS;
+  if (typeof lbFetchWorld === 'function') { if (lbTab === 'world' && LEADERBOARD_URL) lbFetchWorld(); else lbRender(); }
+});
 document.querySelectorAll('.char').forEach(c => c.onclick = () => { document.querySelectorAll('.char').forEach(x => x.classList.remove('sel')); c.classList.add('sel'); playerColor = parseInt(c.dataset.color); localStorage.setItem('nc_char', c.dataset.color); });
+/* ============================================================
+   MAP PICKER
+   Picking a map saves it and reloads the lobby, because the world is built once
+   at start-up — the alternative is tearing down and rebuilding the whole scene
+   mid-menu, which is a lot of moving parts for something a reload does perfectly.
+   ============================================================ */
+function renderMapPick() {
+  const g = document.getElementById('mapgrid');
+  if (!g) return;
+  g.innerHTML = MAPS.map(m => {
+    const missing = m.id !== 'arena' && !m.file;
+    return '<button class="mapcard' + (m.id === mapId ? ' sel' : '') + (missing ? ' empty' : '') + '" data-map="' + m.id + '"' +
+      (missing ? ' disabled' : '') + '>' +
+      '<div class="mn"><span>' + m.name + '</span><span class="mt">' + (missing ? 'add a .glb' : m.tag) + '</span></div>' +
+      '<div class="md">' + (missing ? 'Put your Fab / Sketchfab filename in MAPS to use this slot' : m.desc) + '</div>' +
+      '</button>';
+  }).join('');
+  g.querySelectorAll('.mapcard').forEach(el => el.onclick = () => {
+    const id = el.dataset.map;
+    if (id === mapId) return;
+    localStorage.setItem('nc_map', id);
+    location.reload();          // the new map is built on the way back in
+  });
+}
+
+/* ============================================================
+   LEADERBOARD
+   Two boards, both real:
+     LOCAL  every match you have finished on this device, out of localStorage.
+     WORLD  everyone's, out of an HTTP endpoint you own.
+
+   There is no world board without a server, and a made-up one would be a lie, so
+   with LEADERBOARD_URL empty the World tab says exactly that and tells you how to
+   switch it on. leaderboard-worker.js in this repo is a complete Cloudflare
+   Worker: deploy it, paste its URL here, done.
+
+   Both boards refresh every 60 seconds while the lobby is open.
+   ============================================================ */
+const LEADERBOARD_URL = '';        // e.g. 'https://novaclip-scores.YOURNAME.workers.dev'
+const LB_REFRESH_MS = 60000;
+let lbTab = 'world', lbWorld = null, lbState = 'idle', lbNextAt = 0;
+
+function lbName() {
+  try { const y = JSON.parse(localStorage.getItem('nc_yt') || '{}'); if (y && y.channel) return String(y.channel).slice(0, 24); } catch (e) {}
+  return (localStorage.getItem('nc_name') || 'You').slice(0, 24);
+}
+function lbEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function lbLocalAll() {
+  try { const a = JSON.parse(localStorage.getItem('nc_lb') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+}
+function lbSaveLocal(run) {
+  const a = lbLocalAll();
+  a.push(run);
+  a.sort((x, y) => (y.kills || 0) - (x.kills || 0));
+  localStorage.setItem('nc_lb', JSON.stringify(a.slice(0, 200)));
+}
+/* Anything off the network is untrusted: other players type their own names, so
+   every field is clamped and every string is escaped before it reaches innerHTML. */
+function lbClean(list) {
+  if (!Array.isArray(list)) return [];
+  return list.slice(0, 50).map(r => ({
+    name: String((r && r.name) || '?').slice(0, 24),
+    kills: Math.max(0, Math.min(9999, Math.round(Number(r && r.kills) || 0))),
+    pts: Math.max(0, Math.min(999999, Math.round(Number(r && r.pts) || 0))),
+    mode: String((r && r.mode) || '').slice(0, 10),
+    at: Number(r && r.at) || 0
+  })).sort((a, b) => b.kills - a.kills);
+}
+async function lbFetchWorld() {
+  if (!LEADERBOARD_URL) { lbState = 'noserver'; return; }
+  lbState = 'loading'; lbRender();
+  try {
+    const u = LEADERBOARD_URL + (LEADERBOARD_URL.indexOf('?') < 0 ? '?' : '&') +
+      'map=' + encodeURIComponent(mapId) + '&mode=' + encodeURIComponent(mode);
+    const r = await fetch(u, { method: 'GET' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    lbWorld = lbClean(await r.json());
+    lbState = 'ok';
+  } catch (e) {
+    console.warn('world leaderboard unreachable', e);
+    lbState = 'error';
+  }
+  lbRender();
+}
+async function lbSubmit(run) {
+  lbSaveLocal(run);                            // the local board never needs a network
+  if (!LEADERBOARD_URL) return;
+  try {
+    await fetch(LEADERBOARD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(run) });
+  } catch (e) { console.warn('score submit failed — kept on the local board', e); }
+}
+function lbRows(list, mine) {
+  if (!list.length) return '<div class="lbnote">No scores for this map and difficulty yet — finish a match and you are top of the board.</div>';
+  return list.slice(0, 10).map((r, i) =>
+    '<div class="lbrow' + (mine && r.name === mine && i === list.findIndex(x => x.name === mine) ? ' me' : '') + '">' +
+      '<span class="lr">' + (i + 1) + '</span>' +
+      '<span class="ln2">' + lbEsc(r.name) + '</span>' +
+      '<span class="lm2">' + lbEsc((r.mode || '').toUpperCase()) + '</span>' +
+      '<span class="lk">' + r.kills + '</span>' +
+    '</div>').join('');
+}
+function lbRender() {
+  const body = document.getElementById('lbbody'), meta = document.getElementById('lbmeta');
+  if (!body) return;
+  document.querySelectorAll('.lbtab').forEach(t => t.classList.toggle('sel', t.dataset.lb === lbTab));
+  const label = curMap().name + ' · ' + MODES[mode].label;
+  if (lbTab === 'local') {
+    const mineAll = lbLocalAll().filter(r => r.map === mapId && r.mode === mode);
+    body.innerHTML = '<div class="lbnote" style="margin-bottom:8px">' + label + ' · your runs on this device</div>' +
+      lbRows(lbClean(mineAll), null);
+    if (meta) meta.textContent = lbLocalAll().length + ' match(es) saved';
+    return;
+  }
+  if (lbState === 'noserver') {
+    body.innerHTML =
+      '<div class="lbnote"><b>The world board needs a server.</b><br>' +
+      'Scores from every player cannot live in your browser, so there is nothing to show until one exists — ' +
+      'inventing names here would just be decoration.<br><br>' +
+      'This repo ships <code>leaderboard-worker.js</code>: deploy it to Cloudflare Workers (free), then set ' +
+      '<code>LEADERBOARD_URL</code> in game.html to its address. The board then fills in on its own, every 60 seconds.</div>';
+    if (meta) meta.textContent = 'not connected';
+    return;
+  }
+  if (lbState === 'loading' && !lbWorld) { body.innerHTML = '<div class="lbnote">Loading the world board…</div>'; return; }
+  if (lbState === 'error' && !lbWorld) {
+    body.innerHTML = '<div class="lbnote">Could not reach the world board. Your scores are still being kept on <b>This device</b>, and it will retry in a minute.</div>';
+    if (meta) meta.textContent = 'offline';
+    return;
+  }
+  body.innerHTML = '<div class="lbnote" style="margin-bottom:8px">' + label + ' · top 10 worldwide</div>' +
+    lbRows(lbWorld || [], lbName());
+  if (meta) meta.textContent = 'updates every 60s';
+}
+function lbTick() {
+  // only work while the menu is on screen; nobody reads a leaderboard mid-firefight
+  const ov = document.getElementById('overlay');
+  const open = ov && ov.style.display !== 'none' && !running;
+  if (!open) return;
+  const now = Date.now();
+  if (now >= lbNextAt) { lbNextAt = now + LB_REFRESH_MS; if (lbTab === 'world') lbFetchWorld(); else lbRender(); }
+}
+function lbInit() {
+  document.querySelectorAll('.lbtab').forEach(t => t.onclick = () => {
+    lbTab = t.dataset.lb;
+    if (lbTab === 'world' && !lbWorld && lbState !== 'loading') lbFetchWorld(); else lbRender();
+  });
+  lbState = LEADERBOARD_URL ? 'idle' : 'noserver';
+  lbNextAt = Date.now() + LB_REFRESH_MS;
+  if (LEADERBOARD_URL) lbFetchWorld(); else lbRender();
+  setInterval(lbTick, 5000);
+}
+
 function renderWSel() {
   document.getElementById('wsel').innerHTML = Object.keys(WEAPONS).map(k => {
     const W = WEAPONS[k], owned = W.owned;
@@ -799,6 +1084,8 @@ function renderWSel() {
   document.querySelectorAll('#wsel .w').forEach(el => el.onclick = () => { if (WEAPONS[el.dataset.w].owned) { curWeap = el.dataset.w; renderWSel(); } });
 }
 renderWSel();
+renderMapPick();
+lbInit();
 
 // ---------- init ----------
 function init() {
@@ -843,8 +1130,15 @@ function init() {
   scene.add(sun);
   scene.add(new THREE.HemisphereLight(0xbfe6f0, 0x5a7a3a, 0.9));
 
-  buildWorld();
-  buildShop();
+  /* Terrain used to be built right here — before loadCustomModels() had run.
+     That is why uploaded house models never showed up: buildWorld() checked a
+     list that was still empty. It also made an uploaded map impossible. It is
+     built from buildOnce() now, once the files are actually in. */
+  function buildTerrain() {
+    if (curMap().id !== 'arena' && loadedMapGLB) buildMapWorld(curMap());
+    else buildWorld();
+    buildShop();
+  }
 
   // build fighters + gun. If custom .glb models are set, load them first; otherwise build immediately.
   function buildActors() {
@@ -870,6 +1164,13 @@ function init() {
   const buildOnce = () => {
     if (built) return;
     built = true;
+    try { buildTerrain(); }
+    catch (e) {
+      console.error('map build failed — falling back to Strike Arena', e);
+      mapId = 'arena'; ARENA = MAPS[0].arena;
+      BASES.ct.z = -(ARENA - 25); BASES.t.z = ARENA - 25;
+      try { buildWorld(); buildShop(); } catch (e2) { console.error('fatal map', e2); }
+    }
     try { buildActors(); }
     catch (e) {
       console.error('buildActors failed, retrying with built-in models', e);
@@ -877,7 +1178,8 @@ function init() {
       try { buildActors(); } catch (e2) { console.error('fatal', e2); }
     }
   };
-  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck || CUSTOM_MODELS.knife || CUSTOM_MODELS.rpg || (CUSTOM_MODELS.houses || []).some(Boolean)) {
+  if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck || CUSTOM_MODELS.knife || CUSTOM_MODELS.rpg || (CUSTOM_MODELS.houses || []).some(Boolean) ||
+      Object.keys(EXTRA_WEAPONS).some(k => EXTRA_WEAPONS[k].file) || (curMap().id !== 'arena' && curMap().file)) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
       if (!built) { console.warn('model load stalled \u2014 building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
@@ -976,6 +1278,101 @@ function makeTree(x, z) {
     bl.castShadow = true; g.add(bl);
   }
   g.position.set(x, 0, z); scene.add(g);
+}
+
+/* ============================================================
+   UPLOADED MAP
+   A .glb environment from Fab / Sketchfab, dropped in whole. Two jobs beyond
+   adding it to the scene: fit it to the play area, and give it collision.
+
+   Collision is the real work. blockedAt() and the bullet code only understand
+   box obstacles, and a downloaded map is an arbitrary mesh soup — so every mesh
+   big enough to matter gets an invisible box proxy around its world bounds.
+   That is coarse (a bounding box is not a wall) but it means you cannot walk
+   through the buildings, and it costs nothing at runtime. The list is capped and
+   sorted biggest-first: 400 boxes is already more than the built-in map has, and
+   blockedAt() walks the whole array on every step.
+   ============================================================ */
+const MAP_PROXY_CAP = 400;
+function buildMapWorld(m) {
+  const inner = loadedMapGLB;
+  inner.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3();
+  bb.getSize(sz);
+
+  // fit the footprint to the play area unless a scale is forced
+  let k = m.scale > 0 ? m.scale : (ARENA * 2) / (Math.max(sz.x, sz.z) || 1);
+  if (!isFinite(k) || k <= 0) k = 1;
+  inner.scale.setScalar(k);
+  inner.rotation.y = (m.rotY || 0) * Math.PI / 180;
+  inner.updateMatrixWorld(true);
+  // sit it on the ground and centre it on the origin, so the spawns line up
+  const bb2 = new THREE.Box3().setFromObject(inner), c2 = new THREE.Vector3();
+  bb2.getCenter(c2);
+  inner.position.x -= c2.x; inner.position.z -= c2.z;
+  if (isFinite(bb2.min.y)) inner.position.y -= bb2.min.y;
+  inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  scene.add(inner);
+  console.log('map "' + m.name + '" loaded — fitted scale ' + k.toFixed(4));
+
+  // a floor under it, in case the model has no ground of its own
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(ARENA * 4, ARENA * 4),
+    new THREE.MeshStandardMaterial({ color: m.ground || 0x6f7a63, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02;
+  ground.receiveShadow = true; scene.add(ground);
+
+  // boundary so you cannot walk off the edge of the model
+  const W = ARENA * 2;
+  box(W, 3, 1.5, 0x8a7f70, 0, 1.5, ARENA, true);
+  box(W, 3, 1.5, 0x8a7f70, 0, 1.5, -ARENA, true);
+  box(1.5, 3, W, 0x8a7f70, ARENA, 1.5, 0, true);
+  box(1.5, 3, W, 0x8a7f70, -ARENA, 1.5, 0, true);
+
+  // collision proxies
+  inner.updateMatrixWorld(true);
+  const cand = [];
+  let skipped = 0;
+  const spawns = Object.keys(BASES).map(k => BASES[k]);
+  inner.traverse(o => {
+    if (!o.isMesh || !o.geometry) return;
+    const b = new THREE.Box3().setFromObject(o), s = new THREE.Vector3();
+    b.getSize(s);
+    if (!isFinite(s.x) || !isFinite(s.y) || !isFinite(s.z)) return;
+    if (s.y < 1.2) return;                       // flat enough to walk over
+    if (s.x < 1.0 || s.z < 1.0) return;          // a pole or a wire, not cover
+    /* A box proxy is only honest for something building-sized. Anything bigger is
+       the ground, a skybox, or a single merged mesh holding the whole level — and
+       turning THAT into a solid box fills the map with an invisible wall you
+       cannot get out of. Better a missing collider than an unplayable map. */
+    if (s.x > 60 || s.z > 60) { skipped++; return; }
+    /* Only geometry that reaches the ground blocks walking. blockedAt() tests the
+       TOP of a box against head height, so a roof or a ceiling beam floating at
+       y=8 would otherwise stop you dead at ground level — exactly the invisible
+       barrier this map is supposed to avoid. */
+    if (b.min.y > 1.5) { skipped++; return; }
+    const ctr = new THREE.Vector3(); b.getCenter(ctr);
+    // and never wall in a spawn: the first thing that would do is trap the player
+    const hw = s.x / 2 + 1.5, hd = s.z / 2 + 1.5;
+    if (spawns.some(sp => Math.abs(sp.x - ctr.x) < hw && Math.abs(sp.z - ctr.z) < hd)) { skipped++; return; }
+    cand.push({ w: s.x, h: s.y, d: s.z, x: ctr.x, y: ctr.y, z: ctr.z, vol: s.x * s.y * s.z });
+  });
+  cand.sort((a, b2) => b2.vol - a.vol);
+  cand.slice(0, MAP_PROXY_CAP).forEach(c => {
+    box(c.w, c.h, c.d, 0x000000, c.x, c.y, c.z, true).visible = false;
+  });
+  console.log('map collision: ' + Math.min(cand.length, MAP_PROXY_CAP) + ' box proxies, ' +
+              skipped + ' mesh(es) skipped as too big / overhead / on a spawn');
+
+  // a beacon over each spawn, since an uploaded map has no bases of its own
+  for (const team in BASES) {
+    const B = BASES[team], info = TEAM_INFO[team];
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 30, 8),
+      new THREE.MeshBasicMaterial({ color: info.color, transparent: true, opacity: 0.30 }));
+    beam.position.set(B.x, 16, B.z); scene.add(beam);
+    // Object3D.position is defined non-writable, so it is set, never assigned
+    const glow = new THREE.PointLight(info.color, 1.1, 34);
+    glow.position.set(B.x, 7, B.z); scene.add(glow);
+  }
 }
 
 function buildWorld() {
@@ -1427,7 +1824,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v75 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v76 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -1599,7 +1996,10 @@ function makeFighter(color, useGLB, isPlayer) {
 // Known-good sizes for the built-in models (measured by hand, no guesswork).
 // Weapons are built at their FINAL size directly  no scaling is applied
 // anywhere, so a bad scale value can never corrupt the transform.
-function autoFitGLB(inner) {
+/* `opt` overrides the global weapon settings, so each uploaded weapon can carry
+   its own rotation and scale. Called with no opt it behaves exactly as before. */
+function autoFitGLB(inner, opt) {
+  const O = opt || null;
   const wrapper = new THREE.Group();
   let bbox = new THREE.Box3().setFromObject(inner);
   let size = new THREE.Vector3(); bbox.getSize(size);
@@ -1607,9 +2007,11 @@ function autoFitGLB(inner) {
   // ORIENT: use the explicit settings from CUSTOM_MODELS unless auto is on.
   const spin = new THREE.Group();
   const D = Math.PI / 180;
-  if (CUSTOM_MODELS.weaponAutoOrient) {
+  if (!O && CUSTOM_MODELS.weaponAutoOrient) {
     if (size.y > size.z && size.y > size.x)      spin.rotation.x = -Math.PI / 2;
     else if (size.x > size.z && size.x > size.y) spin.rotation.y =  Math.PI / 2;
+  } else if (O) {
+    spin.rotation.set((O.rotX || 0) * D, (O.rotY || 0) * D, (O.rotZ || 0) * D);
   } else {
     spin.rotation.set((CUSTOM_MODELS.weaponRotX || 0) * D,
                       (CUSTOM_MODELS.weaponRotY || 0) * D,
@@ -1624,7 +2026,7 @@ function autoFitGLB(inner) {
   const longest = Math.max(size.x, size.y, size.z);
   let scale = 0.6 / longest;
   if (!isFinite(scale) || scale <= 0.0001 || scale > 100) scale = 1;
-  scale *= (CUSTOM_MODELS.weaponScale || 1);
+  scale *= (O ? (O.scale || 1) : (CUSTOM_MODELS.weaponScale || 1));
   spin.scale.setScalar(scale);
   spin.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
   wrapper.add(spin);
@@ -1779,9 +2181,11 @@ function buildArms() {
 
 function buildWeapon(type) {
   const m = buildWeaponModel(type);
-  if (loadedWeapGLB && type !== 'knife') {
-    const w = autoFitGLB(m);
-    if (type === 'smg') w.scale.setScalar(0.78);   // same model, carried shorter
+  const own = loadedWeapModels[type];              // this weapon's own uploaded model
+  const E = EXTRA_WEAPONS[type];
+  if (own || (loadedWeapGLB && type !== 'knife')) {
+    const w = autoFitGLB(m, own && E ? { rotX: E.rotX, rotY: E.rotY, rotZ: E.rotZ, scale: E.scale } : null);
+    if (!own && type === 'smg') w.scale.setScalar(0.78);   // same model, carried shorter
     /* The muzzle flash used to be built inside the model group at z = -1.6, which
        meant autoFitGLB measured it as part of the weapon: it inflated the bounding
        box, so the gun came out mis-centred and scaled to fit a marker rather than
@@ -1803,6 +2207,14 @@ function buildWeapon(type) {
 }
 
 function buildWeaponModel(type) {
+  // a weapon with its own uploaded model wins over the shared one
+  if (loadedWeapModels[type]) {
+    const g = new THREE.Group();
+    const inner = loadedWeapModels[type].clone(true);
+    inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    g.add(inner);
+    return g;
+  }
   // rocket launcher
   if (loadedRpgGLB && type === 'rpg') {
     const g = new THREE.Group();
@@ -2135,42 +2547,65 @@ function shoot() {
     if (best) { best.hp = 0; killBot(best); }
     return;
   }
-  const blockDist = coverDistance(origin, dir, RANGE);
-  const ray = new THREE.Raycaster(origin, dir.clone().normalize(), 0, RANGE);
-  let hit = null, hitDist = Infinity, hitPt = null;
-  bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const bx = new THREE.Box3().setFromObject(b.mesh); const pt = ray.ray.intersectBox(bx, new THREE.Vector3()); if (pt) { const d = origin.distanceTo(pt); if (d < hitDist && d <= RANGE) { hitDist = d; hit = b; hitPt = pt.clone(); } } });
-  /* Rifles bite armour too, just barely. A hull is hundreds of health against a
-     shell worth 120, so small-arms fire chips rather than kills  but shooting a
-     tank should do something rather than pass straight through it. */
-  let vHit = null, vDist = Infinity, vPt = null;
-  tanks.forEach(t => {
-    if (t.dead || t.team === PLAYER_TEAM || t === playerTank) return;
-    const bx = new THREE.Box3().setFromObject(t.mesh);
-    const pt = ray.ray.intersectBox(bx, new THREE.Vector3());
-    if (pt) { const d = origin.distanceTo(pt); if (d < vDist && d <= RANGE) { vDist = d; vHit = t; vPt = pt.clone(); } }
-  });
-  if (vHit && vDist < hitDist) { hit = null; hitDist = vDist; } else { vHit = null; }
+  /* One round down the barrel. Pulled out of the body so a shotgun can fire the
+     same resolution several times with a spread — every pellet still tests cover,
+     armour and bodies properly, rather than being faked as one fat bullet. */
+  function fireRay(rdir, tracer) {
+    const blockDist = coverDistance(origin, rdir, RANGE);
+    const ray = new THREE.Raycaster(origin, rdir.clone().normalize(), 0, RANGE);
+    let hit = null, hitDist = Infinity, hitPt = null;
+    bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const bx = new THREE.Box3().setFromObject(b.mesh); const pt = ray.ray.intersectBox(bx, new THREE.Vector3()); if (pt) { const d = origin.distanceTo(pt); if (d < hitDist && d <= RANGE) { hitDist = d; hit = b; hitPt = pt.clone(); } } });
+    /* Rifles bite armour too, just barely. A hull is hundreds of health against a
+       shell worth 120, so small-arms fire chips rather than kills  but shooting a
+       tank should do something rather than pass straight through it. */
+    let vHit = null, vDist = Infinity, vPt = null;
+    tanks.forEach(t => {
+      if (t.dead || t.team === PLAYER_TEAM || t === playerTank) return;
+      const bx = new THREE.Box3().setFromObject(t.mesh);
+      const pt = ray.ray.intersectBox(bx, new THREE.Vector3());
+      if (pt) { const d = origin.distanceTo(pt); if (d < vDist && d <= RANGE) { vDist = d; vHit = t; vPt = pt.clone(); } }
+    });
+    if (vHit && vDist < hitDist) { hit = null; hitDist = vDist; } else { vHit = null; }
 
-  const blocked = blockDist < hitDist;
-  let end;
-  if (blocked) { end = origin.clone().add(dir.clone().multiplyScalar(blockDist)); hit = null; vHit = null; }
-  else if (vHit) end = vPt;
-  else if (hit) end = hitPt; else end = origin.clone().add(dir.clone().multiplyScalar(RANGE));
-  if (vHit) {
-    damageTank(vHit, (scoped ? W.scopedDmg : W.dmg) * 0.25, true);
-    // a visible spark so you can tell you are actually hitting it
-    const sp = new THREE.PointLight(0xffd27a, 2.2, 6);
-    sp.position.copy(vPt); scene.add(sp);
-    setTimeout(() => scene.remove(sp), 70);
+    const blocked = blockDist < hitDist;
+    let end;
+    if (blocked) { end = origin.clone().add(rdir.clone().multiplyScalar(blockDist)); hit = null; vHit = null; }
+    else if (vHit) end = vPt;
+    else if (hit) end = hitPt; else end = origin.clone().add(rdir.clone().multiplyScalar(RANGE));
+    if (vHit) {
+      damageTank(vHit, (scoped ? W.scopedDmg : W.dmg) * 0.25, true);
+      // a visible spark so you can tell you are actually hitting it
+      const sp = new THREE.PointLight(0xffd27a, 2.2, 6);
+      sp.position.copy(vPt); scene.add(sp);
+      setTimeout(() => scene.remove(sp), 70);
+    }
+    if (tracer) {
+      const mw = new THREE.Vector3();
+      if (gunGroup.userData.flash) gunGroup.userData.flash.getWorldPosition(mw);
+      else mw.copy(origin).add(rdir.clone().multiplyScalar(0.5));
+      spawnTracer(mw, end, 0x9fe8ff);
+    }
+    if (hit) {
+      let dmg = scoped ? W.scopedDmg : W.dmg;
+      hit.hp -= dmg; if (hit.hp <= 0) killBot(hit);
+    }
   }
-  const mw = new THREE.Vector3();
-  if (gunGroup.userData.flash) gunGroup.userData.flash.getWorldPosition(mw);
-  else mw.copy(origin).add(dir.clone().multiplyScalar(0.5));
-  spawnTracer(mw, end, 0x9fe8ff);
-  if (hit) {
-    // shotgun falloff: full damage only very close, scales down over its short range
-    let dmg = scoped ? W.scopedDmg : W.dmg;
-    hit.hp -= dmg; if (hit.hp <= 0) killBot(hit);
+
+  const pellets = W.pellets || 0;
+  if (pellets > 1) {
+    // a cone of shot: the first pellet runs true, the rest scatter around it
+    const up = new THREE.Vector3(0, 1, 0);
+    const side = new THREE.Vector3().crossVectors(dir, up).normalize();
+    const vert = new THREE.Vector3().crossVectors(side, dir).normalize();
+    const SPREAD = 0.055;                       // radians, about 3 degrees
+    for (let i = 0; i < pellets; i++) {
+      const d2 = dir.clone();
+      if (i > 0) d2.addScaledVector(side, (Math.random() - 0.5) * 2 * SPREAD)
+                   .addScaledVector(vert, (Math.random() - 0.5) * 2 * SPREAD).normalize();
+      fireRay(d2, i % 2 === 0);                 // half the pellets draw a tracer
+    }
+  } else {
+    fireRay(dir, true);
   }
 }
 
@@ -2743,6 +3178,12 @@ function endMatch() {
   if (bonus) setPts(pts() + bonus);
   const totalEarned = killPts + bonus;
 
+  /* Straight onto the boards. The local one is written no matter what; the world
+     one is posted if an endpoint is configured, and a failed post leaves the run
+     on the local board rather than losing it. */
+  lbSubmit({ name: lbName(), kills: player.kills, deaths: player.deaths, pts: totalEarned,
+             map: mapId, mapName: curMap().name, mode: mode, won: !!won, at: Date.now() });
+
   const tI = TEAM_INFO[PLAYER_TEAM], eI = TEAM_INFO[enemyTeam];
   const resultTxt = won ? 'VICTORY' : draw ? 'DRAW' : 'DEFEAT';
   const resultCol = won ? '#4ade80' : draw ? '#ffd24a' : '#ff6b6b';
@@ -2963,6 +3404,10 @@ function buildTank(team, kind) {
 function spawnTanks() {
   tanks.forEach(t => scene.remove(t.mesh));
   tanks = []; playerTank = null;
+  /* Uploaded maps are infantry only. Nothing else has to know: with no tanks in
+     the list, F finds nothing to enter, the HUD prompt never appears, and the
+     shell code has no vehicles to iterate. */
+  if (!mapHasVehicles()) { console.log('map "' + curMap().name + '" is infantry only — no vehicles spawned'); return; }
   /* Park them in the open just past the front of the base. The base has solid
      side walls at x = +/-13 running 20 deep, so a tank sitting level with the
      platform is behind them  you walk into a wall you cannot see reaching for it.
@@ -3018,7 +3463,8 @@ window.toggleTank = function () {
     tanks.forEach(x => { if (x.dead || x.team !== PLAYER_TEAM) return;
       const d = Math.hypot(x.mesh.position.x - player.x, x.mesh.position.z - player.z);
       if (d < bd) { bd = d; best = x; } });
-    addFeed(best ? '\ud83d\udee1\ufe0f Nearest tank is ' + Math.round(bd) + 'm away \u2014 walk to it and press F'
+    addFeed(!mapHasVehicles() ? '\ud83d\udeb6 ' + curMap().name + ' is infantry only \u2014 no vehicles here'
+                 : best ? '\ud83d\udee1\ufe0f Nearest tank is ' + Math.round(bd) + 'm away \u2014 walk to it and press F'
                  : 'No friendly tank available');
     return;
   }
