@@ -54,6 +54,9 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 #ammo { position: fixed; bottom: 22px; right: 26px; z-index: 11; text-align: right; text-shadow: 0 2px 8px #000; }
 #ammo #magbig { font-size: 2.4rem; font-weight: 800; line-height: 1; }
 #ammo #magbig small { font-size: 1.1rem; opacity: 0.6; }
+#ammo #ammores { font-size: 0.74rem; letter-spacing: 1px; opacity: 0.75; margin-top: 2px; }
+#ammo #ammores.low { color: #ffd24a; opacity: 1; }
+#ammo #ammores.dry { color: #ff6b6b; opacity: 1; font-weight: 800; }
 #ammo #weapname { font-size: 0.9rem; color: #ffd24a; letter-spacing: 1px; font-weight: 700; }
 #feed { position: fixed; bottom: 120px; left: 26px; z-index: 11; font-size: 0.85rem; }
 #feed div { background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 6px; margin-top: 4px; text-shadow: 0 1px 3px #000; }
@@ -336,7 +339,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 
 <div id='board'><h4>🏆 SCOREBOARD</h4><div id='rows'></div></div>
 <div id='ptsbadge'>🏆 <b id='gamepts'>0</b> pts</div>
-<div id='ammo'><div id='weapname'>SNIPER</div><div id='magbig'><span id='mag'>10</span><small id='magmax'>/10</small></div></div>
+<div id='ammo'><div id='weapname'>SNIPER</div><div id='magbig'><span id='mag'>10</span><small id='magmax'>/10</small></div><div id='ammores'></div></div>
 <div id='hp'><div class='lbl'>❤️ HEALTH</div><div class='track'><div id='hpbar'></div></div></div>
 <div id='loadout'></div>
 <div id='feed'></div>
@@ -344,7 +347,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
 <button id='shopbtn'>🛒 SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v77 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · 5 Shotgun · 6 Pistol · 7 LMG · 8 Marksman · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v80 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -481,13 +484,13 @@ const MAPS = [
     desc: 'Full battlefield — village, shop, tanks and trucks',
     file: '', arena: 210, vehicles: true },
 
-  { id: 'map2', name: 'Map 2', tag: 'Your upload',
-    desc: 'Infantry only — no vehicles',
-    file: '', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x6f7a63 },
+  { id: 'map2', name: 'Warehouse', tag: 'Your upload',
+    desc: 'Tight indoor fight — infantry only',
+    file: 'warehouse_map_chicken_gun.glb', scale: 0, rotY: 0, arena: 95, vehicles: false, ground: 0x6f7a63 },
 
-  { id: 'map3', name: 'Map 3', tag: 'Your upload',
-    desc: 'Infantry only — no vehicles',
-    file: '', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x7a7266 }
+  { id: 'map3', name: 'Skyscraper', tag: 'Your upload',
+    desc: 'Rooftops and stairwells — infantry only',
+    file: 'chicken_gun_fruzer_skyscraper.glb', scale: 0, rotY: 0, arena: 120, vehicles: false, ground: 0x7a7266 }
 ];
 let mapId = localStorage.getItem('nc_map') || 'arena';
 if (!MAPS.some(m => m.id === mapId)) mapId = 'arena';
@@ -508,13 +511,60 @@ function shopIsButton() { return curMap().id !== 'arena'; }
      pellets         fires a spread of that many rounds (a shotgun) */
 const EXTRA_WEAPONS = {
   shotgun: { name: 'SHOTGUN', slot: 5, mag: 8,   dmg: 17, scopedDmg: 19, rate: 780, range: 46,  auto: false, scope: false, pellets: 8,
-             file: 'simple_old_shotgun.glb', scale: 1.0, rotX: 0, rotY: 90, rotZ: 0 },
+             ammo: '12ga', file: 'simple_old_shotgun.glb', scale: 1.0,  autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
   pistol:  { name: 'PISTOL',  slot: 6, mag: 15,  dmg: 27, scopedDmg: 33, rate: 190, range: 95,  auto: false, scope: true,
-             file: 'ar_-_dar1_-_double_action_pistol.glb', scale: 0.8, rotX: 0, rotY: 90, rotZ: 0 },
+             ammo: '9mm',  file: 'ar_-_dar1_-_double_action_pistol.glb', scale: 0.8,  autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
   lmg:     { name: 'LMG',     slot: 7, mag: 100, dmg: 26, scopedDmg: 30, rate: 82,  range: 240, auto: true,  scope: true,
-             file: 'bren_mk1_lmg.glb', scale: 1.15, rotX: 0, rotY: 90, rotZ: 0 },
+             ammo: '762',  file: 'bren_mk1_lmg.glb', scale: 1.15, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
   dmr:     { name: 'MARKSMAN', slot: 8, mag: 10, dmg: 62, scopedDmg: 88, rate: 420, range: 420, auto: false, scope: true,
-             file: 'old_-_defender_dmr.glb', scale: 1.05, rotX: 0, rotY: 90, rotZ: 0 }
+             ammo: '762',  file: 'old_-_defender_dmr.glb', scale: 1.05, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 }
+};
+
+/* Models for the weapons that shipped with the game. The four above carry their
+   own; these cover the original four, so every gun in the inventory can have its
+   own mesh instead of sharing the rifle. Same fields, same auto-orientation.
+   (The RPG and the knife keep their CUSTOM_MODELS.rpg / .knife slots.) */
+const BASE_WEAPON_ART = {
+  smg: { file: 'vector_smg.glb', scale: 0.95, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 }
+};
+/* One lookup for "what does this weapon look like", so the loader and the fitter
+   never disagree about where a model comes from. */
+const WEAPON_ART = Object.assign({}, BASE_WEAPON_ART);
+for (const k in EXTRA_WEAPONS) WEAPON_ART[k] = EXTRA_WEAPONS[k];
+
+/* Ammunition. Each weapon feeds from a named box of rounds rather than an endless
+   supply: the magazine is what is in the gun, the reserve is what you are carrying,
+   and reloading moves rounds from one to the other. Run the reserve dry and that
+   weapon is done until you buy more in the shop.
+
+   Calibres are shared where they would be shared in real life — the pistol and the
+   SMG both eat 9mm, the LMG and the marksman rifle both eat 7.62 — so what you buy
+   matters more than which gun you happen to be holding.
+     start  rounds you spawn with
+     buy    rounds per purchase
+     cost   points per purchase
+     tracer colour of the round in flight, so calibres read differently
+
+   BULLETS FROM FAB / SKETCHFAB
+     Put a .glb filename in `file` and that model becomes the round you actually
+     see leaving the barrel — a 9mm looks like a 9mm, a shell looks like a shell,
+     the RPG's warhead is your rocket. Leave it empty and the calibre falls back to
+     a coloured tracer streak, so every gun works before any model is uploaded.
+       scale  multiplies the auto-fit (rounds are fitted to `size` metres long)
+       size   how long the round reads in the world; 0.14 is a rifle round at the
+              scale this game uses, and the rocket is set much larger
+       spin   turns the model on its own axis in flight, for a rocket with fins */
+const AMMO = {
+  '556':    { name: '5.56 mm',   start: 90,  buy: 60, cost: 35, tracer: 0x9fe8ff,
+              file: '', scale: 1, size: 0.14, rotX: 0, rotY: 0, rotZ: 0 },
+  '9mm':    { name: '9 mm',      start: 120, buy: 75, cost: 25, tracer: 0xffe08a,
+              file: '', scale: 1, size: 0.11, rotX: 0, rotY: 0, rotZ: 0 },
+  '762':    { name: '7.62 mm',   start: 80,  buy: 50, cost: 40, tracer: 0xffb066,
+              file: '', scale: 1, size: 0.16, rotX: 0, rotY: 0, rotZ: 0 },
+  '12ga':   { name: '12 gauge',  start: 32,  buy: 24, cost: 35, tracer: 0xff8f6a,
+              file: '', scale: 1, size: 0.13, rotX: 0, rotY: 0, rotZ: 0 },
+  'rocket': { name: 'PG-7 rocket', start: 2, buy: 1,  cost: 60, tracer: 0xffcc55,
+              file: '', scale: 1, size: 0.9,  rotX: 0, rotY: 0, rotZ: 0, spin: true }
 };
 
 // arena half-width; bases sit near the far edges of it. Set by the chosen map.
@@ -523,10 +573,10 @@ const BOT_COUNT = 17;          // 8 allies + 9 enemies, plus you = 18 fighters
 let mode = 'medium';
 
 const WEAPONS = {
-  sniper: { name: 'ASSAULT RIFLE', slot: 1, mag: 30, dmg: 34, scopedDmg: 42, rate: 110, cost: 0, scope: true, auto: true, range: 320, model: 'sniper', owned: true },
-  rpg:    { name: 'RPG', slot: 4, mag: 1, dmg: 0, scopedDmg: 0, rate: 900, cost: 0, scope: true, auto: false, range: 400, model: 'rpg', owned: true, rocket: true },
-  smg:    { name: 'SMG', slot: 3, mag: 40, dmg: 21, scopedDmg: 26, rate: 68, cost: 0, scope: true, auto: true, range: 180, model: 'smg', owned: true },
-  knife:  { name: 'KNIFE', slot: 2, mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, cost: 0, scope: false, auto: false, range: 3, model: 'knife', owned: true }
+  sniper: { name: 'ASSAULT RIFLE', slot: 1, mag: 30, dmg: 34, scopedDmg: 42, rate: 110, cost: 0, scope: true, auto: true, range: 320, model: 'sniper', owned: true, ammo: '556' },
+  rpg:    { name: 'RPG', slot: 4, mag: 1, dmg: 0, scopedDmg: 0, rate: 900, cost: 0, scope: true, auto: false, range: 400, model: 'rpg', owned: true, rocket: true, ammo: 'rocket' },
+  smg:    { name: 'SMG', slot: 3, mag: 40, dmg: 21, scopedDmg: 26, rate: 68, cost: 0, scope: true, auto: true, range: 180, model: 'smg', owned: true, ammo: '9mm' },
+  knife:  { name: 'KNIFE', slot: 2, mag: Infinity, dmg: 100, scopedDmg: 100, rate: 400, cost: 0, scope: false, auto: false, range: 3, model: 'knife', owned: true, ammo: null }
 };
 /* Fold the uploaded weapons in. They are ordinary WEAPONS entries from here on,
    so the number keys, the scroll wheel, the loadout strip and the lobby picker
@@ -535,7 +585,7 @@ for (const k in EXTRA_WEAPONS) {
   const E = EXTRA_WEAPONS[k];
   WEAPONS[k] = { name: E.name, slot: E.slot, mag: E.mag, dmg: E.dmg, scopedDmg: E.scopedDmg,
                  rate: E.rate, cost: 0, scope: !!E.scope, auto: !!E.auto, range: E.range,
-                 pellets: E.pellets || 0, model: k, owned: true };
+                 pellets: E.pellets || 0, model: k, owned: true, ammo: E.ammo || '9mm' };
 }
 function ownedWeapons() { return Object.keys(WEAPONS).filter(k => WEAPONS[k].owned); }
 function saveOwned(l) { /* weapons are no longer purchasable */ }
@@ -562,7 +612,7 @@ const CUSTOM_MODELS = {
   character: 'ImageToStl.com_Y+Bot.glb',
   characterScale: 1.25, // auto-fitted to 1.8m tall, then multiplied by this
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_aac_honey_badger.glb',           // your rifle .glb filename, if you have one
+  weapon: 'low-poly_aac_honey_badger.glb',    // the rifle everything falls back to
 
   // The M4A1 mesh runs along its X axis (6.22 long vs 2.02 tall), with the barrel
   // on -X  the thin end capped by a flash hider  and the buttstock on +X.
@@ -588,6 +638,17 @@ const CUSTOM_MODELS = {
   // the fitted 0.6-unit viewmodel so it follows whatever gun is loaded.
   viewArms: { scale: 1.0 },
 
+  /* Your own first-person arms from Fab / Sketchfab. Drop the filename in and they
+     replace the built-in ones on every weapon; leave it empty and the built-in
+     arms stay. The model is fitted to the viewmodel automatically, then these move
+     it: armsX is right, armsY is up, armsZ is forward (negative is away from you).
+     The wrist monitor rides along, positioned by monitorX/Y/Z, because an uploaded
+     arm has no bone this code can find. */
+  arms: '',
+  armsScale: 1.0, armsX: 0, armsY: 0, armsZ: 0,
+  armsRotX: 0, armsRotY: 0, armsRotZ: 0,
+  monitorX: -0.15, monitorY: -0.10, monitorZ: 0.10, monitorScale: 1.0,
+
   // Drop a tank .glb here (Add file > Upload files) and both you and the bots
   // will use it. Left empty, a built-in blocky tank is used instead, so the
   // vehicles work before any asset is uploaded.
@@ -612,10 +673,10 @@ const CUSTOM_MODELS = {
      (Written as an empty array rather than four placeholder strings: a run of
      bare empty strings is exactly the shape that turns into "Unexpected string"
      if a paste loses its commas.) */
-  houses: [], houseScale: 1.0, houseRotY: 0,
+  houses: ['desert_houses.glb'], houseScale: 1.0, houseRotY: 0,
 
   // Knife model, used for the melee weapon when set.
-  knife: '', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
+  knife: 'knife_animated.glb', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
 
   // Rocket launcher. The repo already ships this one, so the RPG has a model
   // out of the box; swap the filename for anything else you upload.
@@ -628,7 +689,7 @@ const CUSTOM_MODELS = {
     run:     'run forward.glb',
     jump:    'jump loop.glb',
     crouch:  'walk crouching forward.glb',
-    reload:  '',                        // pack has no reload  add 'reloading.glb' if you grab one
+    reload:  'Reload.glb',
     death:   'death from the front.glb',
     grenade: '',                        // add 'throw grenade.glb' if you grab one
     emote:   ''                         // add 'dance.glb' + emoteSound for an emote
@@ -644,6 +705,8 @@ const CUSTOM_MODELS = {
 let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruckGLB = null, loadedKnifeGLB = null, loadedRpgGLB = null, loadedCharAnims = [];
 const loadedHouseGLB = [];
 const loadedWeapModels = {};   // weapon id -> its own uploaded model
+let loadedArmsGLB = null;      // your own first-person arms, when uploaded
+const loadedAmmoGLB = {};      // calibre -> the round model you see in flight
 let loadedMapGLB = null;       // the chosen map, when it is an uploaded one
 const extraClips = {};   // retargeted clips, rebuilt per character in makeFighter
 const rawAnims = {};     // key -> { clips, scene } exactly as loaded, before retargeting
@@ -792,9 +855,10 @@ function mergeAnimClips(clips, name, sceneRoot) {
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
   const anyHouse = (CUSTOM_MODELS.houses || []).some(Boolean);
-  const anyExtraWeap = Object.keys(EXTRA_WEAPONS).some(k => EXTRA_WEAPONS[k].file);
+  const anyExtraWeap = Object.keys(WEAPON_ART).some(k => WEAPON_ART[k].file);
+  const anyRound = Object.keys(AMMO).some(t => AMMO[t].file);
   const mapFile = (curMap().id !== 'arena') ? (curMap().file || '') : '';
-  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse && !anyExtraWeap && !mapFile) { done(); return; }
+  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse && !anyExtraWeap && !mapFile && !CUSTOM_MODELS.arms && !anyRound) { done(); return; }
   const needFBX = isFBX(CUSTOM_MODELS.character) || isFBX(CUSTOM_MODELS.weapon);
 
   // load the right loader(s): GLTFLoader for .glb/.gltf, FBXLoader for Mixamo .fbx
@@ -849,9 +913,18 @@ function loadCustomModels(done) {
     if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed \u2014 using the built-in truck', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed \u2014 using the built-in tank', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed \u2014 using built-in', e); pending--; finish(); }); }
-    // one model per extra weapon, so each gun in the inventory can look like itself
-    Object.keys(EXTRA_WEAPONS).forEach(k => {
-      const f = EXTRA_WEAPONS[k].file;
+    // one model per calibre, so a 9mm looks like a 9mm on its way out of the barrel
+    Object.keys(AMMO).forEach(t => {
+      const f = AMMO[t].file;
+      if (!f) return;
+      pending++;
+      loader.load(f, g => { loadedAmmoGLB[t] = g.scene; console.log('loaded ' + AMMO[t].name + ' round from ' + f); pending--; finish(); },
+                  undefined, e => { console.warn(AMMO[t].name + ' round failed \u2014 using a tracer streak', e); pending--; finish(); });
+    });
+    if (CUSTOM_MODELS.arms) { pending++; loader.load(CUSTOM_MODELS.arms, g => { loadedArmsGLB = g.scene; console.log('loaded first-person arms from ' + CUSTOM_MODELS.arms); pending--; finish(); }, undefined, e => { console.warn('arms model failed \u2014 using the built-in arms', e); pending--; finish(); }); }
+    // one model per weapon, so each gun in the inventory can look like itself
+    Object.keys(WEAPON_ART).forEach(k => {
+      const f = WEAPON_ART[k].file;
       if (!f) return;
       pending++;
       loader.load(f, g => { loadedWeapModels[k] = g.scene; console.log('loaded ' + k + ' model from ' + f); pending--; finish(); },
@@ -886,7 +959,7 @@ function loadCustomModels(done) {
 
 // ---------- state ----------
 let scene, camera, renderer, skyMesh;
-let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, deaths: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true };
+let player = { x: 0, y: 1.7, z: 0, yaw: 0, pitch: 0, hp: 100, kills: 0, deaths: 0, mag: 10, reloading: false, sprint: false, vy: 0, onGround: true, ammo: {} };
 const keys = {};
 // ---- rebindable controls ----
 const DEFAULT_BINDS = { tablet:'KeyQ', weather:'KeyM', tank:'KeyF', forward:'KeyW', back:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', sprint:'ShiftLeft', crouch:'ControlLeft', emote:'KeyT', reload:'KeyR', nade:'KeyG', sticky:'KeyB', plant:'KeyC', detonate:'KeyX', shop:'KeyE', view:'KeyV' };
@@ -1195,7 +1268,7 @@ function init() {
     }
   };
   if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck || CUSTOM_MODELS.knife || CUSTOM_MODELS.rpg || (CUSTOM_MODELS.houses || []).some(Boolean) ||
-      Object.keys(EXTRA_WEAPONS).some(k => EXTRA_WEAPONS[k].file) || (curMap().id !== 'arena' && curMap().file)) {
+      Object.keys(WEAPON_ART).some(k => WEAPON_ART[k].file) || (curMap().id !== 'arena' && curMap().file) || CUSTOM_MODELS.arms || Object.keys(AMMO).some(t => AMMO[t].file)) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
       if (!built) { console.warn('model load stalled \u2014 building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
@@ -1310,6 +1383,92 @@ function makeTree(x, z) {
    blockedAt() walks the whole array on every step.
    ============================================================ */
 const MAP_PROXY_CAP = 400;
+
+/* ---- collision grid for uploaded maps ----
+   Box proxies around meshes only work when the meshes ARE the objects. Exporters
+   routinely split a level by MATERIAL instead: the warehouse map in this repo is
+   35 meshes and every one of them has a bounding box covering the whole level,
+   because each holds every surface that shares a texture. A box around that is a
+   box around the map, so the proxy pass correctly refuses to build any — and
+   correctly leaves you able to walk through the walls.
+
+   So collision comes off the triangles instead, once, at load. Every triangle
+   that stands in the walkable band — knee to head height — stamps its footprint
+   into a 2D grid, and from then on "is this blocked?" is an array lookup rather
+   than a raycast. Bullets march the same grid. It costs one pass over the mesh at
+   load and nothing per frame. */
+const GRID_CELL = 1.4;                 // metres per cell
+const BAND_LO = 0.55, BAND_HI = 2.0;   // a triangle in here is something you hit
+let mapGrid = null, mapGridN = 0, mapGridOrigin = 0;
+let mapLamp = null;      // the light that follows you inside an uploaded map
+
+function gridIndex(x, z) {
+  const i = Math.floor((x - mapGridOrigin) / GRID_CELL);
+  const j = Math.floor((z - mapGridOrigin) / GRID_CELL);
+  if (i < 0 || j < 0 || i >= mapGridN || j >= mapGridN) return -1;
+  return j * mapGridN + i;
+}
+function gridBlocked(x, z) {
+  if (!mapGrid) return false;
+  const k = gridIndex(x, z);
+  return k >= 0 && mapGrid[k] === 1;
+}
+function buildMapCollisionGrid(root) {
+  mapGridOrigin = -ARENA;
+  mapGridN = Math.ceil((ARENA * 2) / GRID_CELL);
+  mapGrid = new Uint8Array(mapGridN * mapGridN);
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  let tris = 0, marked = 0;
+  root.updateMatrixWorld(true);
+  root.traverse(o => {
+    if (!o.isMesh || !o.geometry || !o.geometry.attributes || !o.geometry.attributes.position) return;
+    const g = o.geometry, pos = g.attributes.position, idx = g.index;
+    const n = idx ? idx.count : pos.count;
+    for (let t = 0; t + 2 < n; t += 3) {
+      const i0 = idx ? idx.getX(t) : t, i1 = idx ? idx.getX(t + 1) : t + 1, i2 = idx ? idx.getX(t + 2) : t + 2;
+      a.fromBufferAttribute(pos, i0).applyMatrix4(o.matrixWorld);
+      b.fromBufferAttribute(pos, i1).applyMatrix4(o.matrixWorld);
+      c.fromBufferAttribute(pos, i2).applyMatrix4(o.matrixWorld);
+      tris++;
+      const yLo = Math.min(a.y, b.y, c.y), yHi = Math.max(a.y, b.y, c.y);
+      if (yHi < BAND_LO || yLo > BAND_HI) continue;      // floor, or overhead
+      const xLo = Math.min(a.x, b.x, c.x), xHi = Math.max(a.x, b.x, c.x);
+      const zLo = Math.min(a.z, b.z, c.z), zHi = Math.max(a.z, b.z, c.z);
+      // a triangle spanning half the map is a floor plane caught edge-on, not a wall
+      if (xHi - xLo > 40 || zHi - zLo > 40) continue;
+      for (let x = xLo; x <= xHi + GRID_CELL; x += GRID_CELL) {
+        for (let z = zLo; z <= zHi + GRID_CELL; z += GRID_CELL) {
+          const k = gridIndex(x, z);
+          if (k >= 0 && !mapGrid[k]) { mapGrid[k] = 1; marked++; }
+        }
+      }
+    }
+  });
+  const total = mapGridN * mapGridN;
+  console.log('map collision grid: ' + marked + ' of ' + total + ' cells solid (' +
+              Math.round(marked / total * 100) + '%) from ' + tris + ' triangles, ' +
+              GRID_CELL + 'm cells');
+  /* A grid that says almost everything is solid would trap the player, and one
+     that says nothing is is no better than not having it. Either way, drop it. */
+  if (marked > total * 0.75 || marked < 4) {
+    console.warn('collision grid looks wrong (' + marked + '/' + total + ') — discarded');
+    mapGrid = null;
+  }
+}
+/* March the grid for a bullet: step along the ray and report where it first meets
+   something solid, so shots stop at walls the same way bodies do. */
+function gridCoverDistance(origin, dir, maxDist) {
+  if (!mapGrid) return Infinity;
+  const step = GRID_CELL * 0.6;
+  const d = dir.clone().normalize();
+  for (let t = step; t <= maxDist; t += step) {
+    const y = origin.y + d.y * t;
+    if (y < BAND_LO - 0.4 || y > BAND_HI + 1.2) continue;   // above or below the wall band
+    if (gridBlocked(origin.x + d.x * t, origin.z + d.z * t)) return t;
+  }
+  return Infinity;
+}
+
 function buildMapWorld(m) {
   const inner = loadedMapGLB;
   inner.updateMatrixWorld(true);
@@ -1371,9 +1530,29 @@ function buildMapWorld(m) {
   inner.position.y += (m.yOffset || 0);            // manual nudge, if a map needs it
   inner.updateMatrixWorld(true);
 
-  /* Spawns have to be on that floor too. A spawn hanging over a hole, a cliff or
-     the roof of something is the same bug in a different place, so each one walks
-     in towards the middle until the ground under it is close to zero. */
+  /* Spawns have to be on that floor too, and they have to be FAIR. The bases sit
+     at +/-(arena-25) by default, which assumes the map fills the play area — the
+     warehouse does not, so one team started on solid ground and the other walked
+     in 50 metres looking for some, ending up almost at the middle. Find how far
+     the floor actually runs in both directions and put both spawns at the same
+     distance out, so neither side starts closer to the fight. */
+  const solid = (x, z) => { const y = surfaceAt(x, z); return y !== null && Math.abs(y) < 3; };
+  const LANES = [0, -14, 14, -28, 28, -42, 42];      // a straight line down x=0 can miss
+  let reach = 0, ctX = 0, tX = 0;
+  for (let d = ARENA * 0.88; d > 12 && !reach; d -= ARENA * 0.04) {
+    const near = LANES.find(x => solid(x, -d));
+    const far  = LANES.find(x => solid(x, d));
+    if (near !== undefined && far !== undefined) { reach = d; ctX = near; tX = far; }
+  }
+  if (reach > 12) {
+    BASES.ct.z = -reach; BASES.ct.x = ctX;
+    BASES.t.z = reach;   BASES.t.x = tX;
+    console.log('map floor reaches +/-' + reach.toFixed(0) + 'm — spawns placed there, evenly');
+  }
+
+  /* And a last guard per spawn: one hanging over a hole, a cliff or the roof of
+     something is the same bug in a different place, so it walks in towards the
+     middle until the ground under it is close to zero. */
   Object.keys(BASES).forEach(team => {
     const B = BASES[team];
     const dir = B.z > 0 ? -1 : 1;                  // "in" is towards the centre
@@ -1386,6 +1565,24 @@ function buildMapWorld(m) {
   });
   console.log('map "' + m.name + '" loaded — fitted scale ' + k.toFixed(4) +
               ', spawns at z ' + BASES.ct.z.toFixed(1) + ' / ' + BASES.t.z.toFixed(1));
+
+  /* An uploaded interior brings no lights of its own, and the arena's sun does not
+     reach inside a warehouse — measured on the real map, the view from the floor
+     comes back at RGB 7,11,9, which is a black screen with a HUD on it. This fill
+     light is kept out of the weather sweep so a night preset cannot take it away
+     and leave the map unplayable. */
+  const fill = new THREE.AmbientLight(0xdfe8ff, 1.15);
+  fill.userData.mapFill = true;
+  scene.add(fill);
+  /* Ambient alone flattens an interior into a grey soup and still leaves it dim —
+     measured at 80% of the frame under 30/255. A lamp that rides with the camera
+     gives the walls somewhere for light to come FROM, which is what makes a room
+     readable. It is moved in the frame loop. */
+  const lamp = new THREE.PointLight(0xffeedd, 1.5, 46, 1.4);
+  lamp.userData.mapFill = true;
+  lamp.name = 'mapLamp';
+  scene.add(lamp);
+  mapLamp = lamp;
 
   // a floor under it, in case the model has no ground of its own
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(ARENA * 4, ARENA * 4),
@@ -1434,6 +1631,8 @@ function buildMapWorld(m) {
   });
   console.log('map collision: ' + Math.min(cand.length, MAP_PROXY_CAP) + ' box proxies, ' +
               skipped + ' mesh(es) skipped as too big / overhead / on a spawn');
+  // and the grid, which is what actually stops you on a map split by material
+  buildMapCollisionGrid(inner);
 
   // a beacon over each spawn, since an uploaded map has no bases of its own
   for (const team in BASES) {
@@ -1896,7 +2095,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v77 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v80 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2068,8 +2267,96 @@ function makeFighter(color, useGLB, isPlayer) {
 // Known-good sizes for the built-in models (measured by hand, no guesswork).
 // Weapons are built at their FINAL size directly  no scaling is applied
 // anywhere, so a bad scale value can never corrupt the transform.
+/* Work out which way an uploaded gun is built, so it can be turned to point where
+   the camera is looking without anyone hand-tuning three angles per model.
+
+   The axis is easy and reliable: a gun is far longer than it is thick, so its
+   longest dimension is the bore. Turn that onto Z and the gun stops lying across
+   the screen. Checked against every gun .glb in this repo — 4 of 4 land correctly.
+
+   WHICH END is the muzzle is the hard half, and this does NOT pretend to always
+   know. The obvious rule — thin end forward, since receiver, magazine and grip
+   pile up behind the trigger — was measured on those same four models: it is
+   decisive on the RPG (2.5x thicker at the back) and near-useless on the rifles
+   (1.1-1.3x, because an M4's optic and magazine sit mid-body and both ends taper).
+   So it only acts when the evidence is strong, and otherwise leaves the gun alone
+   and says so. A weapon that comes out backwards is one press of Y in game. */
+const MUZZLE_RATIO = 1.6;               // how lopsided the ends must be to call it
+function autoOrientWeapon(inner) {
+  const pts = [];
+  inner.updateMatrixWorld(true);
+  inner.traverse(o => {
+    if (!o.isMesh || !o.geometry || !o.geometry.attributes || !o.geometry.attributes.position) return;
+    const pos = o.geometry.attributes.position;
+    const step = Math.max(1, Math.floor(pos.count / 1200));      // ~1200 samples is plenty
+    const v = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i += step) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
+      pts.push(v.clone());
+    }
+  });
+  if (pts.length < 8) return { rotY: 0, rotX: 0, axis: '?', called: false };
+
+  const bb = new THREE.Box3().setFromPoints(pts), size = new THREE.Vector3(), ctr = new THREE.Vector3();
+  bb.getSize(size); bb.getCenter(ctr);
+  let axis = 'z';
+  if (size.x >= size.y && size.x >= size.z) axis = 'x';
+  else if (size.y >= size.x && size.y >= size.z) axis = 'y';
+
+  let rotY = 0, rotX = 0;
+  if (axis === 'x') rotY = 90;          // lying along X: quarter turn puts it on Z
+  else if (axis === 'y') rotX = -90;    // standing up: tip it forward onto Z
+
+  // thickest point within the outer 8% at each end of the bore
+  const cross = (p) => (axis === 'x') ? Math.hypot(p.y - ctr.y, p.z - ctr.z)
+                     : (axis === 'y') ? Math.hypot(p.x - ctr.x, p.z - ctr.z)
+                                      : Math.hypot(p.x - ctr.x, p.y - ctr.y);
+  const span = size[axis] || 1, edge = span * 0.08;
+  let loMax = 0, hiMax = 0;
+  pts.forEach(p => {
+    const a = p[axis];
+    if (a <= bb.min[axis] + edge) loMax = Math.max(loMax, cross(p));
+    else if (a >= bb.max[axis] - edge) hiMax = Math.max(hiMax, cross(p));
+  });
+  const ratio = Math.max(loMax, hiMax) / Math.max(1e-6, Math.min(loMax, hiMax));
+  let called = false;
+  if (ratio >= MUZZLE_RATIO) {
+    called = true;
+    /* Thin end wants to end up at -Z. After the turn above, +axis maps to -Z for
+       x and y, and stays +Z for z — so flip when the thin end is on the wrong
+       side of that. */
+    const thinIsPositive = loMax > hiMax;
+    const wantsFlip = (axis === 'z') ? thinIsPositive : !thinIsPositive;
+    if (wantsFlip) { if (axis === 'y') rotX += 180; else rotY += 180; }
+  }
+  return { rotY: rotY, rotX: rotX, axis: axis, called: called, ratio: +ratio.toFixed(2) };
+}
+
+/* Per-weapon orientation fixes, set in game with Y and U and kept in localStorage.
+   Turning a downloaded gun the right way round is a two-second job with the model
+   in front of you and a guess from a distance otherwise, so the game does it. */
+const WORIENT = {};      // per-weapon auto-orient result, cached and reported
+let WFIX = (function () {
+  try { return JSON.parse(localStorage.getItem('nc_wfix') || '{}') || {}; } catch (e) { return {}; }
+})();
+function saveWFix() { localStorage.setItem('nc_wfix', JSON.stringify(WFIX)); }
+function bumpWFix(axis) {
+  const k = curWeap;
+  const f = WFIX[k] || (WFIX[k] = { y: 0, z: 0 });
+  if (axis === 'y') f.y = (f.y + 180) % 360; else f.z = (f.z + 180) % 360;
+  saveWFix();
+  if (gunGroup && scene) {                         // rebuild so you see it immediately
+    const vis = gunGroup.visible; scene.remove(gunGroup);
+    gunGroup = buildWeapon(WEAPONS[curWeap].model); gunGroup.visible = vis; scene.add(gunGroup);
+  }
+  addFeed('🔧 ' + WEAPONS[k].name + ' turned — rotY +' + f.y + ', rotZ +' + f.z + ' (saved)');
+  console.log('weapon fix for ' + k + ': rotY += ' + f.y + ', rotZ += ' + f.z +
+              '  — paste into EXTRA_WEAPONS if you want it in the file');
+}
+
 /* `opt` overrides the global weapon settings, so each uploaded weapon can carry
-   its own rotation and scale. Called with no opt it behaves exactly as before. */
+   its own rotation, scale and fitted length. Called with no opt it behaves exactly
+   as before. */
 function autoFitGLB(inner, opt) {
   const O = opt || null;
   const wrapper = new THREE.Group();
@@ -2096,7 +2383,7 @@ function autoFitGLB(inner, opt) {
   size = new THREE.Vector3(); bbox.getSize(size);
   const center = new THREE.Vector3(); bbox.getCenter(center);
   const longest = Math.max(size.x, size.y, size.z);
-  let scale = 0.6 / longest;
+  let scale = ((O && O.fit) || 0.6) / longest;
   if (!isFinite(scale) || scale <= 0.0001 || scale > 100) scale = 1;
   scale *= (O ? (O.scale || 1) : (CUSTOM_MODELS.weaponScale || 1));
   spin.scale.setScalar(scale);
@@ -2173,6 +2460,50 @@ function updateWristMonitor(dt) {
 }
 
 // simple gloved arms holding the weapon, sized to the 0.6-unit viewmodel
+/* Your own arms from Fab / Sketchfab, in place of the built-in ones.
+   An uploaded pair of arms has no rig this code can read, so it is placed rather
+   than posed: fitted to the length of the weapon in view, dropped into the
+   bottom-centre of the frame where hands belong, and moved from there with the
+   armsX / armsY / armsZ knobs. The wrist monitor is parented alongside it — there
+   is no bone to hang it off, so it gets its own position. */
+function buildUploadedArms() {
+  const g = new THREE.Group();
+  const inner = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone)
+    ? THREE.SkeletonUtils.clone(loadedArmsGLB) : loadedArmsGLB.clone(true);
+  inner.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3(), ctr = new THREE.Vector3();
+  bb.getSize(sz); bb.getCenter(ctr);
+  const longest = Math.max(sz.x, sz.y, sz.z) || 1;
+  // a pair of forearms reads a little longer than the gun itself
+  let k = 0.75 / longest;
+  if (!isFinite(k) || k <= 0) k = 1;
+  k *= (CUSTOM_MODELS.armsScale || 1);
+  const D = Math.PI / 180;
+  inner.scale.setScalar(k);
+  inner.rotation.set((CUSTOM_MODELS.armsRotX || 0) * D, (CUSTOM_MODELS.armsRotY || 0) * D, (CUSTOM_MODELS.armsRotZ || 0) * D);
+  inner.updateMatrixWorld(true);
+  // recentre on its own middle so the offsets below mean the same for any model
+  const bb2 = new THREE.Box3().setFromObject(inner), c2 = new THREE.Vector3();
+  bb2.getCenter(c2);
+  inner.position.set(-c2.x, -c2.y, -c2.z);
+  inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+
+  const holder = new THREE.Group();
+  holder.add(inner);
+  holder.position.set(-0.02 + (CUSTOM_MODELS.armsX || 0),
+                      -0.22 + (CUSTOM_MODELS.armsY || 0),
+                       0.16 + (CUSTOM_MODELS.armsZ || 0));
+  g.add(holder);
+
+  const mon = buildWristMonitor();
+  mon.position.set(CUSTOM_MODELS.monitorX || -0.15, CUSTOM_MODELS.monitorY || -0.10, CUSTOM_MODELS.monitorZ || 0.10);
+  mon.rotation.set(-0.78, 0.60, 0.30);
+  mon.scale.setScalar(3.4 * (CUSTOM_MODELS.monitorScale || 1));
+  g.add(mon);
+  g.userData.monitor = mon;
+  return g;
+}
+
 function buildArms() {
   /* Built the way a real viewmodel is: tapered limbs running between actual joint
      positions, not axis-aligned boxes. The left arm sweeps in from the lower left
@@ -2251,13 +2582,51 @@ function buildArms() {
   return g;
 }
 
+/* Every uploaded weapon is oriented and fitted the same way the rifle is — one
+   path, one set of rules — instead of each kind carrying its own half of the job.
+   The old split is what put guns sideways: the RPG rotated itself 90 degrees in
+   buildWeaponModel and then autoFitGLB turned the result another 90 on top,
+   because the rifle's global setting applied to everything that reached it.
+
+   The rifle's own numbers stay the default. An uploaded weapon with autoOrient on
+   works its rotation out from its mesh instead, and its rotX/rotY/rotZ stack on
+   top of that as fine-tuning. */
+function weaponFit(type) {
+  const fix = WFIX[type] || { y: 0, z: 0 };
+  const E = WEAPON_ART[type];
+  if (E && loadedWeapModels[type]) {
+    let base = { rotY: 0, rotX: 0 };
+    if (E.autoOrient !== false) {
+      base = WORIENT[type] || (WORIENT[type] = autoOrientWeapon(loadedWeapModels[type]));
+      console.log(type + ' auto-orient: bore on ' + base.axis + ' -> turn Y' + base.rotY + ' X' + base.rotX +
+        (base.called ? ' (muzzle called, ' + base.ratio + 'x taper)'
+                     : ' (which end is the muzzle is unclear at ' + base.ratio + 'x — press Y in game if it faces the wrong way)'));
+    }
+    return { rotX: (base.rotX || 0) + (E.rotX || 0), rotY: (base.rotY || 0) + (E.rotY || 0) + fix.y,
+             rotZ: (E.rotZ || 0) + fix.z, scale: E.scale || 1, fit: 0.6 };
+  }
+  if (type === 'rpg' && loadedRpgGLB) {
+    return { rotX: CUSTOM_MODELS.rpgRotX || 0, rotY: (CUSTOM_MODELS.rpgRotY || 0) + fix.y,
+             rotZ: (CUSTOM_MODELS.rpgRotZ || 0) + fix.z, scale: CUSTOM_MODELS.rpgScale || 1, fit: 0.95 };
+  }
+  if (type === 'knife' && loadedKnifeGLB) {
+    return { rotX: CUSTOM_MODELS.knifeRotX || 0, rotY: (CUSTOM_MODELS.knifeRotY || 0) + fix.y,
+             rotZ: (CUSTOM_MODELS.knifeRotZ || 0) + fix.z, scale: CUSTOM_MODELS.knifeScale || 1, fit: 0.42 };
+  }
+  // the shared rifle model, with the rifle's own proven angles, plus any in-game fix
+  if (!fix.y && !fix.z) return null;
+  return { rotX: CUSTOM_MODELS.weaponRotX || 0, rotY: (CUSTOM_MODELS.weaponRotY || 0) + fix.y,
+           rotZ: (CUSTOM_MODELS.weaponRotZ || 0) + fix.z, scale: CUSTOM_MODELS.weaponScale || 1, fit: 0.6 };
+}
+
 function buildWeapon(type) {
   const m = buildWeaponModel(type);
   const own = loadedWeapModels[type];              // this weapon's own uploaded model
-  const E = EXTRA_WEAPONS[type];
-  if (own || (loadedWeapGLB && type !== 'knife')) {
-    const w = autoFitGLB(m, own && E ? { rotX: E.rotX, rotY: E.rotY, rotZ: E.rotZ, scale: E.scale } : null);
-    if (!own && type === 'smg') w.scale.setScalar(0.78);   // same model, carried shorter
+  const hasGLB = own || (type === 'rpg' && loadedRpgGLB) || (type === 'knife' && loadedKnifeGLB) ||
+                 (loadedWeapGLB && type !== 'knife');
+  if (hasGLB) {
+    const w = autoFitGLB(m, weaponFit(type));
+    if (!own && type === 'smg' && !loadedWeapModels.smg) w.scale.setScalar(0.78);   // same model, carried shorter
     /* The muzzle flash used to be built inside the model group at z = -1.6, which
        meant autoFitGLB measured it as part of the weapon: it inflated the bounding
        box, so the gun came out mis-centred and scaled to fit a marker rather than
@@ -2270,7 +2639,7 @@ function buildWeapon(type) {
       new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
     flash.position.set(0, 0.02, mz); w.add(flash); w.userData.flash = flash;
     // arms grip the fitted viewmodel, and carry the wrist monitor with them
-    const arms = buildArms();
+    const arms = loadedArmsGLB ? buildUploadedArms() : buildArms();
     w.add(arms);
     w.userData.arms = arms;
     return w;
@@ -2287,38 +2656,20 @@ function buildWeaponModel(type) {
     g.add(inner);
     return g;
   }
-  // rocket launcher
+  /* The rocket launcher and the knife hand over their raw mesh like every other
+     weapon now. They used to scale and rotate themselves here and then get scaled
+     and rotated AGAIN by autoFitGLB — two turns about Y, which is how a launcher
+     ends up pointing across the screen. weaponFit() carries their numbers instead. */
   if (loadedRpgGLB && type === 'rpg') {
     const g = new THREE.Group();
     const inner = loadedRpgGLB.clone(true);
-    inner.updateMatrixWorld(true);
-    const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3();
-    bb.getSize(sz);
-    const longest = Math.max(sz.x, sz.y, sz.z) || 1;
-    let k = 0.95 / longest;                      // a launcher is longer than a rifle
-    if (!isFinite(k) || k <= 0) k = 1;
-    k *= (CUSTOM_MODELS.rpgScale || 1);
-    const D = Math.PI / 180;
-    inner.scale.setScalar(k);
-    inner.rotation.set((CUSTOM_MODELS.rpgRotX || 0) * D, (CUSTOM_MODELS.rpgRotY || 0) * D, (CUSTOM_MODELS.rpgRotZ || 0) * D);
     inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
     g.add(inner);
     return g;
   }
-  // uploaded knife model, when there is one
   if (loadedKnifeGLB && type === 'knife') {
     const g = new THREE.Group();
     const inner = loadedKnifeGLB.clone(true);
-    inner.updateMatrixWorld(true);
-    const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3();
-    bb.getSize(sz);
-    const longest = Math.max(sz.x, sz.y, sz.z) || 1;
-    let k = 0.42 / longest;                       // a blade reads shorter than a rifle
-    if (!isFinite(k) || k <= 0) k = 1;
-    k *= (CUSTOM_MODELS.knifeScale || 1);
-    const D = Math.PI / 180;
-    inner.scale.setScalar(k);
-    inner.rotation.set((CUSTOM_MODELS.knifeRotX || 0) * D, (CUSTOM_MODELS.knifeRotY || 0) * D, (CUSTOM_MODELS.knifeRotZ || 0) * D);
     inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
     g.add(inner);
     return g;
@@ -2432,10 +2783,93 @@ function spawnTracer(from, to, color) {
 }
 function updateTracers(dt) { for (let i = tracers.length-1; i >= 0; i--) { tracers[i].life -= dt; tracers[i].mesh.material.opacity = Math.max(0, tracers[i].life/0.1); if (tracers[i].life <= 0) { scene.remove(tracers[i].mesh); tracers.splice(i,1); } } }
 
+/* ---- rounds in flight ----
+   When a calibre has an uploaded model, that model is what leaves the barrel: it
+   is fitted, pointed along its own travel, and flown to wherever the shot landed.
+   A real bullet is far too fast to see, so these move at a readable speed — quick
+   enough to feel like a bullet, slow enough that you can actually watch your 9mm.
+
+   Meshes are pooled per calibre. An LMG fires twelve rounds a second and cloning a
+   glTF that often would stutter; the pool clones a handful once and reuses them. */
+const ROUND_SPEED = 240;               // metres per second in the world
+const ROUND_POOL_MAX = 24;             // per calibre
+const roundPool = {}, roundsFlying = [];
+
+function buildRound(type) {
+  const src = loadedAmmoGLB[type];
+  if (!src) return null;
+  const A = AMMO[type];
+  const holder = new THREE.Group();
+  const inner = src.clone(true);
+  inner.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3(), ctr = new THREE.Vector3();
+  bb.getSize(sz); bb.getCenter(ctr);
+  const longest = Math.max(sz.x, sz.y, sz.z) || 1;
+  let k = ((A.size || 0.14) * (A.scale || 1)) / longest;
+  if (!isFinite(k) || k <= 0) k = 1;
+  inner.scale.setScalar(k);
+  /* Point the round along its own flight, nose first.
+     The same rule the weapons use finds the nose: the long axis is the round's
+     length, and a bullet tapers hard enough at the tip that the thin-end test is
+     decisive on it in a way it never is on a rifle. That leaves the nose on -Z.
+
+     But a round is aimed with lookAt(), and lookAt on an ordinary Object3D points
+     its +Z at the target — only a camera looks down -Z. Aiming the model straight
+     from that would fly every round backwards, base first. So the oriented model
+     hangs inside a group turned half a circle, which swaps its -Z nose onto the
+     holder's +Z, and the holder is what gets aimed. */
+  const D = Math.PI / 180;
+  const o = autoOrientWeapon(inner);
+  inner.rotation.set((o.rotX || 0) * D + (A.rotX || 0) * D,
+                     (o.rotY || 0) * D + (A.rotY || 0) * D,
+                     (A.rotZ || 0) * D);
+  inner.position.set(-ctr.x * k, -ctr.y * k, -ctr.z * k);
+  inner.traverse(o2 => { if (o2.isMesh) { o2.castShadow = false; o2.frustumCulled = false; } });
+  const flip = new THREE.Group();
+  flip.rotation.y = Math.PI;
+  flip.add(inner);
+  holder.add(flip);
+  return holder;
+}
+function takeRound(type) {
+  const pool = roundPool[type] || (roundPool[type] = []);
+  const m = pool.pop() || buildRound(type);
+  if (m) { m.visible = true; scene.add(m); }
+  return m;
+}
+function freeRound(type, m) {
+  scene.remove(m);
+  const pool = roundPool[type] || (roundPool[type] = []);
+  if (pool.length < ROUND_POOL_MAX) pool.push(m);
+}
+/* Fire one round from `from` to `to`. Falls back to the streak when the calibre
+   has no model, which is what every weapon does out of the box. */
+function spawnRound(type, from, to, colour) {
+  if (!type || !loadedAmmoGLB[type]) { spawnTracer(from, to, colour); return; }
+  const m = takeRound(type);
+  if (!m) { spawnTracer(from, to, colour); return; }
+  m.position.copy(from);
+  m.lookAt(to);
+  const dist = from.distanceTo(to);
+  roundsFlying.push({ type: type, mesh: m, from: from.clone(), to: to.clone(),
+                      t: 0, dur: Math.max(0.02, dist / ROUND_SPEED), spin: !!AMMO[type].spin });
+}
+function updateRounds(dt) {
+  for (let i = roundsFlying.length - 1; i >= 0; i--) {
+    const r = roundsFlying[i];
+    r.t += dt;
+    const k = r.t / r.dur;
+    if (k >= 1) { freeRound(r.type, r.mesh); roundsFlying.splice(i, 1); continue; }
+    r.mesh.position.lerpVectors(r.from, r.to, k);
+    if (r.spin) r.mesh.rotateZ(dt * 9);
+  }
+}
+
 function coverDistance(origin, dir, maxDist) {
   const rc = new THREE.Raycaster(origin, dir.clone().normalize(), 0, maxDist);
   const hits = rc.intersectObjects(obstacles, false);
-  return hits.length ? hits[0].distance : Infinity;
+  const box = hits.length ? hits[0].distance : Infinity;
+  return Math.min(box, gridCoverDistance(origin, dir, maxDist));
 }
 function camDir() { return new THREE.Vector3(-Math.sin(player.yaw)*Math.cos(player.pitch), Math.sin(player.pitch), -Math.cos(player.yaw)*Math.cos(player.pitch)); }
 
@@ -2454,6 +2888,7 @@ function startMatch() {
   document.getElementById('enbar').style.background = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].css;
   if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
   running = true; c4Ready = false; c4Timer = 20; shopVisits = 0; setPts(pts());
+  resetAmmo();
   // spawn in open ground just in FRONT of your team's base (never inside the walls)
   const HB = BASES[PLAYER_TEAM];
   const facing = PLAYER_TEAM === 'ct' ? 1 : -1;   // CT faces +z, T faces -z
@@ -2510,6 +2945,11 @@ document.addEventListener('keydown', (e) => {
   if (e.code === BINDS.jump && running) e.preventDefault();
   if (!running) return;
   if (e.code === BINDS.reload) reload();
+  /* Turning an uploaded gun the right way round, with it in front of you. Y points
+     it the other way, U rolls it upright. Saved per weapon and printed to the
+     console so the numbers can go into the file when you are happy. */
+  if (e.code === 'KeyY') bumpWFix('y');
+  if (e.code === 'KeyU') bumpWFix('z');
   if (e.code === BINDS.tank) { toggleTank(); }
   if (e.code === BINDS.tablet) { tabletOpen ? closeTablet() : openTablet(); }
   if (e.code === BINDS.weather) { cycleWeather(); }
@@ -2557,20 +2997,70 @@ function buildLoadoutHUD() {
 }
 function switchWeap(w) {
   curWeap = w;
-  player.mag = WEAPONS[w].mag === Infinity ? Infinity : WEAPONS[w].mag;
-  document.getElementById('weapname').textContent = WEAPONS[w].name;
-  document.getElementById('mag').textContent = WEAPONS[w].mag === Infinity ? '\u221e' : player.mag;
-  document.getElementById('magmax').textContent = WEAPONS[w].mag === Infinity ? '' : '/' + WEAPONS[w].mag;
+  const W = WEAPONS[w];
+  /* Swapping weapons loads a magazine out of the reserve rather than conjuring
+     one: carry no 12 gauge and the shotgun comes up empty. */
+  if (W.mag === Infinity) player.mag = Infinity;
+  else if (!W.ammo) player.mag = W.mag;
+  else {
+    if (!player.ammo || !Object.keys(player.ammo).length) resetAmmo();
+    const take = Math.min(W.mag, ammoLeft(W.ammo));
+    player.ammo[W.ammo] = ammoLeft(W.ammo) - take;
+    player.mag = take;
+  }
+  document.getElementById('weapname').textContent = W.name;
+  updateAmmoHUD();
+  /* If the muzzle end could not be worked out from the mesh, say so rather than
+     letting someone wonder why their gun faces backwards. Once per weapon. */
+  const o = WORIENT[w];
+  if (running && o && !o.called && !WFIX[w] && !o.told) { o.told = true;
+    addFeed('🔧 ' + W.name + ': press Y if it points the wrong way, U if it is upside down'); }
   if (gunGroup && scene) { const vis = gunGroup.visible; scene.remove(gunGroup); gunGroup = buildWeapon(WEAPONS[w].model); gunGroup.visible = vis; scene.add(gunGroup); }
   buildLoadoutHUD();
+}
+/* ---- ammunition ----
+   The magazine is what is in the gun; the reserve is what you are carrying, per
+   calibre. Reloading moves rounds across, and when a calibre runs out that weapon
+   is dry until you buy more. Calibres are shared: 9mm feeds the pistol and the
+   SMG, 7.62 feeds the LMG and the marksman rifle. */
+function ammoLeft(type) { return Math.max(0, (player.ammo && player.ammo[type]) || 0); }
+function addAmmo(type, n) {
+  if (!player.ammo) player.ammo = {};
+  player.ammo[type] = ammoLeft(type) + n;
+  updateAmmoHUD();
+}
+function resetAmmo() {
+  player.ammo = {};
+  for (const t in AMMO) player.ammo[t] = AMMO[t].start;
+}
+function updateAmmoHUD() {
+  const W = WEAPONS[curWeap];
+  const mg = document.getElementById('mag'), mx = document.getElementById('magmax'), rs = document.getElementById('ammores');
+  if (mg) mg.textContent = W.mag === Infinity ? '∞' : player.mag;
+  if (mx) mx.textContent = W.mag === Infinity ? '' : '/' + W.mag;
+  if (!rs) return;
+  if (!W.ammo) { rs.textContent = 'melee'; rs.className = ''; return; }
+  const left = ammoLeft(W.ammo);
+  rs.textContent = AMMO[W.ammo].name + ' · ' + left;
+  rs.className = left === 0 ? 'dry' : (left <= AMMO[W.ammo].buy * 0.25 ? 'low' : '');
 }
 function reload() {
   const W = WEAPONS[curWeap];
   if (W.mag === Infinity || player.reloading || player.mag === W.mag) return;
+  const type = W.ammo;
+  const need = W.mag - player.mag;
+  const have = type ? ammoLeft(type) : need;
+  if (type && have <= 0) { addFeed('🚫 Out of ' + AMMO[type].name + ' — buy more in the shop (E)'); return; }
+  const take = Math.min(need, have);
   player.reloading = true; player.reloadStart = performance.now(); player.reloadDur = 1100;
   playOneShot('reload', 1100);
   document.getElementById('mag').textContent = '..';
-  setTimeout(() => { player.mag = W.mag; player.reloading = false; document.getElementById('mag').textContent = player.mag; }, 1100);
+  setTimeout(() => {
+    if (type) { if (!player.ammo) player.ammo = {}; player.ammo[type] = ammoLeft(type) - take; }
+    player.mag += take;
+    player.reloading = false;
+    updateAmmoHUD();
+  }, 1100);
 }
 
 function shoot() {
@@ -2579,13 +3069,18 @@ function shoot() {
     if (now2 - lastShot < WEAPONS.rpg.rate || player.reloading) return;
     if (player.mag <= 0) { reload(); return; }
     lastShot = now2; player.mag--;
-    const magEl = document.getElementById('mag'); if (magEl) magEl.textContent = player.mag;
+    updateAmmoHUD();
     recoil = 1;
     const d = camDir();
     const from = new THREE.Vector3(player.x, player.y - 0.1, player.z).addScaledVector(d, 1.2);
-    const rk = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.8, 10),
+    /* Your uploaded rocket, if there is one — the same model the rocket calibre
+       uses, flown as a real projectile rather than the built-in cone. */
+    let rk = loadedAmmoGLB['rocket'] ? buildRound('rocket') : null;
+    if (!rk) rk = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.8, 10),
       new THREE.MeshStandardMaterial({ color: 0x8d9a6a, emissive: 0x442200 }));
-    rk.position.copy(from); scene.add(rk);
+    rk.position.copy(from);
+    rk.lookAt(from.clone().add(d));
+    scene.add(rk);
     playOneShot('grenade', 900);
     // owner marked as a player-team vehicle so the existing shell code treats it right
     planted.push({ mesh: rk, vel: d.clone().multiplyScalar(58), kind: 'shell', stuck: false, t: 0,
@@ -2606,7 +3101,7 @@ function shoot() {
   if (now - lastShot < W.rate || player.reloading) return;
   if (W.mag !== Infinity && player.mag <= 0) { reload(); return; }
   lastShot = now;
-  if (W.mag !== Infinity) { player.mag--; document.getElementById('mag').textContent = player.mag; }
+  if (W.mag !== Infinity) { player.mag--; updateAmmoHUD(); }
   recoil = 1;
   gunGroup.userData.flashLight.intensity = 3; gunGroup.userData.flash.material.opacity = 0.9;
   setTimeout(() => { gunGroup.userData.flashLight.intensity = 0; gunGroup.userData.flash.material.opacity = 0; }, 55);
@@ -2655,7 +3150,7 @@ function shoot() {
       const mw = new THREE.Vector3();
       if (gunGroup.userData.flash) gunGroup.userData.flash.getWorldPosition(mw);
       else mw.copy(origin).add(rdir.clone().multiplyScalar(0.5));
-      spawnTracer(mw, end, 0x9fe8ff);
+      spawnRound(W.ammo, mw, end, (W.ammo && AMMO[W.ammo]) ? AMMO[W.ammo].tracer : 0x9fe8ff);
     }
     if (hit) {
       let dmg = scoped ? W.scopedDmg : W.dmg;
@@ -2829,12 +3324,22 @@ const SHOP_ITEMS = [
   { id: 'sticky', name: '\ud83e\udde8 Stickies \u00d72', desc: 'Equip with B, throw with LMB, X detonate', cost: 50 },
   { id: 'heavy', name: '\u26a1 Armour-piercing rounds', desc: 'Much higher damage (permanent)', cost: 80, once: true }
 ];
+/* Ammunition on the shelf, one line per calibre, listing which of your weapons
+   eats it so it is obvious what you are buying. */
+for (const t in AMMO) {
+  const A = AMMO[t];
+  const guns = Object.keys(WEAPONS).filter(k => WEAPONS[k].ammo === t).map(k => WEAPONS[k].name.toLowerCase());
+  SHOP_ITEMS.push({ id: 'ammo_' + t, ammo: t,
+    name: '\ud83d\udd2b ' + A.name + ' \u00d7' + A.buy,
+    desc: 'Feeds the ' + (guns.join(', ') || 'nothing yet'), cost: A.cost });
+}
 if (heavyRounds) WEAPONS.sniper.dmg = 60;
 function renderShop() {
   document.getElementById('shopbal').textContent = pts();
   document.getElementById('shopitems').innerHTML = SHOP_ITEMS.map(it => {
     const owned = (it.id === 'heavy' && heavyRounds);
-    return '<div class="item"><div><b>' + it.name + '</b><small>' + it.desc + '</small></div><button ' + (owned || pts() < it.cost ? 'disabled' : '') + ' onclick="buyItem(\'' + it.id + '\')">' + (owned ? '\u2705 OWNED' : it.cost + ' pts') + '</button></div>';
+    const carry = it.ammo ? ' <span style="opacity:.6">(carrying ' + ammoLeft(it.ammo) + ')</span>' : '';
+    return '<div class="item"><div><b>' + it.name + '</b><small>' + it.desc + carry + '</small></div><button ' + (owned || pts() < it.cost ? 'disabled' : '') + ' onclick="buyItem(\'' + it.id + '\')">' + (owned ? '\u2705 OWNED' : it.cost + ' pts') + '</button></div>';
   }).join('');
 }
 window.buyItem = function(id) {
@@ -2843,6 +3348,7 @@ window.buyItem = function(id) {
   if (id === 'heavy') { heavyRounds = true; WEAPONS.sniper.dmg = 60; localStorage.setItem('nc_heavy','1'); }
   if (id === 'frag') inv.frag += 3;
   if (id === 'sticky') inv.sticky += 2;
+  if (it.ammo) addAmmo(it.ammo, AMMO[it.ammo].buy);
   addFeed('\ud83d\uded2 Bought ' + it.name); renderShop(); buildLoadoutHUD();
 };
 function openShop() {
@@ -2949,6 +3455,8 @@ function damagePlayer(amt, from) {
 
 // ---------- player + camera ----------
 function blockedAt(x, z) {
+  // an uploaded map's walls live in the grid; the shop and boxes are still solids
+  if (gridBlocked(x, z)) return true;
   // stop the player walking inside buildings/crates (bullets already collide)
   for (let i = 0; i < obstacles.length; i++) {
     const o = obstacles[i];
@@ -3880,7 +4388,10 @@ function setWeather(key) {
   if (skyMesh) skyMesh.visible = (key === 'sunny' || key === 'cloudy');
   scene.traverse(o => {
     if (o.isDirectionalLight) { o.color.setHex(W.sun); o.intensity = W.sunI; }
-    else if (o.isAmbientLight || o.isHemisphereLight) { o.intensity = W.amb; }
+    else if (o.isAmbientLight || o.isHemisphereLight) {
+      if (o.userData && o.userData.mapFill) return;     // the map's own fill stays put
+      o.intensity = W.amb;
+    }
   });
 
   clearPrecip();
@@ -4121,7 +4632,8 @@ function animate() {
   // refresh the loadout about once a second so the countdown ticks down
   strikeHudT -= dt;
   if (strikeHudT <= 0) { strikeHudT = 1; buildLoadoutHUD(); }
-  updateCamera(dt); updateTracers(dt);
+  updateCamera(dt); updateTracers(dt); updateRounds(dt);
+  if (mapLamp) mapLamp.position.set(camera.position.x, camera.position.y + 1.2, camera.position.z);
   renderer.render(scene, camera);
 }
 
