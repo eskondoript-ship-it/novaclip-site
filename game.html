@@ -482,7 +482,7 @@ const MODES = {
 const MAPS = [
   { id: 'arena', name: 'Strike Arena', tag: 'Built in',
     desc: 'Full battlefield — village, shop, tanks and trucks',
-    file: '', arena: 210, vehicles: true },
+    file: 'pm__makarov_pistol_free_to_use.glb', arena: 210, vehicles: true },
 
   { id: 'map2', name: 'Warehouse', tag: 'Your upload',
     desc: 'Tight indoor fight — infantry only',
@@ -513,7 +513,7 @@ const EXTRA_WEAPONS = {
   shotgun: { name: 'SHOTGUN', slot: 5, mag: 8,   dmg: 17, scopedDmg: 19, rate: 780, range: 46,  auto: false, scope: false, pellets: 8,
              ammo: '12ga', file: 'simple_old_shotgun.glb', scale: 1.0,  autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
   pistol:  { name: 'PISTOL',  slot: 6, mag: 15,  dmg: 27, scopedDmg: 33, rate: 190, range: 95,  auto: false, scope: true,
-             ammo: '9mm',  file: 'ar_-_dar1_-_double_action_pistol.glb', scale: 0.8,  autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
+             ammo: '9mm',  file: '', scale: 0.8,  autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
   lmg:     { name: 'LMG',     slot: 7, mag: 100, dmg: 26, scopedDmg: 30, rate: 82,  range: 240, auto: true,  scope: true,
              ammo: '762',  file: 'bren_mk1_lmg.glb', scale: 1.15, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
   dmr:     { name: 'MARKSMAN', slot: 8, mag: 10, dmg: 62, scopedDmg: 88, rate: 420, range: 420, auto: false, scope: true,
@@ -556,15 +556,15 @@ for (const k in EXTRA_WEAPONS) WEAPON_ART[k] = EXTRA_WEAPONS[k];
        spin   turns the model on its own axis in flight, for a rocket with fins */
 const AMMO = {
   '556':    { name: '5.56 mm',   start: 90,  buy: 60, cost: 35, tracer: 0x9fe8ff,
-              file: '', scale: 1, size: 0.14, rotX: 0, rotY: 0, rotZ: 0 },
+              file: '5.56_nato.glb', scale: 1, size: 0.14, rotX: 0, rotY: 0, rotZ: 0 },
   '9mm':    { name: '9 mm',      start: 120, buy: 75, cost: 25, tracer: 0xffe08a,
-              file: '', scale: 1, size: 0.11, rotX: 0, rotY: 0, rotZ: 0 },
+              file: '9mm_bullet.glb', scale: 1, size: 0.11, rotX: 0, rotY: 0, rotZ: 0 },
   '762':    { name: '7.62 mm',   start: 80,  buy: 50, cost: 40, tracer: 0xffb066,
-              file: '', scale: 1, size: 0.16, rotX: 0, rotY: 0, rotZ: 0 },
+              file: '7.62.glb', scale: 1, size: 0.16, rotX: 0, rotY: 0, rotZ: 0 },
   '12ga':   { name: '12 gauge',  start: 32,  buy: 24, cost: 35, tracer: 0xff8f6a,
-              file: '', scale: 1, size: 0.13, rotX: 0, rotY: 0, rotZ: 0 },
+              file: '12_gauge.glb', scale: 1, size: 0.13, rotX: 0, rotY: 0, rotZ: 0 },
   'rocket': { name: 'PG-7 rocket', start: 2, buy: 1,  cost: 60, tracer: 0xffcc55,
-              file: '', scale: 1, size: 0.9,  rotX: 0, rotY: 0, rotZ: 0, spin: true }
+              file: 'animal_company_-_rpg_ammo.glb', scale: 1, size: 0.9,  rotX: 0, rotY: 0, rotZ: 0, spin: true }
 };
 
 // arena half-width; bases sit near the far edges of it. Set by the chosen map.
@@ -612,7 +612,7 @@ const CUSTOM_MODELS = {
   character: 'ImageToStl.com_Y+Bot.glb',
   characterScale: 1.25, // auto-fitted to 1.8m tall, then multiplied by this
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_aac_honey_badger.glb',    // the rifle everything falls back to
+  weapon: 'low-poly_m4a1_sopmod_block_ii.glb',    // the rifle everything falls back to
 
   // The M4A1 mesh runs along its X axis (6.22 long vs 2.02 tall), with the barrel
   // on -X  the thin end capped by a flash hider  and the buttstock on +X.
