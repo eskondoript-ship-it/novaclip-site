@@ -508,13 +508,13 @@ function shopIsButton() { return curMap().id !== 'arena'; }
      pellets         fires a spread of that many rounds (a shotgun) */
 const EXTRA_WEAPONS = {
   shotgun: { name: 'SHOTGUN', slot: 5, mag: 8,   dmg: 17, scopedDmg: 19, rate: 780, range: 46,  auto: false, scope: false, pellets: 8,
-             file: '', scale: 1.0, rotX: 0, rotY: 90, rotZ: 0 },
+             file: 'simple_old_shotgun.glb', scale: 1.0, rotX: 0, rotY: 90, rotZ: 0 },
   pistol:  { name: 'PISTOL',  slot: 6, mag: 15,  dmg: 27, scopedDmg: 33, rate: 190, range: 95,  auto: false, scope: true,
-             file: '', scale: 0.8, rotX: 0, rotY: 90, rotZ: 0 },
+             file: 'ar_-_dar1_-_double_action_pistol.glb', scale: 0.8, rotX: 0, rotY: 90, rotZ: 0 },
   lmg:     { name: 'LMG',     slot: 7, mag: 100, dmg: 26, scopedDmg: 30, rate: 82,  range: 240, auto: true,  scope: true,
-             file: 'vector_smg.glb', scale: 1.15, rotX: 0, rotY: 90, rotZ: 0 },
+             file: 'bren_mk1_lmg.glb', scale: 1.15, rotX: 0, rotY: 90, rotZ: 0 },
   dmr:     { name: 'MARKSMAN', slot: 8, mag: 10, dmg: 62, scopedDmg: 88, rate: 420, range: 420, auto: false, scope: true,
-             file: '', scale: 1.05, rotX: 0, rotY: 90, rotZ: 0 }
+             file: 'old_-_defender_dmr.glb', scale: 1.05, rotX: 0, rotY: 90, rotZ: 0 }
 };
 
 // arena half-width; bases sit near the far edges of it. Set by the chosen map.
@@ -562,7 +562,7 @@ const CUSTOM_MODELS = {
   character: 'ImageToStl.com_Y+Bot.glb',
   characterScale: 1.25, // auto-fitted to 1.8m tall, then multiplied by this
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
+  weapon: 'low-poly_aac_honey_badger.glb',           // your rifle .glb filename, if you have one
 
   // The M4A1 mesh runs along its X axis (6.22 long vs 2.02 tall), with the barrel
   // on -X  the thin end capped by a flash hider  and the buttstock on +X.
