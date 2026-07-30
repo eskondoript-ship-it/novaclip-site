@@ -69,6 +69,15 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 #ptsbadge { position: fixed; top: 84px; right: 14px; z-index: 11; background: rgba(0,0,0,0.42); border: 1px solid rgba(255,210,74,0.5); padding: 5px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; }
 #ptsbadge b { color: #ffd24a; }
 #safebadge { position: fixed; top: 118px; left: 50%; transform: translateX(-50%); z-index: 11; background: rgba(74,222,128,0.2); border: 1px solid #4ade80; color: #4ade80; padding: 6px 16px; border-radius: 20px; font-weight: 800; display: none; text-shadow: 0 1px 3px #000; }
+/* On an uploaded map the shop is this button instead of a building. It sits
+   clear of the weapon strip, and stays clickable once the pointer is free. */
+#shopbtn { position: fixed; right: 18px; bottom: 108px; z-index: 14; display: none; align-items: center; gap: 8px;
+  background: rgba(255,210,74,0.16); border: 1px solid #ffd24a; color: #ffd24a; font: inherit; font-size: 0.82rem;
+  font-weight: 800; letter-spacing: 0.5px; padding: 10px 16px; border-radius: 22px; cursor: pointer;
+  backdrop-filter: blur(6px); text-shadow: 0 1px 3px #000; }
+#shopbtn:hover { background: rgba(255,210,74,0.28); }
+#shopbtn .k { background: rgba(0,0,0,0.45); border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; }
+#shopbtn .left { opacity: 0.75; font-weight: 600; font-size: 0.72rem; }
 #shopprompt { position: fixed; top: 54%; left: 50%; transform: translate(-50%,0); z-index: 11; background: rgba(255,210,74,0.18); border: 1px solid #ffd24a; color: #ffd24a; padding: 8px 18px; border-radius: 20px; font-weight: 800; display: none; text-shadow: 0 1px 3px #000; }
 #viewTag { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 11; font-size: 0.72rem; opacity: 0.7; background: rgba(0,0,0,0.35); padding: 5px 12px; border-radius: 8px; white-space: nowrap; }
 #backLink { position: fixed; top: 14px; left: 14px; z-index: 21; color: #fff; text-decoration: none; background: rgba(0,0,0,0.4); padding: 8px 14px; border-radius: 20px; font-weight: 700; pointer-events: auto; font-size: 0.85rem; }
@@ -334,7 +343,8 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='c4badge'>💣 C4: <span id='c4stat'>arming…</span></div>
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
-<div id='viewTag'>v76 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · 5 Shotgun · 6 Pistol · 7 LMG · 8 Marksman · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<button id='shopbtn'>🛒 SHOP <span class='k'>E</span></button>
+<div id='viewTag'>v77 · 1 Rifle · 2 Knife · 3 SMG · 4 RPG · 5 Shotgun · 6 Pistol · 7 LMG · 8 Marksman · Scroll: switch · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -471,13 +481,13 @@ const MAPS = [
     desc: 'Full battlefield — village, shop, tanks and trucks',
     file: '', arena: 210, vehicles: true },
 
-  { id: 'map2', name: 'Skyscraper', tag: 'Your upload',
+  { id: 'map2', name: 'Map 2', tag: 'Your upload',
     desc: 'Infantry only — no vehicles',
-    file: 'chicken_gun_fruzer_skyscraper.glb', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x6f7a63 },
+    file: '', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x6f7a63 },
 
-  { id: 'map3', name: 'Warehouse', tag: 'Your upload',
+  { id: 'map3', name: 'Map 3', tag: 'Your upload',
     desc: 'Infantry only — no vehicles',
-    file: 'warehouse_map_chicken_gun.glb', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x7a7266 }
+    file: '', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x7a7266 }
 ];
 let mapId = localStorage.getItem('nc_map') || 'arena';
 if (!MAPS.some(m => m.id === mapId)) mapId = 'arena';
@@ -486,6 +496,8 @@ function curMap() { return MAPS.find(m => m.id === mapId) || MAPS[0]; }
    than dropping you into an empty void. */
 if (curMap().id !== 'arena' && !curMap().file) mapId = 'arena';
 function mapHasVehicles() { return curMap().vehicles !== false; }
+// uploaded maps get the shop as an on-screen button rather than a hut in the world
+function shopIsButton() { return curMap().id !== 'arena'; }
 
 /* Extra weapons, each with its own model from Fab / Sketchfab. Paste the .glb
    filename into `file` and the weapon appears in the inventory on its number
@@ -1137,7 +1149,11 @@ function init() {
   function buildTerrain() {
     if (curMap().id !== 'arena' && loadedMapGLB) buildMapWorld(curMap());
     else buildWorld();
-    buildShop();
+    /* The shop is a building you walk into on the built-in map. Dropping that
+       yellow hut into somebody's downloaded environment would look like litter and
+       block a doorway, so on an uploaded map it is a button instead — same shop,
+       same visit limit, no geometry. */
+    if (!shopIsButton()) buildShop();
   }
 
   // build fighters + gun. If custom .glb models are set, load them first; otherwise build immediately.
@@ -1306,14 +1322,70 @@ function buildMapWorld(m) {
   inner.scale.setScalar(k);
   inner.rotation.y = (m.rotY || 0) * Math.PI / 180;
   inner.updateMatrixWorld(true);
-  // sit it on the ground and centre it on the origin, so the spawns line up
+  // centre it on the origin, so the spawns line up
   const bb2 = new THREE.Box3().setFromObject(inner), c2 = new THREE.Vector3();
   bb2.getCenter(c2);
   inner.position.x -= c2.x; inner.position.z -= c2.z;
   if (isFinite(bb2.min.y)) inner.position.y -= bb2.min.y;
   inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   scene.add(inner);
-  console.log('map "' + m.name + '" loaded — fitted scale ' + k.toFixed(4));
+  inner.updateMatrixWorld(true);
+
+  /* Put the FLOOR at y=0, not the model's lowest vertex.
+     Everything in this game walks on a flat world at y=0 — the player's eye is a
+     fixed 1.7 above it — so what matters is where the ground of the model is, and
+     that is almost never its lowest point: environments come with terrain skirts,
+     foundations, basements and stray geometry hanging below. Sitting the bounding
+     box on zero buries the real floor, and you spawn underneath the map looking up
+     at it.
+     So: cast a grid of rays straight down, take the MEDIAN surface height, and
+     drop the model by that. The median ignores rooftops and pits — it lands on
+     whatever most of the map is, which is the ground you walk on. */
+  const probe = new THREE.Raycaster();
+  const down = new THREE.Vector3(0, -1, 0);
+  const HIGH = ARENA * 4 + 400;
+  function surfaceAt(x, z) {
+    probe.set(new THREE.Vector3(x, HIGH, z), down);
+    probe.far = HIGH * 2;
+    const hits = probe.intersectObject(inner, true);
+    return hits.length ? HIGH - hits[0].distance : null;
+  }
+  const samples = [];
+  const STEP = 7;                                  // 7x7 grid across the play area
+  for (let i = 0; i < STEP; i++) for (let j = 0; j < STEP; j++) {
+    const x = -ARENA * 0.8 + (i / (STEP - 1)) * ARENA * 1.6;
+    const z = -ARENA * 0.8 + (j / (STEP - 1)) * ARENA * 1.6;
+    const y = surfaceAt(x, z);
+    if (y !== null && isFinite(y)) samples.push(y);
+  }
+  if (samples.length >= 4) {
+    samples.sort((a, b) => a - b);
+    const floor = samples[Math.floor(samples.length / 2)];
+    inner.position.y -= floor;
+    inner.updateMatrixWorld(true);
+    console.log('map floor found at y=' + floor.toFixed(2) + ' from ' + samples.length +
+                ' probes — model dropped to put it at 0');
+  } else {
+    console.warn('map floor probe found nothing — leaving the model on its bounding box');
+  }
+  inner.position.y += (m.yOffset || 0);            // manual nudge, if a map needs it
+  inner.updateMatrixWorld(true);
+
+  /* Spawns have to be on that floor too. A spawn hanging over a hole, a cliff or
+     the roof of something is the same bug in a different place, so each one walks
+     in towards the middle until the ground under it is close to zero. */
+  Object.keys(BASES).forEach(team => {
+    const B = BASES[team];
+    const dir = B.z > 0 ? -1 : 1;                  // "in" is towards the centre
+    for (let step = 0; step <= 12; step++) {
+      const z = B.z + dir * step * (ARENA * 0.06);
+      const y = surfaceAt(B.x, z);
+      if (y !== null && Math.abs(y) < 3) { B.z = z; break; }
+      if (step === 12) console.warn('no ground found under the ' + team + ' spawn — left where it was');
+    }
+  });
+  console.log('map "' + m.name + '" loaded — fitted scale ' + k.toFixed(4) +
+              ', spawns at z ' + BASES.ct.z.toFixed(1) + ' / ' + BASES.t.z.toFixed(1));
 
   // a floor under it, in case the model has no ground of its own
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(ARENA * 4, ARENA * 4),
@@ -1824,7 +1896,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v76 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v77 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2467,7 +2539,7 @@ document.addEventListener('keydown', (e) => {
   if (e.code === BINDS.emote) playEmote();
   if (e.code === BINDS.plant) plantC4();
   if (e.code === BINDS.detonate) detonate();
-  if (e.code === BINDS.shop) { if (shopOpen) closeShop(); else if (insideShop()) openShop(); }
+  if (e.code === BINDS.shop) { if (shopOpen) closeShop(); else if (shopIsButton() || insideShop()) openShop(); }
 });
 document.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === BINDS.sprint) player.sprint = false; });
 
@@ -2784,6 +2856,23 @@ function openShop() {
 }
 window.closeShop = function() { shopOpen = false; document.getElementById('shopui').style.display = 'none'; if (running) renderer.domElement.requestPointerLock(); };
 
+/* The button has to work while you are playing, and while you are playing the
+   pointer is locked — a locked pointer has no cursor and every click goes to the
+   canvas. So the button releases the lock first and opens on mousedown, which
+   fires before the canvas' click-to-relock handler can take the lock back. */
+(function () {
+  const b = document.getElementById('shopbtn');
+  if (!b) return;
+  const open = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (!running || shopOpen) return;
+    document.exitPointerLock();
+    openShop();
+  };
+  b.addEventListener('mousedown', open);
+  b.addEventListener('touchstart', open, { passive: false });
+})();
+
 // ---------- bot AI ----------
 function botMuzzle(b) { const v = new THREE.Vector3(); b.mesh.userData.flash.getWorldPosition(v); return v; }
 function botFire(b, target, hitChance, onHit) {
@@ -2909,9 +2998,19 @@ function updatePlayer(dt) {
     if (!freed) respawnPlayer();
   }
 
-  const nowIn = insideShop();
+  /* With a button shop there is no room to stand in, so "inside the shop" means
+     "the shop is open" — you are safe while browsing and the moment you close it
+     you are back in the fight. The visit limit is what stops that being abused. */
+  const nowIn = shopIsButton() ? shopOpen : insideShop();
   const sp = document.getElementById('shopprompt');
-  sp.style.display = (nowIn && !shopOpen) ? 'block' : 'none';
+  sp.style.display = (nowIn && !shopOpen && !shopIsButton()) ? 'block' : 'none';
+  const sb = document.getElementById('shopbtn');
+  if (sb) {
+    sb.style.display = (shopIsButton() && running && !shopOpen) ? 'flex' : 'none';
+    sb.innerHTML = shopVisits >= SHOP_MAX_VISITS
+      ? '🚫 Shop limit reached'
+      : '🛒 SHOP <span class="k">E</span> <span class="left">' + (SHOP_MAX_VISITS - shopVisits) + ' left</span>';
+  }
   if (nowIn && !shopOpen) sp.innerHTML = shopVisits >= SHOP_MAX_VISITS
     ? '\ud83d\udeab Shop limit reached for this round'
     : 'Press E to open the shop \ud83d\uded2 <span style="opacity:0.7">(' + (SHOP_MAX_VISITS - shopVisits) + ' left)</span>';
