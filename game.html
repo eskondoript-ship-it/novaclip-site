@@ -341,7 +341,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop</div>
 <button id='shopbtn'>SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v82 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v83 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -482,7 +482,8 @@ const MAPS = [
 
   { id: 'map3', name: 'Skyscraper', tag: 'Your upload',
     desc: 'Rooftops and stairwells — infantry only',
-    file: 'chicken_gun_fruzer_skyscraper.glb', scale: 0, rotY: 0, arena: 120, vehicles: false, ground: 0x7a7266 }
+    file: 'chicken_gun_fruzer_skyscraper.glb', scale: 0, rotY: 0, arena: 120, vehicles: false,
+    ground: 0x7a7266, floorMode: 'top' }
 ];
 let mapId = localStorage.getItem('nc_map') || 'arena';
 if (!MAPS.some(m => m.id === mapId)) mapId = 'arena';
@@ -548,15 +549,15 @@ for (const k in EXTRA_WEAPONS) WEAPON_ART[k] = EXTRA_WEAPONS[k];
        spin   turns the model on its own axis in flight, for a rocket with fins */
 const AMMO = {
   '556':    { name: '5.56 mm',   start: 90,  buy: 60, cost: 35, tracer: 0x9fe8ff,
-              file: '', scale: 1, size: 0.14, rotX: 0, rotY: 0, rotZ: 0 },
+              file: '5.56_nato.glb', scale: 1, size: 0.14, rotX: 0, rotY: 0, rotZ: 0 },
   '9mm':    { name: '9 mm',      start: 120, buy: 75, cost: 25, tracer: 0xffe08a,
-              file: '', scale: 1, size: 0.11, rotX: 0, rotY: 0, rotZ: 0 },
+              file: '9mm_bullet.glb', scale: 1, size: 0.11, rotX: 0, rotY: 0, rotZ: 0 },
   '762':    { name: '7.62 mm',   start: 80,  buy: 50, cost: 40, tracer: 0xffb066,
-              file: '', scale: 1, size: 0.16, rotX: 0, rotY: 0, rotZ: 0 },
+              file: '7.62.glb', scale: 1, size: 0.16, rotX: 0, rotY: 0, rotZ: 0 },
   '12ga':   { name: '12 gauge',  start: 32,  buy: 24, cost: 35, tracer: 0xff8f6a,
-              file: '', scale: 1, size: 0.13, rotX: 0, rotY: 0, rotZ: 0 },
+              file: '12_gauge.glb', scale: 1, size: 0.13, rotX: 0, rotY: 0, rotZ: 0 },
   'rocket': { name: 'PG-7 rocket', start: 2, buy: 1,  cost: 60, tracer: 0xffcc55,
-              file: '', scale: 1, size: 0.9,  rotX: 0, rotY: 0, rotZ: 0, spin: true }
+              file: 'animal_company_-_rpg_ammo.glb', scale: 1, size: 0.9,  rotX: 0, rotY: 0, rotZ: 0, spin: true }
 };
 
 // arena half-width; bases sit near the far edges of it. Set by the chosen map.
@@ -604,7 +605,7 @@ const CUSTOM_MODELS = {
   character: 'ImageToStl.com_Y+Bot.glb',
   characterScale: 1.25, // auto-fitted to 1.8m tall, then multiplied by this
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_aac_honey_badger.glb',    // the rifle everything falls back to
+  weapon: 'low-poly_m4a1_sopmod_block_ii.glb',    // the rifle everything falls back to
 
   // The M4A1 mesh runs along its X axis (6.22 long vs 2.02 tall), with the barrel
   // on -X  the thin end capped by a flash hider  and the buttstock on +X.
@@ -636,7 +637,7 @@ const CUSTOM_MODELS = {
      it: armsX is right, armsY is up, armsZ is forward (negative is away from you).
      The wrist monitor rides along, positioned by monitorX/Y/Z, because an uploaded
      arm has no bone this code can find. */
-  arms: '',
+  arms: 'free_fps_arms_gameready_-_rigged.glb',
   armsScale: 1.0, armsX: 0, armsY: 0, armsZ: 0,
   armsRotX: 0, armsRotY: 0, armsRotZ: 0,
   monitorX: -0.15, monitorY: -0.10, monitorZ: 0.10, monitorScale: 1.0,
@@ -668,7 +669,7 @@ const CUSTOM_MODELS = {
   houses: ['desert_houses.glb'], houseScale: 1.0, houseRotY: 0,
 
   // Knife model, used for the melee weapon when set.
-  knife: 'knife_animated.glb', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
+  knife: '', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
 
   // Rocket launcher. The repo already ships this one, so the RPG has a model
   // out of the box; swap the filename for anything else you upload.
@@ -1550,7 +1551,14 @@ function buildMapWorld(m) {
   }
   if (samples.length >= 4) {
     samples.sort((a, b) => a - b);
-    const floor = samples[Math.floor(samples.length / 2)];
+    /* Which surface is the floor depends on the map. On a street map most of the
+       model IS the ground, so the median lands on it. On a tower you are meant to
+       be on the ROOF, and the median puts you in the street looking up — which is
+       what happened on the skyscraper. floorMode:'top' takes the upper quartile
+       instead, so the play surface is the roofline the map was built for. */
+    const floor = (m.floorMode === 'top')
+      ? samples[Math.floor(samples.length * 0.75)]
+      : samples[Math.floor(samples.length / 2)];
     inner.position.y -= floor;
     inner.updateMatrixWorld(true);
     console.log('map floor found at y=' + floor.toFixed(2) + ' from ' + samples.length +
@@ -2126,7 +2134,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v82 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v83 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2807,6 +2815,105 @@ function spawnBot(i) {
 
 // ---------- tracers ----------
 /* ============================================================
+   SOUND
+   Two sources, on purpose.
+
+   Your explosion clip (explosion.aac, pulled out of the mp4 you sent) is loaded
+   once and played for anything that goes bang. Everything else — the rifle, the
+   reload, a hit landing, a death — is SYNTHESISED here with Web Audio: an
+   oscillator and a noise burst per shot. That is a deliberate choice over
+   shipping a dozen sound files: nothing to download, nothing to license, nothing
+   to credit, and no delay the first time a gun goes off.
+
+   Browsers refuse to make noise until the user has interacted with the page, so
+   the audio context is created on the first click or key — before that every
+   call here is a no-op rather than an error.
+   ============================================================ */
+const SFX_NAMES = { sniper:'rifle', smg:'smg', pistol:'pistol', shotgun:'shotgun',
+                    lmg:'lmg', dmr:'dmr', knife:'knife', rpg:'rpgfire' };
+const SFX_FILE = 'explosion.aac';        // your clip; leave empty for a synth boom
+let actx = null, sfxGain = null, boomBuf = null, sfxReady = false;
+
+function sfxInit() {
+  if (actx) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  actx = new AC();
+  sfxGain = actx.createGain();
+  sfxGain.gain.value = 0.55;
+  sfxGain.connect(actx.destination);
+  sfxReady = true;
+  if (SFX_FILE) {
+    fetch(SFX_FILE).then(r => r.arrayBuffer())
+      .then(b => actx.decodeAudioData(b))
+      .then(buf => { boomBuf = buf; console.log('explosion clip loaded, ' + buf.duration.toFixed(2) + 's'); })
+      .catch(e => console.warn('explosion clip unavailable, using the synth boom', e));
+  }
+}
+// one gate for the whole page: the first real input unlocks audio
+['pointerdown', 'keydown'].forEach(ev =>
+  window.addEventListener(ev, () => { sfxInit(); if (actx && actx.state === 'suspended') actx.resume(); }, { once: false }));
+
+function noiseBuffer(seconds) {
+  const n = Math.floor(actx.sampleRate * seconds);
+  const buf = actx.createBuffer(1, n, actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  return buf;
+}
+function blip(type, freq, dur, vol, sweepTo) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, actx.currentTime);
+  if (sweepTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, sweepTo), actx.currentTime + dur);
+  g.gain.setValueAtTime(vol, actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0008, actx.currentTime + dur);
+  o.connect(g); g.connect(sfxGain); o.start(); o.stop(actx.currentTime + dur);
+}
+function burst(dur, vol, cutoff) {
+  const src = actx.createBufferSource(), g = actx.createGain(), f = actx.createBiquadFilter();
+  src.buffer = noiseBuffer(dur);
+  f.type = 'lowpass'; f.frequency.value = cutoff || 4000;
+  g.gain.setValueAtTime(vol, actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0008, actx.currentTime + dur);
+  src.connect(f); f.connect(g); g.connect(sfxGain); src.start();
+}
+function playBoom(vol) {
+  if (boomBuf) {
+    const src = actx.createBufferSource(), g = actx.createGain();
+    src.buffer = boomBuf; g.gain.value = vol;
+    src.connect(g); g.connect(sfxGain); src.start();
+  } else {                                   // synth fallback: thump plus rumble
+    blip('sine', 120, 0.5, vol, 30);
+    burst(0.6, vol * 0.8, 900);
+  }
+}
+
+/* One entry point. Everything in the game calls sfx('name'). */
+function sfx(name) {
+  if (!sfxReady || !actx || actx.state !== 'running') return;
+  try {
+    switch (name) {
+      case 'rifle':   blip('square', 320, 0.06, 0.25, 90); burst(0.10, 0.30, 6000); break;
+      case 'smg':     blip('square', 380, 0.04, 0.20, 120); burst(0.07, 0.24, 7000); break;
+      case 'pistol':  blip('square', 300, 0.06, 0.24, 100); burst(0.09, 0.26, 5000); break;
+      case 'shotgun': blip('square', 150, 0.14, 0.32, 50);  burst(0.22, 0.40, 3000); break;
+      case 'lmg':     blip('square', 260, 0.05, 0.26, 80);  burst(0.09, 0.30, 5000); break;
+      case 'dmr':     blip('square', 220, 0.10, 0.30, 60);  burst(0.16, 0.34, 4000); break;
+      case 'knife':   burst(0.09, 0.22, 9000); break;
+      case 'rpgfire': blip('sawtooth', 180, 0.35, 0.30, 60); burst(0.40, 0.35, 2200); break;
+      case 'boom':    playBoom(0.9); break;
+      case 'reload':  blip('square', 900, 0.03, 0.12, 500);
+                      setTimeout(() => { if (sfxReady) blip('square', 600, 0.05, 0.12, 300); }, 260); break;
+      case 'hit':     blip('triangle', 700, 0.05, 0.16, 300); break;
+      case 'hurt':    blip('sawtooth', 200, 0.16, 0.22, 80); break;
+      case 'death':   blip('sawtooth', 160, 0.5, 0.26, 40); burst(0.4, 0.2, 1200); break;
+      case 'pickup':  blip('sine', 660, 0.09, 0.16, 990); break;
+    }
+  } catch (e) { /* never let a sound break a frame */ }
+}
+window.sfx = sfx;
+
+/* ============================================================
    MULTIPLAYER
    Real people in the same match, over a WebSocket to mp-server.js. Leave
    NC_MP_URL empty and none of this runs: the game stays exactly as it is, bots
@@ -3215,6 +3322,7 @@ function reload() {
   if (type && have <= 0) { addFeed('Out of ' + AMMO[type].name + ' — buy more in the shop (E)'); return; }
   const take = Math.min(need, have);
   player.reloading = true; player.reloadStart = performance.now(); player.reloadDur = 1100;
+  sfx('reload');
   playOneShot('reload', 1100);
   document.getElementById('mag').textContent = '..';
   setTimeout(() => {
@@ -3238,11 +3346,25 @@ function shoot() {
     /* Your uploaded rocket, if there is one — the same model the rocket calibre
        uses, flown as a real projectile rather than the built-in cone. */
     let rk = loadedAmmoGLB['rocket'] ? buildRound('rocket') : null;
-    if (!rk) rk = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.8, 10),
-      new THREE.MeshStandardMaterial({ color: 0x8d9a6a, emissive: 0x442200 }));
+    if (!rk) {
+      /* A ConeGeometry points along +Y and lookAt() aims +Z, so the built-in
+         rocket flew nose-up like a firework. Tip it into the group's forward
+         axis once, here, and it points where it is going. */
+      rk = new THREE.Group();
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.8, 10),
+        new THREE.MeshStandardMaterial({ color: 0x8d9a6a, emissive: 0x442200 }));
+      cone.rotation.x = Math.PI / 2;
+      rk.add(cone);
+    }
     rk.position.copy(from);
     rk.lookAt(from.clone().add(d));
     scene.add(rk);
+    /* A rocket leaves the tube with a bang and a light. Without this the only
+       feedback was the mag counter going down. */
+    sfx('rpgfire');
+    const mflash = new THREE.PointLight(0xffb057, 6, 14);
+    mflash.position.copy(from); scene.add(mflash);
+    setTimeout(() => scene.remove(mflash), 90);
     playOneShot('grenade', 900);
     // owner marked as a player-team vehicle so the existing shell code treats it right
     /* A rocket is not a mortar round. At 58 m/s with a tank shell's gravity it
@@ -3270,6 +3392,7 @@ function shoot() {
   lastShot = now;
   if (W.mag !== Infinity) { player.mag--; updateAmmoHUD(); }
   recoil = 1;
+  sfx(curWeap === 'sniper' ? 'rifle' : (SFX_NAMES[curWeap] || 'rifle'));
   gunGroup.userData.flashLight.intensity = 3; gunGroup.userData.flash.material.opacity = 0.9;
   setTimeout(() => { gunGroup.userData.flashLight.intensity = 0; gunGroup.userData.flash.material.opacity = 0; }, 55);
 
@@ -3330,6 +3453,7 @@ function shoot() {
     }
     if (hit) {
       let dmg = scoped ? W.scopedDmg : W.dmg;
+      sfx('hit');
       hit.hp -= dmg; if (hit.hp <= 0) killBot(hit);
     }
   }
@@ -3366,7 +3490,20 @@ function respawnBot(b) {
   const B = BASES[b.team];
   b.mesh.position.set(B.x + (Math.random()-0.5)*20, 0, B.z + (Math.random()-0.5)*14);
 }
-function addFeed(txt) { const f = document.getElementById('feed'); const d = document.createElement('div'); d.textContent = txt; f.appendChild(d); setTimeout(() => d.remove(), 4000); }
+/* The kill feed used to append a node per event and wait 4s to remove each one.
+   A busy round pushes several a second, and every one of them is a layout pass on
+   a growing column while the frame loop is trying to run — that is the "lagging"
+   kill chat. Capped at five lines, oldest dropped immediately. */
+const FEED_MAX = 5;
+function addFeed(txt) {
+  const f = document.getElementById('feed');
+  if (!f) return;
+  const d = document.createElement('div');
+  d.textContent = txt;
+  f.appendChild(d);
+  while (f.childElementCount > FEED_MAX) f.removeChild(f.firstElementChild);
+  setTimeout(() => { if (d.parentNode) d.remove(); }, 3500);
+}
 function teamScore(team) {
   let s = 0;
   if (team === PLAYER_TEAM) s += player.kills;
@@ -3442,6 +3579,18 @@ function updateNades(dt) {
       p.mesh.position.z += p.vel.z * dt;
 
       let hit = p.mesh.position.y <= 0.2 || p.t > (p.rocket ? 6 : 4);
+      /* It never tested the world, so a rocket that met a wall carried on through
+         it and only ever went off on the floor, a body or a hull — which is why
+         the RPG looked like it had no explosion. Sweep the step just travelled
+         against cover and stop at the first thing in the way. */
+      if (!hit) {
+        const step = new THREE.Vector3(p.vel.x, p.vel.y, p.vel.z).multiplyScalar(dt);
+        const len = step.length();
+        if (len > 0.01) {
+          const back = p.mesh.position.clone().addScaledVector(step, -1);
+          if (coverDistance(back, step.clone().normalize(), len + 0.6) < len + 0.6) hit = true;
+        }
+      }
       if (!hit) {
         /* Test against the hull's actual footprint, not a sphere around its origin.
            A tank is roughly 3.4 across and 6.4 long with its origin on the ground,
@@ -3471,6 +3620,7 @@ function updateNades(dt) {
       }
       if (hit) {
         p.done = true;
+        sfx('boom');
         explode(p.mesh.position.clone(), p.blast || 9);
         // splash: infantry near the blast go down, and you take a hit too
         const bp = p.mesh.position;
@@ -3624,9 +3774,9 @@ function damagePlayer(amt, from) {
      by killing the tank. Leaning out of a truck window gives that protection up
      for as long as you are exposed. */
   if (playerTank && !leaningOut) { damageTank(playerTank, amt * 0.6, false); return; }
-  player.hp -= amt; document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
+  player.hp -= amt; sfx('hurt'); document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
   const df = document.getElementById('dmgflash'); df.style.opacity = '1'; setTimeout(() => df.style.opacity = '0', 120);
-  if (player.hp <= 0) { player.deaths++; playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
+  if (player.hp <= 0) { player.deaths++; sfx('death'); playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
 }
 
 // ---------- player + camera ----------
