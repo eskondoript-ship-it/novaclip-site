@@ -347,7 +347,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
 <button id='shopbtn'>🛒 SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v79 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v80 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -484,13 +484,13 @@ const MAPS = [
     desc: 'Full battlefield — village, shop, tanks and trucks',
     file: '', arena: 210, vehicles: true },
 
-  { id: 'map2', name: 'Map 2', tag: 'Your upload',
-    desc: 'Infantry only — no vehicles',
-    file: '', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x6f7a63 },
+  { id: 'map2', name: 'Warehouse', tag: 'Your upload',
+    desc: 'Tight indoor fight — infantry only',
+    file: 'warehouse_map_chicken_gun.glb', scale: 0, rotY: 0, arena: 95, vehicles: false, ground: 0x6f7a63 },
 
-  { id: 'map3', name: 'Map 3', tag: 'Your upload',
-    desc: 'Infantry only — no vehicles',
-    file: '', scale: 0, rotY: 0, arena: 110, vehicles: false, ground: 0x7a7266 }
+  { id: 'map3', name: 'Skyscraper', tag: 'Your upload',
+    desc: 'Rooftops and stairwells — infantry only',
+    file: 'chicken_gun_fruzer_skyscraper.glb', scale: 0, rotY: 0, arena: 120, vehicles: false, ground: 0x7a7266 }
 ];
 let mapId = localStorage.getItem('nc_map') || 'arena';
 if (!MAPS.some(m => m.id === mapId)) mapId = 'arena';
@@ -511,14 +511,26 @@ function shopIsButton() { return curMap().id !== 'arena'; }
      pellets         fires a spread of that many rounds (a shotgun) */
 const EXTRA_WEAPONS = {
   shotgun: { name: 'SHOTGUN', slot: 5, mag: 8,   dmg: 17, scopedDmg: 19, rate: 780, range: 46,  auto: false, scope: false, pellets: 8,
-             ammo: '12ga', file: '', scale: 1.0,  autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
+             ammo: '12ga', file: 'simple_old_shotgun.glb', scale: 1.0,  autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
   pistol:  { name: 'PISTOL',  slot: 6, mag: 15,  dmg: 27, scopedDmg: 33, rate: 190, range: 95,  auto: false, scope: true,
-             ammo: '9mm',  file: '', scale: 0.8,  autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
+             ammo: '9mm',  file: 'ar_-_dar1_-_double_action_pistol.glb', scale: 0.8,  autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
   lmg:     { name: 'LMG',     slot: 7, mag: 100, dmg: 26, scopedDmg: 30, rate: 82,  range: 240, auto: true,  scope: true,
-             ammo: '762',  file: '', scale: 1.15, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
+             ammo: '762',  file: 'bren_mk1_lmg.glb', scale: 1.15, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 },
   dmr:     { name: 'MARKSMAN', slot: 8, mag: 10, dmg: 62, scopedDmg: 88, rate: 420, range: 420, auto: false, scope: true,
-             ammo: '762',  file: '', scale: 1.05, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 }
+             ammo: '762',  file: 'old_-_defender_dmr.glb', scale: 1.05, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 }
 };
+
+/* Models for the weapons that shipped with the game. The four above carry their
+   own; these cover the original four, so every gun in the inventory can have its
+   own mesh instead of sharing the rifle. Same fields, same auto-orientation.
+   (The RPG and the knife keep their CUSTOM_MODELS.rpg / .knife slots.) */
+const BASE_WEAPON_ART = {
+  smg: { file: 'vector_smg.glb', scale: 0.95, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 }
+};
+/* One lookup for "what does this weapon look like", so the loader and the fitter
+   never disagree about where a model comes from. */
+const WEAPON_ART = Object.assign({}, BASE_WEAPON_ART);
+for (const k in EXTRA_WEAPONS) WEAPON_ART[k] = EXTRA_WEAPONS[k];
 
 /* Ammunition. Each weapon feeds from a named box of rounds rather than an endless
    supply: the magazine is what is in the gun, the reserve is what you are carrying,
@@ -600,7 +612,7 @@ const CUSTOM_MODELS = {
   character: 'ImageToStl.com_Y+Bot.glb',
   characterScale: 1.25, // auto-fitted to 1.8m tall, then multiplied by this
   characterYOffset: 0,  // nudge up/down if the feet float or sink
-  weapon: 'low-poly_colt_m4a1.glb',           // your rifle .glb filename, if you have one
+  weapon: 'low-poly_aac_honey_badger.glb',    // the rifle everything falls back to
 
   // The M4A1 mesh runs along its X axis (6.22 long vs 2.02 tall), with the barrel
   // on -X  the thin end capped by a flash hider  and the buttstock on +X.
@@ -640,11 +652,11 @@ const CUSTOM_MODELS = {
   // Drop a tank .glb here (Add file > Upload files) and both you and the bots
   // will use it. Left empty, a built-in blocky tank is used instead, so the
   // vehicles work before any asset is uploaded.
-  tank: '', tankScale: 1.0, tankRotY: 0,
+  tank: 'm-84_yugoslavia.glb', tankScale: 1.0, tankRotY: 0,
 
   // Same deal for trucks  drop a .glb here once you have uploaded it. Empty
   // means the built-in blocky truck is used instead.
-  truck: '', truckScale: 1.0, truckRotY: 0,
+  truck: 'unimog_truck.glb', truckScale: 1.0, truckRotY: 0,
 
   /* A hull drives along its own -Z. The auto-turn lines a model's LENGTH up with
      travel, but it cannot tell which end is the nose, so a truck can end up
@@ -661,10 +673,10 @@ const CUSTOM_MODELS = {
      (Written as an empty array rather than four placeholder strings: a run of
      bare empty strings is exactly the shape that turns into "Unexpected string"
      if a paste loses its commas.) */
-  houses: [], houseScale: 1.0, houseRotY: 0,
+  houses: ['desert_houses.glb'], houseScale: 1.0, houseRotY: 0,
 
   // Knife model, used for the melee weapon when set.
-  knife: '', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
+  knife: 'knife_animated.glb', knifeScale: 1.0, knifeRotX: 0, knifeRotY: 0, knifeRotZ: 0,
 
   // Rocket launcher. The repo already ships this one, so the RPG has a model
   // out of the box; swap the filename for anything else you upload.
@@ -677,7 +689,7 @@ const CUSTOM_MODELS = {
     run:     'run forward.glb',
     jump:    'jump loop.glb',
     crouch:  'walk crouching forward.glb',
-    reload:  '',                        // pack has no reload  add 'reloading.glb' if you grab one
+    reload:  'Reload.glb',
     death:   'death from the front.glb',
     grenade: '',                        // add 'throw grenade.glb' if you grab one
     emote:   ''                         // add 'dance.glb' + emoteSound for an emote
@@ -843,7 +855,7 @@ function mergeAnimClips(clips, name, sceneRoot) {
 function loadCustomModels(done) {
   // only bother if a custom model is actually configured
   const anyHouse = (CUSTOM_MODELS.houses || []).some(Boolean);
-  const anyExtraWeap = Object.keys(EXTRA_WEAPONS).some(k => EXTRA_WEAPONS[k].file);
+  const anyExtraWeap = Object.keys(WEAPON_ART).some(k => WEAPON_ART[k].file);
   const anyRound = Object.keys(AMMO).some(t => AMMO[t].file);
   const mapFile = (curMap().id !== 'arena') ? (curMap().file || '') : '';
   if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse && !anyExtraWeap && !mapFile && !CUSTOM_MODELS.arms && !anyRound) { done(); return; }
@@ -910,9 +922,9 @@ function loadCustomModels(done) {
                   undefined, e => { console.warn(AMMO[t].name + ' round failed \u2014 using a tracer streak', e); pending--; finish(); });
     });
     if (CUSTOM_MODELS.arms) { pending++; loader.load(CUSTOM_MODELS.arms, g => { loadedArmsGLB = g.scene; console.log('loaded first-person arms from ' + CUSTOM_MODELS.arms); pending--; finish(); }, undefined, e => { console.warn('arms model failed \u2014 using the built-in arms', e); pending--; finish(); }); }
-    // one model per extra weapon, so each gun in the inventory can look like itself
-    Object.keys(EXTRA_WEAPONS).forEach(k => {
-      const f = EXTRA_WEAPONS[k].file;
+    // one model per weapon, so each gun in the inventory can look like itself
+    Object.keys(WEAPON_ART).forEach(k => {
+      const f = WEAPON_ART[k].file;
       if (!f) return;
       pending++;
       loader.load(f, g => { loadedWeapModels[k] = g.scene; console.log('loaded ' + k + ' model from ' + f); pending--; finish(); },
@@ -1256,7 +1268,7 @@ function init() {
     }
   };
   if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck || CUSTOM_MODELS.knife || CUSTOM_MODELS.rpg || (CUSTOM_MODELS.houses || []).some(Boolean) ||
-      Object.keys(EXTRA_WEAPONS).some(k => EXTRA_WEAPONS[k].file) || (curMap().id !== 'arena' && curMap().file) || CUSTOM_MODELS.arms || Object.keys(AMMO).some(t => AMMO[t].file)) {
+      Object.keys(WEAPON_ART).some(k => WEAPON_ART[k].file) || (curMap().id !== 'arena' && curMap().file) || CUSTOM_MODELS.arms || Object.keys(AMMO).some(t => AMMO[t].file)) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
       if (!built) { console.warn('model load stalled \u2014 building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
@@ -1371,6 +1383,92 @@ function makeTree(x, z) {
    blockedAt() walks the whole array on every step.
    ============================================================ */
 const MAP_PROXY_CAP = 400;
+
+/* ---- collision grid for uploaded maps ----
+   Box proxies around meshes only work when the meshes ARE the objects. Exporters
+   routinely split a level by MATERIAL instead: the warehouse map in this repo is
+   35 meshes and every one of them has a bounding box covering the whole level,
+   because each holds every surface that shares a texture. A box around that is a
+   box around the map, so the proxy pass correctly refuses to build any — and
+   correctly leaves you able to walk through the walls.
+
+   So collision comes off the triangles instead, once, at load. Every triangle
+   that stands in the walkable band — knee to head height — stamps its footprint
+   into a 2D grid, and from then on "is this blocked?" is an array lookup rather
+   than a raycast. Bullets march the same grid. It costs one pass over the mesh at
+   load and nothing per frame. */
+const GRID_CELL = 1.4;                 // metres per cell
+const BAND_LO = 0.55, BAND_HI = 2.0;   // a triangle in here is something you hit
+let mapGrid = null, mapGridN = 0, mapGridOrigin = 0;
+let mapLamp = null;      // the light that follows you inside an uploaded map
+
+function gridIndex(x, z) {
+  const i = Math.floor((x - mapGridOrigin) / GRID_CELL);
+  const j = Math.floor((z - mapGridOrigin) / GRID_CELL);
+  if (i < 0 || j < 0 || i >= mapGridN || j >= mapGridN) return -1;
+  return j * mapGridN + i;
+}
+function gridBlocked(x, z) {
+  if (!mapGrid) return false;
+  const k = gridIndex(x, z);
+  return k >= 0 && mapGrid[k] === 1;
+}
+function buildMapCollisionGrid(root) {
+  mapGridOrigin = -ARENA;
+  mapGridN = Math.ceil((ARENA * 2) / GRID_CELL);
+  mapGrid = new Uint8Array(mapGridN * mapGridN);
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  let tris = 0, marked = 0;
+  root.updateMatrixWorld(true);
+  root.traverse(o => {
+    if (!o.isMesh || !o.geometry || !o.geometry.attributes || !o.geometry.attributes.position) return;
+    const g = o.geometry, pos = g.attributes.position, idx = g.index;
+    const n = idx ? idx.count : pos.count;
+    for (let t = 0; t + 2 < n; t += 3) {
+      const i0 = idx ? idx.getX(t) : t, i1 = idx ? idx.getX(t + 1) : t + 1, i2 = idx ? idx.getX(t + 2) : t + 2;
+      a.fromBufferAttribute(pos, i0).applyMatrix4(o.matrixWorld);
+      b.fromBufferAttribute(pos, i1).applyMatrix4(o.matrixWorld);
+      c.fromBufferAttribute(pos, i2).applyMatrix4(o.matrixWorld);
+      tris++;
+      const yLo = Math.min(a.y, b.y, c.y), yHi = Math.max(a.y, b.y, c.y);
+      if (yHi < BAND_LO || yLo > BAND_HI) continue;      // floor, or overhead
+      const xLo = Math.min(a.x, b.x, c.x), xHi = Math.max(a.x, b.x, c.x);
+      const zLo = Math.min(a.z, b.z, c.z), zHi = Math.max(a.z, b.z, c.z);
+      // a triangle spanning half the map is a floor plane caught edge-on, not a wall
+      if (xHi - xLo > 40 || zHi - zLo > 40) continue;
+      for (let x = xLo; x <= xHi + GRID_CELL; x += GRID_CELL) {
+        for (let z = zLo; z <= zHi + GRID_CELL; z += GRID_CELL) {
+          const k = gridIndex(x, z);
+          if (k >= 0 && !mapGrid[k]) { mapGrid[k] = 1; marked++; }
+        }
+      }
+    }
+  });
+  const total = mapGridN * mapGridN;
+  console.log('map collision grid: ' + marked + ' of ' + total + ' cells solid (' +
+              Math.round(marked / total * 100) + '%) from ' + tris + ' triangles, ' +
+              GRID_CELL + 'm cells');
+  /* A grid that says almost everything is solid would trap the player, and one
+     that says nothing is is no better than not having it. Either way, drop it. */
+  if (marked > total * 0.75 || marked < 4) {
+    console.warn('collision grid looks wrong (' + marked + '/' + total + ') — discarded');
+    mapGrid = null;
+  }
+}
+/* March the grid for a bullet: step along the ray and report where it first meets
+   something solid, so shots stop at walls the same way bodies do. */
+function gridCoverDistance(origin, dir, maxDist) {
+  if (!mapGrid) return Infinity;
+  const step = GRID_CELL * 0.6;
+  const d = dir.clone().normalize();
+  for (let t = step; t <= maxDist; t += step) {
+    const y = origin.y + d.y * t;
+    if (y < BAND_LO - 0.4 || y > BAND_HI + 1.2) continue;   // above or below the wall band
+    if (gridBlocked(origin.x + d.x * t, origin.z + d.z * t)) return t;
+  }
+  return Infinity;
+}
+
 function buildMapWorld(m) {
   const inner = loadedMapGLB;
   inner.updateMatrixWorld(true);
@@ -1432,9 +1530,29 @@ function buildMapWorld(m) {
   inner.position.y += (m.yOffset || 0);            // manual nudge, if a map needs it
   inner.updateMatrixWorld(true);
 
-  /* Spawns have to be on that floor too. A spawn hanging over a hole, a cliff or
-     the roof of something is the same bug in a different place, so each one walks
-     in towards the middle until the ground under it is close to zero. */
+  /* Spawns have to be on that floor too, and they have to be FAIR. The bases sit
+     at +/-(arena-25) by default, which assumes the map fills the play area — the
+     warehouse does not, so one team started on solid ground and the other walked
+     in 50 metres looking for some, ending up almost at the middle. Find how far
+     the floor actually runs in both directions and put both spawns at the same
+     distance out, so neither side starts closer to the fight. */
+  const solid = (x, z) => { const y = surfaceAt(x, z); return y !== null && Math.abs(y) < 3; };
+  const LANES = [0, -14, 14, -28, 28, -42, 42];      // a straight line down x=0 can miss
+  let reach = 0, ctX = 0, tX = 0;
+  for (let d = ARENA * 0.88; d > 12 && !reach; d -= ARENA * 0.04) {
+    const near = LANES.find(x => solid(x, -d));
+    const far  = LANES.find(x => solid(x, d));
+    if (near !== undefined && far !== undefined) { reach = d; ctX = near; tX = far; }
+  }
+  if (reach > 12) {
+    BASES.ct.z = -reach; BASES.ct.x = ctX;
+    BASES.t.z = reach;   BASES.t.x = tX;
+    console.log('map floor reaches +/-' + reach.toFixed(0) + 'm — spawns placed there, evenly');
+  }
+
+  /* And a last guard per spawn: one hanging over a hole, a cliff or the roof of
+     something is the same bug in a different place, so it walks in towards the
+     middle until the ground under it is close to zero. */
   Object.keys(BASES).forEach(team => {
     const B = BASES[team];
     const dir = B.z > 0 ? -1 : 1;                  // "in" is towards the centre
@@ -1447,6 +1565,24 @@ function buildMapWorld(m) {
   });
   console.log('map "' + m.name + '" loaded — fitted scale ' + k.toFixed(4) +
               ', spawns at z ' + BASES.ct.z.toFixed(1) + ' / ' + BASES.t.z.toFixed(1));
+
+  /* An uploaded interior brings no lights of its own, and the arena's sun does not
+     reach inside a warehouse — measured on the real map, the view from the floor
+     comes back at RGB 7,11,9, which is a black screen with a HUD on it. This fill
+     light is kept out of the weather sweep so a night preset cannot take it away
+     and leave the map unplayable. */
+  const fill = new THREE.AmbientLight(0xdfe8ff, 1.15);
+  fill.userData.mapFill = true;
+  scene.add(fill);
+  /* Ambient alone flattens an interior into a grey soup and still leaves it dim —
+     measured at 80% of the frame under 30/255. A lamp that rides with the camera
+     gives the walls somewhere for light to come FROM, which is what makes a room
+     readable. It is moved in the frame loop. */
+  const lamp = new THREE.PointLight(0xffeedd, 1.5, 46, 1.4);
+  lamp.userData.mapFill = true;
+  lamp.name = 'mapLamp';
+  scene.add(lamp);
+  mapLamp = lamp;
 
   // a floor under it, in case the model has no ground of its own
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(ARENA * 4, ARENA * 4),
@@ -1495,6 +1631,8 @@ function buildMapWorld(m) {
   });
   console.log('map collision: ' + Math.min(cand.length, MAP_PROXY_CAP) + ' box proxies, ' +
               skipped + ' mesh(es) skipped as too big / overhead / on a spawn');
+  // and the grid, which is what actually stops you on a map split by material
+  buildMapCollisionGrid(inner);
 
   // a beacon over each spawn, since an uploaded map has no bases of its own
   for (const team in BASES) {
@@ -1957,7 +2095,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v79 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v80 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2455,7 +2593,7 @@ function buildArms() {
    top of that as fine-tuning. */
 function weaponFit(type) {
   const fix = WFIX[type] || { y: 0, z: 0 };
-  const E = EXTRA_WEAPONS[type];
+  const E = WEAPON_ART[type];
   if (E && loadedWeapModels[type]) {
     let base = { rotY: 0, rotX: 0 };
     if (E.autoOrient !== false) {
@@ -2730,7 +2868,8 @@ function updateRounds(dt) {
 function coverDistance(origin, dir, maxDist) {
   const rc = new THREE.Raycaster(origin, dir.clone().normalize(), 0, maxDist);
   const hits = rc.intersectObjects(obstacles, false);
-  return hits.length ? hits[0].distance : Infinity;
+  const box = hits.length ? hits[0].distance : Infinity;
+  return Math.min(box, gridCoverDistance(origin, dir, maxDist));
 }
 function camDir() { return new THREE.Vector3(-Math.sin(player.yaw)*Math.cos(player.pitch), Math.sin(player.pitch), -Math.cos(player.yaw)*Math.cos(player.pitch)); }
 
@@ -3316,6 +3455,8 @@ function damagePlayer(amt, from) {
 
 // ---------- player + camera ----------
 function blockedAt(x, z) {
+  // an uploaded map's walls live in the grid; the shop and boxes are still solids
+  if (gridBlocked(x, z)) return true;
   // stop the player walking inside buildings/crates (bullets already collide)
   for (let i = 0; i < obstacles.length; i++) {
     const o = obstacles[i];
@@ -4247,7 +4388,10 @@ function setWeather(key) {
   if (skyMesh) skyMesh.visible = (key === 'sunny' || key === 'cloudy');
   scene.traverse(o => {
     if (o.isDirectionalLight) { o.color.setHex(W.sun); o.intensity = W.sunI; }
-    else if (o.isAmbientLight || o.isHemisphereLight) { o.intensity = W.amb; }
+    else if (o.isAmbientLight || o.isHemisphereLight) {
+      if (o.userData && o.userData.mapFill) return;     // the map's own fill stays put
+      o.intensity = W.amb;
+    }
   });
 
   clearPrecip();
@@ -4489,6 +4633,7 @@ function animate() {
   strikeHudT -= dt;
   if (strikeHudT <= 0) { strikeHudT = 1; buildLoadoutHUD(); }
   updateCamera(dt); updateTracers(dt); updateRounds(dt);
+  if (mapLamp) mapLamp.position.set(camera.position.x, camera.position.y + 1.2, camera.position.z);
   renderer.render(scene, camera);
 }
 

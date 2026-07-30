@@ -153,6 +153,10 @@ section{padding:70px 7vw;position:relative}
 .final .g{color:var(--lime);text-shadow:0 0 46px rgba(182,255,60,.45);animation:neonLime 3s ease-in-out infinite}
 @keyframes neonLime{0%,100%{text-shadow:0 0 46px rgba(182,255,60,.45)}50%{text-shadow:0 0 80px rgba(182,255,60,.85)}}
 .final p{color:var(--dim);max-width:40ch;margin:0 auto 30px}
+.creditsrow{margin-top:38px;display:flex;flex-direction:column;align-items:center;gap:9px}
+.btn-credits{background:transparent;color:var(--white);font-weight:700;padding:12px 30px;border-radius:40px;border:1px solid var(--line);font-size:.92rem;cursor:pointer;transition:.3s}
+.btn-credits:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 26px rgba(0,240,255,.25);transform:translateY(-2px)}
+.creditsnote{color:var(--dim);font-size:.78rem;max-width:44ch;line-height:1.6}
 footer{border-top:1px solid var(--line);padding:32px 7vw;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--dim);font-size:.85rem}
 footer a:hover{color:var(--cyan)}
 /* rising neon particles */
@@ -383,12 +387,18 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
     <h2 data-t='final_h'>Your channel's <span class='g'>next level</span><br>starts in a tab.</h2>
     <p data-t='final_p'>Free to start. No downloads. Just you, the tools, and the grind.</p>
     <a href='app.html'><button class='btn-primary' data-t='final_btn'>Open the Studio →</button></a>
+    <!-- The models in the arena were made by other people. Their licences ask for a
+         credit with a link, so the credit lives here where anyone can find it. -->
+    <div class='creditsrow'>
+      <a href='credits.html'><button class='btn-credits' data-t='credits_btn'>📜 Credits</button></a>
+      <div class='creditsnote' data-t='credits_note'>The 3D models, animations and sounds in NovaClip — and who made them.</div>
+    </div>
   </div>
 </section>
 
 <footer>
   <div>© 2026 NovaClip · Built by eskon</div>
-  <div><a href='https://novaclip.streamlit.app' target='_blank' data-t='footer'>Classic app</a></div>
+  <div><a href='credits.html' data-t='credits_btn'>📜 Credits</a> &nbsp;·&nbsp; <a href='https://novaclip.streamlit.app' target='_blank' data-t='footer'>Classic app</a></div>
 </footer>
 
 </div>
