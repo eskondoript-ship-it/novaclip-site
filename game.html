@@ -1397,8 +1397,8 @@ const MAP_PROXY_CAP = 400;
    into a 2D grid, and from then on "is this blocked?" is an array lookup rather
    than a raycast. Bullets march the same grid. It costs one pass over the mesh at
    load and nothing per frame. */
-const GRID_CELL = 1.4;                 // metres per cell
-const BAND_LO = 0.55, BAND_HI = 2.0;   // a triangle in here is something you hit
+const GRID_CELL = 1.0;                 // metres per cell
+const BAND_LO = 0.95, BAND_HI = 2.0;   // a triangle in here is something you hit
 let mapGrid = null, mapGridN = 0, mapGridOrigin = 0;
 let mapLamp = null;      // the light that follows you inside an uploaded map
 
@@ -1418,6 +1418,7 @@ function buildMapCollisionGrid(root) {
   mapGridN = Math.ceil((ARENA * 2) / GRID_CELL);
   mapGrid = new Uint8Array(mapGridN * mapGridN);
   const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  const ux = new THREE.Vector3(), vx = new THREE.Vector3(), nx = new THREE.Vector3();
   let tris = 0, marked = 0;
   root.updateMatrixWorld(true);
   root.traverse(o => {
@@ -1431,17 +1432,33 @@ function buildMapCollisionGrid(root) {
       c.fromBufferAttribute(pos, i2).applyMatrix4(o.matrixWorld);
       tris++;
       const yLo = Math.min(a.y, b.y, c.y), yHi = Math.max(a.y, b.y, c.y);
-      if (yHi < BAND_LO || yLo > BAND_HI) continue;      // floor, or overhead
-      const xLo = Math.min(a.x, b.x, c.x), xHi = Math.max(a.x, b.x, c.x);
-      const zLo = Math.min(a.z, b.z, c.z), zHi = Math.max(a.z, b.z, c.z);
-      // a triangle spanning half the map is a floor plane caught edge-on, not a wall
-      if (xHi - xLo > 40 || zHi - zLo > 40) continue;
-      for (let x = xLo; x <= xHi + GRID_CELL; x += GRID_CELL) {
-        for (let z = zLo; z <= zHi + GRID_CELL; z += GRID_CELL) {
-          const k = gridIndex(x, z);
+      if (yHi < BAND_LO || yLo > BAND_HI) continue;      // under your step, or overhead
+
+      /* Only walls block. A floor, a ramp, a mezzanine, a table top and a ceiling
+         all have triangles inside the same height band, and marking those is what
+         fenced off half the warehouse. The normal tells them apart: a near-flat
+         triangle is something you stand ON, a near-vertical one is something you
+         walk INTO. */
+      ux.subVectors(b, a); vx.subVectors(c, a); nx.crossVectors(ux, vx);
+      const nlen = nx.length();
+      if (nlen < 1e-9) continue;
+      if (Math.abs(nx.y / nlen) > 0.55) continue;        // lying down: a surface, not a wall
+
+      /* Stamp the triangle's OUTLINE, not its bounding box. A box around a long
+         diagonal wall panel fills the whole room it crosses — which is exactly the
+         barrier you hit in an open corridor. Walls are thin, so their outline is
+         the wall. */
+      const step = GRID_CELL * 0.5;
+      const edge = (p1, p2) => {
+        const dx = p2.x - p1.x, dz = p2.z - p1.z;
+        const len = Math.hypot(dx, dz);
+        const n2 = Math.max(1, Math.ceil(len / step));
+        for (let i = 0; i <= n2; i++) {
+          const k = gridIndex(p1.x + dx * (i / n2), p1.z + dz * (i / n2));
           if (k >= 0 && !mapGrid[k]) { mapGrid[k] = 1; marked++; }
         }
-      }
+      };
+      edge(a, b); edge(b, c); edge(c, a);
     }
   });
   const total = mapGridN * mapGridN;
@@ -1450,7 +1467,7 @@ function buildMapCollisionGrid(root) {
               GRID_CELL + 'm cells');
   /* A grid that says almost everything is solid would trap the player, and one
      that says nothing is is no better than not having it. Either way, drop it. */
-  if (marked > total * 0.75 || marked < 4) {
+  if (marked > total * 0.45 || marked < 4) {
     console.warn('collision grid looks wrong (' + marked + '/' + total + ') — discarded');
     mapGrid = null;
   }
@@ -3083,7 +3100,12 @@ function shoot() {
     scene.add(rk);
     playOneShot('grenade', 900);
     // owner marked as a player-team vehicle so the existing shell code treats it right
-    planted.push({ mesh: rk, vel: d.clone().multiplyScalar(58), kind: 'shell', stuck: false, t: 0,
+    /* A rocket is not a mortar round. At 58 m/s with a tank shell's gravity it
+       dropped a metre over a short street and had to be aimed above the target;
+       an RPG-7 leaves the tube at about 115 and its sustainer keeps it flat.
+       Fast, nearly flat, and it hits harder than a tank shell. */
+    planted.push({ mesh: rk, vel: d.clone().multiplyScalar(RPG_SPEED), kind: 'shell', stuck: false, t: 0,
+                   rocket: true, grav: RPG_GRAVITY, dmg: RPG_DMG, blast: RPG_BLAST,
                    owner: { team: PLAYER_TEAM, driver: 'player' } });
     return;
   }
@@ -3260,12 +3282,12 @@ function updateNades(dt) {
     // tank shells: fast, shallow arc, detonate on the first thing they reach
     if (p.kind === 'shell' && !p.done) {
       p.t += dt;
-      p.vel.y -= 11 * dt;
+      p.vel.y -= (p.grav !== undefined ? p.grav : 11) * dt;
       p.mesh.position.x += p.vel.x * dt;
       p.mesh.position.y += p.vel.y * dt;
       p.mesh.position.z += p.vel.z * dt;
 
-      let hit = p.mesh.position.y <= 0.2 || p.t > 4;
+      let hit = p.mesh.position.y <= 0.2 || p.t > (p.rocket ? 6 : 4);
       if (!hit) {
         /* Test against the hull's actual footprint, not a sphere around its origin.
            A tank is roughly 3.4 across and 6.4 long with its origin on the ground,
@@ -3280,7 +3302,7 @@ function updateNades(dt) {
           const halfW = t.kind === 'truck' ? 2.2 : 2.6;
           const halfL = t.kind === 'truck' ? 4.2 : 3.9;
           if (dx < halfW && dz < halfL && dy < 3.2) {
-            damageTank(t, TANK_SHELL_DMG, p.owner.driver === 'player'); hit = true; break;
+            damageTank(t, p.dmg || TANK_SHELL_DMG, p.owner.driver === 'player'); hit = true; break;
           }
         }
       }
@@ -3295,13 +3317,13 @@ function updateNades(dt) {
       }
       if (hit) {
         p.done = true;
-        explode(p.mesh.position.clone(), 9);
+        explode(p.mesh.position.clone(), p.blast || 9);
         // splash: infantry near the blast go down, and you take a hit too
         const bp = p.mesh.position;
         bots.forEach(b => {
           if (!b.alive || b.team === p.owner.team) return;
-          if (b.mesh.position.distanceTo(bp) < 9) {
-            b.hp -= TANK_SHELL_DMG;
+          if (b.mesh.position.distanceTo(bp) < (p.blast || 9)) {
+            b.hp -= p.dmg || TANK_SHELL_DMG;
             if (b.hp <= 0) {
               b.alive = false; b.mesh.visible = false;
               if (p.owner.driver === 'player') { player.kills++; earn(MODES[mode].perKill, 'tank kill'); updateBoard(); }
@@ -3310,7 +3332,7 @@ function updateNades(dt) {
           }
         });
         if (p.owner.team !== PLAYER_TEAM && !playerTank &&
-            bp.distanceTo(new THREE.Vector3(player.x, 1.2, player.z)) < 9) damagePlayer(70, null);
+            bp.distanceTo(new THREE.Vector3(player.x, 1.2, player.z)) < (p.blast || 9)) damagePlayer(70, null);
         scene.remove(p.mesh);
       }
     }
@@ -3850,6 +3872,9 @@ function endMatch() {
    ============================================================ */
 const TANK_COUNT = 4;
 const TANK_HP = 500, TANK_SHELL_DMG = 120, TANK_RELOAD = 2.6;
+/* The RPG: flat, fast and heavier than a tank shell. Gravity is a tenth of the
+   shell's, so over 100 m it drops about half a metre instead of five. */
+const RPG_SPEED = 115, RPG_GRAVITY = 1.2, RPG_DMG = 190, RPG_BLAST = 11;
 let tanks = [], playerTank = null, leaningOut = false;
 
 /* A vehicle drives along its -Z axis, because that is the direction the hull is
