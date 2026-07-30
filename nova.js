@@ -187,7 +187,7 @@ function logSkill(id, n) {
   if (!SKILLS[id]) return;
   const s = getSkills();
   s[id] = (s[id] || 0) + (n > 0 ? Math.round(n) : 1);
-  localStorage.setItem('nc_skills', JSON.stringify(s));
+  localStorage.setItem('nc_skills', JSON.stringify(s)); ncSyncSoon();
   refreshPanels();
   if (typeof window.onSkillLogged === 'function') window.onSkillLogged(id, s[id]);
 }
@@ -240,8 +240,123 @@ function applyTheme(name) { const t = THEMES[name] || THEMES['Dark']; document.d
 function toast(msg) { const t = document.getElementById('nctoast'); if (!t) return; t.textContent = msg; t.style.display = 'block'; clearTimeout(t.hideTimer); t.hideTimer = setTimeout(() => { t.style.display = 'none'; }, 3000); }
 function getPts() { return parseInt(localStorage.getItem('nc_points') || '0'); }
 function checkUnlocks(pts) { const u = JSON.parse(localStorage.getItem('nc_unlocked') || '[]'); for (const [need,name] of QUESTS.concat(ACHIEVEMENTS)) { if (pts >= need && !u.includes(name)) { u.push(name); setTimeout(() => toast('UNLOCKED: ' + name), 1200); } } localStorage.setItem('nc_unlocked', JSON.stringify(u)); }
-function addPts(n) { const p = getPts() + n; localStorage.setItem('nc_points', p); const b = document.getElementById('ncpts'); if (b) b.textContent = p + ' pts'; toast('+' + n + ' pts!'); checkUnlocks(p); refreshPanels(); }
+function addPts(n) { const p = getPts() + n; localStorage.setItem('nc_points', p); ncSyncSoon(); const b = document.getElementById('ncpts'); if (b) b.textContent = p + ' pts'; toast('+' + n + ' pts!'); checkUnlocks(p); refreshPanels(); }
 function saveHist(subject,q,a) { const h = JSON.parse(localStorage.getItem('nc_history') || '{}'); if (!h[subject]) h[subject] = []; h[subject].push([q,a.slice(0,200)]); if (h[subject].length > 10) h[subject].shift(); localStorage.setItem('nc_history', JSON.stringify(h)); refreshPanels(); }
+/* ============================================================
+   ACCOUNT + SAVE SYNC
+   Points, skills, certificates, saved ideas and AI history live in localStorage,
+   which means they live in ONE browser. This carries them to a small server so
+   they survive a new phone, a cleared cache or a school laptop.
+
+   There are no passwords. The browser holds a 32-character key; the server also
+   issues a short recovery code so signing in elsewhere is nine characters typed
+   once. Anyone with the code has the save, which is the honest trade for points
+   and badges — do not imply it is more protected than that.
+
+   Set NC_SERVER to your Worker's address (see leaderboard-worker.js) and this
+   turns itself on. Left empty, everything below is inert and the site works
+   exactly as it does now, offline.
+   ============================================================ */
+const NC_SERVER = '';          // e.g. 'https://novaclip-server.you.workers.dev'
+
+/* What travels. Deliberately NOT nc_yt: that holds a YouTube OAuth token, and a
+   token on someone else's server is a token you no longer control. The channel
+   name is copied into nc_name instead, which is all the rest of the site needs. */
+const NC_SYNC_KEYS = ['nc_points', 'nc_skills', 'nc_certs', 'nc_cert_enrolled',
+                      'nc_ideas', 'nc_history', 'nc_unlocked', 'nc_lb', 'nc_name',
+                      'nc_flap_best', 'nc_lang'];
+
+function ncKey() { return localStorage.getItem('nc_key') || ''; }
+function ncCode() { return localStorage.getItem('nc_code') || ''; }
+function ncSyncOn() { return !!NC_SERVER; }
+
+async function ncApi(path, opts) {
+  const r = await fetch(NC_SERVER.replace(/\/$/, '') + path, opts);
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
+  return body;
+}
+
+async function ncCreateAccount() {
+  const out = await ncApi('/account', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  localStorage.setItem('nc_key', out.key);
+  localStorage.setItem('nc_code', out.code);
+  return out;
+}
+async function ncSignIn(code) {
+  const out = await ncApi('/account/resolve', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: code }) });
+  localStorage.setItem('nc_key', out.key);
+  localStorage.setItem('nc_code', String(code).toUpperCase());
+  return out;
+}
+
+function ncCollect() {
+  const data = {};
+  NC_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+  return data;
+}
+/* Merging, not overwriting. Two devices both hold a points total; taking the
+   server's blindly would wipe a session played offline, so points and counters
+   take the HIGHER value and lists take the longer one. Last-write-wins would
+   quietly delete work. */
+function ncMerge(remote) {
+  if (!remote || typeof remote !== 'object') return 0;
+  let changed = 0;
+  const numeric = { nc_points: 1, nc_flap_best: 1 };
+  for (const k in remote) {
+    if (NC_SYNC_KEYS.indexOf(k) < 0) continue;
+    const mine = localStorage.getItem(k), theirs = remote[k];
+    if (mine === theirs) continue;
+    if (numeric[k]) {
+      const a = parseInt(mine, 10) || 0, b = parseInt(theirs, 10) || 0;
+      if (b > a) { localStorage.setItem(k, String(b)); changed++; }
+    } else if (mine === null || String(theirs).length > String(mine).length) {
+      localStorage.setItem(k, theirs); changed++;
+    }
+  }
+  return changed;
+}
+
+async function ncPull() {
+  if (!ncSyncOn() || !ncKey()) return 0;
+  const out = await ncApi('/save?key=' + encodeURIComponent(ncKey()));
+  const n = ncMerge(out.data);
+  if (n) { refreshPanels(); const b = document.getElementById('ncpts'); if (b) b.textContent = getPts() + ' pts'; }
+  return n;
+}
+async function ncPush() {
+  if (!ncSyncOn() || !ncKey()) return false;
+  await ncApi('/save', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: ncKey(), data: ncCollect() }) });
+  localStorage.setItem('nc_synced_at', String(Date.now()));
+  return true;
+}
+/* Pull on arrival, push on leaving, and push a few seconds after anything
+   changes — a phone that closes the tab mid-session should not lose the session. */
+let ncPushTimer = null;
+function ncSyncSoon() {
+  if (!ncSyncOn() || !ncKey()) return;
+  clearTimeout(ncPushTimer);
+  ncPushTimer = setTimeout(() => ncPush().catch(e => console.warn('sync push failed', e)), 4000);
+}
+async function ncSyncBoot() {
+  if (!ncSyncOn()) return;
+  try {
+    if (!ncKey()) await ncCreateAccount();
+    await ncPull();
+    await ncPush();
+  } catch (e) { console.warn('sync unavailable — staying local', e); }
+  window.addEventListener('pagehide', () => {
+    if (!ncSyncOn() || !ncKey() || !navigator.sendBeacon) return;
+    navigator.sendBeacon(NC_SERVER.replace(/\/$/, '') + '/save',
+      new Blob([JSON.stringify({ key: ncKey(), data: ncCollect() })], { type: 'application/json' }));
+  });
+}
+window.ncCreateAccount = ncCreateAccount; window.ncSignIn = ncSignIn;
+window.ncPull = ncPull; window.ncPush = ncPush; window.ncSyncOn = ncSyncOn;
+window.ncKey = ncKey; window.ncCode = ncCode;
+
 function refreshPanels() {
   const pts = getPts();
   const ql = document.getElementById('questlist'); if (ql) ql.innerHTML = QUESTS.map(([need,name]) => pts >= need ? name + ' — DONE' : name + ' — ' + (need - pts) + ' pts to go').join('<br>');
@@ -283,6 +398,7 @@ window.addEventListener('DOMContentLoaded', () => {
   applyLang(lang());
 
   applySeason();
+  ncSyncBoot();
 });
 
 /* ===== SEASONAL EVENTS — automatic by date, no button =====

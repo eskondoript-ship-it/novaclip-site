@@ -412,6 +412,16 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
     <div class='wsel' id='wsel'></div>
   </div>
 
+  <div class='mappick' id='mproom' style='display:none'>
+    <div class='charlabel'>PLAY WITH FRIENDS</div>
+    <div style='display:flex; gap:8px; justify-content:center; flex-wrap:wrap'>
+      <input id='roomcode' maxlength='12' placeholder='Room code (e.g. NOVA-7K2P)'
+             style='padding:9px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:#fff; font:inherit; font-size:0.85rem; width:230px; text-align:center'>
+      <button id='roomrand' class='lbtab' type='button'>New code</button>
+    </div>
+    <div class='lbnote' style='text-align:center; margin-top:8px'>Share the code and deploy at the same time to land in the same match. Leave it empty to join the open room.</div>
+  </div>
+
   <div class='lbwrap'>
     <div class='lbhead'>
       <div class='lbtabs'>
@@ -1029,6 +1039,11 @@ function renderMapPick() {
    Both boards refresh every 60 seconds while the lobby is open.
    ============================================================ */
 const LEADERBOARD_URL = '';        // e.g. 'https://novaclip-scores.YOURNAME.workers.dev'
+/* Multiplayer relay (mp-server.js). Declared up here with the other endpoints
+   because the lobby reads it while the page is still executing — a const touched
+   above its own declaration throws, and everything below it never initialises. */
+const NC_MP_URL = '';              // e.g. 'wss://novaclip-mp.deno.dev'
+const MP_SEND_HZ = 15;
 const LB_REFRESH_MS = 60000;
 let lbTab = 'world', lbWorld = null, lbState = 'idle', lbNextAt = 0;
 
@@ -1155,6 +1170,21 @@ function renderWSel() {
 renderWSel();
 renderMapPick();
 lbInit();
+(function () {
+  // the room box only means something once NC_MP_URL points at a relay
+  const box = document.getElementById('mproom');
+  if (!box || !NC_MP_URL) return;
+  box.style.display = '';
+  const code = document.getElementById('roomcode');
+  code.value = localStorage.getItem('nc_room') || '';
+  code.oninput = () => localStorage.setItem('nc_room', code.value.toUpperCase());
+  document.getElementById('roomrand').onclick = () => {
+    const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let c = 'NOVA-';
+    for (let i = 0; i < 4; i++) c += A[Math.floor(Math.random() * A.length)];
+    code.value = c; localStorage.setItem('nc_room', c);
+  };
+})();
 
 // ---------- init ----------
 function init() {
@@ -2776,6 +2806,136 @@ function spawnBot(i) {
 }
 
 // ---------- tracers ----------
+/* ============================================================
+   MULTIPLAYER
+   Real people in the same match, over a WebSocket to mp-server.js. Leave
+   NC_MP_URL empty and none of this runs: the game stays exactly as it is, bots
+   only, with no socket and no cost.
+
+   Every player owns their own position and reports their own hits — see the note
+   at the top of mp-server.js for why, and what that does and does not protect
+   against. Peers are drawn with the same character model the bots use, moved by
+   interpolation between the last two updates rather than snapped, because a
+   position that arrives 15 times a second looks like a slideshow if you snap it.
+   ============================================================ */
+let mpSock = null, mpId = null, mpTeam = null, mpPeers = {}, mpLastSend = 0, mpRoom = '';
+function mpLive() { return !!(mpSock && mpSock.readyState === 1); }
+
+function mpConnect(room, name) {
+  if (!NC_MP_URL) return;
+  try { if (mpSock) mpSock.close(); } catch (e) {}
+  mpRoom = (room || 'OPEN').toUpperCase();
+  const url = NC_MP_URL.replace(/\/$/, '') + '/?room=' + encodeURIComponent(mpRoom) +
+              '&name=' + encodeURIComponent((name || 'Player').slice(0, 16));
+  addFeed('Connecting to ' + mpRoom + '...');
+  mpSock = new WebSocket(url);
+  mpSock.onopen = () => addFeed('In room ' + mpRoom);
+  mpSock.onclose = () => { addFeed('Left the room'); mpClearPeers(); };
+  mpSock.onerror = () => addFeed('Could not reach the multiplayer server');
+  mpSock.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch (err) { return; } mpHandle(m); };
+}
+function mpSend(o) { if (mpLive()) { try { mpSock.send(JSON.stringify(o)); } catch (e) {} } }
+function mpClearPeers() {
+  for (const id in mpPeers) { if (mpPeers[id].mesh) scene.remove(mpPeers[id].mesh); }
+  mpPeers = {};
+}
+
+function mpSpawnPeer(id, name, team) {
+  const colour = team === PLAYER_TEAM ? 0x6cc3ff : 0xff8a5c;
+  const mesh = makeFighter(colour, true, false);
+  scene.add(mesh);
+  mpPeers[id] = { id: id, name: name || 'Player', team: team || 't', mesh: mesh,
+                  hp: 100, alive: true,
+                  from: new THREE.Vector3(), to: new THREE.Vector3(), yawFrom: 0, yawTo: 0, t: 1 };
+  return mpPeers[id];
+}
+function mpHandle(m) {
+  switch (m.t) {
+    case 'welcome':
+      mpId = m.id; mpTeam = m.team;
+      (m.players || []).forEach(p => { if (p.id !== mpId && !mpPeers[p.id]) mpSpawnPeer(p.id, p.name, p.team); });
+      addFeed('You are ' + (m.team === 'ct' ? 'CT' : 'T') + ' in ' + m.room);
+      break;
+    case 'joined':
+      if (m.id !== mpId && !mpPeers[m.id]) { mpSpawnPeer(m.id, m.name, m.team); addFeed(m.name + ' joined'); }
+      break;
+    case 'left':
+      if (mpPeers[m.id]) { scene.remove(mpPeers[m.id].mesh); delete mpPeers[m.id]; }
+      break;
+    case 'p': {
+      const p = mpPeers[m.id] || mpSpawnPeer(m.id, 'Player', 't');
+      p.from.copy(p.mesh.position); p.to.set(m.x, 0, m.z);
+      p.yawFrom = p.mesh.rotation.y; p.yawTo = m.yaw;
+      p.t = 0; p.hp = m.hp;
+      p.alive = m.hp > 0;
+      p.mesh.visible = p.alive;
+      break;
+    }
+    case 'shot':
+      spawnTracer(new THREE.Vector3(m.x, m.y, m.z), new THREE.Vector3(m.ex, m.ey, m.ez), 0xffc46a);
+      break;
+    case 'hit': {
+      // somebody says they hit you; your client is what decides you are hurt
+      const from = mpPeers[m.from];
+      damagePlayer(m.dmg, null);
+      if (player.hp <= 0 && from) mpSend({ t: 'died', by: m.from });
+      break;
+    }
+    case 'died': {
+      const p = mpPeers[m.id];
+      if (p) { p.alive = false; p.mesh.visible = false; setTimeout(() => { if (mpPeers[m.id]) { p.alive = true; p.mesh.visible = true; } }, 2500); }
+      if (m.by === mpId) { player.kills++; earn(MODES[mode].perKill, 'kill'); updateBoard(); }
+      addFeed((p ? p.name : 'Someone') + ' was killed');
+      break;
+    }
+    case 'roster':
+      (m.players || []).forEach(r => { if (mpPeers[r.id]) { mpPeers[r.id].kills = r.kills; mpPeers[r.id].name = r.name; } });
+      break;
+    case 'error': addFeed('Server: ' + m.why); break;
+  }
+}
+
+function mpUpdate(dt) {
+  if (!NC_MP_URL) return;
+  // my state, 15 times a second
+  const now = performance.now();
+  if (mpLive() && running && now - mpLastSend > 1000 / MP_SEND_HZ) {
+    mpLastSend = now;
+    mpSend({ t: 'p', x: +player.x.toFixed(2), y: +player.y.toFixed(2), z: +player.z.toFixed(2),
+             yaw: +player.yaw.toFixed(2), anim: player.sprint ? 'run' : 'walk',
+             hp: Math.max(0, Math.round(player.hp)), weap: curWeap,
+             veh: playerTank ? playerTank.kind : '' });
+  }
+  // peers slide to where they said they were, over one send interval
+  const span = 1 / MP_SEND_HZ;
+  for (const id in mpPeers) {
+    const p = mpPeers[id];
+    if (p.t >= 1) continue;
+    p.t = Math.min(1, p.t + dt / span);
+    p.mesh.position.lerpVectors(p.from, p.to, p.t);
+    let d = p.yawTo - p.yawFrom;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    p.mesh.rotation.y = p.yawFrom + d * p.t;
+  }
+}
+/* Peers are shootable exactly like bots: same box test, same range, but the
+   damage is a message rather than a subtraction. */
+function mpHitTest(ray, origin, RANGE) {
+  let best = null, bd = Infinity, bp = null;
+  for (const id in mpPeers) {
+    const p = mpPeers[id];
+    if (!p.alive || p.team === (mpTeam || PLAYER_TEAM)) continue;
+    const bx = new THREE.Box3().setFromObject(p.mesh);
+    const pt = ray.ray.intersectBox(bx, new THREE.Vector3());
+    if (!pt) continue;
+    const d = origin.distanceTo(pt);
+    if (d < bd && d <= RANGE) { bd = d; best = p; bp = pt.clone(); }
+  }
+  return best ? { peer: best, dist: bd, point: bp } : null;
+}
+window.mpConnect = mpConnect;
+
 function spawnTracer(from, to, color) {
   const dir = new THREE.Vector3().subVectors(to, from); const len = dir.length(); if (len < 0.01) return;
   const m = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,len,4), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }));
@@ -2901,6 +3061,7 @@ function startMatch() {
   if (gunGroup) gunGroup.visible = true;
   timerId = setInterval(tick, 1000);
   setInterval(updateBoard, 1500);
+  if (NC_MP_URL) mpConnect(localStorage.getItem('nc_room') || 'OPEN', lbName());
 }
 document.addEventListener('mousemove', (e) => {
   if (document.pointerLockElement !== renderer.domElement) return;
@@ -3157,6 +3318,15 @@ function shoot() {
       if (gunGroup.userData.flash) gunGroup.userData.flash.getWorldPosition(mw);
       else mw.copy(origin).add(rdir.clone().multiplyScalar(0.5));
       spawnRound(W.ammo, mw, end, (W.ammo && AMMO[W.ammo]) ? AMMO[W.ammo].tracer : 0x9fe8ff);
+      if (mpLive()) mpSend({ t: 'shot', x: +mw.x.toFixed(1), y: +mw.y.toFixed(1), z: +mw.z.toFixed(1),
+                             ex: +end.x.toFixed(1), ey: +end.y.toFixed(1), ez: +end.z.toFixed(1), weap: curWeap });
+    }
+    /* A real player standing where a bot would have been takes the round the same
+       way — nearest thing wins, and the damage is sent rather than applied. */
+    const mpHit = mpHitTest(ray, origin, RANGE);
+    if (mpHit && mpHit.dist < hitDist && mpHit.dist < blockDist) {
+      mpSend({ t: 'hit', id: mpHit.peer.id, dmg: Math.round(scoped ? W.scopedDmg : W.dmg) });
+      hit = null;
     }
     if (hit) {
       let dmg = scoped ? W.scopedDmg : W.dmg;
@@ -4641,7 +4811,7 @@ function animate() {
   // refresh the loadout about once a second so the countdown ticks down
   strikeHudT -= dt;
   if (strikeHudT <= 0) { strikeHudT = 1; buildLoadoutHUD(); }
-  updateCamera(dt); updateTracers(dt); updateRounds(dt);
+  updateCamera(dt); updateTracers(dt); updateRounds(dt); mpUpdate(dt);
   if (mapLamp) mapLamp.position.set(camera.position.x, camera.position.y + 1.2, camera.position.z);
   renderer.render(scene, camera);
 }
