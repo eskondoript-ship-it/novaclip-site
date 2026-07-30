@@ -347,7 +347,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='safebadge'>🛡️ SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop 🛒</div>
 <button id='shopbtn'>🛒 SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v78 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v79 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -531,13 +531,28 @@ const EXTRA_WEAPONS = {
      start  rounds you spawn with
      buy    rounds per purchase
      cost   points per purchase
-     tracer colour of the round in flight, so calibres read differently */
+     tracer colour of the round in flight, so calibres read differently
+
+   BULLETS FROM FAB / SKETCHFAB
+     Put a .glb filename in `file` and that model becomes the round you actually
+     see leaving the barrel — a 9mm looks like a 9mm, a shell looks like a shell,
+     the RPG's warhead is your rocket. Leave it empty and the calibre falls back to
+     a coloured tracer streak, so every gun works before any model is uploaded.
+       scale  multiplies the auto-fit (rounds are fitted to `size` metres long)
+       size   how long the round reads in the world; 0.14 is a rifle round at the
+              scale this game uses, and the rocket is set much larger
+       spin   turns the model on its own axis in flight, for a rocket with fins */
 const AMMO = {
-  '556':    { name: '5.56 mm',   start: 90,  buy: 60, cost: 35, tracer: 0x9fe8ff },
-  '9mm':    { name: '9 mm',      start: 120, buy: 75, cost: 25, tracer: 0xffe08a },
-  '762':    { name: '7.62 mm',   start: 80,  buy: 50, cost: 40, tracer: 0xffb066 },
-  '12ga':   { name: '12 gauge',  start: 32,  buy: 24, cost: 35, tracer: 0xff8f6a },
-  'rocket': { name: 'PG-7 rocket', start: 2, buy: 1,  cost: 60, tracer: 0xffcc55 }
+  '556':    { name: '5.56 mm',   start: 90,  buy: 60, cost: 35, tracer: 0x9fe8ff,
+              file: '', scale: 1, size: 0.14, rotX: 0, rotY: 0, rotZ: 0 },
+  '9mm':    { name: '9 mm',      start: 120, buy: 75, cost: 25, tracer: 0xffe08a,
+              file: '', scale: 1, size: 0.11, rotX: 0, rotY: 0, rotZ: 0 },
+  '762':    { name: '7.62 mm',   start: 80,  buy: 50, cost: 40, tracer: 0xffb066,
+              file: '', scale: 1, size: 0.16, rotX: 0, rotY: 0, rotZ: 0 },
+  '12ga':   { name: '12 gauge',  start: 32,  buy: 24, cost: 35, tracer: 0xff8f6a,
+              file: '', scale: 1, size: 0.13, rotX: 0, rotY: 0, rotZ: 0 },
+  'rocket': { name: 'PG-7 rocket', start: 2, buy: 1,  cost: 60, tracer: 0xffcc55,
+              file: '', scale: 1, size: 0.9,  rotX: 0, rotY: 0, rotZ: 0, spin: true }
 };
 
 // arena half-width; bases sit near the far edges of it. Set by the chosen map.
@@ -679,6 +694,7 @@ let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruc
 const loadedHouseGLB = [];
 const loadedWeapModels = {};   // weapon id -> its own uploaded model
 let loadedArmsGLB = null;      // your own first-person arms, when uploaded
+const loadedAmmoGLB = {};      // calibre -> the round model you see in flight
 let loadedMapGLB = null;       // the chosen map, when it is an uploaded one
 const extraClips = {};   // retargeted clips, rebuilt per character in makeFighter
 const rawAnims = {};     // key -> { clips, scene } exactly as loaded, before retargeting
@@ -828,8 +844,9 @@ function loadCustomModels(done) {
   // only bother if a custom model is actually configured
   const anyHouse = (CUSTOM_MODELS.houses || []).some(Boolean);
   const anyExtraWeap = Object.keys(EXTRA_WEAPONS).some(k => EXTRA_WEAPONS[k].file);
+  const anyRound = Object.keys(AMMO).some(t => AMMO[t].file);
   const mapFile = (curMap().id !== 'arena') ? (curMap().file || '') : '';
-  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse && !anyExtraWeap && !mapFile && !CUSTOM_MODELS.arms) { done(); return; }
+  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse && !anyExtraWeap && !mapFile && !CUSTOM_MODELS.arms && !anyRound) { done(); return; }
   const needFBX = isFBX(CUSTOM_MODELS.character) || isFBX(CUSTOM_MODELS.weapon);
 
   // load the right loader(s): GLTFLoader for .glb/.gltf, FBXLoader for Mixamo .fbx
@@ -884,6 +901,14 @@ function loadCustomModels(done) {
     if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed \u2014 using the built-in truck', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed \u2014 using the built-in tank', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed \u2014 using built-in', e); pending--; finish(); }); }
+    // one model per calibre, so a 9mm looks like a 9mm on its way out of the barrel
+    Object.keys(AMMO).forEach(t => {
+      const f = AMMO[t].file;
+      if (!f) return;
+      pending++;
+      loader.load(f, g => { loadedAmmoGLB[t] = g.scene; console.log('loaded ' + AMMO[t].name + ' round from ' + f); pending--; finish(); },
+                  undefined, e => { console.warn(AMMO[t].name + ' round failed \u2014 using a tracer streak', e); pending--; finish(); });
+    });
     if (CUSTOM_MODELS.arms) { pending++; loader.load(CUSTOM_MODELS.arms, g => { loadedArmsGLB = g.scene; console.log('loaded first-person arms from ' + CUSTOM_MODELS.arms); pending--; finish(); }, undefined, e => { console.warn('arms model failed \u2014 using the built-in arms', e); pending--; finish(); }); }
     // one model per extra weapon, so each gun in the inventory can look like itself
     Object.keys(EXTRA_WEAPONS).forEach(k => {
@@ -1231,7 +1256,7 @@ function init() {
     }
   };
   if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck || CUSTOM_MODELS.knife || CUSTOM_MODELS.rpg || (CUSTOM_MODELS.houses || []).some(Boolean) ||
-      Object.keys(EXTRA_WEAPONS).some(k => EXTRA_WEAPONS[k].file) || (curMap().id !== 'arena' && curMap().file) || CUSTOM_MODELS.arms) {
+      Object.keys(EXTRA_WEAPONS).some(k => EXTRA_WEAPONS[k].file) || (curMap().id !== 'arena' && curMap().file) || CUSTOM_MODELS.arms || Object.keys(AMMO).some(t => AMMO[t].file)) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
       if (!built) { console.warn('model load stalled \u2014 building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
@@ -1932,7 +1957,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v78 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v79 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2620,6 +2645,88 @@ function spawnTracer(from, to, color) {
 }
 function updateTracers(dt) { for (let i = tracers.length-1; i >= 0; i--) { tracers[i].life -= dt; tracers[i].mesh.material.opacity = Math.max(0, tracers[i].life/0.1); if (tracers[i].life <= 0) { scene.remove(tracers[i].mesh); tracers.splice(i,1); } } }
 
+/* ---- rounds in flight ----
+   When a calibre has an uploaded model, that model is what leaves the barrel: it
+   is fitted, pointed along its own travel, and flown to wherever the shot landed.
+   A real bullet is far too fast to see, so these move at a readable speed — quick
+   enough to feel like a bullet, slow enough that you can actually watch your 9mm.
+
+   Meshes are pooled per calibre. An LMG fires twelve rounds a second and cloning a
+   glTF that often would stutter; the pool clones a handful once and reuses them. */
+const ROUND_SPEED = 240;               // metres per second in the world
+const ROUND_POOL_MAX = 24;             // per calibre
+const roundPool = {}, roundsFlying = [];
+
+function buildRound(type) {
+  const src = loadedAmmoGLB[type];
+  if (!src) return null;
+  const A = AMMO[type];
+  const holder = new THREE.Group();
+  const inner = src.clone(true);
+  inner.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3(), ctr = new THREE.Vector3();
+  bb.getSize(sz); bb.getCenter(ctr);
+  const longest = Math.max(sz.x, sz.y, sz.z) || 1;
+  let k = ((A.size || 0.14) * (A.scale || 1)) / longest;
+  if (!isFinite(k) || k <= 0) k = 1;
+  inner.scale.setScalar(k);
+  /* Point the round along its own flight, nose first.
+     The same rule the weapons use finds the nose: the long axis is the round's
+     length, and a bullet tapers hard enough at the tip that the thin-end test is
+     decisive on it in a way it never is on a rifle. That leaves the nose on -Z.
+
+     But a round is aimed with lookAt(), and lookAt on an ordinary Object3D points
+     its +Z at the target — only a camera looks down -Z. Aiming the model straight
+     from that would fly every round backwards, base first. So the oriented model
+     hangs inside a group turned half a circle, which swaps its -Z nose onto the
+     holder's +Z, and the holder is what gets aimed. */
+  const D = Math.PI / 180;
+  const o = autoOrientWeapon(inner);
+  inner.rotation.set((o.rotX || 0) * D + (A.rotX || 0) * D,
+                     (o.rotY || 0) * D + (A.rotY || 0) * D,
+                     (A.rotZ || 0) * D);
+  inner.position.set(-ctr.x * k, -ctr.y * k, -ctr.z * k);
+  inner.traverse(o2 => { if (o2.isMesh) { o2.castShadow = false; o2.frustumCulled = false; } });
+  const flip = new THREE.Group();
+  flip.rotation.y = Math.PI;
+  flip.add(inner);
+  holder.add(flip);
+  return holder;
+}
+function takeRound(type) {
+  const pool = roundPool[type] || (roundPool[type] = []);
+  const m = pool.pop() || buildRound(type);
+  if (m) { m.visible = true; scene.add(m); }
+  return m;
+}
+function freeRound(type, m) {
+  scene.remove(m);
+  const pool = roundPool[type] || (roundPool[type] = []);
+  if (pool.length < ROUND_POOL_MAX) pool.push(m);
+}
+/* Fire one round from `from` to `to`. Falls back to the streak when the calibre
+   has no model, which is what every weapon does out of the box. */
+function spawnRound(type, from, to, colour) {
+  if (!type || !loadedAmmoGLB[type]) { spawnTracer(from, to, colour); return; }
+  const m = takeRound(type);
+  if (!m) { spawnTracer(from, to, colour); return; }
+  m.position.copy(from);
+  m.lookAt(to);
+  const dist = from.distanceTo(to);
+  roundsFlying.push({ type: type, mesh: m, from: from.clone(), to: to.clone(),
+                      t: 0, dur: Math.max(0.02, dist / ROUND_SPEED), spin: !!AMMO[type].spin });
+}
+function updateRounds(dt) {
+  for (let i = roundsFlying.length - 1; i >= 0; i--) {
+    const r = roundsFlying[i];
+    r.t += dt;
+    const k = r.t / r.dur;
+    if (k >= 1) { freeRound(r.type, r.mesh); roundsFlying.splice(i, 1); continue; }
+    r.mesh.position.lerpVectors(r.from, r.to, k);
+    if (r.spin) r.mesh.rotateZ(dt * 9);
+  }
+}
+
 function coverDistance(origin, dir, maxDist) {
   const rc = new THREE.Raycaster(origin, dir.clone().normalize(), 0, maxDist);
   const hits = rc.intersectObjects(obstacles, false);
@@ -2827,9 +2934,14 @@ function shoot() {
     recoil = 1;
     const d = camDir();
     const from = new THREE.Vector3(player.x, player.y - 0.1, player.z).addScaledVector(d, 1.2);
-    const rk = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.8, 10),
+    /* Your uploaded rocket, if there is one — the same model the rocket calibre
+       uses, flown as a real projectile rather than the built-in cone. */
+    let rk = loadedAmmoGLB['rocket'] ? buildRound('rocket') : null;
+    if (!rk) rk = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.8, 10),
       new THREE.MeshStandardMaterial({ color: 0x8d9a6a, emissive: 0x442200 }));
-    rk.position.copy(from); scene.add(rk);
+    rk.position.copy(from);
+    rk.lookAt(from.clone().add(d));
+    scene.add(rk);
     playOneShot('grenade', 900);
     // owner marked as a player-team vehicle so the existing shell code treats it right
     planted.push({ mesh: rk, vel: d.clone().multiplyScalar(58), kind: 'shell', stuck: false, t: 0,
@@ -2899,7 +3011,7 @@ function shoot() {
       const mw = new THREE.Vector3();
       if (gunGroup.userData.flash) gunGroup.userData.flash.getWorldPosition(mw);
       else mw.copy(origin).add(rdir.clone().multiplyScalar(0.5));
-      spawnTracer(mw, end, (W.ammo && AMMO[W.ammo]) ? AMMO[W.ammo].tracer : 0x9fe8ff);
+      spawnRound(W.ammo, mw, end, (W.ammo && AMMO[W.ammo]) ? AMMO[W.ammo].tracer : 0x9fe8ff);
     }
     if (hit) {
       let dmg = scoped ? W.scopedDmg : W.dmg;
@@ -4376,7 +4488,7 @@ function animate() {
   // refresh the loadout about once a second so the countdown ticks down
   strikeHudT -= dt;
   if (strikeHudT <= 0) { strikeHudT = 1; buildLoadoutHUD(); }
-  updateCamera(dt); updateTracers(dt);
+  updateCamera(dt); updateTracers(dt); updateRounds(dt);
   renderer.render(scene, camera);
 }
 
