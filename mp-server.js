@@ -200,8 +200,10 @@ Deno.serve((req) => {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
-    return new Response('NovaClip multiplayer relay — ' + rooms.size + ' room(s) open', {
-      headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' }
+    /* charset matters: without it a browser reads the em dash as Latin-1 and
+       prints "relay â€”". Text responses are UTF-8, so say so. */
+    return new Response('NovaClip multiplayer relay - ' + rooms.size + ' room(s) open', {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*' }
     });
   }
 
