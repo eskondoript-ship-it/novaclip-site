@@ -28,6 +28,10 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
 .gbtn { padding: 13px 28px; border-radius: 40px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(90deg, #00F0FF, #4CC9F0); color: #04121a; font-size: 1rem; transition: transform 0.2s, box-shadow .2s; }
 .gbtn:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,240,255,0.4); }
 #uname { display: none; color: #4CC9F0; font-weight: 700; }
+#authmsg { display: none; max-width: 420px; margin-top: 10px; padding: 12px 14px; border-radius: 12px; font-size: 0.86rem; line-height: 1.55; border: 1px solid rgba(247,37,133,0.45); background: rgba(247,37,133,0.10); color: #ffd9e6; }
+#authmsg b { color: #fff; }
+#authmsg code { background: rgba(0,0,0,0.35); padding: 1px 6px; border-radius: 5px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; }
+#authmsg.working { border-color: rgba(76,201,240,0.45); background: rgba(76,201,240,0.10); color: #cdeaff; }
 
 .cardgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 10px; }
 .tool { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 22px; cursor: pointer; transition: 0.25s; }
@@ -76,6 +80,7 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
     <div>
       <button id='gbtn' class='gbtn' data-t='signin'>Sign in with Google</button>
       <p id='uname'></p>
+      <div id='authmsg'></div>
     </div>
   </div>
 
@@ -95,9 +100,42 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
   <div id='toolout' class='panelbox'></div>
 </div>
 
+<script>
+/* Firebase arrives as a module from gstatic.com, and a module script is deferred
+   — so for the first moment of the page, and forever if that request is blocked
+   (school filter, ad blocker, a country that cannot reach Google), the button
+   below is a button with nothing behind it. Clicking it does nothing at all,
+   which reads as "the site is broken" and gives nobody anything to act on.
+   This plain script runs first and puts a holding answer on every copy of the
+   button; the module replaces it the instant it is ready. */
+(function () {
+  function boxes() { return document.querySelectorAll('#authmsg'); }
+  function say(html) {
+    var bs = boxes();
+    for (var i = 0; i < bs.length; i++) { bs[i].innerHTML = html; bs[i].style.display = 'block'; }
+  }
+  function bind() {
+    var bs = document.querySelectorAll('#gbtn');
+    for (var i = 0; i < bs.length; i++) {
+      if (!bs[i].onclick) bs[i].onclick = function () {
+        say(window.ncAuthReady ? 'One moment...' : 'Still loading Google sign-in. If this does not clear in a few seconds, something on this network is blocking <code>www.gstatic.com</code>.');
+      };
+    }
+  }
+  document.addEventListener('DOMContentLoaded', bind);
+  bind();
+  setTimeout(function () {
+    if (window.ncAuthReady) return;
+    say('<b>Google\'s sign-in library did not load.</b><br>The page needs <code>www.gstatic.com</code>, ' +
+        'and something blocked it — usually an ad blocker, a school or work network filter, or being offline. ' +
+        'Try another network or turn the blocker off for this site, then reload.');
+  }, 8000);
+})();
+</script>
 <script type='module'>
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCKJVKqArOofTZT4fiz18cs_-thLB1O2J4',
@@ -131,14 +169,56 @@ function rememberChannel(title) {
   }
 }
 function loadToken() { try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {} return null; }
+
+/* Everything below works through querySelectorAll, not getElementById, on
+   purpose. If this file ever gets pasted into itself the page shows two of every
+   control, and getElementById only ever finds the first — you click the button
+   you can see and nothing happens, because the handler went on the copy above
+   it. That is exactly the "sign-in does nothing" bug. Binding every copy makes
+   the page work even while it is broken, and nova.js removes the duplicate. */
+const all = (sel) => Array.prototype.slice.call(document.querySelectorAll(sel));
+
+function note(html, kind) {
+  const boxes = all('#authmsg');
+  if (!boxes.length) { if (kind !== 'working') alert(html.replace(/<[^>]+>/g, '')); return; }
+  boxes.forEach(b => { b.innerHTML = html; b.className = kind === 'working' ? 'working' : ''; b.style.display = html ? 'block' : 'none'; });
+}
+
+/* Google hands back an error code and a sentence written for developers. A
+   fourteen-year-old reading "auth/unauthorized-domain" learns nothing, so each
+   one is translated into the thing that actually has to be clicked. */
+function explainAuth(e) {
+  const code = (e && e.code) || '';
+  const host = location.hostname || 'this site';
+  if (code === 'auth/unauthorized-domain')
+    return '<b>Google will not sign anyone in from this address yet.</b><br>' +
+      'Open the Firebase console for <code>novaclip-eaf8c</code>, go to <b>Authentication -> Settings -> Authorized domains</b>, ' +
+      'press <b>Add domain</b> and type <code>' + host + '</code>. Sign-in starts working within a minute — no code change needed.';
+  if (code === 'auth/operation-not-allowed')
+    return '<b>Google sign-in is switched off for this project.</b><br>' +
+      'Firebase console -> <b>Authentication -> Sign-in method -> Google -> Enable</b>, then save.';
+  if (code === 'auth/popup-blocked')
+    return 'Your browser blocked the Google window. Allow pop-ups for <code>' + host + '</code>, or press the button again — it will use a full-page redirect instead.';
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request')
+    return 'The Google window closed before sign-in finished. Press the button again when you are ready.';
+  if (code === 'auth/network-request-failed')
+    return 'No connection to Google. Check the network and try again.';
+  if (code === 'auth/invalid-api-key' || code === 'auth/api-key-not-valid')
+    return '<b>The Firebase key in this page is not valid.</b> Copy the current config from Firebase console -> Project settings -> Your apps, and replace <code>firebaseConfig</code> in app.html.';
+  return 'Sign-in failed: ' + ((e && e.message) || 'unknown error') + (code ? ' <code>' + code + '</code>' : '');
+}
+
 function signedInUI(name) {
-  document.getElementById('gbtn').style.display = 'none';
-  const p = document.getElementById('uname');
-  p.style.display = 'block';
-  p.innerHTML = name + ' &nbsp; <a href="#" id="signoutlink" style="color:#7E8AA6;font-size:0.85rem;">Sign out</a>';
-  document.getElementById('toolbar').style.display = 'block';
-  const so = document.getElementById('signoutlink');
-  if (so) so.onclick = (e) => { e.preventDefault(); localStorage.removeItem('nc_yt'); auth.signOut().then(() => location.reload()); };
+  all('#gbtn').forEach(b => b.style.display = 'none');
+  note('');
+  all('#uname').forEach(p => {
+    p.style.display = 'block';
+    p.innerHTML = name + ' &nbsp; <a href="#" class="signoutlink" style="color:#7E8AA6;font-size:0.85rem;">Sign out</a>';
+  });
+  all('#toolbar').forEach(t => t.style.display = 'block');
+  all('.signoutlink').forEach(so => so.onclick = (e) => {
+    e.preventDefault(); localStorage.removeItem('nc_yt'); auth.signOut().then(() => location.reload());
+  });
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -159,23 +239,69 @@ onAuthStateChanged(auth, async (user) => {
 function yt(url) { return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json()); }
 function show(html) { const box = document.getElementById('toolout'); box.style.display = 'block'; box.innerHTML = html; }
 
-async function connect() {
+function ytProvider() {
   const provider = new GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
-  const result = await signInWithPopup(auth, provider);
-  saveToken(GoogleAuthProvider.credentialFromResult(result).accessToken);
-  const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
-  if (data.items && data.items.length) { myStats = data.items[0]; rememberChannel(myStats.snippet.title); signedInUI(myStats.snippet.title); }
+  return provider;
 }
-document.getElementById('gbtn').onclick = connect;
+
+/* Turn a sign-in result into a working session, or say why not. Split out
+   because the popup and the redirect both land here. */
+async function afterSignIn(result) {
+  const cred = GoogleAuthProvider.credentialFromResult(result);
+  if (!cred || !cred.accessToken) {
+    note('Signed in to Google, but it did not hand over permission to read your YouTube channel. ' +
+         'Press the button again and tick the YouTube box on the consent screen.');
+    return;
+  }
+  saveToken(cred.accessToken);
+  const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
+  if (data.error) {
+    note('Google signed you in, but YouTube refused the request: ' + data.error.message +
+         '<br>If it mentions the API being disabled, enable <b>YouTube Data API v3</b> for project ' +
+         '<code>novaclip-eaf8c</code> in the Google Cloud console.');
+    return;
+  }
+  if (data.items && data.items.length) {
+    myStats = data.items[0]; rememberChannel(myStats.snippet.title); signedInUI(myStats.snippet.title); note('');
+  } else {
+    note('That Google account has no YouTube channel on it. Sign out and use the account your channel lives on.');
+  }
+}
+
+async function connect() {
+  note('Opening Google...', 'working');
+  try {
+    await afterSignIn(await signInWithPopup(auth, ytProvider()));
+  } catch (e) {
+    /* Pop-ups are blocked by default on plenty of phones and school-managed
+       browsers. Rather than dead-ending, hand the whole page to Google and pick
+       the result back up on the way in — that path cannot be blocked. */
+    if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) {
+      note('Pop-up blocked — sending you to Google instead...', 'working');
+      try { await signInWithRedirect(auth, ytProvider()); return; } catch (e2) { note(explainAuth(e2)); return; }
+    }
+    note(explainAuth(e));
+    console.warn('sign-in failed', e);
+  }
+}
+all('#gbtn').forEach(b => b.onclick = connect);
+window.ncAuthReady = true;   // tells the holding script above to stand down
+
+// coming back from the redirect fallback
+getRedirectResult(auth).then(r => { if (r) afterSignIn(r); }).catch(e => note(explainAuth(e)));
+// true means "you have a channel loaded and may proceed" — the tools check it,
+// because running a competitor search against a null channel throws instead of
+// telling anyone what went wrong
 async function ensureToken() {
-  if (ytToken && myStats) return;
+  if (ytToken && myStats) return true;
   const cached = loadToken();
   if (cached && !ytToken) {
     ytToken = cached;
-    try { const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true'); if (d.items && d.items.length) { myStats = d.items[0]; rememberChannel(myStats.snippet.title); return; } } catch (e) {}
+    try { const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true'); if (d.items && d.items.length) { myStats = d.items[0]; rememberChannel(myStats.snippet.title); return true; } } catch (e) {}
   }
   await connect();
+  return !!(ytToken && myStats);
 }
 
 async function getCompetitors(n) {
@@ -191,8 +317,8 @@ async function getCompetitors(n) {
   return cd.items.map(ch => ({ ch, diff: Math.abs(parseInt(ch.statistics.subscriberCount || 0) - mySubs) })).sort((a, b) => a.diff - b.diff).slice(0, n || 3).map(x => x.ch);
 }
 
-document.getElementById('compbtn').onclick = async () => {
-  await ensureToken();
+all('#compbtn').forEach(b => b.onclick = async () => {
+  if (!await ensureToken()) return;
   show('Scouting your rivals...');
   const comps = await getCompetitors(3);
   const mySubs = parseInt(myStats.statistics.subscriberCount);
@@ -212,13 +338,16 @@ document.getElementById('compbtn').onclick = async () => {
       '<div class="desc">' + (c.snippet.description ? c.snippet.description.slice(0, 160).replace(/</g, '&lt;') + '…' : 'No description') + '</div>' +
       '<a target="_blank" style="color:#00F0FF; font-size:0.88rem" href="https://www.youtube.com/channel/' + c.id + '">Open channel ↗</a></div>';
   }).join(''));
-};
+});
 
-document.getElementById('duelbtn').onclick = () => { const d = document.getElementById('duelsetup'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; };
-document.getElementById('duelgo').onclick = async () => {
-  await ensureToken();
-  const name = document.getElementById('duelbox').value;
-  if (!name) return;
+all('#duelbtn').forEach(b => b.onclick = () => {
+  all('#duelsetup').forEach(d => d.style.display = d.style.display === 'block' ? 'none' : 'block');
+});
+all('#duelgo').forEach(b => b.onclick = async () => {
+  if (!await ensureToken()) return;
+  const box = document.querySelector('#duelbox');
+  const name = box ? box.value : '';
+  if (!name) { show('Type a channel name first.'); return; }
   show('Preparing the arena...');
   const mySubs = parseInt(myStats.statistics.subscriberCount), myViews = parseInt(myStats.statistics.viewCount);
   const sd = await yt('search?part=snippet&type=channel&maxResults=1&q=' + encodeURIComponent(name));
@@ -234,7 +363,7 @@ document.getElementById('duelgo').onclick = async () => {
   const winner = a > b ? myStats.snippet.title : (b > a ? opp.snippet.title : 'It is a TIE');
   show('<b>DUEL RESULT</b><br><br>' + myStats.snippet.title + ': ' + mySubs.toLocaleString() + ' subs · ' + myViews.toLocaleString() + ' views<br>' + opp.snippet.title + ': ' + oppSubs.toLocaleString() + ' subs · ' + oppViews.toLocaleString() + ' views<br><br><b>Winner: ' + winner + '</b>');
   if (a > b && window.addPts) addPts(20);
-};
+});
 
 
 </script>

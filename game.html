@@ -120,6 +120,15 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 .mapcard .mt { font-size: 0.6rem; letter-spacing: 1.5px; text-transform: uppercase; color: #7E8AA6; }
 .mapcard .md { font-size: 0.72rem; color: #9fb0cc; margin-top: 4px; line-height: 1.45; }
 
+/* ---- who am I playing with ---- */
+.mpmodes { display: grid; grid-template-columns: repeat(3, minmax(140px, 200px)); gap: 10px; justify-content: center; }
+@media (max-width: 720px) { .mpmodes { grid-template-columns: 1fr; } }
+.mpmode { text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); cursor: pointer; transition: 0.2s; }
+.mpmode:hover { border-color: rgba(108,195,255,0.6); }
+.mpmode.sel { border-color: #6cc3ff; background: rgba(108,195,255,0.12); }
+.mpmode b { display: block; font-size: 0.88rem; }
+.mpmode span { display: block; font-size: 0.7rem; color: #9fb0cc; margin-top: 3px; line-height: 1.4; }
+
 /* ---- leaderboard ---- */
 .lbwrap { margin: 4px auto 20px; max-width: 620px; width: 100%; text-align: left; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 16px; }
 .lbhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -341,7 +350,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop</div>
 <button id='shopbtn'>SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v83 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v84 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -413,13 +422,21 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
   </div>
 
   <div class='mappick' id='mproom' style='display:none'>
-    <div class='charlabel'>PLAY WITH FRIENDS</div>
-    <div style='display:flex; gap:8px; justify-content:center; flex-wrap:wrap'>
-      <input id='roomcode' maxlength='12' placeholder='Room code (e.g. NOVA-7K2P)'
-             style='padding:9px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:#fff; font:inherit; font-size:0.85rem; width:230px; text-align:center'>
-      <button id='roomrand' class='lbtab' type='button'>New code</button>
+    <div class='charlabel'>WHO ARE YOU PLAYING WITH</div>
+    <div class='mpmodes' id='mpmodes'>
+      <div class='mpmode' data-mm='random'><b>Random players</b><span>Get matched with anyone online, on this map</span></div>
+      <div class='mpmode' data-mm='code'><b>Friends only</b><span>Share a code — nobody else can join</span></div>
+      <div class='mpmode' data-mm='off'><b>Bots only</b><span>Offline practice, no other people</span></div>
     </div>
-    <div class='lbnote' style='text-align:center; margin-top:8px'>Share the code and deploy at the same time to land in the same match. Leave it empty to join the open room.</div>
+    <div id='mpcodewrap' style='display:none; margin-top:10px'>
+      <div style='display:flex; gap:8px; justify-content:center; flex-wrap:wrap'>
+        <input id='roomcode' maxlength='14' placeholder='Room code (e.g. NOVA-7K2P)'
+               style='padding:9px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:#fff; font:inherit; font-size:0.85rem; width:230px; text-align:center'>
+        <button id='roomrand' class='lbtab' type='button'>New code</button>
+      </div>
+      <div class='lbnote' style='text-align:center; margin-top:8px'>Everyone who types this code and picks the same map lands in your match. Nobody is matched into it by accident.</div>
+    </div>
+    <div class='lbnote' id='mpstatus' style='text-align:center; margin-top:10px'>Checking who is online...</div>
   </div>
 
   <div class='lbwrap'>
@@ -1171,20 +1188,81 @@ function renderWSel() {
 renderWSel();
 renderMapPick();
 lbInit();
+/* ---- who you play with ----------------------------------------------------
+   Three answers, and the default is "random players": someone who just wants a
+   game should get one without knowing what a room code is. The lobby asks the
+   relay who is online every 12 seconds while the menu is open — the count is
+   the honest one (real people on this map right now), not an invented number,
+   so an empty server says so instead of pretending. */
+function mpMode() {
+  if (!NC_MP_URL) return 'off';
+  const m = localStorage.getItem('nc_mpmode');
+  return (m === 'code' || m === 'off' || m === 'random') ? m : 'random';
+}
+// http(s) address of the same relay, for the lobby's plain GETs
+function mpHttp() { return NC_MP_URL.replace(/^ws/, 'http').replace(/\/$/, ''); }
+
+let mpFindTimer = null;
+async function mpRefreshStatus() {
+  const el = document.getElementById('mpstatus');
+  if (!el) return;
+  if (mpMode() === 'off') { el.textContent = 'Bots only — nothing is sent to the server.'; return; }
+  if (mpMode() === 'code') {
+    const c = (localStorage.getItem('nc_room') || '').toUpperCase();
+    el.textContent = c ? 'Your friends need the code ' + c + ' and the map ' + curMap().name + '.'
+                       : 'Pick a code, or hit New code, and send it to your friends.';
+    return;
+  }
+  try {
+    const r = await fetch(mpHttp() + '/find?map=' + encodeURIComponent(mapId), { cache: 'no-store' });
+    const d = await r.json();
+    if (d.onMap > 0) {
+      el.textContent = d.onMap + ' player' + (d.onMap === 1 ? '' : 's') + ' on ' + curMap().name +
+        ' right now' + (d.waiting > 0 ? ' — you will drop into a match with ' + d.waiting + ' of them.'
+                                      : ' — you will start a new match.');
+    } else if (d.players > 0) {
+      el.textContent = 'Nobody on ' + curMap().name + ' yet (' + d.players + ' playing other maps). ' +
+        'Deploy anyway and you open the match others join.';
+    } else {
+      el.textContent = 'Server is up and empty. Deploy and you are the first one in — anyone who joins ' +
+        curMap().name + ' lands with you.';
+    }
+  } catch (e) {
+    el.textContent = 'Could not reach the multiplayer server. You can still play against bots.';
+  }
+}
 (function () {
-  // the room box only means something once NC_MP_URL points at a relay
+  // none of this means anything until NC_MP_URL points at a relay
   const box = document.getElementById('mproom');
   if (!box || !NC_MP_URL) return;
   box.style.display = '';
+
   const code = document.getElementById('roomcode');
   code.value = localStorage.getItem('nc_room') || '';
-  code.oninput = () => localStorage.setItem('nc_room', code.value.toUpperCase());
+  code.oninput = () => { localStorage.setItem('nc_room', code.value.toUpperCase()); mpRefreshStatus(); };
   document.getElementById('roomrand').onclick = () => {
     const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let c = 'NOVA-';
     for (let i = 0; i < 4; i++) c += A[Math.floor(Math.random() * A.length)];
-    code.value = c; localStorage.setItem('nc_room', c);
+    code.value = c; localStorage.setItem('nc_room', c); mpRefreshStatus();
   };
+
+  function paint() {
+    const m = mpMode();
+    document.querySelectorAll('.mpmode').forEach(el => el.classList.toggle('sel', el.dataset.mm === m));
+    document.getElementById('mpcodewrap').style.display = m === 'code' ? '' : 'none';
+    mpRefreshStatus();
+  }
+  document.querySelectorAll('.mpmode').forEach(el => el.onclick = () => {
+    localStorage.setItem('nc_mpmode', el.dataset.mm); paint();
+  });
+  paint();
+
+  // only poll while the menu is up; nobody reads a player count mid-firefight
+  mpFindTimer = setInterval(() => {
+    const ov = document.getElementById('overlay');
+    if (ov && ov.style.display !== 'none' && !running) mpRefreshStatus();
+  }, 12000);
 })();
 
 // ---------- init ----------
@@ -2134,7 +2212,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v83 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v84 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2928,17 +3006,25 @@ window.sfx = sfx;
 let mpSock = null, mpId = null, mpTeam = null, mpPeers = {}, mpLastSend = 0, mpRoom = '';
 function mpLive() { return !!(mpSock && mpSock.readyState === 1); }
 
-function mpConnect(room, name) {
+/* room === '' means "put me wherever the other people are": the server picks the
+   fullest public room on this map. Passing a code asks for that exact room, and
+   the server keeps coded rooms private so strangers are never matched into one.
+   The choice has to happen server-side at connect time — asking "which room is
+   busiest" over HTTP first and then connecting races anyone else doing the same
+   thing, and two players can be told about the same last free slot. */
+function mpConnect(room, name, mapForMatch) {
   if (!NC_MP_URL) return;
   try { if (mpSock) mpSock.close(); } catch (e) {}
-  mpRoom = (room || 'OPEN').toUpperCase();
-  const url = NC_MP_URL.replace(/\/$/, '') + '/?room=' + encodeURIComponent(mpRoom) +
+  const code = (room || '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
+  mpRoom = code;
+  const url = NC_MP_URL.replace(/\/$/, '') + '/?' +
+              (code ? 'room=' + encodeURIComponent(code) : 'quick=1') +
+              '&map=' + encodeURIComponent(mapForMatch || mapId) +
               '&name=' + encodeURIComponent((name || 'Player').slice(0, 16));
-  addFeed('Connecting to ' + mpRoom + '...');
+  addFeed(code ? 'Joining ' + code + '...' : 'Finding a match...');
   mpSock = new WebSocket(url);
-  mpSock.onopen = () => addFeed('In room ' + mpRoom);
-  mpSock.onclose = () => { addFeed('Left the room'); mpClearPeers(); };
-  mpSock.onerror = () => addFeed('Could not reach the multiplayer server');
+  mpSock.onclose = () => { addFeed('Left the match'); mpClearPeers(); };
+  mpSock.onerror = () => addFeed('Could not reach the multiplayer server — bots only');
   mpSock.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch (err) { return; } mpHandle(m); };
 }
 function mpSend(o) { if (mpLive()) { try { mpSock.send(JSON.stringify(o)); } catch (e) {} } }
@@ -2958,11 +3044,15 @@ function mpSpawnPeer(id, name, team) {
 }
 function mpHandle(m) {
   switch (m.t) {
-    case 'welcome':
-      mpId = m.id; mpTeam = m.team;
+    case 'welcome': {
+      mpId = m.id; mpTeam = m.team; mpRoom = m.room || mpRoom;
       (m.players || []).forEach(p => { if (p.id !== mpId && !mpPeers[p.id]) mpSpawnPeer(p.id, p.name, p.team); });
-      addFeed('You are ' + (m.team === 'ct' ? 'CT' : 'T') + ' in ' + m.room);
+      const others = (m.players || []).filter(p => p.id !== mpId).length;
+      addFeed(others ? 'Matched with ' + others + ' player' + (others === 1 ? '' : 's') + ' in ' + m.room
+                     : 'You opened ' + m.room + ' — anyone joining this map lands here');
+      addFeed('You are ' + (m.team === 'ct' ? 'CT' : 'T'));
       break;
+    }
     case 'joined':
       if (m.id !== mpId && !mpPeers[m.id]) { mpSpawnPeer(m.id, m.name, m.team); addFeed(m.name + ' joined'); }
       break;
@@ -3168,7 +3258,9 @@ function startMatch() {
   if (gunGroup) gunGroup.visible = true;
   timerId = setInterval(tick, 1000);
   setInterval(updateBoard, 1500);
-  if (NC_MP_URL) mpConnect(localStorage.getItem('nc_room') || 'OPEN', lbName());
+  const mm = mpMode();
+  if (mm === 'random') mpConnect('', lbName(), mapId);
+  else if (mm === 'code') mpConnect(localStorage.getItem('nc_room') || '', lbName(), mapId);
 }
 document.addEventListener('mousemove', (e) => {
   if (document.pointerLockElement !== renderer.domElement) return;

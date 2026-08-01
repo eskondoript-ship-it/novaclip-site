@@ -363,18 +363,56 @@ function refreshPanels() {
   const al = document.getElementById('achlist'); if (al) al.innerHTML = ACHIEVEMENTS.map(([need,name]) => pts >= need ? name + '' : 'Reach ' + need + ' points (you have ' + pts + ')').join('<br>');
   const hl = document.getElementById('histlist'); if (hl) { const h = JSON.parse(localStorage.getItem('nc_history') || '{}'); let html = ''; for (const s in h) { html += '<b>' + s + '</b> (' + h[s].length + ' chats)<br>' + h[s].slice(-3).map(x => '• ' + x[0]).join('<br>') + '<br><br>'; } hl.innerHTML = html || 'No chats yet - start talking!'; }
 }
-/* A page should only ever have one sidebar. If a file has been pasted into
-   rather than replaced, the markup ends up duplicated — and because the sidebar
-   is position:fixed, the two stack exactly on top of each other, so the copy
-   that never received the injected links is the one you see. Drop the extras and
-   keep the first, which is the one everything else is wired to. */
+/* ===== PASTED-TWICE REPAIR =====
+   When a file is pasted into itself rather than over itself, the browser does
+   not complain: it drops the second <!DOCTYPE> and <head>, and quietly appends
+   the second body to the first. You get two of every heading, two of every
+   button, and — the part nobody guesses from looking at it — a page where
+   half the buttons do nothing. Every script in the file runs twice, and both
+   runs call getElementById, which always returns the FIRST match. So the
+   handlers all pile onto the top copy while the copy you scrolled down to and
+   clicked has none. "Sign in does nothing" is this bug.
+
+   So: keep the first of everything, delete the rest, and say out loud that the
+   file needs re-uploading — because this only papers over it in the browser,
+   the file on the server is still wrong. */
 function dedupeChrome() {
   const bars = document.querySelectorAll('.sidebar');
+  const doubled = bars.length > 1;
   for (let i = 1; i < bars.length; i++) bars[i].remove();
   const badges = document.querySelectorAll('#ncpts');
   for (let i = 1; i < badges.length; i++) badges[i].remove();
-  if (bars.length > 1) console.warn('removed ' + (bars.length - 1) + ' duplicate sidebar(s) — ' +
-    'this page\'s markup appears twice, which usually means a paste was appended instead of replacing the file');
+  if (!doubled) return;
+
+  // whole page bodies, not just the sidebar
+  ['.main', '.orb', '#boot'].forEach(sel => {
+    const els = document.querySelectorAll(sel);
+    for (let i = 1; i < els.length; i++) els[i].remove();
+  });
+  /* Anything left over with an id that already appeared is a duplicate by
+     definition — ids are unique or they are not ids. Removing the later ones
+     leaves exactly the copy the scripts are wired to. */
+  const seen = {};
+  let extra = 0;
+  document.querySelectorAll('[id]').forEach(el => {
+    if (!el.isConnected) return;
+    if (seen[el.id]) { el.remove(); extra++; } else seen[el.id] = true;
+  });
+
+  console.warn('This page\'s markup appears ' + (bars.length) + ' times. Removed the extra copies ' +
+    '(' + extra + ' duplicate ids). The file on the server still has it twice — re-upload it, ' +
+    'replacing the whole file instead of pasting on the end.');
+
+  const bar = document.createElement('div');
+  bar.id = 'ncdupwarn';
+  bar.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;padding:9px 14px;' +
+    'background:#7a1030;color:#ffe3ec;font:600 13px/1.5 system-ui,sans-serif;text-align:center';
+  bar.innerHTML = 'This page was uploaded twice in one file, so everything on it appeared twice. ' +
+    'It has been patched in your browser — re-upload the page and <b>replace</b> the whole file to fix it properly. ' +
+    '<span id="ncdupx" style="cursor:pointer;text-decoration:underline;margin-left:8px">dismiss</span>';
+  document.body.appendChild(bar);
+  const x = document.getElementById('ncdupx');
+  if (x) x.onclick = () => bar.remove();
 }
 
 window.addEventListener('DOMContentLoaded', () => {

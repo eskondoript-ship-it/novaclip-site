@@ -215,8 +215,12 @@ async function boot() {
     const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
     if (d.items && d.items.length) { myStats = d.items[0]; enterDash(); }
     else {
+      /* Print what YouTube actually said. "Session expired" was the old catch-all
+         and it is wrong as often as it is right — a disabled API, a revoked scope
+         and a used-up quota all land here, and all three need a different fix. */
+      const why = d.error && d.error.message ? d.error.message : 'The connection expired.';
       row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">Reconnect in Studio</a>' +
-        '<p class="hint">That session expired. Reconnect in Studio and come back.</p>';
+        '<p class="hint">YouTube would not return your channel: ' + String(why).replace(/</g, '&lt;') + '</p>';
     }
   } catch (e) {
     row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">Reconnect in Studio</a>' +
