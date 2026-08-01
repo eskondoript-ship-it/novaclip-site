@@ -305,24 +305,24 @@ body::before {
 <div class='tbar'>
   <div class='left'>
     <a class='backlnk' href='index.html'>← NovaClip</a>
-    <span class='logo'>🎬 Nova<b>Cut</b></span>
+    <span class='logo'>Nova<b>Cut</b></span>
     <span class='title' id='projname'>Untitled project · auto-saved</span>
   </div>
   <div class='right'>
-    <button class='exportbtn' id='recBtn' data-t='e_export'>⬆ Export</button>
+    <button class='exportbtn' id='recBtn' data-t='e_export'>Export</button>
   </div>
 </div>
 
 <div class='main'>
   <!-- ICON RAIL -->
   <div class='rail'>
-    <div class='rbtn active' data-tab='media'><span class='ic'>🎞️</span><span data-t='e_media'>Media</span></div>
-    <div class='rbtn' data-tab='fx'><span class='ic'>✨</span><span data-t='e_effects'>Effects</span></div>
-    <div class='rbtn' data-tab='audio'><span class='ic'>🎵</span><span data-t='e_audio'>Audio</span></div>
-    <div class='rbtn' data-tab='learn'><span class='ic'>🎓</span><span data-t='e_learn'>Edits</span></div>
-    <div class='rbtn' data-tab='memes'><span class='ic'>😂</span><span data-t='e_memes'>Memes</span></div>
-    <div class='rbtn' data-tab='text'><span class='ic'>🅰️</span><span data-t='e_text'>Text</span></div>
-    <div class='rbtn' data-tab='voice'><span class='ic'>🎙️</span><span data-t='e_voice'>Voice</span></div>
+    <div class='rbtn active' data-tab='media'><span class='ic'></span><span data-t='e_media'>Media</span></div>
+    <div class='rbtn' data-tab='fx'><span class='ic'></span><span data-t='e_effects'>Effects</span></div>
+    <div class='rbtn' data-tab='audio'><span class='ic'></span><span data-t='e_audio'>Audio</span></div>
+    <div class='rbtn' data-tab='learn'><span class='ic'></span><span data-t='e_learn'>Edits</span></div>
+    <div class='rbtn' data-tab='memes'><span class='ic'></span><span data-t='e_memes'>Memes</span></div>
+    <div class='rbtn' data-tab='text'><span class='ic'></span><span data-t='e_text'>Text</span></div>
+    <div class='rbtn' data-tab='voice'><span class='ic'></span><span data-t='e_voice'>Voice</span></div>
   </div>
 
   <!-- RAIL PANEL -->
@@ -352,10 +352,10 @@ body::before {
           <div><b id='beatGap'>—</b><small>per beat</small></div>
         </div>
         <div class='beatwave' id='beatWave'><canvas id='waveCv'></canvas></div>
-        <button class='minibtn' id='snapBtn'>🎯 Snap all clips to the beat</button>
+        <button class='minibtn' id='snapBtn'>Snap all clips to the beat</button>
         <div class='hint' id='beatHint'>Beat markers appear on the timeline — cut on them for a tighter edit.</div>
       </div>
-      <div id='beatBusy' class='hint' style='display:none'>🎧 Listening for beats…</div>
+      <div id='beatBusy' class='hint' style='display:none'>Listening for beats…</div>
     </div>
     <div class='sect' id='sect-learn'>
       <h4 data-t='e_learn_h'>Edit techniques</h4>
@@ -365,9 +365,9 @@ body::before {
       <h4 data-t='e_memes_h'>Meme search</h4>
       <input type='text' id='memeSearch' placeholder='Search memes… (drake, doge, cat)' style='width:100%; padding:10px; border-radius:8px; border:1px solid var(--line2); background:#0e1118; color:var(--txt); font-size:0.85rem; margin-bottom:8px;'>
       <div id='memeCats' style='display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;'>
-        <button class='mcat on' data-cat='popular'>🔥 Popular</button>
-        <button class='mcat' data-cat='latest'>🆕 Latest</button>
-        <button class='mcat' data-cat='classic'>📼 Classic</button>
+        <button class='mcat on' data-cat='popular'>Popular</button>
+        <button class='mcat' data-cat='latest'>Latest</button>
+        <button class='mcat' data-cat='classic'>Classic</button>
         <button class='mcat' data-cat='all'>All</button>
       </div>
       <div id='memeStatus' class='hint' style='margin-bottom:8px;'>Loading meme library…</div>
@@ -386,14 +386,14 @@ body::before {
       <textarea id='voScript' rows='3' placeholder='What should the voice say?'></textarea>
       <label class='sm'>Voice character</label>
       <select id='voVoice'></select>
-      <button class='minibtn' id='voPlay'>🔊 Preview voice</button>
+      <button class='minibtn' id='voPlay'>Preview voice</button>
       <div class='hint'>Plays during export too. Free browser voices.</div>
     </div>
   </div>
 
   <!-- PLAYER -->
   <div class='playercol'>
-    <div class='playerhead'><span class='tag'>👁️ Preview</span><span class='tag' id='timecode'>00:00 / 00:00</span></div>
+    <div class='playerhead'><span class='tag'>Preview</span><span class='tag' id='timecode'>00:00 / 00:00</span></div>
     <canvas id='preview' width='1280' height='720'></canvas>
     <div class='transport'>
       <button class='tbtn' id='stopBtn' title='Stop'>⏹</button>
@@ -461,13 +461,13 @@ body::before {
 </div>
 
 <!-- TIMELINE -->
-<div class='draghint' id='dragHint'>Drop the effect on a clip 🎯</div>
+<div class='draghint' id='dragHint'>Drop the effect on a clip</div>
 <div class='tl-wrap'>
   <div id='tlbeats'></div>
-  <div class='tl-tools'><span>🎞 Timeline</span><span id='selinfo' style='color:var(--cyan)'></span><span class='sep'>drag clips to reorder · click to select</span></div>
+  <div class='tl-tools'><span>Timeline</span><span id='selinfo' style='color:var(--cyan)'></span><span class='sep'>drag clips to reorder · click to select</span></div>
   <div class='ruler'></div>
-  <div class='tl-track'><span class='tlabel'>🎬 Video</span><div id='tlvideo'></div></div>
-  <div class='tl-track'><span class='tlabel'>🎵 Audio</span><div id='tlaudio'><span>🎵</span><div class='wave'></div><span id='audioname'>no music</span></div></div>
+  <div class='tl-track'><span class='tlabel'>Video</span><div id='tlvideo'></div></div>
+  <div class='tl-track'><span class='tlabel'>Audio</span><div id='tlaudio'><span></span><div class='wave'></div><span id='audioname'>no music</span></div></div>
 </div>
 
 <audio id='musicEl' loop></audio>
@@ -604,8 +604,8 @@ document.addEventListener('drop', e => {
   if (s) { s.value = fx; }
   document.querySelectorAll('.fxchip').forEach(x => x.classList.toggle('on', x.dataset.fx === fx));
   const hint = document.getElementById('dragHint');
-  if (hint) { hint.textContent = '✅ ' + (FX_LABELS[fx] || fx) + ' applied to clip ' + (i + 1); hint.classList.add('show');
-    setTimeout(() => { hint.classList.remove('show'); hint.textContent = 'Drop the effect on a clip 🎯'; }, 1600); }
+  if (hint) { hint.textContent = (FX_LABELS[fx] || fx) + ' applied to clip ' + (i + 1); hint.classList.add('show');
+    setTimeout(() => { hint.classList.remove('show'); hint.textContent = 'Drop the effect on a clip'; }, 1600); }
 });
 
 // ============================================================
@@ -746,13 +746,13 @@ document.addEventListener('click', (e) => {
     clips.forEach(c => { c.dur = step; });
     renderTimeline();
     drawTimelineBeats();
-    document.getElementById('beatHint').textContent = '✅ All clips set to ' + step + 's — one beat each.';
+    document.getElementById('beatHint').textContent = 'All clips set to ' + step + 's — one beat each.';
   }
 });
 
 // ---------- LEARN: editing techniques ----------
 const LESSONS = [
-  { icon:'⚽', title:'The football edit (CR7 / Neymar style)', body:
+  { icon:'', title:'The football edit (CR7 / Neymar style)', body:
     '<p>The look everyone copies is really four things stacked together.</p><ol>'+
     '<li><b>Cut on the beat.</b> Drop a track in <b>Audio</b>, then make every clip 0.5–1s so cuts land on the drums.</li>'+
     '<li><b>Punchy colour.</b> Use the <b>Velocity</b>, <b>Teal</b> or <b>Stadium</b> filter at around 0.7 strength.</li>'+
@@ -760,7 +760,7 @@ const LESSONS = [
     '<li><b>Hard transitions.</b> Use <b>Flash</b> or <b>Zoom</b> between clips, never Fade.</li></ol>'+
     '<div class="tip">Rule of thumb: if a clip is longer than the time it takes to say "goal", it is too long.</div>' },
 
-  { icon:'🎵', title:'Editing to the beat', body:
+  { icon:'', title:'Editing to the beat', body:
     '<p>Beat-matching is what separates an edit from a slideshow.</p><ol>'+
     '<li>Add music first, before any clips.</li>'+
     '<li>Play it and tap along — count how long between beats.</li>'+
@@ -768,7 +768,7 @@ const LESSONS = [
     '<li>Set every clip to that duration, then adjust the loud moments to land on a cut.</li></ol>'+
     '<div class="tip">Save the biggest moment for the beat drop. Build up to it with faster and faster cuts.</div>' },
 
-  { icon:'🔥', title:'Hooks — the first 3 seconds', body:
+  { icon:'', title:'Hooks — the first 3 seconds', body:
     '<p>Most viewers leave in 3 seconds. Your first clip decides everything.</p><ol>'+
     '<li>Open on the <b>best</b> moment, not the build-up.</li>'+
     '<li>Add text in the first frame with a question or claim.</li>'+
@@ -776,14 +776,14 @@ const LESSONS = [
     '<li>Never open with a logo or intro.</li></ol>'+
     '<div class="tip">Try starting at the end: show the result, then rewind and explain.</div>' },
 
-  { icon:'🅰️', title:'Text that actually reads', body:
+  { icon:'', title:'Text that actually reads', body:
     '<p>Text is read on a phone, at speed, often on mute.</p><ol>'+
     '<li>Keep it to <b>4–6 words</b> per screen.</li>'+
     '<li>Put it <b>Top</b> or <b>Bottom</b> — the centre covers the action.</li>'+
     '<li>Change it on every cut so it feels alive.</li>'+
     '<li>Say the same thing in the voiceover for anyone watching on mute.</li></ol>' },
 
-  { icon:'😂', title:'Using memes well', body:
+  { icon:'', title:'Using memes well', body:
     '<p>Memes work as punctuation, not as the whole video.</p><ol>'+
     '<li>Open <b>Memes</b>, search, and click one to drop it on the timeline.</li>'+
     '<li>Use them as a <b>reaction</b> right after something surprising.</li>'+
@@ -791,14 +791,14 @@ const LESSONS = [
     '<li>One or two per video. More than that gets tiring.</li></ol>'+
     '<div class="tip">Every meme here is filtered for a 13–18 audience, so anything you find is safe to post.</div>' },
 
-  { icon:'🎙️', title:'Voiceover without a microphone', body:
+  { icon:'', title:'Voiceover without a microphone', body:
     '<p>The <b>Voice</b> tab has 18 character voices built from pitch and speed.</p><ol>'+
     '<li>Write short lines — one sentence per clip.</li>'+
     '<li><b>Hype Man</b> suits sports edits, <b>Deep Narrator</b> suits stories.</li>'+
     '<li>Preview before exporting; speed matters more than the words.</li>'+
     '<li>Leave gaps so the music breathes.</li></ol>' },
 
-  { icon:'📤', title:'Exporting for TikTok and Shorts', body:
+  { icon:'', title:'Exporting for TikTok and Shorts', body:
     '<p>Where a video is posted changes how you should cut it.</p><ol>'+
     '<li><b>Shorts / TikTok / Reels:</b> under 60s, fast cuts, text always on screen.</li>'+
     '<li><b>YouTube long-form:</b> slower, let moments land, use Fade transitions.</li>'+
@@ -969,7 +969,7 @@ function addMeme(mm) {
     media.push({ type: 'image', el: img, dur: 3 });
     addClipFrom(media.length - 1);
     renderBin();
-    document.getElementById('memeStatus').textContent = 'Added "' + mm.name + '" to the timeline ✅';
+    document.getElementById('memeStatus').textContent = 'Added "' + mm.name + '" to the timeline';
   };
   img.onerror = () => {
     // retry without CORS (it will still preview, but export may be blocked)
@@ -1131,24 +1131,24 @@ let voices = [];
    a preferred base voice plus pitch and speed. That is how you get distinct
    personalities rather than a list of "Microsoft George" entries. */
 const VOICE_PRESETS = [
-  { id:'nova',      name:'✨ Nova',            pitch:1.05, rate:1.00, prefer:['female','zira','samantha','aria','jenny'] },
-  { id:'storyteller',name:'📖 Storyteller',    pitch:0.92, rate:0.88, prefer:['male','george','daniel','guy'] },
-  { id:'hype',      name:'🔥 Hype Man',        pitch:1.15, rate:1.28, prefer:['male','guy','mark','david'] },
-  { id:'chill',     name:'🌙 Chill',           pitch:0.95, rate:0.86, prefer:['female','aria','samantha'] },
-  { id:'narrator',  name:'🎬 Deep Narrator',   pitch:0.62, rate:0.84, prefer:['male','david','george','daniel'] },
-  { id:'chipmunk',  name:'🐿️ Chipmunk',        pitch:1.95, rate:1.42, prefer:[] },
-  { id:'robot',     name:'🤖 Robot',           pitch:0.42, rate:0.72, prefer:['male'] },
-  { id:'announcer', name:'📢 Announcer',       pitch:0.80, rate:1.06, prefer:['male','mark','guy'] },
-  { id:'whisper',   name:'🤫 Whisper',         pitch:1.10, rate:0.78, prefer:['female','zira'], volume:0.45 },
-  { id:'sassy',     name:'💅 Sassy',           pitch:1.35, rate:1.12, prefer:['female','zira','aria'] },
-  { id:'grumpy',    name:'😤 Grumpy',          pitch:0.55, rate:0.94, prefer:['male','david'] },
-  { id:'kid',       name:'🧒 Kid',             pitch:1.62, rate:1.14, prefer:['female','zira'] },
-  { id:'newsreader',name:'📰 Newsreader',      pitch:0.98, rate:1.02, prefer:['male','george','daniel'] },
-  { id:'villain',   name:'😈 Villain',         pitch:0.48, rate:0.80, prefer:['male','david','george'] },
-  { id:'speedrun',  name:'⚡ Speedrun',        pitch:1.20, rate:1.75, prefer:[] },
-  { id:'slowmo',    name:'🐢 Slow-mo',         pitch:0.70, rate:0.58, prefer:[] },
-  { id:'alien',     name:'👽 Alien',           pitch:1.80, rate:0.70, prefer:[] },
-  { id:'giant',     name:'🗿 Giant',           pitch:0.35, rate:0.66, prefer:['male'] }
+  { id:'nova',      name:'Nova',            pitch:1.05, rate:1.00, prefer:['female','zira','samantha','aria','jenny'] },
+  { id:'storyteller',name:'Storyteller',    pitch:0.92, rate:0.88, prefer:['male','george','daniel','guy'] },
+  { id:'hype',      name:'Hype Man',        pitch:1.15, rate:1.28, prefer:['male','guy','mark','david'] },
+  { id:'chill',     name:'Chill',           pitch:0.95, rate:0.86, prefer:['female','aria','samantha'] },
+  { id:'narrator',  name:'Deep Narrator',   pitch:0.62, rate:0.84, prefer:['male','david','george','daniel'] },
+  { id:'chipmunk',  name:'Chipmunk',        pitch:1.95, rate:1.42, prefer:[] },
+  { id:'robot',     name:'Robot',           pitch:0.42, rate:0.72, prefer:['male'] },
+  { id:'announcer', name:'Announcer',       pitch:0.80, rate:1.06, prefer:['male','mark','guy'] },
+  { id:'whisper',   name:'Whisper',         pitch:1.10, rate:0.78, prefer:['female','zira'], volume:0.45 },
+  { id:'sassy',     name:'Sassy',           pitch:1.35, rate:1.12, prefer:['female','zira','aria'] },
+  { id:'grumpy',    name:'Grumpy',          pitch:0.55, rate:0.94, prefer:['male','david'] },
+  { id:'kid',       name:'Kid',             pitch:1.62, rate:1.14, prefer:['female','zira'] },
+  { id:'newsreader',name:'Newsreader',      pitch:0.98, rate:1.02, prefer:['male','george','daniel'] },
+  { id:'villain',   name:'Villain',         pitch:0.48, rate:0.80, prefer:['male','david','george'] },
+  { id:'speedrun',  name:'Speedrun',        pitch:1.20, rate:1.75, prefer:[] },
+  { id:'slowmo',    name:'Slow-mo',         pitch:0.70, rate:0.58, prefer:[] },
+  { id:'alien',     name:'Alien',           pitch:1.80, rate:0.70, prefer:[] },
+  { id:'giant',     name:'Giant',           pitch:0.35, rate:0.66, prefer:['male'] }
 ];
 
 function pickBaseVoice(prefer) {
