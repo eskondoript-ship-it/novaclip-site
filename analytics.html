@@ -229,6 +229,17 @@ async function boot() {
 }
 
 async function enterDash() {
+  /* Chart.js comes from a CDN. If that request is blocked — school filter, ad
+     blocker, offline — every chart below throws on `new Chart` and the page
+     goes blank with no explanation, which looks exactly like being signed out.
+     Check once, up front, and say which thing is actually missing. */
+  if (typeof Chart === 'undefined') {
+    document.getElementById('connectrow').innerHTML =
+      '<p class="hint"><b>Your channel loaded, but the chart library did not.</b><br>' +
+      'This page needs <code>cdn.jsdelivr.net</code>, and something blocked it — usually an ad blocker ' +
+      'or a school network filter. Turn the blocker off for this site or try another network, then reload.</p>';
+    return;
+  }
   document.getElementById('connectrow').style.display = 'none';
   document.getElementById('dash').style.display = 'block';
   drawAll();
