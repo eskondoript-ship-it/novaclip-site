@@ -129,6 +129,71 @@ body.driving #ammo { display: none; }
 .mapcard .mt { font-size: 0.6rem; letter-spacing: 1.5px; text-transform: uppercase; color: #7E8AA6; }
 .mapcard .md { font-size: 0.72rem; color: #9fb0cc; margin-top: 4px; line-height: 1.45; }
 
+/* ---- gunsmith ----
+   Two columns: the gun and what it does on the left, the five slots on the
+   right. The stat block is the point of the screen, so it is always visible
+   while you browse attachments rather than hidden behind a tooltip. */
+#gunsmith { position: fixed; inset: 0; z-index: 60; display: none; background: rgba(4,6,12,0.86);
+            backdrop-filter: blur(10px); overflow-y: auto; padding: 24px 16px; }
+#gunsmith.show { display: block; }
+.gspanel { max-width: 1080px; margin: 0 auto; background: rgba(10,14,24,0.96);
+           border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 20px 22px; }
+.gshead { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.gstitle { font-size: 1.35rem; font-weight: 800; letter-spacing: 3px; color: #ffd24a; }
+.gssub { font-size: 0.78rem; color: #9fb0cc; margin-top: 2px; }
+.gspts { margin-left: auto; font-size: 0.9rem; color: #9fb0cc; }
+.gspts b { color: #b6ff3c; font-size: 1.1rem; }
+.gsbody { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 820px) { .gsbody { grid-template-columns: 1fr; } }
+.gsguns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.gsgun { padding: 7px 11px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.15);
+         background: rgba(255,255,255,0.04); font-size: 0.76rem; cursor: pointer; }
+.gsgun.on { border-color: #ffd24a; color: #ffd24a; background: rgba(255,210,74,0.12); }
+.gsgun .cnt { opacity: 0.55; font-size: 0.68rem; margin-left: 5px; }
+
+/* the technical readout */
+.gsstats { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+           border-radius: 14px; padding: 14px 15px; }
+.gsrow { margin-bottom: 9px; }
+.gsrow .lab { display: flex; justify-content: space-between; font-size: 0.72rem; color: #9fb0cc; margin-bottom: 3px; }
+.gsrow .lab b { color: #eaf2ff; font-variant-numeric: tabular-nums; }
+.gsrow .lab .d { font-size: 0.68rem; margin-left: 6px; }
+.gsrow .lab .d.up { color: #b6ff3c; } .gsrow .lab .d.dn { color: #ff6b6b; }
+.gsbar { height: 7px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; position: relative; }
+.gsbar i { position: absolute; left: 0; top: 0; bottom: 0; background: #6cc3ff; border-radius: 4px; }
+.gsbar i.gain { background: #b6ff3c; } .gsbar i.loss { background: #ff6b6b; }
+.gsbar i.ghost { background: rgba(255,255,255,0.22); }
+.gsraw { margin-top: 10px; font-size: 0.68rem; color: #7e8aa6; line-height: 1.6;
+         border-top: 1px solid rgba(255,255,255,0.08); padding-top: 9px; }
+.gsraw b { color: #cfe0ff; font-variant-numeric: tabular-nums; }
+
+.gsslot { border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 12px 13px; margin-bottom: 11px;
+          background: rgba(255,255,255,0.02); }
+.gsslot > .sn { font-size: 0.66rem; letter-spacing: 2px; color: #7e8aa6; margin-bottom: 8px; }
+.gsopts { display: flex; flex-wrap: wrap; gap: 7px; }
+.gsopt { border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; padding: 8px 11px; cursor: pointer;
+         background: rgba(255,255,255,0.03); font-size: 0.76rem; min-width: 128px; transition: 0.15s; }
+.gsopt:hover { border-color: rgba(108,195,255,0.6); }
+.gsopt.on { border-color: #ffd24a; background: rgba(255,210,74,0.12); color: #ffd24a; }
+.gsopt.locked { opacity: 0.75; }
+.gsopt .price { display: block; font-size: 0.66rem; color: #b6ff3c; margin-top: 3px; }
+.gsopt .price.no { color: #ff6b6b; }
+.gsopt .why { display: block; font-size: 0.66rem; color: #8b97ad; margin-top: 4px; line-height: 1.45; }
+.gsopt .tr { display: block; font-size: 0.65rem; margin-top: 4px; }
+.gsopt .tr .up { color: #b6ff3c; } .gsopt .tr .dn { color: #ff6b6b; }
+
+/* the in-match card, toggled with N */
+#weapinfo { position: fixed; left: 26px; bottom: 150px; z-index: 12; display: none; max-width: 300px;
+            background: rgba(4,8,16,0.82); border: 1px solid rgba(255,255,255,0.14); border-radius: 12px;
+            padding: 11px 13px; font-size: 0.74rem; backdrop-filter: blur(6px); }
+#weapinfo.show { display: block; }
+#weapinfo h5 { font-size: 0.82rem; color: #ffd24a; letter-spacing: 1.5px; margin-bottom: 7px; }
+#weapinfo .r { display: flex; justify-content: space-between; gap: 12px; padding: 1px 0; color: #9fb0cc; }
+#weapinfo .r b { color: #eaf2ff; font-variant-numeric: tabular-nums; }
+#weapinfo .r b.up { color: #b6ff3c; } #weapinfo .r b.dn { color: #ff6b6b; }
+#weapinfo .att { margin-top: 7px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;
+                 color: #8b97ad; font-size: 0.7rem; line-height: 1.6; }
+
 /* ---- who am I playing with ---- */
 .mpmodes { display: grid; grid-template-columns: repeat(3, minmax(140px, 200px)); gap: 10px; justify-content: center; }
 @media (max-width: 720px) { .mpmodes { grid-template-columns: 1fr; } }
@@ -353,6 +418,7 @@ body.driving #ammo { display: none; }
 <div id='ptsbadge'><b id='gamepts'>0</b> pts</div>
 <div id='ammo'><div id='weapname'>SNIPER</div><div id='magbig'><span id='mag'>10</span><small id='magmax'>/10</small></div><div id='ammores'></div></div>
 <div id='speedo'><canvas id='speedocv' width='176' height='176'></canvas></div>
+<div id='weapinfo'></div>
 <div id='hp'><div class='lbl'>HEALTH</div><div class='track'><div id='hpbar'></div></div></div>
 <div id='loadout'></div>
 <div id='feed'></div>
@@ -360,7 +426,7 @@ body.driving #ammo { display: none; }
 <div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop</div>
 <button id='shopbtn'>SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v85 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
+<div id='viewTag'>v86 · 1/2: your two weapons · N: weapon stats · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -427,8 +493,31 @@ body.driving #ammo { display: none; }
   </div>
 
   <div class='loadoutpick'>
-    <div class='ll'>EQUIP YOUR STARTING WEAPON <span style='opacity:0.6'>(buy more in the in-match armory)</span></div>
+    <div class='ll'>YOUR TWO WEAPONS <span style='opacity:0.6'>(swap with 1 / 2 or the scroll wheel in game)</span></div>
     <div class='wsel' id='wsel'></div>
+    <div class='lbnote' id='loadnote' style='text-align:center; margin-top:8px'></div>
+    <button id='gunsmithBtn' class='lbtab' type='button' style='margin-top:12px'>Open the Gunsmith</button>
+  </div>
+
+  <!-- ===== GUNSMITH ===== -->
+  <div id='gunsmith'>
+    <div class='gspanel'>
+      <div class='gshead'>
+        <div>
+          <div class='gstitle'>GUNSMITH</div>
+          <div class='gssub' id='gssub'>Fit attachments. Every one of them trades something away.</div>
+        </div>
+        <div class='gspts'><b id='gspoints'>0</b> pts</div>
+        <button id='gsclose' class='lbtab' type='button'>Done</button>
+      </div>
+      <div class='gsbody'>
+        <div class='gsleft'>
+          <div class='gsguns' id='gsguns'></div>
+          <div class='gsstats' id='gsstats'></div>
+        </div>
+        <div class='gsright' id='gsslots'></div>
+      </div>
+    </div>
   </div>
 
   <div class='mappick' id='mproom' style='display:none'>
@@ -552,6 +641,118 @@ const BASE_WEAPON_ART = {
 const WEAPON_ART = Object.assign({}, BASE_WEAPON_ART);
 for (const k in EXTRA_WEAPONS) WEAPON_ART[k] = EXTRA_WEAPONS[k];
 
+/* ============================================================================
+   GUNSMITH — weapon attachments
+   ============================================================================
+   Five slots per weapon, one attachment in each, bought once with points and
+   kept forever. The point of the system is the TRADE: every attachment that
+   gives you something takes something away, so there is no single correct
+   build and a player has a reason to think. A suppressor quietens you and
+   costs range. A long barrel reaches further and slows you down. No stock
+   makes you fast and makes you miss.
+
+   Each `mods` key maps to something the game actually does — nothing here is
+   a number on a screen with no effect behind it:
+
+     dmg     x damage, both hip and scoped
+     rate    x the milliseconds between shots (LOWER is faster)
+     range   x how far the round carries
+     magAdd  fraction of the base magazine added (0.5 = +50% rounds)
+     recoil  x the camera kick per shot
+     spread  x hipfire cone, and the shotgun's pellet spread
+     move    x your walking speed while this weapon is out
+     reload  x reload time
+     quiet   x how likely a bot is to pick you as its target when you fire
+     zoom    x the scoped field of view (LOWER is more magnification)
+
+   MODELS FROM FAB / SKETCHFAB
+     Put a .glb filename in `file` and it is mounted on the gun at that slot's
+     anchor, auto-fitted like every other model. Leave it empty and a built-in
+     stand-in is used, so every attachment is playable and its stats are real
+     before any art arrives. rotX/rotY/rotZ and dx/dy/dz nudge a model that
+     comes out facing the wrong way or sitting proud of the rail. */
+const ATTACH_SLOTS = [
+  { id: 'optic',  name: 'OPTIC' },
+  { id: 'muzzle', name: 'MUZZLE' },
+  { id: 'under',  name: 'UNDERBARREL' },
+  { id: 'mag',    name: 'MAGAZINE' },
+  { id: 'stock',  name: 'STOCK' }
+];
+
+/* Where each slot sits on the finished 0.6-unit viewmodel. The weapon is fitted
+   pointing down -Z with its centre at the origin, so these are the same for
+   every gun — the muzzle is always at the front, the magazine always below. */
+const ATTACH_MOUNT = {
+  optic:  { x: 0, y:  0.075, z: -0.05, fit: 0.13 },
+  muzzle: { x: 0, y:  0.012, z: -0.30, fit: 0.14 },
+  under:  { x: 0, y: -0.055, z: -0.19, fit: 0.10 },
+  mag:    { x: 0, y: -0.085, z: -0.01, fit: 0.12 },
+  stock:  { x: 0, y: -0.005, z:  0.25, fit: 0.16 }
+};
+
+const ATTACHMENTS = {
+  // ---- OPTIC ----
+  reddot:   { name: 'Red Dot Sight', slot: 'optic', cost: 150, file: '', scale: 1,
+              mods: { spread: 0.86, zoom: 0.92 },
+              blurb: 'A clear dot instead of iron sights. No magnification, but you find targets faster.' },
+  holo:     { name: 'Holographic',   slot: 'optic', cost: 280, file: '', scale: 1,
+              mods: { spread: 0.80, zoom: 0.80, move: 0.98 },
+              blurb: 'Wider sight picture and a little magnification. Slightly heavier.' },
+  scope4x:  { name: '4x Scope',      slot: 'optic', cost: 450, file: '', scale: 1,
+              mods: { zoom: 0.45, range: 1.15, spread: 0.72, move: 0.94 },
+              blurb: 'Real magnification and reach. You move slower carrying it.' },
+  // ---- MUZZLE ----
+  suppress: { name: 'Suppressor',    slot: 'muzzle', cost: 520, file: '', scale: 1,
+              mods: { quiet: 0.45, range: 0.88, dmg: 0.96, recoil: 0.90 },
+              blurb: 'Bots are far less likely to come for you. Costs range and a little damage.' },
+  brake:    { name: 'Muzzle Brake',  slot: 'muzzle', cost: 300, file: '', scale: 1,
+              mods: { recoil: 0.66, quiet: 1.30 },
+              blurb: 'Kills the kick. Loud enough that everyone knows where you are.' },
+  longbrl:  { name: 'Long Barrel',   slot: 'muzzle', cost: 380, file: '', scale: 1,
+              mods: { range: 1.35, dmg: 1.06, rate: 1.06, move: 0.95 },
+              blurb: 'Hits harder and further. Slower to cycle, slower to carry.' },
+  // ---- UNDERBARREL ----
+  foregrip: { name: 'Vertical Grip', slot: 'under', cost: 260, file: '', scale: 1,
+              mods: { recoil: 0.74, spread: 0.86, move: 0.97 },
+              blurb: 'Steadies the gun through a long burst.' },
+  laser:    { name: 'Laser Sight',   slot: 'under', cost: 200, file: '', scale: 1,
+              mods: { spread: 0.68, quiet: 1.15 },
+              blurb: 'Tight from the hip. The beam gives your position away.' },
+  bipod:    { name: 'Bipod',         slot: 'under', cost: 240, file: '', scale: 1,
+              mods: { recoil: 0.58, move: 0.90 },
+              blurb: 'Almost no kick at all, if you are willing to be slow.' },
+  // ---- MAGAZINE ----
+  extmag:   { name: 'Extended Mag',  slot: 'mag', cost: 340, file: '', scale: 1,
+              mods: { magAdd: 0.5, reload: 1.25, move: 0.97 },
+              blurb: 'Half again as many rounds before you have to reload.' },
+  fastmag:  { name: 'Fast Mag',      slot: 'mag', cost: 300, file: '', scale: 1,
+              mods: { reload: 0.62 },
+              blurb: 'Back in the fight in well under a second.' },
+  hollow:   { name: 'Hollow Point',  slot: 'mag', cost: 500, file: '', scale: 1,
+              mods: { dmg: 1.18, range: 0.85 },
+              blurb: 'Brutal up close, falls off badly at distance.' },
+  // ---- STOCK ----
+  heavystk: { name: 'Heavy Stock',   slot: 'stock', cost: 280, file: '', scale: 1,
+              mods: { recoil: 0.70, move: 0.93 },
+              blurb: 'Plants the gun. Plants you too.' },
+  lightstk: { name: 'Skeleton Stock', slot: 'stock', cost: 280, file: '', scale: 1,
+              mods: { move: 1.08, recoil: 1.15 },
+              blurb: 'Strips weight off. The gun climbs more.' },
+  nostock:  { name: 'No Stock',      slot: 'stock', cost: 120, file: '', scale: 1,
+              mods: { move: 1.14, spread: 1.30, recoil: 1.25 },
+              blurb: 'Run-and-gun. Do not expect to hit anything past ten metres.' }
+};
+
+/* HOW MANY GUNS YOU CARRY. Two, like every modern shooter: a primary and a
+   secondary, chosen before you deploy and swapped with 1/2 or the scroll
+   wheel. Owning a weapon and carrying it are now different things — the shop
+   sells you guns for the collection, the loadout decides what is on your back. */
+const LOADOUT_SIZE = 2;
+
+// hipfire cone at rest, in radians. Small — about 0.7 degrees — so it reads as
+// "the gun is not perfectly still" rather than as a punishment.
+const HIP_SPREAD = 0.012;
+
 /* Ammunition. Each weapon feeds from a named box of rounds rather than an endless
    supply: the magazine is what is in the gun, the reserve is what you are carrying,
    and reloading moves rounds from one to the other. Run the reserve dry and that
@@ -609,6 +810,75 @@ for (const k in EXTRA_WEAPONS) {
 }
 function ownedWeapons() { return Object.keys(WEAPONS).filter(k => WEAPONS[k].owned); }
 function saveOwned(l) { /* weapons are no longer purchasable */ }
+
+/* ---- what is bolted to each gun, and what you have bought ----
+   Two separate things, kept separate on purpose. `nc_attach` is the build —
+   which attachment sits in which slot on which weapon. `nc_attown` is the
+   collection — what you have paid for and may fit. Losing a build should never
+   cost you the money you spent. */
+let ATTACH_ON = {};        // weapon id -> { slot: attachmentId }
+let ATTACH_OWNED = {};     // attachment id -> true
+try { ATTACH_ON = JSON.parse(localStorage.getItem('nc_attach') || '{}') || {}; } catch (e) { ATTACH_ON = {}; }
+try { ATTACH_OWNED = JSON.parse(localStorage.getItem('nc_attown') || '{}') || {}; } catch (e) { ATTACH_OWNED = {}; }
+function saveAttach() {
+  /* attachOf() creates an empty map the moment a weapon is read, so saving
+     ATTACH_ON raw writes `{"rpg":{},"knife":{}...}` for every gun you merely
+     looked at. Store only the builds that exist. */
+  const lean = {};
+  for (const w in ATTACH_ON) if (Object.keys(ATTACH_ON[w]).length) lean[w] = ATTACH_ON[w];
+  localStorage.setItem('nc_attach', JSON.stringify(lean));
+  localStorage.setItem('nc_attown', JSON.stringify(ATTACH_OWNED));
+}
+function attachOf(w) { return ATTACH_ON[w] || (ATTACH_ON[w] = {}); }
+function fittedIds(w) {
+  const a = attachOf(w);
+  return ATTACH_SLOTS.map(s => a[s.id]).filter(id => id && ATTACHMENTS[id]);
+}
+
+/* THE ONE PLACE that answers "what does this gun actually do right now".
+   Every stat the game reads at runtime comes through here, so an attachment
+   cannot be listed in the menu and then quietly do nothing — if it is not
+   folded in here, it does not exist. */
+function wstat(w) {
+  const B = WEAPONS[w];
+  if (!B) return null;
+  const m = { dmg: 1, rate: 1, range: 1, magAdd: 0, recoil: 1, spread: 1, move: 1, reload: 1, quiet: 1, zoom: 1 };
+  fittedIds(w).forEach(id => {
+    const mod = ATTACHMENTS[id].mods || {};
+    for (const k in mod) {
+      if (k === 'magAdd') m.magAdd += mod[k];
+      else if (m[k] !== undefined) m[k] *= mod[k];
+    }
+  });
+  return {
+    base: B, mult: m,
+    name: B.name,
+    dmg: B.dmg * m.dmg,
+    scopedDmg: B.scopedDmg * m.dmg,
+    rate: B.rate * m.rate,
+    range: (B.range || 300) * m.range,
+    // a magazine is a whole number of rounds; Infinity (the knife) stays Infinity
+    mag: B.mag === Infinity ? Infinity : Math.max(1, Math.round(B.mag * (1 + m.magAdd))),
+    pellets: B.pellets || 0,
+    auto: B.auto, scope: B.scope, ammo: B.ammo, rocket: B.rocket, model: B.model, slot: B.slot,
+    recoil: m.recoil, spread: m.spread, move: m.move, reload: m.reload, quiet: m.quiet, zoom: m.zoom
+  };
+}
+// the gun in your hands, fully modified
+function curStat() { return wstat(curWeap); }
+
+/* ---- the two guns you deploy with ----
+   Owning a weapon and carrying it are different. This is what you carry. */
+let loadout = [];
+try { loadout = JSON.parse(localStorage.getItem('nc_loadout') || 'null') || []; } catch (e) { loadout = []; }
+function validLoadout() {
+  loadout = loadout.filter(w => WEAPONS[w] && WEAPONS[w].owned).slice(0, LOADOUT_SIZE);
+  // a fresh player still deploys with something sensible rather than empty hands
+  const fill = ['sniper', 'smg', 'pistol', 'knife'];
+  for (const f of fill) { if (loadout.length >= LOADOUT_SIZE) break; if (WEAPONS[f] && !loadout.includes(f)) loadout.push(f); }
+  return loadout;
+}
+function saveLoadout() { localStorage.setItem('nc_loadout', JSON.stringify(loadout)); }
 
 const BOT_NAMES = ['Vortex','Blaze','Ghost','Nova','Riper','Zephyr','Talon','Echo','Rogue',
                    'Cinder','Drift','Havoc','Onyx','Quasar','Slate','Vex','Wraith','Zenith'];
@@ -734,6 +1004,7 @@ const loadedHouseGLB = [];
 const loadedWeapModels = {};   // weapon id -> its own uploaded model
 let loadedArmsGLB = null;      // your own first-person arms, when uploaded
 const loadedAmmoGLB = {};      // calibre -> the round model you see in flight
+const loadedAttachGLB = {};    // attachment id -> its model, once uploaded
 let loadedMapGLB = null;       // the chosen map, when it is an uploaded one
 const extraClips = {};   // retargeted clips, rebuilt per character in makeFighter
 const rawAnims = {};     // key -> { clips, scene } exactly as loaded, before retargeting
@@ -884,8 +1155,9 @@ function loadCustomModels(done) {
   const anyHouse = (CUSTOM_MODELS.houses || []).some(Boolean);
   const anyExtraWeap = Object.keys(WEAPON_ART).some(k => WEAPON_ART[k].file);
   const anyRound = Object.keys(AMMO).some(t => AMMO[t].file);
+  const anyAttach = Object.keys(ATTACHMENTS).some(t => ATTACHMENTS[t].file);
   const mapFile = (curMap().id !== 'arena') ? (curMap().file || '') : '';
-  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse && !anyExtraWeap && !mapFile && !CUSTOM_MODELS.arms && !anyRound) { done(); return; }
+  if (!CUSTOM_MODELS.character && !CUSTOM_MODELS.weapon && !CUSTOM_MODELS.tank && !CUSTOM_MODELS.truck && !CUSTOM_MODELS.knife && !CUSTOM_MODELS.rpg && !anyHouse && !anyExtraWeap && !mapFile && !CUSTOM_MODELS.arms && !anyRound && !anyAttach && !CUSTOM_MODELS.missile) { done(); return; }
   const needFBX = isFBX(CUSTOM_MODELS.character) || isFBX(CUSTOM_MODELS.weapon);
 
   // load the right loader(s): GLTFLoader for .glb/.gltf, FBXLoader for Mixamo .fbx
@@ -937,6 +1209,14 @@ function loadCustomModels(done) {
     });
     if (CUSTOM_MODELS.rpg) { pending++; loader.load(CUSTOM_MODELS.rpg, g => { loadedRpgGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('rpg model failed \u2014 using the built-in launcher', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.knife) { pending++; loader.load(CUSTOM_MODELS.knife, g => { loadedKnifeGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('knife model failed \u2014 using the built-in blade', e); pending--; finish(); }); }
+    // attachments: each one that names a file gets loaded like any other model
+    Object.keys(ATTACHMENTS).forEach(id => {
+      const f = ATTACHMENTS[id].file;
+      if (!f) return;
+      pending++;
+      loader.load(f, g => { loadedAttachGLB[id] = g.scene; console.log('loaded attachment ' + id + ' from ' + f); pending--; finish(); },
+        undefined, e => { console.warn('attachment "' + id + '" failed (' + f + ') \u2014 using the built-in stand-in', e); pending--; finish(); });
+    });
     if (CUSTOM_MODELS.missile) { pending++; loader.load(CUSTOM_MODELS.missile, g => { loadedMissileGLB = g.scene; console.log('loaded missile from ' + CUSTOM_MODELS.missile); pending--; finish(); }, undefined, e => { console.warn('missile model failed \u2014 using the built-in warhead', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed \u2014 using the built-in truck', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed \u2014 using the built-in tank', e); pending--; finish(); }); }
@@ -1217,15 +1497,269 @@ function lbInit() {
   setInterval(lbTick, 5000);
 }
 
-function renderWSel() {
-  document.getElementById('wsel').innerHTML = Object.keys(WEAPONS).map(k => {
-    const W = WEAPONS[k], owned = W.owned;
-    return '<div class="w ' + (k === curWeap ? 'equipped' : (owned ? 'owned' : 'locked')) + '" data-w="' + k + '">' + W.name + (owned ? '' : '') + '</div>';
+/* ============================================================
+   THE TECHNICAL READOUT
+   Every number a player is shown here is the number the game uses. The bars
+   are scaled against a fixed ceiling per stat rather than against whatever
+   happens to be the best gun, so a bar means the same thing on every weapon
+   and you can compare two of them honestly.
+
+   Some stats are better when lower — a 68 ms interval is a faster gun than
+   110 ms, and a 0.7 recoil multiplier is a steadier one. Those are inverted
+   for display, so on this screen a longer bar is always better.
+   ============================================================ */
+const STAT_ROWS = [
+  { k: 'dmgShow',  name: 'DAMAGE',    max: 110,  unit: '',      dp: 0 },
+  { k: 'rpm',      name: 'FIRE RATE', max: 900,  unit: ' rpm',  dp: 0 },
+  { k: 'range',    name: 'RANGE',     max: 440,  unit: ' m',    dp: 0 },
+  { k: 'magShow',  name: 'MAGAZINE',  max: 100,  unit: '',      dp: 0 },
+  /* These four are ratios against a bare gun, and attachments push them past
+     100 — a fast mag reloads at 161%. The ceiling is 200 so a full bar means
+     "twice as good as stock" rather than "as good as it gets". */
+  { k: 'ctrl',     name: 'CONTROL',   max: 200,  unit: '%',     dp: 0 },
+  { k: 'acc',      name: 'ACCURACY',  max: 200,  unit: '%',     dp: 0 },
+  { k: 'mob',      name: 'MOBILITY',  max: 140,  unit: '%',     dp: 0 },
+  { k: 'rspeed',   name: 'RELOAD',    max: 200,  unit: '%',     dp: 0 }
+];
+/* Turn the raw stats into the eight numbers on the screen. Kept as its own
+   function so the lobby panel, the in-match card and the delta preview all
+   read from exactly the same arithmetic. */
+function statCard(w, overrideSlot, overrideId) {
+  const saved = overrideSlot ? attachOf(w)[overrideSlot] : undefined;
+  if (overrideSlot) { if (overrideId) attachOf(w)[overrideSlot] = overrideId; else delete attachOf(w)[overrideSlot]; }
+  const S = wstat(w);
+  if (overrideSlot) { if (saved) attachOf(w)[overrideSlot] = saved; else delete attachOf(w)[overrideSlot]; }
+  return {
+    dmgShow: S.dmg,
+    rpm: S.rate > 0 ? 60000 / S.rate : 0,
+    range: S.range,
+    magShow: S.mag === Infinity ? 100 : S.mag,
+    ctrl: 100 / S.recoil,          // less kick = more control
+    acc: 100 / S.spread,           // tighter cone = more accuracy
+    mob: 100 * S.move,
+    rspeed: 100 / S.reload,        // quicker reload = a higher number
+    raw: S
+  };
+}
+function fmtStat(row, v) {
+  return (row.dp ? v.toFixed(row.dp) : Math.round(v)) + row.unit;
+}
+
+/* One bar. `now` is the current value, `next` the value if you fitted the
+   attachment being considered — drawn as a ghost behind the bar so a trade is
+   visible before you spend anything. */
+function statBar(row, now, next) {
+  const pct = (v) => Math.max(2, Math.min(100, (v / row.max) * 100));
+  let delta = '';
+  let ghost = '';
+  if (next !== undefined && Math.abs(next - now) > 0.5) {
+    const up = next > now;
+    delta = '<span class="d ' + (up ? 'up' : 'dn') + '">' + (up ? '+' : '') + fmtStat(row, next - now) + '</span>';
+    ghost = '<i class="ghost" style="width:' + pct(Math.max(now, next)) + '%"></i>';
+  }
+  const cls = next === undefined ? '' : (next > now ? ' gain' : (next < now ? ' loss' : ''));
+  const shown = next === undefined ? now : next;
+  return '<div class="gsrow"><div class="lab"><span>' + row.name + '</span>' +
+         '<span><b>' + fmtStat(row, shown) + '</b>' + delta + '</span></div>' +
+         '<div class="gsbar">' + ghost + '<i class="' + cls.trim() + '" style="width:' + pct(Math.min(now, shown)) + '%"></i></div></div>';
+}
+
+let gsWeap = null, gsPreview = null;   // which gun is open, and what is hovered
+
+function renderGunsmith() {
+  const box = document.getElementById('gunsmith');
+  if (!box || !box.classList.contains('show')) return;
+  if (!gsWeap || !WEAPONS[gsWeap]) gsWeap = validLoadout()[0] || 'sniper';
+  document.getElementById('gspoints').textContent = pts();
+
+  // ---- which gun ----
+  document.getElementById('gsguns').innerHTML = ownedWeapons().map(k => {
+    const n = fittedIds(k).length;
+    return '<div class="gsgun' + (k === gsWeap ? ' on' : '') + '" data-g="' + k + '">' + WEAPONS[k].name +
+           (n ? '<span class="cnt">' + n + '/' + ATTACH_SLOTS.length + '</span>' : '') + '</div>';
   }).join('');
-  document.querySelectorAll('#wsel .w').forEach(el => el.onclick = () => { if (WEAPONS[el.dataset.w].owned) { curWeap = el.dataset.w; renderWSel(); } });
+  document.querySelectorAll('#gsguns .gsgun').forEach(el =>
+    el.onclick = () => { gsWeap = el.dataset.g; gsPreview = null; renderGunsmith(); });
+
+  // ---- the numbers ----
+  const now = statCard(gsWeap);
+  const next = gsPreview ? statCard(gsWeap, gsPreview.slot, gsPreview.id) : null;
+  const S = now.raw;
+  let html = STAT_ROWS.map(r => statBar(r, now[r.k], next ? next[r.k] : undefined)).join('');
+  html += '<div class="gsraw">' +
+    'Rounds leave every <b>' + Math.round(S.rate) + ' ms</b> · ' +
+    'a body takes <b>' + (S.dmg > 0 ? Math.ceil(100 / S.dmg) : '—') + '</b> hit' + (Math.ceil(100 / Math.max(1, S.dmg)) === 1 ? '' : 's') + ' · ' +
+    'reload <b>' + (1.1 * S.reload).toFixed(2) + ' s</b> · ' +
+    'feeds <b>' + (S.ammo ? AMMO[S.ammo].name : 'nothing') + '</b>' +
+    (S.pellets ? ' · <b>' + S.pellets + '</b> pellets per shot' : '') +
+    '<br>Bots notice you <b>' + Math.round(S.quiet * 100) + '%</b> as often as a bare gun' +
+    (S.scope ? ' · scoped field of view <b>' + Math.round(25 * S.zoom) + '°</b>' : ' · no sight') +
+    '</div>';
+  document.getElementById('gsstats').innerHTML = html;
+
+  // ---- the five slots ----
+  const fitted = attachOf(gsWeap);
+  document.getElementById('gsslots').innerHTML = ATTACH_SLOTS.map(slot => {
+    const opts = Object.keys(ATTACHMENTS).filter(id => ATTACHMENTS[id].slot === slot.id);
+    const cells = ['<div class="gsopt' + (!fitted[slot.id] ? ' on' : '') + '" data-slot="' + slot.id + '" data-id="">' +
+                   '<b>None</b><span class="why">Nothing fitted.</span></div>'];
+    opts.forEach(id => {
+      const A = ATTACHMENTS[id], owned = !!ATTACH_OWNED[id], on = fitted[slot.id] === id;
+      const afford = pts() >= A.cost;
+      cells.push('<div class="gsopt' + (on ? ' on' : '') + (owned ? '' : ' locked') + '" data-slot="' + slot.id + '" data-id="' + id + '">' +
+        '<b>' + A.name + '</b>' +
+        (owned ? '' : '<span class="price' + (afford ? '' : ' no') + '">' + A.cost + ' pts</span>') +
+        '<span class="tr">' + tradeText(A) + '</span>' +
+        '<span class="why">' + A.blurb + '</span></div>');
+    });
+    return '<div class="gsslot"><div class="sn">' + slot.name + '</div><div class="gsopts">' + cells.join('') + '</div></div>';
+  }).join('');
+
+  document.querySelectorAll('#gsslots .gsopt').forEach(el => {
+    el.onmouseenter = () => { gsPreview = { slot: el.dataset.slot, id: el.dataset.id }; renderGunsmith(); };
+    el.onmouseleave = () => { gsPreview = null; renderGunsmith(); };
+    el.onclick = () => pickAttachment(el.dataset.slot, el.dataset.id);
+  });
+}
+
+/* The trade, in four words, on the tile itself — so you can see what an
+   attachment costs you without fitting it first.
+
+   The sign has to match the WORD, not the raw multiplier, or the label lies.
+   A muzzle brake stores recoil 0.66; printing "-34% recoil" is true but the
+   player-facing stat is CONTROL, and less recoil is MORE control, so it must
+   read "+52% control" — 1/0.66. Same inversion the stat bars use, for the same
+   reason. Getting this backwards told players a 4x scope cost them accuracy
+   when it actually improves it. */
+const STAT_WORDS = { dmg: 'damage', rate: 'fire rate', range: 'range', magAdd: 'mag', recoil: 'control',
+                     spread: 'accuracy', move: 'mobility', reload: 'reload', quiet: 'stealth', zoom: 'zoom' };
+const STAT_INVERTED = { rate: 1, recoil: 1, spread: 1, reload: 1, quiet: 1, zoom: 1 };
+function tradeText(A) {
+  const bits = [];
+  for (const k in (A.mods || {})) {
+    const v = A.mods[k];
+    let pct;
+    if (k === 'magAdd') pct = Math.round(v * 100);
+    else if (STAT_INVERTED[k]) pct = Math.round((1 / v - 1) * 100);
+    else pct = Math.round((v - 1) * 100);
+    if (!pct) continue;
+    bits.push('<span class="' + (pct > 0 ? 'up' : 'dn') + '">' + (pct > 0 ? '+' : '') + pct + '% ' +
+              (STAT_WORDS[k] || k) + '</span>');
+  }
+  return bits.join(' · ') || '—';
+}
+
+function pickAttachment(slot, id) {
+  if (!id) {                       // taking one off is always free
+    delete attachOf(gsWeap)[slot];
+    saveAttach(); gsPreview = null; renderGunsmith(); refitWeapon();
+    return;
+  }
+  const A = ATTACHMENTS[id];
+  if (!ATTACH_OWNED[id]) {
+    /* The arena keeps its own points helpers — it does not load nova.js — so
+       spend through setPts rather than nova's addPts, which does not exist here. */
+    if (pts() < A.cost) {
+      const sub = document.getElementById('gssub');
+      if (sub) sub.textContent = 'The ' + A.name + ' costs ' + A.cost + ' — you are ' + (A.cost - pts()) + ' points short. Win a round and come back.';
+      return;
+    }
+    setPts(pts() - A.cost);
+    ATTACH_OWNED[id] = true;
+    const sub = document.getElementById('gssub');
+    if (sub) sub.textContent = 'Bought the ' + A.name + '. It is yours on every weapon from now on.';
+  }
+  attachOf(gsWeap)[slot] = id;
+  saveAttach(); gsPreview = null;
+  renderGunsmith(); renderWSel(); refitWeapon();
+}
+
+// the gun in your hands has to change when the build does
+function refitWeapon() {
+  if (gunGroup && scene) {
+    const vis = gunGroup.visible;
+    scene.remove(gunGroup);
+    gunGroup = buildWeapon(WEAPONS[curWeap].model);
+    gunGroup.visible = vis;
+    scene.add(gunGroup);
+  }
+  updateAmmoHUD();
+  renderWeapInfo();
+}
+
+function openGunsmith() {
+  gsWeap = curWeap && WEAPONS[curWeap] ? curWeap : (validLoadout()[0] || 'sniper');
+  document.getElementById('gunsmith').classList.add('show');
+  renderGunsmith();
+}
+function closeGunsmith() {
+  document.getElementById('gunsmith').classList.remove('show');
+  gsPreview = null;
+}
+
+/* ---- the card you can call up mid-match (N) ----
+   Same numbers as the lobby, small enough to read in a firefight. Green and red
+   mark what your attachments changed, so the card doubles as a reminder of what
+   you are actually carrying. */
+let weapInfoOn = localStorage.getItem('nc_weapinfo') === 'on';
+function renderWeapInfo() {
+  const box = document.getElementById('weapinfo');
+  if (!box) return;
+  box.classList.toggle('show', weapInfoOn && running);
+  if (!weapInfoOn || !running) return;
+  const S = curStat(), B = S.base;
+  const row = (label, val, mult, lowerIsBetter) => {
+    let cls = '';
+    if (mult !== undefined && Math.abs(mult - 1) > 0.001) cls = (lowerIsBetter ? mult < 1 : mult > 1) ? ' class="up"' : ' class="dn"';
+    return '<div class="r"><span>' + label + '</span><b' + cls + '>' + val + '</b></div>';
+  };
+  const ids = fittedIds(curWeap);
+  box.innerHTML = '<h5>' + S.name + '</h5>' +
+    row('Damage', Math.round(S.dmg), S.mult.dmg, false) +
+    row('Fire rate', Math.round(60000 / S.rate) + ' rpm', S.mult.rate, true) +
+    row('Range', Math.round(S.range) + ' m', S.mult.range, false) +
+    row('Magazine', S.mag === Infinity ? '∞' : S.mag, 1 + S.mult.magAdd, false) +
+    row('Control', Math.round(100 / S.recoil) + '%', S.mult.recoil, true) +
+    row('Accuracy', Math.round(100 / S.spread) + '%', S.mult.spread, true) +
+    row('Mobility', Math.round(100 * S.move) + '%', S.mult.move, false) +
+    row('Reload', (1.1 * S.reload).toFixed(2) + ' s', S.mult.reload, true) +
+    '<div class="att">' + (ids.length ? ids.map(i => ATTACHMENTS[i].name).join(' · ')
+                                      : 'No attachments fitted — build it in the Gunsmith') + '</div>';
+}
+
+function renderWSel() {
+  validLoadout();
+  document.getElementById('wsel').innerHTML = Object.keys(WEAPONS).map(k => {
+    const W = WEAPONS[k], carried = loadout.includes(k);
+    const n = fittedIds(k).length;
+    return '<div class="w ' + (carried ? 'equipped' : (W.owned ? 'owned' : 'locked')) + '" data-w="' + k + '">' +
+           W.name + (n ? ' <span style="opacity:0.6;font-size:0.72rem">' + n + '⚙</span>' : '') + '</div>';
+  }).join('');
+  const note = document.getElementById('loadnote');
+  if (note) note.textContent = loadout.length
+    ? 'Carrying: ' + loadout.map(w => WEAPONS[w].name).join('  and  ') + '. Click another to swap it in.'
+    : 'Pick two weapons.';
+  document.querySelectorAll('#wsel .w').forEach(el => el.onclick = () => {
+    const w = el.dataset.w;
+    if (!WEAPONS[w] || !WEAPONS[w].owned) return;
+    const at = loadout.indexOf(w);
+    /* Two slots, so picking a third has to push one out. The oldest goes: that
+       is the one you chose first and are least likely to still want. */
+    if (at >= 0) { if (loadout.length > 1) loadout.splice(at, 1); }
+    else { loadout.push(w); while (loadout.length > LOADOUT_SIZE) loadout.shift(); }
+    saveLoadout();
+    if (!loadout.includes(curWeap)) curWeap = loadout[0];
+    renderWSel();
+  });
 }
 renderWSel();
 renderMapPick();
+document.getElementById('gunsmithBtn').onclick = openGunsmith;
+document.getElementById('gsclose').onclick = closeGunsmith;
+// Escape closes it, the way every panel on this page does
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape' && document.getElementById('gunsmith').classList.contains('show')) closeGunsmith();
+});
 lbInit();
 /* ---- who you play with ----------------------------------------------------
    Three answers, and the default is "random players": someone who just wants a
@@ -1400,7 +1934,8 @@ function init() {
     }
   };
   if (CUSTOM_MODELS.character || CUSTOM_MODELS.weapon || CUSTOM_MODELS.tank || CUSTOM_MODELS.truck || CUSTOM_MODELS.knife || CUSTOM_MODELS.rpg || (CUSTOM_MODELS.houses || []).some(Boolean) ||
-      Object.keys(WEAPON_ART).some(k => WEAPON_ART[k].file) || (curMap().id !== 'arena' && curMap().file) || CUSTOM_MODELS.arms || Object.keys(AMMO).some(t => AMMO[t].file)) {
+      Object.keys(WEAPON_ART).some(k => WEAPON_ART[k].file) || (curMap().id !== 'arena' && curMap().file) || CUSTOM_MODELS.arms || Object.keys(AMMO).some(t => AMMO[t].file) ||
+      Object.keys(ATTACHMENTS).some(t => ATTACHMENTS[t].file) || CUSTOM_MODELS.missile) {
     loadCustomModels(buildOnce);
     setTimeout(() => {
       if (!built) { console.warn('model load stalled \u2014 building with built-in models'); loadedCharGLB = null; loadedWeapGLB = null; buildOnce(); }
@@ -2251,7 +2786,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v85 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v86 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2794,13 +3329,76 @@ function buildWeapon(type) {
     const flash = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10),
       new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
     flash.position.set(0, 0.02, mz); w.add(flash); w.userData.flash = flash;
+    mountAttachments(w, type);
     // arms grip the fitted viewmodel, and carry the wrist monitor with them
     const arms = loadedArmsGLB ? buildUploadedArms() : buildArms();
     w.add(arms);
     w.userData.arms = arms;
     return w;
   }
+  mountAttachments(m, type);
   return m;
+}
+
+/* Hang whatever is fitted onto the gun. The weapon has already been fitted to a
+   0.6-unit viewmodel pointing down -Z, so the anchors in ATTACH_MOUNT are the
+   same for every weapon — a suppressor goes on the front of a rifle and the
+   front of an SMG without either needing its own numbers.
+
+   Which weapon key to look up matters: `type` here is the MODEL name, and for
+   the four original guns that is not the weapon id. Attachments belong to the
+   weapon, so resolve back to it. */
+function mountAttachments(root, type) {
+  const wid = Object.keys(WEAPONS).find(k => WEAPONS[k].model === type) || type;
+  const fitted = attachOf(wid);
+  ATTACH_SLOTS.forEach(slotDef => {
+    const id = fitted[slotDef.id];
+    const A = id && ATTACHMENTS[id];
+    if (!A) return;
+    const M = ATTACH_MOUNT[slotDef.id];
+    const g = buildAttachment(id, M);
+    g.position.set(M.x + (A.dx || 0), M.y + (A.dy || 0), M.z + (A.dz || 0));
+    root.add(g);
+  });
+}
+
+function buildAttachment(id, M) {
+  const A = ATTACHMENTS[id];
+  const glb = loadedAttachGLB[id];
+  if (glb) {
+    const inner = glb.clone(true);
+    inner.traverse(o => { if (o.isMesh) { o.castShadow = false; o.frustumCulled = false; } });
+    return autoFitGLB(inner, { fit: M.fit, scale: A.scale || 1,
+                               rotX: A.rotX || 0, rotY: A.rotY || 0, rotZ: A.rotZ || 0 });
+  }
+  /* No model yet: a readable stand-in, so a build can be tried, priced and felt
+     before any art exists. Shaped per slot rather than one grey cube, because
+     you should be able to tell at a glance what is on your gun. */
+  const g = new THREE.Group();
+  const dark = new THREE.MeshStandardMaterial({ color: 0x23262c, metalness: 0.5, roughness: 0.55 });
+  const lit  = new THREE.MeshBasicMaterial({ color: 0x66d9ff });
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); g.add(m); return m; };
+  switch (A.slot) {
+    case 'optic':
+      add(new THREE.BoxGeometry(0.035, 0.035, M.fit), dark, 0, 0, 0);
+      add(new THREE.PlaneGeometry(0.026, 0.026), lit, 0, 0, -M.fit / 2 - 0.001);
+      if (id === 'scope4x') { add(new THREE.CylinderGeometry(0.026, 0.03, 0.03, 10), dark, 0, 0, -M.fit / 2 - 0.02).rotation.x = Math.PI / 2; }
+      break;
+    case 'muzzle':
+      add(new THREE.CylinderGeometry(id === 'suppress' ? 0.022 : 0.016, 0.018, M.fit, 10), dark, 0, 0, 0).rotation.x = Math.PI / 2;
+      break;
+    case 'under':
+      if (id === 'laser') { add(new THREE.BoxGeometry(0.02, 0.02, 0.05), dark, 0, 0, 0); add(new THREE.SphereGeometry(0.008, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff3b3b }), 0, 0, -0.03); }
+      else add(new THREE.BoxGeometry(0.024, M.fit, 0.024), dark, 0, -M.fit / 2, 0);
+      break;
+    case 'mag':
+      add(new THREE.BoxGeometry(0.028, M.fit, 0.05), dark, 0, -M.fit / 2, 0);
+      break;
+    case 'stock':
+      add(new THREE.BoxGeometry(0.03, 0.055, M.fit), dark, 0, 0, 0);
+      break;
+  }
+  return g;
 }
 
 function buildWeaponModel(type) {
@@ -3539,7 +4137,11 @@ function startMatch() {
   player.z = HB.z + facing * 16;                  // 16 units out, clear of the base walls
   player.yaw = PLAYER_TEAM === 'ct' ? 0 : Math.PI; // look toward the enemy
   player.pitch = 0; player.y = 1.7; player.vy = 0; player.onGround = true;
+  // deploy with the first gun of the two you picked, not whatever was last held
+  validLoadout();
+  if (!loadout.includes(curWeap)) curWeap = loadout[0];
   switchWeap(curWeap);
+  renderWeapInfo();
   if (gunGroup) gunGroup.visible = true;
   timerId = setInterval(tick, 1000);
   setInterval(updateBoard, 1500);
@@ -3564,7 +4166,7 @@ document.addEventListener('mousedown', (e) => {
   // in a truck, right mouse leans you out of the window to shoot
   if (e.button === 2 && playerTank && playerTank.kind === 'truck') { leaningOut = true; return; }
   // no black scope ring any more  the weapon's own sights come up instead
-  if (e.button === 2 && WEAPONS[curWeap].scope) { scoped = true; }
+  if (e.button === 2 && curStat().scope) { scoped = true; }
 });
 document.addEventListener('mouseup', (e) => {
   if (e.button === 0) mouseHeld = false;
@@ -3574,10 +4176,13 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 // scroll wheel cycles through owned weapons
 document.addEventListener('wheel', (e) => {
   if (!running || shopOpen) return;
-  const owned = Object.keys(WEAPONS).filter(k => WEAPONS[k].owned);
-  let i = owned.indexOf(curWeap);
-  i = (i + (e.deltaY > 0 ? 1 : -1) + owned.length) % owned.length;
-  switchWeap(owned[i]);
+  // you carry two, so the wheel swaps between those two — not the whole armoury
+  const carried = validLoadout();
+  if (carried.length < 2) return;
+  let i = carried.indexOf(curWeap);
+  if (i < 0) i = 0;
+  i = (i + (e.deltaY > 0 ? 1 : -1) + carried.length) % carried.length;
+  switchWeap(carried[i]);
 }, { passive: true });
 
 function updateNadeHint() {
@@ -3624,7 +4229,20 @@ document.addEventListener('keydown', (e) => {
     }
   }
   if (e.code === BINDS.sprint) player.sprint = true;
-  if (/^Digit[1-9]$/.test(e.code)) { const slot = parseInt(e.code.slice(5)); const w = Object.keys(WEAPONS).find(k => WEAPONS[k].slot === slot); if (w) { switchWeap(w); equippedNade = null; } }
+  /* 1 and 2 are your two guns now, not a fixed key per weapon in the game.
+     Which gun sits on which key is the order you picked them in the lobby. */
+  if (/^Digit[1-9]$/.test(e.code)) {
+    const i = parseInt(e.code.slice(5)) - 1;
+    const w = validLoadout()[i];
+    if (w) { switchWeap(w); equippedNade = null; }
+    else if (i < LOADOUT_SIZE) addFeed('Only ' + LOADOUT_SIZE + ' weapons in a loadout \u2014 pick them before you deploy');
+  }
+  // N shows what the gun in your hands actually does
+  if (e.code === 'KeyN') {
+    weapInfoOn = !weapInfoOn;
+    localStorage.setItem('nc_weapinfo', weapInfoOn ? 'on' : 'off');
+    renderWeapInfo();
+  }
   if (e.code === BINDS.nade) { equippedNade = inv.frag > 0 ? 'frag' : null; if (!inv.frag) addFeed('No frags \u2014 buy in shop (E)'); updateNadeHint(); }
   if (e.code === BINDS.sticky) { equippedNade = inv.sticky > 0 ? 'sticky' : null; if (!inv.sticky) addFeed('No stickies \u2014 buy in shop (E)'); updateNadeHint(); }
   if (e.code === BINDS.emote) playEmote();
@@ -3635,9 +4253,10 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === BINDS.sprint) player.sprint = false; });
 
 function buildLoadoutHUD() {
-  let html = Object.keys(WEAPONS).filter(k => WEAPONS[k].owned).map(k => {
+  // the strip shows what you are carrying, which is two things
+  let html = validLoadout().map(k => {
     const W = WEAPONS[k];
-    return '<div class="slot' + (k === curWeap ? ' active' : '') + '"><span class="key">' + W.slot + '</span>' + W.name + '</div>';
+    return '<div class="slot' + (k === curWeap ? ' active' : '') + '"><span class="key">' + (loadout.indexOf(k) + 1) + '</span>' + W.name + '</div>';
   }).join('');
   // the strike sits in the loadout as a single charge you either have or do not
   const ready = strikeAvailable();
@@ -3648,7 +4267,7 @@ function buildLoadoutHUD() {
 }
 function switchWeap(w) {
   curWeap = w;
-  const W = WEAPONS[w];
+  const W = wstat(w);          // base stats plus whatever is bolted to this gun
   /* Swapping weapons loads a magazine out of the reserve rather than conjuring
      one: carry no 12 gauge and the shotgun comes up empty. */
   if (W.mag === Infinity) player.mag = Infinity;
@@ -3661,6 +4280,7 @@ function switchWeap(w) {
   }
   document.getElementById('weapname').textContent = W.name;
   updateAmmoHUD();
+  renderWeapInfo();
   /* If the muzzle end could not be worked out from the mesh, say so rather than
      letting someone wonder why their gun faces backwards. Once per weapon. */
   const o = WORIENT[w];
@@ -3685,7 +4305,7 @@ function resetAmmo() {
   for (const t in AMMO) player.ammo[t] = AMMO[t].start;
 }
 function updateAmmoHUD() {
-  const W = WEAPONS[curWeap];
+  const W = curStat();
   const mg = document.getElementById('mag'), mx = document.getElementById('magmax'), rs = document.getElementById('ammores');
   if (mg) mg.textContent = W.mag === Infinity ? '∞' : player.mag;
   if (mx) mx.textContent = W.mag === Infinity ? '' : '/' + W.mag;
@@ -3696,33 +4316,34 @@ function updateAmmoHUD() {
   rs.className = left === 0 ? 'dry' : (left <= AMMO[W.ammo].buy * 0.25 ? 'low' : '');
 }
 function reload() {
-  const W = WEAPONS[curWeap];
+  const W = curStat();
   if (W.mag === Infinity || player.reloading || player.mag === W.mag) return;
   const type = W.ammo;
   const need = W.mag - player.mag;
   const have = type ? ammoLeft(type) : need;
   if (type && have <= 0) { addFeed('Out of ' + AMMO[type].name + ' — buy more in the shop (E)'); return; }
   const take = Math.min(need, have);
-  player.reloading = true; player.reloadStart = performance.now(); player.reloadDur = 1100;
+  const dur = Math.max(220, Math.round(1100 * W.reload));   // a fast mag is a real fast mag
+  player.reloading = true; player.reloadStart = performance.now(); player.reloadDur = dur;
   sfx('reload');
-  playOneShot('reload', 1100);
+  playOneShot('reload', dur);
   document.getElementById('mag').textContent = '..';
   setTimeout(() => {
     if (type) { if (!player.ammo) player.ammo = {}; player.ammo[type] = ammoLeft(type) - take; }
     player.mag += take;
     player.reloading = false;
     updateAmmoHUD();
-  }, 1100);
+  }, dur);
 }
 
 function shoot() {
   if (WEAPONS[curWeap] && WEAPONS[curWeap].rocket && !playerTank) {
     const now2 = performance.now();
-    if (now2 - lastShot < WEAPONS.rpg.rate || player.reloading) return;
+    if (now2 - lastShot < wstat('rpg').rate || player.reloading) return;
     if (player.mag <= 0) { reload(); return; }
     lastShot = now2; player.mag--;
     updateAmmoHUD();
-    recoil = 1;
+    recoil = curStat().recoil;
     const d = camDir();
     const from = new THREE.Vector3(player.x, player.y - 0.1, player.z).addScaledVector(d, 1.2);
     /* Your uploaded rocket, if there is one — the same model the rocket calibre
@@ -3768,12 +4389,12 @@ function shoot() {
     }
   } else if (playerTank) { fireTankShell(playerTank, null); return; }
   if (!gunGroup) return;
-  const W = WEAPONS[curWeap]; const now = performance.now();
+  const W = curStat(); const now = performance.now();
   if (now - lastShot < W.rate || player.reloading) return;
   if (W.mag !== Infinity && player.mag <= 0) { reload(); return; }
   lastShot = now;
   if (W.mag !== Infinity) { player.mag--; updateAmmoHUD(); }
-  recoil = 1;
+  recoil = W.recoil;
   sfx(curWeap === 'sniper' ? 'rifle' : (SFX_NAMES[curWeap] || 'rifle'));
   gunGroup.userData.flashLight.intensity = 3; gunGroup.userData.flash.material.opacity = 0.9;
   setTimeout(() => { gunGroup.userData.flashLight.intensity = 0; gunGroup.userData.flash.material.opacity = 0; }, 55);
@@ -3841,20 +4462,28 @@ function shoot() {
   }
 
   const pellets = W.pellets || 0;
+  const up = new THREE.Vector3(0, 1, 0);
+  const side = new THREE.Vector3().crossVectors(dir, up).normalize();
+  const vert = new THREE.Vector3().crossVectors(side, dir).normalize();
+  const jitter = (d0, amount) => {
+    if (amount <= 0) return d0;
+    return d0.clone().addScaledVector(side, (Math.random() - 0.5) * 2 * amount)
+                     .addScaledVector(vert, (Math.random() - 0.5) * 2 * amount).normalize();
+  };
+
   if (pellets > 1) {
     // a cone of shot: the first pellet runs true, the rest scatter around it
-    const up = new THREE.Vector3(0, 1, 0);
-    const side = new THREE.Vector3().crossVectors(dir, up).normalize();
-    const vert = new THREE.Vector3().crossVectors(side, dir).normalize();
-    const SPREAD = 0.055;                       // radians, about 3 degrees
+    const SPREAD = 0.055 * W.spread;            // radians; 3 degrees before attachments
     for (let i = 0; i < pellets; i++) {
-      const d2 = dir.clone();
-      if (i > 0) d2.addScaledVector(side, (Math.random() - 0.5) * 2 * SPREAD)
-                   .addScaledVector(vert, (Math.random() - 0.5) * 2 * SPREAD).normalize();
-      fireRay(d2, i % 2 === 0);                 // half the pellets draw a tracer
+      fireRay(i > 0 ? jitter(dir, SPREAD) : dir, i % 2 === 0);   // half draw a tracer
     }
   } else {
-    fireRay(dir, true);
+    /* Hipfire is not perfectly accurate, and that is what makes a grip or a
+       laser worth buying. Aiming down the sights removes it entirely, so
+       nothing here punishes a player who takes the time to aim — and the cone
+       widens while the gun is still climbing from the last shot. */
+    const hip = scoped ? 0 : HIP_SPREAD * W.spread * (1 + recoil * 0.8);
+    fireRay(jitter(dir, hip), true);
   }
 }
 
@@ -4264,7 +4893,11 @@ function updateBots(dt) {
     if (b.inVehicle) return;      // crewing something; the vehicle AI drives it
     b.cooldown -= dt;
     if (b.cooldown <= 0) {
-      const tgtPlayer = b.team !== PLAYER_TEAM && Math.random() < 0.65 && !inShop;
+      /* A suppressor is only worth 520 points if it does something. It does:
+         bots pick their target here, and a quiet gun makes you a less likely
+         one — a loud brake or a laser makes you a more likely one. */
+      const notice = Math.max(0.08, Math.min(0.95, 0.65 * curStat().quiet));
+      const tgtPlayer = b.team !== PLAYER_TEAM && Math.random() < notice && !inShop;
       if (tgtPlayer) {
         const pd = Math.hypot(player.x - b.mesh.position.x, player.z - b.mesh.position.z);
         if (pd > 0.5) b.mesh.lookAt(player.x, 1.5, player.z);
@@ -4324,7 +4957,8 @@ function blockedAt(x, z) {
 
 function updatePlayer(dt) {
   const crouching = !!keys[BINDS.crouch];
-  const speed = (crouching ? 3.2 : (player.sprint ? 12 : 6.5)) * dt;
+  // what you carry changes how fast you move — a bipod and a 4x are heavy
+  const speed = (crouching ? 3.2 : (player.sprint ? 12 : 6.5)) * curStat().move * dt;
   let fx = 0, fz = 0; const sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
   if (keys[BINDS.forward]) { fx -= sy; fz -= cy; } if (keys[BINDS.back]) { fx += sy; fz += cy; }
   if (keys[BINDS.left]) { fx -= cy; fz += sy; } if (keys[BINDS.right]) { fx += cy; fz -= sy; }
@@ -4471,7 +5105,9 @@ function updateCamera(dt) {
   if (!gunGroup) return;
   /* A touch wider in a truck: the cab sits high and close, so the standard 72
      leaves you peering over the dash. Aiming still narrows to 25. */
-  const fov = scoped ? 25 : (playerTank && playerTank.kind === 'truck' ? 82 : 72);
+  // a 4x scope pulls in further than iron sights: the optic sets the zoom
+  const fov = scoped ? Math.max(8, 25 * curStat().zoom)
+                     : (playerTank && playerTank.kind === 'truck' ? 82 : 72);
   if (Math.abs(camera.fov - fov) > 0.5) { camera.fov += (fov - camera.fov)*0.2; camera.updateProjectionMatrix(); }
   recoil = Math.max(0, recoil - dt*6); const kick = recoil*0.03;
 
@@ -5524,7 +6160,7 @@ function updateStrikes(dt) {
 function animate() {
   requestAnimationFrame(animate);
   const now = performance.now(); let dt = (now - gclock.last)/1000; gclock.last = now; if (dt > 0.1) dt = 0.1;
-  if (running && !shopOpen) { if (!playerTank) updatePlayer(dt); updateBots(dt); updateTanks(dt); updateNades(dt); if (mouseHeld && WEAPONS[curWeap].auto && !equippedNade) shoot(); }
+  if (running && !shopOpen) { if (!playerTank) updatePlayer(dt); updateBots(dt); updateTanks(dt); updateNades(dt); if (mouseHeld && curStat().auto && !equippedNade) shoot(); }
   for (let i = 0; i < mixers.length; i++) mixers[i].update(dt);
   // cancel animation root motion so the character never drifts or flies off
   if (playerMesh && playerMesh.userData.inner && playerMesh.userData.fitPos) {
