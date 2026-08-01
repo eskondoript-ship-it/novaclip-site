@@ -46,13 +46,13 @@ details div { margin-top: 8px; font-size: 0.88rem; line-height: 1.6; opacity: 0.
 </head>
 <body>
 <div class='sidebar'>
-  <a href='index.html' data-t='home'>🏠 Home</a>
-  <a href='app.html' data-t='studio'>📈 Studio</a>
-  <a href='analytics.html' data-t='analytics'>📊 Analytics</a>
-  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
-  <a href='editor.html' data-t='editor'>🎬 Editor</a>
-  <a href='game.html' data-t='sniper'>🎯 Sniper</a>
-  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <a href='index.html' data-t='home'>Home</a>
+  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='analytics'>Analytics</a>
+  <a href='trends.html' data-t='trends'>Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>Editor</a>
+  <a href='game.html' data-t='sniper'>Games</a>
+  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
   <div class='themewrap'>
     <label data-t='language'>Language</label>
     <select id='langpick'></select>
@@ -61,22 +61,22 @@ details div { margin-top: 8px; font-size: 0.88rem; line-height: 1.6; opacity: 0.
 
 <div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
 
-<header><span class='grad' data-t='ai_h'>✨ NovaClip AI</span></header>
+<header><span class='grad' data-t='ai_h'>NovaClip AI</span></header>
 <!-- Rewards, Achievements and History now live on their own page (progress.html)
      so the tutor screen is just the conversation. -->
-<div id='aiout'><div class='msg'>Yo! Pick your tutor, then ask away (+5 pts), cook a thumbnail with 🎨 (+10 pts), or plan a whole video with 🎬 (+10 pts) fr fr</div></div>
+<div id='aiout'><div class='msg'>Yo! Pick your tutor, then ask away (+5 pts), cook a thumbnail with (+10 pts), or plan a whole video with (+10 pts) fr fr</div></div>
 <img id='aiimg'>
 <div id='controls'>
   <select id='subject'>
-    <option value='youtube'>🎬 YouTube Coach</option>
-    <option value='space'>☄️ Asteroid Tutor</option>
-    <option value='business'>💼 Business Tutor</option>
+    <option value='youtube'>YouTube Coach</option>
+    <option value='space'>Asteroid Tutor</option>
+    <option value='business'>Business Tutor</option>
   </select>
   <textarea id='askbox' rows='2' placeholder='Ask NovaClip anything...'></textarea>
   <div>
-    <button id='askbtn' class='smallbtn' data-t='ask'>💬 Ask</button>
-    <button id='thumbbtn' class='smallbtn alt' data-t='thumb'>🎨 Thumbnail</button>
-    <button id='vidbtn' class='smallbtn alt' data-t='video'>🎬 Video maker</button>
+    <button id='askbtn' class='smallbtn' data-t='ask'>Ask</button>
+    <button id='thumbbtn' class='smallbtn alt' data-t='thumb'>Thumbnail</button>
+    <button id='vidbtn' class='smallbtn alt' data-t='video'>Video maker</button>
   </div>
 </div>
 
@@ -107,19 +107,19 @@ document.getElementById('askbtn').onclick = async () => {
   const q = document.getElementById('askbox').value;
   if (!q) return;
   document.getElementById('aiimg').style.display = 'none';
-  setOut('Cooking... 🔥');
+  setOut('Cooking...');
   const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Keep it under 200 words. Question: ' + q }] }] });
   if (data.candidates && data.candidates[0].content.parts[0].text) {
     setOut(data.candidates[0].content.parts[0].text);
     saveHist(subjectName(), q, data.candidates[0].content.parts[0].text);
     addPts(5);
     if (typeof logSkill === 'function') logSkill('ai_ask');
-  } else { setOut('The AI is cooked rn 💀 try again in a minute.'); }
+  } else { setOut('The AI is cooked rn try again in a minute.'); }
 };
 
 document.getElementById('thumbbtn').onclick = async () => {
   const q = document.getElementById('askbox').value || 'exciting gaming video';
-  setOut('Painting your thumbnail... (10-20s) 🎨');
+  setOut('Painting your thumbnail... (10-20s)');
   const data = await askGemini('gemini-2.5-flash-image', { contents: [{ parts: [{ text: 'Generate a bold YouTube thumbnail image, 16:9, vivid colors, high contrast, about: ' + q }] }] });
   let done = false;
   if (data.candidates) {
@@ -128,7 +128,7 @@ document.getElementById('thumbbtn').onclick = async () => {
         const img = document.getElementById('aiimg');
         img.src = 'data:image/png;base64,' + p.inlineData.data;
         img.style.display = 'block';
-        setOut('It ate. Right-click to save it 🔥');
+        setOut('It ate. Right-click to save it');
         saveHist(subjectName(), 'Thumbnail: ' + q, 'image generated');
         addPts(10);
         if (typeof logSkill === 'function') logSkill('ai_ask');
@@ -136,21 +136,21 @@ document.getElementById('thumbbtn').onclick = async () => {
       }
     }
   }
-  if (!done) setOut('Could not generate the image rn 💀 (image model may be busy). Try again in a minute.');
+  if (!done) setOut('Could not generate the image rn (image model may be busy). Try again in a minute.');
 };
 
 document.getElementById('vidbtn').onclick = async () => {
   const q = document.getElementById('askbox').value;
-  if (!q) { setOut('Type your video idea first, then hit 🎬'); return; }
+  if (!q) { setOut('Type your video idea first, then hit'); return; }
   document.getElementById('aiimg').style.display = 'none';
-  setOut('Directing your video... 🎬');
+  setOut('Directing your video...');
   const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Create a complete video plan for this idea: ' + q + '. Give me: 1) A viral title, 2) A 3-second hook line, 3) Full script outline scene by scene, 4) Shot list with camera angles, 5) Music and sound effect suggestions, 6) A thumbnail concept. Format it clearly with the numbers.' }] }] });
   if (data.candidates && data.candidates[0].content.parts[0].text) {
     setOut(data.candidates[0].content.parts[0].text);
     saveHist(subjectName(), 'Video plan: ' + q, data.candidates[0].content.parts[0].text);
     addPts(10);
     if (typeof logSkill === 'function') logSkill('ai_ask');
-  } else { setOut('The AI is cooked rn 💀 try again in a minute.'); }
+  } else { setOut('The AI is cooked rn try again in a minute.'); }
 };
 </script>
 <script src='nova.js'></script>
