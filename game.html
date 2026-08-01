@@ -3,7 +3,7 @@
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>NovaClip — Strike Arena</title>
+<title>NovaClip — Games</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
 body { background: #7ec8e3; overflow: hidden; color: #fff; }
@@ -58,6 +58,15 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 #ammo #ammores.low { color: #ffd24a; opacity: 1; }
 #ammo #ammores.dry { color: #ff6b6b; opacity: 1; font-weight: 800; }
 #ammo #weapname { font-size: 0.9rem; color: #ffd24a; letter-spacing: 1px; font-weight: 700; }
+/* Speedometer. Only on screen while you are driving something — a dial that
+   reads zero for the whole match is just clutter. */
+#speedo { position: fixed; bottom: 92px; right: 18px; z-index: 12; display: none; text-align: center;
+          pointer-events: none; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6)); }
+#speedo canvas { display: block; width: 148px; height: 148px; }
+/* The ammo counter is where the dial goes, and you cannot fire a rifle from the
+   driver's seat anyway — so while you are crewing something, the HUD shows the
+   thing you are actually operating. */
+body.driving #ammo { display: none; }
 #feed { position: fixed; bottom: 120px; left: 26px; z-index: 11; font-size: 0.85rem; }
 #feed div { background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 6px; margin-top: 4px; text-shadow: 0 1px 3px #000; }
 #hp { position: fixed; bottom: 22px; left: 26px; z-index: 11; width: 200px; }
@@ -343,6 +352,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='board'><h4>SCOREBOARD</h4><div id='rows'></div></div>
 <div id='ptsbadge'><b id='gamepts'>0</b> pts</div>
 <div id='ammo'><div id='weapname'>SNIPER</div><div id='magbig'><span id='mag'>10</span><small id='magmax'>/10</small></div><div id='ammores'></div></div>
+<div id='speedo'><canvas id='speedocv' width='176' height='176'></canvas></div>
 <div id='hp'><div class='lbl'>HEALTH</div><div class='track'><div id='hpbar'></div></div></div>
 <div id='loadout'></div>
 <div id='feed'></div>
@@ -350,7 +360,7 @@ body { background: #7ec8e3; overflow: hidden; color: #fff; }
 <div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop</div>
 <button id='shopbtn'>SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v84 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather</div>
+<div id='viewTag'>v85 · 1-8 weapons · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -692,6 +702,13 @@ const CUSTOM_MODELS = {
   // out of the box; swap the filename for anything else you upload.
   rpg: 'rpg7_rocket_launcher.glb', rpgScale: 1.0, rpgRotX: 0, rpgRotY: 90, rpgRotZ: 0,
 
+  /* THE MISSILE (Q — airstrike). Drop your Fab / Sketchfab filename in and the
+     warhead that falls out of the sky is your model instead of the built-in
+     cone. It is auto-fitted to missileLength metres and turned nose-down, so a
+     model built along any axis lands pointing the right way; missileFlip turns
+     it end for end if yours arrives tail-first. */
+  missile: '', missileScale: 1.0, missileLength: 3.2, missileFlip: false,
+
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
     idle:    'idle.glb',
@@ -712,7 +729,7 @@ const CUSTOM_MODELS = {
   // independently. Falls back to the built-in soldiers if it cannot load.
   botsUseModel: true
 };
-let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruckGLB = null, loadedKnifeGLB = null, loadedRpgGLB = null, loadedCharAnims = [];
+let loadedCharGLB = null, loadedWeapGLB = null, loadedTankGLB = null, loadedTruckGLB = null, loadedKnifeGLB = null, loadedRpgGLB = null, loadedMissileGLB = null, loadedCharAnims = [];
 const loadedHouseGLB = [];
 const loadedWeapModels = {};   // weapon id -> its own uploaded model
 let loadedArmsGLB = null;      // your own first-person arms, when uploaded
@@ -920,6 +937,7 @@ function loadCustomModels(done) {
     });
     if (CUSTOM_MODELS.rpg) { pending++; loader.load(CUSTOM_MODELS.rpg, g => { loadedRpgGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('rpg model failed \u2014 using the built-in launcher', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.knife) { pending++; loader.load(CUSTOM_MODELS.knife, g => { loadedKnifeGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('knife model failed \u2014 using the built-in blade', e); pending--; finish(); }); }
+    if (CUSTOM_MODELS.missile) { pending++; loader.load(CUSTOM_MODELS.missile, g => { loadedMissileGLB = g.scene; console.log('loaded missile from ' + CUSTOM_MODELS.missile); pending--; finish(); }, undefined, e => { console.warn('missile model failed \u2014 using the built-in warhead', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.truck) { pending++; loader.load(CUSTOM_MODELS.truck, g => { loadedTruckGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('truck model failed \u2014 using the built-in truck', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.tank) { pending++; loader.load(CUSTOM_MODELS.tank, g => { loadedTankGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('tank model failed \u2014 using the built-in tank', e); pending--; finish(); }); }
     if (CUSTOM_MODELS.weapon) { pending++; loader.load(CUSTOM_MODELS.weapon, g => { loadedWeapGLB = g.scene; pending--; finish(); }, undefined, e => { console.warn('weapon model failed \u2014 using built-in', e); pending--; finish(); }); }
@@ -1062,6 +1080,26 @@ const LEADERBOARD_URL = '';        // e.g. 'https://novaclip-scores.YOURNAME.wor
    above its own declaration throws, and everything below it never initialises. */
 const NC_MP_URL = '';              // e.g. 'wss://novaclip-mp.deno.dev'
 const MP_SEND_HZ = 15;
+
+/* ---- CHASE MUSIC ----------------------------------------------------------
+   Your track, played only when a vehicle is genuinely moving fast, and cut when
+   it slows down. Put the file next to game.html and name it here:
+
+       const MUSIC_FILE = 'chase.mp3';
+
+   Any format the browser plays works — mp3, m4a, ogg, wav. Left empty, nothing
+   loads and nothing is requested, so the game is unchanged.
+
+   CTRL+A turns it off and on, and the choice is remembered. That is deliberately
+   a toggle for the MUSIC only: sound effects are separate and stay on, because
+   the reason to silence a soundtrack is usually that you want to hear the game.
+
+   MUSIC_ON_KMH is where it starts and MUSIC_OFF_KMH is where it stops. They are
+   different on purpose — one threshold makes the track stutter on and off while
+   you hover right at the line. */
+const MUSIC_FILE = '';
+const MUSIC_ON_KMH = 70, MUSIC_OFF_KMH = 45;
+const MUSIC_VOL = 0.5, MUSIC_FADE = 1.4;   // seconds to fade all the way in or out
 const LB_REFRESH_MS = 60000;
 let lbTab = 'world', lbWorld = null, lbState = 'idle', lbNextAt = 0;
 
@@ -2212,7 +2250,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v84 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v85 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -2955,15 +2993,89 @@ function burst(dur, vol, cutoff) {
   g.gain.exponentialRampToValueAtTime(0.0008, actx.currentTime + dur);
   src.connect(f); f.connect(g); g.connect(sfxGain); src.start();
 }
-function playBoom(vol) {
+/* A detonation is not one sound. Real ones arrive in layers: the crack of the
+   charge, a body of low pressure you feel more than hear, then a tail of debris
+   and echo that lasts far longer than the flash. Playing a single clip gives you
+   the crack and nothing else, which is why it read as small. So the clip is kept
+   — it is the character of the blast — and the sub and the tail are built around
+   it. `size` scales all three: a grenade and a missile are the same event at
+   different magnitudes, not different sounds. */
+function playBoom(vol, size) {
+  const s = size || 1;
   if (boomBuf) {
     const src = actx.createBufferSource(), g = actx.createGain();
-    src.buffer = boomBuf; g.gain.value = vol;
+    src.buffer = boomBuf;
+    /* Bigger charge, slower playback: dropping the rate stretches the clip and
+       drags every frequency in it down an octave-ish, which is exactly what mass
+       does to a real explosion. */
+    src.playbackRate.value = Math.max(0.55, 1.12 - 0.22 * s);
+    g.gain.value = vol;
     src.connect(g); g.connect(sfxGain); src.start();
-  } else {                                   // synth fallback: thump plus rumble
-    blip('sine', 120, 0.5, vol, 30);
-    burst(0.6, vol * 0.8, 900);
+  } else {
+    blip('sine', 130 / s, 0.5 * s, vol, 30);
   }
+  // the sub-bass punch, under everything
+  blip('sine', 78 / s, 0.55 * s, vol * 0.85, 24);
+  // the tail: filtered noise that outlasts the clip, so the blast has a decay
+  const tail = actx.createBufferSource(), tg = actx.createGain(), tf = actx.createBiquadFilter();
+  tail.buffer = noiseBuffer(1.1 * s);
+  tf.type = 'lowpass'; tf.frequency.setValueAtTime(2600, actx.currentTime);
+  tf.frequency.exponentialRampToValueAtTime(180, actx.currentTime + 1.0 * s);
+  tg.gain.setValueAtTime(vol * 0.55, actx.currentTime);
+  tg.gain.exponentialRampToValueAtTime(0.0008, actx.currentTime + 1.1 * s);
+  tail.connect(tf); tf.connect(tg); tg.connect(sfxGain); tail.start();
+}
+
+/* Distance matters. A blast on the far side of the map arriving at the same
+   volume as one at your feet is the single loudest tell that a game's audio is
+   fake, and it also means you cannot judge danger by ear. Anything with a world
+   position goes through here. */
+function boomAt(pos, size) {
+  if (!sfxReady || !actx || actx.state !== 'running') return;
+  const d = Math.hypot(pos.x - player.x, (pos.y || 0) - player.y, pos.z - player.z);
+  const near = 12 * (size || 1);
+  const vol = Math.max(0.05, Math.min(1, near / Math.max(near, d))) * 0.95;
+  try { playBoom(vol, size); } catch (e) {}
+  // close ones ring your ears for a moment
+  if (d < 14 * (size || 1)) {
+    try { blip('sine', 2100, 1.1, 0.05, 1900); } catch (e) {}
+  }
+}
+
+/* ---- ENGINE ----
+   One oscillator pair whose pitch follows the vehicle's speed, started when you
+   climb in and stopped when you get out. A looped engine sample would be a file
+   to ship, license and credit; a sawtooth through a lowpass is free and tracks
+   the throttle exactly, which a fixed loop cannot. */
+let engOsc = null, engSub = null, engGain = null, engFilt = null;
+function engineStart() {
+  if (engOsc || !sfxReady || !actx || actx.state !== 'running') return;
+  try {
+    engGain = actx.createGain(); engGain.gain.value = 0;
+    engFilt = actx.createBiquadFilter(); engFilt.type = 'lowpass'; engFilt.frequency.value = 700;
+    engOsc = actx.createOscillator(); engOsc.type = 'sawtooth'; engOsc.frequency.value = 40;
+    engSub = actx.createOscillator(); engSub.type = 'square';   engSub.frequency.value = 20;
+    engOsc.connect(engFilt); engSub.connect(engFilt);
+    engFilt.connect(engGain); engGain.connect(sfxGain);
+    engOsc.start(); engSub.start();
+  } catch (e) { engOsc = null; }
+}
+function engineStop() {
+  if (!engOsc) return;
+  try { engGain.gain.setTargetAtTime(0, actx.currentTime, 0.08); const o = engOsc, s = engSub;
+        setTimeout(() => { try { o.stop(); s.stop(); } catch (e) {} }, 300); } catch (e) {}
+  engOsc = engSub = engGain = engFilt = null;
+}
+function engineUpdate(speed, topSpeed) {
+  if (!engOsc || !actx) return;
+  const k = Math.min(1, Math.abs(speed) / Math.max(1, topSpeed));
+  try {
+    const t = actx.currentTime;
+    engOsc.frequency.setTargetAtTime(46 + k * 150, t, 0.09);
+    engSub.frequency.setTargetAtTime(23 + k * 62, t, 0.09);
+    engFilt.frequency.setTargetAtTime(420 + k * 1500, t, 0.12);
+    engGain.gain.setTargetAtTime(0.05 + k * 0.13, t, 0.12);
+  } catch (e) {}
 }
 
 /* One entry point. Everything in the game calls sfx('name'). */
@@ -2978,8 +3090,13 @@ function sfx(name) {
       case 'lmg':     blip('square', 260, 0.05, 0.26, 80);  burst(0.09, 0.30, 5000); break;
       case 'dmr':     blip('square', 220, 0.10, 0.30, 60);  burst(0.16, 0.34, 4000); break;
       case 'knife':   burst(0.09, 0.22, 9000); break;
-      case 'rpgfire': blip('sawtooth', 180, 0.35, 0.30, 60); burst(0.40, 0.35, 2200); break;
-      case 'boom':    playBoom(0.9); break;
+      case 'rpgfire': blip('sawtooth', 180, 0.35, 0.30, 60); burst(0.40, 0.35, 2200);
+                      // the backblast, a beat behind the launch
+                      setTimeout(() => { if (sfxReady) burst(0.5, 0.22, 1400); }, 60); break;
+      case 'boom':    playBoom(0.9, 1); break;
+      case 'bigboom': playBoom(1.0, 2.1); break;
+      // an incoming missile you can hear before you can see it
+      case 'incoming': blip('sine', 1500, 2.6, 0.13, 260); break;
       case 'reload':  blip('square', 900, 0.03, 0.12, 500);
                       setTimeout(() => { if (sfxReady) blip('square', 600, 0.05, 0.12, 300); }, 260); break;
       case 'hit':     blip('triangle', 700, 0.05, 0.16, 300); break;
@@ -2990,6 +3107,170 @@ function sfx(name) {
   } catch (e) { /* never let a sound break a frame */ }
 }
 window.sfx = sfx;
+
+/* ============================================================
+   SPEEDOMETER + CHASE MUSIC
+   The dial reads the vehicle you are actually crewing. One unit in this world is
+   one metre, so u/s is m/s and km/h is just x3.6 — no invented scale.
+
+   The music is tied to the needle rather than to a key, because a soundtrack you
+   have to start yourself is a soundtrack nobody hears. It comes in when you are
+   genuinely moving and goes when you are not, and CTRL+A silences it for good if
+   you would rather listen to the game.
+   ============================================================ */
+const KMH = 3.6;                       // metres per second -> km/h
+let musicEl = null, musicWant = 0, musicOn = false;
+let musicEnabled = localStorage.getItem('nc_music') !== 'off';
+
+function musicInit() {
+  if (musicEl || !MUSIC_FILE) return;
+  musicEl = new Audio(MUSIC_FILE);
+  musicEl.loop = true;
+  musicEl.volume = 0;
+  musicEl.preload = 'auto';
+  /* A missing or unplayable file must not take the frame down with it, and it
+     must not nag: say it once, in the console, and carry on silently. */
+  musicEl.addEventListener('error', () => {
+    console.warn('chase music: could not load "' + MUSIC_FILE + '" — is the file next to game.html?');
+    musicEl = null;
+  }, { once: true });
+}
+
+function musicToggle() {
+  musicEnabled = !musicEnabled;
+  localStorage.setItem('nc_music', musicEnabled ? 'on' : 'off');
+  if (!musicEnabled && musicEl) { try { musicEl.pause(); } catch (e) {} musicOn = false; musicWant = 0; musicEl.volume = 0; }
+  addFeed(musicEnabled ? 'Music on' : 'Music off');
+  speedoLast = -1;                 // force the dial to repaint with the new state
+}
+
+function musicUpdate(dt, kmh) {
+  if (!MUSIC_FILE) return;
+  if (!musicEnabled) return;
+  musicInit();
+  if (!musicEl) return;
+  // hysteresis: on at the high mark, off at the low one, so it cannot stutter
+  if (kmh >= MUSIC_ON_KMH) musicWant = 1;
+  else if (kmh <= MUSIC_OFF_KMH) musicWant = 0;
+
+  const target = musicWant * MUSIC_VOL;
+  const step = (MUSIC_VOL / MUSIC_FADE) * dt;
+  const v = musicEl.volume;
+  const nv = v < target ? Math.min(target, v + step) : Math.max(target, v - step);
+  musicEl.volume = Math.max(0, Math.min(1, nv));
+
+  if (nv > 0.001 && !musicOn) {
+    musicOn = true;
+    // play() rejects if the browser has not seen a gesture yet; that is normal
+    musicEl.play().catch(() => {});
+  } else if (nv <= 0.001 && musicOn) {
+    musicOn = false;
+    try { musicEl.pause(); } catch (e) {}
+  }
+}
+
+/* The dial itself. Redrawn only while you are driving, and only when the reading
+   has actually moved — a canvas repainted 60 times a second to show the same
+   number is work for nothing. */
+let speedoLast = -1;
+function drawSpeedo(kmh, redline) {
+  const cv = document.getElementById('speedocv');
+  if (!cv) return;
+  const r = Math.round(kmh);
+  if (r === speedoLast) return;
+  speedoLast = r;
+
+  const c = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const cx = W / 2, cy = H / 2, rad = W / 2 - 12;
+  const A0 = Math.PI * 0.78, A1 = Math.PI * 2.22;      // sweep, left-down to right-down
+  const max = Math.max(60, Math.ceil(redline / 20) * 20 + 20);
+  const ang = (v) => A0 + (A1 - A0) * Math.min(1, Math.max(0, v / max));
+
+  c.clearRect(0, 0, W, H);
+
+  // face
+  c.beginPath(); c.arc(cx, cy, rad + 8, 0, Math.PI * 2);
+  c.fillStyle = 'rgba(6,10,18,0.9)'; c.fill();
+  c.lineWidth = 2; c.strokeStyle = 'rgba(255,255,255,0.14)'; c.stroke();
+
+  // the track, then the filled arc up to the current reading
+  c.lineWidth = 7; c.lineCap = 'round';
+  c.beginPath(); c.arc(cx, cy, rad, A0, A1); c.strokeStyle = 'rgba(255,255,255,0.10)'; c.stroke();
+  const grad = c.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, '#6cc3ff'); grad.addColorStop(0.6, '#ffd24a'); grad.addColorStop(1, '#ff5a5a');
+  c.beginPath(); c.arc(cx, cy, rad, A0, ang(kmh)); c.strokeStyle = grad; c.stroke();
+
+  // where the music kicks in — the one mark on the dial that means something
+  if (MUSIC_FILE) {
+    const a = ang(MUSIC_ON_KMH);
+    c.beginPath();
+    c.moveTo(cx + Math.cos(a) * (rad - 11), cy + Math.sin(a) * (rad - 11));
+    c.lineTo(cx + Math.cos(a) * (rad + 5), cy + Math.sin(a) * (rad + 5));
+    c.lineWidth = 3; c.strokeStyle = musicEnabled ? '#6cc3ff' : 'rgba(255,255,255,0.25)'; c.stroke();
+  }
+
+  // ticks every 20 km/h
+  c.lineWidth = 2; c.strokeStyle = 'rgba(255,255,255,0.35)';
+  for (let v = 0; v <= max; v += 20) {
+    const a = ang(v);
+    c.beginPath();
+    c.moveTo(cx + Math.cos(a) * (rad - 13), cy + Math.sin(a) * (rad - 13));
+    c.lineTo(cx + Math.cos(a) * (rad - 6),  cy + Math.sin(a) * (rad - 6));
+    c.stroke();
+  }
+
+  // needle
+  const na = ang(kmh);
+  c.beginPath();
+  c.moveTo(cx - Math.cos(na) * 9, cy - Math.sin(na) * 9);
+  c.lineTo(cx + Math.cos(na) * (rad - 16), cy + Math.sin(na) * (rad - 16));
+  c.lineWidth = 3.5; c.lineCap = 'round';
+  c.strokeStyle = kmh >= MUSIC_ON_KMH ? '#ff7a5a' : '#eaf2ff'; c.stroke();
+  c.beginPath(); c.arc(cx, cy, 5, 0, Math.PI * 2); c.fillStyle = '#eaf2ff'; c.fill();
+
+  // reading
+  c.textAlign = 'center';
+  c.fillStyle = '#eaf2ff';
+  c.font = '800 30px system-ui, sans-serif';
+  c.fillText(String(r), cx, cy + 34);
+  c.fillStyle = 'rgba(234,242,255,0.55)';
+  c.font = '700 10px system-ui, sans-serif';
+  c.fillText('KM/H', cx, cy + 48);
+
+  /* The music state lives on the face rather than in a label underneath it. A
+     separate element below the dial landed on top of the weapon row, and a HUD
+     that overlaps itself is worse than one that says less. */
+  if (MUSIC_FILE) {
+    c.font = '800 9px system-ui, sans-serif';
+    c.fillStyle = musicEnabled ? 'rgba(108,195,255,0.9)' : 'rgba(160,170,190,0.6)';
+    c.fillText(musicEnabled ? 'MUSIC · CTRL+A' : 'MUTED · CTRL+A', cx, cy - 26);
+  }
+}
+
+/* Called every frame. Owns the dial, the engine note and the music, because all
+   three are answers to the same question: how fast are you going. */
+function updateSpeedo(dt) {
+  const box = document.getElementById('speedo');
+  if (!box) return;
+  if (!playerTank || !running) {
+    if (box.style.display !== 'none') {
+      box.style.display = 'none'; speedoLast = -1;
+      document.body.classList.remove('driving');
+    }
+    engineStop();
+    musicUpdate(dt, 0);
+    return;
+  }
+  if (box.style.display === 'none' || !box.style.display) {
+    box.style.display = 'block';
+    document.body.classList.add('driving');
+  }
+  const kmh = Math.abs(playerTank.speed || 0) * KMH;
+  drawSpeedo(kmh, (playerTank.topSpeed || 22) * KMH);
+  engineStart();
+  engineUpdate(playerTank.speed || 0, playerTank.topSpeed || 22);
+  musicUpdate(dt, kmh);
+}
 
 /* ============================================================
    MULTIPLAYER
@@ -3247,6 +3528,9 @@ function startMatch() {
   if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
   running = true; c4Ready = false; c4Timer = 20; shopVisits = 0; setPts(pts());
   resetAmmo();
+  // no smoke or debris left hanging in the air from the last round
+  fx.forEach(f => scene.remove(f.mesh)); fx = [];
+  shake.amp = 0; shake.t = 0; speedoLast = -1;
   // spawn in open ground just in FRONT of your team's base (never inside the walls)
   const HB = BASES[PLAYER_TEAM];
   const facing = PLAYER_TEAM === 'ct' ? 1 : -1;   // CT faces +z, T faces -z
@@ -3303,6 +3587,11 @@ function updateNadeHint() {
 
 document.addEventListener('keydown', (e) => {
   keys[e.code] = true;
+  /* CTRL+A mutes and unmutes the music. Checked before the `running` gate so it
+     works in the lobby too, and preventDefault because in a browser CTRL+A is
+     "select the whole page" — without this you get the soundtrack and a page of
+     highlighted blue text. */
+  if (e.code === 'KeyA' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); musicToggle(); return; }
   if (e.code === BINDS.jump && running) e.preventDefault();
   if (!running) return;
   if (e.code === BINDS.reload) reload();
@@ -3651,15 +3940,156 @@ function detonate() {
   blow.forEach(p => explode(p.mesh.position, p.kind === 'c4' ? 9 : 6));
   planted = planted.filter(p => !blow.includes(p)); blow.forEach(p => scene.remove(p.mesh));
 }
+/* ============================================================
+   EXPLOSIONS
+   The old one was a yellow sphere that grew and faded on a setInterval. Two
+   things were wrong with it. It ran on its own timer, so at 30fps it stepped
+   twice per frame and at 144 it stepped once every five — the blast was a
+   different length depending on the machine. And an explosion is not a ball: the
+   thing that sells it is what happens AROUND the ball. A flash before you see
+   the fire, a shockwave running out along the ground, smoke that keeps rising
+   after the light is gone, debris thrown out on arcs, and the ground moving
+   under you.
+
+   So the visuals are a list of particles stepped by dt from the render loop,
+   like everything else that moves. The damage below is untouched.
+   ============================================================ */
+let fx = [];                       // live explosion pieces
+let shake = { amp: 0, t: 0 };      // camera shake, decays on its own
+
+function addFx(mesh, life, spec) {
+  scene.add(mesh);
+  fx.push(Object.assign({ mesh, life, max: life }, spec || {}));
+}
+
 function explode(pos, radius) {
-  const fl = new THREE.PointLight(0xffaa33, 6, radius*3); fl.position.copy(pos); fl.position.y += 1; scene.add(fl);
-  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.5,10,10), new THREE.MeshBasicMaterial({ color: 0xffcc55, transparent: true, opacity: 0.95 })); ball.position.copy(pos); scene.add(ball);
-  let s = 0.5; const iv = setInterval(() => { s += radius/6; ball.scale.set(s,s,s); ball.material.opacity -= 0.16; if (ball.material.opacity <= 0) { clearInterval(iv); scene.remove(ball); scene.remove(fl); } }, 40);
-  bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const d = b.mesh.position.distanceTo(pos); if (d < radius) { b.hp -= 120*(1-d/radius)+30; if (b.hp <= 0) killBot(b); } });
+  const R = Math.max(2, radius);
+  const p = pos.clone();
+
+  /* The flash. It is white, it is very short, and it comes before the fireball —
+     that ordering is most of why a blast reads as violent rather than as a
+     balloon inflating. */
+  const flash = new THREE.PointLight(0xfff2d0, 26, R * 6);
+  flash.position.copy(p); flash.position.y += 1.2;
+  addFx(flash, 0.13, { kind: 'light', from: 26 });
+
+  const fire = new THREE.PointLight(0xff8a2a, 9, R * 4.5);
+  fire.position.copy(p); fire.position.y += 1;
+  addFx(fire, 0.75, { kind: 'light', from: 9 });
+
+  /* Fireball: two shells, an inner white-hot core that dies fast and an outer
+     body that grows past it. One sphere alone always looks like a bubble. */
+  const core = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 12),
+    new THREE.MeshBasicMaterial({ color: 0xfff6d8, transparent: true, opacity: 1 }));
+  core.position.copy(p); core.position.y += 0.8; core.scale.setScalar(R * 0.18);
+  addFx(core, 0.22, { kind: 'ball', grow: R * 2.2 });
+
+  const body = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 14),
+    new THREE.MeshBasicMaterial({ color: 0xff9a2e, transparent: true, opacity: 0.95 }));
+  body.position.copy(p); body.position.y += 0.9; body.scale.setScalar(R * 0.25);
+  addFx(body, 0.5, { kind: 'ball', grow: R * 1.5, fade: 0.9 });
+
+  /* Shockwave: a flat ring running out along the ground. This is the piece that
+     tells you how far the blast reached, which a sphere never does because you
+     only ever see its front. */
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1, 44),
+    new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.85,
+                                  side: THREE.DoubleSide, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(p.x, 0.12, p.z);
+  addFx(ring, 0.55, { kind: 'ring', grow: R * 1.35 });
+
+  // Smoke, rising and spreading after the fire has gone out.
+  for (let i = 0; i < 7; i++) {
+    const puff = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0x3a3a3e, transparent: true, opacity: 0.55, depthWrite: false }));
+    const a = Math.random() * Math.PI * 2, rr = Math.random() * R * 0.4;
+    puff.position.set(p.x + Math.cos(a) * rr, p.y + 0.6 + Math.random() * 1.2, p.z + Math.sin(a) * rr);
+    puff.scale.setScalar(R * (0.16 + Math.random() * 0.14));
+    addFx(puff, 1.5 + Math.random(), { kind: 'smoke', grow: R * 0.5,
+      vel: new THREE.Vector3((Math.random() - 0.5) * 1.6, 1.6 + Math.random() * 1.6, (Math.random() - 0.5) * 1.6) });
+  }
+
+  // Debris: small shards on ballistic arcs, so the ground gets thrown about too.
+  const shards = Math.min(16, Math.round(R * 1.6));
+  for (let i = 0; i < shards; i++) {
+    const bit = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.34),
+      new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0xffb050 : 0x4a4038 }));
+    bit.position.copy(p); bit.position.y += 0.8;
+    const a = Math.random() * Math.PI * 2, up = 6 + Math.random() * 11, out = 4 + Math.random() * R;
+    addFx(bit, 1.1 + Math.random() * 0.6, { kind: 'debris',
+      vel: new THREE.Vector3(Math.cos(a) * out, up, Math.sin(a) * out),
+      spin: new THREE.Vector3(Math.random() * 9, Math.random() * 9, Math.random() * 9) });
+  }
+
+  // The ground moves. Strength falls off with distance, so a far blast is a rumble.
+  const d = Math.hypot(p.x - player.x, p.z - player.z);
+  const near = R * 3;
+  if (d < near) shakeCamera(Math.min(0.85, (1 - d / near) * (0.25 + R * 0.045)), 0.45);
+
+  // damage: unchanged, and still the only thing here that touches gameplay
+  bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const dd = b.mesh.position.distanceTo(pos); if (dd < radius) { b.hp -= 120*(1-dd/radius)+30; if (b.hp <= 0) killBot(b); } });
+}
+
+function shakeCamera(amp, time) {
+  // a bigger blast overrides a smaller one already running, never adds to it
+  shake.amp = Math.max(shake.amp, amp);
+  shake.t = Math.max(shake.t, time || 0.4);
+}
+
+/* Applied after updateCamera, which sets the camera fresh every frame — so the
+   offset never accumulates and there is nothing to undo. */
+function updateShake(dt) {
+  if (shake.t <= 0) { shake.amp = 0; return; }
+  shake.t -= dt;
+  const k = Math.max(0, shake.t) * shake.amp;
+  camera.position.x += (Math.random() - 0.5) * k;
+  camera.position.y += (Math.random() - 0.5) * k;
+  camera.position.z += (Math.random() - 0.5) * k;
+  camera.rotation.z += (Math.random() - 0.5) * k * 0.09;
+  if (shake.t <= 0) shake.amp = 0;
+}
+
+function updateFx(dt) {
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const f = fx[i];
+    f.life -= dt;
+    const k = Math.max(0, f.life / f.max);          // 1 at birth, 0 at death
+    const m = f.mesh;
+    if (f.life <= 0) { scene.remove(m); if (m.material) m.material.dispose && m.material.dispose(); fx.splice(i, 1); continue; }
+
+    switch (f.kind) {
+      case 'light':
+        m.intensity = f.from * k * k;               // squared: a hard, fast falloff
+        break;
+      case 'ball':
+        m.scale.addScalar(f.grow * dt);
+        m.material.opacity = k * (f.fade || 1);
+        break;
+      case 'ring': {
+        const s = m.scale.x + f.grow * dt;
+        m.scale.set(s, s, s);
+        m.material.opacity = k * 0.85;
+        break;
+      }
+      case 'smoke':
+        m.position.addScaledVector(f.vel, dt);
+        f.vel.multiplyScalar(1 - 1.1 * dt);         // air drags it to a stop
+        m.scale.addScalar(f.grow * dt);
+        m.material.opacity = k * 0.5;
+        break;
+      case 'debris':
+        f.vel.y -= 22 * dt;
+        m.position.addScaledVector(f.vel, dt);
+        m.rotation.x += f.spin.x * dt; m.rotation.y += f.spin.y * dt; m.rotation.z += f.spin.z * dt;
+        if (m.position.y < 0.1) { m.position.y = 0.1; f.vel.set(0, 0, 0); f.spin.set(0, 0, 0); }
+        break;
+    }
+  }
 }
 function updateNades(dt) {
   planted.forEach(p => {
-    if (p.kind === 'frag' && !p.done) { p.t += dt; p.vel.y -= 30*dt; p.mesh.position.x += p.vel.x*dt; p.mesh.position.y += p.vel.y*dt; p.mesh.position.z += p.vel.z*dt; if (p.mesh.position.y <= 0.15) { p.mesh.position.y = 0.15; p.vel.set(0,0,0); } if (p.t > 1.4) { p.done = true; explode(p.mesh.position, 6); scene.remove(p.mesh); } }
+    if (p.kind === 'frag' && !p.done) { p.t += dt; p.vel.y -= 30*dt; p.mesh.position.x += p.vel.x*dt; p.mesh.position.y += p.vel.y*dt; p.mesh.position.z += p.vel.z*dt; if (p.mesh.position.y <= 0.15) { p.mesh.position.y = 0.15; p.vel.set(0,0,0); } if (p.t > 1.4) { p.done = true; explode(p.mesh.position, 6); boomAt(p.mesh.position, 0.85); scene.remove(p.mesh); } }
     if (p.kind === 'sticky' && !p.stuck) { p.vel.y -= 30*dt; p.mesh.position.x += p.vel.x*dt; p.mesh.position.y += p.vel.y*dt; p.mesh.position.z += p.vel.z*dt; if (p.mesh.position.y <= 0.15) { p.mesh.position.y = 0.15; p.stuck = true; } }
 
     // tank shells: fast, shallow arc, detonate on the first thing they reach
@@ -3712,8 +4142,11 @@ function updateNades(dt) {
       }
       if (hit) {
         p.done = true;
-        sfx('boom');
+        /* A rocket lands harder than a tank shell and both land harder than a
+           grenade, and now they sound like it — one clip at one volume for every
+           bang was the flattest thing about the old audio. */
         explode(p.mesh.position.clone(), p.blast || 9);
+        boomAt(p.mesh.position, p.rocket ? 1.7 : 1.25);
         // splash: infantry near the blast go down, and you take a hit too
         const bp = p.mesh.position;
         bots.forEach(b => {
@@ -4964,18 +5397,63 @@ function drawTablet() {
     : 'SPENT \u2014 recharges in ' + strikeWaitText();
 }
 
+/* Your Fab missile, or the built-in warhead if none is set.
+
+   Orientation is the same trap the rockets fell into: a GLB is modelled along
+   whichever axis its author chose, and the game needs the nose pointing DOWN.
+   Rather than guess, the model's longest axis is found and turned onto -Y, then
+   scaled so its length is missileLength metres — so a 40 cm prop and a 12 m
+   ICBM both arrive the right size. missileFlip turns it end for end if the model
+   comes in tail-first, which cannot be detected from geometry alone. */
+function buildMissile() {
+  const g = new THREE.Group();
+  if (loadedMissileGLB) {
+    const inner = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone)
+      ? THREE.SkeletonUtils.clone(loadedMissileGLB) : loadedMissileGLB.clone(true);
+    const box = new THREE.Box3().setFromObject(inner);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const longest = Math.max(size.x, size.y, size.z);
+    // stand the long axis up first, then tip the whole thing nose-down
+    if (longest === size.x) inner.rotation.z = Math.PI / 2;
+    else if (longest === size.z) inner.rotation.x = -Math.PI / 2;
+    const s = (CUSTOM_MODELS.missileLength || 3.2) / Math.max(0.001, longest) * (CUSTOM_MODELS.missileScale || 1);
+    inner.scale.setScalar(s);
+    // recentre on the group's origin so it spins and falls about its own body
+    const b2 = new THREE.Box3().setFromObject(inner), c = new THREE.Vector3();
+    b2.getCenter(c); inner.position.sub(c);
+    g.add(inner);
+    g.rotation.x = CUSTOM_MODELS.missileFlip ? 0 : Math.PI;
+  } else {
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.6, 10),
+      new THREE.MeshStandardMaterial({ color: 0xcfd6dd, emissive: 0x331100, metalness: 0.6, roughness: 0.4 }));
+    // four fins, so the built-in warhead is not just a traffic cone
+    for (let i = 0; i < 4; i++) {
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.8, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0x9aa3ab, metalness: 0.5, roughness: 0.5 }));
+      fin.position.set(Math.cos(i * Math.PI / 2) * 0.4, -1.0, Math.sin(i * Math.PI / 2) * 0.4);
+      fin.rotation.y = i * Math.PI / 2;
+      cone.add(fin);
+    }
+    g.add(cone);
+    g.rotation.x = Math.PI;               // nose down
+  }
+  // exhaust: a glow that follows it down and lights the ground as it arrives
+  const glow = new THREE.PointLight(0xff8a3a, 3.2, 26);
+  glow.position.y = -1.6;
+  g.add(glow);
+  return g;
+}
+
 function callStrike(wx, wz) {
   if (!strikeAvailable()) { addFeed('Strike on cooldown \u2014 ' + strikeWaitText()); return; }
   localStorage.setItem('nc_strike_at', String(Date.now() + STRIKE_COOLDOWN_MS));
   buildLoadoutHUD();
   const name = MISSILES[Math.floor(Math.random() * MISSILES.length)];
 
-  // the warhead itself, falling from altitude
-  const m = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.6, 10),
-    new THREE.MeshStandardMaterial({ color: 0xcfd6dd, emissive: 0x331100, metalness: 0.6, roughness: 0.4 }));
-  m.rotation.x = Math.PI;                 // nose down
+  const m = buildMissile();
   m.position.set(wx, 190, wz);
   scene.add(m);
+  sfx('incoming');                        // you hear it before you see it
 
   // ground marker so the target area is obvious from the field
   const ring = new THREE.Mesh(new THREE.RingGeometry(STRIKE_RADIUS - 1.2, STRIKE_RADIUS, 40),
@@ -4996,7 +5474,14 @@ function updateStrikes(dt) {
     s.ring.material.opacity = 0.35 + Math.sin(performance.now() / 90) * 0.25;
     if (s.t > 0) continue;
 
-    explode(new THREE.Vector3(s.x, 1.2, s.z), STRIKE_RADIUS);
+    /* A missile off the shelf is a different order of event from a grenade. Two
+       fireballs a beat apart — the warhead, then the fuel — plus a heavier boom
+       and a shake you feel from further away. */
+    const hitPt = new THREE.Vector3(s.x, 1.2, s.z);
+    explode(hitPt, STRIKE_RADIUS);
+    boomAt(hitPt, 2.2);
+    shakeCamera(0.9, 0.8);
+    setTimeout(() => { if (scene) explode(new THREE.Vector3(s.x, 2.6, s.z), STRIKE_RADIUS * 0.6); }, 110);
     scene.remove(s.mesh); scene.remove(s.ring);
     let killed = 0;
     bots.forEach(b => {
@@ -5053,7 +5538,8 @@ function animate() {
   // refresh the loadout about once a second so the countdown ticks down
   strikeHudT -= dt;
   if (strikeHudT <= 0) { strikeHudT = 1; buildLoadoutHUD(); }
-  updateCamera(dt); updateTracers(dt); updateRounds(dt); mpUpdate(dt);
+  updateCamera(dt); updateShake(dt); updateFx(dt); updateSpeedo(dt);
+  updateTracers(dt); updateRounds(dt); mpUpdate(dt);
   if (mapLamp) mapLamp.position.set(camera.position.x, camera.position.y + 1.2, camera.position.z);
   renderer.render(scene, camera);
 }
