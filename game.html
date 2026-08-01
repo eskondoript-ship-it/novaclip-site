@@ -1078,7 +1078,8 @@ const LEADERBOARD_URL = '';        // e.g. 'https://novaclip-scores.YOURNAME.wor
 /* Multiplayer relay (mp-server.js). Declared up here with the other endpoints
    because the lobby reads it while the page is still executing — a const touched
    above its own declaration throws, and everything below it never initialises. */
-const NC_MP_URL = '';              // e.g. 'wss://novaclip-mp.deno.dev'
+// your live Deno relay — wss://, not https://, because it is a socket
+const NC_MP_URL = 'wss://novaclip-site.eskondoript-ship-it.deno.net';
 const MP_SEND_HZ = 15;
 
 /* ---- CHASE MUSIC ----------------------------------------------------------
