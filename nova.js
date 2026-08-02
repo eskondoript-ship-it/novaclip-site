@@ -262,7 +262,7 @@ const NC_SERVER = '';          // e.g. 'https://novaclip-server.you.workers.dev'
 /* What travels. Deliberately NOT nc_yt: that holds a YouTube OAuth token, and a
    token on someone else's server is a token you no longer control. The channel
    name is copied into nc_name instead, which is all the rest of the site needs. */
-const NC_SYNC_KEYS = ['nc_points', 'nc_skills', 'nc_certs', 'nc_cert_enrolled',
+const NC_SYNC_KEYS = ['nc_points', 'nc_skills', 'nc_certs','nc_pro','nc_subscription', 'nc_cert_enrolled',
                       'nc_ideas', 'nc_history', 'nc_unlocked', 'nc_lb', 'nc_name',
                       'nc_flap_best', 'nc_lang'];
 
@@ -614,7 +614,78 @@ function applySeason() {
     e_effects_h:'fx n filters', e_memes_h:'meme search', e_text_h:'text on screen',
     e_voice_h:'AI voiceover', e_clip_h:'selected clip', e_filter:'filter', e_trans:'transition',
     e_import:'⊕ drop ur media', e_export:'export',
-    language:'Language'
+    language:'Language',
+
+    /* The other 68 keys. Gen Z mode covered a third of the site, so switching it
+       on gave you a slang homepage and a plain everything-else — which reads as
+       half-finished rather than as a mode. Every data-t key the site actually
+       uses now has a line here, so the switch changes the whole thing. */
+    eyebrow:'for teen creators · 13-18', scrolldown:'▼ keep scrolling',
+    sec1_h1:'smart', sec1_h2:'coaching', sec2_h1:'fair', sec2_h2:'fights',
+    sec_play:'play', sec_nums:'the numbers', play_h:'grind for real rewards',
+    nums_h:'built different', trend_h:'whats hot rn', trend_p:'find the wave before it breaks',
+    final_h:"ur channel's <span class='g'>next level</span><br>starts in a tab.",
+    final_p:'no downloads. no card. just open it and go.', final_btn:'lock in',
+    footer:'made for creators who are still in school',
+    card_ai_d:'three tutors on call, in ur language, tuned for teen creators. ask, learn, level up.',
+    card_duel_d:'only fight channels within 20k subs. subs and views pick the winner. win = points.',
+    card_quest_d:'quests, streaks and badges for actually doing the work.',
+    coach1:'channel coach', coach1d:'titles, hooks and growth that actually work',
+    coach2:'space tutor',   coach2d:'turn curiosity into stuff people watch',
+    coach3:'money tutor',   coach3d:'side hustles and smart moves, no waffle',
+    meta_ai:'AI tutors on call', meta_editor:'browser editor', meta_rewards:'quests & rewards',
+    st_languages:'languages', st_games:'games', st_tools:'tools', st_downloads:'downloads',
+    how1:'connect ur channel', how2:'do the work', how3:'get the badge',
+    ticker:"<b>AI TUTORS</b> · <i>VIDEO EDITOR</i> · <u>CHANNEL DUELS</u> · <b>TREND RADAR</b> · <i>GAMES</i> · <u>STATS</u> · <b>REWARDS</b> · ",
+    signin:'sign in w google', ask:'ask', scan:'scan it', scanning:'scanning...',
+    video:'video', thumb:'thumbnail', compare:'compare w rivals',
+    fight:'fight!', duel_label:'views + subs duel (max 20k sub gap)',
+    ai_h:'NovaClip AI',
+    quests:'quests', achievements:'achievements', history:'ur chats', recent:'recent',
+    xp_progress:'progress', prog_h:'ur progress', prog_sub:'everything u earned, in one place',
+    prog_skills:'skills', prog_skills_d:'what u have actually practised',
+    prog_rewards_d:'stuff u unlocked', prog_ach_d:'badges u earned', prog_hist_d:'ur AI chats',
+    rw1_t:'first upload', rw1_d:'export a video from the editor',
+    rw2_t:'trend hunter', rw2_d:'run 3 trend scans',
+    rw3_t:'sharpshooter', rw3_d:'top the arena board',
+    credits_btn:'credits', credits_note:'every model and sound, and who made it',
+    e_learn:'learn', e_learn_h:'learn'
+  };
+
+  /* ==========================================================================
+     NOVACLIP PRO
+     One place that answers "has this family paid, and for what". Everything
+     that is supposed to be a Pro feature asks here rather than each page
+     inventing its own check — so a feature cannot end up gated on one page and
+     free on another, which is exactly how a paid plan stops being trusted.
+
+       ncPro()          the whole record, or null
+       ncProHas('tools')  priority AI, longer exports, extra effects, skins
+       ncProHas('family') parental controls, PIN, activity overview
+     ========================================================================== */
+  window.ncPro = function () {
+    try { return JSON.parse(localStorage.getItem('nc_pro') || 'null'); } catch (e) { return null; }
+  };
+  window.ncProHas = function (what) {
+    const p = ncPro();
+    return !!(p && p[what]);
+  };
+
+  /* The badge. A plan you cannot see is a plan people forget they are paying
+     for, so Pro says so on every page — and on the pages where it changes what
+     you get, the feature says which plan unlocked it. */
+  window.ncBuildProBadge = function () {
+    const p = ncPro();
+    if (!p || document.getElementById('ncprobadge')) return;
+    const b = document.createElement('a');
+    b.id = 'ncprobadge';
+    b.href = 'pro.html';
+    b.textContent = 'PRO';
+    b.title = 'NovaClip Pro — ' + (p.plans || []).join(', ');
+    b.style.cssText = 'position:fixed;top:14px;right:96px;z-index:995;padding:5px 12px;border-radius:20px;' +
+      'font:800 0.7rem/1 system-ui,sans-serif;letter-spacing:2px;text-decoration:none;color:#04121a;' +
+      'background:linear-gradient(90deg,#B6FF3C,#00F0FF);box-shadow:0 4px 16px rgba(0,240,255,0.3);';
+    document.body.appendChild(b);
   };
 
   window.ncGenZ = function () { return localStorage.getItem('nc_genz') === '1'; };
@@ -625,7 +696,13 @@ function applySeason() {
     if (lang !== 'en') return;                   // slang only makes sense in English
     document.querySelectorAll('[data-t]').forEach(el => {
       const k = el.getAttribute('data-t');
-      if (GENZ[k]) el.textContent = GENZ[k];
+      const v = GENZ[k];
+      if (!v) return;
+      /* Some strings carry markup — the headline has a coloured span, the ticker
+         has bold and italics. textContent would print "<span class='g'>" on the
+         page as text, so anything with a tag in it goes in as HTML. Same rule
+         the translator already uses, for the same reason. */
+      if (/<[a-z][\s\S]*>/i.test(v)) el.innerHTML = v; else el.textContent = v;
     });
   };
 
@@ -636,8 +713,20 @@ function applySeason() {
 
   // toggle switch, injected into every sidebar
   window.ncBuildGenZToggle = function () {
-    const wrap = document.querySelector('.themewrap');
-    if (!wrap || document.getElementById('genzwrap')) return;
+    if (document.getElementById('genzwrap')) return;
+    /* Not every page has a sidebar — pricing, the editor and the family page do
+       not — and on those the switch simply never appeared, so the mode was
+       unreachable from half the site. Fall back to a small floating control in
+       the corner rather than skipping the page. */
+    let wrap = document.querySelector('.themewrap');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.className = 'themewrap';
+      wrap.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:900;width:190px;' +
+        'background:rgba(10,12,20,0.82);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);' +
+        'border-radius:12px;padding:10px 12px;';
+      document.body.appendChild(wrap);
+    }
     const on = ncGenZ();
     const d = document.createElement('div');
     d.id = 'genzwrap';
@@ -654,7 +743,7 @@ function applySeason() {
     });
   };
 
-  function boot() { ncBuildGenZToggle(); setTimeout(ncApplyGenZ, 60); }
+  function boot() { ncBuildGenZToggle(); ncBuildProBadge(); setTimeout(ncApplyGenZ, 60); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
