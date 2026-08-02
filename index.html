@@ -4,6 +4,29 @@
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaClip — Run your channel like a game</title>
+
+<!-- Search engines and link previews. A page with no description gets whatever
+     Google scrapes off it, and a link with no card is a bare blue URL in a chat. -->
+<meta name='description' content='NovaClip is a free creator toolkit for 13-18 year olds: AI coaching, a browser video editor, trend research that only shows what a channel your size can reach, and points you earn for using it.'>
+<meta name='theme-color' content='#05060A'>
+<meta name='author' content='NovaClip'>
+<link rel='canonical' href='https://novaclip.pages.dev/'>
+
+<meta property='og:type' content='website'>
+<meta property='og:site_name' content='NovaClip'>
+<meta property='og:title' content='NovaClip — Run your channel like a game'>
+<meta property='og:description' content='AI coaching, a browser editor, trend research sized to your channel, and points for every session. Free, no downloads.'>
+<meta property='og:url' content='https://novaclip.pages.dev/'>
+<meta property='og:image' content='https://novaclip.pages.dev/social-card.png'>
+<meta property='og:image:alt' content='NovaClip — a creator toolkit for teens'>
+
+<meta name='twitter:card' content='summary_large_image'>
+<meta name='twitter:title' content='NovaClip — Run your channel like a game'>
+<meta name='twitter:description' content='AI coaching, a browser editor, trend research sized to your channel, and points for every session. Free, no downloads.'>
+<meta name='twitter:image' content='https://novaclip.pages.dev/social-card.png'>
+<!-- NOTE: og:url / canonical / the image path must match where you actually host
+     this. Put a 1200x630 social-card.png next to index.html; until that file
+     exists the cards fall back to a plain text preview. -->
 <style>
 :root{ --void:#05060A; --void2:#0A0C14; --cyan:#00F0FF; --magenta:#FF2E97; --lime:#B6FF3C; --white:#EAF2FF; --dim:#7E8AA6; --line:rgba(120,140,200,0.14); }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -26,6 +49,15 @@ a{color:inherit;text-decoration:none}
 
 .content{margin-left:200px;position:relative;z-index:2}
 @media(max-width:760px){.content{margin-left:0}.sidebar{display:none}}
+
+/* loading state + skip link */
+#boot{position:fixed;inset:0;z-index:9999;background:var(--void);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease}
+#boot.gone{opacity:0;pointer-events:none}
+.bootinner{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:.9rem;letter-spacing:2px;text-transform:uppercase}
+.bootdot{width:10px;height:10px;border-radius:50%;background:var(--cyan);animation:bootpulse 1s ease-in-out infinite}
+@keyframes bootpulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.skip{position:absolute;left:-9999px;top:0;background:var(--cyan);color:#00151a;padding:10px 18px;border-radius:0 0 10px 0;font-weight:800;z-index:9998}
+.skip:focus{left:0}
 
 /* ===== ANIMATED BACKGROUND LAYERS ===== */
 .grid-floor{position:fixed;left:200px;right:0;bottom:0;height:44vh;z-index:0;pointer-events:none;perspective:340px;overflow:hidden;opacity:0.5}
@@ -153,6 +185,10 @@ section{padding:70px 7vw;position:relative}
 .final .g{color:var(--lime);text-shadow:0 0 46px rgba(182,255,60,.45);animation:neonLime 3s ease-in-out infinite}
 @keyframes neonLime{0%,100%{text-shadow:0 0 46px rgba(182,255,60,.45)}50%{text-shadow:0 0 80px rgba(182,255,60,.85)}}
 .final p{color:var(--dim);max-width:40ch;margin:0 auto 30px}
+.creditsrow{margin-top:38px;display:flex;flex-direction:column;align-items:center;gap:9px}
+.btn-credits{background:transparent;color:var(--white);font-weight:700;padding:12px 30px;border-radius:40px;border:1px solid var(--line);font-size:.92rem;cursor:pointer;transition:.3s}
+.btn-credits:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 26px rgba(0,240,255,.25);transform:translateY(-2px)}
+.creditsnote{color:var(--dim);font-size:.78rem;max-width:44ch;line-height:1.6}
 footer{border-top:1px solid var(--line);padding:32px 7vw;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--dim);font-size:.85rem}
 footer a:hover{color:var(--cyan)}
 /* rising neon particles */
@@ -264,14 +300,17 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 </style>
 </head>
 <body>
+<!-- Shown until the page is ready, so the first paint is not a half-built hero. -->
+<div id='boot' role='status' aria-live='polite'><div class='bootinner'><span class='bootdot'></span>Loading NovaClip…</div></div>
+<a class='skip' href='#main'>Skip to content</a>
 <div class='sidebar'>
-  <a href='index.html' data-t='home'>🏠 Home</a>
-  <a href='app.html' data-t='studio'>📈 Studio</a>
-  <a href='analytics.html' data-t='analytics'>📊 Analytics</a>
-  <a href='trends.html' data-t='trends'>🛰️ Trend Spotter</a>
-  <a href='editor.html' data-t='editor'>🎬 Editor</a>
-  <a href='game.html' data-t='sniper'>🎯 Sniper</a>
-  <a href='ai.html' class='aidot' data-t='ai'>✨ NovaClip AI</a>
+  <a href='index.html' data-t='home'>Home</a>
+  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='analytics'>Analytics</a>
+  <a href='trends.html' data-t='trends'>Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>Editor</a>
+  <a href='game.html' data-t='sniper'>Games</a>
+  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
   <div class='themewrap'>
     <label data-t='language'>Language</label>
     <select id='langpick'></select>
@@ -281,19 +320,18 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 <div id='orbs'><div class='orb a'></div><div class='orb b'></div><div class='orb c'></div></div>
 <div id='stars'></div>
 <div class='grid-floor'></div>
-<div class='scanline'></div>
 
 <div id='scrollbar'></div>
 <div class='orb3d a'></div><div class='orb3d b'></div><div class='orb3d c'></div>
 <div class='gridfloor'></div>
 <div id='mouseglow'></div>
 
-<div class='content'>
+<div class='content' id='main'>
 
 <header class='hero'>
   <span class='eyebrow' data-t='eyebrow'>For teen creators · 13–18</span>
-  <h1><span class='hl1' data-t='hero_line1'>Run your <b class='n'>channel</b></span><br><span class='hl2' data-t='hero_line2'>like a <b class='m'>game.</b></span></h1>
-  <div class='console'><span id='type'></span><span class='cursor'>▋</span></div>
+  <h1><span class='hl1' data-t='hero_line1'>Run your <b class='n'>channel</b></span><span class='hl2' data-t='hero_line2'>like a <b class='m'>game.</b></span></h1>
+  <div class='console' aria-hidden='true'><span id='type'></span><span class='cursor'>▋</span></div>
   <div class='herobtns'>
     <a href='app.html'><button class='btn-primary' data-t='startchannel'>Start your channel →</button></a>
     <a href='#play' class='btn-ghost' data-t='seerewards'>See the rewards</a>
@@ -313,13 +351,13 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
     <h2 class='sec-h' data-t='sec1_h1'>Smart<span class='thin' data-t='sec1_h2'>Coaching</span></h2>
     <p class='lead' data-t='card_ai_d'>Three tutors — YouTube, Space and Business — spin up answers in your language, tuned to teen creators. Ask, learn, level up.</p>
     <div style='margin-top:22px'>
-      <div class='tool'><h4>🎬 <span data-t='coach1'>Channel Coach</span></h4><span><span data-t='coach1d'>Titles, hooks, growth that actually works</span>.</span></div>
-      <div class='tool'><h4>☄️ <span data-t='coach2'>Space Tutor</span></h4><span><span data-t='coach2d'>Turn curiosity into content people watch</span>.</span></div>
-      <div class='tool'><h4>💼 <span data-t='coach3'>Money Tutor</span></h4><span><span data-t='coach3d'>Side hustles and smart moves, explained simply</span>.</span></div>
+      <div class='tool'><h4><span data-t='coach1'>Channel Coach</span></h4><span><span data-t='coach1d'>Titles, hooks, growth that actually works</span>.</span></div>
+      <div class='tool'><h4><span data-t='coach2'>Space Tutor</span></h4><span><span data-t='coach2d'>Turn curiosity into content people watch</span>.</span></div>
+      <div class='tool'><h4><span data-t='coach3'>Money Tutor</span></h4><span><span data-t='coach3d'>Side hustles and smart moves, explained simply</span>.</span></div>
     </div>
   </div>
   <div class='visual slideR'>
-    <div class='ring-wrap'><div class='ring r1'></div><div class='ring r2'></div><div class='ring r3'></div><div class='ring-core'>✨</div></div>
+    <div class='ring-wrap'><div class='ring r1'></div><div class='ring r2'></div><div class='ring r3'></div><div class='ring-core'></div></div>
   </div>
 </section>
 
@@ -327,9 +365,9 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 <section class='split'>
   <div class='visual slideL'>
     <div class='duel'>
-      <div class='bar b1'><span>YOU 🔥</span></div>
+      <div class='bar b1'><span>YOU</span></div>
       <div class='vs'>VS</div>
-      <div class='bar b2'><span>RIVAL ⚔️</span></div>
+      <div class='bar b2'><span>RIVAL</span></div>
     </div>
   </div>
   <div class='slideR'>
@@ -342,61 +380,78 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 <!-- TICKER -->
 <div class='ticker'>
   <div class='tk'>
-    <span><b>AI TUTORS</b> · <i>VIDEO EDITOR</i> · <u>CHANNEL DUELS</u> · <b>TREND RADAR</b> · <i>ROOFTOP SNIPER</i> · <u>ANALYTICS</u> · <b>REWARDS</b> · </span>
-    <span><b>AI TUTORS</b> · <i>VIDEO EDITOR</i> · <u>CHANNEL DUELS</u> · <b>TREND RADAR</b> · <i>ROOFTOP SNIPER</i> · <u>ANALYTICS</u> · <b>REWARDS</b> · </span>
+    <span data-t='ticker'><b>AI TUTORS</b> · <i>VIDEO EDITOR</i> · <u>CHANNEL DUELS</u> · <b>TREND RADAR</b> · <i>GAMES</i> · <u>ANALYTICS</u> · <b>REWARDS</b> · </span>
+    <span data-t='ticker'><b>AI TUTORS</b> · <i>VIDEO EDITOR</i> · <u>CHANNEL DUELS</u> · <b>TREND RADAR</b> · <i>GAMES</i> · <u>ANALYTICS</u> · <b>REWARDS</b> · </span>
   </div>
 </div>
 
 <!-- PLAY & EARN with XP -->
 <section class='split' id='play'>
   <div class='slideL'>
-    <div class='sec-label'><span class='bar'></span> 03 — Play &amp; earn</div>
-    <h2 class='sec-h'>Every action<span class='thin'>earns.</span></h2>
+    <div class='sec-label'><span class='bar'></span> <span data-t='sec_play'>03 — Play &amp; earn</span></div>
+    <h2 class='sec-h' data-t='play_h'>Every action<span class='thin'>earns.</span></h2>
     <p class='lead' data-t='card_quest_d'>Ask the AI, edit a clip, win a duel, top the sniper board — it all feeds one XP bar. Hit the milestones, bank real rewards.</p>
   </div>
   <div class='slideR'>
-    <div class='xp-row'><span>YOUR PROGRESS</span><span id='xpnum'>0 XP</span></div>
+    <div class='xp-row'><span data-t='xp_progress'>YOUR PROGRESS</span><span id='xpnum'>0 XP</span></div>
     <div class='xp-bar'><div class='xp-fill' id='xpfill'></div></div>
-    <div class='reward'><span class='amt'>100</span><div class='txt'><b>1 day of NovaClip Pro</b><span>Your first unlock — one quest away.</span></div></div>
-    <div class='reward'><span class='amt'>450</span><div class='txt'><b>1 week of Pro</b><span>Editor exports, priority AI.</span></div></div>
-    <div class='reward'><span class='amt'>1250</span><div class='txt'><b>1 month of Pro</b><span>The grind pays off.</span></div></div>
+    <div class='reward'><span class='amt'>100</span><div class='txt'><b data-t='rw1_t'>1 day of NovaClip Pro</b><span data-t='rw1_d'>Your first unlock — one quest away.</span></div></div>
+    <div class='reward'><span class='amt'>450</span><div class='txt'><b data-t='rw2_t'>1 week of Pro</b><span data-t='rw2_d'>Editor exports, priority AI.</span></div></div>
+    <div class='reward'><span class='amt'>1250</span><div class='txt'><b data-t='rw3_t'>1 month of Pro</b><span data-t='rw3_d'>The grind pays off.</span></div></div>
   </div>
 </section>
 
 <!-- STATS -->
 <section>
   <div class='reveal'>
-    <div class='sec-label'><span class='bar'></span> By the numbers</div>
-    <h2 class='sec-h'>Built<span class='thin'>Different</span></h2>
+    <div class='sec-label'><span class='bar'></span> <span data-t='sec_nums'>By the numbers</span></div>
+    <h2 class='sec-h' data-t='nums_h'>Built<span class='thin'>Different</span></h2>
   </div>
   <div class='stats reveal'>
-    <div><div class='stat-num' data-count='20'>0</div><div class='stat-label'>Languages</div></div>
-    <div><div class='stat-num' data-count='7'>0</div><div class='stat-label'>Themes</div></div>
-    <div><div class='stat-num' data-count='6'>0</div><div class='stat-label'>Tools</div></div>
-    <div><div class='stat-num' data-count='100' data-suffix='%'>0</div><div class='stat-label'>Free</div></div>
+    <div><div class='stat-num' data-count='20'>0</div><div class='stat-label' data-t='st_languages'>Languages</div></div>
+    <div><div class='stat-num' data-count='2'>0</div><div class='stat-label' data-t='st_games'>Games</div></div>
+    <div><div class='stat-num' data-count='6'>0</div><div class='stat-label' data-t='st_tools'>Tools</div></div>
+    <div><div class='stat-num' data-count='0'>0</div><div class='stat-label' data-t='st_downloads'>Downloads</div></div>
   </div>
 </section>
 
 <!-- FINAL -->
 <section class='final'>
   <div class='reveal'>
-    <h2>Your channel's <span class='g'>next level</span><br>starts in a tab.</h2>
-    <p>Free to start. No downloads. Just you, the tools, and the grind.</p>
-    <a href='app.html'><button class='btn-primary'>Open the Studio →</button></a>
+    <h2 data-t='final_h'>Your channel's <span class='g'>next level</span><br>starts in a tab.</h2>
+    <p data-t='final_p'>Free to start. No downloads. Just you, the tools, and the grind.</p>
+    <a href='app.html'><button class='btn-primary' data-t='final_btn'>Open the Studio →</button></a>
+    <!-- The models in the arena were made by other people. Their licences ask for a
+         credit with a link, so the credit lives here where anyone can find it. -->
+    <div class='creditsrow'>
+      <a href='credits.html'><button class='btn-credits' data-t='credits_btn'>Credits</button></a>
+      <div class='creditsnote' data-t='credits_note'>The 3D models, animations and sounds in NovaClip — and who made them.</div>
+    </div>
   </div>
 </section>
 
 <footer>
   <div>© 2026 NovaClip · Built by eskon</div>
-  <div><a href='https://novaclip.streamlit.app' target='_blank' data-t='footer'>Classic app</a></div>
+  <div><a href='credits.html' data-t='credits_btn'>Credits</a> &nbsp;·&nbsp; <a href='https://novaclip.streamlit.app' target='_blank' data-t='footer'>Classic app</a></div>
 </footer>
 
 </div>
 
 <script>
+// Hide the loading state once the page is up (and no later than 4s, so a slow
+// font or image can never leave someone staring at a spinner).
+(function () {
+  const boot = document.getElementById('boot');
+  if (!boot) return;
+  const done = () => { boot.classList.add('gone'); setTimeout(() => boot.remove(), 400); };
+  if (document.readyState === 'complete') done();
+  else window.addEventListener('load', done, { once: true });
+  setTimeout(done, 4000);
+})();
+
 // STAR FIELD
 const sf = document.getElementById('stars');
-for (let i = 0; i < 70; i++) {
+for (let i = 0; i < 28; i++) {   // 70 stars was 70 animated nodes for decoration
   const s = document.createElement('div');
   s.className = 'star';
   const sz = Math.random()*2.4+1;
@@ -416,11 +471,19 @@ const linesByLang = {
   de:['Creator-Konsole startet…','frag die KI → viraler Titel in Sekunden','Clip schneiden → Übergang setzen → exportieren','Duell gewinnen → +20 XP → Belohnungen freischalten','bereit, wenn du es bist.'],
   fa:['کنسول سازنده در حال راه‌اندازی…','از هوش مصنوعی بپرس → عنوان وایرال در چند ثانیه','کلیپ را برش بزن → ترنزیشن بگذار → خروجی بگیر','دوئل را ببر → +۲۰ امتیاز → جوایز را باز کن','هر وقت آماده بودی.']
 };
+function genericLines() {
+  const t = (k, fallback) => (typeof tr === 'function' && tr(k)) ? tr(k) : fallback;
+  return [ t('coach1', 'Channel Coach'), t('card_ai_d', 'Ask the AI, get a title in seconds'),
+           t('card_quest_d', 'Every action earns'), t('final_p', 'Free to start. No downloads.') ];
+}
 const el = document.getElementById('type');
 let li=0, ci=0, del=false;
 function typeLoop(){
   const code = (typeof lang==='function') ? lang() : 'en';
-  const lines = linesByLang[code] || linesByLang.en;
+  /* Only five languages have their own console lines. Rather than dropping a
+     Japanese reader into English, borrow the translated UI strings that already
+     exist for all twenty and build the lines from those. */
+  const lines = linesByLang[code] || genericLines();
   const full = lines[li % lines.length];
   if(!del){ el.textContent = full.slice(0, ci++); if(ci > full.length){ del=true; setTimeout(typeLoop, li%lines.length===lines.length-1?3600:1300); return; } }
   else { el.textContent = full.slice(0, ci--); if(ci<0){ del=false; li++; ci=0; } }
@@ -515,7 +578,7 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
 
 <!-- COMMUNITY COMMENTS -->
 <div class='section reveal' id='community' style='padding:60px 0'>
-  <h2 class='sec-h' style='font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;margin-bottom:10px'>💬 Creator <span class='g'>Community</span></h2>
+  <h2 class='sec-h' style='font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;margin-bottom:10px'>Creator <span class='g'>Community</span></h2>
   <p class='lead' style='margin-bottom:20px'>Share wins, ask for feedback, hype each other up. Every post is checked automatically — bullying and swearing are blocked before they're ever posted.</p>
 
   <div style='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:20px;max-width:760px'>
@@ -525,7 +588,7 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
       <button id='cPost' style='padding:12px 26px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a'>Post comment</button>
       <span id='cMsg' style='font-size:0.85rem;color:#7E8AA6'></span>
     </div>
-    <div class='notice' style='margin-top:14px;font-size:0.82rem;color:#7E8AA6;border-left:3px solid #B6FF3C;padding-left:12px'>🛡️ Be kind. Harassment or swearing gives you a strike — <b>three strikes is a 7-day suspension</b>.</div>
+    <div class='notice' style='margin-top:14px;font-size:0.82rem;color:#7E8AA6;border-left:3px solid #B6FF3C;padding-left:12px'>Be kind. Harassment or swearing gives you a strike — <b>three strikes is a 7-day suspension</b>.</div>
   </div>
 
   <div id='cList' style='max-width:760px;margin-top:20px'></div>
@@ -570,8 +633,8 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
       if (res.suspended) { ncCheckSuspension(); return; }
       msg.style.color = '#FF2E97';
       msg.textContent = check.severity === 'abuse'
-        ? '🚫 Blocked — that looks like bullying. Strike ' + res.strikes + ' of 3.'
-        : '🚫 Blocked — please keep it clean. Strike ' + res.strikes + ' of 3.';
+        ? 'Blocked — that looks like bullying. Strike ' + res.strikes + ' of 3.'
+        : 'Blocked — please keep it clean. Strike ' + res.strikes + ' of 3.';
       return;
     }
     const list = load();
@@ -579,7 +642,7 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
     save(list);
     document.getElementById('cText').value = '';
     msg.style.color = '#B6FF3C';
-    msg.textContent = '✅ Posted!';
+    msg.textContent = 'Posted!';
     render();
   };
   render();
