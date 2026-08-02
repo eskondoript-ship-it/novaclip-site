@@ -96,9 +96,53 @@ const PERSONAS = {
   business: 'You are NovaClip, a business and money tutor for teens, expert in side hustles, saving and entrepreneurship. '
 };
 const PLAIN = 'Write in clear, friendly, everyday English. No slang. Keep it short and genuinely useful. ';
+
+/* ============================================================================
+   WHAT THE TUTOR IS, NOT JUST WHAT IT SOUNDS LIKE
+   The old prompt was one line of costume — "you are a coach, use slang" — and
+   nothing about how to actually answer. So it produced confident paragraphs
+   with no specifics in them, which is the failure mode of every thin system
+   prompt: it has a voice and no method.
+
+   This gives it a method. Three rules, all of them things a fourteen-year-old
+   can act on within the hour:
+
+     BE SPECIFIC   a number, an example or a step, never "make good content".
+     BE HONEST     say when something will not work and why, rather than being
+                   encouraging about a bad idea. Being nice about a plan that
+                   will fail is not kindness.
+     BE SAFE       these are minors. No personal details, no meeting strangers,
+                   no money-making scheme that needs their parents' card, and
+                   anything about their own safety goes to a trusted adult.
+
+   The persona sits on top of that rather than replacing it, so Gen Z mode
+   changes the voice and not the quality of the answer.
+   ============================================================================ */
+const METHOD =
+  'HOW TO ANSWER. Always be concrete: give a number, a real example, or a step they can do today — ' +
+  'never vague advice like "make good content" or "stay consistent" on its own. ' +
+  'If they ask for a title, give three options and say which you would pick and why. ' +
+  'If their plan will not work, say so plainly and give the reason before you offer the alternative; ' +
+  'do not be encouraging about something that will waste their time. ' +
+  'If you do not know, say you do not know rather than inventing statistics. ' +
+  'End with one single next action. ' +
+  'SAFETY: your reader is 13-18. Never ask for or repeat personal details, never suggest meeting anyone ' +
+  'from the internet, never suggest anything that needs a parent\'s card or bank account without saying to ask them first, ' +
+  'and if they mention being hurt, bullied or unsafe, tell them to talk to a trusted adult and stop the lesson there. ';
+
+/* Pro buys thinking time, not a different personality. A free answer is short
+   because a long one costs money to generate; a Pro answer gets the room to
+   show its working. */
+function proDepth() {
+  return (typeof ncProHas === 'function' && ncProHas('tools'))
+    ? { words: 400, extra: 'Take your time. Show your reasoning, give a worked example, and add one thing they have not thought of. ' }
+    : { words: 180, extra: '' };
+}
+
 function persona() {
   const genz = (typeof ncGenZ === 'function') ? ncGenZ() : true;
-  return PERSONAS[document.getElementById('subject').value] + (genz ? SLANG : PLAIN) +
+  return PERSONAS[document.getElementById('subject').value] + METHOD + (genz ? SLANG : PLAIN) +
+    proDepth().extra +
     (typeof langInstruction === 'function' ? langInstruction() : '');
 }
 function subjectName() { return document.getElementById('subject').selectedOptions[0].textContent; }
@@ -108,7 +152,7 @@ document.getElementById('askbtn').onclick = async () => {
   if (!q) return;
   document.getElementById('aiimg').style.display = 'none';
   setOut('Cooking...');
-  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Keep it under 200 words. Question: ' + q }] }] });
+  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Keep it under ' + proDepth().words + ' words. Question: ' + q }] }] });
   if (data.candidates && data.candidates[0].content.parts[0].text) {
     setOut(data.candidates[0].content.parts[0].text);
     saveHist(subjectName(), q, data.candidates[0].content.parts[0].text);

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip Pro</title>
+<meta name='description' content='NovaClip Pro — what your family plan unlocks, who it covers, and where every feature lives.'>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
+body { background: #060608; color: #f4f4f6; }
+
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: stretch; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); }
+.sidebar a { font-size: 1.05rem; text-decoration: none; color: #f4f4f6; display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background 0.2s; }
+.sidebar a:hover { background: rgba(114,9,183,0.25); }
+.sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: 0.78rem; opacity: 0.6; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: 0.95rem; background: rgba(255,255,255,0.05); color: #f4f4f6; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px; }
+
+#orbs { position: fixed; inset: 0; left: 200px; z-index: 0; pointer-events: none; overflow: hidden; }
+.orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.32; }
+.orb.a { width: 460px; height: 460px; background: #00F0FF; top: -90px; left: 8%; }
+.orb.b { width: 400px; height: 400px; background: #B6FF3C; bottom: -80px; right: 6%; opacity: 0.2; }
+@media (max-width: 760px) { .sidebar { position: static; width: 100%; flex-direction: row; flex-wrap: wrap; } #orbs { left: 0; } }
+
+.wrap { margin-left: 200px; position: relative; z-index: 2; padding: 46px 6vw 80px; max-width: 1180px; }
+@media (max-width: 760px) { .wrap { margin-left: 0; padding: 28px 20px 60px; } }
+
+.crown { display: inline-block; font-size: 0.72rem; letter-spacing: 4px; font-weight: 800; color: #04121a;
+         background: linear-gradient(90deg, #B6FF3C, #00F0FF); padding: 6px 14px; border-radius: 20px; margin-bottom: 18px; }
+h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -2px; line-height: 1.03; }
+h1 .grad { background: linear-gradient(90deg, #B6FF3C, #00F0FF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sub { color: #8b97ad; margin: 14px 0 30px; max-width: 60ch; line-height: 1.7; font-size: 1.04rem; }
+
+.status { border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 22px 24px; margin-bottom: 30px;
+          background: linear-gradient(150deg, rgba(0,240,255,0.09), rgba(255,255,255,0.02)); }
+.status h2 { font-size: 1.15rem; margin-bottom: 4px; }
+.status .meta { color: #8b97ad; font-size: 0.9rem; line-height: 1.7; }
+.status .meta b { color: #cfe0ff; }
+
+h3.sec { font-size: 0.76rem; letter-spacing: 3px; text-transform: uppercase; color: #7E8AA6; margin: 34px 0 14px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.card { border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; background: rgba(255,255,255,0.03);
+        display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit; transition: 0.22s; }
+.card:hover { border-color: rgba(0,240,255,0.45); transform: translateY(-3px); }
+.card.locked { opacity: 0.55; }
+.card b { font-size: 1.04rem; }
+.card p { color: #8b97ad; font-size: 0.88rem; line-height: 1.6; }
+.card .tagrow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.pill { font-size: 0.66rem; letter-spacing: 1.4px; font-weight: 800; padding: 3px 9px; border-radius: 12px; }
+.pill.on { background: rgba(182,255,60,0.16); color: #B6FF3C; }
+.pill.off { background: rgba(255,255,255,0.08); color: #8b97ad; }
+.card .where { font-size: 0.8rem; color: #00F0FF; font-weight: 700; }
+
+.cta { display: inline-block; margin-top: 8px; padding: 13px 30px; border-radius: 30px; font-weight: 800; font-size: 0.98rem;
+       text-decoration: none; color: #04121a; background: linear-gradient(90deg, #B6FF3C, #00F0FF); }
+.ghost { display: inline-block; margin: 8px 0 0 10px; padding: 12px 26px; border-radius: 30px; font-weight: 700;
+         text-decoration: none; color: #cfe0ff; border: 1px solid rgba(255,255,255,0.2); font-size: 0.94rem; }
+.note { color: #7E8AA6; font-size: 0.85rem; line-height: 1.7; margin-top: 22px; max-width: 66ch; }
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <a href='index.html' data-t='home'>Home</a>
+  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='analytics'>Analytics</a>
+  <a href='trends.html' data-t='trends'>Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>Editor</a>
+  <a href='game.html' data-t='sniper'>Games</a>
+  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
+
+<div class='wrap'>
+  <span class='crown'>NOVACLIP PRO</span>
+  <h1 id='ptitle'><span class='grad'>NovaClip Pro</span></h1>
+  <p class='sub' id='psub'></p>
+
+  <div class='status' id='pstatus'></div>
+
+  <h3 class='sec'>What the plan unlocks</h3>
+  <div class='grid' id='pfeatures'></div>
+
+  <h3 class='sec'>For the parent</h3>
+  <div class='grid' id='pfamily'></div>
+
+  <p class='note' id='pnote'></p>
+</div>
+
+<script>
+/* ============================================================================
+   THE PRO HOME
+   This page has one job: make a paid plan visible. Before it existed a family
+   paid, got a receipt, and then saw a site identical to the free one — the
+   features were listed on the pricing page and nowhere else, and nothing ever
+   read the record checkout wrote.
+
+   So every row here is driven by the real entitlement (ncProHas) rather than
+   by a hardcoded list, and each one says WHERE the feature lives. A card that
+   claims something is unlocked and cannot tell you where to use it is the same
+   problem in a nicer font.
+   ============================================================================ */
+const TOOLS = [
+  { t: 'Priority AI answers', p: 'The tutors think for longer and answer in more depth instead of giving you the short version.',
+    where: 'Open NovaClip AI', href: 'ai.html', need: 'tools' },
+  { t: 'Longer editor exports', p: 'Export up to 10 minutes instead of 60 seconds, at full quality.',
+    where: 'Open the Editor', href: 'editor.html', need: 'tools' },
+  { t: 'Extra effects & transitions', p: 'The full effects shelf rather than the free four.',
+    where: 'Open the Editor', href: 'editor.html', need: 'tools' },
+  { t: 'Video ratings', p: 'Every upload scored on hook, title, thumbnail and consistency, with the one change that would help most.',
+    where: 'Open Analytics', href: 'analytics.html', need: 'tools' },
+  { t: 'Exclusive game skins', p: 'Pro weapon finishes in Strike Arena.',
+    where: 'Open Games', href: 'game.html', need: 'tools' }
+];
+const FAMILY = [
+  { t: 'Parental controls & PIN', p: 'A PIN on purchases, and limits you set rather than ones we assume.',
+    where: 'Open the Family Dashboard', href: 'parent.html', need: 'family' },
+  { t: 'Activity overview', p: 'What your child actually used this week — time, tools, and what they made.',
+    where: 'Open the Family Dashboard', href: 'parent.html', need: 'family' },
+  { t: 'Harassment comment scanner', p: 'Scans comments on their videos and alerts you, with one-tap reporting to YouTube.',
+    where: 'Open the Family Dashboard', href: 'parent.html', need: 'family' }
+];
+
+function card(f, unlocked) {
+  return '<a class="card' + (unlocked ? '' : ' locked') + '" href="' + (unlocked ? f.href : 'pricing.html') + '">' +
+    '<b>' + f.t + '</b>' +
+    '<div class="tagrow"><span class="pill ' + (unlocked ? 'on">INCLUDED' : 'off">NOT IN YOUR PLAN') + '</span></div>' +
+    '<p>' + f.p + '</p>' +
+    '<span class="where">' + (unlocked ? f.where + ' →' : 'See plans →') + '</span></a>';
+}
+
+function render() {
+  const pro = (typeof ncPro === 'function') ? ncPro() : null;
+  const hasTools = !!(pro && pro.tools), hasFamily = !!(pro && pro.family);
+
+  document.getElementById('pfeatures').innerHTML = TOOLS.map(f => card(f, hasTools)).join('');
+  document.getElementById('pfamily').innerHTML = FAMILY.map(f => card(f, hasFamily)).join('');
+
+  const st = document.getElementById('pstatus');
+  const sub = document.getElementById('psub');
+
+  if (!pro) {
+    /* Not a member. This page still has to be worth landing on, so it explains
+       what Pro is rather than showing an error — and it does not pretend
+       anything is active. */
+    document.getElementById('ptitle').innerHTML = 'One plan for <span class="grad">the whole family</span>';
+    sub.textContent = 'NovaClip is free and stays free. Pro adds the things that cost us money to run and the things a parent asks for — deeper AI answers, real exports, and oversight that belongs to you rather than to us.';
+    st.innerHTML = '<h2>You are on the free plan</h2>' +
+      '<p class="meta">Everything on this page is off. Nothing you have made is locked behind it — your videos, points, ' +
+      'certificates and progress are yours on the free plan and stay that way.</p>' +
+      '<a class="cta" href="pricing.html">See the plans</a>' +
+      '<a class="ghost" href="index.html">Back to NovaClip</a>';
+    document.getElementById('pnote').textContent =
+      'Certificates are a separate one-time purchase and are not part of Pro — and they are earned, not bought: paying enrols you, and the certificate issues when you have done the work.';
+    return;
+  }
+
+  const since = pro.since ? new Date(pro.since) : null;
+  document.getElementById('ptitle').innerHTML = 'Your <span class="grad">Pro</span> is active';
+  sub.textContent = 'Here is exactly what you are paying for and where to find each part of it.';
+  st.innerHTML = '<h2>' + (pro.plans && pro.plans.length ? pro.plans.join(' + ') : 'NovaClip Pro') + '</h2>' +
+    '<p class="meta">' +
+    'Creator tools: <b>' + (hasTools ? 'included' : 'not in this plan') + '</b><br>' +
+    'Family controls: <b>' + (hasFamily ? 'included' : 'not in this plan') + '</b><br>' +
+    (since ? 'Active since <b>' + since.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) + '</b>' : '') +
+    '</p>' +
+    '<a class="cta" href="' + (hasFamily ? 'parent.html' : 'ai.html') + '">' + (hasFamily ? 'Open the Family Dashboard' : 'Start with the AI') + '</a>' +
+    '<a class="ghost" href="pricing.html">Manage plan</a>';
+  document.getElementById('pnote').textContent = hasTools && hasFamily
+    ? 'You have the full bundle, so everything above is on.'
+    : 'The Family Bundle covers both columns for less than the two separately.';
+}
+
+document.addEventListener('DOMContentLoaded', render);
+</script>
+<script src='nova.js'></script>
+</body>
+</html>

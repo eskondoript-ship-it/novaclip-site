@@ -149,8 +149,11 @@ const ASSETS = [
   { file: 'ct_urban.glb',                  use: 'Spare character model', title: 'CT Urban', by: '', url: '', lic: '' },
 
   // ---- sound ----
-  { file: 'explosion.aac', use: 'Explosion / RPG', title: 'Explosion (from the meme template video you supplied)',
-    by: '', url: '', lic: '' },
+  /* No longer used — every sound in the game is synthesised in the browser from
+     oscillators and filtered noise, so there is nothing to license or credit.
+     The row stays as a note in case a clip is added back via SFX_FILE. */
+  { file: '(none — all sound is synthesised)', use: 'Weapons, explosions, engine', title: 'Web Audio, generated at runtime',
+    by: 'NovaClip', url: '', lic: 'No third-party audio' },
   /* Music is the asset most likely to get a page taken down: a track you did not
      write needs a licence that allows it, and a popular song does not have one.
      Whatever you name in MUSIC_FILE belongs on this list before the site is

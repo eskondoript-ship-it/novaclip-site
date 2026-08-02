@@ -253,6 +253,10 @@ body.driving #ammo { display: none; }
 .lbtabs { display: flex; gap: 6px; }
 .lbtab { padding: 6px 13px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: #cfe0f5; font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
 .lbtab.sel { border-color: #B6FF3C; color: #B6FF3C; background: rgba(182,255,60,0.12); }
+/* Same pill shape as a leaderboard tab, but not a leaderboard tab — a separate
+   class so no selector can ever mistake one for the other again. */
+.pillbtn { padding: 8px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.05); color: #cfe0f5; font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.18s; }
+.pillbtn:hover { border-color: #6cc3ff; color: #6cc3ff; }
 .lbmeta { margin-left: auto; font-size: 0.7rem; color: #7E8AA6; font-variant-numeric: tabular-nums; }
 .lbrow { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid rgba(255,255,255,0.07); font-size: 0.84rem; }
 .lbrow:first-child { border-top: none; }
@@ -470,7 +474,7 @@ body.driving #ammo { display: none; }
 <div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop</div>
 <button id='shopbtn'>SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v87 · 1/2: your two weapons · N: weapon stats · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
+<div id='viewTag'>v88 · 1/2: your two weapons · N: weapon stats · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -540,7 +544,7 @@ body.driving #ammo { display: none; }
     <div class='ll'>YOUR TWO WEAPONS <span style='opacity:0.6'>(swap with 1 / 2 or the scroll wheel in game)</span></div>
     <div class='wsel' id='wsel'></div>
     <div class='lbnote' id='loadnote' style='text-align:center; margin-top:8px'></div>
-    <button id='gunsmithBtn' class='lbtab' type='button' style='margin-top:12px'>Open the Gunsmith</button>
+    <button id='gunsmithBtn' class='pillbtn' type='button' style='margin-top:12px'>Open the Gunsmith</button>
   </div>
 
   <!-- ===== GUNSMITH ===== -->
@@ -552,7 +556,7 @@ body.driving #ammo { display: none; }
           <div class='gssub' id='gssub'>Fit attachments. Every one of them trades something away.</div>
         </div>
         <div class='gspts'><b id='gspoints'>0</b> pts</div>
-        <button id='gsclose' class='lbtab' type='button'>Done</button>
+        <button id='gsclose' class='pillbtn' type='button'>Done</button>
       </div>
       <div class='gsbody'>
         <div class='gsleft'>
@@ -575,7 +579,7 @@ body.driving #ammo { display: none; }
       <div style='display:flex; gap:8px; justify-content:center; flex-wrap:wrap'>
         <input id='roomcode' maxlength='14' placeholder='Room code (e.g. NOVA-7K2P)'
                style='padding:9px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:#fff; font:inherit; font-size:0.85rem; width:230px; text-align:center'>
-        <button id='roomrand' class='lbtab' type='button'>New code</button>
+        <button id='roomrand' class='pillbtn' type='button'>New code</button>
       </div>
       <div class='lbnote' style='text-align:center; margin-top:8px'>Everyone who types this code and picks the same map lands in your match. Nobody is matched into it by accident.</div>
     </div>
@@ -1520,7 +1524,7 @@ function lbRows(list, mine) {
 function lbRender() {
   const body = document.getElementById('lbbody'), meta = document.getElementById('lbmeta');
   if (!body) return;
-  document.querySelectorAll('.lbtab').forEach(t => t.classList.toggle('sel', t.dataset.lb === lbTab));
+  document.querySelectorAll('.lbtab[data-lb]').forEach(t => t.classList.toggle('sel', t.dataset.lb === lbTab));
   const label = curMap().name + ' · ' + MODES[mode].label;
   if (lbTab === 'local') {
     const mineAll = lbLocalAll().filter(r => r.map === mapId && r.mode === mode);
@@ -1558,7 +1562,12 @@ function lbTick() {
   if (now >= lbNextAt) { lbNextAt = now + LB_REFRESH_MS; if (lbTab === 'world') lbFetchWorld(); else lbRender(); }
 }
 function lbInit() {
-  document.querySelectorAll('.lbtab').forEach(t => t.onclick = () => {
+  /* [data-lb] matters. This used to grab every .lbtab on the page — a class
+     borrowed by the Gunsmith button, its Done button and New code, because they
+     wanted the same look — and overwrite their click handlers with the
+     leaderboard's tab switcher. lbInit() runs last, so it won. That is why the
+     Gunsmith button did nothing: it had a handler, just not its own. */
+  document.querySelectorAll('.lbtab[data-lb]').forEach(t => t.onclick = () => {
     lbTab = t.dataset.lb;
     if (lbTab === 'world' && !lbWorld && lbState !== 'loading') lbFetchWorld(); else lbRender();
   });
@@ -2996,7 +3005,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v87 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v88 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -3757,7 +3766,12 @@ function spawnBot(i) {
    ============================================================ */
 const SFX_NAMES = { sniper:'rifle', smg:'smg', pistol:'pistol', shotgun:'shotgun',
                     lmg:'lmg', dmr:'dmr', knife:'knife', rpg:'rpgfire' };
-const SFX_FILE = 'explosion.aac';        // your clip; leave empty for a synth boom
+/* Empty on purpose. The clip you supplied was one recording played at one
+   volume for every blast, and a sample cannot change with the event — a
+   grenade and a missile came out identical. Everything is synthesised now, so
+   size, distance and material are parameters rather than a single file. Put a
+   filename back here any time and it layers on top of the synth again. */
+const SFX_FILE = '';
 let actx = null, sfxGain = null, boomBuf = null, sfxReady = false;
 
 function sfxInit() {
@@ -3803,6 +3817,55 @@ function burst(dur, vol, cutoff) {
   g.gain.exponentialRampToValueAtTime(0.0008, actx.currentTime + dur);
   src.connect(f); f.connect(g); g.connect(sfxGain); src.start();
 }
+
+/* ---------------------------------------------------------------------------
+   A GUNSHOT IS FOUR SOUNDS
+   The old one was a square-wave blip and a lowpassed noise burst — which is a
+   laser, not a rifle. A real shot is layered, and the layers arrive in an
+   order your ear knows:
+
+     CRACK   the supersonic snap. Two milliseconds, almost all of it above
+             2 kHz. This is the layer that makes it read as a firearm rather
+             than as a beep, and it was the one entirely missing.
+     BODY    the pressure behind it — a pitch sweeping down fast, which is what
+             gives a shotgun its weight and a pistol its lack of it.
+     MECH    the action cycling. Quiet, metallic, a few milliseconds late.
+     TAIL    the room answering, with the filter closing as it decays.
+
+   Every weapon is the same four layers with different numbers, so an SMG and
+   an LMG are recognisably the same family rather than two unrelated noises.
+--------------------------------------------------------------------------- */
+function noiseThrough(type, freq, q, dur, vol, delay, sweepTo) {
+  const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+  const t0 = actx.currentTime + (delay || 0);
+  src.buffer = noiseBuffer(dur);
+  f.type = type; f.frequency.setValueAtTime(freq, t0);
+  if (sweepTo) f.frequency.exponentialRampToValueAtTime(Math.max(40, sweepTo), t0 + dur);
+  if (q) f.Q.value = q;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.0015);      // near-instant attack
+  g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur);
+  src.connect(f); f.connect(g); g.connect(sfxGain); src.start(t0);
+  src.stop(t0 + dur + 0.02);
+}
+
+function gunshot(o) {
+  const v = o.vol === undefined ? 1 : o.vol;
+  // 1. the crack
+  noiseThrough('highpass', o.crackHz || 2600, 0.7, o.crackLen || 0.028, 0.34 * v, 0);
+  // 2. the body, sweeping down
+  const osc = actx.createOscillator(), og = actx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(o.bodyHz || 220, actx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(o.bodyTo || 55, actx.currentTime + (o.bodyLen || 0.09));
+  og.gain.setValueAtTime(0.30 * v * (o.bodyVol || 1), actx.currentTime);
+  og.gain.exponentialRampToValueAtTime(0.0008, actx.currentTime + (o.bodyLen || 0.09));
+  osc.connect(og); og.connect(sfxGain); osc.start(); osc.stop(actx.currentTime + (o.bodyLen || 0.09) + 0.02);
+  // 3. the action cycling, a few milliseconds behind
+  if (o.mech !== false) noiseThrough('bandpass', 1800, 6, 0.03, 0.09 * v, 0.02);
+  // 4. the room
+  noiseThrough('lowpass', o.tailHz || 1800, 0, o.tailLen || 0.22, 0.11 * v, 0.01, 260);
+}
 /* A detonation is not one sound. Real ones arrive in layers: the crack of the
    charge, a body of low pressure you feel more than hear, then a tail of debris
    and echo that lasts far longer than the flash. Playing a single clip gives you
@@ -3822,7 +3885,36 @@ function playBoom(vol, size) {
     g.gain.value = vol;
     src.connect(g); g.connect(sfxGain); src.start();
   } else {
-    blip('sine', 130 / s, 0.5 * s, vol, 30);
+    /* No clip, so this IS the explosion rather than a placeholder for one.
+       Three things a real detonation has that a sine sweep does not: a hard
+       crack at the front, broadband noise in the middle that starts bright and
+       closes down, and enough level to clip — the distortion of an explosion is
+       most of what makes it sound violent. The waveshaper is that clipping. */
+    const shaper = actx.createWaveShaper();
+    const curve = new Float32Array(257);
+    for (let i = 0; i < 257; i++) { const x = i / 128 - 1; curve[i] = Math.tanh(x * 3.2); }
+    shaper.curve = curve;
+    const sg = actx.createGain(); sg.gain.value = 1;
+    shaper.connect(sg); sg.connect(sfxGain);
+
+    // the crack at the front
+    const cr = actx.createBufferSource(), cf = actx.createBiquadFilter(), cg = actx.createGain();
+    cr.buffer = noiseBuffer(0.05 * s); cf.type = 'highpass'; cf.frequency.value = 1400;
+    cg.gain.setValueAtTime(vol * 1.1, actx.currentTime);
+    cg.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.05 * s);
+    cr.connect(cf); cf.connect(cg); cg.connect(shaper); cr.start();
+
+    // the body: broadband, closing from bright to dull as it decays
+    const bd = actx.createBufferSource(), bf = actx.createBiquadFilter(), bg = actx.createGain();
+    bd.buffer = noiseBuffer(0.45 * s); bf.type = 'lowpass';
+    bf.frequency.setValueAtTime(5200, actx.currentTime);
+    bf.frequency.exponentialRampToValueAtTime(220, actx.currentTime + 0.4 * s);
+    bg.gain.setValueAtTime(vol * 1.25, actx.currentTime);
+    bg.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.45 * s);
+    bd.connect(bf); bf.connect(bg); bg.connect(shaper); bd.start();
+
+    // and the pitch dropping through the floor underneath it
+    blip('sine', 150 / s, 0.45 * s, vol * 0.9, 28);
   }
   // the sub-bass punch, under everything
   blip('sine', 78 / s, 0.55 * s, vol * 0.85, 24);
@@ -3893,13 +3985,17 @@ function sfx(name) {
   if (!sfxReady || !actx || actx.state !== 'running') return;
   try {
     switch (name) {
-      case 'rifle':   blip('square', 320, 0.06, 0.25, 90); burst(0.10, 0.30, 6000); break;
-      case 'smg':     blip('square', 380, 0.04, 0.20, 120); burst(0.07, 0.24, 7000); break;
-      case 'pistol':  blip('square', 300, 0.06, 0.24, 100); burst(0.09, 0.26, 5000); break;
-      case 'shotgun': blip('square', 150, 0.14, 0.32, 50);  burst(0.22, 0.40, 3000); break;
-      case 'lmg':     blip('square', 260, 0.05, 0.26, 80);  burst(0.09, 0.30, 5000); break;
-      case 'dmr':     blip('square', 220, 0.10, 0.30, 60);  burst(0.16, 0.34, 4000); break;
-      case 'knife':   burst(0.09, 0.22, 9000); break;
+      /* Same four layers each time; the numbers are what make a shotgun a
+         shotgun. Bigger calibre = lower body, longer tail, deeper crack. */
+      case 'rifle':   gunshot({ crackHz: 2800, bodyHz: 240, bodyTo: 60, bodyLen: 0.085, tailHz: 1900, tailLen: 0.24 }); break;
+      case 'smg':     gunshot({ crackHz: 3400, bodyHz: 300, bodyTo: 90, bodyLen: 0.045, tailHz: 2400, tailLen: 0.13, bodyVol: 0.8, vol: 0.85 }); break;
+      case 'pistol':  gunshot({ crackHz: 3000, bodyHz: 260, bodyTo: 80, bodyLen: 0.06,  tailHz: 2100, tailLen: 0.17, vol: 0.9 }); break;
+      case 'shotgun': gunshot({ crackHz: 1700, bodyHz: 150, bodyTo: 38, bodyLen: 0.16,  tailHz: 1100, tailLen: 0.42, bodyVol: 1.5, crackLen: 0.05, vol: 1.15 }); break;
+      case 'lmg':     gunshot({ crackHz: 2500, bodyHz: 210, bodyTo: 52, bodyLen: 0.075, tailHz: 1700, tailLen: 0.26, bodyVol: 1.15 }); break;
+      case 'dmr':     gunshot({ crackHz: 2200, bodyHz: 185, bodyTo: 45, bodyLen: 0.12,  tailHz: 1400, tailLen: 0.38, bodyVol: 1.3, vol: 1.1 }); break;
+      // a blade has no charge behind it: air, then the sound of it landing
+      case 'knife':   noiseThrough('bandpass', 5200, 3, 0.07, 0.16, 0);
+                      noiseThrough('bandpass', 900, 8, 0.05, 0.10, 0.05); break;
       case 'rpgfire': blip('sawtooth', 180, 0.35, 0.30, 60); burst(0.40, 0.35, 2200);
                       // the backblast, a beat behind the launch
                       setTimeout(() => { if (sfxReady) burst(0.5, 0.22, 1400); }, 60); break;
@@ -3907,12 +4003,21 @@ function sfx(name) {
       case 'bigboom': playBoom(1.0, 2.1); break;
       // an incoming missile you can hear before you can see it
       case 'incoming': blip('sine', 1500, 2.6, 0.13, 260); break;
-      case 'reload':  blip('square', 900, 0.03, 0.12, 500);
-                      setTimeout(() => { if (sfxReady) blip('square', 600, 0.05, 0.12, 300); }, 260); break;
-      case 'hit':     blip('triangle', 700, 0.05, 0.16, 300); break;
-      case 'hurt':    blip('sawtooth', 200, 0.16, 0.22, 80); break;
-      case 'death':   blip('sawtooth', 160, 0.5, 0.26, 40); burst(0.4, 0.2, 1200); break;
-      case 'pickup':  blip('sine', 660, 0.09, 0.16, 990); break;
+      /* A reload is three metal sounds with gaps, not one beep: the magazine
+         releasing, the new one seating, the bolt going home. The gaps are what
+         make it read as a sequence of actions. */
+      case 'reload':  noiseThrough('bandpass', 1500, 9, 0.035, 0.13, 0);
+                      noiseThrough('bandpass', 1100, 7, 0.05,  0.15, 0.30);
+                      noiseThrough('bandpass', 2400, 10, 0.03, 0.12, 0.52); break;
+      // a hit is a wet thud with a click on it, not a chime
+      case 'hit':     noiseThrough('bandpass', 420, 2.5, 0.055, 0.20, 0);
+                      noiseThrough('highpass', 3800, 0, 0.012, 0.10, 0); break;
+      case 'hurt':    noiseThrough('lowpass', 700, 0, 0.18, 0.22, 0, 180);
+                      blip('sawtooth', 150, 0.20, 0.14, 62); break;
+      case 'death':   blip('sawtooth', 150, 0.55, 0.22, 38);
+                      noiseThrough('lowpass', 1200, 0, 0.5, 0.18, 0.02, 200); break;
+      case 'pickup':  blip('sine', 720, 0.07, 0.13, 1080);
+                      blip('sine', 1080, 0.09, 0.09, 1440); break;
     }
   } catch (e) { /* never let a sound break a frame */ }
 }

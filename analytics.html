@@ -73,6 +73,40 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
 .kpi .n { font-size: 1.9rem; font-weight: 900; background: linear-gradient(90deg,#00F0FF,#F72585); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1.1; }
 .kpi .l { font-size: .72rem; color: #7E8AA6; letter-spacing: 1.4px; text-transform: uppercase; margin-top: 6px; }
 
+
+/* ---- channel review + video ratings ---- */
+.reviewbox { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px 20px; margin-top: 18px; }
+.rvhead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.rvhead h4 { font-size: 1rem; }
+.rvnote { color: #7E8AA6; font-size: 0.8rem; }
+.rvperiods { margin-left: auto; display: flex; gap: 6px; }
+.rvp { padding: 5px 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: #cfe0f5; font: inherit; font-size: 0.76rem; font-weight: 700; cursor: pointer; }
+.rvp.on { border-color: #00F0FF; color: #00F0FF; background: rgba(0,240,255,0.12); }
+.rvgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.rvcell { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px 14px; }
+.rvcell .n { font-size: 1.5rem; font-weight: 800; }
+.rvcell .l { font-size: 0.76rem; color: #7E8AA6; margin-top: 2px; }
+.rvcell .d { font-size: 0.74rem; font-weight: 700; }
+.rvcell .d.up { color: #B6FF3C; } .rvcell .d.down { color: #ff6b6b; } .rvcell .d.flat { color: #7E8AA6; }
+
+.vrow { display: grid; grid-template-columns: 54px minmax(0,1fr) auto; gap: 14px; align-items: center;
+        padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.07); }
+.vrow:first-child { border-top: 0; }
+.vgrade { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+          font-weight: 800; font-size: 1.25rem; }
+.vgrade.a { background: rgba(182,255,60,0.16); color: #B6FF3C; }
+.vgrade.b { background: rgba(0,240,255,0.14); color: #00F0FF; }
+.vgrade.c { background: rgba(255,210,74,0.14); color: #ffd24a; }
+.vgrade.d { background: rgba(255,107,107,0.14); color: #ff6b6b; }
+.vtitle { font-weight: 700; font-size: 0.94rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vmeta { color: #7E8AA6; font-size: 0.78rem; margin-top: 3px; }
+.vfix { color: #cfe0ff; font-size: 0.8rem; margin-top: 5px; line-height: 1.55; }
+.vfix b { color: #ffd24a; }
+.vbars { display: flex; gap: 4px; margin-top: 6px; }
+.vbar { height: 5px; border-radius: 3px; flex: 1; background: rgba(255,255,255,0.09); overflow: hidden; }
+.vbar i { display: block; height: 100%; background: linear-gradient(90deg,#00F0FF,#B6FF3C); }
+.vopen { color: #00F0FF; font-size: 0.8rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+
 /* chart panels */
 .card, .chartbox {
   background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
@@ -186,6 +220,28 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
       <div class='chartcard'><h4>Overall profile</h4><canvas id='c_radar' height='240'></canvas></div>
       <div class='chartcard'><h4>Engagement mix (you)</h4><canvas id='c_dough' height='240'></canvas></div>
     </div>
+
+    <!-- The channel review. renderReview() has always written into rvTitle and
+         rvStats; the markup for them was never in the page, so the function
+         threw on its first line and the whole section silently did not exist. -->
+    <div class='reviewbox'>
+      <div class='rvhead'>
+        <h4 id='rvTitle'>Channel review</h4>
+        <div class='rvperiods'>
+          <button class='rvp on' data-d='1'>Today</button>
+          <button class='rvp' data-d='7'>Week</button>
+          <button class='rvp' data-d='30'>Month</button>
+          <button class='rvp' data-d='365'>Year</button>
+        </div>
+      </div>
+      <div class='rvgrid' id='rvStats'></div>
+    </div>
+
+    <div class='reviewbox'>
+      <div class='rvhead'><h4>Your videos, rated</h4>
+        <span class='rvnote' id='rateNote'></span></div>
+      <div id='rateList'></div>
+    </div>
   </div>
 </div>
 
@@ -249,6 +305,13 @@ async function enterDash() {
     if (rivals && rivals.length) { rivalName = rivals[0].snippet.title; rivalUploads = await fetchUploads(rivals[0], 50); }
   } catch (e) { console.warn('upload history unavailable', e); }
   renderReview();
+  renderRatings();
+  document.querySelectorAll('.rvp').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.rvp').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    periodDays = parseInt(b.dataset.d, 10);
+    renderReview();
+  });
 }
 
 async function getCompetitors() {
@@ -384,6 +447,124 @@ function slice(list, days) {
   return list.filter(v => v.date.getTime() >= cut);
 }
 function sum(list, k) { return list.reduce((s, v) => s + v[k], 0); }
+
+/* ============================================================================
+   RATING A VIDEO
+   Every score here comes from the creator's OWN numbers, compared against
+   their own median — not against YouTube at large. That matters: a channel
+   with 300 subscribers measured against global averages would score F on
+   everything forever, which teaches nothing. Measured against itself, a 300-sub
+   channel can see which of ITS videos worked, which is the only comparison that
+   can actually change what they do next.
+
+   Four dimensions, all computed, none invented:
+
+     REACH        views against the channel's median video
+     ENGAGEMENT   (likes + comments) per view, against the channel's median
+     TITLE        length, and whether it does any of the things titles that get
+                  clicked do — a number, a question, a specific noun
+     TIMING       the gap since the previous upload against the usual gap
+
+   And one recommendation: the weakest dimension, said as an action.
+   ============================================================================ */
+function median(nums) {
+  const a = nums.filter(n => isFinite(n)).sort((x, y) => x - y);
+  if (!a.length) return 0;
+  const m = Math.floor(a.length / 2);
+  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+}
+// 0-100 from a ratio against the median, where 1.0 (exactly typical) is 60
+function ratioScore(value, mid) {
+  if (!mid) return 50;
+  const r = value / mid;
+  return Math.max(0, Math.min(100, Math.round(60 * Math.pow(r, 0.6))));
+}
+
+function titleScore(t) {
+  const s = String(t || '');
+  let score = 40;
+  const len = s.length;
+  // 30-70 characters survives truncation on mobile and still says something
+  if (len >= 30 && len <= 70) score += 22;
+  else if (len >= 20 && len <= 85) score += 10;
+  if (/\d/.test(s)) score += 12;                      // a number is a promise
+  if (/\?/.test(s)) score += 8;                       // a question is a hook
+  if (/^(how|why|what|i |we |this|the day|stop|never|do not|don't)/i.test(s)) score += 10;
+  const caps = s.replace(/[^A-Z]/g, '').length;
+  if (len > 8 && caps / len > 0.6) score -= 20;       // ALL CAPS reads as spam
+  if (len < 15) score -= 15;                          // too short to say anything
+  return Math.max(0, Math.min(100, score));
+}
+
+function rateVideos(list) {
+  if (!list || list.length < 2) return [];
+  const sorted = list.slice().sort((a, b) => b.date - a.date);
+  const midViews = median(sorted.map(v => v.views));
+  const midEng = median(sorted.map(v => v.views > 0 ? (v.likes + v.comments) / v.views : 0));
+  // the usual gap between uploads, in days
+  const gaps = [];
+  for (let i = 0; i < sorted.length - 1; i++) gaps.push((sorted[i].date - sorted[i + 1].date) / 86400000);
+  const midGap = median(gaps) || 7;
+
+  return sorted.slice(0, 10).map((v, i) => {
+    const eng = v.views > 0 ? (v.likes + v.comments) / v.views : 0;
+    const gap = i < sorted.length - 1 ? (v.date - sorted[i + 1].date) / 86400000 : midGap;
+    const parts = {
+      reach: ratioScore(v.views, midViews),
+      engagement: ratioScore(eng, midEng),
+      title: titleScore(v.title),
+      // posting sooner than usual scores well; a long silence does not
+      timing: Math.max(0, Math.min(100, Math.round(100 - (gap / Math.max(1, midGap) - 1) * 40)))
+    };
+    const overall = Math.round(parts.reach * 0.35 + parts.engagement * 0.3 + parts.title * 0.25 + parts.timing * 0.1);
+    // the single weakest thing, phrased as something to do
+    const worst = Object.keys(parts).sort((a, b) => parts[a] - parts[b])[0];
+    const FIX = {
+      reach: 'Fewest views of your recent run. Look at what the thumbnail promises — nobody clicked it, so the video never got a chance.',
+      engagement: 'People watched but did not react. Ask one direct question in the first 20 seconds and pin it as a comment.',
+      title: 'The title is doing no work. Aim for 30-70 characters with a number or a question in it — "3 things" beats "my new video".',
+      timing: 'This came ' + Math.round(gap) + ' days after the last one, against your usual ' + Math.round(midGap) + '. The gap costs you more reach than the video itself did.'
+    };
+    return { v, parts, overall, fix: FIX[worst],
+             grade: overall >= 78 ? 'A' : overall >= 62 ? 'B' : overall >= 45 ? 'C' : 'D' };
+  });
+}
+
+function renderRatings() {
+  const box = document.getElementById('rateList');
+  const note = document.getElementById('rateNote');
+  if (!box) return;
+  const pro = (typeof ncProHas === 'function') && ncProHas('tools');
+  const rated = rateVideos(myUploads);
+
+  if (!rated.length) {
+    box.innerHTML = '<p class="hint">Post at least two videos and this fills in — a rating needs something of yours to compare against.</p>';
+    return;
+  }
+  /* Free shows the most recent one, Pro shows ten. The free one is a real
+     rating, not a teaser: you can act on it without paying. */
+  const show = pro ? rated : rated.slice(0, 1);
+  note.textContent = pro
+    ? 'Your last ' + show.length + ' videos, scored against your own median.'
+    : 'Your latest video. Pro rates the last ten.';
+
+  box.innerHTML = show.map(r =>
+    '<div class="vrow">' +
+      '<div class="vgrade ' + r.grade.toLowerCase() + '">' + r.grade + '</div>' +
+      '<div><div class="vtitle">' + String(r.v.title).replace(/</g, '&lt;') + '</div>' +
+        '<div class="vmeta">' + r.v.views.toLocaleString() + ' views · ' + r.v.likes.toLocaleString() + ' likes · ' +
+          r.v.comments.toLocaleString() + ' comments · ' + r.v.date.toLocaleDateString() + '</div>' +
+        '<div class="vbars">' +
+          ['reach','engagement','title','timing'].map(k =>
+            '<div class="vbar" title="' + k + ' ' + r.parts[k] + '/100"><i style="width:' + r.parts[k] + '%"></i></div>').join('') +
+        '</div>' +
+        '<div class="vfix"><b>Do this next:</b> ' + r.fix + '</div>' +
+      '</div>' +
+      '<a class="vopen" target="_blank" href="https://www.youtube.com/watch?v=' + r.v.id + '">Open →</a>' +
+    '</div>').join('') +
+    (pro ? '' : '<p class="hint" style="margin-top:12px">' +
+      '<a href="pricing.html" style="color:#00F0FF;font-weight:700">NovaClip Pro</a> rates your last ten and shows what changed between them.</p>');
+}
 
 function renderReview() {
   const names = { 1:'Today', 7:'This week', 30:'This month', 365:'This year' };
