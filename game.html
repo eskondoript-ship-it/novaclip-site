@@ -692,20 +692,20 @@ const ATTACH_MOUNT = {
 
 const ATTACHMENTS = {
   // ---- OPTIC ----
-  reddot:   { name: 'Red Dot Sight', slot: 'optic', cost: 150, file: '', scale: 1,
+  reddot:   { name: 'Red Dot Sight', slot: 'optic', cost: 150, file: 'pbr_mini_red_dot.glb', scale: 1,
               mods: { spread: 0.86, zoom: 0.92 },
               blurb: 'A clear dot instead of iron sights. No magnification, but you find targets faster.' },
   holo:     { name: 'Holographic',   slot: 'optic', cost: 280, file: '', scale: 1,
               mods: { spread: 0.80, zoom: 0.80, move: 0.98 },
               blurb: 'Wider sight picture and a little magnification. Slightly heavier.' },
-  scope4x:  { name: '4x Scope',      slot: 'optic', cost: 450, file: '', scale: 1,
+  scope4x:  { name: '4x Scope',      slot: 'optic', cost: 450, file: 'sig_sauer_juliet4_4x_magnifier.glb', scale: 1,
               mods: { zoom: 0.45, range: 1.15, spread: 0.72, move: 0.94 },
               blurb: 'Real magnification and reach. You move slower carrying it.' },
   // ---- MUZZLE ----
-  suppress: { name: 'Suppressor',    slot: 'muzzle', cost: 520, file: '', scale: 1,
+  suppress: { name: 'Suppressor',    slot: 'muzzle', cost: 520, file: 'supressor.glb', scale: 1,
               mods: { quiet: 0.45, range: 0.88, dmg: 0.96, recoil: 0.90 },
               blurb: 'Bots are far less likely to come for you. Costs range and a little damage.' },
-  brake:    { name: 'Muzzle Brake',  slot: 'muzzle', cost: 300, file: '', scale: 1,
+  brake:    { name: 'Muzzle Brake',  slot: 'muzzle', cost: 300, file: 'heart_rifle_flash_hider__muzzle_brake_v2.glb', scale: 1,
               mods: { recoil: 0.66, quiet: 1.30 },
               blurb: 'Kills the kick. Loud enough that everyone knows where you are.' },
   longbrl:  { name: 'Long Barrel',   slot: 'muzzle', cost: 380, file: '', scale: 1,
@@ -715,24 +715,24 @@ const ATTACHMENTS = {
   foregrip: { name: 'Vertical Grip', slot: 'under', cost: 260, file: '', scale: 1,
               mods: { recoil: 0.74, spread: 0.86, move: 0.97 },
               blurb: 'Steadies the gun through a long burst.' },
-  laser:    { name: 'Laser Sight',   slot: 'under', cost: 200, file: '', scale: 1,
+  laser:    { name: 'Laser Sight',   slot: 'under', cost: 200, file: 'pistol_laser_sight.glb', scale: 1,
               mods: { spread: 0.68, quiet: 1.15 },
               blurb: 'Tight from the hip. The beam gives your position away.' },
-  bipod:    { name: 'Bipod',         slot: 'under', cost: 240, file: '', scale: 1,
+  bipod:    { name: 'Bipod',         slot: 'under', cost: 240, file: 'hk_g3_steel_bipod_low-poly.glb', scale: 1,
               mods: { recoil: 0.58, move: 0.90 },
               blurb: 'Almost no kick at all, if you are willing to be slow.' },
   // ---- MAGAZINE ----
-  extmag:   { name: 'Extended Mag',  slot: 'mag', cost: 340, file: '', scale: 1,
+  extmag:   { name: 'Extended Mag',  slot: 'mag', cost: 340, file: '60_rounds_ak_magazine.glb', scale: 1,
               mods: { magAdd: 0.5, reload: 1.25, move: 0.97 },
               blurb: 'Half again as many rounds before you have to reload.' },
-  fastmag:  { name: 'Fast Mag',      slot: 'mag', cost: 300, file: '', scale: 1,
+  fastmag:  { name: 'Fast Mag',      slot: 'mag', cost: 300, file: 'ar-15_usgi_magazine.glb', scale: 1,
               mods: { reload: 0.62 },
               blurb: 'Back in the fight in well under a second.' },
   hollow:   { name: 'Hollow Point',  slot: 'mag', cost: 500, file: '', scale: 1,
               mods: { dmg: 1.18, range: 0.85 },
               blurb: 'Brutal up close, falls off badly at distance.' },
   // ---- STOCK ----
-  heavystk: { name: 'Heavy Stock',   slot: 'stock', cost: 280, file: '', scale: 1,
+  heavystk: { name: 'Heavy Stock',   slot: 'stock', cost: 280, file: 'mab_gen2_stock.glb', scale: 1,
               mods: { recoil: 0.70, move: 0.93 },
               blurb: 'Plants the gun. Plants you too.' },
   lightstk: { name: 'Skeleton Stock', slot: 'stock', cost: 280, file: '', scale: 1,
@@ -977,7 +977,7 @@ const CUSTOM_MODELS = {
      cone. It is auto-fitted to missileLength metres and turned nose-down, so a
      model built along any axis lands pointing the right way; missileFlip turns
      it end for end if yours arrives tail-first. */
-  missile: '', missileScale: 1.0, missileLength: 3.2, missileFlip: false,
+  missile: 'zolfaghar.glb', missileScale: 1.0, missileLength: 3.2, missileFlip: false,
 
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
@@ -1366,7 +1366,7 @@ const MP_SEND_HZ = 15;
    Your track, played only when a vehicle is genuinely moving fast, and cut when
    it slows down. Put the file next to game.html and name it here:
 
-       const MUSIC_FILE = 'chase.mp3';
+       const MUSIC_FILE = 'music.mp3';
 
    Any format the browser plays works — mp3, m4a, ogg, wav. Left empty, nothing
    loads and nothing is requested, so the game is unchanged.
