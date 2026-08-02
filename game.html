@@ -173,6 +173,105 @@ body.driving #ammo { display: none; }
 .mapcard .mt { font-size: 0.6rem; letter-spacing: 1.5px; text-transform: uppercase; color: #7E8AA6; }
 .mapcard .md { font-size: 0.72rem; color: #9fb0cc; margin-top: 4px; line-height: 1.45; }
 
+/* ============================================================
+   FUTURISTIC PASS
+   The reference is a modern shooter's weapon bench: near-black panels, hairline
+   cyan edges, clipped corners instead of rounded ones, monospaced uppercase
+   labels, and light that looks emitted rather than painted. Four things carry
+   that look and none of them cost a frame:
+
+     CLIPPED CORNERS  a cut corner reads as machined; a rounded one reads as an
+                      app. clip-path, no images.
+     HAIRLINE EDGES   1px at low alpha with a glow behind it, not a thick border.
+     A FAINT GRID     4% opacity lines under the panel, so surfaces have a scale.
+     SEGMENTED BARS   a bar cut into cells reads as an instrument. A smooth
+                      gradient reads as a progress bar.
+   ============================================================ */
+.fx-cut { clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); }
+
+#gunsmith { background:
+  radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,240,255,0.10), transparent 70%),
+  linear-gradient(180deg, rgba(4,10,18,0.94), rgba(2,5,10,0.97)) !important; }
+.gspanel {
+  position: relative;
+  background:
+    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px) 0 0 / 100% 34px,
+    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px) 0 0 / 34px 100%,
+    linear-gradient(160deg, rgba(9,18,30,0.97), rgba(4,8,14,0.98)) !important;
+  border: 1px solid rgba(0,240,255,0.22) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 60px rgba(0,240,255,0.07), inset 0 1px 0 rgba(0,240,255,0.14);
+  clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+}
+/* the corner ticks — the detail that says "instrument panel" */
+.gspanel::before, .gspanel::after {
+  content: ''; position: absolute; width: 46px; height: 2px; background: #00F0FF;
+  box-shadow: 0 0 12px rgba(0,240,255,0.8);
+}
+.gspanel::before { top: 0; left: 18px; }
+.gspanel::after { bottom: 18px; right: 0; width: 2px; height: 46px; }
+
+.gstitle { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace !important;
+           color: #00F0FF !important; letter-spacing: 6px !important;
+           text-shadow: 0 0 18px rgba(0,240,255,0.55); }
+.gssub { font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.4px; }
+
+.gsgun, .gsopt, .gsslot, .gsstats {
+  border-radius: 0 !important;
+  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+}
+.gsgun { border-color: rgba(0,240,255,0.16) !important; background: rgba(0,240,255,0.03) !important;
+         font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: 1px; }
+.gsgun.on { border-color: #00F0FF !important; color: #00F0FF !important;
+            background: rgba(0,240,255,0.12) !important; box-shadow: 0 0 22px rgba(0,240,255,0.22); }
+.gsslot { border-color: rgba(0,240,255,0.12) !important; background: rgba(6,14,24,0.6) !important; }
+.gsslot > .sn { color: #00F0FF !important; opacity: 0.75;
+                font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: 4px !important; }
+.gsopt { border-color: rgba(255,255,255,0.10) !important; background: rgba(255,255,255,0.025) !important; }
+.gsopt:hover { border-color: rgba(0,240,255,0.65) !important; box-shadow: 0 0 20px rgba(0,240,255,0.16); }
+.gsopt.on { border-color: #00F0FF !important; color: #00F0FF !important;
+            background: rgba(0,240,255,0.10) !important; box-shadow: 0 0 26px rgba(0,240,255,0.25); }
+.gsstats { border-color: rgba(0,240,255,0.14) !important; background: rgba(4,10,18,0.7) !important; }
+.gsrow .lab { font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: 1.6px; }
+
+/* segmented meters — an instrument, not a progress bar */
+.gsbar { border-radius: 0 !important; background: rgba(255,255,255,0.05) !important; height: 9px !important;
+         position: relative; overflow: hidden; }
+.gsbar::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 6px, rgba(2,6,12,0.95) 6px 8px); }
+.gsbar i { border-radius: 0 !important; background: linear-gradient(90deg, #007a8c, #00F0FF) !important;
+           box-shadow: 0 0 14px rgba(0,240,255,0.55); }
+.gsbar i.gain { background: linear-gradient(90deg, #5d9c00, #B6FF3C) !important; box-shadow: 0 0 14px rgba(182,255,60,0.5); }
+.gsbar i.loss { background: linear-gradient(90deg, #8c1f1f, #ff6b6b) !important; box-shadow: 0 0 14px rgba(255,107,107,0.45); }
+
+/* the button that opens it — a wide machined bar, not a pill */
+#gunsmithBtn {
+  display: block; width: 100%; max-width: 320px; margin: 14px auto 0 !important;
+  padding: 13px 20px !important; border-radius: 0 !important;
+  font-family: ui-monospace, Menlo, Consolas, monospace !important;
+  letter-spacing: 5px !important; font-size: 0.8rem !important; font-weight: 800;
+  color: #00F0FF !important;
+  border: 1px solid rgba(0,240,255,0.45) !important;
+  background: linear-gradient(180deg, rgba(0,240,255,0.14), rgba(0,240,255,0.04)) !important;
+  box-shadow: 0 0 26px rgba(0,240,255,0.18), inset 0 1px 0 rgba(0,240,255,0.35);
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  transition: 0.2s;
+}
+#gunsmithBtn:hover { color: #04121a !important;
+  background: linear-gradient(180deg, #00F0FF, #00a9c4) !important;
+  box-shadow: 0 0 40px rgba(0,240,255,0.6); }
+
+/* the lobby, same language: cut corners and emitted edges */
+.diff, .mapcard, .mpmode, .lbwrap, .wsel .w {
+  border-radius: 0 !important;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+.diff.sel, .mapcard.sel, .mpmode.sel { box-shadow: 0 0 26px rgba(108,195,255,0.22); }
+.wsel .w.equipped { box-shadow: 0 0 20px rgba(255,210,74,0.25); }
+#overlay h1 { text-shadow: 0 0 40px rgba(108,195,255,0.25); }
+#startBtn { clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+            border-radius: 0 !important; letter-spacing: 3px; }
+
 /* ---- gunsmith ----
    Two columns: the gun and what it does on the left, the five slots on the
    right. The stat block is the point of the screen, so it is always visible
@@ -474,7 +573,7 @@ body.driving #ammo { display: none; }
 <div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop</div>
 <button id='shopbtn'>SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v88 · 1/2: your two weapons · N: weapon stats · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
+<div id='viewTag'>v89 · 1/2: your two weapons · N: weapon stats · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -544,7 +643,7 @@ body.driving #ammo { display: none; }
     <div class='ll'>YOUR TWO WEAPONS <span style='opacity:0.6'>(swap with 1 / 2 or the scroll wheel in game)</span></div>
     <div class='wsel' id='wsel'></div>
     <div class='lbnote' id='loadnote' style='text-align:center; margin-top:8px'></div>
-    <button id='gunsmithBtn' class='pillbtn' type='button' style='margin-top:12px'>Open the Gunsmith</button>
+    <button id='gunsmithBtn' class='pillbtn' type='button' style='margin-top:12px'>MODIFICATIONS</button>
   </div>
 
   <!-- ===== GUNSMITH ===== -->
@@ -552,7 +651,7 @@ body.driving #ammo { display: none; }
     <div class='gspanel'>
       <div class='gshead'>
         <div>
-          <div class='gstitle'>GUNSMITH</div>
+          <div class='gstitle'>MODIFICATIONS</div>
           <div class='gssub' id='gssub'>Fit attachments. Every one of them trades something away.</div>
         </div>
         <div class='gspts'><b id='gspoints'>0</b> pts</div>
@@ -675,7 +774,14 @@ function curMap() { return MAPS.find(m => m.id === mapId) || MAPS[0]; }
 if (curMap().id !== 'arena' && !curMap().file) mapId = 'arena';
 function mapHasVehicles() { return curMap().vehicles !== false; }
 // uploaded maps get the shop as an on-screen button rather than a hut in the world
-function shopIsButton() { return curMap().id !== 'arena'; }
+/* The shop is a building you walk into. On the uploaded maps it used to be a
+   button on the HUD instead, because dropping a hut at a fixed spot on someone
+   else's level lands it inside a wall as often as not. So now it is placed
+   rather than assumed: findShopSpot() looks for a clear patch of floor and puts
+   the real building there, and the button only comes back if a whole map has
+   nowhere to stand — which is a fallback, not the default. */
+let shopPlaced = false;
+function shopIsButton() { return !shopPlaced; }
 
 /* Extra weapons, each with its own model from Fab / Sketchfab. Paste the .glb
    filename into `file` and the weapon appears in the inventory on its number
@@ -1356,7 +1462,7 @@ let inv = { frag: 0, sticky: 0 };
 let lastShot = 0, recoil = 0, c4Ready = false, c4Timer = 20, heavyRounds = localStorage.getItem('nc_heavy') === '1';
 let playerMesh, gunGroup, timerId;
 const gclock = { last: performance.now() };
-const SHOP = { x: 0, z: -30, w: 14, d: 11 };
+let SHOP = { x: 0, z: -30, w: 14, d: 11 };
 
 function pts() { const v = parseInt(localStorage.getItem('nc_points'), 10); return isFinite(v) && v >= 0 ? v : 0; }
 function setPts(v) { v = Math.max(0, Math.round(isFinite(v) ? v : 0)); localStorage.setItem('nc_points', String(v)); const g = document.getElementById('gamepts'); if (g) g.textContent = v; const s = document.getElementById('shopbal'); if (s) s.textContent = v; }
@@ -1804,7 +1910,7 @@ function renderWeapInfo() {
     row('Mobility', Math.round(100 * S.move) + '%', S.mult.move, false) +
     row('Reload', (1.1 * S.reload).toFixed(2) + ' s', S.mult.reload, true) +
     '<div class="att">' + (ids.length ? ids.map(i => ATTACHMENTS[i].name).join(' · ')
-                                      : 'No attachments fitted — build it in the Gunsmith') + '</div>';
+                                      : 'No attachments fitted — build it in Modifications') + '</div>';
 }
 
 function renderWSel() {
@@ -1972,7 +2078,16 @@ function init() {
        yellow hut into somebody's downloaded environment would look like litter and
        block a doorway, so on an uploaded map it is a button instead — same shop,
        same visit limit, no geometry. */
-    if (!shopIsButton()) buildShop();
+    /* The arena's shop sits where the map was designed around it. An uploaded
+       map gets one placed in the first clear spot found, and only falls back to
+       the HUD button if the whole level is solid. */
+    if (curMap().id === 'arena') { shopPlaced = true; buildShop(); }
+    else {
+      const spot = findShopSpot();
+      if (spot) { SHOP.x = spot.x; SHOP.z = spot.z; shopPlaced = true; buildShop();
+                  console.log('shop placed at', spot.x.toFixed(1), spot.z.toFixed(1)); }
+      else console.warn('no clear ground for the shop on this map \u2014 using the HUD button');
+    }
   }
 
   // build fighters + gun. If custom .glb models are set, load them first; otherwise build immediately.
@@ -2805,6 +2920,29 @@ function buildBases() {
     for (let i = 0; i < 3; i++) box(2, 2, 2, 0x6b7358, B.x - 8 + i*8, 1.5, B.z + (team === 'ct' ? -4 : 4), true);
   }
 }
+/* Somewhere with room for a 14x11 hut and a door you can reach. Walks a
+   spiral out from the middle of the map testing the collision grid, so it works
+   the same on the built-in arena and on a GLB nobody has seen before. */
+function findShopSpot() {
+  const need = { w: SHOP.w / 2 + 2, d: SHOP.d / 2 + 2 };
+  const clear = (cx, cz) => {
+    for (let ix = -1; ix <= 1; ix++) for (let iz = -1; iz <= 1; iz++) {
+      if (blockedAt(cx + ix * need.w, cz + iz * need.d)) return false;
+      if (floorAt(cx + ix * need.w, cz + iz * need.d) > 0.4) return false;   // not on the high ground
+    }
+    return true;
+  };
+  const R = Math.max(20, ARENA - 20);
+  for (let r = 18; r < R; r += 8) {
+    for (let a = 0; a < 12; a++) {
+      const ang = a / 12 * Math.PI * 2;
+      const cx = Math.cos(ang) * r, cz = Math.sin(ang) * r;
+      if (clear(cx, cz)) return { x: cx, z: cz };
+    }
+  }
+  return null;
+}
+
 function buildShop() {
   const wall = 0x2a3a4a;
   const DOOR = 5;                                  // doorway width
@@ -3005,7 +3143,7 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v88 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        if (vt) vt.textContent = 'v89 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -3376,7 +3514,7 @@ function updateWristMonitor(dt) {
    bottom-centre of the frame where hands belong, and moved from there with the
    armsX / armsY / armsZ knobs. The wrist monitor is parented alongside it — there
    is no bone to hang it off, so it gets its own position. */
-function buildUploadedArms() {
+function buildUploadedArms(grip) {
   const g = new THREE.Group();
   const inner = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone)
     ? THREE.SkeletonUtils.clone(loadedArmsGLB) : loadedArmsGLB.clone(true);
@@ -3400,9 +3538,11 @@ function buildUploadedArms() {
 
   const holder = new THREE.Group();
   holder.add(inner);
+  // grip comes from the weapon that is asking; the CUSTOM_MODELS offsets still nudge it
+  const G = grip || { y: -0.22, z: 0.16 };
   holder.position.set(-0.02 + (CUSTOM_MODELS.armsX || 0),
-                      -0.22 + (CUSTOM_MODELS.armsY || 0),
-                       0.16 + (CUSTOM_MODELS.armsZ || 0));
+                      G.y + (CUSTOM_MODELS.armsY || 0),
+                      G.z + (CUSTOM_MODELS.armsZ || 0));
   g.add(holder);
 
   const mon = buildWristMonitor();
@@ -3414,7 +3554,7 @@ function buildUploadedArms() {
   return g;
 }
 
-function buildArms() {
+function buildArms(grip) {
   /* Built the way a real viewmodel is: tapered limbs running between actual joint
      positions, not axis-aligned boxes. The left arm sweeps in from the lower left
      of the screen and the glove closes over the handguard; the right forearm comes
@@ -3489,6 +3629,13 @@ function buildArms() {
   mon.scale.setScalar(3.4 * S);      // large enough to read at a glance mid-fight
   g.add(mon);
   g.userData.monitor = mon;
+
+  /* The joint positions above are tuned for a rifle. Slide the whole pair so
+     the trigger hand lands on THIS weapon's grip — rGrip sits at (.042,-.060,
+     .022) inside the group, so this offset puts it exactly on the measured
+     point. Without it the hands stay where a rifle's grip would be and a
+     rocket launcher floats past them. */
+  if (grip) g.position.set(0, grip.y + 0.060, grip.z - 0.022);
   return g;
 }
 
@@ -3549,13 +3696,31 @@ function buildWeapon(type) {
       new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
     flash.position.set(0, 0.02, mz); w.add(flash); w.userData.flash = flash;
     mountAttachments(w, type);
-    // arms grip the fitted viewmodel, and carry the wrist monitor with them
-    const arms = loadedArmsGLB ? buildUploadedArms() : buildArms();
+    /* Arms grip the fitted viewmodel, and carry the wrist monitor with them.
+       The grip point is measured from THIS weapon rather than assumed: a rifle
+       and a rocket launcher are both fitted to 0.6 units but their bodies sit
+       at completely different heights, so one fixed offset put the hands on the
+       rifle and left them floating in the air beside the RPG. */
+    const wb = new THREE.Box3().setFromObject(w);
+    const grip = isFinite(wb.min.y)
+      ? { y: wb.min.y + 0.02, z: (wb.max.z - 0.06) }     // just under the body, toward the stock
+      : { y: -0.22, z: 0.16 };
+    const arms = loadedArmsGLB ? buildUploadedArms(grip) : buildArms(grip);
     w.add(arms);
     w.userData.arms = arms;
     return w;
   }
   mountAttachments(m, type);
+  /* The built-in weapon had no arms at all. Nobody noticed while the uploaded
+     models were loading fine — but the moment a .glb 404s or the load times out
+     this is the path you get, and it was a gun hanging in the air with no hands
+     on it. The procedural gun is modelled at the same scale the built-in arm
+     positions were tuned for, so it takes them unmodified. */
+  if (!m.userData.arms) {
+    const arms = loadedArmsGLB ? buildUploadedArms() : buildArms();
+    m.add(arms);
+    m.userData.arms = arms;
+  }
   return m;
 }
 
@@ -5202,8 +5367,23 @@ function updateBots(dt) {
     b.retarget -= dt;
     if (b.retarget <= 0) { b.tx = (Math.random()-0.5)*80; b.tz = (Math.random()-0.5)*80; b.retarget = 1.6 + Math.random()*2.4; }
     const dx = b.tx - b.mesh.position.x, dz = b.tz - b.mesh.position.z, dist = Math.hypot(dx, dz);
-    if (dist > 0.5) { b.mesh.position.x += (dx/dist)*dt*5; b.mesh.position.z += (dz/dist)*dt*5; }
-    b.mesh.position.y = 0;   // stay on the ground
+    /* Bots never tested collision at all — they walked through the shop, the
+       crates and the houses long before the plaza existed; the new high ground
+       just made it obvious, because a bot strolling through a thirty-metre
+       concrete slab is impossible to miss. Same slide-along-the-wall test the
+       player gets, per axis, so they follow a wall instead of stopping dead. */
+    if (dist > 0.5) {
+      const feet = b.mesh.position.y;
+      const nx = b.mesh.position.x + (dx/dist)*dt*5;
+      const nz = b.mesh.position.z + (dz/dist)*dt*5;
+      let moved = false;
+      if (!blockedAt(nx, b.mesh.position.z, feet) && floorAt(nx, b.mesh.position.z) - feet <= 0.75) { b.mesh.position.x = nx; moved = true; }
+      if (!blockedAt(b.mesh.position.x, nz, feet) && floorAt(b.mesh.position.x, nz) - feet <= 0.75) { b.mesh.position.z = nz; moved = true; }
+      // walked into a corner: pick somewhere else rather than grinding at it
+      if (!moved) b.retarget = 0;
+    }
+    // a bot stands on the deck if it walked up onto it, not in the air over it
+    b.mesh.position.y = floorAt(b.mesh.position.x, b.mesh.position.z);
     if (b.tag) {
       const dist = Math.hypot(b.mesh.position.x - player.x, b.mesh.position.z - player.z);
       b.tag.visible = b.alive && dist < 70;
@@ -5513,9 +5693,14 @@ function updateCamera(dt) {
        manoeuvring. The seat is offset forward and to the left, where a driver
        actually sits, rather than the centre of the hull. */
     if (!thirdPerson) {
-      const seatF = (t.kind === 'truck' ? 1.9 : 0.7);    // forward from hull centre
+      /* Eye height, not seat height. At 2.25 the camera sat level with the top
+         of the dashboard, so two thirds of the screen was moulded plastic and
+         you drove by looking through the windscreen's bottom edge. A driver's
+         eyes are about 700mm above the seat base; 2.95 puts them over the
+         bonnet with the road visible where it should be. */
+      const seatF = (t.kind === 'truck' ? 1.6 : 0.7);    // forward from hull centre
       const seatL = (t.kind === 'truck' ? 0.7 : 0.0);    // towards the left seat
-      const seatY = (t.kind === 'truck' ? 2.25 : 2.55);
+      const seatY = (t.kind === 'truck' ? 2.95 : 2.55);
       const fx = -Math.sin(t.yaw), fz = -Math.cos(t.yaw);
       const rx =  Math.cos(t.yaw), rz = -Math.sin(t.yaw);
       camera.position.set(

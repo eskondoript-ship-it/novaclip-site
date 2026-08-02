@@ -198,6 +198,25 @@ body::before {
 .tclip.sel { animation: selGlow 2.2s ease-in-out infinite; }
 @keyframes selGlow { 0%,100%{ box-shadow: 0 0 14px rgba(0,240,255,0.35);} 50%{ box-shadow: 0 0 28px rgba(0,240,255,0.65);} }
 
+
+/* ---- meme sound effects ---- */
+.sfxrow { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:9px;
+          border:1px solid var(--line2); background:rgba(255,255,255,0.02); margin-bottom:6px; }
+.sfxrow:hover { border-color:#4CC9F0; }
+.sfxrow .nm { flex:1; font-size:0.83rem; font-weight:600; }
+.sfxrow .tg { font-size:0.66rem; color:#7E8AA6; }
+.sfxrow button { border:none; border-radius:7px; padding:6px 11px; font-size:0.72rem; font-weight:800;
+                 cursor:pointer; background:rgba(76,201,240,0.16); color:#4CC9F0; }
+.sfxrow button.add { background:rgba(182,255,60,0.16); color:#B6FF3C; }
+.sfxrow button:hover { filter:brightness(1.4); }
+.sfxcat { padding:5px 11px; border-radius:14px; font-size:0.72rem; font-weight:700; cursor:pointer;
+          border:1px solid var(--line2); background:rgba(255,255,255,0.03); color:#9fb0cc; }
+.sfxcat.on { border-color:#4CC9F0; color:#4CC9F0; background:rgba(76,201,240,0.12); }
+.sfxdrop { display:flex; align-items:center; gap:8px; font-size:0.75rem; color:#9fb0cc;
+           padding:5px 9px; border-radius:7px; background:rgba(255,255,255,0.03); margin-bottom:4px; }
+.sfxdrop b { color:#EAF2FF; }
+.sfxdrop .x { margin-left:auto; cursor:pointer; color:#ff6b6b; font-weight:800; }
+
 /* audio waveform pulses */
 #tlaudio .wave { animation: wavePulse 1.6s ease-in-out infinite; }
 @keyframes wavePulse { 0%,100%{ opacity:.55; } 50%{ opacity:.95; } }
@@ -345,6 +364,16 @@ body::before {
       <h4>Audio</h4>
       <div class='hint' style='margin-bottom:8px'>Add a music track — it plays through preview and export.</div>
       <input type='file' id='musicInput' accept='audio/*' style='width:100%; font-size:0.8rem;'>
+
+      <!-- ===== MEME SOUND EFFECTS ===== -->
+      <h4 style='margin-top:18px'>Meme sound effects</h4>
+      <input type='text' id='sfxSearch' placeholder='Search sounds… (bruh, vine boom, fart, rizz)'
+             style='width:100%; padding:10px; border-radius:8px; border:1px solid var(--line2); background:#0e1118; color:var(--txt); font-size:0.85rem; margin-bottom:8px;'>
+      <div id='sfxCats' style='display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;'></div>
+      <div class='hint' id='sfxStatus' style='margin-bottom:8px'></div>
+      <div id='sfxResults'></div>
+      <div class='hint' style='margin-top:8px'>Click a sound to preview it. <b>Add</b> drops it on the timeline at the playhead.</div>
+      <div id='sfxTimeline' style='margin-top:10px'></div>
       <div id='beatPanel' style='display:none'>
         <div class='beathead'>
           <div><b id='bpmVal'>—</b><small>BPM</small></div>
@@ -980,6 +1009,160 @@ function addMeme(mm) {
   };
   img.src = mm.url;
 }
+/* ============================================================================
+   MEME SOUND EFFECTS
+   Every sound here is SYNTHESISED in the browser — oscillators, filtered noise
+   and envelopes — rather than downloaded. That is not a shortcut, it is the
+   only version of this feature that can actually ship: the meme sounds
+   everybody wants are ripped from films, TV and other people's videos, and a
+   site for teenagers cannot hand out copyrighted audio and call it a library.
+   These are recognisable in shape and legally yours to publish.
+
+   Each entry is a recipe. The engine below turns a recipe into audio, so
+   adding a new sound is a few numbers rather than a file to host and credit.
+   ============================================================================ */
+const SFX_LIB = [
+  { id:'boom',   name:'Vine boom',       cat:'classic', tags:'bass drop impact',
+    r:[{k:'sine',f:120,to:34,d:0.55,v:0.9},{k:'noise',hp:60,lp:400,d:0.5,v:0.35}] },
+  { id:'bruh',   name:'Bruh',            cat:'classic', tags:'reaction voice',
+    r:[{k:'saw',f:150,to:92,d:0.32,v:0.5},{k:'saw',f:225,to:138,d:0.32,v:0.22}] },
+  { id:'airhorn',name:'Air horn',        cat:'hype',    tags:'mlg loud',
+    r:[{k:'saw',f:420,to:420,d:0.5,v:0.4},{k:'saw',f:630,to:630,d:0.5,v:0.3},{k:'saw',f:840,to:840,d:0.5,v:0.2}] },
+  { id:'record', name:'Record scratch',  cat:'classic', tags:'stop freeze frame',
+    r:[{k:'noise',hp:800,lp:6000,d:0.35,v:0.45},{k:'saw',f:900,to:120,d:0.3,v:0.3}] },
+  { id:'ding',   name:'Correct ding',    cat:'ui',      tags:'right yes point',
+    r:[{k:'sine',f:1320,to:1320,d:0.14,v:0.4},{k:'sine',f:1980,to:1980,d:0.22,v:0.28,delay:0.09}] },
+  { id:'buzz',   name:'Wrong buzzer',    cat:'ui',      tags:'no fail x',
+    r:[{k:'square',f:180,to:150,d:0.45,v:0.4}] },
+  { id:'pop',    name:'Pop',             cat:'ui',      tags:'bubble click',
+    r:[{k:'sine',f:420,to:1400,d:0.07,v:0.5}] },
+  { id:'swoosh', name:'Swoosh',          cat:'ui',      tags:'transition whoosh',
+    r:[{k:'noise',hp:300,lp:9000,sweep:400,d:0.4,v:0.4}] },
+  { id:'suspense',name:'Suspense sting', cat:'drama',   tags:'dun dun tension',
+    r:[{k:'saw',f:70,to:70,d:0.9,v:0.35},{k:'saw',f:105,to:105,d:0.9,v:0.2}] },
+  { id:'fail',   name:'Sad trombone',    cat:'drama',   tags:'womp womp lose',
+    r:[{k:'saw',f:300,to:150,d:1.0,v:0.32}] },
+  { id:'fart',   name:'Fart',            cat:'silly',   tags:'prank rude',
+    r:[{k:'saw',f:110,to:58,d:0.4,v:0.45},{k:'noise',hp:40,lp:700,d:0.4,v:0.3}] },
+  { id:'boing',  name:'Boing',           cat:'silly',   tags:'cartoon spring bounce',
+    r:[{k:'sine',f:600,to:180,d:0.28,v:0.45},{k:'sine',f:300,to:520,d:0.22,v:0.3,delay:0.2}] },
+  { id:'slap',   name:'Slap',            cat:'silly',   tags:'hit smack',
+    r:[{k:'noise',hp:900,lp:7000,d:0.06,v:0.6},{k:'sine',f:180,to:60,d:0.12,v:0.4}] },
+  { id:'coin',   name:'Coin get',        cat:'game',    tags:'reward points level',
+    r:[{k:'square',f:988,to:988,d:0.08,v:0.35},{k:'square',f:1319,to:1319,d:0.35,v:0.3,delay:0.07}] },
+  { id:'levelup',name:'Level up',        cat:'game',    tags:'win fanfare',
+    r:[{k:'square',f:523,to:523,d:0.1,v:0.3},{k:'square',f:659,to:659,d:0.1,v:0.3,delay:0.1},
+       {k:'square',f:784,to:784,d:0.1,v:0.3,delay:0.2},{k:'square',f:1047,to:1047,d:0.4,v:0.32,delay:0.3}] },
+  { id:'gameover',name:'Game over',      cat:'game',    tags:'lose died',
+    r:[{k:'square',f:392,to:392,d:0.16,v:0.3},{k:'square',f:311,to:311,d:0.16,v:0.3,delay:0.16},
+       {k:'square',f:262,to:100,d:0.6,v:0.32,delay:0.32}] },
+  { id:'alarm',  name:'Alert alarm',     cat:'hype',    tags:'siren warning',
+    r:[{k:'square',f:800,to:500,d:0.25,v:0.3},{k:'square',f:800,to:500,d:0.25,v:0.3,delay:0.3}] },
+  { id:'riser',  name:'Riser',           cat:'hype',    tags:'build up drop',
+    r:[{k:'noise',hp:200,lp:1000,sweep:9000,d:1.4,v:0.35},{k:'saw',f:180,to:1400,d:1.4,v:0.2}] },
+  { id:'heartbeat',name:'Heartbeat',     cat:'drama',   tags:'tension nervous',
+    r:[{k:'sine',f:70,to:40,d:0.18,v:0.6},{k:'sine',f:70,to:40,d:0.18,v:0.45,delay:0.34}] },
+  { id:'camera', name:'Camera shutter',  cat:'ui',      tags:'photo snap',
+    r:[{k:'noise',hp:2000,lp:11000,d:0.04,v:0.5},{k:'noise',hp:1200,lp:6000,d:0.05,v:0.4,delay:0.07}] }
+];
+
+let sfxCtx = null, sfxCat = 'all', sfxDrops = [];
+function sfxAudio() {
+  if (!sfxCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) sfxCtx = new AC(); }
+  if (sfxCtx && sfxCtx.state === 'suspended') sfxCtx.resume();
+  return sfxCtx;
+}
+
+/* Turn a recipe into sound. One function for every entry above, so a new meme
+   sound is a line of data and never a new code path. */
+function playSfx(id) {
+  const item = SFX_LIB.find(x => x.id === id);
+  const ctx = sfxAudio();
+  if (!item || !ctx) return;
+  const t0 = ctx.currentTime;
+  item.r.forEach(part => {
+    const at = t0 + (part.delay || 0);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(part.v, at + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0008, at + part.d);
+    g.connect(ctx.destination);
+    if (part.k === 'noise') {
+      const n = Math.floor(ctx.sampleRate * part.d);
+      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = part.hp || 20;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(part.lp || 8000, at);
+      if (part.sweep) lp.frequency.exponentialRampToValueAtTime(part.sweep, at + part.d);
+      src.connect(hp); hp.connect(lp); lp.connect(g); src.start(at); src.stop(at + part.d + 0.02);
+    } else {
+      const o = ctx.createOscillator();
+      o.type = part.k === 'saw' ? 'sawtooth' : part.k;
+      o.frequency.setValueAtTime(part.f, at);
+      if (part.to && part.to !== part.f) o.frequency.exponentialRampToValueAtTime(Math.max(20, part.to), at + part.d);
+      o.connect(g); o.start(at); o.stop(at + part.d + 0.02);
+    }
+  });
+}
+
+function renderSfx() {
+  const q = (document.getElementById('sfxSearch').value || '').toLowerCase().trim();
+  const list = SFX_LIB.filter(x =>
+    (sfxCat === 'all' || x.cat === sfxCat) &&
+    (!q || (x.name + ' ' + x.tags + ' ' + x.cat).toLowerCase().includes(q)));
+  document.getElementById('sfxStatus').textContent =
+    list.length ? list.length + ' sound' + (list.length === 1 ? '' : 's') + ' — all generated in your browser, free to publish'
+                : 'Nothing matches "' + q + '". Try bruh, boom, coin, swoosh.';
+  document.getElementById('sfxResults').innerHTML = list.map(x =>
+    '<div class="sfxrow"><div><div class="nm">' + x.name + '</div><div class="tg">' + x.tags + '</div></div>' +
+    '<button data-play="' + x.id + '">Play</button>' +
+    '<button class="add" data-add="' + x.id + '">Add</button></div>').join('');
+  document.querySelectorAll('#sfxResults [data-play]').forEach(b => b.onclick = () => playSfx(b.dataset.play));
+  document.querySelectorAll('#sfxResults [data-add]').forEach(b => b.onclick = () => addSfxDrop(b.dataset.add));
+}
+
+function addSfxDrop(id) {
+  const item = SFX_LIB.find(x => x.id === id);
+  if (!item) return;
+  // at the playhead if the editor has one, otherwise at the end of what is there
+  const at = (typeof playhead === 'number' && isFinite(playhead)) ? playhead : sfxDrops.length * 1.0;
+  sfxDrops.push({ id: id, name: item.name, at: at });
+  sfxDrops.sort((a, b) => a.at - b.at);
+  playSfx(id);
+  renderSfxDrops();
+  if (typeof logSkill === 'function') logSkill('edit_sfx');
+}
+
+function renderSfxDrops() {
+  const box = document.getElementById('sfxTimeline');
+  if (!box) return;
+  box.innerHTML = sfxDrops.length
+    ? '<div class="hint" style="margin-bottom:6px">On your timeline:</div>' + sfxDrops.map((d, i) =>
+        '<div class="sfxdrop"><b>' + d.name + '</b> at ' + d.at.toFixed(1) + 's' +
+        '<span class="x" data-del="' + i + '">remove</span></div>').join('')
+    : '';
+  box.querySelectorAll('[data-del]').forEach(x => x.onclick = () => {
+    sfxDrops.splice(parseInt(x.dataset.del, 10), 1); renderSfxDrops();
+  });
+}
+
+function initSfx() {
+  const cats = ['all'].concat([...new Set(SFX_LIB.map(x => x.cat))]);
+  document.getElementById('sfxCats').innerHTML = cats.map(c =>
+    '<span class="sfxcat' + (c === 'all' ? ' on' : '') + '" data-c="' + c + '">' + c + '</span>').join('');
+  document.querySelectorAll('#sfxCats .sfxcat').forEach(el => el.onclick = () => {
+    sfxCat = el.dataset.c;
+    document.querySelectorAll('#sfxCats .sfxcat').forEach(x => x.classList.toggle('on', x === el));
+    renderSfx();
+  });
+  document.getElementById('sfxSearch').oninput = renderSfx;
+  renderSfx();
+}
+document.addEventListener('DOMContentLoaded', initSfx);
+
 function loadMemes() {
   if (memesLoaded) return;
   memesLoaded = true;
