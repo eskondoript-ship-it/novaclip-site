@@ -240,10 +240,12 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
 <div class='billtoggle'>
   <button class='bt active' data-cycle='month'>Monthly</button>
   <button class='bt' data-cycle='year'>Yearly <span class='btsave'>2 months free</span></button>
+  <button class='bt' data-cycle='once'>One-time <span class='btsave'>certificates</span></button>
 </div>
+<p id='billnote' style='text-align:center;color:#7E8AA6;font-size:0.85rem;margin:-6px auto 22px;max-width:52ch;line-height:1.6'></p>
 
 <div class='grid'>
-    <div class='plan'>
+    <div class='plan' data-kind='sub'>
       <h3>Family Dashboard</h3>
       <div class='price' data-eur='6.99' data-usd='7.99' data-gbp='5.99' data-cny='49.9' data-chf='6.90' data-inr='599' data-bdt='799'><small class='per'>/month</small></div>
       <ul>
@@ -256,7 +258,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
       <button class='cta' onclick="alert('Secure checkout opening soon')">Start free trial</button>
     </div>
 
-    <div class='plan'>
+    <div class='plan' data-kind='sub'>
       <h3>Kids' Tools Upgrade</h3>
       <div class='price' data-eur='4.99' data-usd='5.99' data-gbp='4.49' data-cny='39.9' data-chf='4.90' data-inr='449' data-bdt='599'><small class='per'>/month</small></div>
       <ul>
@@ -268,7 +270,7 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
       <button class='cta' onclick="alert('Secure checkout opening soon')">Upgrade tools</button>
     </div>
 
-    <div class='plan best'>
+    <div class='plan best' data-kind='sub'>
       <span class='tag'>BEST VALUE</span>
       <h3>Family Bundle</h3>
       <div class='price' data-eur='9.99' data-usd='10.99' data-gbp='8.99' data-cny='79.9' data-chf='9.90' data-inr='899' data-bdt='1199'><small class='per'>/month</small></div>
@@ -281,9 +283,9 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
       <button class='cta' onclick="alert('Secure checkout opening soon')">Get the bundle</button>
     </div>
 
-    <div class='plan'>
+    <div class='plan' data-kind='once'>
       <h3>Basic Certificate</h3>
-      <div class='price' data-eur='24.99' data-usd='27.99' data-gbp='21.99' data-cny='199' data-chf='24.90' data-inr='1999' data-bdt='2799'><small class='per'> one-time</small></div>
+      <div class='price' data-eur='24.99' data-usd='27.99' data-gbp='21.99' data-cny='199' data-chf='24.90' data-inr='1999' data-bdt='2799'><small class='per once'> one-time</small></div>
       <ul>
         <li>Entry NovaClip Creator Certificate</li>
         <li><b>Earned, not bought</b> — issues at 150 pts once you have exported 3 videos, run 3 trend scans and used the AI tutors</li>
@@ -293,9 +295,9 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
       <button class='cta' onclick="alert('Secure checkout opening soon')">Get Basic</button>
     </div>
 
-    <div class='plan'>
+    <div class='plan' data-kind='once'>
       <h3>Advanced Certificate</h3>
-      <div class='price' data-eur='49.99' data-usd='54.99' data-gbp='44.99' data-cny='399' data-chf='49.90' data-inr='3999' data-bdt='5499'><small class='per'> one-time</small></div>
+      <div class='price' data-eur='49.99' data-usd='54.99' data-gbp='44.99' data-cny='399' data-chf='49.90' data-inr='3999' data-bdt='5499'><small class='per once'> one-time</small></div>
       <ul>
         <li>Everything in Basic</li>
         <li><b>Earned, not bought</b> — issues at 600 pts once you have exported 10 videos, saved 5 ideas and reviewed your analytics</li>
@@ -305,10 +307,10 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
       <button class='cta' onclick="alert('Secure checkout opening soon')">Get Advanced</button>
     </div>
 
-    <div class='plan best'>
+    <div class='plan best' data-kind='once'>
       <span class='tag'>TOP TIER</span>
       <h3>Master Certificate</h3>
-      <div class='price' data-eur='99.99' data-usd='109.99' data-gbp='89.99' data-cny='799' data-chf='99.90' data-inr='7999' data-bdt='10999'><small class='per'> one-time</small></div>
+      <div class='price' data-eur='99.99' data-usd='109.99' data-gbp='89.99' data-cny='799' data-chf='99.90' data-inr='7999' data-bdt='10999'><small class='per once'> one-time</small></div>
       <ul>
         <li>Everything in Advanced</li>
         <li><b>Earned, not bought</b> — issues at 1500 pts once you have exported 25 videos, run 20 scans and topped the Arena board 3 times</li>
@@ -357,13 +359,34 @@ function renderPrices(cur) {
   const yearly = billCycle === 'year';
   document.querySelectorAll('.price').forEach(p => {
     const per = p.querySelector('.per');
-    if (!per) { p.innerHTML = fmt(cur, p.dataset[cur]); return; }   // one-time items unchanged
+    /* A certificate is bought once. It used to carry a `.per` element saying
+       "one-time", and this loop treated ANY price with a `.per` as a monthly
+       rate — so on the yearly tab it multiplied by ten and printed a
+       twenty-five euro certificate as "EUR 249.90 /year". The `.once` marker is
+       what separates a price from a rate, and a price is never multiplied. */
+    if (!per || per.classList.contains('once')) {
+      p.innerHTML = fmt(cur, p.dataset[cur]) + '<small class="per once"> one-time</small>';
+      return;
+    }
     let val = parseFloat(p.dataset[cur]);
     // yearly = 10x the monthly price, so two months are free
     if (yearly) val = Math.round(val * 10 * 100) / 100;
     const label = yearly ? '/year' : '/month';
     p.innerHTML = fmt(cur, val) + '<small class="per">' + label + '</small>';
   });
+
+  /* Monthly and Yearly are two ways to pay for the same subscriptions, so they
+     show the same three cards. One-time is a different kind of thing entirely
+     and shows the certificates — which is why they are no longer sitting in a
+     yearly list pretending to renew. */
+  const wantKind = billCycle === 'once' ? 'once' : 'sub';
+  document.querySelectorAll('.plan[data-kind]').forEach(el => {
+    el.style.display = el.dataset.kind === wantKind ? '' : 'none';
+  });
+  const bl = document.getElementById('billnote');
+  if (bl) bl.textContent = billCycle === 'once'
+    ? 'Certificates are a single payment. There is nothing to renew and nothing to cancel — and they only issue once you have earned them.'
+    : 'Subscriptions renew ' + (yearly ? 'every year' : 'every month') + ' and can be cancelled any time.';
   const sv = document.getElementById('saveline');
   if (sv) {
     const base = parseFloat(sv.dataset[cur]);
@@ -698,6 +721,7 @@ async function setupWallet() {
       };
       localStorage.setItem('nc_subscription', JSON.stringify(sub));
       const boughtItems = CART.slice();
+      grantPro(boughtItems);
       CART = []; saveCart();
       issueCertificates(boughtItems);
       document.getElementById('coSentTo').textContent = sub.email;
@@ -773,6 +797,33 @@ function enrol(tier) {
 function ownedCerts() { try { return JSON.parse(localStorage.getItem('nc_certs') || '[]') || []; } catch (e) { return []; } }
 
 // called after a successful purchase — enrols, and issues only if already earned
+/* ---------------------------------------------------------------------------
+   TURNING A PURCHASE INTO SOMETHING REAL
+   nc_subscription was written at checkout and then read by absolutely nothing.
+   A parent paid and the site behaved exactly as it had a minute earlier: no
+   priority answers, no longer exports, no extra effects, no badge. The
+   features were listed on the pricing page and implemented nowhere.
+
+   This writes the entitlement the rest of the site actually checks (ncPro() in
+   nova.js), derived from what was bought rather than from the plan's display
+   name — so renaming a card on this page cannot silently switch a feature off.
+--------------------------------------------------------------------------- */
+function grantPro(items) {
+  const names = (items || []).map(i => String(i.name || '').toLowerCase());
+  const has = (frag) => names.some(n => n.indexOf(frag) >= 0);
+  const bundle = has('bundle');
+  const pro = {
+    tier: bundle ? 'bundle' : (has('dashboard') ? 'family' : (has('tools') ? 'tools' : null)),
+    family: bundle || has('dashboard'),      // parental controls, PIN, activity
+    tools:  bundle || has('tools'),          // priority AI, longer exports, effects, skins
+    since: new Date().toISOString(),
+    plans: (items || []).map(i => i.name).filter(Boolean)
+  };
+  if (!pro.tier) return;                     // a certificate on its own is not Pro
+  localStorage.setItem('nc_pro', JSON.stringify(pro));
+  try { if (typeof ncSyncSoon === 'function') ncSyncSoon(); } catch (e) {}
+}
+
 function issueCertificates(items) {
   const bought = (items || []).map(i => certKeyFor(i.name)).filter(Boolean);
   if (!bought.length) { const b = document.getElementById('certIssued'); if (b) b.style.display = 'none'; return; }
@@ -1230,6 +1281,7 @@ function initCheckout() {
     const sub = { plan: coCurrent.plan, price: coCurrent.price, cycle: coCurrent.cycle,
       email: email, last4: card.replace(/\D/g, '').slice(-4), exp: exp, started: new Date().toISOString() };
     localStorage.setItem('nc_subscription', JSON.stringify(sub));
+    grantPro(CART.length ? CART.slice() : [{ name: coCurrent.plan }]);
     document.getElementById('coSentTo').textContent = email;
     document.getElementById('coSummary').innerHTML =
       '<div><b>Plan:</b> ' + sub.plan + '</div>' +
