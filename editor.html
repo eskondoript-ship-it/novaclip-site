@@ -3,1332 +3,482 @@
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>NovaClip Editor</title>
+<title>NovaClip Studio</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
-:root { --bg:#0a0a0f; --panel:#15161d; --panel2:#1c1e27; --line:#282a36; --line2:#333644; --txt:#e8ecf4; --dim:#8a92a6; --cyan:#00F0FF; --pink:#FF2E97; --purple:#7209B7; }
-body { background: var(--bg); color: var(--txt); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-a { color: inherit; text-decoration: none; }
-::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 4px; } ::-webkit-scrollbar-track { background: transparent; }
+body { background: #060608; color: #EAF2FF; overflow-x: hidden; }
+a { text-decoration: none; color: inherit; }
 
-/* top bar */
-.tbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: linear-gradient(180deg,#17181f,#121319); border-bottom: 1px solid var(--line); z-index: 5; }
-.tbar .left { display: flex; align-items: center; gap: 16px; }
-.tbar .logo { font-weight: 800; font-size: 1.05rem; }
-.tbar .logo b { color: var(--cyan); }
-.tbar .title { font-size: 0.82rem; color: var(--dim); background: var(--panel2); padding: 5px 12px; border-radius: 8px; }
-.tbar .right { display: flex; gap: 10px; align-items: center; }
-.exportbtn { padding: 9px 22px; border-radius: 9px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(90deg,var(--cyan),#4CC9F0); color: #04121a; transition: .2s; }
-.exportbtn:hover { box-shadow: 0 0 24px rgba(0,240,255,0.4); transform: translateY(-1px); }
-.backlnk { font-size: 0.85rem; color: var(--dim); } .backlnk:hover { color: var(--cyan); }
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 210px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 20px 0; gap: 4px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); }
+.sidebar a { font-size: 1rem; color: #EAF2FF; display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background 0.2s; }
+.sidebar a:hover { background: rgba(114,9,183,0.25); }
+.sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: 0.78rem; opacity: 0.6; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: 0.95rem; background: rgba(255,255,255,0.05); color: #EAF2FF; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px; }
 
-/* main 3-column area */
-.main { flex: 1; display: grid; grid-template-columns: 84px 300px 1fr 300px; gap: 1px; background: var(--line); min-height: 0; }
-.col { background: var(--panel); overflow-y: auto; min-height: 0; }
-@media (max-width: 1050px) { .main { grid-template-columns: 64px 1fr; } .railpanel, .props { display: none; } }
+.main { margin-left: 210px; padding: 34px 40px 60px; position: relative; z-index: 2; }
+@media (max-width: 820px) { .main { margin-left: 0; padding: 20px; } .sidebar { position: static; width: 100%; flex-direction: row; flex-wrap: wrap; } .sidebar .themewrap { margin: 0; } }
 
-/* icon rail (CapCut left tabs) */
-.rail { background: #101116; display: flex; flex-direction: column; padding: 10px 0; gap: 2px; }
-.rail .rbtn { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 14px 2px; cursor: pointer; color: var(--dim); font-size: 0.6rem; font-weight: 600; border-left: 3px solid transparent; transition: .2s; line-height: 1.1; text-align: center; }
-.rail .rbtn .ic { font-size: 1.35rem; }
-.rail .rbtn:hover { color: var(--txt); background: rgba(255,255,255,0.03); }
-.rail .rbtn.active { color: var(--cyan); border-left-color: var(--cyan); background: rgba(0,240,255,0.06); }
+.head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
+h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -1.5px; }
+h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.subtitle { color: #7E8AA6; margin-bottom: 24px; font-size: 1.02rem; }
 
-/* rail panel content */
-.railpanel { padding: 16px; }
-.railpanel .sect { display: none; }
-.railpanel .sect.show { display: block; animation: fade .25s both; }
-.railpanel h4 { font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 12px; }
-.importbtn { width: 100%; padding: 12px; border-radius: 10px; border: 1px dashed var(--line2); background: var(--panel2); color: #cfd6e4; cursor: pointer; font-weight: 700; margin-bottom: 14px; transition: .2s; }
-.importbtn:hover { border-color: var(--cyan); color: var(--cyan); }
-.thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.thumbs .th { aspect-ratio: 16/10; border-radius: 8px; overflow: hidden; background: #000; position: relative; cursor: pointer; border: 1px solid var(--line); transition: .15s; }
-.thumbs .th:hover { border-color: var(--cyan); transform: scale(1.03); }
-.thumbs .th img, .thumbs .th video { width: 100%; height: 100%; object-fit: cover; }
-.thumbs .th .dur { position: absolute; bottom: 3px; right: 5px; font-size: 0.62rem; background: #000c; padding: 1px 6px; border-radius: 4px; }
-.fxgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.mcat { padding: 6px 11px; border-radius: 20px; border: 1px solid var(--line2); background: var(--panel2); color: var(--dim); font-size: 0.74rem; cursor: pointer; transition: .2s; font-weight: 600; }
-.mcat:hover { border-color: var(--cyan); color: var(--txt); }
-.mcat.on { background: rgba(0,240,255,0.14); border-color: var(--cyan); color: var(--cyan); }
-.fxchip { padding: 12px 8px; border-radius: 9px; background: var(--panel2); border: 1px solid var(--line); text-align: center; font-size: 0.8rem; cursor: pointer; transition: .15s; }
-.fxchip:hover { border-color: var(--cyan); } .fxchip.on { border-color: var(--cyan); background: rgba(0,240,255,0.1); color: var(--cyan); }
+.gbtn { padding: 13px 28px; border-radius: 40px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(90deg, #00F0FF, #4CC9F0); color: #04121a; font-size: 1rem; transition: transform 0.2s, box-shadow .2s; }
+.gbtn:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,240,255,0.4); }
+#uname { display: none; color: #4CC9F0; font-weight: 700; }
+#authmsg { display: none; max-width: 420px; margin-top: 10px; padding: 12px 14px; border-radius: 12px; font-size: 0.86rem; line-height: 1.55; border: 1px solid rgba(247,37,133,0.45); background: rgba(247,37,133,0.10); color: #ffd9e6; }
+#authmsg b { color: #fff; }
+#authmsg code { background: rgba(0,0,0,0.35); padding: 1px 6px; border-radius: 5px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; }
+#authmsg.working { border-color: rgba(76,201,240,0.45); background: rgba(76,201,240,0.10); color: #cdeaff; }
 
-/* player */
-.playercol { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #0c0d12; }
-.playerhead { width: 100%; max-width: 620px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--dim); margin-bottom: 10px; }
-.playerhead .tag { background: var(--panel2); padding: 4px 12px; border-radius: 20px; }
-#preview { width: 100%; max-width: 620px; aspect-ratio: 16/9; background: #000; border-radius: 12px; border: 1px solid var(--line2); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-.transport { margin-top: 14px; display: flex; gap: 10px; align-items: center; }
-.tbtn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line2); background: var(--panel2); color: var(--txt); font-size: 1rem; cursor: pointer; transition: .2s; display: flex; align-items: center; justify-content: center; }
-.tbtn:hover { border-color: var(--cyan); color: var(--cyan); }
-.tbtn.play { width: 54px; height: 54px; background: linear-gradient(135deg,var(--cyan),#4CC9F0); color: #04121a; border: none; font-size: 1.3rem; }
-.tbtn.rec { color: var(--pink); border-color: rgba(255,46,151,0.5); }
+.cardgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 10px; }
+.tool { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 22px; cursor: pointer; transition: 0.25s; }
+.tool:hover { transform: translateY(-5px); border-color: rgba(0,240,255,0.4); box-shadow: 0 16px 40px rgba(0,240,255,0.12); }
+.tool .ico { font-size: 1.8rem; margin-bottom: 10px; }
+.tool h3 { font-size: 1.1rem; margin-bottom: 6px; }
+.tool p { color: #7E8AA6; font-size: 0.9rem; line-height: 1.5; }
 
-/* properties (right) */
-.props { padding: 16px; }
-.props h4 { font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 12px; }
-.prop { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
-.prop h5 { font-size: 0.9rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-.prop h5 .chk { accent-color: var(--cyan); width: 16px; height: 16px; }
-.prop label.sm { font-size: 0.72rem; color: var(--dim); display: block; margin: 8px 0 4px; }
-.prop select, .prop input[type=text], .prop textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line2); background: #0e1118; color: var(--txt); font-size: 0.85rem; }
-.prop input[type=range] { width: 100%; accent-color: var(--cyan); }
-.rowflex { display: flex; gap: 8px; align-items: center; }
-.rowflex .val { font-size: 0.78rem; color: var(--cyan); min-width: 40px; text-align: right; font-weight: 700; }
-.minibtn { margin-top: 10px; padding: 9px 16px; border-radius: 9px; border: none; font-weight: 700; cursor: pointer; background: linear-gradient(90deg,var(--pink),var(--purple)); color: white; font-size: 0.82rem; margin-right: 6px; }
-.minibtn.alt { background: var(--panel); border: 1px solid var(--line2); color: #cfd6e4; }
-.hint { font-size: 0.72rem; color: #6b7284; margin-top: 8px; line-height: 1.5; }
-
-/* timeline */
-.tl-wrap { background: #0c0d12; border-top: 1px solid var(--line); padding: 10px 16px 16px; }
-.tl-tools { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; font-size: 0.78rem; color: var(--dim); }
-.tl-tools .sep { margin-left: auto; }
-.ruler { height: 20px; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 60px); border-radius: 4px; font-size: 0.6rem; color: #5a6174; }
-.tl-track { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.tl-track .tlabel { width: 54px; flex-shrink: 0; font-size: 0.66rem; color: var(--dim); text-align: right; }
-#tlvideo { display: flex; gap: 4px; padding: 6px; min-height: 64px; overflow-x: auto; background: var(--panel); border-radius: 8px; flex: 1; }
-.tclip { flex: 0 0 auto; height: 52px; border-radius: 7px; overflow: hidden; position: relative; cursor: grab; border: 2px solid transparent; display: flex; }
-.tclip.sel { border-color: var(--cyan); box-shadow: 0 0 16px rgba(0,240,255,0.4); }
-.tclip img, .tclip video { height: 100%; width: auto; object-fit: cover; pointer-events: none; }
-.tclip .lbl { position: absolute; top: 2px; left: 4px; font-size: 0.58rem; background: #000b; padding: 1px 6px; border-radius: 4px; }
-.tclip .del { position: absolute; top: 2px; right: 2px; background: var(--pink); border: none; color: white; border-radius: 50%; width: 16px; height: 16px; cursor: pointer; font-size: 0.65rem; line-height: 1; }
-#tlaudio { height: 30px; border-radius: 8px; background: linear-gradient(90deg,#12203a,#1a1030); display: flex; align-items: center; padding: 0 12px; font-size: 0.68rem; color: #7fa0d0; gap: 10px; flex: 1; }
-#tlaudio .wave { flex: 1; height: 16px; background: repeating-linear-gradient(90deg, #2a4a80 0 2px, #16305e 2px 4px, #35589a 4px 6px, #1c3a70 6px 8px); border-radius: 3px; opacity: 0.7; }
-@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-
-/* ===== 3D + ANIMATED UPGRADE ===== */
-body { perspective: 1400px; }
-body::before {
-  content:''; position:fixed; inset:-20%; z-index:0; pointer-events:none;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(0,240,255,0.10), transparent 45%),
-    radial-gradient(circle at 85% 75%, rgba(255,46,151,0.10), transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(114,9,183,0.08), transparent 60%);
-  animation: auroraDrift 22s ease-in-out infinite alternate;
-}
-@keyframes auroraDrift {
-  0%   { transform: translate(0,0) scale(1); }
-  50%  { transform: translate(-3%, 2%) scale(1.08); }
-  100% { transform: translate(3%, -2%) scale(1.02); }
-}
-.tbar, .main, .tl-wrap { position: relative; z-index: 1; }
-
-/* glass panels with real depth */
-.col, .rail, .tl-wrap {
-  background: linear-gradient(160deg, rgba(30,33,44,0.82), rgba(16,18,26,0.9));
-  backdrop-filter: blur(18px) saturate(1.2);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 50px rgba(0,0,0,0.5);
-}
-.tbar {
-  background: linear-gradient(180deg, rgba(28,31,42,0.95), rgba(15,17,24,0.92));
-  backdrop-filter: blur(20px);
-  box-shadow: 0 6px 30px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(255,255,255,0.05);
-}
-.tbar .logo { text-shadow: 0 0 22px rgba(0,240,255,0.5); }
-
-/* animated brand shimmer */
-.tbar .logo b {
-  background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C,#00F0FF);
-  background-size: 300% auto;
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: shimmer 6s linear infinite;
-}
-@keyframes shimmer { to { background-position: 300% center; } }
-
-/* icon rail: 3D lift + glow */
-.rail .rbtn {
-  transform-style: preserve-3d;
-  transition: transform .3s cubic-bezier(.2,.9,.3,1.3), color .25s, background .25s;
-}
-.rail .rbtn:hover { transform: translateZ(22px) translateX(3px) scale(1.06); }
-.rail .rbtn.active {
-  background: linear-gradient(90deg, rgba(0,240,255,0.16), transparent);
-  box-shadow: inset 3px 0 0 var(--cyan), 0 0 26px rgba(0,240,255,0.18);
-}
-.rail .rbtn.active .ic { animation: iconPulse 2.4s ease-in-out infinite; }
-@keyframes iconPulse { 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.16);} }
-
-/* panel sections slide in with depth */
-.railpanel .sect.show { animation: sectIn .45s cubic-bezier(.2,.9,.3,1.1) both; }
-@keyframes sectIn { from { opacity:0; transform: translateX(-22px) rotateY(-12deg); } to { opacity:1; transform:none; } }
-
-/* player: floating 3D screen */
-#preview {
-  transform: perspective(1200px) rotateX(1.6deg);
-  transition: transform .5s cubic-bezier(.2,.9,.3,1.1), box-shadow .5s;
-  box-shadow: 0 30px 70px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.06), 0 0 60px rgba(0,240,255,0.10);
-  animation: floaty 7s ease-in-out infinite;
-}
-#preview:hover { transform: perspective(1200px) rotateX(0deg) translateY(-4px) scale(1.008); box-shadow: 0 36px 90px rgba(0,0,0,0.7), 0 0 70px rgba(0,240,255,0.2); }
-@keyframes floaty { 0%,100%{ translate: 0 0; } 50%{ translate: 0 -6px; } }
-
-/* transport buttons: springy 3D */
-.tbtn { transition: transform .25s cubic-bezier(.2,.9,.3,1.5), box-shadow .25s, border-color .25s, color .25s; }
-.tbtn:hover { transform: translateY(-4px) scale(1.1); box-shadow: 0 10px 24px rgba(0,0,0,0.5); }
-.tbtn:active { transform: translateY(0) scale(.94); }
-.tbtn.play {
-  box-shadow: 0 0 0 0 rgba(0,240,255,0.55);
-  animation: playPulse 2.6s ease-out infinite;
-}
-@keyframes playPulse { 0%{ box-shadow:0 0 0 0 rgba(0,240,255,0.5);} 70%{ box-shadow:0 0 0 20px rgba(0,240,255,0);} 100%{ box-shadow:0 0 0 0 rgba(0,240,255,0);} }
-
-/* fx chips: tilt + shine */
-.fxchip { position: relative; overflow: hidden; transform-style: preserve-3d;
-  transition: transform .28s cubic-bezier(.2,.9,.3,1.4), border-color .25s, background .25s, box-shadow .25s; }
-.fxchip::after {
-  content:''; position:absolute; inset:0; transform: translateX(-120%) skewX(-20deg);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
-}
-.fxchip:hover { transform: translateY(-4px) rotateX(9deg) scale(1.07); box-shadow: 0 12px 26px rgba(0,0,0,0.45); }
-.fxchip:hover::after { animation: chipShine .7s ease forwards; }
-@keyframes chipShine { to { transform: translateX(120%) skewX(-20deg); } }
-.fxchip.on { box-shadow: 0 0 22px rgba(0,240,255,0.35), inset 0 0 18px rgba(0,240,255,0.10); }
-
-/* media + meme thumbs pop in 3D */
-.thumbs .th { transform-style: preserve-3d; transition: transform .3s cubic-bezier(.2,.9,.3,1.4), box-shadow .3s, border-color .25s; }
-.thumbs .th:hover { transform: translateZ(28px) scale(1.1) rotateY(-7deg); box-shadow: 0 18px 40px rgba(0,0,0,0.6); z-index: 5; }
-
-/* property cards lift */
-.prop { transition: transform .3s cubic-bezier(.2,.9,.3,1.2), border-color .3s, box-shadow .3s; }
-.prop:hover { transform: translateY(-3px); border-color: rgba(0,240,255,0.35); box-shadow: 0 14px 34px rgba(0,0,0,0.45); }
-
-/* timeline clips: 3D grab */
-.tclip { transition: transform .22s cubic-bezier(.2,.9,.3,1.4), box-shadow .22s, border-color .22s; }
-.tclip:hover { transform: translateY(-5px) scale(1.05) rotateX(7deg); box-shadow: 0 14px 30px rgba(0,0,0,0.55); z-index: 4; }
-.tclip.sel { animation: selGlow 2.2s ease-in-out infinite; }
-@keyframes selGlow { 0%,100%{ box-shadow: 0 0 14px rgba(0,240,255,0.35);} 50%{ box-shadow: 0 0 28px rgba(0,240,255,0.65);} }
-
-/* audio waveform pulses */
-#tlaudio .wave { animation: wavePulse 1.6s ease-in-out infinite; }
-@keyframes wavePulse { 0%,100%{ opacity:.55; } 50%{ opacity:.95; } }
-
-/* export button */
-.exportbtn { transition: transform .25s cubic-bezier(.2,.9,.3,1.5), box-shadow .25s; }
-.exportbtn:hover { transform: translateY(-3px) scale(1.05); }
-
-@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
-
-/* ===== FORM CONTROLS — no white boxes anywhere ===== */
-.railpanel input[type=text],
-.railpanel input[type=email],
-.railpanel input[type=number],
-.railpanel textarea,
-.railpanel select,
-.prop input[type=text],
-.prop textarea,
-.prop select {
-  width: 100%;
-  padding: 11px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--line2);
-  background: #0e1118;
-  color: var(--txt);
-  font-size: 0.86rem;
-  font-family: inherit;
-  outline: none;
-  transition: border-color .2s, box-shadow .2s;
-  margin-bottom: 10px;
-  display: block;
-}
-.railpanel input:focus, .railpanel textarea:focus, .railpanel select:focus,
-.prop input:focus, .prop textarea:focus, .prop select:focus {
-  border-color: var(--cyan);
-  box-shadow: 0 0 0 3px rgba(0,240,255,0.12);
-}
-.railpanel input::placeholder, .railpanel textarea::placeholder { color: #6b7284; }
-.railpanel select option, .prop select option { background: #0e1118; color: var(--txt); }
-.railpanel textarea { resize: vertical; min-height: 78px; }
-.railpanel label.sm { display: block; font-size: .72rem; color: var(--dim); margin: 4px 0 5px; letter-spacing: .5px; }
-
-/* file inputs — style the ugly default button */
-.railpanel input[type=file] {
-  width: 100%; font-size: .8rem; color: var(--dim);
-  background: #0e1118; border: 1px dashed var(--line2); border-radius: 10px;
-  padding: 10px; margin-bottom: 10px;
-}
-.railpanel input[type=file]::file-selector-button {
-  background: linear-gradient(90deg, var(--cyan), #4CC9F0);
-  color: #04121a; border: none; border-radius: 8px;
-  padding: 7px 14px; font-weight: 700; cursor: pointer; margin-right: 10px;
-  font-family: inherit; font-size: .78rem;
-}
-.railpanel input[type=file]::file-selector-button:hover { filter: brightness(1.12); }
-
-/* keep the panel sections tidy */
-.railpanel .sect { display: none; }
-.railpanel .sect.show { display: block; }
-.railpanel .minibtn { margin-top: 2px; }
-
-.lessons { display:flex; flex-direction:column; gap:8px; }
-.lesson { border:1px solid var(--line2); border-radius:12px; overflow:hidden; background:rgba(255,255,255,.03); }
-.lesson > button { width:100%; text-align:left; padding:11px 13px; background:none; border:none; color:var(--txt);
-  font-family:inherit; font-size:.84rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:9px; }
-.lesson > button:hover { background:rgba(255,255,255,.04); }
-.lesson .li { font-size:1.05rem; }
-.lesson .arrow { margin-left:auto; color:var(--dim); font-size:.75rem; transition:.2s; }
-.lesson.open .arrow { transform:rotate(90deg); }
-.lesson .body { display:none; padding:0 13px 13px; font-size:.8rem; color:var(--dim); line-height:1.75; }
-.lesson.open .body { display:block; }
-.lesson .body ol { margin:6px 0 0 16px; }
-.lesson .body li { margin-bottom:5px; }
-.lesson .body b { color:var(--txt); }
-.lesson .tip { margin-top:9px; padding:8px 10px; border-left:3px solid var(--cyan); border-radius:6px;
-  background:rgba(0,240,255,.06); color:#b8bccb; font-size:.76rem; }
-
-.beathead { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:12px 0 10px; }
-.beathead > div { background:rgba(255,255,255,.05); border:1px solid var(--line2); border-radius:10px;
-  padding:9px 6px; text-align:center; }
-.beathead b { display:block; font-size:1.15rem; font-weight:900; color:var(--cyan); line-height:1.1; }
-.beathead small { font-size:.6rem; color:var(--dim); letter-spacing:.8px; text-transform:uppercase; }
-.beatwave { position:relative; height:58px; border:1px solid var(--line2); border-radius:10px;
-  overflow:hidden; background:#0b0e15; margin-bottom:10px; }
-.beatwave canvas { width:100%; height:100%; display:block; }
-#tlbeats { position:absolute; inset:0; pointer-events:none; z-index:3; }
-#tlbeats i { position:absolute; top:0; bottom:0; width:1px; background:rgba(0,240,255,.42); }
-#tlbeats i.bar { width:2px; background:rgba(247,37,133,.75); }
-
-.fxchip { cursor: grab; }
-.fxchip:active { cursor: grabbing; }
-.fxchip.dragging { opacity:.45; transform:scale(.94); }
-.tclip.dropready { outline:2px dashed var(--cyan); outline-offset:2px; }
-.tclip.dropover { outline:2px solid var(--cyan); background:rgba(0,240,255,.18) !important;
-  box-shadow:0 0 24px rgba(0,240,255,.5) !important; transform:translateY(-4px) scale(1.06); }
-.draghint { position:fixed; bottom:96px; left:50%; transform:translateX(-50%); z-index:60;
-  background:rgba(0,240,255,.14); border:1px solid var(--cyan); color:var(--cyan);
-  padding:8px 18px; border-radius:22px; font-size:.8rem; font-weight:700; pointer-events:none;
-  opacity:0; transition:opacity .2s; }
-.draghint.show { opacity:1; }
+#toolbar { display: none; }
+.panelbox { margin-top: 20px; text-align: left; display: none; background: rgba(255,255,255,0.04); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 22px; }
+#duelbox { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #EAF2FF; }
+.smallbtn { margin-top: 12px; padding: 11px 22px; border-radius: 24px; border: none; cursor: pointer; font-weight: 800; color: white; background: linear-gradient(90deg, #F72585, #7209B7); }
+.compcard { border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 16px; margin-bottom: 12px; background: rgba(255,255,255,0.02); }
+.compcard b { font-size: 1.05rem; }
+.compcard .row { display: flex; flex-wrap: wrap; gap: 16px; margin: 8px 0; font-size: 0.9rem; color: #b8bccb; }
+.compcard .row span b { color: #00F0FF; font-size: 0.9rem; }
+.compcard .desc { font-size: 0.85rem; color: #7E8AA6; line-height: 1.5; margin: 6px 0; }
+.orb { position: fixed; border-radius: 50%; filter: blur(90px); opacity: 0.25; z-index: 0; pointer-events: none; }
+.orb.a { width: 440px; height: 440px; background: #7209B7; top: -80px; right: 6%; }
+.orb.b { width: 380px; height: 380px; background: #F72585; bottom: -60px; left: 20%; }
 </style>
 </head>
 <body>
-
-<div class='tbar'>
-  <div class='left'>
-    <a class='backlnk' href='index.html'>← NovaClip</a>
-    <span class='logo'>Nova<b>Cut</b></span>
-    <span class='title' id='projname'>Untitled project · auto-saved</span>
-  </div>
-  <div class='right'>
-    <button class='exportbtn' id='recBtn' data-t='e_export'>Export</button>
+<div class='sidebar'>
+  <a href='index.html' data-t='home'>Home</a>
+  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='analytics'>Analytics</a>
+  <a href='trends.html' data-t='trends'>Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>Editor</a>
+  <a href='game.html' data-t='sniper'>Games</a>
+  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
   </div>
 </div>
+
+<div class='orb a'></div><div class='orb b'></div>
 
 <div class='main'>
-  <!-- ICON RAIL -->
-  <div class='rail'>
-    <div class='rbtn active' data-tab='media'><span class='ic'></span><span data-t='e_media'>Media</span></div>
-    <div class='rbtn' data-tab='fx'><span class='ic'></span><span data-t='e_effects'>Effects</span></div>
-    <div class='rbtn' data-tab='audio'><span class='ic'></span><span data-t='e_audio'>Audio</span></div>
-    <div class='rbtn' data-tab='learn'><span class='ic'></span><span data-t='e_learn'>Edits</span></div>
-    <div class='rbtn' data-tab='memes'><span class='ic'></span><span data-t='e_memes'>Memes</span></div>
-    <div class='rbtn' data-tab='text'><span class='ic'></span><span data-t='e_text'>Text</span></div>
-    <div class='rbtn' data-tab='voice'><span class='ic'></span><span data-t='e_voice'>Voice</span></div>
-  </div>
-
-  <!-- RAIL PANEL -->
-  <div class='col railpanel'>
-    <div class='sect show' id='sect-media'>
-      <h4>Media</h4>
-      <button class='importbtn' data-t='e_import' onclick="document.getElementById('mediaInput').click()">⊕ Import media</button>
-      <input type='file' id='mediaInput' accept='video/*,image/*' multiple style='display:none'>
-      <div class='thumbs' id='binthumbs'></div>
-      <div class='hint'>Click a clip to add it to the timeline again.</div>
+  <div class='head'>
+    <div>
+      <h1><span class='grad' data-t='studio_h'>NovaClip Studio</span></h1>
+      <p class='subtitle' data-t='studio_sub'>Connect your channel and scout the competition.</p>
     </div>
-    <div class='sect' id='sect-fx'>
-      <h4 data-t='e_effects_h'>Effects &amp; filters</h4>
-      <div class='fxgrid' id='fxgrid'></div>
-      <label class='sm' style='margin-top:14px'>Strength</label>
-      <div class='rowflex'><input type='range' id='fxStr' min='0' max='100' value='60'><span class='val' id='fxStrVal'>60%</span></div>
-      <label class='sm' style='margin-top:10px; display:flex; align-items:center; gap:8px;'><input type='checkbox' class='chk' id='fxOn' checked style='width:16px;height:16px;accent-color:var(--cyan)'> Filters on</label>
-    </div>
-    <div class='sect' id='sect-audio'>
-      <h4>Audio</h4>
-      <div class='hint' style='margin-bottom:8px'>Add a music track — it plays through preview and export.</div>
-      <input type='file' id='musicInput' accept='audio/*' style='width:100%; font-size:0.8rem;'>
-      <div id='beatPanel' style='display:none'>
-        <div class='beathead'>
-          <div><b id='bpmVal'>—</b><small>BPM</small></div>
-          <div><b id='beatCount'>—</b><small>beats found</small></div>
-          <div><b id='beatGap'>—</b><small>per beat</small></div>
-        </div>
-        <div class='beatwave' id='beatWave'><canvas id='waveCv'></canvas></div>
-        <button class='minibtn' id='snapBtn'>Snap all clips to the beat</button>
-        <div class='hint' id='beatHint'>Beat markers appear on the timeline — cut on them for a tighter edit.</div>
-      </div>
-      <div id='beatBusy' class='hint' style='display:none'>Listening for beats…</div>
-    </div>
-    <div class='sect' id='sect-learn'>
-      <h4 data-t='e_learn_h'>Edit techniques</h4>
-      <div class='lessons' id='lessons'></div>
-    </div>
-    <div class='sect' id='sect-memes'>
-      <h4 data-t='e_memes_h'>Meme search</h4>
-      <input type='text' id='memeSearch' placeholder='Search memes… (drake, doge, cat)' style='width:100%; padding:10px; border-radius:8px; border:1px solid var(--line2); background:#0e1118; color:var(--txt); font-size:0.85rem; margin-bottom:8px;'>
-      <div id='memeCats' style='display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;'>
-        <button class='mcat on' data-cat='popular'>Popular</button>
-        <button class='mcat' data-cat='latest'>Latest</button>
-        <button class='mcat' data-cat='classic'>Classic</button>
-        <button class='mcat' data-cat='all'>All</button>
-      </div>
-      <div id='memeStatus' class='hint' style='margin-bottom:8px;'>Loading meme library…</div>
-      <div class='thumbs' id='memeResults'></div>
-      <div class='hint'>Click any meme to drop it straight onto your timeline.</div>
-    </div>
-    <div class='sect' id='sect-text'>
-      <h4 data-t='e_text_h'>Text overlay</h4>
-      <input type='text' id='txtInput' placeholder='Caption / title...'>
-      <label class='sm'>Position</label>
-      <select id='txtPos'><option value='top'>Top</option><option value='center' selected>Center</option><option value='bottom'>Bottom</option></select>
-      <button class='minibtn' id='txtBtn'>Add text</button><button class='minibtn alt' id='txtClear'>Clear</button>
-    </div>
-    <div class='sect' id='sect-voice'>
-      <h4 data-t='e_voice_h'>AI voiceover</h4>
-      <textarea id='voScript' rows='3' placeholder='What should the voice say?'></textarea>
-      <label class='sm'>Voice character</label>
-      <select id='voVoice'></select>
-      <button class='minibtn' id='voPlay'>Preview voice</button>
-      <div class='hint'>Plays during export too. Free browser voices.</div>
+    <div>
+      <button id='gbtn' class='gbtn' data-t='signin'>Sign in with Google</button>
+      <p id='uname'></p>
+      <div id='authmsg'></div>
     </div>
   </div>
 
-  <!-- PLAYER -->
-  <div class='playercol'>
-    <div class='playerhead'><span class='tag'>Preview</span><span class='tag' id='timecode'>00:00 / 00:00</span></div>
-    <canvas id='preview' width='1280' height='720'></canvas>
-    <div class='transport'>
-      <button class='tbtn' id='stopBtn' title='Stop'>⏹</button>
-      <button class='tbtn play' id='playBtn' title='Play'>▶</button>
-      <button class='tbtn rec' id='recBtn2' title='Record & export'>⏺</button>
+  <div id='toolbar'>
+    <div class='cardgrid'>
+      <div class='tool' id='compbtn'><div class='ico'></div><h3 data-t='t_comp'>Closest competitors</h3><p data-t='t_comp_d'>Channels closest to your size — full stats and links.</p></div>
+      <div class='tool' id='duelbtn'><div class='ico'></div><h3 data-t='t_duel'>Duel a channel</h3><p data-t='t_duel_d'>Challenge a channel within 20k subs and win points.</p></div>
+      <a class='tool' href='analytics.html'><div class='ico'></div><h3 data-t='t_analytics'>Full analytics</h3><p data-t='t_analytics_d'>Deep charts comparing you to rivals — on its own page.</p></a>
     </div>
   </div>
 
-  <!-- PROPERTIES -->
-  <div class='col props'>
-    <h4 data-t='e_clip_h'>Selected clip</h4>
-    <div class='prop'>
-      <h5 data-t='e_filter'>Filter</h5>
-      <select id='clipFx'>
-        <option value='none'>None</option>
-        <option value='bw'>Black & White</option>
-        <option value='sepia'>Sepia</option>
-        <option value='vivid'>Vivid</option>
-        <option value='punchy'>Punchy</option>
-        <option value='blur'>Blur</option>
-        <option value='neon'>Neon shift</option>
-        <option value='glow'>Glow</option>
-        <option value='vintage'>Vintage</option>
-        <option value='invert'>Invert</option>
-      </select>
-    </div>
-    <div class='prop'>
-      <h5 data-t='e_trans'>Transition in</h5>
-      <select id='clipTrans'>
-        <option value='none'>None (cut)</option>
-        <option value='fade' selected>Fade</option>
-        <option value='slideL'>Slide from left</option>
-        <option value='slideR'>Slide from right</option>
-        <option value='slideUp'>Slide up</option>
-        <option value='slideDown'>Slide down</option>
-        <option value='zoom'>Zoom in</option>
-        <option value='zoomOut'>Zoom out</option>
-        <option value='spin'>Spin CW</option>
-        <option value='spinCCW'>Spin CCW</option>
-        <option value='flip'>Flip</option>
-        <option value='punch'>Punch</option>
-        <option value='drop'>Drop</option>
-        <option value='rise'>Rise</option>
-        <option value='swirl'>Swirl</option>
-        <option value='diagTL'>Diagonal ↖</option>
-        <option value='diagTR'>Diagonal ↗</option>
-        <option value='diagBL'>Diagonal ↙</option>
-        <option value='diagBR'>Diagonal ↘</option>
-        <option value='popIn'>Pop in</option>
-        <option value='stretch'>Stretch</option>
-        <option value='whipL'>Whip left</option>
-        <option value='whipR'>Whip right</option>
-        <option value='tilt'>Tilt</option>
-        <option value='bounce'>Bounce</option>
-        <option value='glitch'>Glitch</option>
-      </select>
-      <label class='sm'>Clip duration (seconds)</label>
-      <input type='text' id='clipDur' value='3'>
-    </div>
-    <div class='prop'>
-      <h5>Info</h5>
-      <div class='hint' id='selinfo2'>Select a clip on the timeline to edit it.</div>
-    </div>
+  <div id='duelsetup' class='panelbox'>
+    <b data-t='duel_label'>Views and subs duel (max 20k subs difference between channels)</b><br><br>
+    <input id='duelbox' data-tph='opp_ph' placeholder='Opponent channel name...'>
+    <button id='duelgo' class='smallbtn' data-t='fight'>Fight!</button>
   </div>
+  <div id='toolout' class='panelbox'></div>
 </div>
-
-<!-- TIMELINE -->
-<div class='draghint' id='dragHint'>Drop the effect on a clip</div>
-<div class='tl-wrap'>
-  <div id='tlbeats'></div>
-  <div class='tl-tools'><span>Timeline</span><span id='selinfo' style='color:var(--cyan)'></span><span class='sep'>drag clips to reorder · click to select</span></div>
-  <div class='ruler'></div>
-  <div class='tl-track'><span class='tlabel'>Video</span><div id='tlvideo'></div></div>
-  <div class='tl-track'><span class='tlabel'>Audio</span><div id='tlaudio'><span></span><div class='wave'></div><span id='audioname'>no music</span></div></div>
-</div>
-
-<audio id='musicEl' loop></audio>
 
 <script>
-const canvas = document.getElementById('preview');
-const ctx = canvas.getContext('2d');
-let clips = [];
-let media = [];
-let overlays = [];
-let selected = -1;
+/* Firebase arrives as a module from gstatic.com, and a module script is deferred
+   — so for the first moment of the page, and forever if that request is blocked
+   (school filter, ad blocker, a country that cannot reach Google), the button
+   below is a button with nothing behind it. Clicking it does nothing at all,
+   which reads as "the site is broken" and gives nobody anything to act on.
+   This plain script runs first and puts a holding answer on every copy of the
+   button; the module replaces it the instant it is ready. */
+(function () {
+  function boxes() { return document.querySelectorAll('#authmsg'); }
+  function say(html) {
+    var bs = boxes();
+    for (var i = 0; i < bs.length; i++) { bs[i].innerHTML = html; bs[i].style.display = 'block'; }
+  }
+  function bind() {
+    var bs = document.querySelectorAll('#gbtn');
+    for (var i = 0; i < bs.length; i++) {
+      if (!bs[i].onclick) bs[i].onclick = function () {
+        say(window.ncAuthReady ? 'One moment...' : 'Still loading Google sign-in. If this does not clear in a few seconds, something on this network is blocking <code>www.gstatic.com</code>.');
+      };
+    }
+  }
+  document.addEventListener('DOMContentLoaded', bind);
+  bind();
+  setTimeout(function () {
+    if (window.ncAuthReady) return;
+    say('<b>Google\'s sign-in library did not load.</b><br>The page needs <code>www.gstatic.com</code>, ' +
+        'and something blocked it — usually an ad blocker, a school or work network filter, or being offline. ' +
+        'Try another network or turn the blocker off for this site, then reload.');
+  }, 8000);
+})();
+</script>
+<script type='module'>
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
-const FX = {
-  none:   s => 'none',
-  // ---- SPORTS EDIT LOOKS (the CR7 / Neymar / football edit palette) ----
-  velocity:  s => 'contrast(' + (1 + 0.9*s) + ') saturate(' + (1 + 1.1*s) + ') brightness(' + (1 + 0.12*s) + ')',
-  teal:      s => 'sepia(' + (0.35*s) + ') hue-rotate(' + (-18*s) + 'deg) saturate(' + (1 + 1.3*s) + ') contrast(' + (1 + 0.5*s) + ')',
-  goldhour:  s => 'sepia(' + (0.5*s) + ') saturate(' + (1 + 1.2*s) + ') brightness(' + (1 + 0.14*s) + ') contrast(' + (1 + 0.3*s) + ')',
-  stadium:   s => 'contrast(' + (1 + 1.1*s) + ') saturate(' + (1 + 0.8*s) + ') brightness(' + (1 - 0.08*s) + ')',
-  coldsteel: s => 'hue-rotate(' + (-24*s) + 'deg) saturate(' + (1 - 0.28*s) + ') contrast(' + (1 + 0.85*s) + ') brightness(' + (1 + 0.06*s) + ')',
-  crushed:   s => 'contrast(' + (1 + 1.5*s) + ') brightness(' + (1 - 0.14*s) + ') saturate(' + (1 + 0.5*s) + ')',
-  bleach:    s => 'saturate(' + (1 - 0.55*s) + ') contrast(' + (1 + 1.1*s) + ') brightness(' + (1 + 0.16*s) + ')',
-  filmburn:  s => 'sepia(' + (0.3*s) + ') contrast(' + (1 + 0.7*s) + ') saturate(' + (1 + 0.9*s) + ') hue-rotate(' + (8*s) + 'deg)',
-  moonlight: s => 'hue-rotate(' + (-40*s) + 'deg) brightness(' + (1 - 0.16*s) + ') contrast(' + (1 + 0.55*s) + ') saturate(' + (1 + 0.35*s) + ')',
-  hypebeast: s => 'saturate(' + (1 + 2.1*s) + ') contrast(' + (1 + 0.9*s) + ') hue-rotate(' + (12*s) + 'deg)',
-  bw:     s => 'grayscale(' + s + ')',
-  sepia:  s => 'sepia(' + s + ')',
-  vivid:  s => 'saturate(' + (1 + 1.6*s) + ')',
-  punchy: s => 'contrast(' + (1 + 0.8*s) + ')',
-  blur:   s => 'blur(' + (6*s) + 'px)',
-  neon:   s => 'hue-rotate(' + (110*s) + 'deg) saturate(' + (1 + s) + ')',
-  glow:   s => 'brightness(' + (1 + 0.4*s) + ') contrast(' + (1 + 0.25*s) + ') saturate(' + (1 + 0.5*s) + ')',
-  vintage:s => 'sepia(' + (0.55*s) + ') contrast(' + (1 + 0.35*s) + ') brightness(' + (1 - 0.12*s) + ')',
-  invert: s => 'invert(' + s + ')',
-  // +30 more
-  cool:     s => 'hue-rotate(' + (-30*s) + 'deg) saturate(' + (1 + 0.5*s) + ')',
-  warm:     s => 'sepia(' + (0.3*s) + ') saturate(' + (1 + 0.6*s) + ') brightness(' + (1 + 0.05*s) + ')',
-  dream:    s => 'blur(' + (1.5*s) + 'px) brightness(' + (1 + 0.25*s) + ') saturate(' + (1 + 0.4*s) + ')',
-  noir:     s => 'grayscale(' + s + ') contrast(' + (1 + 0.6*s) + ') brightness(' + (1 - 0.1*s) + ')',
-  fade:     s => 'contrast(' + (1 - 0.3*s) + ') brightness(' + (1 + 0.15*s) + ') saturate(' + (1 - 0.2*s) + ')',
-  pop:      s => 'saturate(' + (1 + 2*s) + ') contrast(' + (1 + 0.3*s) + ')',
-  cyber:    s => 'hue-rotate(' + (180*s) + 'deg) saturate(' + (1 + 1.2*s) + ') contrast(' + (1 + 0.2*s) + ')',
-  sunset:   s => 'sepia(' + (0.4*s) + ') hue-rotate(' + (-20*s) + 'deg) saturate(' + (1 + 0.7*s) + ')',
-  ocean:    s => 'hue-rotate(' + (160*s) + 'deg) saturate(' + (1 + 0.6*s) + ') brightness(' + (1 + 0.05*s) + ')',
-  forest:   s => 'hue-rotate(' + (60*s) + 'deg) saturate(' + (1 + 0.5*s) + ')',
-  candy:    s => 'hue-rotate(' + (300*s) + 'deg) saturate(' + (1 + 1.5*s) + ') brightness(' + (1 + 0.1*s) + ')',
-  mono:     s => 'grayscale(' + s + ') brightness(' + (1 + 0.1*s) + ')',
-  crisp:    s => 'contrast(' + (1 + 0.5*s) + ') brightness(' + (1 + 0.05*s) + ') saturate(' + (1 + 0.3*s) + ')',
-  soft:     s => 'blur(' + (0.8*s) + 'px) brightness(' + (1 + 0.1*s) + ')',
-  dark:     s => 'brightness(' + (1 - 0.35*s) + ') contrast(' + (1 + 0.3*s) + ')',
-  bright:   s => 'brightness(' + (1 + 0.4*s) + ')',
-  hicon:    s => 'contrast(' + (1 + s) + ')',
-  lomo:     s => 'sepia(' + (0.3*s) + ') contrast(' + (1 + 0.5*s) + ') saturate(' + (1 + 0.8*s) + ')',
-  frost:    s => 'hue-rotate(' + (200*s) + 'deg) brightness(' + (1 + 0.15*s) + ') saturate(' + (1 - 0.3*s) + ')',
-  ember:    s => 'sepia(' + (0.5*s) + ') hue-rotate(' + (-15*s) + 'deg) saturate(' + (1 + s) + ')',
-  violet:   s => 'hue-rotate(' + (260*s) + 'deg) saturate(' + (1 + s) + ')',
-  emerald:  s => 'hue-rotate(' + (100*s) + 'deg) saturate(' + (1 + 0.8*s) + ')',
-  gold:     s => 'sepia(' + (0.6*s) + ') saturate(' + (1 + 0.9*s) + ') brightness(' + (1 + 0.08*s) + ')',
-  ghost:    s => 'invert(' + (0.85*s) + ') hue-rotate(' + (180*s) + 'deg)',
-  xray:     s => 'invert(' + s + ') contrast(' + (1 + 0.4*s) + ')',
-  toon:     s => 'saturate(' + (1 + 2.5*s) + ') contrast(' + (1 + 0.7*s) + ')',
-  faded70:  s => 'sepia(' + (0.35*s) + ') contrast(' + (1 - 0.2*s) + ') saturate(' + (1 - 0.15*s) + ') brightness(' + (1 + 0.1*s) + ')',
-  moody:    s => 'brightness(' + (1 - 0.2*s) + ') contrast(' + (1 + 0.4*s) + ') saturate(' + (1 - 0.25*s) + ')',
-  radiant:  s => 'brightness(' + (1 + 0.3*s) + ') saturate(' + (1 + 0.7*s) + ') contrast(' + (1 + 0.15*s) + ')',
-  matrix:   s => 'hue-rotate(' + (90*s) + 'deg) saturate(' + (1 + 1.5*s) + ') brightness(' + (1 - 0.1*s) + ')',
-  blush:    s => 'hue-rotate(' + (330*s) + 'deg) saturate(' + (1 + 0.8*s) + ') brightness(' + (1 + 0.08*s) + ')',
-  steel:    s => 'grayscale(' + (0.6*s) + ') hue-rotate(' + (200*s) + 'deg) contrast(' + (1 + 0.3*s) + ')',
-  honey:    s => 'sepia(' + (0.45*s) + ') saturate(' + (1 + 0.6*s) + ') brightness(' + (1 + 0.12*s) + ')'
+const firebaseConfig = {
+  apiKey: 'AIzaSyCKJVKqArOofTZT4fiz18cs_-thLB1O2J4',
+  authDomain: 'novaclip-eaf8c.firebaseapp.com',
+  projectId: 'novaclip-eaf8c',
+  storageBucket: 'novaclip-eaf8c.firebasestorage.app',
+  messagingSenderId: '299962701489',
+  appId: '1:299962701489:web:766f4ea8632830c625b490'
 };
 
-// CapCut-style icon rail tab switching
-document.querySelectorAll('.rail .rbtn').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.rail .rbtn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.railpanel .sect').forEach(s => s.classList.remove('show'));
-    document.getElementById('sect-' + btn.dataset.tab).classList.add('show');
-    if (btn.dataset.tab === 'memes') loadMemes();
-  };
-});
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+let ytToken = null, myStats = null;
 
-// FX chip grid mirrors the clipFx <select>
-const FX_LABELS = { none:'None', velocity:'Velocity', teal:'Teal', goldhour:'Golden Hr', stadium:'Stadium', coldsteel:'Cold Steel', crushed:'Crushed', bleach:'Bleach', filmburn:'Film Burn', moonlight:'Moonlight', hypebeast:'Hypebeast', bw:'B&W', sepia:'Sepia', vivid:'Vivid', punchy:'Punchy', blur:'Blur', neon:'Neon', glow:'Glow', vintage:'Vintage', invert:'Invert', cool:'Cool', warm:'Warm', dream:'Dream', noir:'Noir', fade:'Fade', pop:'Pop', cyber:'Cyber', sunset:'Sunset', ocean:'Ocean', forest:'Forest', candy:'Candy', mono:'Mono', crisp:'Crisp', soft:'Soft', dark:'Dark', bright:'Bright', hicon:'Hi-Con', lomo:'Lomo', frost:'Frost', ember:'Ember', violet:'Violet', emerald:'Emerald', gold:'Gold', ghost:'Ghost', xray:'X-Ray', toon:'Toon', faded70:'70s', moody:'Moody', radiant:'Radiant', matrix:'Matrix', blush:'Blush', steel:'Steel', honey:'Honey' };
-const fxgrid = document.getElementById('fxgrid');
-Object.keys(FX_LABELS).forEach(key => {
-  const c = document.createElement('div');
-  c.className = 'fxchip' + (key === 'none' ? ' on' : '');
-  c.textContent = FX_LABELS[key];
-  c.dataset.fx = key;
-  c.draggable = true;
-  c.addEventListener('dragstart', ev => {
-    ev.dataTransfer.setData('text/plain', key);
-    ev.dataTransfer.effectAllowed = 'copy';
-    c.classList.add('dragging');
-    document.querySelectorAll('.tclip').forEach(t => t.classList.add('dropready'));
-    const hint = document.getElementById('dragHint'); if (hint) hint.classList.add('show');
+function saveToken(tok, channel) {
+  ytToken = tok;
+  let prev = {};
+  try { prev = JSON.parse(localStorage.getItem('nc_yt') || '{}') || {}; } catch (e) {}
+  // keep the channel title — certificates are issued in the connected channel's name
+  const rec = { t: tok, exp: Date.now() + 50*60*1000, channel: channel || prev.channel || '' };
+  localStorage.setItem('nc_yt', JSON.stringify(rec));
+}
+function rememberChannel(title) {
+  if (!title) return;
+  let rec = {};
+  try { rec = JSON.parse(localStorage.getItem('nc_yt') || '{}') || {}; } catch (e) {}
+  if (rec.channel !== title) { rec.channel = title; localStorage.setItem('nc_yt', JSON.stringify(rec)); }
+  if (typeof logSkill === 'function' && !localStorage.getItem('nc_yt_logged')) {
+    localStorage.setItem('nc_yt_logged', '1');
+    logSkill('yt_connect');
+  }
+}
+function loadToken() { try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {} return null; }
+
+/* Everything below works through querySelectorAll, not getElementById, on
+   purpose. If this file ever gets pasted into itself the page shows two of every
+   control, and getElementById only ever finds the first — you click the button
+   you can see and nothing happens, because the handler went on the copy above
+   it. That is exactly the "sign-in does nothing" bug. Binding every copy makes
+   the page work even while it is broken, and nova.js removes the duplicate. */
+const all = (sel) => Array.prototype.slice.call(document.querySelectorAll(sel));
+
+function note(html, kind) {
+  const boxes = all('#authmsg');
+  if (!boxes.length) { if (kind !== 'working') alert(html.replace(/<[^>]+>/g, '')); return; }
+  boxes.forEach(b => { b.innerHTML = html; b.className = kind === 'working' ? 'working' : ''; b.style.display = html ? 'block' : 'none'; });
+}
+
+/* Google hands back an error code and a sentence written for developers. A
+   fourteen-year-old reading "auth/unauthorized-domain" learns nothing, so each
+   one is translated into the thing that actually has to be clicked. */
+function explainAuth(e) {
+  const code = (e && e.code) || '';
+  const host = location.hostname || 'this site';
+  if (code === 'auth/unauthorized-domain')
+    return '<b>Google will not sign anyone in from this address yet.</b><br>' +
+      'Open the Firebase console for <code>novaclip-eaf8c</code>, go to <b>Authentication -> Settings -> Authorized domains</b>, ' +
+      'press <b>Add domain</b> and type <code>' + host + '</code>. Sign-in starts working within a minute — no code change needed.';
+  if (code === 'auth/operation-not-allowed')
+    return '<b>Google sign-in is switched off for this project.</b><br>' +
+      'Firebase console -> <b>Authentication -> Sign-in method -> Google -> Enable</b>, then save.';
+  if (code === 'auth/popup-blocked')
+    return 'Your browser blocked the Google window. Allow pop-ups for <code>' + host + '</code>, or press the button again — it will use a full-page redirect instead.';
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request')
+    return 'The Google window closed before sign-in finished. Press the button again when you are ready.';
+  if (code === 'auth/network-request-failed')
+    return 'No connection to Google. Check the network and try again.';
+  if (code === 'auth/invalid-api-key' || code === 'auth/api-key-not-valid')
+    return '<b>The Firebase key in this page is not valid.</b> Copy the current config from Firebase console -> Project settings -> Your apps, and replace <code>firebaseConfig</code> in app.html.';
+  return 'Sign-in failed: ' + ((e && e.message) || 'unknown error') + (code ? ' <code>' + code + '</code>' : '');
+}
+
+function signedInUI(name) {
+  all('#gbtn').forEach(b => b.style.display = 'none');
+  note('');
+  all('#uname').forEach(p => {
+    p.style.display = 'block';
+    p.innerHTML = name + ' &nbsp; <a href="#" class="signoutlink" style="color:#7E8AA6;font-size:0.85rem;">Sign out</a>';
   });
-  c.addEventListener('dragend', () => {
-    c.classList.remove('dragging');
-    document.querySelectorAll('.tclip').forEach(t => t.classList.remove('dropready','dropover'));
-    const hint = document.getElementById('dragHint'); if (hint) hint.classList.remove('show');
+  all('#toolbar').forEach(t => t.style.display = 'block');
+  all('.signoutlink').forEach(so => so.onclick = (e) => {
+    e.preventDefault(); localStorage.removeItem('nc_yt'); auth.signOut().then(() => location.reload());
   });
-  c.onclick = () => {
-    document.querySelectorAll('.fxchip').forEach(x => x.classList.remove('on'));
-    c.classList.add('on');
-    document.getElementById('clipFx').value = key;
-    document.getElementById('clipFx').dispatchEvent(new Event('change'));
-  };
-  fxgrid.appendChild(c);
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    signedInUI(user.displayName);
+    const cached = loadToken();
+    if (cached) {
+      ytToken = cached;
+      try {
+        const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
+        if (data.items && data.items.length) { myStats = data.items[0]; rememberChannel(myStats.snippet.title); }
+        else { ytToken = null; localStorage.removeItem('nc_yt'); }
+      } catch (e) { ytToken = null; }
+    }
+  }
 });
 
+function yt(url) { return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json()); }
+function show(html) { const box = document.getElementById('toolout'); box.style.display = 'block'; box.innerHTML = html; }
 
+function ytProvider() {
+  const provider = new GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
+  return provider;
+}
 
-// ---- drop an effect straight onto a clip ----
-document.addEventListener('dragover', e => {
-  const t = e.target.closest && e.target.closest('.tclip');
-  if (!t) return;
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'copy';
-  document.querySelectorAll('.tclip').forEach(x => x.classList.remove('dropover'));
-  t.classList.add('dropover');
-});
-document.addEventListener('drop', e => {
-  const t = e.target.closest && e.target.closest('.tclip');
-  if (!t) return;
-  e.preventDefault();
-  const fx = e.dataTransfer.getData('text/plain');
-  const i = parseInt(t.dataset.i, 10);
-  if (!FX[fx] || !clips[i]) return;
-  clips[i].fx = fx;
-  sel = i;                                   // select the clip we just dropped on
-  renderTimeline();
-  const s = document.getElementById('clipFx');
-  if (s) { s.value = fx; }
-  document.querySelectorAll('.fxchip').forEach(x => x.classList.toggle('on', x.dataset.fx === fx));
-  const hint = document.getElementById('dragHint');
-  if (hint) { hint.textContent = (FX_LABELS[fx] || fx) + ' applied to clip ' + (i + 1); hint.classList.add('show');
-    setTimeout(() => { hint.classList.remove('show'); hint.textContent = 'Drop the effect on a clip'; }, 1600); }
-});
-
-// ============================================================
-//  BEAT DETECTION — finds the beats in a track, like CapCut
-//  Runs entirely in the browser using the Web Audio API.
-// ============================================================
-let BEATS = [], BPM = 0, trackDur = 0;
-
-async function analyseBeats(file) {
-  document.getElementById('beatBusy').style.display = 'block';
-  document.getElementById('beatPanel').style.display = 'none';
-  try {
-    const buf = await file.arrayBuffer();
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const audio = await ctx.decodeAudioData(buf);
-    trackDur = audio.duration;
-
-    // mix to mono
-    const len = audio.length;
-    const mono = new Float32Array(len);
-    for (let c = 0; c < audio.numberOfChannels; c++) {
-      const ch = audio.getChannelData(c);
-      for (let i = 0; i < len; i++) mono[i] += ch[i] / audio.numberOfChannels;
-    }
-    const sr = audio.sampleRate;
-
-    // energy envelope in ~10ms windows
-    const win = Math.floor(sr * 0.01);
-    const frames = Math.floor(len / win);
-    const energy = new Float32Array(frames);
-    for (let f = 0; f < frames; f++) {
-      let sum = 0;
-      const start = f * win;
-      for (let i = 0; i < win; i++) { const v = mono[start + i]; sum += v * v; }
-      energy[f] = sum / win;
-    }
-
-    // onset = how much energy JUMPED versus the previous frame
-    const onset = new Float32Array(frames);
-    for (let f = 1; f < frames; f++) onset[f] = Math.max(0, energy[f] - energy[f - 1]);
-
-    // adaptive threshold over a moving window, then pick local peaks
-    const half = 40;                       // ±0.4s of context
-    const peaks = [];
-    for (let f = 2; f < frames - 2; f++) {
-      let sum = 0, n = 0;
-      for (let k = Math.max(0, f - half); k < Math.min(frames, f + half); k++) { sum += onset[k]; n++; }
-      const mean = sum / n;
-      const thr = mean * 1.9 + 1e-7;
-      if (onset[f] > thr && onset[f] >= onset[f-1] && onset[f] >= onset[f+1]) {
-        const t = f * win / sr;
-        if (!peaks.length || t - peaks[peaks.length - 1] > 0.16) peaks.push(t);   // min 160ms apart
-      }
-    }
-
-    // estimate BPM from the most common gap between peaks
-    const gaps = [];
-    for (let i = 1; i < peaks.length; i++) gaps.push(peaks[i] - peaks[i-1]);
-    let bpm = 0;
-    if (gaps.length > 4) {
-      const hist = {};
-      gaps.forEach(g => { if (g > 0.25 && g < 1.2) { const k = Math.round(g * 100) / 100; hist[k] = (hist[k] || 0) + 1; } });
-      let best = 0, bestGap = 0;
-      for (const k in hist) if (hist[k] > best) { best = hist[k]; bestGap = parseFloat(k); }
-      if (bestGap > 0) {
-        bpm = Math.round(60 / bestGap);
-        while (bpm < 70) bpm *= 2;         // fold into a musical range
-        while (bpm > 180) bpm = Math.round(bpm / 2);
-      }
-    }
-
-    // build an even grid from the detected tempo — cleaner than raw peaks
-    if (bpm > 0) {
-      const step = 60 / bpm;
-      const first = peaks.length ? peaks[0] % step : 0;
-      BEATS = [];
-      for (let t = first; t < trackDur; t += step) BEATS.push(Math.round(t * 1000) / 1000);
-    } else {
-      BEATS = peaks;
-    }
-    BPM = bpm;
-
-    ctx.close();
-    showBeats(energy, win, sr);
-  } catch (e) {
-    console.warn('beat detection failed', e);
-    document.getElementById('beatBusy').textContent = 'Could not read that audio file.';
+/* Turn a sign-in result into a working session, or say why not. Split out
+   because the popup and the redirect both land here. */
+async function afterSignIn(result) {
+  const cred = GoogleAuthProvider.credentialFromResult(result);
+  if (!cred || !cred.accessToken) {
+    note('Signed in to Google, but it did not hand over permission to read your YouTube channel. ' +
+         'Press the button again and tick the YouTube box on the consent screen.');
     return;
   }
-  document.getElementById('beatBusy').style.display = 'none';
-  document.getElementById('beatPanel').style.display = 'block';
-}
-
-function showBeats(energy, win, sr) {
-  document.getElementById('bpmVal').textContent = BPM || '—';
-  document.getElementById('beatCount').textContent = BEATS.length;
-  document.getElementById('beatGap').textContent = BPM ? (Math.round(60 / BPM * 100) / 100) + 's' : '—';
-
-  // waveform + beat ticks
-  const cv = document.getElementById('waveCv');
-  const w = cv.clientWidth || 300, hgt = cv.clientHeight || 58;
-  cv.width = w * 2; cv.height = hgt * 2;
-  const g = cv.getContext('2d');
-  g.clearRect(0, 0, cv.width, cv.height);
-  let max = 0;
-  for (let i = 0; i < energy.length; i++) if (energy[i] > max) max = energy[i];
-  g.fillStyle = 'rgba(0,240,255,.45)';
-  for (let x = 0; x < cv.width; x++) {
-    const f = Math.floor(x / cv.width * energy.length);
-    const v = max ? Math.sqrt(energy[f] / max) : 0;
-    const bh = v * cv.height * 0.92;
-    g.fillRect(x, (cv.height - bh) / 2, 1, bh);
+  saveToken(cred.accessToken);
+  const data = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
+  if (data.error) {
+    note('Google signed you in, but YouTube refused the request: ' + data.error.message +
+         '<br>If it mentions the API being disabled, enable <b>YouTube Data API v3</b> for project ' +
+         '<code>novaclip-eaf8c</code> in the Google Cloud console.');
+    return;
   }
-  g.fillStyle = 'rgba(247,37,133,.85)';
-  BEATS.forEach((t, i) => {
-    const x = Math.round(t / trackDur * cv.width);
-    g.fillRect(x, 0, i % 4 === 0 ? 3 : 1, cv.height);
-  });
-
-  drawTimelineBeats();
-}
-
-// beat markers across the timeline itself
-function drawTimelineBeats() {
-  const box = document.getElementById('tlbeats');
-  if (!box || !BEATS.length || !trackDur) return;
-  const total = clips.reduce((s, c) => s + c.dur, 0) || trackDur;
-  box.innerHTML = BEATS.filter(t => t <= total)
-    .map((t, i) => '<i class="' + (i % 4 === 0 ? 'bar' : '') + '" style="left:' + (t / total * 100) + '%"></i>')
-    .join('');
-}
-
-// snap every clip to one beat long
-document.addEventListener('click', (e) => {
-  if (e.target && e.target.id === 'snapBtn') {
-    if (!BPM) return;
-    const step = Math.round(60 / BPM * 100) / 100;
-    clips.forEach(c => { c.dur = step; });
-    renderTimeline();
-    drawTimelineBeats();
-    document.getElementById('beatHint').textContent = 'All clips set to ' + step + 's — one beat each.';
+  if (data.items && data.items.length) {
+    myStats = data.items[0]; rememberChannel(myStats.snippet.title); signedInUI(myStats.snippet.title); note('');
+  } else {
+    note('That Google account has no YouTube channel on it. Sign out and use the account your channel lives on.');
   }
-});
-
-// ---------- LEARN: editing techniques ----------
-const LESSONS = [
-  { icon:'', title:'The football edit (CR7 / Neymar style)', body:
-    '<p>The look everyone copies is really four things stacked together.</p><ol>'+
-    '<li><b>Cut on the beat.</b> Drop a track in <b>Audio</b>, then make every clip 0.5–1s so cuts land on the drums.</li>'+
-    '<li><b>Punchy colour.</b> Use the <b>Velocity</b>, <b>Teal</b> or <b>Stadium</b> filter at around 0.7 strength.</li>'+
-    '<li><b>Short clips.</b> Set clip duration to <b>0.6s</b> in the right-hand panel. Long clips kill the energy.</li>'+
-    '<li><b>Hard transitions.</b> Use <b>Flash</b> or <b>Zoom</b> between clips, never Fade.</li></ol>'+
-    '<div class="tip">Rule of thumb: if a clip is longer than the time it takes to say "goal", it is too long.</div>' },
-
-  { icon:'', title:'Editing to the beat', body:
-    '<p>Beat-matching is what separates an edit from a slideshow.</p><ol>'+
-    '<li>Add music first, before any clips.</li>'+
-    '<li>Play it and tap along — count how long between beats.</li>'+
-    '<li>Most songs sit near <b>0.5s</b> per beat at 120bpm.</li>'+
-    '<li>Set every clip to that duration, then adjust the loud moments to land on a cut.</li></ol>'+
-    '<div class="tip">Save the biggest moment for the beat drop. Build up to it with faster and faster cuts.</div>' },
-
-  { icon:'', title:'Hooks — the first 3 seconds', body:
-    '<p>Most viewers leave in 3 seconds. Your first clip decides everything.</p><ol>'+
-    '<li>Open on the <b>best</b> moment, not the build-up.</li>'+
-    '<li>Add text in the first frame with a question or claim.</li>'+
-    '<li>Keep it under 1 second before the first cut.</li>'+
-    '<li>Never open with a logo or intro.</li></ol>'+
-    '<div class="tip">Try starting at the end: show the result, then rewind and explain.</div>' },
-
-  { icon:'', title:'Text that actually reads', body:
-    '<p>Text is read on a phone, at speed, often on mute.</p><ol>'+
-    '<li>Keep it to <b>4–6 words</b> per screen.</li>'+
-    '<li>Put it <b>Top</b> or <b>Bottom</b> — the centre covers the action.</li>'+
-    '<li>Change it on every cut so it feels alive.</li>'+
-    '<li>Say the same thing in the voiceover for anyone watching on mute.</li></ol>' },
-
-  { icon:'', title:'Using memes well', body:
-    '<p>Memes work as punctuation, not as the whole video.</p><ol>'+
-    '<li>Open <b>Memes</b>, search, and click one to drop it on the timeline.</li>'+
-    '<li>Use them as a <b>reaction</b> right after something surprising.</li>'+
-    '<li>Keep them short — 1s is plenty.</li>'+
-    '<li>One or two per video. More than that gets tiring.</li></ol>'+
-    '<div class="tip">Every meme here is filtered for a 13–18 audience, so anything you find is safe to post.</div>' },
-
-  { icon:'', title:'Voiceover without a microphone', body:
-    '<p>The <b>Voice</b> tab has 18 character voices built from pitch and speed.</p><ol>'+
-    '<li>Write short lines — one sentence per clip.</li>'+
-    '<li><b>Hype Man</b> suits sports edits, <b>Deep Narrator</b> suits stories.</li>'+
-    '<li>Preview before exporting; speed matters more than the words.</li>'+
-    '<li>Leave gaps so the music breathes.</li></ol>' },
-
-  { icon:'', title:'Exporting for TikTok and Shorts', body:
-    '<p>Where a video is posted changes how you should cut it.</p><ol>'+
-    '<li><b>Shorts / TikTok / Reels:</b> under 60s, fast cuts, text always on screen.</li>'+
-    '<li><b>YouTube long-form:</b> slower, let moments land, use Fade transitions.</li>'+
-    '<li>Export, then watch it once on your phone before posting.</li>'+
-    '<li>Check it still makes sense <b>on mute</b>.</li></ol>' }
-];
-
-function renderLessons() {
-  const box = document.getElementById('lessons');
-  if (!box) return;
-  box.innerHTML = LESSONS.map((l, i) =>
-    '<div class="lesson" data-i="' + i + '">' +
-      '<button><span class="li">' + l.icon + '</span>' + l.title + '<span class="arrow">▶</span></button>' +
-      '<div class="body">' + l.body + '</div>' +
-    '</div>').join('');
-  box.querySelectorAll('.lesson > button').forEach(btn => {
-    btn.onclick = () => btn.parentElement.classList.toggle('open');
-  });
-}
-renderLessons();
-
-// ---------- MEME SEARCH ----------
-let MEMES = [], ALL_MEMES = [], memesLoaded = false, memeCat = 'popular';
-
-// ---- SAFETY FILTER: nothing suggestive, violent or adult reaches a 13-18 audience ----
-const MEME_BLOCK_WORDS = [
-  'sex','sexy','sexual','hot girl','boob','thicc','onlyfans','porn','nude','naked','strip','thirst',
-  'distracted boyfriend','cheating','cheat','affair','girlfriend','side chick','simp',
-  'beer','wine','drunk','vodka','alcohol','weed','drug','smoke','cigarette','blunt','high',
-  'kill','death','dead','die','suicide','hang','gun','shoot','shot','blood','gore','murder','corpse','coffin','funeral',
-  'nazi','hitler','racist','slave','terror','isis','war crime',
-  'fat','ugly','stupid','idiot','loser','trash','hate',
-  'gender','religion','jesus','church','satan','devil','hell',
-  'gambl','casino','bet','vape'
-];
-/* Match on word boundaries, not raw substrings. Plain includes() was blocking
-   templates whose names merely contain a blocked word inside another word:
-   "change" holds "hang", "simply" holds "simp", "godfather" holds "fat" and
-   "soldier" holds "die" — seven good templates were being dropped that way.
-   Multi-word entries such as "distracted boyfriend" still match as a phrase. */
-const MEME_BLOCK_RE = MEME_BLOCK_WORDS.map(w =>
-  new RegExp(w.indexOf(' ') >= 0 ? w.replace(/\s+/g, '\\s+')
-                                 : '\\b' + w + '(s|es|ed|ing)?\\b', 'i'));
-function memeIsSafe(name) {
-  const n = (name || '').toLowerCase();
-  return !MEME_BLOCK_RE.some(re => re.test(n));
 }
 
-
-// ---- EXTRA CURATED TEMPLATES ----
-// Imgflip hosts far more templates than the public API returns. These are
-// hand-picked safe ones. Any ID that fails to load is removed automatically,
-// so a wrong entry simply disappears rather than showing a broken image.
-const EXTRA_MEMES = [
-  ['181913649','Drake Hotline Bling'],['87743020','Two Buttons'],['217743513','UNO Draw 25 Cards'],
-  ['131087935','Running Away Balloon'],['124822590','Left Exit 12 Off Ramp'],['129242436','Change My Mind'],
-  ['4087833','Waiting Skeleton'],['102156234','Mocking Spongebob'],['438680','Batman Slapping Robin'],
-  ['61579','One Does Not Simply'],['5496396','Leonardo Dicaprio Cheers'],['61532','The Most Interesting Man'],
-  ['8072285','Doge'],['101470','Ancient Aliens'],['61520','Futurama Fry'],
-  ['155067746','Surprised Pikachu'],['91538330','X X Everywhere'],['21735','The Rock Driving'],
-  ['61546','Brace Yourselves'],['1035805','Boardroom Meeting Suggestion'],['6235864','Finding Neverland'],
-  ['28251713','Oprah You Get A'],['226297822','Panik Kalm Panik'],['247375501','Buff Doge vs Cheems'],
-  ['252600902','Always Has Been'],['178591752','Tuxedo Winnie The Pooh'],['89370399','Roll Safe Think About It'],
-  ['27813981','Hide The Pain Harold'],['93895088','Expanding Brain'],['119139145','Blank Nut Button'],
-  ['148909805','Monkey Puppet'],['135256802','Epic Handshake'],['55311130','This Is Fine'],
-  ['84341851','Evil Kermit'],['16464531','But Thats None Of My Business'],['79132341','Bike Fall'],
-  ['132769734','Hard To Swallow Pills'],['1509839','Captain Picard Facepalm'],['100947','Matrix Morpheus'],
-  ['14371066','Star Wars Yoda'],['24557067','Spongebob Ight Imma Head Out'],['188390779','Woman Yelling At Cat'],
-  ['259237855','Laughing Leo'],['175540452','Unsettled Tom'],['563423','That Would Be Great'],
-  ['23752','The Scroll Of Truth'],['61539','First World Problems'],['61585','Bad Luck Brian'],
-  ['61556','Grandma Finds The Internet'],['101287','Third World Success Kid'],['61544','Success Kid'],
-  ['101511','Dont You Squidward'],['6531067','See Nobody Cares'],['101716','Yall Got Any More Of That'],
-  ['74191766','Arthur Fist'],['195515965','Clown Applying Makeup'],['180190441','Theyre The Same Picture'],
-  ['61533','X All The Y'],['61582','Creepy Condescending Wonka'],['101910402','Marked Safe From'],
-  ['134797956','American Chopper Argument'],['4173692','Bad Pun Dog'],['259680','Am I The Only One Around Here'],
-  ['405658','Grandma Finds The Internet'],['1367068','Sudden Clarity Clarence'],['3218037','This Is Fine Classic'],
-  ['40945639','Dr Evil Laser'],['9440985','Baby Godfather'],['245898','Picard Wtf'],
-  ['356183','Bird Box'],['460541','Jack Sparrow Being Chased'],['61527','Y U No'],
-  ['12403754','Bad Luck Brian'],['61581','Put It Somewhere Else Patrick'],['101288','Third World Skeptical Kid'],
-  ['61568','Aliens Guy'],['444501','Maury Lie Detector'],['196652226','Spongebob Ight'],
-  ['114585149','Trade Offer'],['370867422','Anime Girl Hiding'],['119215120','Soldier Protecting Sleeping Child'],
-  ['163573','Imagination Spongebob'],['1232104','Confession Bear'],['5872970','Insanity Wolf'],
-  ['58087204','Boardroom Suggestion'],['80707627','Sad Pablo Escobar'],['142009471','Blank Transparent Square'],
-  ['62319497','Wanna Come In No'],['52403859','Kermit Sipping Tea'],['67452763','Wolf Of Wall Street'],
-  ['99683372','Sleeping Shaq'],['114010443','Aint Nobody Got Time For That'],['77045868','Pawn Stars Best I Can Do'],
-  ['21604248','So Trendy Right Now'],['170715','Yo Dawg Heard You'],['101440','Member Berries'],
-  ['322841258','Anime Girl Hiding from Terminator'],['123999232','The Scroll Of Truth'],['131940431','Gru Plan 4 Panel'],
-  ['91545132','Trump Bill Signing'],['176908','Mugatu So Hot Right Now'],['235589','Trumpet Boy'],
-  ['189470951','Spiderman Pointing'],['136693281','Skeleton Waiting'],['222403160','Bernie I Am Once Again Asking'],
-  ['206151112','Sleeping Shaq Reaction'],['161865971','Marked Safe From'],['147234140','Bernie Mittens'],
-  ['309868304','Disappointed Cricket Fan'],['128057626','Types Of Headaches'],['61521','Philosoraptor'],
-  ['1341276','Squidward Window'],['7844508','Thinking Cat'],['2977323','Mel Gibson Freedom'],
-  ['2795477','Angry Baby'],['3236612','Confused Gandalf'],['1790995','Grandma Computer'],
-  ['5085370','Sad Frog'],['4288985','Excited Cat'],['9599155','Distracted Cat'],
-  ['15412461','Dwight Schrute'],['16820585','Spiderman Camera'],['17178313','Confused Travolta'],
-  ['19419628','Nervous Guy'],['20007896','Angry Chef Gordon Ramsay'],['22381423','Skeptical Baby'],
-  ['26433458','Interview Question'],['28034788','Shut Up And Take My Money'],['29617627','Look At Me'],
-  ['30549496','Perfection'],['33766545','Gasp Rage Face'],['35202147','Waiting Skeleton Wide'],
-  ['38507035','Charlie Conspiracy'],['43274201','Rick And Carl'],['47235368','Steve Harvey'],
-  ['48432289','Fry Not Sure'],['50421420','Disaster Girl'],['53297513','Hold Up Wait A Minute'],
-  ['56225174','Be Like Bill'],['58469929','Salt Bae'],['60130789','Success Kid Wide'],
-  ['63267705','Sad Cat Thumbs Up'],['64958514','Confused Nick Young'],['66046555','Kevin Hart'],
-  ['70849550','Sponge Bob Rainbow'],['72525473','Confused Math Lady'],['76020929','Kermit Window'],
-  ['78704672','Elmo Fire'],['82291234','Facepalm Picard'],['86601785','Confused Blinking Guy'],
-  ['88180482','Grandma Yells'],['90345784','Bad Advice Mallard'],['92084495','Elf Buddy'],
-  ['94804940','Chill Guy'],['97984','Disaster Girl Classic'],['100777631','Cat Screaming'],
-  ['104263771','Squinting Eyes'],['106029787','Angry Pooh'],['108538854','Thinking Emoji'],
-  ['112126428','Two Roads'],['113632226','Big Brain'],['116083','Bear Grylls'],
-  ['118344','Spiderman Glasses'],['122029631','Anime Wall Punch'],['124055727','Y U No Guy'],
-  ['126227874','Peter Griffin News'],['128194093','Two Guys On Bus'],['130331894','Wolverine Looking At Photo'],
-  ['133423851','That Is Where Youre Wrong Kiddo'],['136392153','Waiting For Something'],['138545953','Blank Comic Panel'],
-  ['140456595','Left Exit Wide'],['144865805','Bugs Bunny Communist'],['146245259','Kombucha Girl'],
-  ['153452716','Astronaut Always Has Been'],['157233152','Vince McMahon Reaction'],['159801589','Bonk Cheems'],
-  ['165095039','Charlie Day Conspiracy'],['167485','Confession Kid'],['171380657','Squid Game'],
-  ['173277903','Woman Cat Table'],['177682295','Vibe Check'],['179908504','Cat Vibing'],
-  ['183366458','Chad Yes'],['185213304','Wojak Brain'],['187102311','Emergency Meeting Among Us'],
-  ['191874712','Chungus'],['193378242','Steve Buscemi Fellow Kids'],['197588641','Kanye Thinking'],
-  ['199730622','Padme Anakin'],['203046205','Zero Wing'],['205767437','Frodo Sam'],
-  ['209930264','Doge Bonk'],['213133139','Perfect Chad'],['216951317','Anakin Padme 4 Panel'],
-  ['219482288','Same Energy'],['221578498','Cool Cat'],['225043818','Slap Table'],
-  ['229286668','Genie Rules'],['233273983','Big Chungus Meme'],['238043725','Cat Cry'],
-  ['241914843','Whisper Ear'],['245234','Chemistry Cat'],['249433786','Nervous Sweating'],
-  ['253957965','Speech Bubble'],['256868248','Buff Cheems'],['260898879','Trollge'],
-  ['265012753','Gigachad'],['271650','Skeptical Third World Kid'],['274946','Yao Ming Face'],
-  ['287852','Foul Bachelor Frog']
-];
-function extraMemeList() {
-  const seen = {};
-  return EXTRA_MEMES.filter(m => {
-    if (!/^\d+$/.test(m[0]) || seen[m[0]]) return false;
-    seen[m[0]] = 1;
-    return memeIsSafe(m[1]);
-  }).map(m => ({ id: m[0], name: m[1], url: 'https://i.imgflip.com/' + m[0] + '.jpg' }));
-}
-
-// Well-known older templates, used to build the "Classic" shelf
-const CLASSIC_HINTS = ['doge','bad luck brian','success kid','philosoraptor','y u no','one does not simply','ancient aliens','first world problems','grumpy','futurama fry','condescending wonka','most interesting man','all the things','rage','trollface','pepe','yo dawg','third world','picard','boromir','sparta','forever alone','me gusta','okay guy','joseph ducreux','scumbag steve','good guy greg','overly attached','sudden clarity','insanity wolf','courage wolf','socially awkward','confession bear','pigeon','disaster girl','hide the pain','roll safe','arthur fist','evil kermit','salt bae'];
-function isClassic(name) {
-  const n = (name || '').toLowerCase();
-  return CLASSIC_HINTS.some(w => n.includes(w));
-}
-function showMemes(list) {
-  const box = document.getElementById('memeResults');
-  box.innerHTML = '';
-  list.slice(0, 40).forEach(mm => {
-    const d = document.createElement('div');
-    d.className = 'th';
-    d.title = mm.name;
-    const im = document.createElement('img');
-    im.loading = 'lazy';
-    im.onerror = () => { d.remove(); ALL_MEMES = ALL_MEMES.filter(x => x.url !== mm.url); };
-    im.src = mm.url;
-    d.appendChild(im);
-    const lbl = document.createElement('div');
-    lbl.className = 'dur';
-    lbl.textContent = mm.name.length > 14 ? mm.name.slice(0, 13) + '…' : mm.name;
-    d.appendChild(lbl);
-    d.onclick = () => addMeme(mm);
-    box.appendChild(d);
-  });
-  if (!list.length) box.innerHTML = '<div class="hint">No memes matched that search.</div>';
-}
-function addMeme(mm) {
-  if (!memeIsSafe(mm.name)) { document.getElementById('memeStatus').textContent = 'That meme is not available on NovaClip.'; return; }
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    media.push({ type: 'image', el: img, dur: 3 });
-    addClipFrom(media.length - 1);
-    renderBin();
-    document.getElementById('memeStatus').textContent = 'Added "' + mm.name + '" to the timeline';
-  };
-  img.onerror = () => {
-    // retry without CORS (it will still preview, but export may be blocked)
-    const im2 = new Image();
-    im2.onload = () => { media.push({ type: 'image', el: im2, dur: 3 }); addClipFrom(media.length - 1); renderBin(); document.getElementById('memeStatus').textContent = 'Added "' + mm.name + '" (preview only — may not export)'; };
-    im2.onerror = () => { document.getElementById('memeStatus').textContent = 'Could not load that meme, try another.'; };
-    im2.src = mm.url;
-  };
-  img.src = mm.url;
-}
-function loadMemes() {
-  if (memesLoaded) return;
-  memesLoaded = true;
-  fetch('https://api.imgflip.com/get_memes')
-    .then(r => r.json())
-    .then(d => {
-      if (d && d.success && d.data && d.data.memes) {
-        const raw = d.data.memes;
-        const blocked = raw.length;
-        const apiSafe = raw.filter(m => memeIsSafe(m.name));
-        const names = {};
-        apiSafe.forEach(m => { names[m.name.toLowerCase()] = 1; });
-        const extras = extraMemeList().filter(m => !names[m.name.toLowerCase()]);
-        ALL_MEMES = apiSafe.concat(extras);
-        MEMES = ALL_MEMES;
-        const removed = blocked - ALL_MEMES.length;
-        document.getElementById('memeStatus').innerHTML =
-          '<b style="color:var(--cyan)">' + ALL_MEMES.length + '</b> family-friendly memes ready' +
-          (removed ? ' &nbsp;·&nbsp; <span style="color:#8a8f9c">' + removed + ' filtered out as inappropriate</span>' : '');
-        applyCat();
-      } else { throw new Error('bad response'); }
-    })
-    .catch(() => {
-      memesLoaded = false;
-      document.getElementById('memeStatus').textContent = 'Could not reach the meme library. Check your connection and reopen this tab.';
-    });
-}
-function applyCat() {
-  let list = ALL_MEMES;
-  if (memeCat === 'popular') list = ALL_MEMES.slice(0, 40);                 // API returns most-used first
-  else if (memeCat === 'latest') list = ALL_MEMES.slice(-40).reverse();     // newest additions sit at the end
-  else if (memeCat === 'classic') {
-    const c = ALL_MEMES.filter(m => isClassic(m.name));
-    list = c.length ? c : ALL_MEMES.slice(40, 80);
-  }
-  MEMES = list;
-  const q = (document.getElementById('memeSearch').value || '').trim().toLowerCase();
-  showMemes(q ? list.filter(m => m.name.toLowerCase().includes(q)) : list);
-}
-document.querySelectorAll('.mcat').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.mcat').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
-    memeCat = btn.dataset.cat;
-    applyCat();
-  };
-});
-document.getElementById('memeSearch').oninput = () => {
-  const q = document.getElementById('memeSearch').value.trim().toLowerCase();
-  // searching looks across the whole safe library, not just the open category
-  showMemes(q ? ALL_MEMES.filter(m => m.name.toLowerCase().includes(q)) : MEMES);
-};
-
-document.getElementById('mediaInput').onchange = (e) => {
-  [...e.target.files].forEach(file => {
-    const url = URL.createObjectURL(file);
-    if (file.type.startsWith('video')) {
-      const v = document.createElement('video');
-      v.src = url; v.muted = true; v.playsInline = true;
-      v.onloadedmetadata = () => { media.push({ type: 'video', el: v, dur: Math.min(v.duration, 8) }); addClipFrom(media.length-1); renderBin(); };
-    } else {
-      const img = new Image();
-      img.src = url;
-      img.onload = () => { media.push({ type: 'image', el: img, dur: 3 }); addClipFrom(media.length-1); renderBin(); };
-    }
-  });
-  e.target.value = '';
-};
-function addClipFrom(mi) {
-  const m = media[mi];
-  clips.push({ type: m.type, el: m.el, dur: m.dur, fx: 'none', str: 0.6, trans: 'fade' });
-  renderTL();
-}
-function renderBin() {
-  const b = document.getElementById('binthumbs');
-  b.innerHTML = '';
-  media.forEach((m, i) => {
-    const d = document.createElement('div'); d.className = 'th';
-    if (m.type === 'image') { const im = document.createElement('img'); im.src = m.el.src; d.appendChild(im); }
-    else { const v = document.createElement('video'); v.src = m.el.src; v.muted = true; d.appendChild(v); }
-    const du = document.createElement('div'); du.className = 'dur'; du.textContent = m.dur.toFixed(0) + 's'; d.appendChild(du);
-    d.onclick = () => addClipFrom(i);
-    b.appendChild(d);
-  });
-}
-
-function renderTL() {
-  const tl = document.getElementById('tlvideo');
-  tl.innerHTML = '';
-  if (!clips.length) { tl.innerHTML = '<div style="opacity:0.4; padding:16px; font-size:0.8rem;">Import media to start ⊕</div>'; document.getElementById('selinfo').textContent = ''; return; }
-  clips.forEach((c, i) => {
-    const d = document.createElement('div');
-    d.className = 'tclip' + (i === selected ? ' sel' : '');
-    d.style.width = (c.dur * 34) + 'px';
-    d.draggable = true;
-    d.onclick = () => selectClip(i);
-    if (c.type === 'image') { const im = document.createElement('img'); im.src = c.el.src; d.appendChild(im); }
-    else { const v = document.createElement('video'); v.src = c.el.src; v.muted = true; d.appendChild(v); }
-    const lbl = document.createElement('div'); lbl.className = 'lbl'; lbl.textContent = (i+1) + ' · ' + c.dur.toFixed(1) + 's'; d.appendChild(lbl);
-    const del = document.createElement('button'); del.className = 'del'; del.textContent = '×';
-    del.onclick = (ev) => { ev.stopPropagation(); clips.splice(i, 1); selected = -1; renderTL(); };
-    d.appendChild(del);
-    d.ondragstart = (ev) => ev.dataTransfer.setData('i', i);
-    d.ondragover = (ev) => ev.preventDefault();
-    d.ondrop = (ev) => { ev.preventDefault(); const from = +ev.dataTransfer.getData('i'); const m = clips.splice(from, 1)[0]; clips.splice(i, 0, m); selected = i; renderTL(); };
-    tl.appendChild(d);
-  });
-  updateTimecode();
-}
-function selectClip(i) {
-  selected = i;
-  const c = clips[i];
-  document.getElementById('clipFx').value = c.fx;
-  document.getElementById('fxStr').value = Math.round(c.str * 100);
-  document.getElementById('fxStrVal').textContent = Math.round(c.str * 100) + '%';
-  document.getElementById('clipTrans').value = c.trans;
-  document.getElementById('clipDur').value = c.dur;
-  document.getElementById('selinfo').textContent = 'Clip ' + (i+1) + ' selected';
-  renderTL();
-  drawFrame(c, 0.5);
-}
-document.getElementById('clipFx').onchange = (e) => { if (selected >= 0) { clips[selected].fx = e.target.value; drawFrame(clips[selected], 0.5); } };
-document.getElementById('fxStr').oninput = (e) => {
-  document.getElementById('fxStrVal').textContent = e.target.value + '%';
-  if (selected >= 0) { clips[selected].str = e.target.value / 100; drawFrame(clips[selected], 0.5); }
-};
-document.getElementById('clipTrans').onchange = (e) => { if (selected >= 0) clips[selected].trans = e.target.value; };
-document.getElementById('clipDur').oninput = (e) => { if (selected >= 0) { const v = parseFloat(e.target.value); if (v > 0) { clips[selected].dur = v; renderTL(); } } };
-renderTL();
-
-function updateTimecode() {
-  const total = clips.reduce((a,c) => a + c.dur, 0);
-  const mm = Math.floor(total/60), ss = Math.round(total%60);
-  document.getElementById('timecode').textContent = '00:00 / ' + (mm<10?'0':'')+mm + ':' + (ss<10?'0':'')+ss;
-}
-
-document.getElementById('txtBtn').onclick = () => {
-  const t = document.getElementById('txtInput').value.trim();
-  if (!t) return;
-  overlays.push({ text: t, pos: document.getElementById('txtPos').value });
-  document.getElementById('txtInput').value = '';
-};
-document.getElementById('txtClear').onclick = () => { overlays = []; };
-
-let voices = [];
-
-/* ---- CapCut-style voice characters ----
-   Browser TTS only exposes plain system voices, so each character is a preset:
-   a preferred base voice plus pitch and speed. That is how you get distinct
-   personalities rather than a list of "Microsoft George" entries. */
-const VOICE_PRESETS = [
-  { id:'nova',      name:'Nova',            pitch:1.05, rate:1.00, prefer:['female','zira','samantha','aria','jenny'] },
-  { id:'storyteller',name:'Storyteller',    pitch:0.92, rate:0.88, prefer:['male','george','daniel','guy'] },
-  { id:'hype',      name:'Hype Man',        pitch:1.15, rate:1.28, prefer:['male','guy','mark','david'] },
-  { id:'chill',     name:'Chill',           pitch:0.95, rate:0.86, prefer:['female','aria','samantha'] },
-  { id:'narrator',  name:'Deep Narrator',   pitch:0.62, rate:0.84, prefer:['male','david','george','daniel'] },
-  { id:'chipmunk',  name:'Chipmunk',        pitch:1.95, rate:1.42, prefer:[] },
-  { id:'robot',     name:'Robot',           pitch:0.42, rate:0.72, prefer:['male'] },
-  { id:'announcer', name:'Announcer',       pitch:0.80, rate:1.06, prefer:['male','mark','guy'] },
-  { id:'whisper',   name:'Whisper',         pitch:1.10, rate:0.78, prefer:['female','zira'], volume:0.45 },
-  { id:'sassy',     name:'Sassy',           pitch:1.35, rate:1.12, prefer:['female','zira','aria'] },
-  { id:'grumpy',    name:'Grumpy',          pitch:0.55, rate:0.94, prefer:['male','david'] },
-  { id:'kid',       name:'Kid',             pitch:1.62, rate:1.14, prefer:['female','zira'] },
-  { id:'newsreader',name:'Newsreader',      pitch:0.98, rate:1.02, prefer:['male','george','daniel'] },
-  { id:'villain',   name:'Villain',         pitch:0.48, rate:0.80, prefer:['male','david','george'] },
-  { id:'speedrun',  name:'Speedrun',        pitch:1.20, rate:1.75, prefer:[] },
-  { id:'slowmo',    name:'Slow-mo',         pitch:0.70, rate:0.58, prefer:[] },
-  { id:'alien',     name:'Alien',           pitch:1.80, rate:0.70, prefer:[] },
-  { id:'giant',     name:'Giant',           pitch:0.35, rate:0.66, prefer:['male'] }
-];
-
-function pickBaseVoice(prefer) {
-  if (!voices.length) return null;
-  const en = voices.filter(v => /^en/i.test(v.lang));
-  const pool = en.length ? en : voices;
-  for (const key of (prefer || [])) {
-    const hit = pool.find(v => v.name.toLowerCase().includes(key));
-    if (hit) return hit;
-    if (key === 'female') { const f = pool.find(v => /zira|samantha|aria|jenny|female|hazel|susan/i.test(v.name)); if (f) return f; }
-    if (key === 'male')   { const m = pool.find(v => /david|george|guy|mark|daniel|male|james/i.test(v.name)); if (m) return m; }
-  }
-  return pool[0];
-}
-
-function loadVoices() {
-  voices = speechSynthesis.getVoices();
-  const sel = document.getElementById('voVoice');
-  if (!sel) return;
-  const keep = sel.value;
-  sel.innerHTML = '';
-  VOICE_PRESETS.forEach(p => {
-    const o = document.createElement('option');
-    o.value = p.id;
-    o.textContent = p.name;
-    sel.appendChild(o);
-  });
-  if (keep) sel.value = keep;
-}
-speechSynthesis.onvoiceschanged = loadVoices;
-loadVoices();
-
-function currentPreset() {
-  const id = document.getElementById('voVoice').value;
-  return VOICE_PRESETS.find(p => p.id === id) || VOICE_PRESETS[0];
-}
-
-function speak(text) {
-  if (!text) return;
-  speechSynthesis.cancel();
-  const p = currentPreset();
-  const u = new SpeechSynthesisUtterance(text);
-  const base = pickBaseVoice(p.prefer);
-  if (base) u.voice = base;
-  u.pitch  = Math.max(0, Math.min(2, p.pitch));
-  u.rate   = Math.max(0.1, Math.min(10, p.rate));
-  u.volume = p.volume != null ? p.volume : 1;
-  speechSynthesis.speak(u);
-}
-document.getElementById('voPlay').onclick = () => speak(document.getElementById('voScript').value);
-
-document.getElementById('musicInput').onchange = (e) => {
-  const f = e.target.files[0];
-  if (f) {
-    document.getElementById('musicEl').src = URL.createObjectURL(f);
-    document.getElementById('audioname').textContent = f.name.slice(0, 22);
-    analyseBeats(f);
-  }
-};
-
-let playing = false;
-function drawFrame(clip, prog) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-  let alpha = 1, tx = 0, ty = 0, scale = 1, rot = 0;
-  if (prog < 0.15) {
-    const p = prog / 0.15;
-    const W = canvas.width, H = canvas.height;
-    switch (clip.trans) {
-      case 'fade': alpha = p; break;
-      case 'slideL': tx = -W * (1 - p); break;
-      case 'slideR': tx = W * (1 - p); break;
-      case 'slideUp': ty = H * (1 - p); break;
-      case 'slideDown': ty = -H * (1 - p); break;
-      case 'zoom': scale = 0.5 + 0.5 * p; alpha = p; break;
-      case 'zoomOut': scale = 1.6 - 0.6 * p; alpha = p; break;
-      case 'spin': rot = (1 - p) * Math.PI; alpha = p; scale = 0.6 + 0.4 * p; break;
-      case 'spinCCW': rot = -(1 - p) * Math.PI; alpha = p; scale = 0.6 + 0.4 * p; break;
-      case 'flip': scale = 1; ty = 0; alpha = p; scale = Math.abs(Math.cos((1 - p) * Math.PI)) * 0.5 + 0.5; break;
-      case 'punch': scale = 1 + (1 - p) * 0.6; alpha = p; break;
-      case 'drop': ty = -H * (1 - p) * (1 - p); alpha = p; break;
-      case 'rise': ty = H * (1 - p) * (1 - p); alpha = p; break;
-      case 'swirl': rot = (1 - p) * Math.PI * 2; scale = p; alpha = p; break;
-      case 'diagTL': tx = -W * (1 - p); ty = -H * (1 - p); break;
-      case 'diagTR': tx = W * (1 - p); ty = -H * (1 - p); break;
-      case 'diagBL': tx = -W * (1 - p); ty = H * (1 - p); break;
-      case 'diagBR': tx = W * (1 - p); ty = H * (1 - p); break;
-      case 'popIn': scale = p * p; alpha = p; break;
-      case 'stretch': scale = p; tx = 0; alpha = p; break;
-      case 'whipL': tx = -W * (1 - p); rot = (1 - p) * 0.3; break;
-      case 'whipR': tx = W * (1 - p); rot = -(1 - p) * 0.3; break;
-      case 'tilt': rot = (1 - p) * 0.5; alpha = p; break;
-      case 'bounce': { const b = 1 - Math.abs(Math.sin((1 - p) * Math.PI * 1.5)) * (1 - p); scale = b; alpha = p; } break;
-      case 'glitch': tx = (Math.random() - 0.5) * W * (1 - p) * 0.3; alpha = 0.4 + p * 0.6; break;
-    }
-  }
-  ctx.globalAlpha = alpha;
-  ctx.translate(canvas.width / 2 + tx, canvas.height / 2 + ty);
-  ctx.scale(scale, scale);
-  ctx.rotate(rot);
-  const useFx = document.getElementById('fxOn').checked;
-  ctx.filter = (useFx && clip.fx !== 'none') ? FX[clip.fx](clip.str) : 'none';
-  const el = clip.el;
-  const iw = el.videoWidth || el.width, ih = el.videoHeight || el.height;
-  const s = Math.max(canvas.width / iw, canvas.height / ih);
-  ctx.drawImage(el, -iw*s/2, -ih*s/2, iw*s, ih*s);
-  ctx.restore();
-  ctx.save();
-  overlays.forEach(o => {
-    ctx.font = 'bold 60px Segoe UI, sans-serif';
-    ctx.fillStyle = 'white'; ctx.strokeStyle = 'black'; ctx.lineWidth = 6; ctx.textAlign = 'center';
-    const y = o.pos === 'top' ? 90 : o.pos === 'bottom' ? canvas.height - 50 : canvas.height / 2;
-    ctx.strokeText(o.text, canvas.width / 2, y);
-    ctx.fillText(o.text, canvas.width / 2, y);
-  });
-  ctx.restore();
-}
-
-async function playSequence() {
-  if (!clips.length || playing) return;
-  playing = true;
-  const music = document.getElementById('musicEl');
-  if (music.src) { music.currentTime = 0; music.play().catch(() => {}); }
-  const vo = document.getElementById('voScript').value;
-  if (vo) speak(vo);
-  for (let i = 0; i < clips.length && playing; i++) {
-    const clip = clips[i];
-    selected = i; renderTL();
-    if (clip.type === 'video') { try { clip.el.currentTime = 0; await clip.el.play().catch(() => {}); } catch (e) {} }
-    const start = performance.now();
-    const durMs = clip.dur * 1000;
-    await new Promise(res => {
-      function frame(now) {
-        if (!playing) return res();
-        const t = now - start;
-        drawFrame(clip, t / durMs);
-        if (t < durMs) requestAnimationFrame(frame); else res();
-      }
-      requestAnimationFrame(frame);
-    });
-    if (clip.type === 'video') clip.el.pause();
-  }
-  music.pause();
-  playing = false;
-}
-document.getElementById('playBtn').onclick = playSequence;
-
-let recorder, chunks = [];
-async function record() {
-  if (!clips.length) { alert('Add some clips first!'); return; }
-  chunks = [];
-  const stream = canvas.captureStream(30);
+async function connect() {
+  note('Opening Google...', 'working');
   try {
-    const actx = new AudioContext();
-    const dest = actx.createMediaStreamDestination();
-    const music = document.getElementById('musicEl');
-    if (music.src) { const src = actx.createMediaElementSource(music); src.connect(dest); src.connect(actx.destination); }
-    dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
-  } catch (e) {}
-  const mime = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
-  recorder = new MediaRecorder(stream, { mimeType: mime });
-  recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-  recorder.onstop = () => {
-    const blob = new Blob(chunks, { type: mime });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'novaclip-video.' + (mime === 'video/mp4' ? 'mp4' : 'webm');
-    a.click();
-    // a finished export is one of the reps that counts towards a certificate
-    if (typeof logSkill === 'function') logSkill('edit_export');
-    if (typeof addPts === 'function') addPts(15);
-  };
-  recorder.start();
-  await playSequence();
-  if (recorder.state !== 'inactive') recorder.stop();
+    await afterSignIn(await signInWithPopup(auth, ytProvider()));
+  } catch (e) {
+    /* Pop-ups are blocked by default on plenty of phones and school-managed
+       browsers. Rather than dead-ending, hand the whole page to Google and pick
+       the result back up on the way in — that path cannot be blocked. */
+    if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) {
+      note('Pop-up blocked — sending you to Google instead...', 'working');
+      try { await signInWithRedirect(auth, ytProvider()); return; } catch (e2) { note(explainAuth(e2)); return; }
+    }
+    note(explainAuth(e));
+    console.warn('sign-in failed', e);
+  }
 }
-document.getElementById('recBtn').onclick = record;
-document.getElementById('recBtn2').onclick = record;
-document.getElementById('stopBtn').onclick = () => { playing = false; if (recorder && recorder.state !== 'inactive') recorder.stop(); speechSynthesis.cancel(); document.getElementById('musicEl').pause(); };
+all('#gbtn').forEach(b => b.onclick = connect);
+window.ncAuthReady = true;   // tells the holding script above to stand down
+
+// coming back from the redirect fallback
+getRedirectResult(auth).then(r => { if (r) afterSignIn(r); }).catch(e => note(explainAuth(e)));
+// true means "you have a channel loaded and may proceed" — the tools check it,
+// because running a competitor search against a null channel throws instead of
+// telling anyone what went wrong
+async function ensureToken() {
+  if (ytToken && myStats) return true;
+  const cached = loadToken();
+  if (cached && !ytToken) {
+    ytToken = cached;
+    try { const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true'); if (d.items && d.items.length) { myStats = d.items[0]; rememberChannel(myStats.snippet.title); return true; } } catch (e) {}
+  }
+  await connect();
+  return !!(ytToken && myStats);
+}
+
+/* ============================================================================
+   FINDING CHANNELS THAT ARE ACTUALLY YOUR SIZE
+   The old version did two things wrong and they compounded.
+
+   1. It searched "gaming channel", "vlog channel", "music channel". YouTube
+      answers those with the BIGGEST channels that match, because that is what
+      search is for. A creator with 1,200 subscribers was handed a pool of
+      million-subscriber channels and told to pick from it.
+
+   2. It ranked by the ABSOLUTE difference in subscribers. At 1,200 subs the
+      gap to 200,000 is 198,800 and the gap to 900,000 is 898,800 — so it
+      dutifully called the 200,000 channel your "closest competitor". Nothing
+      about that is close. Size on YouTube is multiplicative: 600 and 2,400 are
+      both one doubling away from 1,200, and that is the comparison that means
+      something. So the ranking is now on the RATIO — |log(theirs / yours)| —
+      and anything outside a quarter to four times your size is not offered at
+      all.
+
+   The search terms come from your own titles and description rather than a
+   generic list, so the pool is at least in your subject. And when nothing in
+   range turns up, it says so instead of printing a channel forty times your
+   size with a straight face.
+   ============================================================================ */
+const STOPWORDS = new Set(('the a an and or of for to in on with my our your i we this that is are was ' +
+  'it he she they you how what why when new best top vs video videos channel official full hd 4k ' +
+  'shorts short live stream part ep episode').split(' '));
+
+function seedTerms(myVideos) {
+  const words = {};
+  const feed = (text, weight) => {
+    String(text || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).forEach(w => {
+      if (w.length < 4 || STOPWORDS.has(w)) return;
+      words[w] = (words[w] || 0) + weight;
+    });
+  };
+  (myVideos || []).forEach(v => feed(v.snippet && v.snippet.title, 3));
+  feed(myStats.snippet.description, 1);
+  feed(myStats.snippet.title, 2);
+  const ranked = Object.keys(words).sort((a, b) => words[b] - words[a]).slice(0, 8);
+  // pair the strongest words up: two-word queries are far more specific than one
+  const out = [];
+  for (let i = 0; i < ranked.length && out.length < 5; i += 2) {
+    out.push(ranked[i + 1] ? ranked[i] + ' ' + ranked[i + 1] : ranked[i]);
+  }
+  if (!out.length) out.push(myStats.snippet.title);
+  return out;
+}
+
+async function myRecentVideos(limit) {
+  try {
+    const up = myStats.contentDetails && myStats.contentDetails.relatedPlaylists &&
+               myStats.contentDetails.relatedPlaylists.uploads;
+    if (!up) return [];
+    const d = await yt('playlistItems?part=snippet&maxResults=' + (limit || 12) + '&playlistId=' + up);
+    return d.items || [];
+  } catch (e) { return []; }
+}
+
+// how far apart two channels are in size, as a number of doublings
+function sizeGap(a, b) { return Math.abs(Math.log2(Math.max(1, a) / Math.max(1, b))); }
+
+/* "×2.3 your size" is the sentence a creator can act on. "+198,800 subs" is a
+   number they cannot do anything with. */
+function sizeWord(theirs, mine) {
+  const r = Math.max(1, theirs) / Math.max(1, mine);
+  if (r >= 0.95 && r <= 1.05) return 'the same size as you';
+  return r > 1 ? '\u00d7' + r.toFixed(r < 10 ? 1 : 0) + ' your size'
+               : '\u00d7' + (1 / r).toFixed(r > 0.1 ? 1 : 0) + ' smaller than you';
+}
+
+async function getCompetitors(n) {
+  const mySubs = parseInt(myStats.statistics.subscriberCount || 0) || 1;
+  const mine = await myRecentVideos(12);
+  const seeds = seedTerms(mine);
+
+  const ids = new Set();
+  for (const q of seeds) {
+    const sd = await yt('search?part=snippet&type=channel&maxResults=25&order=relevance&q=' + encodeURIComponent(q)).catch(() => null);
+    if (sd && sd.items) sd.items.forEach(i => { if (i.snippet.channelId !== myStats.id) ids.add(i.snippet.channelId); });
+    /* Search by VIDEO as well as by channel. A small creator's channel rarely
+       ranks for anything, but their videos do — and every video has a channel
+       behind it. This is where most of the genuinely small channels come from. */
+    const vd = await yt('search?part=snippet&type=video&maxResults=25&order=relevance&q=' + encodeURIComponent(q)).catch(() => null);
+    if (vd && vd.items) vd.items.forEach(i => { if (i.snippet.channelId !== myStats.id) ids.add(i.snippet.channelId); });
+    if (ids.size >= 120) break;
+  }
+  if (!ids.size) return [];
+
+  // channels? takes 50 ids at a time
+  const all = [];
+  const list = [...ids];
+  for (let i = 0; i < list.length; i += 50) {
+    const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + list.slice(i, i + 50).join(',')).catch(() => null);
+    if (cd && cd.items) all.push(...cd.items);
+  }
+
+  const scored = all
+    .filter(ch => ch.id !== myStats.id)
+    // a hidden subscriber count is 0 in the API, which would look like the
+    // closest possible match to a channel with none — drop those rather than
+    // rank them first
+    .filter(ch => !(ch.statistics && ch.statistics.hiddenSubscriberCount))
+    .map(ch => ({ ch, gap: sizeGap(parseInt(ch.statistics.subscriberCount || 0), mySubs) }))
+    .sort((a, b) => a.gap - b.gap);
+
+  // within two doublings either way — a quarter your size to four times it
+  const close = scored.filter(x => x.gap <= 2);
+  const picked = (close.length ? close : scored).slice(0, n || 3);
+  picked.forEach(x => { x.ch.__gap = x.gap; x.ch.__inRange = x.gap <= 2; });
+  return picked.map(x => x.ch);
+}
+
+all('#compbtn').forEach(b => b.onclick = async () => {
+  if (!await ensureToken()) return;
+  show('Reading your videos, then looking for channels your size...');
+  const comps = await getCompetitors(3);
+  const mySubs = parseInt(myStats.statistics.subscriberCount);
+  if (!comps.length) {
+    show('<b>Nothing to compare you to yet.</b><br><span style="color:#7E8AA6">YouTube search returned no channels for your topics. ' +
+         'That usually means the channel has very few videos to read subjects from — upload a couple more and try again.</span>');
+    return;
+  }
+  const anyClose = comps.some(c => c.__inRange);
+  const header = anyClose
+    ? '<b style="font-size:1.15rem">Channels your size</b><br><span style="color:#7E8AA6;font-size:0.85rem">' +
+      'Same subject as your videos, and within four times your subscriber count either way. ' +
+      'Size is compared as a ratio, not a difference — 600 and 2,400 are both one doubling from 1,200.</span>'
+    : '<b style="font-size:1.15rem">Nothing really close</b><br><span style="color:#ffb84d;font-size:0.85rem">' +
+      'No channel in your subject came back within four times your size. These are the nearest ' +
+      'anyway, and they are further from you than a fair comparison should be — treat them as a look ahead, not a rival.</span>';
+  show(header + '<br><br>' + comps.map((c, i) => {
+    const s = c.statistics;
+    const subs = parseInt(s.subscriberCount || 0), views = parseInt(s.viewCount || 0), vids = parseInt(s.videoCount || 1);
+    const avg = Math.round(views / Math.max(vids, 1));
+    const gap = subs - mySubs;
+    const created = c.snippet.publishedAt ? new Date(c.snippet.publishedAt).getFullYear() : '—';
+    return '<div class="compcard"><b>' + (i + 1) + '. ' + c.snippet.title + '</b>' + (c.snippet.country ? ' · ' + c.snippet.country : '') +
+      ' · since ' + created +
+      '<div class="row"><span><b>' + subs.toLocaleString() + '</b> subs</span>' +
+      '<span><b>' + views.toLocaleString() + '</b> views</span>' +
+      '<span><b>' + vids.toLocaleString() + '</b> videos</span>' +
+      '<span><b>~' + avg.toLocaleString() + '</b> views/video</span>' +
+      '<span>' + (gap >= 0 ? '+' : '') + gap.toLocaleString() + ' vs you</span>' +
+      '<span style="color:' + (c.__inRange ? '#b6ff3c' : '#ffb84d') + '">' + sizeWord(subs, mySubs) + '</span></div>' +
+      '<div class="desc">' + (c.snippet.description ? c.snippet.description.slice(0, 160).replace(/</g, '&lt;') + '…' : 'No description') + '</div>' +
+      '<a target="_blank" style="color:#00F0FF; font-size:0.88rem" href="https://www.youtube.com/channel/' + c.id + '">Open channel ↗</a></div>';
+  }).join(''));
+});
+
+all('#duelbtn').forEach(b => b.onclick = () => {
+  all('#duelsetup').forEach(d => d.style.display = d.style.display === 'block' ? 'none' : 'block');
+});
+all('#duelgo').forEach(b => b.onclick = async () => {
+  if (!await ensureToken()) return;
+  const box = document.querySelector('#duelbox');
+  const name = box ? box.value : '';
+  if (!name) { show('Type a channel name first.'); return; }
+  show('Preparing the arena...');
+  const mySubs = parseInt(myStats.statistics.subscriberCount), myViews = parseInt(myStats.statistics.viewCount);
+  const sd = await yt('search?part=snippet&type=channel&maxResults=1&q=' + encodeURIComponent(name));
+  if (!sd.items || !sd.items.length) { show('Could not find that channel.'); return; }
+  const cd = await yt('channels?part=statistics,snippet&id=' + sd.items[0].snippet.channelId);
+  const opp = cd.items[0];
+  const oppSubs = parseInt(opp.statistics.subscriberCount || 0), oppViews = parseInt(opp.statistics.viewCount || 0);
+  const gap = Math.abs(mySubs - oppSubs);
+  if (gap > 20000) { show('Unfair matchup! The gap is ' + gap.toLocaleString() + ' subs — max allowed is 20,000. Pick someone closer!'); return; }
+  let a = 0, b = 0;
+  if (mySubs >= oppSubs) a++; else b++;
+  if (myViews >= oppViews) a++; else b++;
+  const winner = a > b ? myStats.snippet.title : (b > a ? opp.snippet.title : 'It is a TIE');
+  show('<b>DUEL RESULT</b><br><br>' + myStats.snippet.title + ': ' + mySubs.toLocaleString() + ' subs · ' + myViews.toLocaleString() + ' views<br>' + opp.snippet.title + ': ' + oppSubs.toLocaleString() + ' subs · ' + oppViews.toLocaleString() + ' views<br><br><b>Winner: ' + winner + '</b>');
+  if (a > b && window.addPts) addPts(20);
+});
+
+
 </script>
 <script src='nova.js'></script>
 </body>
