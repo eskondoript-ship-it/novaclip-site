@@ -30,7 +30,8 @@
      GET  /save?key=...             -> { data, at }          load progress
      POST /save {key, data}         -> { ok, at }            store progress
      GET  /board?map=&mode=         -> [ rows ]              top 25
-     POST /board {name,kills,...}   -> { ok, rank, board }   submit a run
+     POST /board {name,kills,key?}  -> { ok, rank, board }   submit a run
+                                    -> 409 if that name is another player's
 
    PUTTING IT ONLINE WITHOUT A COMMAND LINE
      1. dash.cloudflare.com -> Workers & Pages -> Create -> Worker -> Deploy
@@ -184,8 +185,33 @@ export default {
       }
       if (request.method === 'POST') {
         if (await rateLimited(env, 'board:' + ip, WRITE_COOLDOWN_MS)) return json({ error: 'slow down' }, 429);
+
+        /* ---- A NAME BELONGS TO ONE ACCOUNT ----
+           The board keys rows by name, so without this two people called
+           "MrBeast" are the same row and the second one overwrites the first.
+           Worse, a name here is usually a real YouTube channel title — the game
+           fills it in from the connected channel — so anyone could type a
+           creator's channel name and post scores as them.
+
+           So a name is claimed the first time it is used and bound to the
+           account key that claimed it. After that, only that account may post
+           under it. Nobody has to register anything: the first person to play
+           under a name owns it, and a creator who connects their channel owns
+           their channel's name from their first match.
+
+           A player with no account key can still post, but only under a name
+           nobody has claimed — which is the honest trade for not signing in. */
+        const claimant = validKey(body.key) ? body.key : null;
+        const wanted = cleanName(body.name);
+        const nameKey = 'name:' + wanted.toLowerCase();
+        const owner = await env.DB.get(nameKey);
+        if (owner && owner !== claimant) {
+          return json({ error: 'the name "' + wanted + '" belongs to another player', taken: true }, 409);
+        }
+        if (!owner) await env.DB.put(nameKey, claimant || 'anon:' + ip);
+
         const run = {
-          name:   cleanName(body.name),
+          name:   wanted,
           kills:  clampInt(body.kills, 0, 9999),
           deaths: clampInt(body.deaths, 0, 9999),
           pts:    clampInt(body.pts, 0, 999999),
