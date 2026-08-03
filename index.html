@@ -290,6 +290,56 @@ h2 { animation: riseIn .8s cubic-bezier(.2,.9,.3,1.15) both; }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
+/* ===== FLOATING YOUTUBE TILES =====
+   The hero had orbs, stars and a grid — atmosphere, but nothing that said what
+   the site is FOR. These do: the mark of the platform you are here to grow on,
+   drifting behind the headline.
+
+   Tiles rather than bare glyphs, because a red play button floating on its own
+   reads as a stray icon; set into a dark rounded square with a hairline edge it
+   reads as a card, which is the language the rest of the page already speaks.
+
+   Each one gets its own duration, delay and size from nth-child — a set of
+   identical animations started together looks like a carousel, and the whole
+   point is that they never quite line up. Behind the text, never clickable, and
+   completely still for anyone who asked for less motion. */
+/* z-index 0 and the hero's own content lifted above it. A positioned layer with
+   z-index 1 beats non-positioned text, which put the tiles ON TOP of the
+   headline — the one place they must never be. */
+.ytfloat { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.hero > :not(.ytfloat) { position: relative; z-index: 2; }
+.ytf {
+  position: absolute; display: grid; place-items: center;
+  width: 62px; height: 62px; border-radius: 19px;
+  background: rgba(14,14,18,0.92);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+  animation: ytdrift 12s ease-in-out infinite;
+  will-change: transform;
+}
+.ytf svg { width: 26px; height: 26px; display: block; }
+@keyframes ytdrift {
+  0%, 100% { transform: translate3d(0,0,0) rotate(0deg); }
+  50%      { transform: translate3d(0,-22px,0) rotate(3deg); }
+}
+/* Placed AROUND the text, not under it. The first pass scattered them evenly
+   and one landed behind the R of "Run" and another under the buttons — the
+   headline still won on z-index, but a tile half-hidden behind a letter just
+   looks like a mistake. The copy occupies roughly x 21-59% / y 20-56%, so
+   these live outside that box. */
+.ytf:nth-child(1) { top: 8%;  left: 10%; animation-duration: 11s; animation-delay: -1s; }
+.ytf:nth-child(2) { top: 12%; left: 66%; animation-duration: 14s; animation-delay: -4s; width: 50px; height: 50px; border-radius: 15px; }
+.ytf:nth-child(3) { top: 40%; left: 86%; animation-duration: 9s;  animation-delay: -6s; width: 72px; height: 72px; border-radius: 22px; }
+.ytf:nth-child(4) { top: 90%; left: 5%;  animation-duration: 13s; animation-delay: -2s; width: 46px; height: 46px; border-radius: 14px; opacity: .75; }
+.ytf:nth-child(5) { top: 66%; left: 72%; animation-duration: 10s; animation-delay: -7s; opacity: .9; }
+.ytf:nth-child(6) { top: 26%; left: 92%; animation-duration: 15s; animation-delay: -3s; width: 40px; height: 40px; border-radius: 12px; opacity: .55; }
+.ytf svg .yt-body { fill: #FF0033; filter: drop-shadow(0 0 7px rgba(255,0,51,0.55)); }
+.ytf svg .yt-play { fill: #fff; }
+/* on a phone the hero text fills the width, so the ones that would sit under it go */
+@media (max-width: 860px) { .ytf:nth-child(2), .ytf:nth-child(5), .ytf:nth-child(6) { display: none; } }
+@media (prefers-reduced-motion: reduce) { .ytf { animation: none !important; } }
+
+
 h1 .hl1, h1 .hl2 { display:block; unicode-bidi:isolate; }
 h1 .hl1 b, h1 .hl2 b { font-weight:inherit; }
 h1 .n { color:#00F0FF; }
@@ -329,6 +379,14 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 <div class='content' id='main'>
 
 <header class='hero'>
+  <div class='ytfloat' aria-hidden='true'>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+  </div>
   <span class='eyebrow' data-t='eyebrow'>For teen creators · 13–18</span>
   <h1><span class='hl1' data-t='hero_line1'>Run your <b class='n'>channel</b></span><span class='hl2' data-t='hero_line2'>like a <b class='m'>game.</b></span></h1>
   <div class='console' aria-hidden='true'><span id='type'></span><span class='cursor'>▋</span></div>
