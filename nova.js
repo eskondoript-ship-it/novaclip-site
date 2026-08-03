@@ -233,7 +233,24 @@ style.textContent =
 ".radar::before,.radar::after { content:''; position:absolute; inset:0; border-radius:50%; border:1px solid rgba(76,201,240,0.25); margin:40px; }" +
 ".radar::after { margin:80px; }" +
 ".radar .sweep { position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 0deg,rgba(76,201,240,0.55) 0deg,rgba(76,201,240,0) 60deg,transparent 360deg); animation:ncsweep 1.6s linear infinite; }" +
-"@keyframes ncsweep { to { transform:rotate(360deg); } }";
+"@keyframes ncsweep { to { transform:rotate(360deg); } }" +
+
+/* ---- iOS-style age wheel ----
+   A wheel instead of a text box on purpose. A text box invites a second try:
+   type a number, read the rejection, type a number that gets in. A wheel is one
+   gesture, it commits, and it never tells you which numbers are the right ones. */
+"#ncWheel { position:relative; height:220px; overflow-y:scroll; scroll-snap-type:y mandatory; " +
+  "-webkit-overflow-scrolling:touch; scrollbar-width:none; margin:6px 0 18px; " +
+  "-webkit-mask-image:linear-gradient(180deg,transparent,#000 26%,#000 74%,transparent); " +
+  "mask-image:linear-gradient(180deg,transparent,#000 26%,#000 74%,transparent); }" +
+"#ncWheel::-webkit-scrollbar { display:none; }" +
+"#ncWheel .ncw { height:44px; line-height:44px; scroll-snap-align:center; text-align:center; " +
+  "font-size:1.5rem; font-weight:600; color:#5b6478; transition:color .18s, transform .18s; }" +
+"#ncWheel .ncw.on { color:#EAF2FF; transform:scale(1.22); }" +
+"#ncWheel .ncw.near { color:#8c96ad; }" +
+"#ncWheelBand { position:absolute; left:0; right:0; top:88px; height:44px; pointer-events:none; " +
+  "border-top:1px solid rgba(255,255,255,0.16); border-bottom:1px solid rgba(255,255,255,0.16); " +
+  "background:rgba(255,255,255,0.04); border-radius:8px; }";
 document.head.appendChild(style);
 
 function applyTheme(name) { const t = THEMES[name] || THEMES['Dark']; document.documentElement.style.setProperty('--bg',t[0]); document.documentElement.style.setProperty('--box',t[1]); document.documentElement.style.setProperty('--txt',t[2]); document.body.dataset.theme = name; localStorage.setItem('nc_theme',name); }
@@ -562,31 +579,117 @@ function applySeason() {
   window.ncAge = function () { return parseInt(localStorage.getItem('nc_user_age') || '0'); };
   window.ncControlsRelaxed = function () { const a = ncAge(); return a >= 16 && a <= 18; };
 
+  /* ---- the age gate ----
+     The old one asked the question and then answered it for you: "NovaClip is
+     built for creators aged 13-18" sat directly above the box, and a number
+     outside that range was refused with a message repeating the range, leaving
+     the box editable. So it did not collect an age — it ran a guessing game
+     with the answer printed on the card, and everybody who wanted in typed 15.
+
+     Three changes, all pointing the same way:
+       NOTHING IS EXPLAINED FIRST. Just the question. There is no band to aim
+       for on screen, so the number you land on is the one you meant.
+       ONE ANSWER, KEPT. Whatever comes back is written down and acted on. An
+       out-of-range age is an outcome with its own screen, not a "try again"
+       that hands you another go at the same box.
+       A WHEEL, NOT A TEXT BOX. You spin it once and it commits. Typing invites
+       a correction; a wheel does not, and it cannot be edited after you see
+       what your answer led to. */
   window.ncAgeGate = function () {
     if (ncAge()) return;
+
     const o = document.createElement('div');
     o.id = 'ncAgeGate';
     o.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(5,6,10,0.96);color:#EAF2FF;display:flex;align-items:center;justify-content:center;padding:24px;font-family:Segoe UI,sans-serif;backdrop-filter:blur(8px);';
-    o.innerHTML = '<div style="max-width:460px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px">' +
-      '<div style="font-size:2.4rem;margin-bottom:10px"></div>' +
-      '<h2 style="margin-bottom:8px">How old are you?</h2>' +
-      '<p style="color:#7E8AA6;font-size:0.92rem;line-height:1.6;margin-bottom:16px">NovaClip is built for creators aged 13–18. Your answer sets the right safety level for your account.</p>' +
-      '<input id="ncAgeInput" type="text" inputmode="numeric" maxlength="2" placeholder="Your age" style="width:100%;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:#0A0C14;color:#EAF2FF;font-size:1.05rem;text-align:center;margin-bottom:12px">' +
-      '<button id="ncAgeGo" style="width:100%;padding:14px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;font-size:1rem">Continue</button>' +
-      '<div id="ncAgeMsg" style="color:#FF2E97;font-size:0.85rem;margin-top:10px;min-height:20px"></div></div>';
+    o.innerHTML = '<div style="width:100%;max-width:360px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px 26px">' +
+      '<h2 style="margin-bottom:14px;font-size:1.5rem">How old are you?</h2>' +
+      '<div id="ncWheelWrap" style="position:relative">' +
+        '<div id="ncWheelBand"></div>' +
+        '<div id="ncWheel" tabindex="0" role="listbox" aria-label="Your age"></div>' +
+      '</div>' +
+      '<button id="ncAgeGo" disabled style="width:100%;padding:14px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;font-size:1rem;opacity:0.35;transition:opacity .2s">Continue</button>' +
+      '</div>';
     document.body.appendChild(o);
-    document.getElementById('ncAgeGo').onclick = () => {
-      const a = parseInt(document.getElementById('ncAgeInput').value, 10);
-      const msg = document.getElementById('ncAgeMsg');
-      if (isNaN(a) || a < 1 || a > 120) { msg.textContent = 'Please enter a valid age.'; return; }
-      if (a < 13) { msg.innerHTML = 'Sorry — NovaClip is for ages 13 and over. Under-13 accounts need verified parental consent (COPPA/GDPR-K).'; return; }
-      if (a > 18) { msg.innerHTML = 'NovaClip is designed for teen creators aged 13–18.'; return; }
-      localStorage.setItem('nc_user_age', String(a));
-      o.remove();
+
+    const wheel = document.getElementById('ncWheel');
+    const go = document.getElementById('ncAgeGo');
+    const LOW = 5, HIGH = 99, H = 44;
+    let rows = '<div style="height:88px"></div>';
+    for (let a = LOW; a <= HIGH; a++) rows += '<div class="ncw" data-a="' + a + '" role="option">' + a + '</div>';
+    wheel.innerHTML = rows + '<div style="height:88px"></div>';
+
+    let picked = 0, touched = false;
+    function paint() {
+      const i = Math.round(wheel.scrollTop / H);
+      picked = LOW + i;
+      [].forEach.call(wheel.querySelectorAll('.ncw'), (el, n) => {
+        const d = Math.abs(n - i);
+        el.className = 'ncw' + (d === 0 ? ' on' : d === 1 ? ' near' : '');
+        if (d === 0) el.setAttribute('aria-selected', 'true'); else el.removeAttribute('aria-selected');
+      });
+    }
+    /* Continue stays dead until the wheel is actually moved. Without this the
+       age it happens to open on becomes the answer for anyone who just clicks
+       through — which is the same problem in a new shape. */
+    function arm() { touched = true; go.disabled = false; go.style.opacity = '1'; }
+
+    let raf = 0;
+    wheel.addEventListener('scroll', () => {
+      arm();
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(paint);
+    });
+    wheel.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      e.preventDefault();
+      arm();
+      wheel.scrollTop += (e.key === 'ArrowDown' ? 1 : -1) * H;
+    });
+    wheel.scrollTop = 0;      // opens at the bottom of the range, hinting nothing
+    paint();
+
+    /* One screen, one outcome. It replaces the card rather than sitting under
+       it, so there is no box left to change your mind in. */
+    function outcome(title, body, cta) {
+      o.innerHTML = '<div style="width:100%;max-width:420px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px 26px">' +
+        '<h2 style="margin-bottom:10px;font-size:1.4rem">' + title + '</h2>' +
+        '<p style="color:#7E8AA6;font-size:0.94rem;line-height:1.7">' + body + '</p>' +
+        (cta || '') + '</div>';
+    }
+
+    go.onclick = () => {
+      if (!touched) return;
+      const a = picked;
+      localStorage.setItem('nc_user_age', String(a));   // written first, whatever it is
+
+      if (a < 13) {
+        outcome('Thanks for being honest.',
+          'NovaClip needs verified parental consent for creators under 13, so we cannot open an account from here yet. ' +
+          'Ask a parent or guardian to set one up for you from the Family Dashboard.',
+          '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">Open the Family Dashboard</a>');
+        return;
+      }
+      if (a > 18) {
+        outcome('You are over 18.',
+          'NovaClip is built for creators aged 13 to 18, so this will not be your account — but it can be your child’s. ' +
+          'The Family Dashboard is the grown-up side: controls, activity and the comment scanner.',
+          '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">Open the Family Dashboard</a>');
+        return;
+      }
+
       if (a >= 16) {
         localStorage.setItem('nc_controls_relaxed', '1');
-        alert('You are 16+, so monitoring is lighter: your chats are no longer logged for your parent.\n\nParental controls can only be fully removed by your parent from the Family Dashboard.');
+        /* Was an alert(), which is a browser dialog on a page that has its own
+           voice — and it fired before the user had seen the site at all. */
+        outcome('You are 16 or over.',
+          'Monitoring is lighter from here: your chats are no longer logged for your parent. ' +
+          'Parental controls can still only be fully removed by your parent, from the Family Dashboard.',
+          '<button id="ncAgeDone" style="margin-top:18px;padding:13px 30px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;font-size:0.98rem">Got it</button>');
+        const done = document.getElementById('ncAgeDone');
+        if (done) done.onclick = () => o.remove();
+        return;
       }
+      o.remove();
     };
   };
 
