@@ -573,7 +573,7 @@ body.driving #ammo { display: none; }
 <div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop</div>
 <button id='shopbtn'>SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v89 · 1/2: your two weapons · N: weapon stats · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
+<div id='viewTag'>v90 · 1/2: your two weapons · N: weapon stats · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -1109,7 +1109,11 @@ const CUSTOM_MODELS = {
   arms: 'free_fps_arms_gameready_-_rigged.glb',
   armsScale: 1.0, armsX: 0, armsY: 0, armsZ: 0,
   armsRotX: 0, armsRotY: 0, armsRotZ: 0,
-  monitorX: -0.15, monitorY: -0.10, monitorZ: 0.10, monitorScale: 1.0,
+  /* The monitor now straps to the left forearm bone when the arms are rigged,
+     so these are nudges FROM the forearm rather than a position in the frame.
+     They used to be an absolute spot, and left at the old -0.15/-0.10/0.10 the
+     device floated a hand's width off the arm it is supposed to be strapped to. */
+  monitorX: 0, monitorY: 0, monitorZ: 0, monitorScale: 1.0,
 
   // Drop a tank .glb here (Add file > Upload files) and both you and the bots
   // will use it. Left empty, a built-in blocky tank is used instead, so the
@@ -3507,48 +3511,197 @@ function updateWristMonitor(dt) {
   hrTex.needsUpdate = true;
 }
 
-// simple gloved arms holding the weapon, sized to the 0.6-unit viewmodel
-/* Your own arms from Fab / Sketchfab, in place of the built-in ones.
-   An uploaded pair of arms has no rig this code can read, so it is placed rather
-   than posed: fitted to the length of the weapon in view, dropped into the
-   bottom-centre of the frame where hands belong, and moved from there with the
-   armsX / armsY / armsZ knobs. The wrist monitor is parented alongside it — there
-   is no bone to hang it off, so it gets its own position. */
-function buildUploadedArms(grip) {
+/* ---------- UPLOADED FIRST-PERSON ARMS ----------
+   Two goes at this floated the hands in the top corner of the screen, and both
+   times for the same reason: Box3.setFromObject does not measure a rigged model.
+   It reads each mesh's geometry bounds in BIND space and ignores the skeleton
+   entirely, so for these arms it reported y −0.21…0.06 / z −0.05…0.44 while the
+   bones actually had them at y 0.04…0.56 / z 0.68…0.96 — a third of a unit up
+   and most of a unit back. Every "centre it and drop it on the grip" line was
+   therefore centring a box that was not where the arms were.
+
+   So this measures the POSE (bone world positions), and then, rather than
+   sliding a rigid lump of geometry near the gun and hoping, it actually poses
+   the rig: shoulders are seated below and behind the frame where a shoulder
+   belongs, and each hand is driven onto a real point on THIS weapon — support
+   hand on the handguard, trigger hand on the grip — by inverse kinematics. Any
+   rigged arms model works, because the chain is found by bone name rather than
+   by the one rig I happened to test. */
+
+// which side of the body a bone belongs to. 'Hand_1L_04', 'mixamorigLeftHand'
+// and 'hand.R' all answer correctly; 'forearm' does not read as a right bone.
+function boneSide(name, side) {
+  const n = (name || '').toLowerCase();
+  if (side === 'L') return /left/.test(n) || /(^|[^a-z])l(?![a-z])/.test(n);
+  return /right/.test(n) || /(^|[^a-z])r(?![a-z])/.test(n);
+}
+
+// the wrist bone of one arm — not a finger, and not the deeper of two hand bones
+function findHandBone(root, side) {
+  let best = null, bestDepth = 1e9;
+  root.traverse(o => {
+    if (!o.isBone) return;
+    const n = o.name || '';
+    if (!/hand|wrist|palm/i.test(n)) return;
+    if (/finger|thumb|index|middle|pinky|_end/i.test(n)) return;
+    if (!boneSide(n, side)) return;
+    let d = 0, p = o.parent; while (p) { d++; p = p.parent; }
+    if (d < bestDepth) { bestDepth = d; best = o; }
+  });
+  return best;
+}
+
+/* The box the arms actually occupy on screen. Bones for anything skinned,
+   geometry for anything that is not, which is what makes it right for a rig
+   in a pose and still right for a static pair of props. */
+function posedBox(root) {
+  root.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  let any = false;
+  const v = new THREE.Vector3();
+  root.traverse(o => {
+    if (o.isSkinnedMesh && o.skeleton && o.skeleton.bones.length) {
+      o.skeleton.bones.forEach(b => { b.getWorldPosition(v); box.expandByPoint(v); any = true; });
+    } else if (o.isMesh && o.geometry) {
+      if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+      box.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld));
+      any = true;
+    }
+  });
+  return any ? box : null;
+}
+
+/* Cyclic-coordinate-descent onto a target. Two bones converge in a handful of
+   passes, and the per-pass cap keeps the first swing from throwing the elbow
+   through the chest on its way to a solution. */
+function ikReach(chain, tip, target, iters) {
+  const bp = new THREE.Vector3(), ep = new THREE.Vector3();
+  const v1 = new THREE.Vector3(), v2 = new THREE.Vector3();
+  const q = new THREE.Quaternion(), pq = new THREE.Quaternion(), wq = new THREE.Quaternion();
+  for (let it = 0; it < (iters || 16); it++) {
+    for (let i = chain.length - 1; i >= 0; i--) {
+      const b = chain[i];
+      if (!b || !b.parent) continue;
+      b.updateMatrixWorld(true);
+      b.getWorldPosition(bp); tip.getWorldPosition(ep);
+      v1.subVectors(ep, bp); v2.subVectors(target, bp);
+      if (v1.lengthSq() < 1e-10 || v2.lengthSq() < 1e-10) continue;
+      v1.normalize(); v2.normalize();
+      q.setFromUnitVectors(v1, v2);
+      let step = q;
+      const ang = 2 * Math.acos(Math.min(1, Math.abs(q.w)));
+      if (ang > 0.5) step = new THREE.Quaternion().slerp(q, 0.5 / ang);
+      b.parent.getWorldQuaternion(pq); b.getWorldQuaternion(wq);
+      b.quaternion.copy(pq.invert()).multiply(step).multiply(wq);
+      b.updateMatrixWorld(true);
+    }
+  }
+}
+
+function buildUploadedArms(wbox) {
   const g = new THREE.Group();
   const inner = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone)
     ? THREE.SkeletonUtils.clone(loadedArmsGLB) : loadedArmsGLB.clone(true);
-  inner.updateMatrixWorld(true);
-  const bb = new THREE.Box3().setFromObject(inner), sz = new THREE.Vector3(), ctr = new THREE.Vector3();
-  bb.getSize(sz); bb.getCenter(ctr);
-  const longest = Math.max(sz.x, sz.y, sz.z) || 1;
-  // a pair of forearms reads a little longer than the gun itself
-  let k = 0.75 / longest;
-  if (!isFinite(k) || k <= 0) k = 1;
-  k *= (CUSTOM_MODELS.armsScale || 1);
   const D = Math.PI / 180;
-  inner.scale.setScalar(k);
-  inner.rotation.set((CUSTOM_MODELS.armsRotX || 0) * D, (CUSTOM_MODELS.armsRotY || 0) * D, (CUSTOM_MODELS.armsRotZ || 0) * D);
-  inner.updateMatrixWorld(true);
-  // recentre on its own middle so the offsets below mean the same for any model
-  const bb2 = new THREE.Box3().setFromObject(inner), c2 = new THREE.Vector3();
-  bb2.getCenter(c2);
-  inner.position.set(-c2.x, -c2.y, -c2.z);
+  inner.rotation.set((CUSTOM_MODELS.armsRotX || 0) * D,
+                     (CUSTOM_MODELS.armsRotY || 0) * D,
+                     (CUSTOM_MODELS.armsRotZ || 0) * D);
   inner.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
-
   const holder = new THREE.Group();
   holder.add(inner);
-  // grip comes from the weapon that is asking; the CUSTOM_MODELS offsets still nudge it
-  const G = grip || { y: -0.22, z: 0.16 };
-  holder.position.set(-0.02 + (CUSTOM_MODELS.armsX || 0),
-                      G.y + (CUSTOM_MODELS.armsY || 0),
-                      G.z + (CUSTOM_MODELS.armsZ || 0));
   g.add(holder);
+  g.updateMatrixWorld(true);
 
+  const handL = findHandBone(inner, 'L'), handR = findHandBone(inner, 'R');
+  const foreR = handR && handR.parent, upperR = foreR && foreR.parent;
+  const foreL = handL && handL.parent, upperL = foreL && foreL.parent;
+  const rigged = !!(handR && foreR && upperR && upperR.isBone);
+
+  /* SIZE. Keyed to the arm's own reach rather than to the bounding box, so a
+     model that ships with a stray root node at the origin is not shrunk to
+     nothing. Arms do not change size when you pick up a bigger gun, so this is
+     a constant in viewmodel units, not a fraction of the weapon. */
+  /* A person's shoulder-to-hand is about 0.65 m and a rifle is about 0.9 m, so
+     against the 0.6-unit viewmodel every weapon is fitted to, an arm is 0.46
+     units. Sizing off the arm's own reach rather than its bounding box means a
+     model that ships with a stray root node at the origin is not shrunk to
+     nothing to make that node fit. */
+  const REACH = 0.46;
+  let k = 1;
+  if (rigged) {
+    const a = new THREE.Vector3(), c = new THREE.Vector3();
+    upperR.getWorldPosition(a); handR.getWorldPosition(c);
+    const reach = a.distanceTo(c);
+    if (reach > 1e-4) k = REACH / reach;
+  } else {
+    const pb = posedBox(inner), sz = new THREE.Vector3();
+    if (pb) { pb.getSize(sz); const L = Math.max(sz.x, sz.y, sz.z); if (L > 1e-4) k = 0.75 / L; }
+  }
+  if (!isFinite(k) || k <= 0) k = 1;
+  holder.scale.setScalar(k * (CUSTOM_MODELS.armsScale || 1));
+  g.updateMatrixWorld(true);
+
+  /* WHERE THE GUN IS. The weapon has already been fitted and centred, so its
+     own box gives the two places a hand goes: back along the body for the
+     trigger hand, forward under the barrel for the support hand. */
+  const B = wbox && isFinite(wbox.min.y) ? wbox : null;
+  const lowY = B ? B.min.y : -0.10, backZ = B ? B.max.z : 0.30, frontZ = B ? B.min.z : -0.30;
+  const tR = new THREE.Vector3( 0.045, lowY + 0.020, backZ * 0.34);
+  /* The support hand is placed RELATIVE to the trigger hand, not as a fraction
+     of the barrel. A rocket launcher is half again as long as a rifle, and
+     putting the second hand at 44% of its length asked the left arm to reach
+     1.18 units when it is 0.60 long — so it stretched out straight and stopped
+     short, which is exactly what a floating hand looks like. */
+  const spread = Math.min(0.24, Math.max(0.10, (tR.z - frontZ) * 0.75));
+  const tL = new THREE.Vector3(-0.040, lowY + 0.020, tR.z - spread);
+
+  /* SEAT. Shoulders go below and behind the two grips — that is what makes a
+     forearm rise into frame instead of a pair of hands hovering in it. Anchored
+     on the midpoint of the grips and measured in arm-lengths, so both hands stay
+     comfortably inside the arm's reach and keep a bend in the elbow whatever is
+     being carried. armsX/Y/Z move the whole rig from here. */
+  const mid = tR.clone().add(tL).multiplyScalar(0.5);
+  const seat = new THREE.Vector3(0 + (CUSTOM_MODELS.armsX || 0),
+                                 mid.y - 0.50 * REACH + (CUSTOM_MODELS.armsY || 0),
+                                 mid.z + 0.34 * REACH + (CUSTOM_MODELS.armsZ || 0));
+  const anchor = new THREE.Vector3();
+  if (rigged) {
+    const a = new THREE.Vector3(), b2 = new THREE.Vector3();
+    upperR.getWorldPosition(a);
+    if (upperL) { upperL.getWorldPosition(b2); anchor.addVectors(a, b2).multiplyScalar(0.5); }
+    else anchor.copy(a);
+  } else {
+    const pb = posedBox(g);
+    if (pb) pb.getCenter(anchor);
+  }
+  holder.position.add(seat.clone().sub(anchor));
+  g.updateMatrixWorld(true);
+
+  /* POSE. Each hand is pulled onto its point on the weapon. This is the whole
+     fix: the arms are no longer placed near the gun, they are bent onto it. */
+  if (rigged) {
+    ikReach([upperR, foreR], handR, tR, 16);
+    if (handL && foreL && upperL && upperL.isBone) ikReach([upperL, foreL], handL, tL, 16);
+    g.updateMatrixWorld(true);
+  }
+
+  /* The monitor rides the left forearm when there is one to ride, which is
+     where a wrist device lives — and falls back to a fixed spot otherwise. */
   const mon = buildWristMonitor();
-  mon.position.set(CUSTOM_MODELS.monitorX || -0.15, CUSTOM_MODELS.monitorY || -0.10, CUSTOM_MODELS.monitorZ || 0.10);
-  mon.rotation.set(-0.78, 0.60, 0.30);
-  mon.scale.setScalar(3.4 * (CUSTOM_MODELS.monitorScale || 1));
+  /* 3.4 was tuned against the built-in arms, which are drawn much smaller than
+     a real forearm; on the uploaded rig it came out the size of the gun. */
+  mon.scale.setScalar((rigged ? 1.5 : 3.4) * (CUSTOM_MODELS.monitorScale || 1));
+  if (rigged && handL && foreL) {
+    const wl = new THREE.Vector3(), fl = new THREE.Vector3();
+    handL.getWorldPosition(wl); foreL.getWorldPosition(fl);
+    // the screen faces +Z, which is the eye; a little tilt so it reads as strapped on
+    mon.rotation.set(-0.35, 0.25, 0.10);
+    mon.position.copy(wl.lerp(fl, 0.30)).add(new THREE.Vector3(
+      CUSTOM_MODELS.monitorX || 0, (CUSTOM_MODELS.monitorY || 0) + 0.030, (CUSTOM_MODELS.monitorZ || 0) + 0.030));
+  } else {
+    mon.rotation.set(-0.78, 0.60, 0.30);
+    mon.position.set(CUSTOM_MODELS.monitorX || -0.15, CUSTOM_MODELS.monitorY || -0.10, CUSTOM_MODELS.monitorZ || 0.10);
+  }
   g.add(mon);
   g.userData.monitor = mon;
   return g;
@@ -3695,21 +3848,25 @@ function buildWeapon(type) {
     const flash = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10),
       new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0 }));
     flash.position.set(0, 0.02, mz); w.add(flash); w.userData.flash = flash;
+    /* Measure the BARE gun for the grip points, before anything is bolted on.
+       A bipod hangs well below the receiver and a scope sits well above it, so
+       measuring afterwards moved the hands down onto the bipod's feet. */
+    const wb = new THREE.Box3().setFromObject(w);
     mountAttachments(w, type);
     /* Arms grip the fitted viewmodel, and carry the wrist monitor with them.
-       The grip point is measured from THIS weapon rather than assumed: a rifle
-       and a rocket launcher are both fitted to 0.6 units but their bodies sit
-       at completely different heights, so one fixed offset put the hands on the
-       rifle and left them floating in the air beside the RPG. */
-    const wb = new THREE.Box3().setFromObject(w);
+       The grip points are measured from THIS weapon rather than assumed: a rifle
+       and a rocket launcher are both fitted from the same code but their bodies
+       sit at completely different heights, so one fixed offset put the hands on
+       the rifle and left them floating in the air beside the RPG. */
     const grip = isFinite(wb.min.y)
       ? { y: wb.min.y + 0.02, z: (wb.max.z - 0.06) }     // just under the body, toward the stock
       : { y: -0.22, z: 0.16 };
-    const arms = loadedArmsGLB ? buildUploadedArms(grip) : buildArms(grip);
+    const arms = loadedArmsGLB ? buildUploadedArms(wb) : buildArms(grip);
     w.add(arms);
     w.userData.arms = arms;
     return w;
   }
+  const mb = new THREE.Box3().setFromObject(m);
   mountAttachments(m, type);
   /* The built-in weapon had no arms at all. Nobody noticed while the uploaded
      models were loading fine — but the moment a .glb 404s or the load times out
@@ -3717,7 +3874,7 @@ function buildWeapon(type) {
      on it. The procedural gun is modelled at the same scale the built-in arm
      positions were tuned for, so it takes them unmodified. */
   if (!m.userData.arms) {
-    const arms = loadedArmsGLB ? buildUploadedArms() : buildArms();
+    const arms = loadedArmsGLB ? buildUploadedArms(mb) : buildArms();
     m.add(arms);
     m.userData.arms = arms;
   }
@@ -5808,6 +5965,12 @@ function updateCamera(dt) {
     gunGroup.rotation.copy(camera.rotation);
     if (!scoped) {
       gunGroup.rotation.x += Math.sin(t*1.1)*0.006 - kick*0.35 + rlrot;
+      /* Turn the gun a few degrees off the line of sight while hip-firing. Dead
+         square to the camera a weapon is end-on: you see the stock and a dot of
+         muzzle, and now that the hands are actually gripping it they cover even
+         that. Every shooter cheats this angle so you can see what you carry.
+         Aiming still lines the sights up straight, because that view is scoped. */
+      gunGroup.rotation.y += 0.11;
     }
   }
   skyMesh.position.set(player.x, 0, player.z);
