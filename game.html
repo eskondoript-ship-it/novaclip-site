@@ -293,6 +293,20 @@ body.driving #ammo { display: none; }
          background: rgba(255,255,255,0.04); font-size: 0.76rem; cursor: pointer; }
 .gsgun.on { border-color: #ffd24a; color: #ffd24a; background: rgba(255,210,74,0.12); }
 .gsgun .cnt { opacity: 0.55; font-size: 0.68rem; margin-left: 5px; }
+/* a gun you are actually taking in wears its slot number, so the row says what
+   you carry as well as what is open on the bench */
+.gsgun.carried { border-left: 3px solid #7CFFB2; }
+.gsgun .eq { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px;
+             margin-left: 6px; border-radius: 4px; background: #7CFFB2; color: #04121a;
+             font-size: 0.62rem; font-weight: 800; }
+.gsequip { width: 100%; margin-bottom: 14px; padding: 10px 14px; border-radius: 9px; cursor: pointer;
+           border: 1px solid rgba(124,255,178,0.45); background: rgba(124,255,178,0.10); color: #7CFFB2;
+           font-family: inherit; font-size: 0.74rem; font-weight: 800; letter-spacing: 1.5px;
+           clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+           transition: background .15s, border-color .15s; }
+.gsequip:hover:not(:disabled) { background: rgba(124,255,178,0.2); }
+.gsequip.on { border-color: rgba(255,210,74,0.5); background: rgba(255,210,74,0.10); color: #ffd24a; }
+.gsequip:disabled { opacity: 0.4; cursor: default; }
 
 /* the technical readout */
 .gsstats { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
@@ -573,7 +587,7 @@ body.driving #ammo { display: none; }
 <div id='safebadge'>SAFE ZONE — <span id='safetime'>60</span>s</div>
 <div id='shopprompt'>Press E to open the shop</div>
 <button id='shopbtn'>SHOP <span class='k'>E</span></button>
-<div id='viewTag'>v90 · 1/2: your two weapons · N: weapon stats · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
+<div id='viewTag'>v91 · 1/2: your two weapons · N: weapon stats · Scroll: switch · R: reload (uses your reserve) · Y/U: turn a stuck weapon · G/B: equip nade, LMB: throw · SPACE: jump · R: reload · C/X: C4 · T: emote · E: shop · V: view · F: tank · Q: strike · M: weather · CTRL+A: music</div>
 
 <div id='shopui'>
   <div class='shopbox'>
@@ -660,6 +674,7 @@ body.driving #ammo { display: none; }
       <div class='gsbody'>
         <div class='gsleft'>
           <div class='gsguns' id='gsguns'></div>
+          <button class='gsequip' id='gsequip' type='button'></button>
           <div class='gsstats' id='gsstats'></div>
         </div>
         <div class='gsright' id='gsslots'></div>
@@ -806,7 +821,12 @@ const EXTRA_WEAPONS = {
    own mesh instead of sharing the rifle. Same fields, same auto-orientation.
    (The RPG and the knife keep their CUSTOM_MODELS.rpg / .knife slots.) */
 const BASE_WEAPON_ART = {
-  smg: { file: 'vector_smg.glb', scale: 0.95, autoOrient: true, rotX: 0, rotY: 0, rotZ: 0 }
+  /* rotY 180: the auto-orienter works out which axis the bore runs along, but
+     it has to guess which END is the muzzle from the taper — and on a Vector it
+     guessed wrong. The body is boxy, the folding stock is as thin as the
+     suppressor, so it picked the stock. The gun was carried backwards and fired
+     out of the buttplate. This turns it end for end. */
+  smg: { file: 'vector_smg.glb', scale: 0.95, autoOrient: true, rotX: 0, rotY: 180, rotZ: 0 }
 };
 /* One lookup for "what does this weapon look like", so the loader and the fitter
    never disagree about where a model comes from. */
@@ -1000,6 +1020,15 @@ function saveAttach() {
   for (const w in ATTACH_ON) if (Object.keys(ATTACH_ON[w]).length) lean[w] = ATTACH_ON[w];
   localStorage.setItem('nc_attach', JSON.stringify(lean));
   localStorage.setItem('nc_attown', JSON.stringify(ATTACH_OWNED));
+}
+/* Does this weapon have a MAGNIFIED optic on it?
+   Not the same question as WEAPONS[w].scope, which is only "can this thing be
+   aimed" — and that is true of everything except the knife. Leaning out of a
+   truck window tested the wrong one, so a black telescopic ring dropped over
+   the screen for an assault rifle with iron sights. A ring is a scope you look
+   THROUGH; anything else just comes up to the eye. */
+function magnified(w) {
+  return w === 'dmr' || fittedIds(w).includes('scope4x');
 }
 function attachOf(w) { return ATTACH_ON[w] || (ATTACH_ON[w] = {}); }
 function fittedIds(w) {
@@ -1762,14 +1791,50 @@ function renderGunsmith() {
   if (!gsWeap || !WEAPONS[gsWeap]) gsWeap = validLoadout()[0] || 'sniper';
   document.getElementById('gspoints').textContent = pts();
 
-  // ---- which gun ----
+  /* ---- which gun ----
+     Two different things live in this row and they used to be one. Clicking a
+     gun opens it on the bench, which is not the same as taking it into the
+     match — so you could build a shotgun here, close the panel, and still
+     deploy with the rifle, because what you carry was only settable from the
+     lobby strip behind this one. Every gun now shows whether it is in the
+     loadout, and the button under the row puts the open gun in or takes it
+     out, without leaving the bench. */
+  const carried = validLoadout();
   document.getElementById('gsguns').innerHTML = ownedWeapons().map(k => {
     const n = fittedIds(k).length;
-    return '<div class="gsgun' + (k === gsWeap ? ' on' : '') + '" data-g="' + k + '">' + WEAPONS[k].name +
+    return '<div class="gsgun' + (k === gsWeap ? ' on' : '') + (carried.includes(k) ? ' carried' : '') +
+           '" data-g="' + k + '">' + WEAPONS[k].name +
+           (carried.includes(k) ? '<span class="eq">' + (carried.indexOf(k) + 1) + '</span>' : '') +
            (n ? '<span class="cnt">' + n + '/' + ATTACH_SLOTS.length + '</span>' : '') + '</div>';
   }).join('');
   document.querySelectorAll('#gsguns .gsgun').forEach(el =>
     el.onclick = () => { gsWeap = el.dataset.g; gsPreview = null; renderGunsmith(); });
+
+  /* You always deploy with exactly two — validLoadout() back-fills the moment a
+     slot empties — so there is no such thing as dropping a gun, only swapping
+     one out. The button said "TAP TO DROP" first, and dropping silently pulled
+     a default in behind it, which is a worse kind of not-working than the thing
+     it replaced. It names the gun you are about to lose instead. */
+  const on = carried.includes(gsWeap);
+  const eq = document.getElementById('gsequip');
+  if (eq) {
+    const goes = carried[0];
+    eq.className = 'gsequip' + (on ? ' on' : '');
+    eq.textContent = on
+      ? 'SLOT ' + (carried.indexOf(gsWeap) + 1) + ' · CARRYING ' + WEAPONS[gsWeap].name
+      : 'CARRY ' + WEAPONS[gsWeap].name + (goes ? ' — REPLACES ' + WEAPONS[goes].name : '');
+    eq.disabled = on;
+    eq.onclick = () => {
+      if (loadout.includes(gsWeap)) return;
+      loadout.push(gsWeap);
+      while (loadout.length > LOADOUT_SIZE) loadout.shift();   // the oldest pick goes
+      saveLoadout();
+      if (!loadout.includes(curWeap)) curWeap = loadout[0];
+      renderWSel();            // the lobby strip behind the panel agrees
+      renderGunsmith();
+      if (typeof buildLoadoutHUD === 'function') buildLoadoutHUD();
+    };
+  }
 
   // ---- the numbers ----
   const now = statCard(gsWeap);
@@ -3147,7 +3212,12 @@ function makeFighter(color, useGLB, isPlayer) {
         const fin2 = measure(model);
         window.__ncFit = { height: +fin2.sz.y.toFixed(3), foot: +fin2.bb.min.y.toFixed(3), scale: +s.toFixed(3) };
         const vt = document.getElementById('viewTag');
-        if (vt) vt.textContent = 'v89 \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
+        /* The version was hardcoded here as well as in the markup, so bumping
+           the tag only changed half of it and the screen kept reporting the
+           previous build after an update — which makes every "did you paste
+           it?" conversation impossible to settle. Read it off the tag itself. */
+        const ver = (vt && (vt.textContent.match(/^v\d+/) || [])[0]) || 'v90';
+        if (vt) vt.textContent = ver + ' \u00b7 fit: ' + window.__ncFit.height + 'm foot ' + window.__ncFit.foot +
           ' \u00b7 ' + vt.textContent.replace(new RegExp('^v\\d+[^\u00b7]*\u00b7 (fit:[^\u00b7]*\u00b7 )?'), '');
       }
 
@@ -4808,11 +4878,18 @@ document.addEventListener('mousedown', (e) => {
      same press does both, and the scope comes up if the gun has one. */
   if (e.button === 2 && playerTank && playerTank.kind === 'truck') {
     leaningOut = true;
-    if (curStat().scope) { scoped = true; document.getElementById('scope').style.display = 'block'; }
+    /* Leaning out IS aiming, so scoped goes on either way — that is what the
+       accuracy and damage numbers key off. The black ring is separate, and only
+       belongs on a gun you actually look through. */
+    if (curStat().scope) scoped = true;
+    if (magnified(curWeap)) document.getElementById('scope').style.display = 'block';
     return;
   }
-  // no black scope ring any more  the weapon's own sights come up instead
-  if (e.button === 2 && curStat().scope) { scoped = true; }
+  // iron sights and red dots just come up to the eye; a 4x gets the ring
+  if (e.button === 2 && curStat().scope) {
+    scoped = true;
+    if (magnified(curWeap)) document.getElementById('scope').style.display = 'block';
+  }
 });
 document.addEventListener('mouseup', (e) => {
   if (e.button === 0) mouseHeld = false;
