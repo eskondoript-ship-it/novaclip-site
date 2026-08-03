@@ -91,6 +91,17 @@ body.driving #ammo { display: none; }
 #shopbtn .k { background: rgba(0,0,0,0.45); border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; }
 #shopbtn .left { opacity: 0.75; font-weight: 600; font-size: 0.72rem; }
 #shopprompt { position: fixed; top: 54%; left: 50%; transform: translate(-50%,0); z-index: 11; background: rgba(255,210,74,0.18); border: 1px solid #ffd24a; color: #ffd24a; padding: 8px 18px; border-radius: 20px; font-weight: 800; display: none; text-shadow: 0 1px 3px #000; }
+/* ---- site chrome inside the arena ----
+   nova.js brings the points badge and the language/vibe box to every page. The
+   arena already draws its own points, so that badge is a duplicate; and once a
+   match starts nothing belongs on screen that is not the game. The language box
+   stays in the lobby, because otherwise this is the one page a Persian player
+   cannot change the language from. */
+#ncpts { display: none !important; }
+.themewrap { left: 14px !important; top: 14px !important; bottom: auto !important;
+             width: 176px !important; opacity: 0.5; transition: opacity .18s; z-index: 8 !important; }
+.themewrap:hover { opacity: 1; }
+body.ncplaying .themewrap { display: none !important; }
 #viewTag { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 11; font-size: 0.72rem; opacity: 0.7; background: rgba(0,0,0,0.35); padding: 5px 12px; border-radius: 8px; white-space: nowrap; }
 #backLink { position: fixed; top: 14px; left: 14px; z-index: 21; color: #fff; text-decoration: none; background: rgba(0,0,0,0.4); padding: 8px 14px; border-radius: 20px; font-weight: 700; pointer-events: auto; font-size: 0.85rem; }
 #errbox { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 99; background: #a00c; color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; display: none; max-width: 90vw; }
@@ -547,7 +558,7 @@ body.driving #ammo { display: none; }
     </div>
   </div>
 </div>
-<div id='hud'><div id='crosshair'></div></div>
+<div id='hud' dir='ltr'><div id='crosshair'></div></div>
 <div id='scope'></div>
 <div id='tankprompt'></div>
 <div id='weatherTag'>Sunny</div>
@@ -563,7 +574,7 @@ body.driving #ammo { display: none; }
 
 <div class='topbar'>
   <div class='mode'>DOMINATION</div>
-  <div class='sub'>5v5 · Eliminate the enemy team</div>
+  <div class='sub' data-t='g_5v5'>5v5 · Eliminate the enemy team</div>
   <div class='scorewrap'>
     <span class='tm me' id='tmMine'>CT</span>
     <div class='bar'><div id='mebar' style='width:50%;background:#6cc3ff'></div></div>
@@ -628,36 +639,36 @@ body.driving #ammo { display: none; }
 
 <div id='controlsPanel'>
   <div class='cpbox'>
-    <h2>Controls</h2>
+    <h2 data-t='g_controls'>Controls</h2>
     <p class='cphint'>Click a key, then press the new one you want.</p>
     <div id='bindlist'></div>
-    <button class='cpbtn alt' id='bindReset'>Reset to defaults</button>
-    <button class='cpbtn' id='bindClose'>Done</button>
+    <button class='cpbtn alt' id='bindReset' data-t='g_reset'>Reset to defaults</button>
+    <button class='cpbtn' id='bindClose' data-t='g_done'>Done</button>
   </div>
 </div>
 
 <div id='overlay'>
   <div class='mtag'>NovaClip Arcade</div>
   <h1>Strike <span class='c'>Arena</span></h1>
-  <p class='sub'>10 fighters. 5 minutes. Capture kills across a bright city battlefield. Earn NovaClip points and top the board for the MVP bonus.</p>
+  <p class='sub' data-t='g_sub'>10 fighters. 5 minutes. Capture kills across a bright city battlefield. Earn NovaClip points and top the board for the MVP bonus.</p>
 
   <div class='diffgrid'>
-    <div class='diff easy' data-mode='easy'><h3>EASY</h3><small>Chill bots · 2 pts/kill · MVP +10</small></div>
-    <div class='diff med sel' data-mode='medium'><h3>MEDIUM</h3><small>Tough bots · 5 pts/kill · MVP +20</small></div>
-    <div class='diff hard' data-mode='hard'><h3>HARD</h3><small>Deadly bots · 10 pts/kill · MVP +50</small></div>
-    <div class='diff ranked' data-mode='ranked'><h3>RANKED</h3><small>Elite bots · 15 pts/kill · MVP +80</small></div>
+    <div class='diff easy' data-mode='easy'><h3 data-t='g_easy'>EASY</h3><small data-t='g_easy_d'>Chill bots · 2 pts/kill · MVP +10</small></div>
+    <div class='diff med sel' data-mode='medium'><h3 data-t='g_med'>MEDIUM</h3><small data-t='g_med_d'>Tough bots · 5 pts/kill · MVP +20</small></div>
+    <div class='diff hard' data-mode='hard'><h3 data-t='g_hard'>HARD</h3><small data-t='g_hard_d'>Deadly bots · 10 pts/kill · MVP +50</small></div>
+    <div class='diff ranked' data-mode='ranked'><h3 data-t='g_rank'>RANKED</h3><small data-t='g_rank_d'>Elite bots · 15 pts/kill · MVP +80</small></div>
   </div>
 
   <div class='mappick'>
-    <div class='charlabel'>CHOOSE YOUR MAP</div>
+    <div class='charlabel' data-t='g_map'>CHOOSE YOUR MAP</div>
     <div class='mapgrid' id='mapgrid'></div>
   </div>
 
   <div class='loadoutpick'>
-    <div class='ll'>YOUR TWO WEAPONS <span style='opacity:0.6'>(swap with 1 / 2 or the scroll wheel in game)</span></div>
+    <div class='ll'><span data-t='g_two'>YOUR TWO WEAPONS</span> <span style='opacity:0.6' data-t='g_two_d'>(swap with 1 / 2 or the scroll wheel in game)</span></div>
     <div class='wsel' id='wsel'></div>
     <div class='lbnote' id='loadnote' style='text-align:center; margin-top:8px'></div>
-    <button id='gunsmithBtn' class='pillbtn' type='button' style='margin-top:12px'>MODIFICATIONS</button>
+    <button id='gunsmithBtn' class='pillbtn' type='button' style='margin-top:12px' data-t='g_mods'>MODIFICATIONS</button>
   </div>
 
   <!-- ===== GUNSMITH ===== -->
@@ -665,11 +676,11 @@ body.driving #ammo { display: none; }
     <div class='gspanel'>
       <div class='gshead'>
         <div>
-          <div class='gstitle'>MODIFICATIONS</div>
-          <div class='gssub' id='gssub'>Fit attachments. Every one of them trades something away.</div>
+          <div class='gstitle' data-t='g_mods'>MODIFICATIONS</div>
+          <div class='gssub' id='gssub' data-t='g_mods_d'>Fit attachments. Every one of them trades something away.</div>
         </div>
         <div class='gspts'><b id='gspoints'>0</b> pts</div>
-        <button id='gsclose' class='pillbtn' type='button'>Done</button>
+        <button id='gsclose' class='pillbtn' type='button' data-t='g_done'>Done</button>
       </div>
       <div class='gsbody'>
         <div class='gsleft'>
@@ -683,17 +694,17 @@ body.driving #ammo { display: none; }
   </div>
 
   <div class='mappick' id='mproom' style='display:none'>
-    <div class='charlabel'>WHO ARE YOU PLAYING WITH</div>
+    <div class='charlabel' data-t='g_who'>WHO ARE YOU PLAYING WITH</div>
     <div class='mpmodes' id='mpmodes'>
-      <div class='mpmode' data-mm='random'><b>Random players</b><span>Get matched with anyone online, on this map</span></div>
-      <div class='mpmode' data-mm='code'><b>Friends only</b><span>Share a code — nobody else can join</span></div>
-      <div class='mpmode' data-mm='off'><b>Bots only</b><span>Offline practice, no other people</span></div>
+      <div class='mpmode' data-mm='random'><b data-t='g_rand'>Random players</b><span data-t='g_rand_d'>Get matched with anyone online, on this map</span></div>
+      <div class='mpmode' data-mm='code'><b data-t='g_fr'>Friends only</b><span data-t='g_fr_d'>Share a code — nobody else can join</span></div>
+      <div class='mpmode' data-mm='off'><b data-t='g_bots'>Bots only</b><span data-t='g_bots_d'>Offline practice, no other people</span></div>
     </div>
     <div id='mpcodewrap' style='display:none; margin-top:10px'>
       <div style='display:flex; gap:8px; justify-content:center; flex-wrap:wrap'>
         <input id='roomcode' maxlength='14' placeholder='Room code (e.g. NOVA-7K2P)'
                style='padding:9px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:#fff; font:inherit; font-size:0.85rem; width:230px; text-align:center'>
-        <button id='roomrand' class='pillbtn' type='button'>New code</button>
+        <button id='roomrand' class='pillbtn' type='button' data-t='g_newcode'>New code</button>
       </div>
       <div class='lbnote' style='text-align:center; margin-top:8px'>Everyone who types this code and picks the same map lands in your match. Nobody is matched into it by accident.</div>
     </div>
@@ -712,8 +723,8 @@ body.driving #ammo { display: none; }
   </div>
 
   <div class='deployrow'>
-    <button id='startBtn'>Deploy</button>
-    <button id='controlsBtn'>Controls</button>
+    <button id='startBtn' data-t='g_deploy'>Deploy</button>
+    <button id='controlsBtn' data-t='g_controls'>Controls</button>
   </div>
   <div class='keyshint'>WASD move · Mouse aim · Click fire · Right-click scope · Space jump · Shift sprint · R reload · 1/2 or scroll to switch weapon · V first/third person</div>
 </div>
@@ -1991,9 +2002,13 @@ function renderWSel() {
            W.name + (n ? ' <span style="opacity:0.6;font-size:0.72rem">' + n + ' mods</span>' : '') + '</div>';
   }).join('');
   const note = document.getElementById('loadnote');
+  /* Built from a template rather than concatenated English, so it follows the
+     language like the labels around it. {w} is where the two guns go. */
+  const T = (k, fb) => (typeof tr === 'function' && tr(k)) || fb;
   if (note) note.textContent = loadout.length
-    ? 'Carrying: ' + loadout.map(w => WEAPONS[w].name).join('  and  ') + '. Click another to swap it in.'
-    : 'Pick two weapons.';
+    ? T('g_carrying', 'Carrying: {w}. Click another to swap it in.')
+        .replace('{w}', loadout.map(w => WEAPONS[w].name).join(T('g_and', ' and ')))
+    : T('g_pick2', 'Pick two weapons.');
   document.querySelectorAll('#wsel .w').forEach(el => el.onclick = () => {
     const w = el.dataset.w;
     if (!WEAPONS[w] || !WEAPONS[w].owned) return;
@@ -4827,6 +4842,7 @@ document.getElementById('startBtn').onclick = () => {
 };
 
 function startMatch() {
+  document.body.classList.add('ncplaying');
   document.querySelector('.topbar .mode').textContent = MODES[mode].label;
   document.getElementById('tmMine').textContent = TEAM_INFO[PLAYER_TEAM].short;
   document.getElementById('tmTheirs').textContent = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].short;
@@ -7277,5 +7293,12 @@ try {
   console.error(err);
 }
 </script>
+<!-- The arena used to run without nova.js, so the whole lobby stayed in
+     English while every other page switched language — game.html did not have a
+     single translatable string on it. It loads the shared script now, and the
+     CSS above hides the two bits of site chrome the game already provides for
+     itself. Their logSkill() writes the same nc_skills store, and nova's is the
+     stricter of the two, so the later definition winning is the right way round. -->
+<script src='nova.js'></script>
 </body>
 </html>
