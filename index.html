@@ -318,21 +318,36 @@ h2 { animation: riseIn .8s cubic-bezier(.2,.9,.3,1.15) both; }
   will-change: transform;
 }
 .ytf svg { width: 26px; height: 26px; display: block; }
+/* Two paths, not one. The first version was a single up-and-down between two
+   keyframes: measured, it moved 6-18px in three seconds in a dead straight
+   line, which reads as a twitch rather than as floating. A four-point loop with
+   a horizontal component drifts instead — and giving half the tiles the mirror
+   path stops six squares rising and falling as one. Still slow, still small:
+   the biggest excursion is 26px on a 62px tile. */
 @keyframes ytdrift {
-  0%, 100% { transform: translate3d(0,0,0) rotate(0deg); }
-  50%      { transform: translate3d(0,-22px,0) rotate(3deg); }
+  0%, 100% { transform: translate3d(0, 0, 0)        rotate(0deg); }
+  25%      { transform: translate3d(9px, -14px, 0)   rotate(2deg); }
+  50%      { transform: translate3d(2px, -26px, 0)   rotate(-1.5deg); }
+  75%      { transform: translate3d(-8px, -12px, 0)  rotate(-3deg); }
 }
+@keyframes ytdrift2 {
+  0%, 100% { transform: translate3d(0, 0, 0)        rotate(0deg); }
+  25%      { transform: translate3d(-10px, -11px, 0) rotate(-2.5deg); }
+  50%      { transform: translate3d(-3px, -24px, 0)  rotate(1deg); }
+  75%      { transform: translate3d(11px, -13px, 0)  rotate(3deg); }
+}
+.ytf:nth-child(even) { animation-name: ytdrift2; }
 /* Placed AROUND the text, not under it. The first pass scattered them evenly
    and one landed behind the R of "Run" and another under the buttons — the
    headline still won on z-index, but a tile half-hidden behind a letter just
    looks like a mistake. The copy occupies roughly x 21-59% / y 20-56%, so
    these live outside that box. */
-.ytf:nth-child(1) { top: 8%;  left: 10%; animation-duration: 11s; animation-delay: -1s; }
-.ytf:nth-child(2) { top: 12%; left: 66%; animation-duration: 14s; animation-delay: -4s; width: 50px; height: 50px; border-radius: 15px; }
-.ytf:nth-child(3) { top: 40%; left: 86%; animation-duration: 9s;  animation-delay: -6s; width: 72px; height: 72px; border-radius: 22px; }
-.ytf:nth-child(4) { top: 90%; left: 5%;  animation-duration: 13s; animation-delay: -2s; width: 46px; height: 46px; border-radius: 14px; opacity: .75; }
-.ytf:nth-child(5) { top: 66%; left: 72%; animation-duration: 10s; animation-delay: -7s; opacity: .9; }
-.ytf:nth-child(6) { top: 26%; left: 92%; animation-duration: 15s; animation-delay: -3s; width: 40px; height: 40px; border-radius: 12px; opacity: .55; }
+.ytf:nth-child(1) { top: 8%;  left: 10%; animation-duration: 9s; animation-delay: -1s; }
+.ytf:nth-child(2) { top: 12%; left: 66%; animation-duration: 12s; animation-delay: -4s; width: 50px; height: 50px; border-radius: 15px; }
+.ytf:nth-child(3) { top: 40%; left: 86%; animation-duration: 8s;  animation-delay: -6s; width: 72px; height: 72px; border-radius: 22px; }
+.ytf:nth-child(4) { top: 90%; left: 5%;  animation-duration: 11s; animation-delay: -2s; width: 46px; height: 46px; border-radius: 14px; opacity: .75; }
+.ytf:nth-child(5) { top: 66%; left: 72%; animation-duration: 8.5s; animation-delay: -7s; opacity: .9; }
+.ytf:nth-child(6) { top: 26%; left: 92%; animation-duration: 13s; animation-delay: -3s; width: 40px; height: 40px; border-radius: 12px; opacity: .55; }
 .ytf svg .yt-body { fill: #FF0033; filter: drop-shadow(0 0 7px rgba(255,0,51,0.55)); }
 .ytf svg .yt-play { fill: #fff; }
 /* on a phone the hero text fills the width, so the ones that would sit under it go */
