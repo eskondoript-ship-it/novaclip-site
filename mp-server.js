@@ -71,7 +71,13 @@ const num = (v, lo, hi) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : 0;
 };
+const DEV_API_KEY = "novaclip-dev-secret";
+const url = new URL(req.url);
+const auth = req.headers.get("Authorization");
 
+if (auth !== `Bearer ${DEV_API_KEY}`) {
+  return new Response("Unauthorized", { status: 401 });
+}
 function send(ws, obj) {
   try { if (ws.readyState === 1) ws.send(JSON.stringify(obj)); } catch (e) { /* gone */ }
 }
