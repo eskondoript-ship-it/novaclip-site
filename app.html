@@ -242,6 +242,18 @@ function show(html) { const box = document.getElementById('toolout'); box.style.
 function ytProvider() {
   const provider = new GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
+  /* The Data API returns totals — subscribers, views, likes. Everything that
+     makes an analytics page worth opening (watch time, average view duration,
+     click-through rate, where viewers come from, who they are, what they earn)
+     lives in the YouTube ANALYTICS API, which is a different service and needs
+     its own scope. Without these two the dashboard can only ever show four
+     numbers and a list of titles.
+
+     Monetary is asked for separately because it is the one a family may not
+     want to grant; the revenue panel handles being refused and says so rather
+     than showing a zero that looks like "you earned nothing". */
+  provider.addScope('https://www.googleapis.com/auth/yt-analytics.readonly');
+  provider.addScope('https://www.googleapis.com/auth/yt-analytics-monetary.readonly');
   return provider;
 }
 
