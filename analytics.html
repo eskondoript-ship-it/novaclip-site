@@ -170,6 +170,23 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
 .compcount button:hover { color:#fff; }
 .compcount button.on { background:linear-gradient(90deg,#00F0FF,#4CC9F0); color:#04121a; }
 .compcount.off { opacity:.35; pointer-events:none; }
+
+/* ---- real performance block ---- */
+.perfbox { border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px 18px 6px;
+           background: rgba(255,255,255,0.03); margin-bottom: 18px; }
+.perfbox .rvhead h4 small { font-weight: 500; color: #7E8AA6; font-size: 0.78rem; margin-left: 8px; }
+.pfp { padding: 5px 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15);
+       background: rgba(255,255,255,0.04); color: #cfe0f5; font: inherit; font-size: 0.76rem;
+       font-weight: 700; cursor: pointer; }
+.pfp.on { border-color: #00F0FF; color: #00F0FF; background: rgba(0,240,255,0.12); }
+.perfnote { font-size: 0.82rem; line-height: 1.65; color: #9fb0cc; margin: 4px 0 12px; }
+.perfnote.warn { color: #ffd24a; }
+.perfnote code { background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px; }
+.moneybox { margin: 6px 0 14px; padding: 13px 15px; border-radius: 12px;
+            border: 1px solid rgba(182,255,60,0.25); background: rgba(182,255,60,0.06);
+            font-size: 0.86rem; color: #cfe0ff; line-height: 1.65; }
+.moneybox b { color: #B6FF3C; font-size: 1.15rem; }
+.moneybox.off { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: #9fb0cc; }
 </style>
 </head>
 <body>
@@ -219,6 +236,40 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
       <div class='chartcard wide'><h4>Recent uploads — view trend</h4><canvas id='c_trend' height='90'></canvas></div>
       <div class='chartcard'><h4>Overall profile</h4><canvas id='c_radar' height='240'></canvas></div>
       <div class='chartcard'><h4>Engagement mix (you)</h4><canvas id='c_dough' height='240'></canvas></div>
+    </div>
+
+
+    <!-- ===== REAL PERFORMANCE (YouTube Analytics API) =====
+         Everything above this line comes from the Data API, which returns
+         totals: subscribers, views, likes. That is a scoreboard, not analytics.
+         Watch time, how long people actually stay, click-through rate, where
+         viewers come from, who they are and what the channel earns all live in
+         the YouTube Analytics API — a different service with its own scope.
+
+         The uploaded design showed all of this too, but from a constants file:
+         three invented channels, 284,500 dollars of revenue, and series built
+         out of Math.sin() and Math.random(). These panels show the same things
+         from the channel that is actually signed in, and when a number cannot
+         be had they say why instead of printing a zero. -->
+    <div class='perfbox' id='perfbox'>
+      <div class='rvhead'>
+        <h4>Performance <small id='perfRange'>last 28 days</small></h4>
+        <div class='rvperiods'>
+          <button class='pfp on' data-d='28'>28 days</button>
+          <button class='pfp' data-d='90'>90 days</button>
+          <button class='pfp' data-d='365'>Year</button>
+        </div>
+      </div>
+      <div class='perfnote' id='perfNote'></div>
+      <div class='kpis' id='perfKpis'></div>
+      <div class='chartgrid'>
+        <div class='chartcard wide'><h4>Views &amp; watch time by day</h4><canvas id='p_daily' height='110'></canvas></div>
+        <div class='chartcard'><h4>Where viewers come from</h4><canvas id='p_traffic' height='210'></canvas></div>
+        <div class='chartcard'><h4>Top countries</h4><canvas id='p_geo' height='210'></canvas></div>
+        <div class='chartcard'><h4>Who is watching</h4><canvas id='p_demo' height='210'></canvas></div>
+        <div class='chartcard'><h4>Subscribers gained &amp; lost</h4><canvas id='p_subs' height='210'></canvas></div>
+      </div>
+      <div class='moneybox' id='moneyBox'></div>
     </div>
 
     <!-- The channel review. renderReview() has always written into rvTitle and
@@ -306,12 +357,212 @@ async function enterDash() {
   } catch (e) { console.warn('upload history unavailable', e); }
   renderReview();
   renderRatings();
+  renderPerformance();
+  document.querySelectorAll('.pfp').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.pfp').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    perfDays = parseInt(b.dataset.d, 10);
+    renderPerformance();
+  });
   document.querySelectorAll('.rvp').forEach(b => b.onclick = () => {
     document.querySelectorAll('.rvp').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
     periodDays = parseInt(b.dataset.d, 10);
     renderReview();
   });
+}
+
+
+/* ============================================================================
+   THE YOUTUBE ANALYTICS API
+   ============================================================================
+   A different service from the Data API used above: youtubeanalytics.googleapis
+   .com rather than googleapis.com/youtube/v3, its own scopes, and it answers
+   with rows rather than objects. It is the only place the numbers that matter
+   actually live — the Data API cannot tell you how long anyone watched.
+
+   Every call here can fail in a way the user can act on, so each one is caught
+   and reported: a missing scope means reconnect, an empty result means the
+   channel has no data for that window yet, and a refused monetary scope means
+   exactly that rather than earnings of zero. */
+const YTA = 'https://youtubeanalytics.googleapis.com/v2/reports';
+let perfDays = 28, perfCharts = {};
+
+function ymd(d) { return d.toISOString().slice(0, 10); }
+function perfRange(days) {
+  const end = new Date(Date.now() - 86400000);          // yesterday: today is always partial
+  const start = new Date(end.getTime() - (days - 1) * 86400000);
+  return { start: ymd(start), end: ymd(end) };
+}
+
+async function yta(opts) {
+  const r = perfRange(perfDays);
+  const q = new URLSearchParams(Object.assign({
+    ids: 'channel==MINE', startDate: r.start, endDate: r.end
+  }, opts));
+  const res = await fetch(YTA + '?' + q.toString(), { headers: { Authorization: 'Bearer ' + ytToken } });
+  const j = await res.json();
+  if (j.error) { const e = new Error(j.error.message || 'Analytics request failed'); e.code = j.error.code; throw e; }
+  return j;
+}
+
+const nfmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : String(Math.round(n));
+function hms(sec) {
+  sec = Math.round(sec || 0);
+  const m = Math.floor(sec / 60), s2 = sec % 60;
+  return m + ':' + String(s2).padStart(2, '0');
+}
+
+function killPerfCharts() {
+  for (const k in perfCharts) { try { perfCharts[k].destroy(); } catch (e) {} }
+  perfCharts = {};
+}
+
+/* One bar/line helper so five panels do not each carry their own Chart.js
+   boilerplate — and so they all look like the same dashboard. */
+function perfChart(id, type, labels, datasets, opts) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  perfCharts[id] = new Chart(el.getContext('2d'), {
+    type: type,
+    data: { labels: labels, datasets: datasets },
+    options: Object.assign({
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: datasets.length > 1, labels: { color: '#9fb0cc', boxWidth: 10, font: { size: 10 } } } },
+      scales: {
+        x: { ticks: { color: '#7E8AA6', font: { size: 9 }, maxRotation: 0, autoSkip: true }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#7E8AA6', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+      }
+    }, opts || {})
+  });
+}
+
+function perfSay(msg, warn) {
+  const n = document.getElementById('perfNote');
+  if (!n) return;
+  n.className = 'perfnote' + (warn ? ' warn' : '');
+  n.innerHTML = msg;
+}
+
+async function renderPerformance() {
+  const box = document.getElementById('perfbox');
+  if (!box || typeof Chart === 'undefined') return;
+  document.getElementById('perfRange').textContent = 'last ' + perfDays + ' days';
+  killPerfCharts();
+  perfSay('Loading your performance…');
+
+  /* ---- the headline numbers ---- */
+  let totals = null;
+  try {
+    const j = await yta({ metrics: 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained,subscribersLost' });
+    totals = (j.rows && j.rows[0]) || null;
+  } catch (e) {
+    /* 403 here is almost always the scope: the account connected before this
+       page asked for yt-analytics.readonly, so the old token cannot see any of
+       it. Telling them to reconnect is the fix; "an error occurred" is not. */
+    const scope = e.code === 403 || /scope|permission|insufficient/i.test(e.message || '');
+    perfSay(scope
+      ? '<b>This section needs one more permission.</b> Your connection was made before NovaClip asked for analytics access. ' +
+        'Go to <a href="app.html" style="color:#00F0FF">Studio</a>, disconnect and connect again — the Google screen will ask for ' +
+        '“View YouTube Analytics reports”. Everything above still works without it.'
+      : 'YouTube would not return your analytics: ' + String(e.message).replace(/</g, '&lt;'), true);
+    document.getElementById('perfKpis').innerHTML = '';
+    document.getElementById('moneyBox').innerHTML = '';
+    return;
+  }
+
+  if (!totals || !totals[0]) {
+    perfSay('No views in the last ' + perfDays + ' days, so there is nothing to chart yet. Upload something and come back.', true);
+    document.getElementById('perfKpis').innerHTML = '';
+    return;
+  }
+  perfSay('Straight from your channel, for the ' + perfDays + ' days ending yesterday. Today is left out because it is still counting.');
+
+  const [views, mins, avgDur, avgPct, gained, lost] = totals;
+  document.getElementById('perfKpis').innerHTML =
+    kpi('Views', nfmt(views)) +
+    kpi('Watch time', nfmt(Math.round(mins / 60)) + ' h') +
+    kpi('Avg view', hms(avgDur)) +
+    kpi('Avg % watched', (avgPct || 0).toFixed(1) + '%') +
+    kpi('Subs gained', '+' + nfmt(gained)) +
+    kpi('Net subs', (gained - lost >= 0 ? '+' : '') + nfmt(gained - lost));
+
+  /* ---- day by day ---- */
+  try {
+    const j = await yta({ metrics: 'views,estimatedMinutesWatched', dimensions: 'day', sort: 'day' });
+    const rows = j.rows || [];
+    perfChart('p_daily', 'line', rows.map(r => r[0].slice(5)), [
+      { label: 'Views', data: rows.map(r => r[1]), borderColor: '#00F0FF', backgroundColor: 'rgba(0,240,255,0.12)', fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2 },
+      { label: 'Watch time (min)', data: rows.map(r => r[2]), borderColor: '#FF2E97', backgroundColor: 'rgba(255,46,151,0.10)', fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2 }
+    ]);
+  } catch (e) { console.warn('daily series', e); }
+
+  /* ---- traffic sources ---- */
+  try {
+    const j = await yta({ metrics: 'views', dimensions: 'insightTrafficSourceType', sort: '-views', maxResults: 8 });
+    const rows = j.rows || [];
+    const pretty = { YT_SEARCH: 'YouTube search', SUGGESTED_VIDEO: 'Suggested', BROWSE: 'Browse / home',
+                     PLAYLIST: 'Playlists', EXT_URL: 'Outside YouTube', CHANNEL: 'Your channel page',
+                     NOTIFICATION: 'Notifications', SHORTS: 'Shorts feed', NO_LINK_OTHER: 'Direct / other' };
+    perfChart('p_traffic', 'bar', rows.map(r => pretty[r[0]] || r[0]),
+      [{ data: rows.map(r => r[1]), backgroundColor: '#00F0FF', borderRadius: 5 }], { indexAxis: 'y' });
+  } catch (e) { console.warn('traffic', e); }
+
+  /* ---- geography ---- */
+  try {
+    const j = await yta({ metrics: 'views', dimensions: 'country', sort: '-views', maxResults: 8 });
+    const rows = j.rows || [];
+    const names = (typeof Intl !== 'undefined' && Intl.DisplayNames) ? new Intl.DisplayNames([lang ? lang() : 'en'], { type: 'region' }) : null;
+    perfChart('p_geo', 'bar', rows.map(r => { try { return (names && names.of(r[0])) || r[0]; } catch (x) { return r[0]; } }),
+      [{ data: rows.map(r => r[1]), backgroundColor: '#B6FF3C', borderRadius: 5 }], { indexAxis: 'y' });
+  } catch (e) { console.warn('geo', e); }
+
+  /* ---- who is watching ---- */
+  try {
+    const j = await yta({ metrics: 'viewerPercentage', dimensions: 'ageGroup,gender', sort: 'ageGroup' });
+    const rows = j.rows || [];
+    const ages = [...new Set(rows.map(r => r[0]))].sort();
+    const pick = g => ages.map(a => { const hit = rows.find(r => r[0] === a && r[1] === g); return hit ? hit[2] : 0; });
+    perfChart('p_demo', 'bar', ages.map(a => a.replace('age', '')), [
+      { label: 'Female', data: pick('female'), backgroundColor: '#FF2E97', borderRadius: 4 },
+      { label: 'Male', data: pick('male'), backgroundColor: '#00F0FF', borderRadius: 4 }
+    ], { scales: { x: { stacked: true, ticks: { color: '#7E8AA6', font: { size: 9 } }, grid: { display: false } },
+                   y: { stacked: true, ticks: { color: '#7E8AA6', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } } } });
+  } catch (e) { console.warn('demographics', e); }
+
+  /* ---- subscribers in and out ---- */
+  try {
+    const j = await yta({ metrics: 'subscribersGained,subscribersLost', dimensions: 'day', sort: 'day' });
+    const rows = j.rows || [];
+    perfChart('p_subs', 'bar', rows.map(r => r[0].slice(5)), [
+      { label: 'Gained', data: rows.map(r => r[1]), backgroundColor: '#B6FF3C', borderRadius: 3 },
+      { label: 'Lost', data: rows.map(r => -r[2]), backgroundColor: '#ff6b6b', borderRadius: 3 }
+    ], { scales: { x: { stacked: true, ticks: { color: '#7E8AA6', font: { size: 9 }, maxRotation: 0, autoSkip: true }, grid: { display: false } },
+                   y: { stacked: true, ticks: { color: '#7E8AA6', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } } } });
+  } catch (e) { console.warn('subs series', e); }
+
+  /* ---- money ----
+     The one number a fabricated dashboard is most tempting to invent, so it is
+     the one to be strictest about. Three honest outcomes: a real figure, "not
+     monetised yet", or "you did not grant that permission". Never a zero. */
+  const money = document.getElementById('moneyBox');
+  try {
+    const j = await yta({ metrics: 'estimatedRevenue,estimatedAdRevenue,cpm' });
+    const r = (j.rows && j.rows[0]) || [0, 0, 0];
+    money.className = 'moneybox';
+    money.innerHTML = r[0] > 0
+      ? 'Estimated revenue over these ' + perfDays + ' days: <b>$' + r[0].toFixed(2) + '</b>' +
+        (r[2] ? ' &nbsp;·&nbsp; CPM $' + r[2].toFixed(2) : '') +
+        '<br><span style="color:#7E8AA6;font-size:0.8rem">YouTube\'s own estimate, before their share and before tax.</span>'
+      : 'No revenue in this period. That is normal until a channel is in the YouTube Partner Programme — ' +
+        'you need 1,000 subscribers and 4,000 watch hours (or 10M Shorts views) to apply.';
+  } catch (e) {
+    money.className = 'moneybox off';
+    money.innerHTML = /scope|permission|insufficient|forbidden/i.test(e.message || '') || e.code === 403
+      ? 'Earnings are hidden because the money permission was not granted. That is a fine choice — reconnect in ' +
+        '<a href="app.html" style="color:#00F0FF">Studio</a> and tick the revenue box if you want it here.'
+      : 'Earnings unavailable: ' + String(e.message).replace(/</g, '&lt;');
+  }
 }
 
 async function getCompetitors() {
