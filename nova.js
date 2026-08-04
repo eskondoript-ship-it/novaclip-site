@@ -120,6 +120,10 @@ const T = {
      this one stayed in English, because game.html had not a single data-t on
      it. These are the strings you actually read before deploying. */
   g_sub: { en:"10 fighters. 5 minutes. Capture kills across a bright city battlefield. Earn NovaClip points and top the board for the MVP bonus.", zh:"10名战士。5分钟。在明亮的城市战场上抢夺击杀。赚取 NovaClip 积分，登顶榜单获得 MVP 奖励。", hi:"10 लड़ाके। 5 मिनट। चमकीले शहरी युद्धक्षेत्र में किल्स बटोरें। NovaClip पॉइंट कमाएँ और MVP बोनस के लिए बोर्ड पर शीर्ष पर रहें।", es:"10 luchadores. 5 minutos. Consigue bajas en un campo de batalla urbano. Gana puntos NovaClip y lidera la tabla para el bono MVP.", ar:"10 مقاتلين. 5 دقائق. احصد النقاط في ساحة معركة مدينية مضيئة. اكسب نقاط NovaClip وتصدَّر اللوحة للحصول على مكافأة أفضل لاعب.", fr:"10 combattants. 5 minutes. Enchaîne les éliminations sur un champ de bataille urbain. Gagne des points NovaClip et domine le classement pour le bonus MVP.", bn:"১০ জন যোদ্ধা। ৫ মিনিট। উজ্জ্বল শহুরে যুদ্ধক্ষেত্রে কিল সংগ্রহ করুন। NovaClip পয়েন্ট অর্জন করুন এবং MVP বোনাসের জন্য বোর্ডে শীর্ষে থাকুন।", pt:"10 lutadores. 5 minutos. Consegue abates num campo de batalha urbano. Ganha pontos NovaClip e lidera a tabela para o bónus MVP.", ru:"10 бойцов. 5 минут. Набирайте убийства на светлом городском поле боя. Зарабатывайте очки NovaClip и возглавьте таблицу ради бонуса MVP.", ur:"10 لڑاکے۔ 5 منٹ۔ روشن شہری میدانِ جنگ میں کِلز حاصل کریں۔ NovaClip پوائنٹس کمائیں اور MVP بونس کے لیے بورڈ پر سرِفہرست آئیں۔", id:"10 petarung. 5 menit. Kumpulkan kill di medan perang kota yang terang. Raih poin NovaClip dan puncaki papan untuk bonus MVP.", de:"10 Kämpfer. 5 Minuten. Sammle Kills auf einem hellen Stadt-Schlachtfeld. Verdiene NovaClip-Punkte und führe die Tabelle für den MVP-Bonus an.", ja:"10人の戦士。5分間。明るい都市の戦場でキルを稼ごう。NovaClipポイントを獲得し、ボードの首位でMVPボーナスを狙え。", tr:"10 savaşçı. 5 dakika. Aydınlık şehir savaş alanında öldürme topla. NovaClip puanı kazan ve MVP bonusu için tabloda zirveye çık.", ko:"10명의 전사. 5분. 밝은 도시 전장에서 킬을 쓸어 담으세요. NovaClip 포인트를 얻고 보드 1위로 MVP 보너스를 받으세요.", fa:"۱۰ مبارز. ۵ دقیقه. در میدان نبرد شهریِ روشن کیل بگیر. امتیاز NovaClip بگیر و برای پاداش بهترین بازیکن صدرنشین شو.", uk:"10 бійців. 5 хвилин. Збирайте вбивства на світлому міському полі бою. Заробляйте бали NovaClip і очолюйте таблицю заради бонусу MVP.", it:"10 combattenti. 5 minuti. Colleziona uccisioni in un campo di battaglia urbano. Guadagna punti NovaClip e domina la classifica per il bonus MVP.", pl:"10 wojowników. 5 minut. Zbieraj zabójstwa na jasnym miejskim polu bitwy. Zdobywaj punkty NovaClip i prowadź w tabeli po bonus MVP.", vi:"10 chiến binh. 5 phút. Săn hạ gục trên chiến trường thành phố rực sáng. Kiếm điểm NovaClip và dẫn đầu bảng để nhận thưởng MVP." },
+  ai_hi: { en:"Hey! Ask me anything about growing your channel.", zh:"嘿！关于频道成长的任何问题都可以问我。", hi:"हे! अपने चैनल को बढ़ाने के बारे में कुछ भी पूछो।", es:"¡Hola! Pregúntame lo que sea sobre hacer crecer tu canal.", ar:"أهلًا! اسألني أي شيء عن تنمية قناتك.", fr:"Salut ! Demande-moi ce que tu veux sur la croissance de ta chaîne.", bn:"হেই! আপনার চ্যানেল বড় করা নিয়ে যা খুশি জিজ্ঞাসা করুন।", pt:"Olá! Pergunta-me o que quiseres sobre fazer crescer o teu canal.", ru:"Привет! Спрашивай что угодно о росте канала.", ur:"ہیلو! اپنے چینل کو بڑھانے کے بارے میں کچھ بھی پوچھیں۔", id:"Hai! Tanya apa saja soal mengembangkan channel-mu.", de:"Hey! Frag mich alles zum Wachstum deines Kanals.", ja:"やあ！チャンネルを伸ばすことなら何でも聞いてね。", tr:"Selam! Kanalını büyütmekle ilgili her şeyi sorabilirsin.", ko:"안녕! 채널 성장에 대해 뭐든 물어보세요.", fa:"سلام! هرچی درباره‌ی رشد کانالت می‌خوای بپرس.", uk:"Привіт! Питай що завгодно про зростання каналу.", it:"Ciao! Chiedimi qualsiasi cosa su come far crescere il canale.", pl:"Hej! Pytaj o cokolwiek na temat rozwoju kanału.", vi:"Chào! Hỏi mình bất cứ điều gì về việc phát triển kênh." },
+  ai_sub: { en:"Ask about titles, thumbnails, ideas — anything.", zh:"标题、缩略图、创意——什么都可以问。", hi:"टाइटल, थंबनेल, आइडिया — कुछ भी पूछो।", es:"Pregunta sobre títulos, miniaturas, ideas: lo que sea.", ar:"اسأل عن العناوين والصور المصغّرة والأفكار — أي شيء.", fr:"Titres, miniatures, idées — pose n'importe quelle question.", bn:"টাইটেল, থাম্বনেইল, আইডিয়া — যা খুশি জিজ্ঞাসা করুন।", pt:"Pergunta sobre títulos, miniaturas, ideias — o que quiseres.", ru:"Спрашивай про заголовки, обложки, идеи — что угодно.", ur:"ٹائٹلز، تھمب نیلز، آئیڈیاز — کچھ بھی پوچھیں۔", id:"Tanya soal judul, thumbnail, ide — apa saja.", de:"Frag nach Titeln, Thumbnails, Ideen — was du willst.", ja:"タイトル、サムネ、アイデア — なんでもどうぞ。", tr:"Başlıklar, kapak görselleri, fikirler — ne istersen sor.", ko:"제목, 썸네일, 아이디어 — 뭐든 물어보세요.", fa:"درباره‌ی عنوان، تصویر بندانگشتی، ایده — هر چیزی بپرس.", uk:"Питай про заголовки, обкладинки, ідеї — будь-що.", it:"Chiedi di titoli, miniature, idee — qualsiasi cosa.", pl:"Pytaj o tytuły, miniatury, pomysły — o cokolwiek.", vi:"Hỏi về tiêu đề, ảnh thu nhỏ, ý tưởng — bất cứ thứ gì." },
+  ai_start: { en:"New chat", zh:"新对话", hi:"नई चैट", es:"Nuevo chat", ar:"محادثة جديدة", fr:"Nouvelle discussion", bn:"নতুন চ্যাট", pt:"Nova conversa", ru:"Новый чат", ur:"نئی چیٹ", id:"Obrolan baru", de:"Neuer Chat", ja:"新しいチャット", tr:"Yeni sohbet", ko:"새 채팅", fa:"گفت‌وگوی جدید", uk:"Новий чат", it:"Nuova chat", pl:"Nowy czat", vi:"Trò chuyện mới" },
+  ai_ph: { en:"Ask NovaClip anything…", zh:"向 NovaClip 提问…", hi:"NovaClip से कुछ भी पूछें…", es:"Pregunta lo que sea a NovaClip…", ar:"اسأل NovaClip أي شيء…", fr:"Demande n'importe quoi à NovaClip…", bn:"NovaClip-কে যা খুশি জিজ্ঞাসা করুন…", pt:"Pergunta o que quiseres ao NovaClip…", ru:"Спросите NovaClip о чём угодно…", ur:"NovaClip سے کچھ بھی پوچھیں…", id:"Tanya apa saja ke NovaClip…", de:"Frag NovaClip alles…", ja:"NovaClip に何でも聞いてみて…", tr:"NovaClip'e her şeyi sor…", ko:"NovaClip에게 무엇이든 물어보세요…", fa:"از NovaClip هر چیزی بپرس…", uk:"Запитайте NovaClip про будь-що…", it:"Chiedi qualsiasi cosa a NovaClip…", pl:"Zapytaj NovaClip o cokolwiek…", vi:"Hỏi NovaClip bất cứ điều gì…" },
   g_5v5: { en:"5v5 · Eliminate the enemy team", zh:"5对5 · 消灭敌队", hi:"5v5 · दुश्मन टीम को खत्म करें", es:"5c5 · Elimina al equipo rival", ar:"5 ضد 5 · اقضِ على فريق العدو", fr:"5c5 · Élimine l'équipe adverse", bn:"৫v৫ · শত্রু দলকে নিশ্চিহ্ন করুন", pt:"5v5 · Elimina a equipa inimiga", ru:"5 на 5 · Уничтожьте команду врага", ur:"5 بمقابلہ 5 · دشمن ٹیم کا خاتمہ کریں", id:"5v5 · Habisi tim musuh", de:"5v5 · Schalte das gegnerische Team aus", ja:"5対5 · 敵チームを殲滅", tr:"5v5 · Düşman takımı yok et", ko:"5대5 · 적 팀을 전멸시키세요", fa:"۵ به ۵ · تیم دشمن را از بین ببر", uk:"5 на 5 · Знищіть команду ворога", it:"5v5 · Elimina la squadra nemica", pl:"5 na 5 · Wyeliminuj drużynę wroga", vi:"5v5 · Tiêu diệt đội địch" },
   g_carrying: { en:"Carrying: {w}. Click another to swap it in.", zh:"携带：{w}。点击其他武器进行更换。", hi:"साथ में: {w}। बदलने के लिए दूसरे पर क्लिक करें।", es:"Llevas: {w}. Haz clic en otra para cambiarla.", ar:"تحمل: {w}. انقر على سلاح آخر لتبديله.", fr:"Tu portes : {w}. Clique sur une autre pour l'échanger.", bn:"বহন করছেন: {w}। বদলাতে অন্যটিতে ক্লিক করুন।", pt:"Levas: {w}. Clica noutra para a trocar.", ru:"С собой: {w}. Нажмите на другое, чтобы заменить.", ur:"آپ کے پاس: {w}۔ بدلنے کے لیے دوسرے پر کلک کریں۔", id:"Membawa: {w}. Klik yang lain untuk menukarnya.", de:"Dabei: {w}. Klicke eine andere an, um zu tauschen.", ja:"装備中：{w}。別の武器をクリックで入れ替え。", tr:"Taşıdığın: {w}. Değiştirmek için başkasına tıkla.", ko:"소지 중: {w}. 다른 것을 클릭해 교체하세요.", fa:"همراه داری: {w}. برای تعویض روی یکی دیگر کلیک کن.", uk:"Із собою: {w}. Натисніть іншу, щоб замінити.", it:"Porti: {w}. Clicca un'altra per sostituirla.", pl:"Nosisz: {w}. Kliknij inną, aby ją wymienić.", vi:"Đang mang: {w}. Bấm vũ khí khác để đổi." },
   g_and: { en:" and ", zh:" 和 ", hi:" और ", es:" y ", ar:" و ", fr:" et ", bn:" এবং ", pt:" e ", ru:" и ", ur:" اور ", id:" dan ", de:" und ", ja:" と ", tr:" ve ", ko:" 그리고 ", fa:" و ", uk:" і ", it:" e ", pl:" i ", vi:" và " },
@@ -495,9 +499,148 @@ function ncBrand() {
   bar.insertBefore(a, bar.firstChild);
 }
 
+
+/* ============================================================================
+   THE MINI AI  —  n8n chat widget, site-wide
+   ============================================================================
+   A floating assistant on every page, backed by an n8n workflow. Loaded from
+   here rather than pasted into nine files, and it brings three things the bare
+   two-line embed does not:
+
+   IT COUNTS AS AN AI CHAT. parent.html reads nc_history to show a parent how
+   much AI their child used, and ai.html has always written to it. A second
+   assistant that skipped it would have left the Family Dashboard reporting "No
+   AI chats yet" while a conversation was happening — a hole in the oversight
+   this site sells, opened by accident.
+
+   IT KEEPS THE 16+ PROMISE. The age gate tells 16 to 18 year olds that their
+   chats are no longer logged for their parent. So for them the transcript is
+   not written. The skill credit still is: that is the learner's own progress,
+   not surveillance, and it is what certificates are counted from.
+
+   IT SPEAKS THE SITE'S LANGUAGE. The chosen language rides along in metadata,
+   so the workflow can answer in Persian to someone reading the site in Persian
+   rather than defaulting to English.
+
+   Hooked by wrapping fetch rather than by watching the DOM: the widget POSTs
+   to the webhook and reads the reply, so that one call is the whole
+   conversation. Reading it from the rendered bubbles would break the first
+   time the package changed a class name.
+   ============================================================================ */
+const NC_AI_WEBHOOK = 'https://amirkondori.app.n8n.cloud/webhook/8777d9a6-8942-47f5-9b57-63f94f37a840/chat';
+
+function ncRecordAIChat(q, a) {
+  if (!q) return;
+  try {
+    // certificates count the reps whatever the age — that is the learner's own record
+    if (typeof logSkill === 'function') logSkill('ai_ask');
+    if (typeof ncControlsRelaxed === 'function' && ncControlsRelaxed()) return;  // 16+: no transcript
+    saveHist('NovaClip Assistant', String(q).slice(0, 300), String(a || '').slice(0, 300));
+  } catch (e) {}
+}
+
+function ncWatchAIChat() {
+  if (window.__ncAIWrapped || typeof window.fetch !== 'function') return;
+  window.__ncAIWrapped = true;
+  const orig = window.fetch;
+  window.fetch = function (input, init) {
+    let url = '';
+    try { url = typeof input === 'string' ? input : (input && input.url) || ''; } catch (e) {}
+    const mine = url.indexOf(NC_AI_WEBHOOK) === 0;
+    let asked = '';
+    if (mine && init && typeof init.body === 'string') {
+      try { asked = (JSON.parse(init.body) || {}).chatInput || ''; } catch (e) {}
+    }
+    const p = orig.apply(this, arguments);
+    if (!mine || !asked) return p;
+    /* clone before reading — a Response body can only be consumed once, and the
+       widget still needs it to draw the reply */
+    return p.then(function (res) {
+      try {
+        res.clone().json()
+          .then(function (j) { ncRecordAIChat(asked, (j && (j.output || j.text || j.message)) || ''); })
+          .catch(function () { ncRecordAIChat(asked, ''); });
+      } catch (e) { ncRecordAIChat(asked, ''); }
+      return res;
+    });
+  };
+}
+
+function ncMiniAI() {
+  if (document.getElementById('ncChatCss')) return;
+  ncWatchAIChat();
+
+  const css = document.createElement('link');
+  css.id = 'ncChatCss'; css.rel = 'stylesheet';
+  css.href = 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css';
+  document.head.appendChild(css);
+
+  /* The widget ships light and square. These pull it into the site's palette
+     and lift it clear of the corners the points badge and the language box
+     already occupy. */
+  const st = document.createElement('style');
+  st.textContent =
+    ':root {' +
+    '  --chat--color-primary: #7209B7; --chat--color-primary-shade-50: #5d0796;' +
+    '  --chat--color-secondary: #00F0FF; --chat--color-white: #EAF2FF;' +
+    '  --chat--color-dark: #05060A; --chat--color-light: #0B0E16;' +
+    '  --chat--color-typing: #7E8AA6;' +
+    '  --chat--toggle--background: linear-gradient(135deg,#FF2E97,#7209B7,#00F0FF);' +
+    '  --chat--toggle--size: 56px;' +
+    '  --chat--window--width: 380px; --chat--window--height: 560px;' +
+    '  --chat--border-radius: 14px;' +
+    '  --chat--header--background: #0B0E16; --chat--header--color: #EAF2FF;' +
+    '  --chat--message--bot--background: rgba(255,255,255,0.05);' +
+    '  --chat--message--bot--color: #EAF2FF;' +
+    '  --chat--message--user--background: #7209B7; --chat--message--user--color: #fff;' +
+    '  --chat--textarea--height: 54px;' +
+    '}' +
+    '#n8n-chat .chat-window-toggle { box-shadow: 0 8px 30px rgba(114,9,183,0.5); }' +
+    /* bottom-right is where the editor keeps the points badge, so sit above it */
+    '#n8n-chat { position: fixed; right: 18px; bottom: 92px; z-index: 996; }' +
+    /* nothing floats over a match in progress */
+    'body.ncplaying #n8n-chat { display: none !important; }' +
+    '@media (max-width: 520px) { :root { --chat--window--width: 100vw; } }';
+  document.head.appendChild(st);
+
+  const host = document.createElement('div');
+  host.id = 'n8n-chat';
+  document.body.appendChild(host);
+
+  const L = (typeof lang === 'function' && lang()) || 'en';
+  import('https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js')
+    .then(function (m) {
+      m.createChat({
+        webhookUrl: NC_AI_WEBHOOK,
+        target: '#n8n-chat',
+        mode: 'window',
+        showWelcomeScreen: false,
+        loadPreviousSession: true,
+        /* the workflow gets to know who it is talking to, so it can answer in
+           the right language and pitch it at the right age */
+        metadata: { language: L, languageName: (LANGS[L] || 'English'), age: (typeof ncAge === 'function' ? ncAge() : 0), site: 'novaclip' },
+        initialMessages: [tr('ai_hi') || 'Hey! Ask me anything about growing your channel.'],
+        i18n: { en: {
+          title: 'NovaClip Assistant',
+          subtitle: tr('ai_sub') || 'Ask about titles, thumbnails, ideas — anything.',
+          footer: '',
+          getStarted: tr('ai_start') || 'New chat',
+          inputPlaceholder: tr('ai_ph') || 'Ask NovaClip anything…'
+        } }
+      });
+    })
+    .catch(function (e) {
+      /* Loaded from a CDN, so a blocked network or an offline device means no
+         widget. Say so in the console rather than leaving a dead corner. */
+      console.warn('NovaClip mini AI could not load (CDN unreachable?)', e);
+      const h = document.getElementById('n8n-chat'); if (h) h.remove();
+    });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   dedupeChrome();
   ncBrand();
+  ncMiniAI();
   const badge = document.createElement('div'); badge.id = 'ncpts'; badge.textContent = getPts() + ' pts'; document.body.appendChild(badge);
   const t = document.createElement('div'); t.id = 'nctoast'; document.body.appendChild(t);
   const lpick = document.getElementById('langpick');
