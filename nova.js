@@ -539,6 +539,93 @@ function ncRecordAIChat(q, a) {
   } catch (e) {}
 }
 
+
+/* ---- WHAT THE ASSISTANT KNOWS ABOUT YOUR CHANNEL ----
+   Without this the assistant is a generic YouTube chatbot: it answers "how do I
+   get more views" the same way for someone with 40 subscribers and someone with
+   40,000, and it cannot tell you whether a video did well because it has never
+   seen one of yours.
+
+   So the connected channel rides along with every message. Not at createChat
+   time — metadata there is captured once, and a session that starts before you
+   connect would stay ignorant for its whole life. It is merged into the request
+   body in the fetch hook instead, so it is current on every send and it starts
+   working the moment you connect in Studio, mid-conversation.
+
+   Cached for 30 minutes because the YouTube API has a daily quota and a chat is
+   many messages. Refreshed in the background, never blocking the widget.
+
+   When there is no connection this sends { connected: false } rather than
+   nothing: the workflow can then say "connect your channel in Studio" instead of
+   guessing at numbers it does not have — the failure mode being avoided is an
+   assistant that invents a subscriber count. */
+const NC_SNAP_TTL = 30 * 60 * 1000;
+
+function ncYTToken() {
+  try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; }
+  catch (e) {}
+  return null;
+}
+
+function ncCachedSnap() {
+  try {
+    const c = JSON.parse(localStorage.getItem('nc_ytsnap') || 'null');
+    if (c && c.at && Date.now() - c.at < NC_SNAP_TTL) return c.data;
+  } catch (e) {}
+  return null;
+}
+
+async function ncChannelSnapshot(force) {
+  const tok = ncYTToken();
+  if (!tok) return { connected: false, why: 'no channel connected in Studio yet' };
+  if (!force) { const c = ncCachedSnap(); if (c) return c; }
+
+  const api = (u) => fetch('https://www.googleapis.com/youtube/v3/' + u, { headers: { Authorization: 'Bearer ' + tok } }).then(r => r.json());
+  try {
+    const ch = await api('channels?part=statistics,snippet,contentDetails&mine=true');
+    const me = ch.items && ch.items[0];
+    if (!me) return { connected: false, why: (ch.error && ch.error.message) || 'YouTube returned no channel' };
+
+    const st = me.statistics || {}, sn = me.snippet || {};
+    const data = {
+      connected: true,
+      title: sn.title || '',
+      handle: (sn.customUrl || ''),
+      description: (sn.description || '').slice(0, 300),
+      created: (sn.publishedAt || '').slice(0, 10),
+      subscribers: +st.subscriberCount || 0,
+      totalViews: +st.viewCount || 0,
+      videoCount: +st.videoCount || 0,
+      recent: []
+    };
+
+    /* Recent uploads matter more than the totals: "is this one doing well" is
+       the question people actually ask, and it needs something to compare to. */
+    const up = me.contentDetails && me.contentDetails.relatedPlaylists && me.contentDetails.relatedPlaylists.uploads;
+    if (up) {
+      const pl = await api('playlistItems?part=contentDetails&playlistId=' + up + '&maxResults=10');
+      const ids = (pl.items || []).map(i => i.contentDetails.videoId).filter(Boolean).join(',');
+      if (ids) {
+        const vs = await api('videos?part=statistics,snippet&id=' + ids);
+        data.recent = (vs.items || []).map(v => ({
+          title: (v.snippet && v.snippet.title) || '',
+          published: ((v.snippet && v.snippet.publishedAt) || '').slice(0, 10),
+          views: +(v.statistics && v.statistics.viewCount) || 0,
+          likes: +(v.statistics && v.statistics.likeCount) || 0,
+          comments: +(v.statistics && v.statistics.commentCount) || 0
+        }));
+        // the median, so the workflow can say "above your usual" without doing stats
+        const vv = data.recent.map(r => r.views).sort((a, b) => a - b);
+        if (vv.length) data.medianViews = vv[Math.floor(vv.length / 2)];
+      }
+    }
+    localStorage.setItem('nc_ytsnap', JSON.stringify({ at: Date.now(), data: data }));
+    return data;
+  } catch (e) {
+    return { connected: false, why: 'could not reach YouTube' };
+  }
+}
+
 function ncWatchAIChat() {
   if (window.__ncAIWrapped || typeof window.fetch !== 'function') return;
   window.__ncAIWrapped = true;
@@ -551,6 +638,28 @@ function ncWatchAIChat() {
     if (mine && init && typeof init.body === 'string') {
       try { asked = (JSON.parse(init.body) || {}).chatInput || ''; } catch (e) {}
     }
+    /* The channel goes out WITH the question. Building the body here rather
+       than at init is what lets it be current on every message. */
+    if (mine && asked) {
+      const self = this;
+      return ncChannelSnapshot().then(function (chan) {
+        let body = init.body;
+        try {
+          const j = JSON.parse(init.body);
+          j.channel = chan;
+          body = JSON.stringify(j);
+        } catch (e) {}
+        return orig.call(self, input, Object.assign({}, init, { body: body }));
+      }).then(function (res) {
+        try {
+          res.clone().json()
+            .then(function (j) { ncRecordAIChat(asked, (j && (j.output || j.text || j.message)) || ''); })
+            .catch(function () { ncRecordAIChat(asked, ''); });
+        } catch (e) { ncRecordAIChat(asked, ''); }
+        return res;
+      });
+    }
+
     const p = orig.apply(this, arguments);
     if (!mine || !asked) return p;
     /* clone before reading — a Response body can only be consumed once, and the
@@ -641,6 +750,8 @@ window.addEventListener('DOMContentLoaded', () => {
   dedupeChrome();
   ncBrand();
   ncMiniAI();
+  // warm the channel cache in the background so message one already has it
+  if (ncYTToken()) setTimeout(function () { ncChannelSnapshot(); }, 1200);
   const badge = document.createElement('div'); badge.id = 'ncpts'; badge.textContent = getPts() + ' pts'; document.body.appendChild(badge);
   const t = document.createElement('div'); t.id = 'nctoast'; document.body.appendChild(t);
   const lpick = document.getElementById('langpick');
