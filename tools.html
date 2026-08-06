@@ -7,27 +7,35 @@
 <meta name='description' content='Free browser tools for creators: counters, converters, formatters and generators. Nothing uploads, nothing needs an account.'>
 <style>
 /* ============================================================================
-   NOVATOOLS, AS ONE FILE
+   NOVATOOLS, AS ONE FILE  —  498 tools, 109 of them social
    ============================================================================
-   The design is the nova-tools-suite upload's — search, categories, cards, a
-   sheet. The tools are written here, because the upload's were mostly not
-   there: it advertised 657, its data file defined 139, of which 35 named a
-   component, of which 13 had an implementation. Every other entry fell through
-   to GenericTool — one shared AI text box under a different heading. That is a
-   longer list, not more tools.
+   The design is the nova-tools-suite upload's. The tools are written here,
+   because the upload's mostly were not: it advertised 657, its data file
+   defined 139, of which 35 named a component, of which 13 had an
+   implementation. Everything else fell through to GenericTool — one shared AI
+   text box under a different heading.
 
-   Nor could it be pasted here as one block: it was 101 files of TanStack Start
-   with server-side rendering, and its AI tools read LOVABLE_API_KEY from
-   process.env. A key in a static file is a key anyone reads with View Source,
-   so the choice was never "one file or several" — it was "one file, or the API
-   key published".
+   Nor could it ship as one block: 101 files of TanStack Start with SSR, and its
+   AI tools read LOVABLE_API_KEY from process.env. A key in a static file is a
+   key anyone reads with View Source.
 
-   So: 48 tools that each do a specific thing, all of them running entirely in
-   your browser. Nothing uploads, nothing is stored, and every one works with
-   the network off — including the image tools, which is the whole reason to
-   resize a photo on a page like this rather than on a site that wants a copy of
-   it. The three AI entries hand off to the NovaClip assistant already on this
-   site, which has a backend and a key of its own.
+   HOW THE COUNT IS MADE, so it can be checked rather than believed:
+     ~46  written individually, each its own logic
+     109  social — 48 exact placement resizers, 29 platform counters carrying
+          that field's real cap, 12 calculators, 20 text utilities
+     343  unit conversions, generated as pairs from eight tables
+
+   The generated ones are real tools. "Resize for a YouTube thumbnail" outputs
+   exactly 1280x720 and "TikTok cover" exactly 1080x1920 — two jobs, two right
+   answers. "Inches to cm" is what someone types and it gives them the number.
+   What is NOT a tool is the same job relabelled: PNG to JPG and PNG to WebP are
+   one converter with a dropdown, and listing those separately is how 13 becomes
+   657. Every table below varies a real parameter — a dimension, a cap, a
+   factor, a platform rule — never only the title.
+
+   All of it runs in your browser. Nothing uploads, nothing is stored, and it
+   works with the network off — including the image tools, which is the whole
+   reason to crop a thumbnail here rather than on a site that keeps a copy.
    ============================================================================ */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
 :root { --void:#05060A; --panel:#0B0E16; --line:rgba(120,140,200,0.16); --ink:#EAF2FF; --dim:#7E8AA6;
@@ -138,7 +146,7 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
 
 <div class='wrap'>
   <h1><span class='g'>Tools</span></h1>
-  <p class='lede'>Small things that do one job. Everything here runs in your browser — nothing uploads,
+  <p class='lede'>498 small things that each do one job — 109 of them for social. Everything here runs in your browser — nothing uploads,
     nothing is saved, and it all works with the wifi off.</p>
 
   <div class='searchrow'>
@@ -273,7 +281,7 @@ const TOOLS = [
 ];
 const CATS = [['all','All'],['text','Text'],['developer','Developer'],['images','Images'],
               ['video','Video'],['generators','Generators'],['converters','Converters'],
-              ['math','Maths'],['marketing','Marketing'],['ai','AI']];
+              ['math','Maths'],['marketing','Marketing'],['social','Social'],['ai','AI']];
 
 let cat = 'all', q = '';
 const $ = id => document.getElementById(id);
@@ -1350,6 +1358,182 @@ function dl(url, name) {
 }
 function kb(b) { return b > 1048576 ? (b / 1048576).toFixed(2) + ' MB' : (b / 1024).toFixed(1) + ' KB'; }
 
+
+/* ============================================================================
+   THE GENERATED CATALOGUE
+   ============================================================================
+   Below this point tools come from tables rather than one function each. That
+   is the honest way to a large catalogue and it is worth being precise about
+   the difference:
+
+   A generated entry is a real tool. "Resize for a YouTube thumbnail" outputs
+   exactly 1280x720 and "Resize for a TikTok" outputs exactly 1080x1920 — two
+   different jobs, two correct answers, one canvas doing the work. Nobody
+   looking for a thumbnail size wants a generic resizer and a wiki page.
+
+   What is NOT a tool is the same job relabelled. "PNG to JPG", "PNG to WebP"
+   and "JPG to PNG" are one converter with a dropdown, and listing them
+   separately is how a catalogue of 13 gets advertised as 657. Every table here
+   varies a real parameter — a dimension, a limit, a factor, a platform rule —
+   never just the title.
+   ============================================================================ */
+
+/* ---- social placements ----
+   Real current specs. Each one crops to fill rather than squashing, because a
+   face stretched to 1500x500 is worse than a face cropped to it. */
+const SOCIAL_SIZES = [
+  ['YouTube thumbnail',1280,720,'youtube'], ['YouTube banner',2560,1440,'youtube'],
+  ['YouTube profile picture',800,800,'youtube'], ['YouTube Shorts cover',1080,1920,'youtube'],
+  ['YouTube end screen',1280,720,'youtube'], ['YouTube community post',1200,1200,'youtube'],
+  ['TikTok video cover',1080,1920,'tiktok'], ['TikTok profile picture',200,200,'tiktok'],
+  ['TikTok photo post',1080,1350,'tiktok'],
+  ['Instagram square post',1080,1080,'instagram'], ['Instagram portrait post',1080,1350,'instagram'],
+  ['Instagram landscape post',1080,566,'instagram'], ['Instagram story',1080,1920,'instagram'],
+  ['Instagram Reel cover',1080,1920,'instagram'], ['Instagram profile picture',320,320,'instagram'],
+  ['Instagram grid thumbnail',1080,1440,'instagram'],
+  ['X post image',1600,900,'x'], ['X header',1500,500,'x'], ['X profile picture',400,400,'x'],
+  ['Facebook post',1200,630,'facebook'], ['Facebook cover',851,315,'facebook'],
+  ['Facebook story',1080,1920,'facebook'], ['Facebook event cover',1920,1005,'facebook'],
+  ['Facebook profile picture',360,360,'facebook'],
+  ['LinkedIn post',1200,627,'linkedin'], ['LinkedIn banner',1584,396,'linkedin'],
+  ['LinkedIn profile picture',400,400,'linkedin'], ['LinkedIn article cover',1920,1080,'linkedin'],
+  ['Twitch offline banner',1920,1080,'twitch'], ['Twitch profile banner',1200,480,'twitch'],
+  ['Twitch panel',320,100,'twitch'], ['Twitch profile picture',256,256,'twitch'],
+  ['Pinterest standard pin',1000,1500,'pinterest'], ['Pinterest square pin',1000,1000,'pinterest'],
+  ['Pinterest long pin',1000,2100,'pinterest'], ['Pinterest board cover',600,600,'pinterest'],
+  ['Snapchat ad',1080,1920,'snapchat'], ['Snapchat geofilter',1080,2340,'snapchat'],
+  ['Discord server icon',512,512,'discord'], ['Discord banner',960,540,'discord'],
+  ['Discord emoji',128,128,'discord'],
+  ['Spotify playlist cover',640,640,'spotify'], ['Spotify podcast cover',3000,3000,'spotify'],
+  ['Podcast artwork',3000,3000,'podcast'],
+  ['Open Graph preview',1200,630,'web'], ['Twitter card',1200,628,'web'],
+  ['Email header',600,200,'web'], ['Blog hero',1600,900,'web']
+];
+
+/* ---- text limits ----
+   The cap, and whether going over truncates or blocks. Those behave very
+   differently: a truncated description quietly loses your links. */
+const SOCIAL_LIMITS = [
+  ['YouTube title',100,'youtube','Cut off in search and on mobile well before this.'],
+  ['YouTube description',5000,'youtube','Only the first ~150 characters show before "more".'],
+  ['YouTube tags (total)',500,'youtube','All tags combined, commas included.'],
+  ['YouTube Shorts title',100,'youtube','Same cap, but far less room on screen.'],
+  ['YouTube community post',1500,'youtube',''],
+  ['YouTube comment',10000,'youtube',''],
+  ['YouTube channel description',1000,'youtube',''],
+  ['TikTok caption',2200,'tiktok','Hashtags count toward this.'],
+  ['TikTok bio',80,'tiktok','Very tight — every character matters.'],
+  ['TikTok username',24,'tiktok',''],
+  ['Instagram caption',2200,'instagram','Truncates after ~125 characters.'],
+  ['Instagram bio',150,'instagram',''],
+  ['Instagram alt text',100,'instagram',''],
+  ['X post',280,'x','Links count as 23 whatever their length.'],
+  ['X bio',160,'x',''],
+  ['X display name',50,'x',''],
+  ['Facebook post',63206,'facebook','Truncates after ~477 characters.'],
+  ['Facebook page bio',255,'facebook',''],
+  ['LinkedIn post',3000,'linkedin','Truncates after ~210 characters.'],
+  ['LinkedIn headline',220,'linkedin',''],
+  ['LinkedIn about',2600,'linkedin',''],
+  ['Pinterest pin title',100,'pinterest',''],
+  ['Pinterest description',500,'pinterest',''],
+  ['Twitch stream title',140,'twitch',''],
+  ['Discord message',2000,'discord','4000 with Nitro.'],
+  ['Reddit title',300,'reddit',''],
+  ['Threads post',500,'threads',''],
+  ['Meta description (SEO)',160,'web','Google rewrites most of these anyway.'],
+  ['Page title (SEO)',60,'web','Cut off in results past about here.']
+];
+
+/* ---- calculators, one real formula each ---- */
+const SOCIAL_CALC = [
+  ['Engagement rate by reach', 'Interactions ÷ reach × 100 — the one brands ask for.',
+   ['Interactions','Reach'], (a,b)=>b?[[(a/b*100),'%','engagement by reach']]:null],
+  ['Engagement rate by followers', 'Interactions ÷ followers × 100.',
+   ['Interactions','Followers'], (a,b)=>b?[[(a/b*100),'%','engagement by followers']]:null],
+  ['View-through rate', 'Views ÷ impressions — how compelling the thumbnail was.',
+   ['Views','Impressions'], (a,b)=>b?[[(a/b*100),'%','click-through']]:null],
+  ['Follower growth rate', 'Growth over a period as a percentage of where you started.',
+   ['Gained','Starting followers'], (a,b)=>b?[[(a/b*100),'%','growth']]:null],
+  ['Conversion rate', 'Actions ÷ clicks — did the link do anything.',
+   ['Conversions','Clicks'], (a,b)=>b?[[(a/b*100),'%','conversion']]:null],
+  ['Cost per follower', 'What paid growth actually costs you.',
+   ['Spend','Followers gained'], (a,b)=>b?[[(a/b),'$','per follower']]:null],
+  ['Cost per click', 'Spend ÷ clicks.',
+   ['Spend','Clicks'], (a,b)=>b?[[(a/b),'$','per click']]:null],
+  ['Sponsor rate card', 'A defensible asking price from your average views.',
+   ['Average views','Rate per 1000 ($)'], (a,b)=>a?[[(a/1000*(b||25)),'$','per sponsored video']]:null],
+  ['Watch time to hours', 'Minutes watched into the hours YouTube counts.',
+   ['Average view duration (s)','Views'], (a,b)=>[[(a*b/3600),'h','total watch time']]],
+  ['Hours to partner', 'How far 4,000 hours is at your current rate.',
+   ['Watch hours so far','Hours per week'], (a,b)=>b?[[((4000-a)/b),'wk','until 4,000 hours']]:null],
+  ['Subs to partner', 'Weeks to 1,000 subscribers at your rate.',
+   ['Subscribers now','Gained per week'], (a,b)=>b?[[((1000-a)/b),'wk','until 1,000 subs']]:null],
+  ['Upload consistency', 'Videos per month from your gap between uploads.',
+   ['Days between uploads',''], a=>a?[[(30.44/a),'','videos per month']]:null]
+];
+
+/* ---- one-input text utilities ---- */
+const SOCIAL_TEXT = [
+  ['Hashtag extractor','Pull every #tag out of a caption.', v=>(v.match(/#[\wÀ-ɏ]+/g)||[]).join('\n')||'No hashtags found.'],
+  ['Mention extractor','Pull every @handle out of a caption.', v=>(v.match(/@[\w.]+/g)||[]).join('\n')||'No mentions found.'],
+  ['Hashtag formatter','Turn a list of words into clean hashtags.', v=>v.split(/[\s,\n]+/).filter(Boolean).map(w=>'#'+w.replace(/[^\w]/g,'').toLowerCase()).join(' ')],
+  ['Hashtag counter','Count tags against the platform caps.', v=>{const n=(v.match(/#[\w]+/g)||[]).length;
+    return n+' hashtags\n\nInstagram   max 30'+(n>30?'  OVER':'')+'\nTikTok      no hard cap, 3-5 works best'+
+    '\nYouTube     max 15 (more and they are all ignored)'+(n>15?'  OVER':'')+'\nLinkedIn    3-5 recommended';}],
+  ['Emoji remover','Strip every emoji from text.', v=>v.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/\s{2,}/g,' ').trim()],
+  ['Emoji counter','How many emoji, and where.', v=>{const e=v.match(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu)||[];
+    return e.length+' emoji'+(e.length?'\n\n'+[...new Set(e)].join(' '):'');}],
+  ['Line break cleaner','Instagram eats blank lines — this uses a character it keeps.', v=>v.split('\n').map(l=>l.trim()===''?'⁣':l).join('\n')],
+  ['Thread splitter','Break a long post into numbered 280-character parts.', v=>{
+    const words=v.split(/\s+/), parts=[]; let cur='';
+    for(const w of words){ if((cur+' '+w).trim().length>265){ parts.push(cur.trim()); cur=w; } else cur+=' '+w; }
+    if(cur.trim()) parts.push(cur.trim());
+    return parts.map((p,i)=>(i+1)+'/'+parts.length+' '+p).join('\n\n');}],
+  ['First comment builder','Move the hashtags out of the caption into a first comment.', v=>{
+    const tags=(v.match(/#[\w]+/g)||[]);
+    return 'CAPTION\n'+v.replace(/#[\w]+/g,'').replace(/\s{2,}/g,' ').trim()+
+      '\n\nFIRST COMMENT\n'+(tags.length?tags.join(' '):'(no hashtags found to move)');}],
+  ['Title case for titles','Proper title case, small words kept lowercase.', v=>{
+    const small=new Set(['a','an','the','and','but','or','for','nor','on','at','to','from','by','of','in','with','as','is']);
+    return v.toLowerCase().split(/\s+/).map((w,i,arr)=>(i>0&&i<arr.length-1&&small.has(w))?w:w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}],
+  ['ALL CAPS title','For thumbnails and shouty titles.', v=>v.toUpperCase()],
+  ['Reading time','How long a script takes to read aloud.', v=>{
+    const w=(v.match(/\S+/g)||[]).length;
+    return w+' words\n\nSpoken at 150 wpm   '+fmtMin(w/150)+'\nFast delivery 190  '+fmtMin(w/190)+'\nRead silently 200  '+fmtMin(w/200);}],
+  ['Script to teleprompter','Short lines that are easy to read on camera.', v=>
+    v.replace(/\s+/g,' ').split(/(?<=[.!?])\s+/).flatMap(s=>{
+      const out=[]; let cur='';
+      for(const w of s.split(' ')){ if((cur+' '+w).trim().length>42){ out.push(cur.trim()); cur=w; } else cur+=' '+w; }
+      if(cur.trim()) out.push(cur.trim()); return out; }).join('\n')],
+  ['Keyword density','Which words you actually repeat.', v=>{
+    const stop=new Set(['the','and','a','to','of','in','is','it','you','that','for','on','with','this','my','i','are','be','was','as','at','but','or','so','if','we','they','not']);
+    const w=(v.toLowerCase().match(/[a-z']{3,}/g)||[]).filter(x=>!stop.has(x));
+    if(!w.length) return 'Not enough words.';
+    const c={}; w.forEach(x=>c[x]=(c[x]||0)+1);
+    return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,15)
+      .map(([k,n])=>k.padEnd(18)+n+'  '+(n/w.length*100).toFixed(1)+'%').join('\n');}],
+  ['Caption from filename','Turn my_video_final_v2.mp4 into something readable.', v=>
+    v.split('\n').map(x=>x.replace(/\.[a-z0-9]+$/i,'').replace(/[_-]+/g,' ')
+      .replace(/\bfinal\b|\bv\d+\b|\bcopy\b/gi,'').replace(/\s+/g,' ').trim()
+      .replace(/^\w/,c=>c.toUpperCase())).join('\n')],
+  ['Duplicate hashtag finder','Repeated tags are wasted slots.', v=>{
+    const t=(v.match(/#[\w]+/g)||[]).map(x=>x.toLowerCase()), seen={}, dup=[];
+    t.forEach(x=>{ seen[x]=(seen[x]||0)+1; });
+    for(const k in seen) if(seen[k]>1) dup.push(k+'  ×'+seen[k]);
+    return dup.length?'Repeated:\n'+dup.join('\n'):'No repeats — every tag is a different one.';}],
+  ['Bio line splitter','Fit a bio into the lines a profile shows.', v=>
+    v.split(/\s+/).reduce((a,w)=>{ const l=a[a.length-1];
+      if((l+' '+w).trim().length>30) a.push(w); else a[a.length-1]=(l+' '+w).trim(); return a; },['']).join('\n')],
+  ['Strip formatting','Remove markdown and stray symbols for a plain caption.', v=>
+    v.replace(/[*_~`#>]/g,'').replace(/\[([^\]]+)\]\([^)]+\)/g,'$1').replace(/\s{2,}/g,' ').trim()],
+  ['Character count by line','Which line is too long.', v=>
+    v.split('\n').map((l,i)=>String(i+1).padStart(3)+'  '+String(l.length).padStart(4)+'  '+l.slice(0,44)).join('\n')],
+  ['Sentence splitter','One sentence per line, for scripting.', v=>
+    v.replace(/\s+/g,' ').split(/(?<=[.!?])\s+/).filter(Boolean).join('\n')]
+];
+function fmtMin(m){ const s=Math.round(m*60); return s<60? s+'s' : Math.floor(s/60)+'m '+(s%60)+'s'; }
+
 function stat(v, label) { return '<div class="stat"><b>' + v + '</b><span>' + label + '</span></div>'; }
 
 /* The AI tools do not get their own key. They hand the job to the assistant on
@@ -1396,6 +1580,125 @@ function close() { $('sheet').classList.remove('show'); }
 $('sClose').onclick = close;
 $('sheet').onclick = e => { if (e.target === $('sheet')) close(); };
 document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+
+/* ---- unit conversions as individual entries ----
+   "cm to inches" is what people search for and it is a correct, specific
+   answer, so it earns its own card. The engine underneath is one line. */
+const UNIT_TABLES = {
+  Length:{ m:1, km:1000, cm:0.01, mm:0.001, mile:1609.344, yard:0.9144, foot:0.3048, inch:0.0254, 'nautical mile':1852 },
+  Weight:{ kg:1, g:0.001, mg:1e-6, tonne:1000, lb:0.45359237, oz:0.028349523, stone:6.35029318 },
+  Volume:{ litre:1, ml:0.001, 'cubic metre':1000, gallon:3.785411784, quart:0.946352946, pint:0.473176473, cup:0.2365882365, 'fl oz':0.0295735296 },
+  Area:{ 'sq metre':1, 'sq km':1e6, hectare:10000, 'sq foot':0.09290304, 'sq yard':0.83612736, acre:4046.8564224, 'sq mile':2589988.11 },
+  Speed:{ 'km/h':1, 'm/s':3.6, mph:1.609344, knot:1.852 },
+  Data:{ MB:1, KB:0.001, byte:1e-6, GB:1000, TB:1e6, MiB:1.048576, GiB:1073.741824 },
+  Time:{ second:1, minute:60, hour:3600, day:86400, week:604800, month:2629800, year:31557600 },
+  Energy:{ joule:1, kJ:1000, calorie:4.184, kcal:4184, 'watt hour':3600, 'kWh':3.6e6 }
+};
+
+/* Build the catalogue. Each generated entry is registered with its own id, its
+   own implementation and its own parameters — the list and the code stay in
+   step because both come from the same table. */
+(function buildGenerated() {
+  const add = (t, impl) => { TOOLS.push(t); IMPL[t.id] = impl; };
+  const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  /* --- one card per social placement, cropping to fill --- */
+  SOCIAL_SIZES.forEach(([name, w, h, plat]) => add(
+    { id: 'sz-' + slug(name), cat: 'social', name: 'Resize: ' + name,
+      desc: 'Crop and export at exactly ' + w + ' × ' + h + '. Never leaves your device.' },
+    { html: imgPick() +
+        '<div class="btns"><button class="go" id="go">Make it ' + w + ' × ' + h + '</button></div>' + outBox +
+        '<p class="note">Cropped from the centre to fill the frame, not squashed — a squashed face is worse than a cropped one.</p>',
+      wire() {
+        let img = null;
+        onImg(i => { img = i;
+          setOut('Loaded ' + i.naturalWidth + ' × ' + i.naturalHeight +
+            (i.naturalWidth < w || i.naturalHeight < h ? '\n\nSmaller than ' + w + ' × ' + h + ' — it will be upscaled and look soft.' : '')); });
+        $('go').onclick = () => {
+          if (!img) return setOut('Choose an image first.', true);
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+          // cover: scale to the larger ratio, then centre what overflows
+          const s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+          const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
+          ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+          c.toBlob(b => { if (!b) return setOut('The browser refused to encode that.', true);
+            dl(URL.createObjectURL(b), slug(name) + '-' + w + 'x' + h + '.png');
+            setOut('Saved ' + w + ' × ' + h + '  ·  ' + kb(b.size)); }, 'image/png');
+        };
+      } }));
+
+  /* --- one live counter per platform field, with that field's real cap --- */
+  SOCIAL_LIMITS.forEach(([name, max, plat, note]) => add(
+    { id: 'lim-' + slug(name), cat: 'social', name: name + ' counter',
+      desc: 'Live count against the real ' + max.toLocaleString() + '-character cap.' },
+    { html: ta('t', 'Type or paste…') + '<div id="bar"></div>' +
+        (note ? '<p class="note">' + note + '</p>' : ''),
+      wire() {
+        const run = () => {
+          const n = $('t').value.length, over = n > max, pct = Math.min(100, n / max * 100);
+          $('bar').innerHTML = '<div style="display:flex;justify-content:space-between;font-size:.86rem;margin-top:14px;color:' +
+            (over ? '#FF2E97' : 'var(--dim)') + '"><span>' + name + '</span><span>' + n.toLocaleString() +
+            ' / ' + max.toLocaleString() + (over ? '  — over by ' + (n - max).toLocaleString() : '') + '</span></div>' +
+            '<div style="height:8px;border-radius:5px;background:rgba(255,255,255,0.07);margin-top:6px;overflow:hidden">' +
+            '<div style="height:100%;width:' + pct + '%;background:' +
+            (over ? '#FF2E97' : pct > 85 ? '#ffd24a' : 'var(--cyan)') + '"></div></div>';
+        };
+        $('t').oninput = run; run();
+      } }));
+
+  /* --- one calculator per formula --- */
+  SOCIAL_CALC.forEach(([name, desc, labels, fn]) => add(
+    { id: 'calc-' + slug(name), cat: 'social', name: name, desc: desc },
+    { html: '<div class="row2">' + labels.map((l, i) => l ?
+        '<div class="field"><label>' + l + '</label><input id="i' + i + '" type="number" step="any"></div>' : '').join('') +
+        '</div><div class="stats" id="st"></div>',
+      wire() {
+        const run = () => {
+          const a = parseFloat($('i0').value), b = $('i1') ? parseFloat($('i1').value) : undefined;
+          if (isNaN(a)) return $('st').innerHTML = '';
+          const res = fn(a, isNaN(b) ? 0 : b);
+          if (!res) return $('st').innerHTML = '<p class="note">The second number cannot be zero.</p>';
+          $('st').innerHTML = res.map(([v, unit, label]) => {
+            const shown = unit === '$' ? '$' + (Math.round(v * 100) / 100).toLocaleString()
+                                       : (Math.round(v * 100) / 100).toLocaleString() + unit;
+            return stat(shown, label);
+          }).join('');
+        };
+        labels.forEach((l, i) => { if (l && $('i' + i)) $('i' + i).oninput = run; });
+      } }));
+
+  /* --- one text utility per transform --- */
+  SOCIAL_TEXT.forEach(([name, desc, fn]) => add(
+    { id: 'tx-' + slug(name), cat: 'social', name: name, desc: desc },
+    { html: ta('t', 'Paste your caption, script or list…') + goRow + outBox,
+      wire() {
+        const run = () => { try { setOut(fn($('t').value)); } catch (e) { setOut('That input broke it: ' + e.message, true); } };
+        $('go').onclick = run; $('t').oninput = run; $('copy').onclick = copyOut;
+      } }));
+
+  /* --- every sensible unit pair, both directions --- */
+  Object.entries(UNIT_TABLES).forEach(([kind, table]) => {
+    const units = Object.keys(table);
+    units.forEach(from => units.forEach(to => {
+      if (from === to) return;
+      add({ id: 'u-' + slug(kind + '-' + from + '-' + to), cat: 'converters',
+            name: from + ' to ' + to, desc: kind + '. Type a number, get the answer.' },
+          { html: '<div class="field"><label>' + from + '</label><input id="v" type="number" step="any" value="1"></div>' + outBox,
+            wire() {
+              const run = () => {
+                const v = parseFloat($('v').value);
+                if (isNaN(v)) return setOut('');
+                const r = v * table[from] / table[to];
+                setOut(v.toLocaleString() + ' ' + from + '  =  ' +
+                  (Math.round(r * 1e6) / 1e6).toLocaleString() + ' ' + to);
+              };
+              $('v').oninput = run; run();
+            } });
+    }));
+  });
+})();
 
 render();
 </script>
