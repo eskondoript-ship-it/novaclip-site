@@ -7,7 +7,9 @@
 <meta name='description' content='498 free browser tools: social image sizes, character counters, converters, formatters and generators. Everything runs on your device — nothing uploads, no account, works offline.'>
 <link rel='canonical' href='https://REPLACE-ME/'>
 <meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1'>
-<meta name='theme-color' content='#7c5cff'>
+<meta name='theme-color' content='#5A5BF6'>
+<link rel='icon' href='favicon.svg' type='image/svg+xml'>
+<link rel='apple-touch-icon' href='logo.svg'>
 
 <meta property='og:type' content='website'>
 <meta property='og:site_name' content='NovaTools'>
@@ -228,8 +230,10 @@ code, .mono { font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospa
   backdrop-filter: blur(14px); border-radius: calc(var(--radius) + 4px);
   padding: 8px 12px; box-shadow: var(--shadow-soft); }
 .brand { display: flex; align-items: center; gap: 9px; text-decoration: none; color: inherit; }
-.brandsq { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 12px;
-  background: var(--gradient-brand); color: var(--primary-foreground); font-weight: 800; font-size: 15px; }
+.brandsq { display: block; width: 32px; height: 32px; border-radius: 10px; overflow: hidden;
+  flex: 0 0 auto; transition: transform .3s cubic-bezier(.22,1,.36,1); }
+.brandsq svg { display: block; width: 100%; height: 100%; }
+.brand:hover .brandsq { transform: rotate(-8deg) scale(1.06); }
 .brandtx { font-size: 15px; font-weight: 600; letter-spacing: -0.015em; }
 .navlinks { display: none; flex: 1; align-items: center; gap: 2px; margin-left: 10px; }
 @media (min-width: 1024px) { .navlinks { display: flex; } }
@@ -546,6 +550,36 @@ kbd { font-size: 11px; border-radius: 6px; padding: 1px 5px; font-family: inheri
 .final h2 { max-width: none; }
 .final .sublede { max-width: 48ch; }
 
+/* ---- navbar ----
+   The underline animation was written for <button>, and the two page links
+   added later were <a>, which arrive with a browser underline of their own.
+   Both element types now share the rule, because which tag a link happens to
+   be is not something a visitor should be able to see. */
+.navlink { text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+  white-space: nowrap; line-height: 1.4; }
+.navdrop { position: relative; }
+.navlink .chev { transition: transform .25s; opacity: .75; }
+.navlink[aria-expanded='true'] .chev { transform: rotate(180deg); }
+.dropmenu { position: absolute; left: -6px; top: calc(100% + 10px); width: 292px; z-index: 60;
+  padding: 6px; border-radius: calc(var(--radius) + 4px);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  background: color-mix(in oklab, var(--card) 97%, transparent);
+  backdrop-filter: blur(18px); box-shadow: var(--shadow-glow);
+  opacity: 0; transform: translateY(-8px) scale(.98); pointer-events: none;
+  transition: opacity .22s, transform .22s; }
+.dropmenu.open { opacity: 1; transform: none; pointer-events: auto; }
+.dropmenu a { display: block; padding: 9px 12px; border-radius: 10px; text-decoration: none;
+  color: var(--foreground); transition: background .18s; }
+.dropmenu a:hover, .dropmenu a:focus-visible {
+  background: color-mix(in oklab, var(--secondary) 70%, transparent); }
+.dropmenu b { display: block; font-size: 14px; font-weight: 550; }
+.dropmenu span { display: block; font-size: 12.5px; color: var(--muted-foreground); margin-top: 1px; }
+#mobile .mgroup { font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--muted-foreground); padding: 12px 12px 4px; }
+#mobile a { display: block; padding: 10px 12px; border-radius: 10px; font-size: 14.5px;
+  text-decoration: none; color: var(--foreground); }
+#mobile a:hover { background: color-mix(in oklab, var(--secondary) 60%, transparent); }
+
 /* ---- search suggestions, favourites, trust ----
    Three additions that all lean on the same idea: the only things worth
    storing about a visitor are the ones they can see and delete. Favourites and
@@ -635,17 +669,42 @@ kbd { font-size: 11px; border-radius: 6px; padding: 1px 5px; font-family: inheri
 
 <nav class='nav' id='nav'>
   <div class='navin'>
-    <a class='brand' href='./'><span class='brandsq'>N</span><span class='brandtx'>NovaTools</span></a>
+    <a class='brand' href='./' aria-label='NovaTools, home'>
+      <span class='brandsq'>
+        <svg viewBox='0 0 64 64' aria-hidden='true'>
+          <defs><linearGradient id='navg' x1='0' y1='0' x2='1' y2='1'>
+            <stop offset='0' stop-color='#5A5BF6'/><stop offset='.55' stop-color='#00C3D6'/>
+            <stop offset='1' stop-color='#FF8AD8'/></linearGradient></defs>
+          <rect x='2' y='2' width='60' height='60' rx='16' fill='url(#navg)'/>
+          <path fill='#fff' d='M29 17 Q33.42 29.58 46 34 Q33.42 38.42 29 51 Q24.58 38.42 12 34 Q24.58 29.58 29 17 Z'/>
+          <circle cx='47.5' cy='16.5' r='5' fill='#fff' fill-opacity='.94'/>
+        </svg>
+      </span>
+      <span class='brandtx'>NovaTools</span>
+    </a>
+
+    <!-- Ten items in a row is a list, not a navigation. The five that scroll
+         this page live under Product; the four that are separate pages stay at
+         the top level, where a first-time visitor is looking for them. -->
     <div class='navlinks' id='navlinks'>
       <button class='navlink' data-go='tools'>Tools</button>
-      <button class='navlink' data-go='features'>Features</button>
-      <button class='navlink' data-go='how'>How it works</button>
-      <button class='navlink' data-go='why'>Why NovaTools</button>
-      <button class='navlink' data-go='roadmap'>Roadmap</button>
-      <button class='navlink' data-go='faq'>FAQ</button>
+      <div class='navdrop'>
+        <button class='navlink drop' id='prodbtn' aria-expanded='false' aria-haspopup='true' aria-controls='prodmenu'>
+          Product <svg class='chev' width='11' height='11' viewBox='0 0 24 24' aria-hidden='true'><path d='M5 9l7 7 7-7' fill='none' stroke='currentColor' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/></svg>
+        </button>
+        <div class='dropmenu' id='prodmenu' role='menu' aria-labelledby='prodbtn'>
+          <a role='menuitem' href='#features' data-go='features'><b>Features</b><span>Why it runs on your machine</span></a>
+          <a role='menuitem' href='#how' data-go='how'><b>How it works</b><span>Four steps, none of them a sign-up</span></a>
+          <a role='menuitem' href='#why' data-go='why'><b>Why NovaTools</b><span>What is true about it, and what is not</span></a>
+          <a role='menuitem' href='#roadmap' data-go='roadmap'><b>Roadmap</b><span>The things that need a server</span></a>
+          <a role='menuitem' href='#faq' data-go='faq'><b>FAQ</b><span>The questions worth answering</span></a>
+        </div>
+      </div>
       <a class='navlink' href='blog.html'>Blog</a>
+      <a class='navlink' href='pricing.html'>Pricing</a>
       <a class='navlink' href='about.html'>About</a>
     </div>
+
     <div class='navright'>
       <button class='navsearch' id='navsearch'>Search tools <kbd>/</kbd></button>
       <button class='iconbtn' id='themebtn' aria-label='Switch theme' title='Switch theme'><svg width='15' height='15' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9' fill='none' stroke='currentColor' stroke-width='1.8'/><path d='M12 3a9 9 0 0 0 0 18Z' fill='currentColor'/></svg></button>
@@ -2831,8 +2890,13 @@ $('roadmapchips').innerHTML = ['AI writer', 'Blog generator', 'Email writer', 'P
   onScroll();
 
   /* ---- which section am I in ---- */
-  const links = [...document.querySelectorAll('.navlink')];
+  /* Anything carrying data-go points at a section of this page, whether it sits
+     in the bar or inside the Product menu. Tracking that attribute rather than
+     a class means moving a link between the two changes nothing here. */
+  const links = [...document.querySelectorAll('.navlink[data-go], #prodmenu a[data-go]')];
   const secs = links.map(l => document.getElementById(l.dataset.go)).filter(Boolean);
+  const prodbtn = $('prodbtn'), prodmenu = $('prodmenu');
+  const inProduct = ['features', 'how', 'why', 'roadmap', 'faq'];
   if (secs.length) {
     const seen = new Set();
     const io = new IntersectionObserver(es => {
@@ -2840,16 +2904,51 @@ $('roadmapchips').innerHTML = ['AI writer', 'Blog generator', 'Email writer', 'P
       const here = secs.filter(x => seen.has(x.id)).pop();
       /* Past the last linked section the band holds only the CTA and the footer.
          Leaving the previous link lit reads better than clearing the whole bar. */
-      if (here) links.forEach(l => l.classList.toggle('active', l.dataset.go === here.id));
+      if (!here) return;
+      links.forEach(l => l.classList.toggle('active', l.dataset.go === here.id));
+      /* A section that lives under Product lights the Product button instead,
+         since its own link is not on screen. */
+      prodbtn.classList.toggle('active', inProduct.indexOf(here.id) > -1);
     }, { rootMargin: '-70px 0px -60% 0px' });
     secs.forEach(x => io.observe(x));
   }
 
+  /* ---- the Product menu ----
+     Click to open rather than hover: a hover menu is unusable on a touch screen
+     and unforgiving with a trackpad. Escape closes it and returns focus to the
+     button, which is what a keyboard user expects from a menu. */
+  function closeProduct() {
+    prodmenu.classList.remove('open');
+    prodbtn.setAttribute('aria-expanded', 'false');
+  }
+  prodbtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    const open = prodmenu.classList.toggle('open');
+    prodbtn.setAttribute('aria-expanded', String(open));
+    if (open) prodmenu.querySelector('a').focus();
+  });
+  prodmenu.addEventListener('click', closeProduct);
+  addEventListener('click', function (e) {
+    if (!prodmenu.contains(e.target) && e.target !== prodbtn) closeProduct();
+  });
+  addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && prodmenu.classList.contains('open')) { closeProduct(); prodbtn.focus(); }
+  });
+
   /* ---- mobile menu ---- */
   const menu = $('mobile'), burger = $('burger');
-  menu.innerHTML = links.map(l =>
-    '<button data-m="' + l.dataset.go + '">' + l.textContent + '</button>').join('');
-  menu.querySelectorAll('button').forEach(b =>
+  menu.innerHTML =
+    '<div class="mgroup">Browse</div>' +
+    '<button data-m="tools">Tools</button>' +
+    '<div class="mgroup">Product</div>' +
+    inProduct.map(function (id) {
+      const l = links.find(function (x) { return x.dataset.go === id; });
+      return '<button data-m="' + id + '">' + (l ? l.querySelector('b').textContent : id) + '</button>';
+    }).join('') +
+    '<div class="mgroup">More</div>' +
+    '<a href="blog.html">Blog</a><a href="pricing.html">Pricing</a>' +
+    '<a href="about.html">About</a><a href="contact.html">Contact</a>';
+  menu.querySelectorAll('button[data-m]').forEach(b =>
     b.onclick = () => { closeMenu(); goTo(b.dataset.m); });
   function closeMenu() { menu.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); }
   burger.onclick = () => {

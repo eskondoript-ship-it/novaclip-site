@@ -109,8 +109,10 @@ code, pre, .mono { font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, Co
   background: color-mix(in oklab, var(--card) 78%, transparent);
   border-radius: calc(var(--radius) + 4px); padding: 8px 12px; box-shadow: var(--shadow-soft); }
 .brand { display: flex; align-items: center; gap: 9px; text-decoration: none; color: inherit; font-weight: 600; }
-.brandsq { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 12px;
-  background: var(--gradient-brand); color: var(--primary-foreground); font-weight: 800; font-size: 15px; }
+.brandsq { display: block; width: 32px; height: 32px; border-radius: 10px; overflow: hidden;
+  flex: 0 0 auto; transition: transform .3s cubic-bezier(.22,1,.36,1); }
+.brandsq svg { display: block; width: 100%; height: 100%; }
+.brand:hover .brandsq { transform: rotate(-8deg) scale(1.06); }
 .navlinks { display: none; align-items: center; gap: 2px; margin-left: 8px; }
 @media (min-width: 900px) { .navlinks { display: flex; } }
 .navlinks a { border-radius: 10px; padding: 7px 12px; font-size: 14px; text-decoration: none;
