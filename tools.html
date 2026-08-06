@@ -9,23 +9,25 @@
 /* ============================================================================
    NOVATOOLS, AS ONE FILE
    ============================================================================
-   Ported from the nova-tools-suite upload, which was a 101-file TanStack Start
-   app with 53 dependencies and server-side rendering. It could not be pasted
-   into this site as one block for a reason worth writing down: its AI tools run
-   through createServerFn with LOVABLE_API_KEY read from process.env. A key in a
-   static file is a key anyone can read with View Source, so the choice was
-   never "one file or several" — it was "one file, or the API key published".
+   The design is the nova-tools-suite upload's — search, categories, cards, a
+   sheet. The tools are written here, because the upload's were mostly not
+   there: it advertised 657, its data file defined 139, of which 35 named a
+   component, of which 13 had an implementation. Every other entry fell through
+   to GenericTool — one shared AI text box under a different heading. That is a
+   longer list, not more tools.
 
-   What carried over is everything that never needed a server. These run
-   entirely in your browser: nothing is uploaded, nothing is stored, and they
-   work with the network off. The AI-backed ones hand off to the NovaClip
-   assistant already running on this site, which has its own backend and keeps
-   its own key, instead of shipping a second one.
+   Nor could it be pasted here as one block: it was 101 files of TanStack Start
+   with server-side rendering, and its AI tools read LOVABLE_API_KEY from
+   process.env. A key in a static file is a key anyone reads with View Source,
+   so the choice was never "one file or several" — it was "one file, or the API
+   key published".
 
-   On the catalogue size: the upload advertised 657 tools. The data file defines
-   139, of which 35 name a component, of which 13 have an implementation — every
-   other entry fell through to GenericTool, a single AI text box wearing a
-   different title. The tools below are the ones that do a specific thing.
+   So: 48 tools that each do a specific thing, all of them running entirely in
+   your browser. Nothing uploads, nothing is stored, and every one works with
+   the network off — including the image tools, which is the whole reason to
+   resize a photo on a page like this rather than on a site that wants a copy of
+   it. The three AI entries hand off to the NovaClip assistant already on this
+   site, which has a backend and a key of its own.
    ============================================================================ */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
 :root { --void:#05060A; --panel:#0B0E16; --line:rgba(120,140,200,0.16); --ink:#EAF2FF; --dim:#7E8AA6;
@@ -194,6 +196,74 @@ const TOOLS = [
     desc:'Exact age in years, months and days, plus the next birthday.' },
   { id:'ratio', cat:'video', name:'Aspect ratio & bitrate',
     desc:'Fit any size to 16:9, 9:16 or 1:1, and a sane bitrate for the result.' },
+  { id:'find-replace', cat:'text', name:'Find & replace',
+    desc:'Across the whole text, with regular expressions if you want them.' },
+  { id:'sort-lines', cat:'text', name:'Sort & dedupe lines',
+    desc:'A to Z, by length, reversed or shuffled — and drop repeats.' },
+  { id:'char-freq', cat:'text', name:'Character frequency',
+    desc:'Which letters and words come up most, ranked.' },
+  { id:'lorem', cat:'text', name:'Placeholder text',
+    desc:'Lorem ipsum by words, sentences or paragraphs.' },
+  { id:'url-encode', cat:'developer', name:'URL encode / decode',
+    desc:'Percent-encoding for whole URLs or single components.' },
+  { id:'html-entities', cat:'developer', name:'HTML entities',
+    desc:'Escape and unescape &amp;, &lt;, quotes and the rest.' },
+  { id:'hash', cat:'developer', name:'Hash generator',
+    desc:'SHA-1, SHA-256, SHA-384 and SHA-512 from the browser crypto engine.' },
+  { id:'regex', cat:'developer', name:'Regex tester',
+    desc:'Live matches, groups and a count, with the usual flags.' },
+  { id:'csv-json', cat:'developer', name:'CSV to JSON',
+    desc:'Quoted fields and embedded commas handled properly. Converts back too.' },
+  { id:'query', cat:'developer', name:'Query string parser',
+    desc:'Split a URL into its parts and every parameter.' },
+  { id:'base-conv', cat:'developer', name:'Number base converter',
+    desc:'Binary, octal, decimal and hex, all at once.' },
+  { id:'markdown', cat:'developer', name:'Markdown preview',
+    desc:'Headings, bold, links, lists and code to HTML.' },
+  { id:'img-resize', cat:'images', name:'Image resizer',
+    desc:'Resize by pixels or percent, aspect kept. Never leaves your device.' },
+  { id:'img-compress', cat:'images', name:'Image compressor',
+    desc:'Trade quality for size and see the saving before you download.' },
+  { id:'img-convert', cat:'images', name:'Image format converter',
+    desc:'PNG, JPEG and WebP in any direction.' },
+  { id:'img-datauri', cat:'images', name:'Image to data URI',
+    desc:'Base64 data URL for embedding straight into CSS or HTML.' },
+  { id:'favicon', cat:'images', name:'Favicon set',
+    desc:'16, 32, 48, 180 and 512 px from one image, downloaded together.' },
+  { id:'filesize', cat:'video', name:'Video file size',
+    desc:'How big a render will be, from length, bitrate and audio.' },
+  { id:'chapters', cat:'video', name:'YouTube chapters',
+    desc:'Turn a rough list into a valid chapter block — the rules are strict.' },
+  { id:'srt-vtt', cat:'video', name:'SRT to VTT',
+    desc:'Convert subtitles between the two formats, both directions.' },
+  { id:'safearea', cat:'video', name:'Thumbnail safe area',
+    desc:'See where the duration badge and UI cover your thumbnail.' },
+  { id:'picker', cat:'generators', name:'Random picker',
+    desc:'Pick winners from a list, or roll numbers. No repeats unless you ask.' },
+  { id:'palette', cat:'generators', name:'Colour palette',
+    desc:'Complementary, triadic, analogous and shades from one colour.' },
+  { id:'gradient', cat:'generators', name:'CSS gradient',
+    desc:'Build a gradient and copy the CSS.' },
+  { id:'shadow', cat:'generators', name:'CSS box-shadow',
+    desc:'Dial in a shadow and take the rule.' },
+  { id:'units', cat:'converters', name:'Unit converter',
+    desc:'Length, weight, temperature, data and speed.' },
+  { id:'roman', cat:'converters', name:'Roman numerals',
+    desc:'Both directions, up to 3,999.' },
+  { id:'timezone', cat:'converters', name:'Time zone converter',
+    desc:'One moment, shown in the zones you care about.' },
+  { id:'stats', cat:'math', name:'Average & spread',
+    desc:'Mean, median, mode, range and standard deviation from a list.' },
+  { id:'ratio-simp', cat:'math', name:'Ratio simplifier',
+    desc:'Reduce a ratio and scale it to any side.' },
+  { id:'limits', cat:'marketing', name:'Platform limits',
+    desc:'Live count against the real caps for YouTube, TikTok, X and the rest.' },
+  { id:'utm', cat:'marketing', name:'UTM link builder',
+    desc:'Tagged campaign links that analytics can actually group.' },
+  { id:'engagement', cat:'marketing', name:'Engagement rate',
+    desc:'Your rate, and how it reads against the usual band.' },
+  { id:'cpm', cat:'marketing', name:'CPM & RPM',
+    desc:'What a view is worth, and what a sponsor slot should cost.' },
   { id:'ai-title', cat:'ai', name:'YouTube title ideas', ai:true,
     desc:'Ten title options for a video, from the assistant that knows your channel.' },
   { id:'ai-desc', cat:'ai', name:'Description & tags', ai:true,
@@ -201,8 +271,9 @@ const TOOLS = [
   { id:'ai-hook', cat:'ai', name:'First-line hook', ai:true,
     desc:'Openings that stop the scroll, rewritten until one lands.' }
 ];
-const CATS = [['all','All'],['text','Text'],['developer','Developer'],['generators','Generators'],
-              ['converters','Converters'],['math','Maths'],['video','Video'],['ai','AI']];
+const CATS = [['all','All'],['text','Text'],['developer','Developer'],['images','Images'],
+              ['video','Video'],['generators','Generators'],['converters','Converters'],
+              ['math','Maths'],['marketing','Marketing'],['ai','AI']];
 
 let cat = 'all', q = '';
 const $ = id => document.getElementById(id);
@@ -507,6 +578,716 @@ const IMPL = {
       $('d').oninput = run;
     }
   },
+  'find-replace': {
+    html: ta('t','Paste your text') +
+      '<div class="row2"><div class="field"><label>Find</label><input id="f" placeholder="old"></div>' +
+      '<div class="field"><label>Replace with</label><input id="r" placeholder="new"></div></div>' +
+      '<div class="field"><label><input type="checkbox" id="re" style="width:auto;margin-right:7px">Treat "find" as a regular expression</label></div>' +
+      goRow + outBox + '<p class="note" id="cnt"></p>',
+    wire() {
+      const run = () => {
+        const v=$('t').value, f=$('f').value;
+        if(!f) return setOut(v);
+        try {
+          const rx = $('re').checked ? new RegExp(f,'g') : new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g');
+          const n = (v.match(rx)||[]).length;
+          setOut(v.replace(rx,$('r').value));
+          $('cnt').textContent = n + (n===1?' replacement':' replacements');
+        } catch(e){ setOut('That regular expression will not compile: '+e.message,true); }
+      };
+      ['t','f','r'].forEach(i=>$(i).oninput=run); $('re').onchange=run; $('go').onclick=run; $('copy').onclick=copyOut;
+    }
+  },
+  'sort-lines': {
+    html: ta('t','One item per line') +
+      '<div class="field"><label>Order</label><select id="m">' +
+      '<option value="az">A to Z</option><option value="za">Z to A</option><option value="len">Shortest first</option>' +
+      '<option value="num">Numerically</option><option value="rev">Reverse current</option><option value="shuf">Shuffle</option></select></div>' +
+      '<div class="field"><label><input type="checkbox" id="d" style="width:auto;margin-right:7px">Remove duplicates</label></div>' +
+      goRow + outBox + '<p class="note" id="cnt"></p>',
+    wire() {
+      const run = () => {
+        let L = $('t').value.split('\n').filter(x=>x.trim()!=='');
+        const before = L.length;
+        if($('d').checked) L = [...new Set(L)];
+        const m=$('m').value;
+        if(m==='az') L.sort((a,b)=>a.localeCompare(b));
+        else if(m==='za') L.sort((a,b)=>b.localeCompare(a));
+        else if(m==='len') L.sort((a,b)=>a.length-b.length);
+        else if(m==='num') L.sort((a,b)=>(parseFloat(a)||0)-(parseFloat(b)||0));
+        else if(m==='rev') L.reverse();
+        else if(m==='shuf') for(let i=L.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[L[i],L[j]]=[L[j],L[i]];}
+        setOut(L.join('\n'));
+        $('cnt').textContent = before+' in, '+L.length+' out'+(before!==L.length?' ('+(before-L.length)+' removed)':'');
+      };
+      $('go').onclick=run; $('copy').onclick=copyOut;
+    }
+  },
+  'char-freq': {
+    html: ta('t','Paste text') + '<div class="btns"><button class="go" id="go">Count</button></div>' + outBox,
+    wire() {
+      $('go').onclick = () => {
+        const v=$('t').value.toLowerCase();
+        const letters={}, words={};
+        for(const c of v) if(/[a-z0-9]/.test(c)) letters[c]=(letters[c]||0)+1;
+        for(const w of (v.match(/[a-z']{2,}/g)||[])) words[w]=(words[w]||0)+1;
+        const top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,10);
+        const bar=(n,max)=>'█'.repeat(Math.max(1,Math.round(n/max*18)));
+        const lt=top(letters), wt=top(words);
+        if(!lt.length) return setOut('Nothing to count yet.',true);
+        setOut('LETTERS\n'+lt.map(([k,n])=>k+'  '+bar(n,lt[0][1])+'  '+n).join('\n')+
+          (wt.length?'\n\nWORDS\n'+wt.map(([k,n])=>k.padEnd(14)+bar(n,wt[0][1])+'  '+n).join('\n'):''));
+      };
+    }
+  },
+  'lorem': {
+    html: '<div class="row2"><div class="field"><label>How many</label><input id="n" type="number" value="3" min="1" max="200"></div>' +
+      '<div class="field"><label>Of</label><select id="u"><option>paragraphs</option><option>sentences</option><option>words</option></select></div></div>' +
+      goRow + outBox,
+    wire() {
+      const W='lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum'.split(' ');
+      const w=()=>W[Math.floor(Math.random()*W.length)];
+      const sent=()=>{const n=6+Math.floor(Math.random()*10);const a=Array.from({length:n},w);a[0]=a[0][0].toUpperCase()+a[0].slice(1);return a.join(' ')+'.';};
+      const run=()=>{
+        const n=Math.min(200,Math.max(1,+$('n').value||1)), u=$('u').value;
+        if(u==='words') setOut(Array.from({length:n},w).join(' '));
+        else if(u==='sentences') setOut(Array.from({length:n},sent).join(' '));
+        else setOut(Array.from({length:n},()=>Array.from({length:3+Math.floor(Math.random()*3)},sent).join(' ')).join('\n\n'));
+      };
+      $('go').onclick=run; $('copy').onclick=copyOut; run();
+    }
+  },
+  'url-encode': {
+    html: ta('t','https://example.com/a b?x=1&y=hi there') +
+      '<div class="btns"><button class="go" id="go">Encode</button><button class="alt" id="dec">Decode</button>' +
+      '<button class="alt" id="comp">Encode component</button><button class="alt" id="copy">Copy</button></div>' + outBox +
+      '<p class="note"><b>Encode</b> keeps <code>/ : ? &amp; =</code> so a whole URL stays a URL. <b>Encode component</b> escapes them too — use it for one parameter value.</p>',
+    wire() {
+      $('go').onclick=()=>{try{setOut(encodeURI($('t').value));}catch(e){setOut('Could not encode that.',true);}};
+      $('comp').onclick=()=>{try{setOut(encodeURIComponent($('t').value));}catch(e){setOut('Could not encode that.',true);}};
+      $('dec').onclick=()=>{try{setOut(decodeURIComponent($('t').value));}catch(e){setOut('That is not valid percent-encoding.',true);}};
+      $('copy').onclick=copyOut;
+    }
+  },
+  'html-entities': {
+    html: ta('t','<p class="x">Tom & Jerry</p>') +
+      '<div class="btns"><button class="go" id="go">Escape</button><button class="alt" id="un">Unescape</button>' +
+      '<button class="alt" id="copy">Copy</button></div>' + outBox,
+    wire() {
+      $('go').onclick=()=>setOut($('t').value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'));
+      $('un').onclick=()=>{const d=document.createElement('textarea');d.innerHTML=$('t').value;setOut(d.value);};
+      $('copy').onclick=copyOut;
+    }
+  },
+  'hash': {
+    html: ta('t','Anything to hash') +
+      '<div class="field"><label>Algorithm</label><select id="a"><option>SHA-256</option><option>SHA-1</option><option>SHA-384</option><option>SHA-512</option></select></div>' +
+      goRow + outBox +
+      '<p class="note">Hashing happens in your browser through the Web Crypto engine. Nothing is sent anywhere — which is the only way a hash tool should work. <b>SHA-1 is broken</b> for anything security-related; it is here for checksums and legacy formats.</p>',
+    wire() {
+      const run=async()=>{
+        const v=$('t').value;
+        if(!v) return setOut('');
+        try {
+          const buf=await crypto.subtle.digest($('a').value, new TextEncoder().encode(v));
+          setOut([...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join(''));
+        } catch(e){ setOut('Hashing needs a secure page (https). '+e.message,true); }
+      };
+      $('go').onclick=run; $('a').onchange=run; $('copy').onclick=copyOut;
+    }
+  },
+  'regex': {
+    html: '<div class="field"><label>Pattern</label><input id="p" placeholder="\\\\b\\\\w+@\\\\w+\\\\.\\\\w+\\\\b"></div>' +
+      '<div class="field"><label>Flags</label><input id="f" value="g" placeholder="gim"></div>' +
+      ta('t','Text to search') + '<div class="btns"><button class="go" id="go">Test</button></div>' + outBox,
+    wire() {
+      const run=()=>{
+        const p=$('p').value; if(!p) return setOut('');
+        let rx; try{ rx=new RegExp(p,$('f').value||''); }catch(e){ return setOut('Will not compile: '+e.message,true); }
+        const v=$('t').value, out=[];
+        try {
+          if(rx.global){ let m,guard=0; while((m=rx.exec(v))!==null && guard++<2000){ out.push(m); if(m.index===rx.lastIndex) rx.lastIndex++; } }
+          else { const m=rx.exec(v); if(m) out.push(m); }
+        } catch(e){ return setOut('Failed while matching: '+e.message,true); }
+        if(!out.length) return setOut('No matches.');
+        setOut(out.length+(out.length===1?' match':' matches')+'\n\n'+out.slice(0,60).map((m,i)=>
+          '['+i+'] at '+m.index+'  "'+m[0]+'"'+(m.length>1?'\n      groups: '+m.slice(1).map(g=>g===undefined?'(none)':'"'+g+'"').join(', '):'')).join('\n'));
+      };
+      ['p','f','t'].forEach(i=>$(i).oninput=run); $('go').onclick=run;
+    }
+  },
+  'csv-json': {
+    html: ta('t','name,views\nMy video,4200\n"Title, with comma",900') +
+      '<div class="btns"><button class="go" id="go">CSV to JSON</button><button class="alt" id="back">JSON to CSV</button>' +
+      '<button class="alt" id="copy">Copy</button></div>' + outBox,
+    wire() {
+      /* A hand-rolled splitter because "a,b" inside quotes is the whole problem
+         with CSV — split(',') gets it wrong on the first real file. */
+      const cells = line => {
+        const out=[]; let cur='', q=false;
+        for(let i=0;i<line.length;i++){
+          const c=line[i];
+          if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+          else if(c==='"') q=true;
+          else if(c===','){ out.push(cur); cur=''; }
+          else cur+=c;
+        }
+        out.push(cur); return out;
+      };
+      $('go').onclick=()=>{
+        const lines=$('t').value.split(/\r?\n/).filter(l=>l.trim()!=='');
+        if(lines.length<2) return setOut('Needs a header row and at least one row of data.',true);
+        const head=cells(lines[0]).map(h=>h.trim());
+        const rows=lines.slice(1).map(l=>{
+          const c=cells(l), o={};
+          head.forEach((h,i)=>{ const raw=(c[i]??'').trim(); o[h] = raw!=='' && !isNaN(Number(raw)) ? Number(raw) : raw; });
+          return o;
+        });
+        setOut(JSON.stringify(rows,null,2));
+      };
+      $('back').onclick=()=>{
+        try {
+          const a=JSON.parse($('t').value);
+          if(!Array.isArray(a)||!a.length) throw new Error('Expected a non-empty array of objects.');
+          const head=[...new Set(a.flatMap(o=>Object.keys(o)))];
+          const q=v=>{ const s=v===undefined||v===null?'':String(v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+          setOut([head.join(','),...a.map(o=>head.map(h=>q(o[h])).join(','))].join('\n'));
+        } catch(e){ setOut('Could not read that JSON: '+e.message,true); }
+      };
+      $('copy').onclick=copyOut;
+    }
+  },
+  'query': {
+    html: '<div class="field"><label>URL</label><input id="t" placeholder="https://a.com/p?utm_source=yt&v=1"></div>' +
+      goRow + outBox,
+    wire() {
+      const run=()=>{
+        const v=$('t').value.trim(); if(!v) return setOut('');
+        let u; try{ u=new URL(v); }catch(e){ try{ u=new URL('https://'+v); }catch(e2){ return setOut('That is not a URL.',true); } }
+        const ps=[...u.searchParams.entries()];
+        setOut('Protocol  '+u.protocol.replace(':','')+'\nHost      '+u.host+'\nPath      '+(u.pathname||'/')+
+          (u.hash?'\nHash      '+u.hash:'')+'\n\n'+(ps.length?ps.map(([k,val])=>k.padEnd(18)+val).join('\n'):'No query parameters.'));
+      };
+      $('t').oninput=run; $('go').onclick=run; $('copy').onclick=copyOut;
+    }
+  },
+  'base-conv': {
+    html: '<div class="row2"><div class="field"><label>Value</label><input id="v" value="255"></div>' +
+      '<div class="field"><label>Currently in</label><select id="b"><option value="10">Decimal</option>' +
+      '<option value="2">Binary</option><option value="8">Octal</option><option value="16">Hex</option></select></div></div>' + outBox,
+    wire() {
+      const run=()=>{
+        const raw=$('v').value.trim().replace(/^0[bxo]/i,''); const b=+$('b').value;
+        if(!raw) return setOut('');
+        const n=parseInt(raw,b);
+        if(isNaN(n)) return setOut('That is not a valid base-'+b+' number.',true);
+        setOut('Decimal  '+n+'\nBinary   '+n.toString(2)+'\nOctal    '+n.toString(8)+'\nHex      '+n.toString(16).toUpperCase());
+      };
+      $('v').oninput=run; $('b').onchange=run; run();
+    }
+  },
+  'markdown': {
+    html: ta('t','# Heading\n\nSome **bold** and a [link](https://x.com).\n\n- one\n- two') +
+      '<div class="btns"><button class="go" id="go">Convert</button><button class="alt" id="copy">Copy HTML</button></div>' + outBox,
+    wire() {
+      $('go').onclick=()=>{
+        let h=esc($('t').value);
+        h=h.replace(/```([\s\S]*?)```/g,(m,c)=>'<pre><code>'+c.trim()+'</code></pre>')
+           .replace(/`([^`]+)`/g,'<code>$1</code>')
+           .replace(/^###### (.*)$/gm,'<h6>$1</h6>').replace(/^##### (.*)$/gm,'<h5>$1</h5>')
+           .replace(/^#### (.*)$/gm,'<h4>$1</h4>').replace(/^### (.*)$/gm,'<h3>$1</h3>')
+           .replace(/^## (.*)$/gm,'<h2>$1</h2>').replace(/^# (.*)$/gm,'<h1>$1</h1>')
+           .replace(/^&gt; (.*)$/gm,'<blockquote>$1</blockquote>')
+           .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>')
+           .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2">$1</a>')
+           .replace(/^\s*[-*] (.*)$/gm,'<li>$1</li>').replace(/^\s*\d+\. (.*)$/gm,'<li>$1</li>')
+           .replace(/(<li>[\s\S]*?<\/li>)(?!\s*<li>)/g,'<ul>$1</ul>')
+           .replace(/^---$/gm,'<hr>');
+        setOut(h.split(/\n{2,}/).map(b=>/^<(h\d|ul|pre|blockquote|hr)/.test(b.trim())?b:'<p>'+b.trim()+'</p>').join('\n'));
+      };
+      $('copy').onclick=copyOut;
+    }
+  },
+  /* ---- images ----
+     Every one of these goes through a canvas in your own browser. The picture is
+     never uploaded, which is the whole reason to use a page like this instead of
+     a site that wants your holiday photos on its server. */
+  'img-resize': {
+    html: imgPick() + '<div class="row2"><div class="field"><label>Width</label><input id="w" type="number" placeholder="1280"></div>' +
+      '<div class="field"><label>Height</label><input id="h" type="number" placeholder="720"></div></div>' +
+      '<div class="field"><label><input type="checkbox" id="lock" checked style="width:auto;margin-right:7px">Keep the proportions</label></div>' +
+      '<div class="btns"><button class="go" id="go">Resize &amp; download</button></div>' + outBox,
+    wire() {
+      let img=null;
+      onImg(i=>{ img=i; $('w').value=i.naturalWidth; $('h').value=i.naturalHeight;
+        setOut('Loaded '+i.naturalWidth+' x '+i.naturalHeight); });
+      $('w').oninput=()=>{ if(img&&$('lock').checked) $('h').value=Math.round(+$('w').value/(img.naturalWidth/img.naturalHeight)); };
+      $('h').oninput=()=>{ if(img&&$('lock').checked) $('w').value=Math.round(+$('h').value*(img.naturalWidth/img.naturalHeight)); };
+      $('go').onclick=()=>{
+        if(!img) return setOut('Choose an image first.',true);
+        const w=Math.max(1,+$('w').value||1), h=Math.max(1,+$('h').value||1);
+        drawTo(img,w,h,'image/png',1,(blob,url)=>{ dl(url,'resized-'+w+'x'+h+'.png'); setOut('Saved '+w+' x '+h+'  ·  '+kb(blob.size)); });
+      };
+    }
+  },
+  'img-compress': {
+    html: imgPick() + '<div class="field"><label>Quality <span id="qv">0.7</span></label>' +
+      '<input id="q2" type="range" min="0.1" max="1" step="0.05" value="0.7"></div>' +
+      '<div class="field"><label>Format</label><select id="f"><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option></select></div>' +
+      '<div class="btns"><button class="go" id="go">Compress &amp; download</button></div>' + outBox,
+    wire() {
+      let img=null, orig=0;
+      onImg((i,file)=>{ img=i; orig=file.size; setOut('Original: '+kb(orig)+'  ('+i.naturalWidth+' x '+i.naturalHeight+')'); });
+      $('q2').oninput=()=>$('qv').textContent=$('q2').value;
+      $('go').onclick=()=>{
+        if(!img) return setOut('Choose an image first.',true);
+        drawTo(img,img.naturalWidth,img.naturalHeight,$('f').value,+$('q2').value,(blob,url)=>{
+          dl(url,'compressed.'+($('f').value==='image/webp'?'webp':'jpg'));
+          const saved=orig?Math.round((1-blob.size/orig)*100):0;
+          setOut('Original    '+kb(orig)+'\nCompressed  '+kb(blob.size)+
+            (orig?('\nSaved       '+(saved>0?saved+'%':'nothing — it was already smaller')):''));
+        });
+      };
+    }
+  },
+  'img-convert': {
+    html: imgPick() + '<div class="field"><label>Convert to</label><select id="f">' +
+      '<option value="image/png">PNG</option><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option></select></div>' +
+      '<div class="btns"><button class="go" id="go">Convert &amp; download</button></div>' + outBox +
+      '<p class="note">PNG keeps transparency; JPEG does not and will fill it with black. WebP keeps it and is usually the smallest.</p>',
+    wire() {
+      let img=null;
+      onImg(i=>{ img=i; setOut('Loaded '+i.naturalWidth+' x '+i.naturalHeight); });
+      $('go').onclick=()=>{
+        if(!img) return setOut('Choose an image first.',true);
+        const f=$('f').value, ext=f.split('/')[1].replace('jpeg','jpg');
+        drawTo(img,img.naturalWidth,img.naturalHeight,f,0.92,(blob,url)=>{ dl(url,'converted.'+ext); setOut('Saved as '+ext.toUpperCase()+'  ·  '+kb(blob.size)); });
+      };
+    }
+  },
+  'img-datauri': {
+    html: imgPick() + '<div class="btns"><button class="go" id="go">Make data URI</button><button class="alt" id="copy">Copy</button></div>' + outBox +
+      '<p class="note">Data URIs inflate by about a third over the raw file, so they suit small icons rather than photographs.</p>',
+    wire() {
+      let file=null;
+      onImg((i,f)=>{ file=f; setOut('Loaded '+kb(f.size)); });
+      $('go').onclick=()=>{
+        if(!file) return setOut('Choose an image first.',true);
+        const r=new FileReader();
+        r.onload=()=>setOut(r.result);
+        r.readAsDataURL(file);
+      };
+      $('copy').onclick=copyOut;
+    }
+  },
+  'favicon': {
+    html: imgPick() + '<div class="btns"><button class="go" id="go">Make the set</button></div>' + outBox +
+      '<p class="note">Downloads 16, 32, 48, 180 and 512 px as separate PNGs. 180 is the Apple touch icon, 512 the one a phone uses when the site is added to a home screen.</p>',
+    wire() {
+      let img=null;
+      onImg(i=>{ img=i; setOut('Loaded '+i.naturalWidth+' x '+i.naturalHeight+
+        (i.naturalWidth<512?'\n\nSmaller than 512px — the big sizes will be soft.':'')); });
+      $('go').onclick=()=>{
+        if(!img) return setOut('Choose an image first.',true);
+        [16,32,48,180,512].forEach((n,k)=>setTimeout(()=>drawTo(img,n,n,'image/png',1,(b,u)=>dl(u,'favicon-'+n+'.png')), k*280));
+        setOut('Saving five files…');
+      };
+    }
+  },
+  /* ---- video / creator ---- */
+  'filesize': {
+    html: '<div class="row2"><div class="field"><label>Length (minutes)</label><input id="m" type="number" value="10" min="0" step="0.5"></div>' +
+      '<div class="field"><label>Video bitrate (Mbps)</label><input id="v" type="number" value="8" min="0.1" step="0.5"></div></div>' +
+      '<div class="field"><label>Audio bitrate (kbps)</label><input id="a" type="number" value="192" min="0"></div>' + outBox,
+    wire() {
+      const run=()=>{
+        const m=+$('m').value||0, v=+$('v').value||0, a=+$('a').value||0;
+        const bytes=(v*1e6/8 + a*1000/8)*m*60;
+        setOut('About  '+kb(bytes)+
+          '\n\nPer minute   '+kb(bytes/(m||1))+
+          '\nUpload at 10 Mbps takes about '+Math.max(1,Math.round(bytes*8/10e6/60))+' min');
+      };
+      ['m','v','a'].forEach(i=>$(i).oninput=run); run();
+    }
+  },
+  'chapters': {
+    html: ta('t','0 Intro\n1:24 The setup\n5:40 What went wrong\n11:02 Fixing it') +
+      '<div class="btns"><button class="go" id="go">Format</button><button class="alt" id="copy">Copy</button></div>' + outBox +
+      '<p class="note">YouTube only turns these into chapters if <b>the first one is 0:00</b>, there are <b>at least three</b>, and each lasts <b>10 seconds or more</b>. This checks all three.</p>',
+    wire() {
+      $('go').onclick=()=>{
+        const rows=$('t').value.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+          const m=/^(\d{1,2}:)?(\d{1,2}):?(\d{2})?\s+(.*)$/.exec(l) || /^(\d+)\s+(.+)$/.exec(l);
+          if(!m) return null;
+          let secs, title;
+          if(m.length===3){ secs=+m[1]; title=m[2]; }
+          else { const h=m[1]?+m[1].replace(':',''):0; secs = m[3]!==undefined ? h*3600+ +m[2]*60 + +m[3] : +m[2]*60 + 0; title=m[4]; if(m[3]===undefined){ secs=+m[2]*60; } }
+          return { secs, title:(title||'').trim() };
+        }).filter(Boolean).sort((a,b)=>a.secs-b.secs);
+        if(!rows.length) return setOut('Could not read any timestamps. Use "1:24 Title" per line.',true);
+        const fmt=s=>{const h=Math.floor(s/3600),m2=Math.floor(s%3600/60),s2=s%60;
+          return (h?h+':'+String(m2).padStart(2,'0'):String(m2))+':'+String(s2).padStart(2,'0');};
+        const problems=[];
+        if(rows[0].secs!==0) problems.push('The first chapter must start at 0:00 — it starts at '+fmt(rows[0].secs)+'.');
+        if(rows.length<3) problems.push('YouTube needs at least three chapters; there are '+rows.length+'.');
+        rows.forEach((r,i)=>{ const next=rows[i+1]; if(next && next.secs-r.secs<10)
+          problems.push('"'+r.title+'" is only '+(next.secs-r.secs)+'s long — the minimum is 10.'); });
+        setOut(rows.map(r=>fmt(r.secs)+' '+r.title).join('\n') +
+          (problems.length ? '\n\n--- will NOT work as chapters ---\n' + problems.map(p=>'• '+p).join('\n')
+                           : '\n\n--- valid, paste into your description ---'), problems.length>0);
+      };
+      $('copy').onclick=copyOut;
+    }
+  },
+  'srt-vtt': {
+    html: ta('t','1\n00:00:01,000 --> 00:00:04,000\nHello there') +
+      '<div class="btns"><button class="go" id="go">SRT to VTT</button><button class="alt" id="back">VTT to SRT</button>' +
+      '<button class="alt" id="copy">Copy</button></div>' + outBox +
+      '<p class="note">The real difference is the decimal separator: SRT uses a comma, VTT a full stop. VTT also needs a WEBVTT header.</p>',
+    wire() {
+      $('go').onclick=()=>{
+        const v=$('t').value.trim();
+        if(!v) return setOut('');
+        setOut('WEBVTT\n\n'+v.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g,'$1.$2'));
+      };
+      $('back').onclick=()=>{
+        const v=$('t').value.replace(/^WEBVTT.*\n+/i,'').trim();
+        if(!v) return setOut('');
+        const blocks=v.split(/\n{2,}/).map((b,i)=>{
+          const lines=b.split('\n').filter(Boolean);
+          const ti=lines.findIndex(l=>l.includes('-->'));
+          if(ti<0) return null;
+          return (i+1)+'\n'+lines[ti].replace(/(\d{2}:\d{2}:\d{2})\.(\d{3})/g,'$1,$2')+'\n'+lines.slice(ti+1).join('\n');
+        }).filter(Boolean);
+        setOut(blocks.join('\n\n'));
+      };
+      $('copy').onclick=copyOut;
+    }
+  },
+  'safearea': {
+    html: imgPick() + '<canvas id="cv" style="width:100%;border-radius:12px;border:1px solid var(--line);margin-top:14px;display:none"></canvas>' + outBox +
+      '<p class="note">The red box is where the duration badge sits, and the shaded strip is what a phone can crop. Keep faces and words out of both.</p>',
+    wire() {
+      onImg(img=>{
+        const cv=$('cv'); cv.style.display='block';
+        const W=1280, H=Math.round(W*img.naturalHeight/img.naturalWidth);
+        cv.width=W; cv.height=H;
+        const c=cv.getContext('2d');
+        c.drawImage(img,0,0,W,H);
+        // duration badge: bottom-right, roughly 10% wide and 8% tall
+        c.strokeStyle='#FF2E97'; c.lineWidth=4;
+        c.strokeRect(W-W*0.13, H-H*0.13, W*0.11, H*0.09);
+        // the strip a narrow phone layout can crop
+        c.fillStyle='rgba(0,0,0,0.45)';
+        c.fillRect(0,0,W*0.06,H); c.fillRect(W-W*0.06,0,W*0.06,H);
+        const ratio=(img.naturalWidth/img.naturalHeight).toFixed(2);
+        setOut(img.naturalWidth+' x '+img.naturalHeight+'  ·  ratio '+ratio+
+          (Math.abs(img.naturalWidth/img.naturalHeight-16/9)>0.05 ? '\n\nNot 16:9 — YouTube will letterbox or crop it.' : '\n\n16:9, which is what YouTube wants.') +
+          (img.naturalWidth<1280 ? '\nUnder 1280 wide, so it will look soft on a TV.' : ''));
+      });
+    }
+  },
+  /* ---- generators ---- */
+  'picker': {
+    html: ta('t','One name per line') +
+      '<div class="row2"><div class="field"><label>How many to pick</label><input id="n" type="number" value="1" min="1"></div>' +
+      '<div class="field"><label><input type="checkbox" id="rep" style="width:auto;margin-right:7px">Allow repeats</label></div></div>' +
+      '<div class="btns"><button class="go" id="go">Pick</button><button class="alt" id="copy">Copy</button></div>' + outBox +
+      '<p class="note">Uses the browser\'s cryptographic random source, not Math.random — so a giveaway draw is genuinely unpredictable.</p>',
+    wire() {
+      const rnd=n=>crypto.getRandomValues(new Uint32Array(1))[0] % n;
+      $('go').onclick=()=>{
+        let L=$('t').value.split('\n').map(x=>x.trim()).filter(Boolean);
+        if(!L.length) return setOut('Add some options first.',true);
+        const n=Math.max(1,+$('n').value||1);
+        if(!$('rep').checked && n>L.length) return setOut('Only '+L.length+' options — tick "allow repeats" to pick '+n+'.',true);
+        const out=[];
+        for(let i=0;i<n;i++){ const k=rnd(L.length); out.push(L[k]); if(!$('rep').checked) L.splice(k,1); }
+        setOut(out.map((x,i)=>(i+1)+'. '+x).join('\n'));
+      };
+      $('copy').onclick=copyOut;
+    }
+  },
+  'palette': {
+    html: '<div class="field"><label>Base colour</label><input id="c" value="#00F0FF"></div>' +
+      '<div id="sw2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;margin-top:14px"></div>' + outBox,
+    wire() {
+      const hex2hsl=h=>{
+        const m=/^#?([0-9a-f]{6}|[0-9a-f]{3})$/i.exec(h.trim()); if(!m) return null;
+        let v=m[1]; if(v.length===3) v=v.split('').map(c=>c+c).join('');
+        const r=parseInt(v.slice(0,2),16)/255,g=parseInt(v.slice(2,4),16)/255,b=parseInt(v.slice(4,6),16)/255;
+        const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;
+        let hh=0,s=0;
+        if(d){ s=d/(1-Math.abs(2*l-1)); hh=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4; hh=Math.round(hh*60); if(hh<0)hh+=360; }
+        return [hh,s*100,l*100];
+      };
+      const hsl2hex=(h,s,l)=>{
+        s/=100; l/=100;
+        const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l);
+        const f=n=>Math.round(255*(l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)))));
+        return '#'+[f(0),f(8),f(4)].map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();
+      };
+      const run=()=>{
+        const hsl=hex2hsl($('c').value);
+        if(!hsl) return setOut('Use a hex colour like #00F0FF.',true);
+        const [h,s,l]=hsl;
+        const set=[['Base',hsl2hex(h,s,l)],['Complement',hsl2hex((h+180)%360,s,l)],
+          ['Triad A',hsl2hex((h+120)%360,s,l)],['Triad B',hsl2hex((h+240)%360,s,l)],
+          ['Analogous −30',hsl2hex((h+330)%360,s,l)],['Analogous +30',hsl2hex((h+30)%360,s,l)],
+          ['Light',hsl2hex(h,s,Math.min(92,l+25))],['Dark',hsl2hex(h,s,Math.max(8,l-25))]];
+        $('sw2').innerHTML=set.map(([n,c])=>'<div><div style="height:52px;border-radius:9px;background:'+c+
+          ';border:1px solid var(--line)"></div><div style="font-size:.64rem;color:var(--dim);margin-top:5px">'+n+'</div>'+
+          '<div style="font-size:.7rem;font-family:ui-monospace,monospace">'+c+'</div></div>').join('');
+        setOut(set.map(([n,c])=>n.padEnd(16)+c).join('\n'));
+      };
+      $('c').oninput=run; run();
+    }
+  },
+  'gradient': {
+    html: '<div class="row2"><div class="field"><label>From</label><input id="a" value="#FF2E97"></div>' +
+      '<div class="field"><label>To</label><input id="b" value="#00F0FF"></div></div>' +
+      '<div class="field"><label>Angle <span id="av">90</span>°</label><input id="ang" type="range" min="0" max="360" value="90"></div>' +
+      '<div id="prev" style="height:80px;border-radius:12px;border:1px solid var(--line);margin-top:12px"></div>' +
+      '<div class="btns"><button class="alt" id="copy">Copy CSS</button></div>' + outBox,
+    wire() {
+      const run=()=>{
+        const css='linear-gradient('+$('ang').value+'deg, '+$('a').value+' 0%, '+$('b').value+' 100%)';
+        $('prev').style.background=css; $('av').textContent=$('ang').value;
+        setOut('background: '+css+';');
+      };
+      ['a','b'].forEach(i=>$(i).oninput=run); $('ang').oninput=run; $('copy').onclick=copyOut; run();
+    }
+  },
+  'shadow': {
+    html: '<div class="row2"><div class="field"><label>X <span id="xv">0</span>px</label><input id="x" type="range" min="-40" max="40" value="0"></div>' +
+      '<div class="field"><label>Y <span id="yv">12</span>px</label><input id="y" type="range" min="-40" max="40" value="12"></div></div>' +
+      '<div class="row2"><div class="field"><label>Blur <span id="bv">30</span>px</label><input id="b" type="range" min="0" max="90" value="30"></div>' +
+      '<div class="field"><label>Spread <span id="sv">0</span>px</label><input id="s" type="range" min="-30" max="30" value="0"></div></div>' +
+      '<div class="row2"><div class="field"><label>Colour</label><input id="c" value="#000000"></div>' +
+      '<div class="field"><label>Opacity <span id="ov">0.45</span></label><input id="o" type="range" min="0" max="1" step="0.05" value="0.45"></div></div>' +
+      '<div style="display:grid;place-items:center;height:130px;margin-top:14px"><div id="prev" style="width:110px;height:70px;border-radius:12px;background:#1a2030"></div></div>' +
+      '<div class="btns"><button class="alt" id="copy">Copy CSS</button></div>' + outBox,
+    wire() {
+      const run=()=>{
+        const hex=$('c').value.replace('#','');
+        const full=hex.length===3?hex.split('').map(c=>c+c).join(''):hex;
+        const r=parseInt(full.slice(0,2),16)||0,g=parseInt(full.slice(2,4),16)||0,b=parseInt(full.slice(4,6),16)||0;
+        const css=$('x').value+'px '+$('y').value+'px '+$('b').value+'px '+$('s').value+'px rgba('+r+','+g+','+b+','+$('o').value+')';
+        $('prev').style.boxShadow=css;
+        ['x','y','b','s','o'].forEach(i=>{const l=$(i[0]+'v'); if(l) l.textContent=$(i).value;});
+        setOut('box-shadow: '+css+';');
+      };
+      ['x','y','b','s','o','c'].forEach(i=>$(i).oninput=run); $('copy').onclick=copyOut; run();
+    }
+  },
+  /* ---- converters ---- */
+  'units': {
+    html: '<div class="field"><label>Kind</label><select id="k">' +
+      '<option>Length</option><option>Weight</option><option>Temperature</option><option>Data</option><option>Speed</option></select></div>' +
+      '<div class="row2"><div class="field"><label>Value</label><input id="v" type="number" value="1"></div>' +
+      '<div class="field"><label>From</label><select id="f"></select></div></div>' + outBox,
+    wire() {
+      /* Everything but temperature converts through one base unit, so a table of
+         factors covers all of it. Temperature has offsets, so it is its own case. */
+      const U={
+        Length:{ m:1, km:1000, cm:0.01, mm:0.001, mile:1609.344, yard:0.9144, foot:0.3048, inch:0.0254 },
+        Weight:{ kg:1, g:0.001, tonne:1000, lb:0.45359237, oz:0.028349523 },
+        Data:{ MB:1, KB:0.001, GB:1000, TB:1e6, MiB:1.048576, GiB:1073.741824 },
+        Speed:{ 'km/h':1, 'm/s':3.6, mph:1.609344, knot:1.852 }
+      };
+      const fill=()=>{
+        const k=$('k').value;
+        const names = k==='Temperature' ? ['C','F','K'] : Object.keys(U[k]);
+        $('f').innerHTML=names.map(n=>'<option>'+n+'</option>').join('');
+        run();
+      };
+      const run=()=>{
+        const k=$('k').value, v=+$('v').value, from=$('f').value;
+        if(isNaN(v)) return setOut('Enter a number.',true);
+        if(k==='Temperature'){
+          const c = from==='C'?v : from==='F'?(v-32)*5/9 : v-273.15;
+          return setOut('Celsius     '+r(c)+'\nFahrenheit  '+r(c*9/5+32)+'\nKelvin      '+r(c+273.15));
+        }
+        const base=v*U[k][from];
+        setOut(Object.entries(U[k]).map(([n,f])=>n.padEnd(10)+r(base/f)).join('\n'));
+      };
+      const r=n=>Math.round(n*1e6)/1e6;
+      $('k').onchange=fill; $('v').oninput=run; $('f').onchange=run; fill();
+    }
+  },
+  'roman': {
+    html: '<div class="field"><label>A number, or Roman numerals</label><input id="t" value="2026"></div>' + outBox,
+    wire() {
+      const M=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+      const V={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};
+      const run=()=>{
+        const v=$('t').value.trim().toUpperCase();
+        if(!v) return setOut('');
+        if(/^\d+$/.test(v)){
+          let n=+v;
+          if(n<1||n>3999) return setOut('Roman numerals run from 1 to 3,999.',true);
+          let out=''; for(const [d,s] of M) while(n>=d){ out+=s; n-=d; }
+          return setOut(out);
+        }
+        if(!/^[IVXLCDM]+$/.test(v)) return setOut('Use digits, or the letters I V X L C D M.',true);
+        let n=0; for(let i=0;i<v.length;i++) n += V[v[i]] < V[v[i+1]] ? -V[v[i]] : V[v[i]];
+        setOut(String(n));
+      };
+      $('t').oninput=run; run();
+    }
+  },
+  'timezone': {
+    html: '<div class="field"><label>Date &amp; time (yours)</label><input id="d" type="datetime-local"></div>' + outBox,
+    wire() {
+      const ZONES=['UTC','America/Los_Angeles','America/New_York','Europe/London','Europe/Lisbon','Europe/Berlin',
+                   'Africa/Lagos','Asia/Tehran','Asia/Dubai','Asia/Kolkata','Asia/Singapore','Asia/Tokyo','Australia/Sydney'];
+      const run=()=>{
+        const v=$('d').value;
+        const d=v?new Date(v):new Date();
+        if(isNaN(d)) return setOut('Pick a date and time.',true);
+        setOut(ZONES.map(z=>{
+          try { return z.split('/').pop().replace('_',' ').padEnd(14)+
+            new Intl.DateTimeFormat('en-GB',{timeZone:z,dateStyle:'medium',timeStyle:'short'}).format(d); }
+          catch(e){ return z.padEnd(14)+'unavailable'; }
+        }).join('\n'));
+      };
+      $('d').oninput=run;
+      const now=new Date(Date.now()-new Date().getTimezoneOffset()*60000);
+      $('d').value=now.toISOString().slice(0,16); run();
+    }
+  },
+  /* ---- maths ---- */
+  'stats': {
+    html: ta('t','12\n40\n7\n40\n19') + '<div class="btns"><button class="go" id="go">Work it out</button></div>' +
+      '<div class="stats" id="st"></div>' + outBox,
+    wire() {
+      $('go').onclick=()=>{
+        const n=$('t').value.split(/[\s,]+/).map(Number).filter(x=>!isNaN(x));
+        if(!n.length) return setOut('Add some numbers, one per line or comma separated.',true);
+        const sorted=[...n].sort((a,b)=>a-b);
+        const sum=n.reduce((a,b)=>a+b,0), mean=sum/n.length;
+        const mid=Math.floor(sorted.length/2);
+        const median=sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;
+        const counts={}; n.forEach(x=>counts[x]=(counts[x]||0)+1);
+        const top=Math.max(...Object.values(counts));
+        const modes=top>1?Object.keys(counts).filter(k=>counts[k]===top):[];
+        // population standard deviation — these are whole lists, not samples
+        const sd=Math.sqrt(n.reduce((a,b)=>a+(b-mean)**2,0)/n.length);
+        const r=x=>Math.round(x*1e4)/1e4;
+        $('st').innerHTML=stat(n.length,'values')+stat(r(mean),'mean')+stat(r(median),'median')+stat(r(sd),'std dev');
+        setOut('Sum      '+r(sum)+'\nMin      '+sorted[0]+'\nMax      '+sorted[sorted.length-1]+
+          '\nRange    '+r(sorted[sorted.length-1]-sorted[0])+
+          '\nMode     '+(modes.length?modes.join(', '):'none repeats'));
+      };
+    }
+  },
+  'ratio-simp': {
+    html: '<div class="row2"><div class="field"><label>A</label><input id="a" type="number" value="1920"></div>' +
+      '<div class="field"><label>B</label><input id="b" type="number" value="1080"></div></div>' +
+      '<div class="field"><label>Scale so A becomes</label><input id="s" type="number" placeholder="leave empty to skip"></div>' + outBox,
+    wire() {
+      const gcd=(a,b)=>b?gcd(b,a%b):a;
+      const run=()=>{
+        const a=+$('a').value, b=+$('b').value;
+        if(!a||!b) return setOut('Both sides need a non-zero number.',true);
+        const g=gcd(Math.abs(a),Math.abs(b));
+        let out='Simplified   '+(a/g)+' : '+(b/g)+'\nAs a decimal '+(Math.round(a/b*1e4)/1e4)+' : 1';
+        const s=+$('s').value;
+        if(s) out+='\n\nScaled       '+s+' : '+Math.round(s*b/a);
+        setOut(out);
+      };
+      ['a','b','s'].forEach(i=>$(i).oninput=run); run();
+    }
+  },
+  /* ---- marketing ---- */
+  'limits': {
+    html: ta('t','Type or paste, and watch the bars.') + '<div id="lim"></div>',
+    wire() {
+      const L=[['YouTube title',100],['YouTube description',5000],['YouTube tag',500],
+               ['Shorts title',100],['TikTok caption',2200],['Instagram caption',2200],
+               ['X post',280],['Reddit title',300],['Thumbnail text (readable)',30]];
+      const run=()=>{
+        const n=$('t').value.length;
+        $('lim').innerHTML=L.map(([name,max])=>{
+          const pct=Math.min(100,n/max*100);
+          const over=n>max;
+          return '<div style="margin-top:11px"><div style="display:flex;justify-content:space-between;font-size:.76rem;color:'+
+            (over?'#FF2E97':'var(--dim)')+'"><span>'+name+'</span><span>'+n+' / '+max+(over?'  over by '+(n-max):'')+'</span></div>'+
+            '<div style="height:6px;border-radius:4px;background:rgba(255,255,255,0.07);margin-top:4px;overflow:hidden">'+
+            '<div style="height:100%;width:'+pct+'%;background:'+(over?'#FF2E97':pct>85?'#ffd24a':'var(--cyan)')+'"></div></div></div>';
+        }).join('');
+      };
+      $('t').oninput=run; run();
+    }
+  },
+  'utm': {
+    html: '<div class="field"><label>Destination URL</label><input id="u" placeholder="https://yoursite.com/page"></div>' +
+      '<div class="row2"><div class="field"><label>Source</label><input id="s" placeholder="youtube"></div>' +
+      '<div class="field"><label>Medium</label><input id="m" placeholder="description"></div></div>' +
+      '<div class="row2"><div class="field"><label>Campaign</label><input id="c" placeholder="launch-video"></div>' +
+      '<div class="field"><label>Content (optional)</label><input id="ct" placeholder="pinned-comment"></div></div>' +
+      '<div class="btns"><button class="alt" id="copy">Copy link</button></div>' + outBox +
+      '<p class="note">Keep them lowercase and consistent. Analytics treats <code>YouTube</code> and <code>youtube</code> as two different sources, which is how one campaign becomes five rows.</p>',
+    wire() {
+      const run=()=>{
+        const u=$('u').value.trim();
+        if(!u) return setOut('');
+        let url; try{ url=new URL(u.startsWith('http')?u:'https://'+u); }catch(e){ return setOut('That is not a URL.',true); }
+        const add=(k,v)=>{ if(v.trim()) url.searchParams.set(k, v.trim().toLowerCase().replace(/\s+/g,'-')); };
+        add('utm_source',$('s').value); add('utm_medium',$('m').value);
+        add('utm_campaign',$('c').value); add('utm_content',$('ct').value);
+        setOut(url.toString());
+      };
+      ['u','s','m','c','ct'].forEach(i=>$(i).oninput=run); $('copy').onclick=copyOut;
+    }
+  },
+  'engagement': {
+    html: '<div class="row2"><div class="field"><label>Views</label><input id="v" type="number" value="4200"></div>' +
+      '<div class="field"><label>Likes</label><input id="l" type="number" value="310"></div></div>' +
+      '<div class="row2"><div class="field"><label>Comments</label><input id="c" type="number" value="44"></div>' +
+      '<div class="field"><label>Shares (optional)</label><input id="s" type="number" value="0"></div></div>' +
+      '<div class="stats" id="st"></div>' + outBox,
+    wire() {
+      const run=()=>{
+        const v=+$('v').value||0, l=+$('l').value||0, c=+$('c').value||0, s=+$('s').value||0;
+        if(!v) return setOut('Views cannot be zero.',true);
+        const er=(l+c+s)/v*100, lr=l/v*100, cr=c/v*100;
+        const r=x=>Math.round(x*100)/100;
+        $('st').innerHTML=stat(r(er)+'%','engagement')+stat(r(lr)+'%','like rate')+stat(r(cr)+'%','comment rate');
+        /* The bands are the ones creators actually quote: under 2% is quiet,
+           4%+ is strong. Stated as a rough guide because it varies hugely by
+           niche and format, and a precise-looking benchmark would be invented. */
+        setOut(er<1?'Under 1% — quiet. Worth looking at the hook and the thumbnail.'
+          :er<2?'1-2% — on the low side of normal.'
+          :er<4?'2-4% — a healthy, normal range.'
+          :er<8?'4-8% — strong. Whatever this was, do it again.'
+          :'Over 8% — unusually high. Often a small, very engaged audience.'
+          + '\n\nRough guide only: engagement varies a lot by niche and by format, and Shorts sit higher than long videos.');
+      };
+      ['v','l','c','s'].forEach(i=>$(i).oninput=run); run();
+    }
+  },
+  'cpm': {
+    html: '<div class="row2"><div class="field"><label>Views</label><input id="v" type="number" value="50000"></div>' +
+      '<div class="field"><label>Earnings ($)</label><input id="e" type="number" value="120" step="0.01"></div></div>' +
+      '<div class="field"><label>Monetised playbacks (optional — for true CPM)</label><input id="m" type="number" placeholder="e.g. 28000"></div>' +
+      '<div class="stats" id="st"></div>' + outBox,
+    wire() {
+      const run=()=>{
+        const v=+$('v').value||0, e=+$('e').value||0, m=+$('m').value||0;
+        if(!v) return setOut('Views cannot be zero.',true);
+        const rpm=e/v*1000, cpm=m?e/m*1000:0;
+        const r=x=>'$'+(Math.round(x*100)/100);
+        $('st').innerHTML=stat(r(rpm),'RPM')+(m?stat(r(cpm),'CPM'):'')+stat(r(e/v),'per view');
+        setOut('RPM is what YOU keep per 1,000 views — earnings divided by all views.'+
+          (m?'\nCPM is what advertisers paid per 1,000 monetised playbacks, before YouTube\'s 45% cut.':
+             '\n\nAdd monetised playbacks (Analytics shows it) to get CPM too.')+
+          '\n\nA sponsor slot on this video: roughly '+r(v/1000*15)+' to '+r(v/1000*40)+
+          ' at the usual $15-40 per 1,000 views.');
+      };
+      ['v','e','m'].forEach(i=>$(i).oninput=run); run();
+    }
+  },
   'ratio': {
     html: '<div class="row2"><div class="field"><label>Width</label><input id="w" type="number" value="1920"></div>' +
       '<div class="field"><label>Height</label><input id="h" type="number" value="1080"></div></div>' +
@@ -532,6 +1313,42 @@ const IMPL = {
     }
   }
 };
+
+
+/* ---- shared helpers for the image tools ----
+   One file picker, one canvas draw, one download. Five tools would otherwise
+   each carry their own copy of the same twenty lines. */
+function imgPick() {
+  return '<div class="field"><label>Image</label><input id="file" type="file" accept="image/*"></div>';
+}
+function onImg(cb) {
+  $('file').onchange = e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const img = new Image();
+    img.onload = () => cb(img, f);
+    img.onerror = () => setOut('That file could not be read as an image.', true);
+    img.src = URL.createObjectURL(f);
+  };
+}
+function drawTo(img, w, h, type, quality, cb) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  /* JPEG has no alpha: without this, transparency comes out black instead of
+     the white everyone expects. */
+  if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }
+  ctx.drawImage(img, 0, 0, w, h);
+  c.toBlob(b => { if (!b) return setOut('The browser refused to encode that.', true); cb(b, URL.createObjectURL(b)); }, type, quality);
+}
+function dl(url, name) {
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function kb(b) { return b > 1048576 ? (b / 1048576).toFixed(2) + ' MB' : (b / 1024).toFixed(1) + ' KB'; }
 
 function stat(v, label) { return '<div class="stat"><b>' + v + '</b><span>' + label + '</span></div>'; }
 
