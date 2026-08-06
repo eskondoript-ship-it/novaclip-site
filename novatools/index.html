@@ -285,7 +285,7 @@ h1 .g { background: var(--gradient-brand); -webkit-background-clip: text;
           border-color: color-mix(in oklab, var(--border) 70%, transparent); }
 
 /* ---- the card ---- */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(268px, 100%), 1fr)); gap: 16px; }
 .tool { position: relative; display: flex; flex-direction: column; text-align: left;
   border-radius: calc(var(--radius) + 8px);
   border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
@@ -355,7 +355,7 @@ textarea:focus, .field input:focus, .field select:focus {
   font-family: "Geist Mono", ui-monospace, Menlo, monospace; font-size: 12.8px; line-height: 1.65;
   white-space: pre-wrap; word-break: break-word; }
 .out.err { border-color: color-mix(in oklab, oklch(0.68 0.2 22) 50%, transparent); color: oklch(0.75 0.16 22); }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px,1fr)); gap: 10px; margin-top: 16px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(104px, 100%),1fr)); gap: 10px; margin-top: 16px; }
 .stat { border-radius: 12px; padding: 12px 13px;
   border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   background: color-mix(in oklab, var(--secondary) 30%, transparent); }
@@ -438,7 +438,7 @@ h1 .ch { display: inline-block; opacity: 0; transform: translateY(24px) rotateX(
 .trust { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted-foreground); font-size: 12.5px; }
 .trust span { display: inline-flex; align-items: center; gap: 6px; }
 .tick { color: var(--accent); }
-.counts { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 14px; margin-top: 40px; }
+.counts { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(140px, 100%),1fr)); gap: 14px; margin-top: 40px; }
 .count { border-radius: calc(var(--radius) + 4px); padding: 18px;
   border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   background: color-mix(in oklab, var(--card) 55%, transparent); }
@@ -466,7 +466,7 @@ section { padding: 84px 0; position: relative; }
   color: var(--muted-foreground); font-weight: 600; margin-bottom: 12px; display: block; }
 h2 { font-size: clamp(1.8rem,3.4vw,2.6rem); font-weight: 600; letter-spacing: -.03em; line-height: 1.1; }
 .sublede { color: var(--muted-foreground); max-width: 56ch; margin-top: 14px; }
-.cards3 { display: grid; grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap: 16px; margin-top: 34px; }
+.cards3 { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(320px, 100%),1fr)); gap: 16px; margin-top: 34px; }
 .fcard { border-radius: calc(var(--radius) + 8px); padding: 22px;
   border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   background: color-mix(in oklab, var(--card) 55%, transparent);
@@ -490,7 +490,7 @@ h2 { font-size: clamp(1.8rem,3.4vw,2.6rem); font-weight: 600; letter-spacing: -.
 .step p { color: var(--muted-foreground); font-size: 13.5px; margin-top: 5px; line-height: 1.6; max-width: 62ch; }
 
 /* ---- why / list ---- */
-.why { display: grid; grid-template-columns: repeat(auto-fit,minmax(230px,1fr)); gap: 12px; margin-top: 30px; }
+.why { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(230px, 100%),1fr)); gap: 12px; margin-top: 30px; }
 .why div { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
 .why .tick { flex: 0 0 auto; margin-top: 2px; }
 .why span.t { color: var(--muted-foreground); font-size: 13px; display: block; margin-top: 2px; }
@@ -517,7 +517,7 @@ h2 { font-size: clamp(1.8rem,3.4vw,2.6rem); font-weight: 600; letter-spacing: -.
 
 /* ---- footer ---- */
 .foot { border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent); margin-top: 70px; padding: 50px 0 30px; }
-.footcols { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 28px; }
+.footcols { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(150px, 100%),1fr)); gap: 28px; }
 .footcols h4 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 12px; }
 .footcols a { display: block; color: var(--muted-foreground); text-decoration: none; font-size: 13.5px; padding: 4px 0; }
 .footcols a:hover { color: var(--foreground); }
@@ -607,7 +607,7 @@ kbd { font-size: 11px; border-radius: 6px; padding: 1px 5px; font-family: inheri
 .tool:hover .fav, .tool .fav:focus-visible, .tool .fav.on { opacity: 1; }
 .tool .fav.on { color: oklch(0.78 0.16 75); }
 .tool .fav:hover { background: color-mix(in oklab, var(--secondary) 70%, transparent); }
-.trustrow { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 14px; margin-top: 34px; }
+.trustrow { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(210px, 100%),1fr)); gap: 14px; margin-top: 34px; }
 .trustrow div { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; }
 .trustrow b { display: block; font-size: 14px; }
 .trustrow span.t { color: var(--muted-foreground); display: block; margin-top: 2px; }
@@ -650,6 +650,63 @@ kbd { font-size: 11px; border-radius: 6px; padding: 1px 5px; font-family: inheri
 .formmsg { margin-top: 10px; font-size: 13.5px; color: var(--muted-foreground); }
 .formmsg.ok { color: var(--accent); }
 .formmsg.err { color: oklch(0.62 0.21 25); }
+
+/* ---- fitting a finger ----
+   A pointing device is accurate to a pixel; a fingertip is about 9mm across.
+   These rules only apply where the primary input is coarse, so nothing here
+   changes the desktop layout — and they are deliberately narrow, because
+   padding out every link in a paragraph would wreck the paragraph.
+
+   `hover: none` is checked alongside `pointer: coarse` so a laptop with a
+   touchscreen, which has both, keeps the tighter desktop spacing it was
+   designed for. */
+@media (pointer: coarse) and (hover: none) {
+  .cat, .rchip, .tag, .navlink, .dropmenu a, #sugg button,
+  .footcols a, #mobile button, #mobile a, .q button {
+    min-height: 40px; display: flex; align-items: center;
+  }
+  .cat, .rchip { padding-top: 8px; padding-bottom: 8px; }
+  .footcols a { padding: 9px 0; }
+  .iconbtn, .burger { min-width: 40px; min-height: 40px; }
+  .cta, .ghost { min-height: 42px; padding-top: 11px; padding-bottom: 11px; }
+  .tool .fav { opacity: 1; width: 40px; height: 40px; }   /* no hover to reveal it */
+  .tool { padding: 22px 18px; }
+  input, textarea, select, #q { min-height: 44px; font-size: 16px; }
+  /* 16px is not a taste decision: iOS zooms the whole page in when a field
+     with smaller text takes focus, and the visitor is then left zoomed. */
+  /* Card chips and ad labels: sized for a monitor at arm's length, too small
+     on anything held. Tied to the input device rather than the width, so a
+     tablet gets it too. */
+  .tool .chip, .chip, .rchip, .adslot .adlabel { font-size: 12.5px; }
+}
+
+/* Nothing below 12px on a phone. The chips and tags are secondary labels, and
+   they were set at a size that reads on a monitor at arm's length rather than
+   a handset at reading distance. */
+@media (max-width: 520px) {
+  .tool .chip, .chip, .rchip, .adslot .adlabel { font-size: 12px; }
+  .count b { font-size: 26px; }
+  .fc { display: none; }            /* the floating preview cards, no room for them */
+}
+
+/* Very small phones: 320px is still 3% of handsets and the whole layout has to
+   survive it, not just avoid a scrollbar. */
+@media (max-width: 360px) {
+  .wrap, .container { padding-left: 14px; padding-right: 14px; }
+  .navin { padding: 6px 8px; gap: 6px; }
+  .brandtx { font-size: 14px; }
+  .heroctas { gap: 8px; }
+  .cta.big, .ghost.big { padding: 12px 18px; font-size: 14.5px; }
+  .counts { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .count { padding: 14px; }
+}
+
+/* Large monitors: the 1200px column is right for reading, but on a 2560px
+   screen the tool grid can use more of it without the cards becoming huge. */
+@media (min-width: 1800px) {
+  #tools .container, .foot .container { max-width: 1560px; }
+  #tools .grid { grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .rv { opacity: 1 !important; transform: none !important; filter: none !important; }
@@ -1989,7 +2046,7 @@ const IMPL = {
   },
   'palette': {
     html: '<div class="field"><label>Base colour</label><input id="c" value="#00F0FF"></div>' +
-      '<div id="sw2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;margin-top:14px"></div>' + outBox,
+      '<div id="sw2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(70px, 100%),1fr));gap:8px;margin-top:14px"></div>' + outBox,
     wire() {
       const hex2hsl=h=>{
         const m=/^#?([0-9a-f]{6}|[0-9a-f]{3})$/i.exec(h.trim()); if(!m) return null;

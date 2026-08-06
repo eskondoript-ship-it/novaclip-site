@@ -295,6 +295,75 @@ style.textContent =
   "background:rgba(255,255,255,0.04); border-radius:8px; }";
 document.head.appendChild(style);
 
+/* ============================================================================
+   FITTING THE DEVICE
+   ============================================================================
+   One sheet, injected by the script every NovaClip page already loads, so the
+   rules cannot drift between index, app, tools, analytics, editor and game.
+
+   Three problems, three groups of rules:
+
+   1. A fingertip is about 9mm across and a mouse pointer is one pixel. Targets
+      built for the pointer are unhittable with the finger. These rules apply
+      only where the primary input is coarse AND there is no hover, so a laptop
+      with a touchscreen keeps the tighter desktop spacing it was designed for.
+
+   2. iOS zooms the entire page in when a text field smaller than 16px takes
+      focus, and leaves the visitor zoomed with no obvious way back. Setting
+      16px on inputs is not a taste decision, it is the fix for that.
+
+   3. Below about 380px the sidebar, the tab strips and the stat grids run out
+      of room. They get narrower gutters rather than a horizontal scrollbar.
+   ============================================================================ */
+const ncFit = document.createElement('style');
+ncFit.textContent =
+"@media (pointer: coarse) and (hover: none) {" +
+  "button, .btn, .tab, .chip, .pill, .navlink, .side a, .sidebar a, nav a," +
+  "  [role=button], .card > a, .tool, .toolbtn {" +
+  "    min-height:44px; }" +
+  "input, textarea, select { min-height:44px; font-size:16px; }" +
+  "input[type=range] { height:44px; }" +
+  /* A 4px-tall track is impossible to grab; the thumb is what the finger
+     actually aims at, so it gets the size rather than the track. */
+  "input[type=range]::-webkit-slider-thumb { width:26px; height:26px; }" +
+  "input[type=range]::-moz-range-thumb { width:26px; height:26px; }" +
+  "input[type=checkbox], input[type=radio] { min-width:24px; min-height:24px; }" +
+  /* A footer is a row of standalone destinations rather than a sentence, so
+     each one gets a target box. Links inside a paragraph are deliberately left
+     alone: WCAG exempts them, and padding them would break the line height of
+     the text they sit in. */
+  "footer a, .foot a, .footer a { display:inline-block; padding:11px 4px; }" +
+"}" +
+
+/* Nothing under 12px on a handset. These labels were sized for a monitor at
+   arm's length, not a phone at reading distance. */
+"@media (max-width: 520px) {" +
+  ".tag, .chip, .badge, .meta, small { font-size:12px !important; }" +
+  "table { font-size:13px; }" +
+  /* A table wider than the screen scrolls inside its own box instead of
+     forcing the whole page sideways. */
+  "table { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }" +
+"}" +
+
+"@media (max-width: 380px) {" +
+  "body { --pad:14px; }" +
+  ".wrap, .container, .page, main { padding-left:14px !important; padding-right:14px !important; }" +
+  "h1 { font-size:clamp(1.6rem, 8vw, 2.2rem); }" +
+"}" +
+
+/* Landscape on a phone leaves about 350px of height. Anything with a fixed
+   vertical rhythm has to give some of it back or the content is unreachable. */
+"@media (max-height: 430px) and (orientation: landscape) {" +
+  ".hero, header.hero { padding-top:70px; padding-bottom:20px; }" +
+  ".sheet, .modal, .sbox { max-height:92vh; }" +
+"}" +
+
+/* Nothing on these pages is meant to scroll sideways. This is the safety net
+   that turns an overflow into a clipped edge rather than a broken page — the
+   overflows themselves are fixed at the source, this is for the next one. */
+"html { overflow-x:hidden; }";
+document.head.appendChild(ncFit);
+
 function applyTheme(name) { const t = THEMES[name] || THEMES['Dark']; document.documentElement.style.setProperty('--bg',t[0]); document.documentElement.style.setProperty('--box',t[1]); document.documentElement.style.setProperty('--txt',t[2]); document.body.dataset.theme = name; localStorage.setItem('nc_theme',name); }
 function toast(msg) { const t = document.getElementById('nctoast'); if (!t) return; t.textContent = msg; t.style.display = 'block'; clearTimeout(t.hideTimer); t.hideTimer = setTimeout(() => { t.style.display = 'none'; }, 3000); }
 function getPts() { return parseInt(localStorage.getItem('nc_points') || '0'); }

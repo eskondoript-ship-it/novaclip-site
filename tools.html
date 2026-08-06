@@ -74,14 +74,14 @@ h1 .g { background: linear-gradient(90deg,var(--cyan),var(--mag)); -webkit-backg
 .cat:hover { border-color: rgba(0,240,255,0.5); }
 .cat.on { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,0.12); }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%),1fr)); gap: 14px; }
 .tool { text-align: left; border: 1px solid var(--line); border-radius: 16px; padding: 16px 17px;
         background: rgba(255,255,255,0.03); cursor: pointer; color: inherit; font: inherit; transition: .2s; }
 .tool:hover { border-color: rgba(0,240,255,0.5); transform: translateY(-3px);
               box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
 .tool b { display: block; font-size: 1rem; margin-bottom: 5px; }
 .tool p { color: var(--dim); font-size: .82rem; line-height: 1.55; }
-.tool .tag { display: inline-block; margin-top: 9px; font-size: .62rem; letter-spacing: 1.5px; font-weight: 800;
+.tool .tag { display: inline-block; margin-top: 9px; font-size: .75rem; letter-spacing: 1.5px; font-weight: 800;
              text-transform: uppercase; color: var(--cyan); }
 .tool.ai .tag { color: var(--mag); }
 .empty { color: var(--dim); padding: 30px 0; }
@@ -119,7 +119,7 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
        background: rgba(0,0,0,0.35); white-space: pre-wrap; word-break: break-word; min-height: 46px;
        font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .86rem; line-height: 1.6; }
 .out.err { border-color: var(--mag); color: #ffb3d4; }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px,1fr)); gap: 10px; margin-top: 14px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(96px, 100%),1fr)); gap: 10px; margin-top: 14px; }
 .stat { border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; background: rgba(255,255,255,0.03); }
 .stat b { display: block; font-size: 1.4rem; color: var(--cyan); font-variant-numeric: tabular-nums; }
 .stat span { font-size: .68rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--dim); }
@@ -1019,7 +1019,7 @@ const IMPL = {
   },
   'palette': {
     html: '<div class="field"><label>Base colour</label><input id="c" value="#00F0FF"></div>' +
-      '<div id="sw2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;margin-top:14px"></div>' + outBox,
+      '<div id="sw2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(70px, 100%),1fr));gap:8px;margin-top:14px"></div>' + outBox,
     wire() {
       const hex2hsl=h=>{
         const m=/^#?([0-9a-f]{6}|[0-9a-f]{3})$/i.exec(h.trim()); if(!m) return null;

@@ -175,7 +175,7 @@ section{padding:70px 7vw;position:relative}
 .tool span{color:var(--dim);font-size:.9rem}
 
 /* STATS */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:24px;margin-top:28px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px, 100%),1fr));gap:24px;margin-top:28px}
 .stat-num{font-size:3.2rem;font-weight:800;background:linear-gradient(90deg,var(--magenta),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-2px}
 .stat-label{color:var(--dim);margin-top:2px;font-size:.9rem}
 
@@ -565,8 +565,36 @@ function typeLoop(){
 setTimeout(typeLoop, 900);
 
 // SCROLL REVEALS
-const io = new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:0.18});
-document.querySelectorAll('.reveal,.slideL,.slideR,.split,.section').forEach(x=>io.observe(x));
+// A reveal parks its element to one side and fades it in on entry. If the
+// observer misses one — a fast flick can hand it a single entry where the
+// element went in and back out between frames — that element stays invisible
+// AND pushed off the edge for the rest of the visit. On a phone, where
+// .slideR starts 70px to the right of a screen only 320px wide, that is a
+// panel the visitor never sees. So whatever the observer has not revealed
+// gets swept on geometry; the set only shrinks, so it costs nothing.
+const io = new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)reveal(e.target)})},{threshold:0.18});
+const pending = new Set();
+function reveal(el){ if(!pending.has(el)) return; pending.delete(el); io.unobserve(el); el.classList.add('in'); }
+// Registered on DOMContentLoaded rather than here. This script sits in the
+// middle of the document, so a query run now only sees the markup the parser
+// has already reached — which is how the Creator Community section, declared
+// below this block, went unobserved and therefore stayed at opacity 0 for
+// every visitor who ever scrolled to it.
+function collectReveals(){
+  document.querySelectorAll('.reveal,.slideL,.slideR,.split,.section').forEach(x=>{
+    if(x.classList.contains('in')) return;
+    pending.add(x); io.observe(x);
+  });
+  sweepReveals();
+}
+if(document.readyState === 'loading') addEventListener('DOMContentLoaded', collectReveals);
+else collectReveals();
+function sweepReveals(){
+  if(!pending.size) return removeEventListener('scroll', sweepReveals);
+  [...pending].forEach(el=>{ if(el.getBoundingClientRect().top < innerHeight*0.92) reveal(el); });
+}
+addEventListener('scroll', sweepReveals, {passive:true});
+addEventListener('resize', sweepReveals, {passive:true});
 
 // SCROLL PROGRESS BAR
 addEventListener('scroll',()=>{
@@ -645,8 +673,22 @@ for(let i=0;i<18;i++){
 }
 
 // STAGGERED REWARD ENTRANCE
-const rio=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:0.3});
-document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
+// Same safety net as the reveals above, for the same reason: a .reward that
+// never gets .in sits 40px to the right of the screen at zero opacity.
+const rpending = new Set();
+const rio=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)rev(e.target)})},{threshold:0.3});
+function rev(el){ if(!rpending.has(el)) return; rpending.delete(el); rio.unobserve(el); el.classList.add('in'); }
+function collectRewards(){
+  document.querySelectorAll('.reward').forEach(r=>{ rpending.add(r); rio.observe(r); });
+  sweepRewards();
+}
+if(document.readyState === 'loading') addEventListener('DOMContentLoaded', collectRewards);
+else collectRewards();
+function sweepRewards(){
+  if(!rpending.size) return removeEventListener('scroll', sweepRewards);
+  [...rpending].forEach(el=>{ if(el.getBoundingClientRect().top < innerHeight*0.92) rev(el); });
+}
+addEventListener('scroll', sweepRewards, {passive:true});
 </script>
 
 <!-- COMMUNITY COMMENTS -->
