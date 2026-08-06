@@ -102,6 +102,80 @@ body.driving #ammo { display: none; }
              width: 176px !important; opacity: 0.5; transition: opacity .18s; z-index: 8 !important; }
 .themewrap:hover { opacity: 1; }
 body.ncplaying .themewrap { display: none !important; }
+
+/* ============================================================================
+   TOUCH CONTROLS
+   ============================================================================
+   The lobby always fitted a phone. The match never did: the whole control
+   scheme was WASD, a mouse and pointer lock, none of which a handset has. So
+   the game loaded, looked right, and could not be played.
+
+   Everything below is hidden unless the primary input is coarse, so a desktop
+   never sees a pixel of it, and it only appears once a match is running.
+   ============================================================================ */
+#tc { position: fixed; inset: 0; z-index: 40; display: none;
+      pointer-events: none; touch-action: none; user-select: none; -webkit-user-select: none; }
+body.ncplaying #tc { display: block; }
+@media (pointer: fine) { #tc { display: none !important; } }
+
+/* The look area is everything on the right that is not a button. A drag here
+   turns you; a tap does nothing, so it cannot be mistaken for a shot. */
+#tcLook { position: absolute; inset: 0 0 0 42%; pointer-events: auto; }
+
+/* A floating stick rather than a fixed one: it appears under the thumb
+   wherever the thumb lands in the lower left. A fixed stick means looking
+   down to find it, which in a shooter is the same as losing. */
+#tcMove { position: absolute; left: 0; bottom: 0; width: 46%; height: 62%; pointer-events: auto; }
+#tcRing { position: absolute; width: 132px; height: 132px; margin: -66px 0 0 -66px;
+  border-radius: 50%; border: 2px solid rgba(255,255,255,0.22);
+  background: rgba(10,14,24,0.28); backdrop-filter: blur(3px);
+  opacity: 0; transition: opacity .14s; pointer-events: none; }
+#tcNub { position: absolute; width: 58px; height: 58px; margin: -29px 0 0 -29px;
+  border-radius: 50%; background: rgba(255,255,255,0.34);
+  border: 2px solid rgba(255,255,255,0.5); opacity: 0; transition: opacity .14s; pointer-events: none; }
+#tcRing.on, #tcNub.on { opacity: 1; }
+#tcRing.run { border-color: rgba(0,240,255,0.85); box-shadow: 0 0 22px rgba(0,240,255,0.4); }
+
+.tcb { position: absolute; pointer-events: auto; display: grid; place-items: center;
+  border-radius: 50%; border: 2px solid rgba(255,255,255,0.28);
+  background: rgba(10,14,24,0.42); backdrop-filter: blur(4px);
+  color: #EAF2FF; font: 700 12px/1 system-ui, sans-serif; letter-spacing: .04em;
+  text-align: center; transition: transform .08s, background .12s; }
+.tcb:active, .tcb.on { transform: scale(0.93); background: rgba(0,240,255,0.28);
+  border-color: rgba(0,240,255,0.8); }
+#tcFire { right: 22px; bottom: 26px; width: 92px; height: 92px; font-size: 14px; }
+#tcAim  { right: 128px; bottom: 96px; width: 68px; height: 68px; }
+#tcJump { right: 30px; bottom: 132px; width: 62px; height: 62px; }
+#tcRel  { right: 128px; bottom: 22px; width: 60px; height: 60px; }
+#tcDuck { right: 196px; bottom: 40px; width: 58px; height: 58px; }
+
+/* The rest of the verbs live behind one button. Ten more circles on a 390px
+   screen would cover the game you are trying to look at. */
+#tcMore { right: 16px; top: 16px; width: 46px; height: 46px; font-size: 17px; }
+#tcTray { position: absolute; right: 16px; top: 70px; width: 168px; display: none;
+  grid-template-columns: 1fr 1fr; gap: 7px; pointer-events: auto; }
+#tcTray.open { display: grid; }
+#tcTray button { border-radius: 11px; border: 1px solid rgba(255,255,255,0.24);
+  background: rgba(10,14,24,0.66); backdrop-filter: blur(5px); color: #EAF2FF;
+  font: 600 11.5px/1.25 system-ui, sans-serif; padding: 11px 4px; min-height: 42px; cursor: pointer; }
+#tcTray button:active { background: rgba(0,240,255,0.3); }
+
+/* Portrait is playable but cramped, and every phone shooter asks for landscape
+   for the same reason: your thumbs need to be either side of the picture. */
+#tcRotate { position: fixed; inset: 0; z-index: 60; display: none; place-items: center;
+  background: rgba(6,9,16,0.94); color: #EAF2FF; text-align: center;
+  font: 600 15px/1.6 system-ui, sans-serif; padding: 30px; }
+@media (pointer: coarse) and (orientation: portrait) {
+  body.ncplaying #tcRotate { display: grid; }
+}
+@media (pointer: coarse) and (max-height: 400px) {
+  #tcFire { width: 78px; height: 78px; bottom: 16px; }
+  #tcAim  { width: 58px; height: 58px; right: 112px; bottom: 76px; }
+  #tcJump { width: 54px; height: 54px; bottom: 106px; }
+  #tcRel  { width: 52px; height: 52px; right: 110px; bottom: 14px; }
+  #tcDuck { width: 50px; height: 50px; right: 170px; bottom: 26px; }
+}
+
 #viewTag { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 11; font-size: 0.72rem; opacity: 0.7; background: rgba(0,0,0,0.35); padding: 5px 12px; border-radius: 8px; white-space: nowrap; }
 #backLink { position: fixed; top: 14px; left: 14px; z-index: 21; color: #fff; text-decoration: none; background: rgba(0,0,0,0.4); padding: 8px 14px; border-radius: 20px; font-weight: 700; pointer-events: auto; font-size: 0.85rem; }
 #errbox { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 99; background: #a00c; color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; display: none; max-width: 90vw; }
@@ -4841,6 +4915,19 @@ document.getElementById('startBtn').onclick = () => {
   runDeploySequence(startMatch);
 };
 
+/* Pointer lock is a mouse concept. On a handset there is no pointer to lock,
+   and asking for it ranges from a silent no-op to a thrown exception to a
+   fullscreen prompt depending on the browser — so touch devices skip it and
+   use the on-screen controls instead. The renderer check matters too: these
+   run from click handlers that exist before the scene has finished building. */
+function lockPointer() {
+  if (matchMedia('(pointer: coarse)').matches) return;
+  if (!renderer || !renderer.domElement || !renderer.domElement.requestPointerLock) return;
+  try { renderer.domElement.requestPointerLock(); } catch (e) {}
+}
+function pointerLocked() {
+  return !!renderer && document.pointerLockElement === renderer.domElement;
+}
 function startMatch() {
   document.body.classList.add('ncplaying');
   document.querySelector('.topbar .mode').textContent = MODES[mode].label;
@@ -4848,7 +4935,7 @@ function startMatch() {
   document.getElementById('tmTheirs').textContent = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].short;
   document.getElementById('mebar').style.background = TEAM_INFO[PLAYER_TEAM].css;
   document.getElementById('enbar').style.background = TEAM_INFO[PLAYER_TEAM === TEAM_CT ? TEAM_T : TEAM_CT].css;
-  if (renderer && renderer.domElement) renderer.domElement.requestPointerLock();
+  lockPointer();
   running = true; c4Ready = false; c4Timer = 20; shopVisits = 0; setPts(pts());
   resetAmmo();
   // no smoke or debris left hanging in the air from the last round
@@ -4874,12 +4961,12 @@ function startMatch() {
   else if (mm === 'code') mpConnect(localStorage.getItem('nc_room') || '', lbName(), mapId);
 }
 document.addEventListener('mousemove', (e) => {
-  if (document.pointerLockElement !== renderer.domElement) return;
+  if (!pointerLocked()) return;
   const sens = scoped ? 0.0009 : 0.0022;
   player.yaw -= e.movementX * sens; player.pitch -= e.movementY * sens;
   player.pitch = Math.max(-1.35, Math.min(1.35, player.pitch));
 });
-document.getElementById('game').addEventListener('click', () => { if (running && !shopOpen && document.pointerLockElement !== renderer.domElement) renderer.domElement.requestPointerLock(); });
+document.getElementById('game').addEventListener('click', () => { if (running && !shopOpen && !pointerLocked()) lockPointer(); });
 let mouseHeld = false, equippedNade = null;
 document.addEventListener('mousedown', (e) => {
   if (!running || shopOpen) return;
@@ -5580,7 +5667,7 @@ function openShop() {
   renderShop();
   document.exitPointerLock();
 }
-window.closeShop = function() { shopOpen = false; document.getElementById('shopui').style.display = 'none'; if (running) renderer.domElement.requestPointerLock(); };
+window.closeShop = function() { shopOpen = false; document.getElementById('shopui').style.display = 'none'; if (running) lockPointer(); };
 
 /* The button has to work while you are playing, and while you are playing the
    pointer is locked — a locked pointer has no cursor and every click goes to the
@@ -6814,7 +6901,7 @@ function openTablet() {
 window.closeTablet = function () {
   tabletOpen = false;
   document.getElementById('tablet').style.display = 'none';
-  if (running) renderer.domElement.requestPointerLock();
+  if (running) lockPointer();
 };
 
 function drawTablet() {
@@ -7300,5 +7387,187 @@ try {
      itself. Their logSkill() writes the same nc_skills store, and nova's is the
      stricter of the two, so the later definition winning is the right way round. -->
 <script src='nova.js'></script>
+
+<!-- Touch controls. Inert on a desktop: the container is display:none unless
+     the primary pointer is coarse, and the script below returns immediately
+     if it is not. -->
+<div id='tc' aria-hidden='true'>
+  <div id='tcMove'><div id='tcRing'></div><div id='tcNub'></div></div>
+  <div id='tcLook'></div>
+  <button class='tcb' id='tcFire'>FIRE</button>
+  <button class='tcb' id='tcAim'>AIM</button>
+  <button class='tcb' id='tcJump'>JUMP</button>
+  <button class='tcb' id='tcRel'>RELOAD</button>
+  <button class='tcb' id='tcDuck'>DUCK</button>
+  <button class='tcb' id='tcMore' aria-label='More controls'>&#8942;</button>
+  <div id='tcTray'>
+    <button data-k='shop'>Shop</button>
+    <button data-k='tank'>Vehicle</button>
+    <button data-k='nade'>Grenade</button>
+    <button data-k='sticky'>Sticky</button>
+    <button data-k='plant'>Plant C4</button>
+    <button data-k='detonate'>Detonate</button>
+    <button data-k='view'>View</button>
+    <button data-k='emote'>Emote</button>
+    <button data-swap='1'>Swap gun</button>
+    <button data-k='tablet'>Tablet</button>
+  </div>
+</div>
+<div id='tcRotate'><div>Turn your phone sideways<br><span style='opacity:.6;font-weight:400'>This one needs both thumbs</span></div></div>
+
+<script>
+/* ============================================================================
+   TOUCH CONTROLS
+   ============================================================================
+   The rule this follows: synthesise the inputs the game already understands,
+   never re-implement what it does with them. Movement writes the same
+   keys[BINDS.forward] the keyboard writes. Fire and aim dispatch real
+   mousedown and mouseup events, so leaning out of a truck window, the scope
+   ring, throwing an equipped grenade and every other branch in those handlers
+   runs unchanged and cannot drift out of step with the desktop game.
+
+   The one thing that cannot be reused is looking: the mousemove handler
+   returns early unless the pointer is locked, and pointer lock does not exist
+   on a handset. So a drag writes player.yaw and player.pitch directly, with
+   the same clamp the mouse path uses.
+   ============================================================================ */
+(function touchControls() {
+  const coarse = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  if (!coarse) return;
+
+  const $ = id => document.getElementById(id);
+  const ring = $('tcRing'), nub = $('tcNub');
+
+  /* ---- movement: a floating stick ---------------------------------------- */
+  const DEAD = 16, MAX = 52, SPRINT_AT = 44;
+  let moveId = null, ox = 0, oy = 0;
+
+  function clearMove() {
+    ['forward', 'back', 'left', 'right', 'sprint'].forEach(k => { keys[BINDS[k]] = false; });
+    if (typeof player === 'object' && player) player.sprint = false;
+    ring.classList.remove('on', 'run'); nub.classList.remove('on');
+    moveId = null;
+  }
+
+  function applyMove(dx, dy) {
+    const dist = Math.hypot(dx, dy);
+    const k = dist > MAX ? MAX / dist : 1;
+    nub.style.left = (ox + dx * k) + 'px';
+    nub.style.top = (oy + dy * k) + 'px';
+
+    if (dist < DEAD) {
+      ['forward', 'back', 'left', 'right', 'sprint'].forEach(n => { keys[BINDS[n]] = false; });
+      if (player) player.sprint = false;
+      ring.classList.remove('run');
+      return;
+    }
+    /* Eight directions rather than an analogue vector, because the movement
+       code the keyboard drives is boolean. A 0.38 threshold on the normalised
+       axes gives clean diagonals without a dead wedge between them. */
+    const nx = dx / dist, ny = dy / dist;
+    keys[BINDS.forward] = ny < -0.38;
+    keys[BINDS.back]    = ny >  0.38;
+    keys[BINDS.left]    = nx < -0.38;
+    keys[BINDS.right]   = nx >  0.38;
+
+    /* Push the stick to the edge to sprint. A separate sprint button is one
+       more thing to find with a thumb that is already busy steering. */
+    const run = dist > SPRINT_AT && ny < -0.3;
+    keys[BINDS.sprint] = run;
+    if (player) player.sprint = run;
+    ring.classList.toggle('run', run);
+  }
+
+  $('tcMove').addEventListener('pointerdown', e => {
+    if (moveId !== null) return;
+    moveId = e.pointerId;
+    /* Capture keeps the drag alive if the thumb slides outside the zone. It
+       throws if the pointer has already been released, which costs nothing to
+       tolerate and would otherwise take the whole handler down with it. */
+    try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+    ox = e.clientX; oy = e.clientY;
+    ring.style.left = nub.style.left = ox + 'px';
+    ring.style.top = nub.style.top = oy + 'px';
+    ring.classList.add('on'); nub.classList.add('on');
+    e.preventDefault();
+  });
+  $('tcMove').addEventListener('pointermove', e => {
+    if (e.pointerId !== moveId) return;
+    applyMove(e.clientX - ox, e.clientY - oy);
+    e.preventDefault();
+  });
+  ['pointerup', 'pointercancel'].forEach(t =>
+    $('tcMove').addEventListener(t, e => { if (e.pointerId === moveId) clearMove(); }));
+
+  /* ---- looking ----------------------------------------------------------- */
+  let lookId = null, lx = 0, ly = 0;
+  $('tcLook').addEventListener('pointerdown', e => {
+    if (lookId !== null) return;
+    lookId = e.pointerId; lx = e.clientX; ly = e.clientY;
+    try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+    e.preventDefault();
+  });
+  $('tcLook').addEventListener('pointermove', e => {
+    if (e.pointerId !== lookId || !running) return;
+    /* Same ratio between hip and scoped sensitivity as the mouse path, scaled
+       for a thumb travelling across glass rather than a hand across a desk. */
+    const sens = scoped ? 0.0016 : 0.0040;
+    player.yaw -= (e.clientX - lx) * sens;
+    player.pitch -= (e.clientY - ly) * sens;
+    player.pitch = Math.max(-1.35, Math.min(1.35, player.pitch));
+    lx = e.clientX; ly = e.clientY;
+    e.preventDefault();
+  });
+  ['pointerup', 'pointercancel'].forEach(t =>
+    $('tcLook').addEventListener(t, e => { if (e.pointerId === lookId) lookId = null; }));
+
+  /* ---- the buttons -------------------------------------------------------- */
+  const mouse = (type, button) =>
+    document.dispatchEvent(new MouseEvent(type, { button: button, bubbles: true }));
+
+  function hold(el, down, up) {
+    el.addEventListener('pointerdown', e => { e.preventDefault(); el.classList.add('on'); down(); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(t =>
+      el.addEventListener(t, () => { if (el.classList.contains('on')) { el.classList.remove('on'); up(); } }));
+  }
+
+  hold($('tcFire'), () => mouse('mousedown', 0), () => mouse('mouseup', 0));
+  hold($('tcAim'),  () => mouse('mousedown', 2), () => mouse('mouseup', 2));
+
+  /* A key the game reads every frame has to be held, not tapped — jump and
+     crouch are polled in the movement step. Reload is edge-triggered on
+     keydown, so it gets a real keydown/keyup pair. */
+  const holdKey = (el, bind) => hold(el,
+    () => { keys[BINDS[bind]] = true; },
+    () => { keys[BINDS[bind]] = false; });
+  holdKey($('tcJump'), 'jump');
+  holdKey($('tcDuck'), 'crouch');
+
+  function tapKey(bind) {
+    document.dispatchEvent(new KeyboardEvent('keydown', { code: BINDS[bind], bubbles: true }));
+    setTimeout(() => document.dispatchEvent(
+      new KeyboardEvent('keyup', { code: BINDS[bind], bubbles: true })), 60);
+  }
+  $('tcRel').addEventListener('pointerdown', e => { e.preventDefault(); tapKey('reload'); });
+
+  /* ---- the tray ----------------------------------------------------------- */
+  const tray = $('tcTray');
+  $('tcMore').addEventListener('pointerdown', e => { e.preventDefault(); tray.classList.toggle('open'); });
+  tray.querySelectorAll('button').forEach(b => {
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      if (b.dataset.swap) document.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true }));
+      else tapKey(b.dataset.k);
+      tray.classList.remove('open');
+    });
+  });
+
+  /* Losing the tab mid-match with a direction held would leave you walking
+     into a wall when you came back. */
+  addEventListener('blur', clearMove);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) clearMove(); });
+})();
+</script>
+
 </body>
 </html>
