@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip — Tools</title>
+<meta name='description' content='Free browser tools for creators: counters, converters, formatters and generators. Nothing uploads, nothing needs an account.'>
+<style>
+/* ============================================================================
+   NOVATOOLS, AS ONE FILE
+   ============================================================================
+   Ported from the nova-tools-suite upload, which was a 101-file TanStack Start
+   app with 53 dependencies and server-side rendering. It could not be pasted
+   into this site as one block for a reason worth writing down: its AI tools run
+   through createServerFn with LOVABLE_API_KEY read from process.env. A key in a
+   static file is a key anyone can read with View Source, so the choice was
+   never "one file or several" — it was "one file, or the API key published".
+
+   What carried over is everything that never needed a server. These run
+   entirely in your browser: nothing is uploaded, nothing is stored, and they
+   work with the network off. The AI-backed ones hand off to the NovaClip
+   assistant already running on this site, which has its own backend and keeps
+   its own key, instead of shipping a second one.
+
+   On the catalogue size: the upload advertised 657 tools. The data file defines
+   139, of which 35 name a component, of which 13 have an implementation — every
+   other entry fell through to GenericTool, a single AI text box wearing a
+   different title. The tools below are the ones that do a specific thing.
+   ============================================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
+:root { --void:#05060A; --panel:#0B0E16; --line:rgba(120,140,200,0.16); --ink:#EAF2FF; --dim:#7E8AA6;
+        --cyan:#00F0FF; --mag:#FF2E97; --lime:#B6FF3C; }
+body { background: var(--void); color: var(--ink); line-height: 1.5; }
+
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(8,9,14,0.9);
+           backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 20px 0; gap: 6px;
+           z-index: 998; border-right: 1px solid var(--line); overflow-y: auto; }
+.sidebar a { font-size: 1.05rem; color: var(--ink); text-decoration: none; display: flex; align-items: center;
+             gap: 12px; padding: 12px 20px; font-weight: 600; transition: .25s; }
+.sidebar a:hover { background: rgba(0,240,255,0.08); padding-left: 26px; }
+.sidebar a.aidot { background: linear-gradient(135deg,#FF2E97,#7209B7,#00F0FF); color:#fff;
+                   border-radius: 10px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display:block; font-size:.78rem; opacity:.6; margin-bottom:6px; }
+.sidebar select { width:100%; font-size:.95rem; background:rgba(255,255,255,0.05); color:var(--ink);
+                  border:1px solid var(--line); border-radius:8px; padding:9px; }
+@media (max-width: 860px) { .sidebar { position: static; width: 100%; flex-direction: row; flex-wrap: wrap; } }
+
+.wrap { margin-left: 200px; padding: 40px 5vw 80px; max-width: 1240px; }
+@media (max-width: 860px) { .wrap { margin-left: 0; padding: 24px 18px 60px; } }
+
+h1 { font-size: clamp(2rem,4.5vw,3rem); font-weight: 800; letter-spacing: -1.5px; }
+h1 .g { background: linear-gradient(90deg,var(--cyan),var(--mag)); -webkit-background-clip: text;
+        background-clip: text; color: transparent; }
+.lede { color: var(--dim); margin: 10px 0 26px; max-width: 62ch; line-height: 1.7; }
+
+.searchrow { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+#q { flex: 1; min-width: 240px; padding: 13px 16px; border-radius: 12px; border: 1px solid var(--line);
+     background: rgba(255,255,255,0.04); color: var(--ink); font-size: .95rem; outline: none; }
+#q:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,240,255,0.12); }
+.cats { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 22px; }
+.cat { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--line); background: rgba(255,255,255,0.04);
+       color: #cfe0f5; font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; transition: .18s; }
+.cat:hover { border-color: rgba(0,240,255,0.5); }
+.cat.on { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,0.12); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 14px; }
+.tool { text-align: left; border: 1px solid var(--line); border-radius: 16px; padding: 16px 17px;
+        background: rgba(255,255,255,0.03); cursor: pointer; color: inherit; font: inherit; transition: .2s; }
+.tool:hover { border-color: rgba(0,240,255,0.5); transform: translateY(-3px);
+              box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
+.tool b { display: block; font-size: 1rem; margin-bottom: 5px; }
+.tool p { color: var(--dim); font-size: .82rem; line-height: 1.55; }
+.tool .tag { display: inline-block; margin-top: 9px; font-size: .62rem; letter-spacing: 1.5px; font-weight: 800;
+             text-transform: uppercase; color: var(--cyan); }
+.tool.ai .tag { color: var(--mag); }
+.empty { color: var(--dim); padding: 30px 0; }
+
+/* ---- the tool itself, in a sheet ---- */
+#sheet { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center;
+         background: rgba(2,4,8,0.8); backdrop-filter: blur(8px); padding: 20px; }
+#sheet.show { display: flex; }
+.sbox { width: 100%; max-width: 720px; max-height: 88vh; overflow-y: auto; background: var(--panel);
+        border: 1px solid var(--line); border-radius: 18px; padding: 22px 24px; }
+.shead { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 4px; }
+.shead h2 { font-size: 1.25rem; }
+.shead p { color: var(--dim); font-size: .85rem; margin-top: 3px; }
+.sclose { margin-left: auto; background: rgba(255,255,255,0.06); border: 1px solid var(--line); color: var(--ink);
+          border-radius: 10px; width: 34px; height: 34px; cursor: pointer; font-size: 1.1rem; flex: 0 0 auto; }
+.sclose:hover { border-color: var(--mag); color: var(--mag); }
+.field { margin-top: 14px; }
+.field label { display: block; font-size: .72rem; letter-spacing: 1.6px; text-transform: uppercase;
+               color: var(--dim); margin-bottom: 6px; font-weight: 700; }
+textarea, .field input, .field select { width: 100%; padding: 11px 13px; border-radius: 10px;
+        border: 1px solid var(--line); background: rgba(255,255,255,0.04); color: var(--ink);
+        font-size: .92rem; font-family: inherit; outline: none; }
+textarea { min-height: 130px; resize: vertical; font-family: ui-monospace, Menlo, Consolas, monospace; }
+textarea:focus, .field input:focus { border-color: var(--cyan); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
+.btns { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 14px; }
+.go { padding: 11px 24px; border: none; border-radius: 24px; font-weight: 800; cursor: pointer;
+      background: linear-gradient(90deg,var(--cyan),#4CC9F0); color: #04121a; font-size: .92rem; }
+.go:hover { box-shadow: 0 0 24px rgba(0,240,255,0.4); }
+.alt { padding: 11px 20px; border-radius: 24px; cursor: pointer; background: rgba(255,255,255,0.05);
+       border: 1px solid var(--line); color: #cfe0f5; font: inherit; font-size: .88rem; font-weight: 700; }
+.alt:hover { border-color: var(--cyan); color: var(--cyan); }
+.out { margin-top: 14px; padding: 13px 15px; border-radius: 12px; border: 1px solid var(--line);
+       background: rgba(0,0,0,0.35); white-space: pre-wrap; word-break: break-word; min-height: 46px;
+       font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .86rem; line-height: 1.6; }
+.out.err { border-color: var(--mag); color: #ffb3d4; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px,1fr)); gap: 10px; margin-top: 14px; }
+.stat { border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; background: rgba(255,255,255,0.03); }
+.stat b { display: block; font-size: 1.4rem; color: var(--cyan); font-variant-numeric: tabular-nums; }
+.stat span { font-size: .68rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--dim); }
+.swatch { height: 46px; border-radius: 10px; border: 1px solid var(--line); margin-top: 10px; }
+.note { color: var(--dim); font-size: .8rem; line-height: 1.65; margin-top: 12px; }
+.note b { color: #cfe0ff; }
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <a href='index.html' data-t='home'>Home</a>
+  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='analytics'>Analytics</a>
+  <a href='trends.html' data-t='trends'>Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>Editor</a>
+  <a href='tools.html'>Tools</a>
+  <a href='game.html' data-t='sniper'>Games</a>
+  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div class='wrap'>
+  <h1><span class='g'>Tools</span></h1>
+  <p class='lede'>Small things that do one job. Everything here runs in your browser — nothing uploads,
+    nothing is saved, and it all works with the wifi off.</p>
+
+  <div class='searchrow'>
+    <input id='q' type='search' placeholder='Search tools…' autocomplete='off'>
+  </div>
+  <div class='cats' id='cats'></div>
+  <div class='grid' id='grid'></div>
+  <p class='empty' id='empty' style='display:none'>Nothing matches that.</p>
+</div>
+
+<div id='sheet'>
+  <div class='sbox'>
+    <div class='shead'>
+      <div><h2 id='sTitle'></h2><p id='sDesc'></p></div>
+      <button class='sclose' id='sClose' aria-label='Close'>&times;</button>
+    </div>
+    <div id='sBody'></div>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------------------------
+   THE CATALOGUE
+   Only tools with a real implementation. The upload listed 139 and claimed 657;
+   the rest rendered a shared AI text box under a different heading, which is a
+   longer list rather than more tools. `ai:true` means it hands off to the
+   NovaClip assistant, which has a backend and a key of its own.
+   --------------------------------------------------------------------------- */
+const TOOLS = [
+  { id:'word-counter', cat:'text', name:'Word counter',
+    desc:'Words, characters, sentences and reading time as you type.' },
+  { id:'case-converter', cat:'text', name:'Case converter',
+    desc:'UPPER, lower, Title, Sentence, camelCase, snake_case and kebab-case.' },
+  { id:'text-cleaner', cat:'text', name:'Text cleaner',
+    desc:'Strip extra spaces, blank lines, smart quotes and invisible characters.' },
+  { id:'json-formatter', cat:'developer', name:'JSON formatter',
+    desc:'Pretty-print, minify and validate — with the position of the error.' },
+  { id:'base64', cat:'developer', name:'Base64 encode / decode',
+    desc:'Text to Base64 and back, UTF-8 safe.' },
+  { id:'uuid', cat:'developer', name:'UUID generator',
+    desc:'RFC 4122 v4 identifiers from the browser crypto source.' },
+  { id:'jwt', cat:'developer', name:'JWT decoder',
+    desc:'Read the header, payload and expiry of a token. Nothing is sent anywhere.' },
+  { id:'password', cat:'generators', name:'Password generator',
+    desc:'Strong passwords with real entropy, and how long a crack would take.' },
+  { id:'slug', cat:'generators', name:'Slug generator',
+    desc:'Turn a title into a clean URL slug, accents folded.' },
+  { id:'color', cat:'converters', name:'Colour converter',
+    desc:'HEX, RGB and HSL together, with a swatch.' },
+  { id:'timestamp', cat:'converters', name:'Timestamp converter',
+    desc:'Unix seconds or milliseconds to a readable date, and back.' },
+  { id:'percentage', cat:'math', name:'Percentage calculator',
+    desc:'Percent of, change between, and what percent one number is of another.' },
+  { id:'age', cat:'math', name:'Age calculator',
+    desc:'Exact age in years, months and days, plus the next birthday.' },
+  { id:'ratio', cat:'video', name:'Aspect ratio & bitrate',
+    desc:'Fit any size to 16:9, 9:16 or 1:1, and a sane bitrate for the result.' },
+  { id:'ai-title', cat:'ai', name:'YouTube title ideas', ai:true,
+    desc:'Ten title options for a video, from the assistant that knows your channel.' },
+  { id:'ai-desc', cat:'ai', name:'Description & tags', ai:true,
+    desc:'A description with timestamps and a tag set, written for your video.' },
+  { id:'ai-hook', cat:'ai', name:'First-line hook', ai:true,
+    desc:'Openings that stop the scroll, rewritten until one lands.' }
+];
+const CATS = [['all','All'],['text','Text'],['developer','Developer'],['generators','Generators'],
+              ['converters','Converters'],['math','Maths'],['video','Video'],['ai','AI']];
+
+let cat = 'all', q = '';
+const $ = id => document.getElementById(id);
+
+function render() {
+  const term = q.trim().toLowerCase();
+  const list = TOOLS.filter(t =>
+    (cat === 'all' || t.cat === cat) &&
+    (!term || (t.name + ' ' + t.desc).toLowerCase().includes(term)));
+  $('grid').innerHTML = list.map(t =>
+    '<button class="tool' + (t.ai ? ' ai' : '') + '" data-id="' + t.id + '">' +
+    '<b>' + t.name + '</b><p>' + t.desc + '</p>' +
+    '<span class="tag">' + (t.ai ? 'Assistant' : 'In your browser') + '</span></button>').join('');
+  $('empty').style.display = list.length ? 'none' : 'block';
+  document.querySelectorAll('.tool').forEach(b => b.onclick = () => open(b.dataset.id));
+}
+$('cats').innerHTML = CATS.map(([id,n]) =>
+  '<button class="cat' + (id === 'all' ? ' on' : '') + '" data-c="' + id + '">' + n + '</button>').join('');
+document.querySelectorAll('.cat').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.cat').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); cat = b.dataset.c; render();
+});
+$('q').oninput = e => { q = e.target.value; render(); };
+
+/* ---------------------------------------------------------------------------
+   THE TOOLS
+   Each returns markup plus a wire() that binds it. Kept in one shape so adding
+   one is a single entry rather than a new pattern.
+   --------------------------------------------------------------------------- */
+const esc = s => String(s).replace(/[<>&]/g, c => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;' }[c]));
+const ta = (id, ph) => '<div class="field"><label>Input</label><textarea id="' + id + '" placeholder="' + ph + '"></textarea></div>';
+const outBox = '<div class="out" id="out"></div>';
+function setOut(v, isErr) { const o = $('out'); o.textContent = v; o.className = 'out' + (isErr ? ' err' : ''); }
+function copyOut() {
+  const v = $('out').textContent;
+  if (!v) return;
+  navigator.clipboard.writeText(v).then(() => { const b = $('copy'); if (b) { b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1400); } });
+}
+const goRow = '<div class="btns"><button class="go" id="go">Run</button><button class="alt" id="copy">Copy</button></div>';
+
+const IMPL = {
+  'word-counter': {
+    html: ta('t', 'Paste or type…') + '<div class="stats" id="st"></div>',
+    wire() {
+      const calc = () => {
+        const v = $('t').value;
+        const words = (v.match(/\S+/g) || []).length;
+        const sentences = (v.match(/[^.!?]+[.!?]+/g) || []).length;
+        const lines = v ? v.split(/\n/).length : 0;
+        // 200 wpm is the usual silent-reading figure for adults
+        const mins = words / 200;
+        $('st').innerHTML =
+          stat(words, 'words') + stat(v.length, 'characters') +
+          stat(v.replace(/\s/g, '').length, 'no spaces') + stat(sentences, 'sentences') +
+          stat(lines, 'lines') + stat(mins < 1 ? '<1 min' : Math.round(mins) + ' min', 'read time');
+      };
+      $('t').oninput = calc; calc();
+    }
+  },
+  'case-converter': {
+    html: ta('t', 'Some text to convert') +
+      '<div class="field"><label>Style</label><select id="mode">' +
+      ['UPPERCASE','lowercase','Title Case','Sentence case','camelCase','PascalCase','snake_case','kebab-case']
+        .map(m => '<option>' + m + '</option>').join('') + '</select></div>' + goRow + outBox,
+    wire() {
+      const words = s => s.replace(/[_-]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').split(/\s+/).filter(Boolean);
+      const run = () => {
+        const v = $('t').value, m = $('mode').value;
+        let r = v;
+        if (m === 'UPPERCASE') r = v.toUpperCase();
+        else if (m === 'lowercase') r = v.toLowerCase();
+        else if (m === 'Title Case') r = v.replace(/\w\S*/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
+        else if (m === 'Sentence case') r = v.toLowerCase().replace(/(^\s*\w|[.!?]\s+\w)/g, c => c.toUpperCase());
+        else if (m === 'camelCase') r = words(v).map((w,i) => i ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w.toLowerCase()).join('');
+        else if (m === 'PascalCase') r = words(v).map(w => w[0].toUpperCase() + w.slice(1).toLowerCase()).join('');
+        else if (m === 'snake_case') r = words(v).map(w => w.toLowerCase()).join('_');
+        else if (m === 'kebab-case') r = words(v).map(w => w.toLowerCase()).join('-');
+        setOut(r);
+      };
+      $('go').onclick = run; $('mode').onchange = run; $('copy').onclick = copyOut;
+    }
+  },
+  'text-cleaner': {
+    html: ta('t', 'Messy text') + goRow + outBox +
+      '<p class="note">Removes zero-width and other invisible characters too — the ones that survive a copy from a PDF and break search.</p>',
+    wire() {
+      $('go').onclick = () => {
+        const r = $('t').value
+          .replace(/[​-‍﻿]/g, '')       // zero-width
+          .replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
+          .replace(/[–—]/g, '-').replace(/…/g, '...')
+          .replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n')
+          .replace(/\n{3,}/g, '\n\n').trim();
+        setOut(r);
+      };
+      $('copy').onclick = copyOut;
+    }
+  },
+  'json-formatter': {
+    html: ta('t', '{"paste":"json here"}') +
+      '<div class="btns"><button class="go" id="go">Format</button><button class="alt" id="min">Minify</button>' +
+      '<button class="alt" id="copy">Copy</button></div>' + outBox,
+    wire() {
+      const parse = () => JSON.parse($('t').value);
+      const fail = e => {
+        /* The position is the useful half of a JSON error: "Unexpected token"
+           without a line number sends you reading the whole file. */
+        const m = /position (\d+)/.exec(e.message);
+        if (!m) return setOut(e.message, true);
+        const upto = $('t').value.slice(0, +m[1]);
+        const line = upto.split('\n').length, col = upto.length - upto.lastIndexOf('\n');
+        setOut(e.message + '\n\nLine ' + line + ', column ' + col, true);
+      };
+      $('go').onclick = () => { try { setOut(JSON.stringify(parse(), null, 2)); } catch (e) { fail(e); } };
+      $('min').onclick = () => { try { setOut(JSON.stringify(parse())); } catch (e) { fail(e); } };
+      $('copy').onclick = copyOut;
+    }
+  },
+  'base64': {
+    html: ta('t', 'Text, or Base64 to decode') +
+      '<div class="btns"><button class="go" id="go">Encode</button><button class="alt" id="dec">Decode</button>' +
+      '<button class="alt" id="copy">Copy</button></div>' + outBox,
+    wire() {
+      /* btoa throws on anything above U+00FF, so go through UTF-8 bytes —
+         otherwise every emoji and accented character fails. */
+      const enc = s => btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+      const dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.trim()), c => c.charCodeAt(0)));
+      $('go').onclick = () => { try { setOut(enc($('t').value)); } catch (e) { setOut('Could not encode: ' + e.message, true); } };
+      $('dec').onclick = () => { try { setOut(dec($('t').value)); } catch (e) { setOut('That is not valid Base64.', true); } };
+      $('copy').onclick = copyOut;
+    }
+  },
+  'uuid': {
+    html: '<div class="field"><label>How many</label><input id="n" type="number" value="5" min="1" max="200"></div>' +
+      goRow + outBox,
+    wire() {
+      const one = () => (crypto.randomUUID ? crypto.randomUUID() :
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        }));
+      const run = () => setOut(Array.from({ length: Math.min(200, Math.max(1, +$('n').value || 1)) }, one).join('\n'));
+      $('go').onclick = run; $('copy').onclick = copyOut; run();
+    }
+  },
+  'jwt': {
+    html: ta('t', 'eyJhbGciOi…') + '<div class="btns"><button class="go" id="go">Decode</button>' +
+      '<button class="alt" id="copy">Copy</button></div>' + outBox +
+      '<p class="note">Decoding is not verifying. This reads what the token <b>says</b>; only the server that holds the key can tell you whether it is genuine.</p>',
+    wire() {
+      const part = s => JSON.stringify(JSON.parse(new TextDecoder().decode(
+        Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)))), null, 2);
+      $('go').onclick = () => {
+        try {
+          const p = $('t').value.trim().split('.');
+          if (p.length < 2) throw new Error('A JWT has three parts separated by dots.');
+          const payload = JSON.parse(part(p[1]).replace(/\n/g, ''));
+          let extra = '';
+          if (payload.exp) {
+            const when = new Date(payload.exp * 1000);
+            extra = '\n\n' + (when < new Date() ? 'EXPIRED ' : 'Expires ') + when.toLocaleString();
+          }
+          setOut('HEADER\n' + part(p[0]) + '\n\nPAYLOAD\n' + part(p[1]) + extra);
+        } catch (e) { setOut('Could not read that token: ' + e.message, true); }
+      };
+      $('copy').onclick = copyOut;
+    }
+  },
+  'password': {
+    html: '<div class="row2"><div class="field"><label>Length</label><input id="len" type="number" value="20" min="6" max="128"></div>' +
+      '<div class="field"><label>Include</label><select id="set">' +
+      '<option value="all">Letters, numbers, symbols</option><option value="alnum">Letters and numbers</option>' +
+      '<option value="easy">Easy to read (no l 1 O 0)</option></select></div></div>' + goRow + outBox +
+      '<div class="stats" id="st"></div>',
+    wire() {
+      const SETS = {
+        all: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}',
+        alnum: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+        easy: 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+      };
+      const run = () => {
+        const n = Math.min(128, Math.max(6, +$('len').value || 20)), pool = SETS[$('set').value];
+        /* Modulo on a random byte skews toward the low end of the pool. Reject
+           the tail instead, so every character is equally likely. */
+        const out = [];
+        const limit = 256 - (256 % pool.length);
+        while (out.length < n) {
+          for (const b of crypto.getRandomValues(new Uint8Array(n * 2))) {
+            if (b < limit) { out.push(pool[b % pool.length]); if (out.length === n) break; }
+          }
+        }
+        setOut(out.join(''));
+        const bits = n * Math.log2(pool.length);
+        // 1e10 guesses/second is a reasonable modern offline-cracking assumption
+        const secs = Math.pow(2, bits - 1) / 1e10;
+        $('st').innerHTML = stat(Math.round(bits), 'bits of entropy') + stat(human(secs), 'to crack offline');
+      };
+      const human = s => s < 60 ? 'seconds' : s < 3600 ? 'minutes' : s < 86400 ? 'hours' :
+        s < 3.15e7 ? 'days' : s < 3.15e9 ? 'years' : s < 3.15e12 ? 'centuries' : 'longer than Earth';
+      $('go').onclick = run; $('copy').onclick = copyOut; run();
+    }
+  },
+  'slug': {
+    html: '<div class="field"><label>Title</label><input id="t" placeholder="How I Grew to 1,000 Subs — in 30 Days"></div>' +
+      goRow + outBox,
+    wire() {
+      const run = () => setOut($('t').value.normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''));
+      $('go').onclick = run; $('t').oninput = run; $('copy').onclick = copyOut;
+    }
+  },
+  'color': {
+    html: '<div class="field"><label>Colour</label><input id="t" placeholder="#00F0FF, rgb(0,240,255) or hsl(...)"></div>' +
+      '<div class="swatch" id="sw"></div>' + '<div class="btns"><button class="go" id="go">Convert</button>' +
+      '<button class="alt" id="copy">Copy</button></div>' + outBox,
+    wire() {
+      const run = () => {
+        const v = $('t').value.trim();
+        if (!v) return setOut('');
+        // let the browser parse it — it already knows every CSS colour format
+        const probe = document.createElement('div');
+        probe.style.color = ''; probe.style.color = v;
+        if (!probe.style.color) return setOut('That is not a colour CSS understands.', true);
+        document.body.appendChild(probe);
+        const rgb = getComputedStyle(probe).color; probe.remove();
+        const [r,g,b] = rgb.match(/\d+/g).map(Number);
+        const hex = '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('').toUpperCase();
+        const mx = Math.max(r,g,b)/255, mn = Math.min(r,g,b)/255, l = (mx+mn)/2, d = mx-mn;
+        let h = 0, s = 0;
+        if (d) {
+          s = d / (1 - Math.abs(2*l - 1));
+          const R = r/255, G = g/255, B = b/255;
+          h = mx === R ? ((G-B)/d) % 6 : mx === G ? (B-R)/d + 2 : (R-G)/d + 4;
+          h = Math.round(h * 60); if (h < 0) h += 360;
+        }
+        $('sw').style.background = hex;
+        setOut('HEX  ' + hex + '\nRGB  rgb(' + r + ', ' + g + ', ' + b + ')\nHSL  hsl(' +
+               h + ', ' + Math.round(s*100) + '%, ' + Math.round(l*100) + '%)');
+      };
+      $('go').onclick = run; $('t').oninput = run; $('copy').onclick = copyOut;
+    }
+  },
+  'timestamp': {
+    html: '<div class="field"><label>Unix timestamp, or a date</label><input id="t" placeholder="1767225600 or 2026-01-01"></div>' +
+      goRow + outBox,
+    wire() {
+      const run = () => {
+        const v = $('t').value.trim();
+        if (!v) return setOut('');
+        let d;
+        if (/^\d{9,13}$/.test(v)) d = new Date(+v * (v.length <= 10 ? 1000 : 1));  // seconds vs milliseconds
+        else d = new Date(v);
+        if (isNaN(d)) return setOut('Could not read that as a date or a timestamp.', true);
+        setOut('Local    ' + d.toLocaleString() +
+               '\nUTC      ' + d.toUTCString() +
+               '\nISO      ' + d.toISOString() +
+               '\nSeconds  ' + Math.floor(d.getTime()/1000) +
+               '\nMillis   ' + d.getTime());
+      };
+      $('go').onclick = run; $('t').oninput = run; $('copy').onclick = copyOut;
+      $('t').value = String(Math.floor(Date.now()/1000)); run();
+    }
+  },
+  'percentage': {
+    html: '<div class="field"><label>Question</label><select id="mode">' +
+      '<option value="of">What is A% of B</option><option value="is">A is what % of B</option>' +
+      '<option value="chg">Change from A to B</option></select></div>' +
+      '<div class="row2"><div class="field"><label>A</label><input id="a" type="number" value="25"></div>' +
+      '<div class="field"><label>B</label><input id="b" type="number" value="80"></div></div>' + outBox,
+    wire() {
+      const run = () => {
+        const a = +$('a').value, b = +$('b').value, m = $('mode').value;
+        if (isNaN(a) || isNaN(b)) return setOut('Two numbers, please.', true);
+        if (m === 'of') setOut(a + '% of ' + b + '  =  ' + round(a/100*b));
+        else if (m === 'is') setOut(b === 0 ? 'B cannot be zero.' : a + ' is ' + round(a/b*100) + '% of ' + b, b === 0);
+        else setOut(a === 0 ? 'A cannot be zero for a change.' :
+          round((b-a)/Math.abs(a)*100) + '%  ' + (b >= a ? 'increase' : 'decrease') + '  (' + a + ' → ' + b + ')', a === 0);
+      };
+      const round = n => Math.round(n * 1e4) / 1e4;
+      ['a','b'].forEach(i => $(i).oninput = run); $('mode').onchange = run; run();
+    }
+  },
+  'age': {
+    html: '<div class="field"><label>Date of birth</label><input id="d" type="date"></div>' + '<div class="stats" id="st"></div>' + outBox,
+    wire() {
+      const run = () => {
+        const v = $('d').value;
+        if (!v) { $('st').innerHTML = ''; return setOut(''); }
+        const b = new Date(v + 'T00:00:00'), now = new Date();
+        if (b > now) { $('st').innerHTML = ''; return setOut('That is in the future.', true); }
+        let y = now.getFullYear() - b.getFullYear();
+        let m = now.getMonth() - b.getMonth();
+        let d = now.getDate() - b.getDate();
+        if (d < 0) { m--; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+        if (m < 0) { y--; m += 12; }
+        const days = Math.floor((now - b) / 86400000);
+        $('st').innerHTML = stat(y, 'years') + stat(m, 'months') + stat(d, 'days') + stat(days.toLocaleString(), 'days alive');
+        let next = new Date(now.getFullYear(), b.getMonth(), b.getDate());
+        if (next < now) next = new Date(now.getFullYear() + 1, b.getMonth(), b.getDate());
+        setOut('Next birthday in ' + Math.ceil((next - now) / 86400000) + ' days (' + next.toDateString() + ')');
+      };
+      $('d').oninput = run;
+    }
+  },
+  'ratio': {
+    html: '<div class="row2"><div class="field"><label>Width</label><input id="w" type="number" value="1920"></div>' +
+      '<div class="field"><label>Height</label><input id="h" type="number" value="1080"></div></div>' +
+      '<div class="field"><label>Fit to</label><select id="r">' +
+      '<option value="1.7778">16:9 — landscape</option><option value="0.5625">9:16 — Shorts / Reels</option>' +
+      '<option value="1">1:1 — square</option><option value="1.3333">4:3</option></select></div>' + outBox,
+    wire() {
+      const gcd = (a,b) => b ? gcd(b, a % b) : a;
+      const run = () => {
+        const w = +$('w').value, h = +$('h').value, target = +$('r').value;
+        if (!w || !h) return setOut('Both sides need a number.', true);
+        const g = gcd(w,h);
+        // fit inside, never crop: whichever side is over becomes the constraint
+        const cur = w/h;
+        const fit = cur > target ? [Math.round(h*target), h] : [w, Math.round(w/target)];
+        // roughly YouTube's own recommendation, scaled by pixel count
+        const mbps = Math.max(1, Math.round((fit[0]*fit[1]) / 1e6 * 4.5 * 10) / 10);
+        setOut('Now        ' + w + ' x ' + h + '  (' + (w/g) + ':' + (h/g) + ')' +
+               '\nFitted     ' + fit[0] + ' x ' + fit[1] +
+               '\nBitrate    about ' + mbps + ' Mbps at 30fps, ' + Math.round(mbps*1.5*10)/10 + ' at 60fps');
+      };
+      ['w','h'].forEach(i => $(i).oninput = run); $('r').onchange = run; run();
+    }
+  }
+};
+
+function stat(v, label) { return '<div class="stat"><b>' + v + '</b><span>' + label + '</span></div>'; }
+
+/* The AI tools do not get their own key. They hand the job to the assistant on
+   this site, which already has a backend and already knows the channel — one
+   place where prompts live, one place to fix when something is wrong. */
+const AI_PROMPTS = {
+  'ai-title': 'Give me 10 YouTube title options for a video about: ',
+  'ai-desc': 'Write a YouTube description with timestamps and a tag list for a video about: ',
+  'ai-hook': 'Write 5 opening lines that stop the scroll for a video about: '
+};
+function aiTool(t) {
+  return {
+    html: ta('t', 'What is the video about?') +
+      '<div class="btns"><button class="go" id="go">Ask the assistant</button></div>' +
+      '<p class="note">This opens the NovaClip assistant with your request. It runs on this site\'s own ' +
+      'backend and already knows your channel, so the answer is about <b>your</b> videos rather than a generic one.</p>',
+    wire() {
+      $('go').onclick = () => {
+        const v = $('t').value.trim();
+        if (!v) return;
+        try { navigator.clipboard.writeText(AI_PROMPTS[t.id] + v); } catch (e) {}
+        close();
+        /* Open the widget if it is on the page; otherwise send them to the full
+           AI page rather than silently doing nothing. */
+        const toggle = document.querySelector('#n8n-chat .chat-window-toggle');
+        if (toggle) { toggle.click(); }
+        else location.href = 'ai.html';
+      };
+    }
+  };
+}
+
+function open(id) {
+  const t = TOOLS.find(x => x.id === id);
+  if (!t) return;
+  const impl = t.ai ? aiTool(t) : IMPL[t.id];
+  $('sTitle').textContent = t.name;
+  $('sDesc').textContent = t.desc;
+  $('sBody').innerHTML = impl.html;
+  $('sheet').classList.add('show');
+  impl.wire();
+}
+function close() { $('sheet').classList.remove('show'); }
+$('sClose').onclick = close;
+$('sheet').onclick = e => { if (e.target === $('sheet')) close(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+render();
+</script>
+<script src='nova.js'></script>
+</body>
+</html>
