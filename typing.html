@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Typing race — NovaClip</title>
+<meta name='description' content='A one-minute typing race with three boards: phones, laptops, and everyone together. Thumbs and keyboards are not the same sport.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#05070E;--panel:#0C1220;--line:rgba(255,255,255,.1);--txt:#E8EEFF;--dim:#8A97B4;
+  --cyan:#00E5FF;--violet:#7C5CFF;--pink:#FF3D9A;--lime:#B6FF4A;--amber:#FFB443;
+  --grad:linear-gradient(110deg,var(--violet),var(--cyan) 48%,var(--pink))}
+body{background:var(--ink);color:var(--txt);min-height:100vh;
+  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px}
+.wrap{width:min(760px,100% - 34px);margin:0 auto;padding:26px 0 70px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+.top img{width:30px;height:30px}
+.top b{font-weight:700;letter-spacing:-.02em}
+.back{margin-left:auto;font-size:13.5px;color:var(--dim);padding:9px 14px;border-radius:11px;
+  border:1px solid var(--line)}
+.back:hover{color:var(--txt)}
+h1{font-size:clamp(1.9rem,5vw,2.7rem);font-weight:640;letter-spacing:-.038em;line-height:1.05}
+.g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--dim);margin-top:14px;max-width:56ch}
+
+/* the three boards */
+.modes{display:flex;gap:8px;margin:28px 0 18px;flex-wrap:wrap}
+.mode{padding:10px 17px;border-radius:12px;font:inherit;font-size:14px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--dim);transition:.2s}
+.mode.on{color:var(--txt);background:rgba(124,92,255,.2);border-color:rgba(124,92,255,.5)}
+.mode:disabled{opacity:.42;cursor:not-allowed}
+.why{font-size:13px;color:var(--dim);margin-bottom:22px}
+
+/* the race */
+.card{border:1px solid var(--line);background:rgba(255,255,255,.022);border-radius:20px;padding:22px}
+#passage{font:500 clamp(1.05rem,2.4vw,1.35rem)/1.85 ui-monospace,'SF Mono',Menlo,monospace;
+  letter-spacing:.01em;word-break:break-word;min-height:132px}
+#passage span{transition:color .1s}
+.ok{color:var(--lime)}
+.bad{color:var(--pink);text-decoration:underline wavy var(--pink);text-underline-offset:4px}
+.now{background:rgba(0,229,255,.26);border-radius:3px}
+.todo{color:var(--dim)}
+#feed{width:100%;margin-top:18px;padding:13px 15px;border-radius:13px;font:inherit;font-size:16px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--txt);outline:none}
+#feed:focus{border-color:rgba(0,229,255,.5)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(110px,100%),1fr));gap:11px;margin-top:18px}
+.stat{padding:14px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.02)}
+.stat b{display:block;font-size:26px;font-weight:660;letter-spacing:-.03em;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{font-size:12px;color:var(--dim)}
+.btns{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}
+button.go{padding:13px 24px;border:0;border-radius:13px;font:inherit;font-weight:640;cursor:pointer;
+  background:var(--grad);color:#05070E}
+button.alt{padding:13px 20px;border:1px solid var(--line);border-radius:13px;font:inherit;
+  cursor:pointer;background:none;color:var(--txt)}
+
+/* results */
+.board{margin-top:34px}
+.board h2{font-size:1.2rem;font-weight:620;letter-spacing:-.02em;margin-bottom:6px}
+.board p.sub{color:var(--dim);font-size:13.5px;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:13px;
+  border:1px solid var(--line);background:rgba(255,255,255,.02);margin-bottom:8px}
+.row .rank{width:26px;font-weight:700;color:var(--dim);font-size:14px}
+.row .who{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+.row .face{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;flex:0 0 auto;
+  background:var(--grad);font-size:15px}
+.row .face img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.row .nm{font-size:14.5px;font-weight:560;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .wpm{font:700 17px/1 ui-monospace,monospace;color:var(--lime)}
+.row .acc{font-size:12.5px;color:var(--dim);width:44px;text-align:right}
+.row.me{border-color:rgba(0,229,255,.45);background:rgba(0,229,255,.06)}
+.empty{color:var(--dim);font-size:14px;padding:16px 0}
+.note{color:var(--dim);font-size:12.5px;line-height:1.6;margin-top:16px;
+  border-top:1px solid var(--line);padding-top:14px}
+@media (pointer:coarse) and (hover:none){
+  .mode,button.go,button.alt{min-height:46px}
+  #feed{font-size:16px;min-height:48px}
+}
+</style>
+</head>
+<body>
+<div class='wrap'>
+  <div class='top'>
+    <img src='logo.svg' alt=''><b>NovaClip</b>
+    <a class='back' href='app.html'>&larr; Studio</a>
+  </div>
+
+  <h1>Typing race, <span class='g'>three boards</span></h1>
+  <p class='lede'>Sixty seconds. Thumbs on glass and ten fingers on a keyboard are not the same
+    sport, so they do not share a table &mdash; and there is a third for everyone together.</p>
+
+  <div class='modes' id='modes'></div>
+  <p class='why' id='why'></p>
+
+  <div class='card'>
+    <div id='passage'></div>
+    <input id='feed' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false'
+           placeholder='Click here and start typing&hellip;'>
+    <div class='stats'>
+      <div class='stat'><b id='sWpm'>0</b><span>words per minute</span></div>
+      <div class='stat'><b id='sAcc'>100</b><span>% accurate</span></div>
+      <div class='stat'><b id='sTime'>60</b><span>seconds left</span></div>
+      <div class='stat'><b id='sBest'>0</b><span>your best here</span></div>
+    </div>
+    <div class='btns'>
+      <button class='go' id='again'>New passage</button>
+      <button class='alt' id='reset'>Clear my scores</button>
+    </div>
+  </div>
+
+  <div class='board'>
+    <h2 id='bTitle'>Board</h2>
+    <p class='sub' id='bSub'></p>
+    <div id='rows'></div>
+    <p class='note' id='bNote'></p>
+  </div>
+</div>
+
+<script src='nova.js'></script>
+<script>
+/* ============================================================================
+   TYPING RACE
+   ============================================================================
+   Three boards, because a phone and a laptop are different instruments. A good
+   thumb-typist does 35-45 wpm; a good touch-typist does 80-110. Putting them in
+   one table means the phone players never appear on it, so they stop playing.
+
+   Which board you may post to is decided by the device, not by a dropdown:
+   a coarse pointer with no fine pointer available is a phone or tablet, and a
+   fine pointer is a mouse or trackpad next to a real keyboard. You cannot post
+   a laptop score from a phone or the other way round — that is the whole point
+   of separating them. Mixed always takes your run.
+   ============================================================================ */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  /* ---- which device is this ---------------------------------------------- */
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  const fine   = matchMedia('(pointer: fine)').matches;
+  const DEVICE = (coarse && !fine) ? 'mobile' : 'laptop';
+
+  const BOARDS = [
+    ['mobile', 'Phones', 'Typed with thumbs on glass.'],
+    ['laptop', 'Keyboards', 'Typed on a real keyboard.'],
+    ['mixed',  'Everyone', 'Every run, whatever it was typed on.']
+  ];
+  let board = DEVICE;
+
+  /* ---- passages ----
+     Ordinary sentences with ordinary punctuation. No pangrams and no lorem:
+     you want the test to measure typing the words people actually type. */
+  const PASSAGES = [
+    'The best thumbnail is the one that still reads when it is the size of a stamp, because that is how most people will see it.',
+    'Editing is mostly deciding what to remove. The first cut is always too long, and the second one usually is as well.',
+    'Nobody watches a video because the transition was clever. They watch because the first five seconds promised something worth waiting for.',
+    'A good title says what the video is, not how the video feels about itself. Curiosity works; confusion does not.',
+    'Upload on a schedule you can keep on a bad week, not the one you can keep on a good one. Consistency beats intensity every time.',
+    'The camera does not need to be expensive. The light does need to be in front of you, and the microphone does need to be close.',
+    'Watch time is not a score you chase. It is a signal that somebody found the middle of your video as interesting as the start.',
+    'Write the description for the person who is already convinced. Put the link where they will actually see it, near the top.'
+  ];
+
+  const DUR = 60;
+  let text = '', typed = '', started = 0, timer = null, done = false, keys = 0;
+
+  function key(b) { return 'nc_type_' + b; }
+  function load(b) { try { return JSON.parse(localStorage.getItem(key(b)) || '[]'); } catch (e) { return []; } }
+  function save(b, rows) { try { localStorage.setItem(key(b), JSON.stringify(rows.slice(0, 20))); } catch (e) {} }
+
+  /* ---- the passage ------------------------------------------------------- */
+  function newPassage() {
+    text = PASSAGES[Math.floor(Math.random() * PASSAGES.length)];
+    typed = ''; started = 0; done = false; keys = 0;
+    clearInterval(timer); timer = null;
+    $('feed').value = ''; $('feed').disabled = false;
+    $('sWpm').textContent = '0'; $('sAcc').textContent = '100'; $('sTime').textContent = DUR;
+    paint();
+  }
+
+  function paint() {
+    $('passage').innerHTML = [...text].map((ch, i) => {
+      let cls = 'todo';
+      if (i < typed.length) cls = typed[i] === ch ? 'ok' : 'bad';
+      else if (i === typed.length) cls = 'now';
+      return '<span class="' + cls + '">' + (ch === ' ' ? '&nbsp;' : ch.replace(/[<>&]/g, c =>
+        ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))) + '</span>';
+    }).join('');
+  }
+
+  function stats() {
+    const elapsed = started ? (Date.now() - started) / 1000 : 0;
+    let right = 0;
+    for (let i = 0; i < typed.length; i++) if (typed[i] === text[i]) right++;
+    /* A "word" is five characters, which is the standard the whole industry
+       uses — otherwise "a a a a a" would beat "extraordinary". */
+    const wpm = elapsed > 0 ? Math.round((right / 5) / (elapsed / 60)) : 0;
+    const acc = typed.length ? Math.round(right / typed.length * 100) : 100;
+    return { wpm: Math.max(0, wpm), acc, right };
+  }
+
+  function tick() {
+    const left = Math.max(0, DUR - (Date.now() - started) / 1000);
+    $('sTime').textContent = Math.ceil(left);
+    const s = stats();
+    $('sWpm').textContent = s.wpm;
+    $('sAcc').textContent = s.acc;
+    if (left <= 0) finish();
+  }
+
+  function finish() {
+    if (done) return;
+    done = true;
+    clearInterval(timer); timer = null;
+    $('feed').disabled = true;
+    const s = stats();
+    if (s.right < 40) return draw();   // too little typed to mean anything
+    /* The fastest verified humans sit around 210-230 wpm on familiar text.
+       Anything past 250 did not come from a person, and letting it onto the
+       board would make every honest score look pointless. */
+    if (keys < s.right * 0.7) {
+      $('bNote').textContent = 'Those characters arrived without keystrokes. Not recorded.';
+      return draw();
+    }
+    if (s.wpm > 250) {
+      $('bNote').textContent = 'That run came out at ' + s.wpm + ' wpm, which is past what ' +
+        'anyone has typed. Not recorded.';
+      return draw();
+    }
+
+    const row = {
+      name: (window.ncName && ncName()) || 'You',
+      face: (window.ncAvatar && ncAvatar()) || '⭐',
+      wpm: s.wpm, acc: s.acc, at: Date.now(), dev: DEVICE, me: true
+    };
+    /* Your run goes on your device's board and on Mixed — never on the other
+       device's board, which is what keeps the separation meaningful. */
+    [DEVICE, 'mixed'].forEach(b => {
+      const rows = load(b);
+      rows.push(row);
+      rows.sort((x, y) => y.wpm - x.wpm || y.acc - x.acc);
+      save(b, rows);
+    });
+    draw();
+  }
+
+  /* Pasting the passage in would post a four-figure score, so it is refused
+     outright rather than filtered later. */
+  /* Characters that arrive without a key having been pressed did not come from
+     fingers. Counting keydowns and comparing at the end catches a paste, an
+     autofill and a script setting .value directly, and it does not misfire on
+     someone who simply types quickly — which a naive speed threshold does. */
+  $('feed').addEventListener('keydown', e => {
+    if (e.key && e.key.length === 1 || e.key === 'Backspace') keys++;
+  });
+
+  $('feed').addEventListener('paste', e => {
+    e.preventDefault();
+    $('bNote').textContent = 'Pasting is not typing. Nice try.';
+  });
+
+  $('feed').addEventListener('input', e => {
+    if (done) return;
+    if (!started) { started = Date.now(); timer = setInterval(tick, 200); }
+    typed = e.target.value;
+    if (typed.length >= text.length) { paint(); finish(); return; }
+    paint();
+    const s = stats();
+    $('sWpm').textContent = s.wpm; $('sAcc').textContent = s.acc;
+  });
+
+  /* ---- boards ------------------------------------------------------------ */
+  function drawModes() {
+    $('modes').innerHTML = BOARDS.map(([id, label]) =>
+      '<button class="mode' + (id === board ? ' on' : '') + '" data-b="' + id + '">' + label + '</button>').join('');
+    $('modes').querySelectorAll('.mode').forEach(b =>
+      b.onclick = () => { board = b.dataset.b; drawModes(); draw(); });
+    const other = DEVICE === 'mobile' ? 'Keyboards' : 'Phones';
+    $('why').textContent = DEVICE === 'mobile'
+      ? 'You are on a touch screen, so your runs post to Phones and Everyone. ' +
+        'You can read the ' + other + ' board but not post to it.'
+      : 'You have a keyboard, so your runs post to Keyboards and Everyone. ' +
+        'You can read the ' + other + ' board but not post to it.';
+  }
+
+  function draw() {
+    const meta = BOARDS.find(b => b[0] === board);
+    $('bTitle').textContent = meta[1];
+    $('bSub').textContent = meta[2];
+    const rows = load(board);
+    $('sBest').textContent = (load(DEVICE)[0] || {}).wpm || 0;
+
+    $('rows').innerHTML = rows.length ? rows.slice(0, 10).map((r, i) => {
+      const face = String(r.face || '').startsWith('data:')
+        ? '<span class="face"><img src="' + r.face + '" alt=""></span>'
+        : '<span class="face">' + (r.face || '⭐') + '</span>';
+      return '<div class="row' + (r.me ? ' me' : '') + '">' +
+        '<span class="rank">' + (i + 1) + '</span>' +
+        '<span class="who">' + face + '<span class="nm">' +
+          String(r.name).replace(/[<>&]/g, '') + '</span></span>' +
+        '<span class="wpm">' + r.wpm + '</span>' +
+        '<span class="acc">' + r.acc + '%</span></div>';
+    }).join('') : '<p class="empty">Nothing here yet. Type a passage and you are first.</p>';
+
+    /* The honest bit. There is no server in this project, so these are your own
+       runs on this device — not a global ranking. Saying "leaderboard" and
+       showing one name would be a lie the visitor can spot in ten seconds. */
+    $('bNote').textContent = window.NC_SERVER
+      ? 'Ranked against everyone who has played.'
+      : 'These are your own runs, kept in this browser. There is no server behind ' +
+        'NovaClip, so nothing is uploaded and nobody else can see them — which also ' +
+        'means this is not a global ranking yet. Clearing your site data clears it.';
+  }
+
+  $('again').onclick = newPassage;
+  $('reset').onclick = () => {
+    if (!confirm('Clear every score on all three boards?')) return;
+    BOARDS.forEach(([id]) => localStorage.removeItem(key(id)));
+    draw();
+  };
+
+  drawModes(); newPassage(); draw();
+  addEventListener('load', () => { if (window.ncAgeGate) ncAgeGate(); });
+})();
+</script>
+</body>
+</html>

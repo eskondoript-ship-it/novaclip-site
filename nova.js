@@ -815,9 +815,357 @@ function ncMiniAI() {
     });
 }
 
+
+/* ============================================================================
+   SCREEN TIME
+   ============================================================================
+   Ninety minutes of use, then the site locks for fifteen and the budget
+   resets. Both numbers are constants below because they are the sort of thing
+   that gets argued about.
+
+   It counts ACTIVE time, not wall-clock time. A tab left open on a second
+   monitor all afternoon would otherwise burn the whole budget without anyone
+   looking at it, and a limit that punishes you for forgetting to close a tab
+   is one people learn to resent rather than respect. So the clock only runs
+   while the tab is visible AND something has been touched in the last minute.
+
+   Honest note for whoever maintains this: a browser-side limit is a nudge, not
+   a lock. Clearing site data resets it, and anyone determined will work that
+   out. Enforcing it properly needs an account and a server, which this site
+   deliberately does not have. It is here to help someone who wants the help.
+   ============================================================================ */
+const NC_ST_BUDGET = 90 * 60 * 1000;   // 1 h 30 m of use
+const NC_ST_BREAK  = 15 * 60 * 1000;   // then locked for 15 minutes
+const NC_ST_IDLE   = 60 * 1000;        // no interaction for this long = not using it
+
+function ncScreenTime() {
+  const get = (k, d) => { const v = +localStorage.getItem(k); return isFinite(v) && v ? v : d; };
+  const set = (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) {} };
+
+  let lastTouch = Date.now();
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev =>
+    addEventListener(ev, () => { lastTouch = Date.now(); }, { passive: true }));
+
+  const badge = document.createElement('div');
+  badge.id = 'ncst';
+  badge.style.cssText = 'position:fixed;right:14px;bottom:14px;z-index:9990;padding:7px 13px;' +
+    'border-radius:999px;font:600 12px/1 system-ui,sans-serif;letter-spacing:.02em;' +
+    'border:1px solid rgba(255,255,255,0.14);background:rgba(8,11,20,0.82);color:#8A97B4;' +
+    'backdrop-filter:blur(10px);pointer-events:none;display:none';
+  document.body.appendChild(badge);
+
+  let veil = null;
+  function lockScreen(until) {
+    if (veil) return;
+    veil = document.createElement('div');
+    veil.id = 'ncstlock';
+    veil.style.cssText = 'position:fixed;inset:0;z-index:99997;display:grid;place-items:center;' +
+      'background:rgba(4,6,12,0.97);backdrop-filter:blur(14px);color:#EAF2FF;text-align:center;' +
+      'padding:26px;font-family:system-ui,sans-serif';
+    veil.innerHTML =
+      '<div style="max-width:340px">' +
+      '<div style="font-size:44px;margin-bottom:14px">⏸</div>' +
+      '<h2 style="font-size:1.5rem;font-weight:650;letter-spacing:-.02em">Time for a break</h2>' +
+      '<p style="color:#8A97B4;margin-top:12px;font-size:15px;line-height:1.6">' +
+      'You have been here an hour and a half. Stand up, look out of a window, ' +
+      'drink something. NovaClip will be here.</p>' +
+      '<div id="ncstcd" style="margin-top:22px;font:700 34px/1 ui-monospace,monospace;' +
+      'background:linear-gradient(110deg,#7C5CFF,#00E5FF);-webkit-background-clip:text;' +
+      'background-clip:text;color:transparent">15:00</div>' +
+      '</div>';
+    document.body.appendChild(veil);
+    document.body.style.overflow = 'hidden';
+  }
+  function unlockScreen() {
+    if (!veil) return;
+    veil.remove(); veil = null;
+    document.body.style.overflow = '';
+  }
+
+  const mmss = ms => {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  };
+
+  let last = Date.now();
+  function tick() {
+    const now = Date.now();
+    const lockUntil = get('nc_st_lock', 0);
+
+    if (now < lockUntil) {
+      lockScreen(lockUntil);
+      const cd = document.getElementById('ncstcd');
+      if (cd) cd.textContent = mmss(lockUntil - now);
+      badge.style.display = 'none';
+      last = now;
+      return;
+    }
+    unlockScreen();
+
+    /* Only bill time that was actually spent using the site. */
+    const active = !document.hidden && (now - lastTouch) < NC_ST_IDLE;
+    const delta = Math.min(now - last, 10000);   // a sleeping laptop must not bill hours
+    last = now;
+    if (!active) { badge.style.display = 'none'; return; }
+
+    const used = get('nc_st_used', 0) + delta;
+    set('nc_st_used', used);
+
+    const left = NC_ST_BUDGET - used;
+    if (left <= 0) {
+      set('nc_st_lock', now + NC_ST_BREAK);
+      set('nc_st_used', 0);
+      return;
+    }
+    /* The badge only appears in the last ten minutes. A countdown visible the
+       whole time is a nag; one that appears near the end is information. */
+    if (left < 10 * 60 * 1000) {
+      badge.style.display = 'block';
+      badge.textContent = mmss(left) + ' left';
+      badge.style.color = left < 60000 ? '#FFB443' : '#8A97B4';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  tick();
+  setInterval(tick, 1000);
+  window.ncScreenTimeReset = function () {   // for the parent page
+    set('nc_st_used', 0); set('nc_st_lock', 0); unlockScreen();
+  };
+}
+
+
+/* ============================================================================
+   PROFILE — a name and a face
+   ============================================================================
+   Both live in this browser and nowhere else. There is no server here, so a
+   profile picture cannot be seen by anyone but you — which is also why an
+   uploaded image is safe to allow: it never leaves the device.
+
+   The name goes through ncModerate() before it is accepted. On a site for
+   13-18s a display name is the one piece of free text that follows you around,
+   and it is worth checking once at the point of entry.
+   ============================================================================ */
+const NC_AVATARS = ['\u{1F984}','\u{1F98A}','\u{1F431}','\u{1F438}','\u{1F419}','\u{1F41D}',
+  '\u{1F680}','\u{1F30D}','\u{26A1}','\u{1F525}','\u{1F308}','\u{1F3AE}',
+  '\u{1F3A7}','\u{1F3AC}','\u{1F4F8}','\u{1F3A8}','\u{2B50}','\u{1F36A}'];
+
+function ncName()   { return localStorage.getItem('nc_name') || ''; }
+function ncAvatar() { return localStorage.getItem('nc_avatar') || NC_AVATARS[0]; }
+
+function ncProfile() {
+  const sb = document.querySelector('.sidebar');
+  if (!sb || document.getElementById('ncprof')) return;
+
+  const box = document.createElement('button');
+  box.id = 'ncprof';
+  box.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;margin:14px 0 6px;' +
+    'padding:9px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);' +
+    'background:rgba(255,255,255,0.03);color:inherit;font:inherit;cursor:pointer;text-align:left';
+  function paint() {
+    const pic = ncAvatar();
+    const face = pic.startsWith('data:')
+      ? '<img src="' + pic + '" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover">'
+      : '<span style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;' +
+        'background:linear-gradient(120deg,#7C5CFF,#00E5FF);font-size:17px">' + pic + '</span>';
+    box.innerHTML = face + '<span style="font-size:13.5px;font-weight:600">' +
+      (ncName() ? ncName().replace(/[<>&]/g, '') : 'Set your name') + '</span>';
+  }
+  paint();
+  sb.insertBefore(box, sb.firstChild);
+  box.onclick = openProfile;
+
+  function openProfile() {
+    if (document.getElementById('ncprofui')) return;
+    const o = document.createElement('div');
+    o.id = 'ncprofui';
+    o.style.cssText = 'position:fixed;inset:0;z-index:99996;display:grid;place-items:center;' +
+      'background:rgba(4,6,12,0.9);backdrop-filter:blur(10px);padding:22px;font-family:system-ui,sans-serif';
+    o.innerHTML =
+      '<div style="width:100%;max-width:400px;background:#0C1220;border:1px solid rgba(255,255,255,0.12);' +
+      'border-radius:20px;padding:26px;color:#EAF2FF">' +
+      '<h2 style="font-size:1.25rem;font-weight:650;margin-bottom:16px">Your profile</h2>' +
+      '<label style="display:block;font-size:12.5px;color:#8A97B4;margin-bottom:6px">Name</label>' +
+      '<input id="ncpname" maxlength="20" placeholder="What should we call you?" ' +
+      'style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.14);' +
+      'background:rgba(255,255,255,0.04);color:#EAF2FF;font:inherit;font-size:15px">' +
+      '<p id="ncperr" style="color:#FF6B9D;font-size:13px;margin-top:7px;display:none"></p>' +
+      '<label style="display:block;font-size:12.5px;color:#8A97B4;margin:18px 0 8px">Picture</label>' +
+      '<div id="ncpavs" style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px"></div>' +
+      '<label style="display:block;margin-top:12px;font-size:12.5px;color:#8A97B4">' +
+      'or use your own <input type="file" id="ncpfile" accept="image/*" style="display:block;margin-top:6px;font-size:12px"></label>' +
+      '<p style="color:#8A97B4;font-size:12px;margin-top:10px;line-height:1.5">' +
+      'Both stay in this browser. There is no server here, so nothing is uploaded and nobody else can see them.</p>' +
+      '<label style="display:block;font-size:12.5px;color:#8A97B4;margin:20px 0 6px">' +
+      'Your own AI key <span style="opacity:.7">(optional)</span></label>' +
+      '<input id="ncpkey" type="password" placeholder="AIza…" autocomplete="off" ' +
+      'style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.14);' +
+      'background:rgba(255,255,255,0.04);color:#EAF2FF;font:inherit;font-size:14px">' +
+      '<p id="ncpkerr" style="font-size:12.5px;margin-top:7px;display:none"></p>' +
+      '<p style="color:#8A97B4;font-size:12px;margin-top:8px;line-height:1.5">' +
+      'Leave this empty and the AI here uses NovaClip’s shared key, which is free but ' +
+      'gets busy. A key of your own from ' +
+      '<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" ' +
+      'style="color:#00E5FF">Google AI Studio</a> skips the queue. It is kept in this browser ' +
+      'and sent straight to Google — so the requests are billed to you, and anyone with your ' +
+      'device can read it. Do not paste a key you also use for anything important.</p>' +
+      '<div style="display:flex;gap:9px;margin-top:20px">' +
+      '<button id="ncpsave" style="flex:1;padding:12px;border:0;border-radius:12px;cursor:pointer;' +
+      'background:linear-gradient(110deg,#7C5CFF,#00E5FF);color:#05070E;font:inherit;font-weight:650">Save</button>' +
+      '<button id="ncpcancel" style="padding:12px 18px;border:1px solid rgba(255,255,255,0.14);' +
+      'border-radius:12px;cursor:pointer;background:none;color:#EAF2FF;font:inherit">Cancel</button>' +
+      '</div></div>';
+    document.body.appendChild(o);
+
+    let pick = ncAvatar();
+    const grid = document.getElementById('ncpavs');
+    function drawAvs() {
+      grid.innerHTML = NC_AVATARS.map(a =>
+        '<button data-a="' + a + '" style="aspect-ratio:1;border-radius:11px;cursor:pointer;font-size:19px;' +
+        'border:2px solid ' + (a === pick ? '#00E5FF' : 'rgba(255,255,255,0.1)') + ';' +
+        'background:rgba(255,255,255,0.04)">' + a + '</button>').join('');
+      grid.querySelectorAll('button').forEach(b =>
+        b.onclick = () => { pick = b.dataset.a; drawAvs(); });
+    }
+    drawAvs();
+    document.getElementById('ncpname').value = ncName();
+    document.getElementById('ncpkey').value = ncAIKey();
+
+    document.getElementById('ncpfile').onchange = e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      /* Downscaled to 128px before storing: local storage is small, and a
+         modern phone photo would fill it on its own. */
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = c.height = 128;
+        const x = c.getContext('2d');
+        const s = Math.max(128 / img.width, 128 / img.height);
+        x.drawImage(img, (128 - img.width * s) / 2, (128 - img.height * s) / 2,
+                    img.width * s, img.height * s);
+        pick = c.toDataURL('image/jpeg', 0.8);
+        drawAvs();
+      };
+      img.src = URL.createObjectURL(f);
+    };
+
+    document.getElementById('ncpcancel').onclick = () => o.remove();
+    document.getElementById('ncpsave').onclick = () => {
+      const v = document.getElementById('ncpname').value.trim();
+      const err = document.getElementById('ncperr');
+      if (v.length < 2) { err.textContent = 'A name needs at least two characters.'; err.style.display = 'block'; return; }
+      const mod = window.ncModerate ? ncModerate(v) : { ok: true };
+      if (!mod.ok) { err.textContent = 'Pick something else — that one will not fly here.'; err.style.display = 'block'; return; }
+      /* An empty box means "use the shared key", which is a valid choice and
+         not an error. Anything else has to look like a key, or the first AI
+         request fails somewhere far away from the box you typed it into. */
+      const k = document.getElementById('ncpkey').value.trim();
+      const kerr = document.getElementById('ncpkerr');
+      if (k && !ncKeyLooksReal(k)) {
+        kerr.textContent = 'A Google AI key starts with AIza and is about 39 characters. That one is not.';
+        kerr.style.color = '#FF6B9D'; kerr.style.display = 'block';
+        return;
+      }
+      ncSetAIKey(k);
+      try {
+        localStorage.setItem('nc_name', v);
+        localStorage.setItem('nc_avatar', pick);
+      } catch (e) {}
+      paint(); o.remove();
+      if (window.ncSyncSoon) ncSyncSoon();
+    };
+  }
+}
+
+/* ============================================================================
+   THE SITE'S AI KEY, AND ONE WAY TO ASK
+   ============================================================================
+   Every AI feature on the site used to reach the model its own way. That is
+   how you end up with four copies of the same fetch and only three of them
+   handling a 429. There is one function now: ncAsk().
+
+   There are two routes to a model and the difference matters:
+
+     THE SITE WORKER   the default. The key lives on the Cloudflare Worker, not
+                       in the page, which is the only correct place for it —
+                       anything shipped to a browser is public, and a Gemini key
+                       in a static file is a key someone else is spending.
+
+     YOUR OWN KEY      optional. If you paste a key into your profile it is used
+                       instead, straight from your browser to Google. It stays
+                       in this browser. Two honest warnings go with that and
+                       both are shown in the UI: the request is visible in your
+                       own network tab, and the spend is yours.
+
+   The reason to offer the second at all is that the worker is one free tier
+   shared by everyone here. When it is rate-limited, a key of your own is the
+   difference between the feature working and a shrug.
+   ============================================================================ */
+const NC_AI_WORKER = 'https://novaclip-ai.eskondori-pt.workers.dev';
+const NC_AI_DIRECT = 'https://generativelanguage.googleapis.com/v1beta/models/';
+
+function ncAIKey()     { try { return localStorage.getItem('nc_ai_key') || ''; } catch (e) { return ''; } }
+function ncSetAIKey(k) { try { k ? localStorage.setItem('nc_ai_key', k) : localStorage.removeItem('nc_ai_key'); } catch (e) {} }
+
+/* A Gemini key is 39 characters starting AIza. Checking the shape before the
+   first request turns "the AI is broken" into "that is not a key", which is a
+   much shorter conversation. */
+function ncKeyLooksReal(k) { return /^AIza[\w-]{30,}$/.test((k || '').trim()); }
+
+/* Returns { text, image, err }. It never throws and it never returns a made-up
+   answer: if the model could not be reached, err says so and text is empty, so
+   callers can tell "it said nothing" apart from "it could not be asked". */
+async function ncAsk(prompt, opts) {
+  opts = opts || {};
+  const model = opts.model || 'gemini-2.5-flash';
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: opts.temperature == null ? 0.7 : opts.temperature }
+  };
+  if (opts.maxTokens) body.generationConfig.maxOutputTokens = opts.maxTokens;
+
+  const own = ncAIKey();
+  let data = null, err = '';
+  try {
+    let r;
+    if (ncKeyLooksReal(own)) {
+      r = await fetch(NC_AI_DIRECT + model + ':generateContent?key=' + encodeURIComponent(own.trim()),
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (r.status === 400 || r.status === 403) err = 'That key was refused by Google. Check it in your profile.';
+      else if (r.status === 429) err = 'Your own key is out of quota for now.';
+    } else {
+      r = await fetch(NC_AI_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: model, payload: body }) });
+      if (r.status === 429) err = 'The shared AI is busy. Add your own key in your profile to skip the queue.';
+    }
+    if (!err && !r.ok) err = 'The AI service answered ' + r.status + '.';
+    if (!err) data = await r.json();
+  } catch (e) {
+    err = 'Could not reach the AI. Check your connection.';
+  }
+  if (err) return { text: '', image: '', err: err };
+
+  let text = '', image = '';
+  const parts = data && data.candidates && data.candidates[0] &&
+                data.candidates[0].content && data.candidates[0].content.parts;
+  (parts || []).forEach(p => {
+    if (p.text) text += p.text;
+    if (p.inlineData) image = 'data:image/png;base64,' + p.inlineData.data;
+  });
+  if (!text && !image) err = 'The AI returned nothing that time. Try again.';
+  return { text: text, image: image, err: err };
+}
+
+window.ncAIKey = ncAIKey; window.ncSetAIKey = ncSetAIKey;
+window.ncKeyLooksReal = ncKeyLooksReal; window.ncAsk = ncAsk;
+
 window.addEventListener('DOMContentLoaded', () => {
   dedupeChrome();
   ncBrand();
+  ncProfile();
+  ncScreenTime();
   ncMiniAI();
   // warm the channel cache in the background so message one already has it
   if (ncYTToken()) setTimeout(function () { ncChannelSnapshot(); }, 1200);
@@ -832,6 +1180,13 @@ window.addEventListener('DOMContentLoaded', () => {
   // extra sidebar links (Family / Pricing) injected on every page
   const sb = document.querySelector('.sidebar .themewrap');
   if (sb && !document.getElementById('ncfamlink')) {
+    /* Pages that live outside the original nav. Added here rather than pasted
+       into nineteen files, which is how the nav drifted out of step before. */
+    [['typing.html', 'Typing race'], ['gift.html', 'Gifts'], ['coder.html', 'Coder']].forEach(([href, label]) => {
+      if (document.querySelector('.sidebar a[href="' + href + '"]')) return;
+      const a = document.createElement('a'); a.href = href; a.textContent = label;
+      sb.parentNode.insertBefore(a, sb);
+    });
     const prg = document.createElement('a'); prg.id = 'ncproglink'; prg.href = 'progress.html'; prg.setAttribute('data-t','progress'); prg.textContent = tr('progress');
     const fam = document.createElement('a'); fam.id = 'ncfamlink'; fam.href = 'parent.html'; fam.setAttribute('data-t','family'); fam.textContent = tr('family');
     const pri = document.createElement('a'); pri.href = 'pricing.html'; pri.setAttribute('data-t','pricing'); pri.textContent = tr('pricing');
