@@ -1104,16 +1104,46 @@ function ncProfile() {
    some pages listed six links, some nine — and the only cure for that is one
    copy that every page gets.
    ============================================================================ */
+/* Icons as inline SVG paths on a 24-grid. Not emoji: emoji render differently
+   on every platform, they carry their own colour, and they cannot pick up the
+   active state. These inherit currentColor, so one rule lights the whole row. */
+const NC_ICONS = {
+  home:      'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10',
+  studio:    'M3 5h13v14H3zM19 8l3-2v12l-3-2z',
+  analytics: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  editor:    'M3 6h18M3 12h18M3 18h11M17 15l4 3-4 3z',
+  trends:    'M3 17l6-6 4 4 8-8M15 7h6v6',
+  ai:        'M12 3l2.2 5.6L20 11l-5.8 2.4L12 19l-2.2-5.6L4 11l5.8-2.4z',
+  coder:     'M8 7l-5 5 5 5M16 7l5 5-5 5',
+  games:     'M7 12h4m-2-2v4M15 11h.01M18 13h.01M4 8h16a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z',
+  typing:    'M4 7h16v10H4zM7 10h.01M11 10h.01M15 10h.01M8 14h8',
+  gift:      'M4 11h16v9H4zM2 7h20v4H2zM12 7v13M12 7S9 3 7 4s0 3 5 3zM12 7s3-4 5-3-0 3-5 3z',
+  progress:  'M12 3a9 9 0 109 9h-9z',
+  family:    'M8 11a3 3 0 100-6 3 3 0 000 6zM2 20a6 6 0 0112 0M17 11a3 3 0 100-6M16 20a6 6 0 016-6',
+  pricing:   'M12 2v20M17 6H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'
+};
+
 const NC_NAV = [
-  { items: [['index.html', 'Home', 'home']] },
-  { name: 'Channel', items: [['app.html', 'Studio', 'studio'], ['analytics.html', 'Analytics', 'analytics']] },
-  { name: 'Create',  items: [['editor.html', 'Editor', 'editor'], ['trends.html', 'Trend Spotter', 'trends']] },
-  { name: 'AI',      items: [['ai.html', 'NovaClip AI', 'ai'], ['coder.html', 'Coder', '']] },
-  { name: 'Games',   items: [['game.html', 'Games', 'sniper'], ['typing.html', 'Typing race', '']] },
-  { name: 'Socials', items: [['gift.html', 'Gifts', '']] },
-  { name: 'You',     items: [['progress.html', 'Progress', 'progress'], ['parent.html', 'Family', 'family'],
-                             ['pricing.html', 'Pricing', 'pricing']] }
+  { items: [['index.html', 'Home', 'home', 'home']] },
+  { name: 'Channel', icon: 'analytics', items: [
+      ['app.html', 'Studio', 'studio', 'studio'], ['analytics.html', 'Analytics', 'analytics', 'analytics']] },
+  { name: 'Create', icon: 'editor', items: [
+      ['editor.html', 'Editor', 'editor', 'editor'], ['trends.html', 'Trend Spotter', 'trends', 'trends']] },
+  { name: 'AI', icon: 'ai', items: [
+      ['ai.html', 'NovaClip AI', 'ai', 'ai'], ['coder.html', 'Coder', '', 'coder']] },
+  { name: 'Games', icon: 'games', items: [
+      ['game.html', 'Games', 'sniper', 'games'], ['typing.html', 'Typing race', '', 'typing']] },
+  { name: 'Socials', icon: 'gift', items: [['gift.html', 'Gifts', '', 'gift']] },
+  { name: 'You', icon: 'progress', items: [
+      ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
+      ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
 ];
+
+function ncIcon(name) {
+  const d = NC_ICONS[name] || NC_ICONS.home;
+  return '<svg class="nci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+         'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
+}
 
 function ncNav() {
   const bar = document.querySelector('.sidebar');
@@ -1123,36 +1153,76 @@ function ncNav() {
     const st = document.createElement('style');
     st.id = 'ncnavcss';
     st.textContent = [
-      /* the bar itself: it scrolls, so a long nav can never be cut off again */
+      /* the bar: a soft vertical wash and a hairline edge rather than a flat
+         panel, so it reads as a surface the content sits in front of */
       '.sidebar{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;',
-      'scrollbar-color:rgba(255,255,255,.18) transparent}',
-      '.sidebar::-webkit-scrollbar{width:6px}',
-      '.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px}',
-      '#ncnav{display:flex;flex-direction:column;gap:1px;padding:0 10px}',
-      /* the group header — a button, because it toggles */
-      '#ncnav .ncgh{display:flex;align-items:center;justify-content:space-between;width:100%;',
-      'padding:9px 10px 5px;background:none;border:0;cursor:pointer;text-align:left;',
-      'font:700 10.5px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;',
-      'color:#6F7C99}',
-      '#ncnav .ncgh:hover{color:#9FB0D0}',
-      '#ncnav .ncgh .ncar{transition:transform .18s;font-size:9px;opacity:.75}',
+      'scrollbar-color:rgba(255,255,255,.14) transparent;',
+      'background:linear-gradient(175deg,#0E1220 0%,#0A0D18 55%,#080B14 100%) !important;',
+      'border-right:1px solid rgba(255,255,255,.07) !important;',
+      'box-shadow:1px 0 0 rgba(124,92,255,.10), 18px 0 44px -30px rgba(0,0,0,.9)}',
+      '.sidebar::-webkit-scrollbar{width:5px}',
+      '.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}',
+      '.sidebar::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.26)}',
+      '#ncnav{display:flex;flex-direction:column;gap:2px;padding:2px 10px 6px}',
+
+      /* group header */
+      '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;',
+      'padding:13px 9px 6px;background:none;border:0;cursor:pointer;text-align:left;',
+      'font:700 10px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.15em;text-transform:uppercase;',
+      'color:#5D6A88;transition:color .18s}',
+      '#ncnav .ncgh:hover{color:#A8B8D8}',
+      '#ncnav .ncgh .ncgl{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.10),transparent)}',
+      '#ncnav .ncgh .ncar{width:13px;height:13px;flex:0 0 auto;transition:transform .22s cubic-bezier(.4,1.4,.5,1);opacity:.6}',
       '#ncnav .ncg.shut .ncar{transform:rotate(-90deg)}',
       /* The layout lives here, not in an inline style. An inline display:flex
          beats any stylesheet rule, so collapsing would silently do nothing. */
-      '#ncnav .ncgi{display:flex;flex-direction:column;gap:1px}',
+      '#ncnav .ncgi{display:flex;flex-direction:column;gap:2px}',
       '#ncnav .ncg.shut .ncgi{display:none}',
-      /* the links, overriding each page\'s own .sidebar a rules */
-      '.sidebar #ncnav a.ncl{display:flex;align-items:center;gap:9px;margin:0;',
-      'padding:8px 11px;border-radius:9px;font:600 14.5px/1.25 Segoe UI,system-ui,sans-serif;',
-      'color:#C6D2E8;text-decoration:none;background:none;transition:background .16s,color .16s}',
-      '.sidebar #ncnav a.ncl:hover{background:rgba(114,9,183,.28);color:#fff}',
-      '.sidebar #ncnav a.ncl.on{background:linear-gradient(135deg,#F72585,#7209B7,#4CC9F0);color:#fff}',
-      '.sidebar #ncnav a.ncl .ncd{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.35;flex:0 0 auto}',
-      '.sidebar #ncnav a.ncl.on .ncd{opacity:1}',
-      /* phones keep the horizontal strip the pages already switch to */
-      '@media (max-width:760px){#ncnav{flex-direction:row;padding:0;gap:0}',
+
+      /* the row. position:relative for the active rail; the gradient sits in a
+         ::before at opacity 0 so hovering fades it rather than snapping. */
+      '.sidebar #ncnav a.ncl{position:relative;display:flex;align-items:center;gap:11px;margin:0;',
+      'padding:9px 12px;border-radius:11px;font:600 14px/1.2 Segoe UI,system-ui,sans-serif;',
+      'color:#98A6C4;text-decoration:none;background:none;isolation:isolate;',
+      'transition:color .18s,transform .18s}',
+      '.sidebar #ncnav a.ncl::before{content:"";position:absolute;inset:0;border-radius:11px;z-index:-1;',
+      'background:linear-gradient(105deg,rgba(124,92,255,.22),rgba(0,229,255,.13));',
+      'opacity:0;transition:opacity .2s}',
+      '.sidebar #ncnav a.ncl:hover{color:#EAF2FF;transform:translateX(2px)}',
+      '.sidebar #ncnav a.ncl:hover::before{opacity:1}',
+      '.sidebar #ncnav a.ncl:focus-visible{outline:2px solid #00E5FF;outline-offset:2px}',
+
+      /* active: the gradient stays lit, plus a rail on the left edge */
+      '.sidebar #ncnav a.ncl.on{color:#fff}',
+      '.sidebar #ncnav a.ncl.on::before{opacity:1;',
+      'background:linear-gradient(105deg,rgba(247,37,133,.26),rgba(124,92,255,.30) 55%,rgba(0,229,255,.18))}',
+      '.sidebar #ncnav a.ncl.on::after{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);',
+      'width:3px;height:22px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,#F72585,#7C5CFF,#00E5FF);',
+      'box-shadow:0 0 12px rgba(124,92,255,.75)}',
+
+      /* the icon sits in its own tile so the rows line up whatever the glyph */
+      '.sidebar #ncnav a.ncl .nci{width:17px;height:17px;flex:0 0 auto;opacity:.72;transition:opacity .18s,transform .18s}',
+      '.sidebar #ncnav a.ncl:hover .nci{opacity:1;transform:scale(1.08)}',
+      '.sidebar #ncnav a.ncl.on .nci{opacity:1}',
+      '.sidebar #ncnav a.ncl .nct{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+
+      /* profile and brand, tidied to match */
+      '.sidebar #ncprof{border-radius:13px !important;transition:background .18s,border-color .18s}',
+      '.sidebar #ncprof:hover{background:rgba(255,255,255,.07) !important;border-color:rgba(124,92,255,.5) !important}',
+      '.sidebar .themewrap{border-top:1px solid rgba(255,255,255,.06);margin-top:auto}',
+
+      /* phones: a horizontal strip, icons above labels so it stays readable */
+      '@media (max-width:760px){',
+      '.sidebar{background:rgba(10,13,24,.96) !important;box-shadow:0 -8px 30px rgba(0,0,0,.6)}',
+      '#ncnav{flex-direction:row;padding:0;gap:0}',
       '#ncnav .ncgh{display:none}#ncnav .ncg{display:flex}#ncnav .ncg.shut .ncgi{display:flex}',
-      '.sidebar #ncnav a.ncl{white-space:nowrap;padding:9px 13px;border-radius:0}}'
+      '#ncnav .ncgi{flex-direction:row}',
+      '.sidebar #ncnav a.ncl{flex-direction:column;gap:3px;white-space:nowrap;padding:7px 13px;',
+      'border-radius:12px;font-size:10.5px;letter-spacing:.01em}',
+      '.sidebar #ncnav a.ncl:hover{transform:none}',
+      '.sidebar #ncnav a.ncl .nci{width:19px;height:19px}',
+      '.sidebar #ncnav a.ncl.on::after{left:50%;top:auto;bottom:-1px;transform:translateX(-50%);',
+      'width:20px;height:3px;border-radius:3px 3px 0 0}}'
     ].join('');
     document.head.appendChild(st);
   }
@@ -1182,7 +1252,9 @@ function ncNav() {
       const h = document.createElement('button');
       h.className = 'ncgh';
       h.type = 'button';
-      h.innerHTML = '<span>' + group.name + '</span><span class="ncar">▼</span>';
+      h.innerHTML = '<span>' + group.name + '</span><span class="ncgl"></span>' +
+        '<svg class="ncar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
       h.setAttribute('aria-expanded', String(!g.classList.contains('shut')));
       h.onclick = () => {
         g.classList.toggle('shut');
@@ -1193,13 +1265,15 @@ function ncNav() {
 
     const box = document.createElement('div');
     box.className = 'ncgi';
-    group.items.forEach(([href, label, key]) => {
+    group.items.forEach(([href, label, key, icon]) => {
       const a = document.createElement('a');
-      a.className = 'ncl' + (href.toLowerCase() === here ? ' on' : '');
+      const on = href.toLowerCase() === here;
+      a.className = 'ncl' + (on ? ' on' : '');
       a.href = href;
+      if (on) a.setAttribute('aria-current', 'page');
       /* data-t goes on the label span, never on the <a>. applyLang() assigns
-         textContent, which on the anchor would delete the dot inside it. */
-      a.innerHTML = '<span class="ncd"></span><span' +
+         textContent, which on the anchor would delete the icon inside it. */
+      a.innerHTML = ncIcon(icon) + '<span class="nct"' +
         (key ? ' data-t="' + key + '"' : '') + '>' + label + '</span>';
       box.appendChild(a);
     });
@@ -1295,11 +1369,36 @@ async function ncAsk(prompt, opts) {
 window.ncAIKey = ncAIKey; window.ncSetAIKey = ncSetAIKey;
 window.ncKeyLooksReal = ncKeyLooksReal; window.ncAsk = ncAsk;
 
+/* ============================================================================
+   THE EDITOR'S EXTRA TOOLS
+   ============================================================================
+   animator.js adds the paper animation and the object remover to the editor.
+   It was supposed to be loaded by a script tag in editor.html — but editor.html
+   is a 339 kB compiled bundle, so that one line means re-pasting the whole
+   file, and the line went missing. The tools were on the server with nothing
+   loading them.
+
+   nova.js is already loaded by the editor, so it can load them instead. No
+   change to the bundle, and the tools cannot go missing again from a paste
+   that was too big to be worth doing.
+   ============================================================================ */
+function ncEditorTools() {
+  if (!/editor\.html/i.test(location.pathname) && !document.getElementById('root')) return;
+  if (document.getElementById('ncanimjs')) return;
+  const s = document.createElement('script');
+  s.id = 'ncanimjs';
+  s.src = 'animator.js';
+  s.onerror = () => console.warn('animator.js is not on the server yet — ' +
+    'the Animate and Remove buttons will not appear until it is uploaded.');
+  document.body.appendChild(s);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   dedupeChrome();
   ncBrand();
   ncProfile();
   ncNav();
+  ncEditorTools();
   ncScreenTime();
   ncMiniAI();
   // warm the channel cache in the background so message one already has it
