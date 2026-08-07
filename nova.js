@@ -1120,7 +1120,8 @@ const NC_ICONS = {
   gift:      'M4 11h16v9H4zM2 7h20v4H2zM12 7v13M12 7S9 3 7 4s0 3 5 3zM12 7s3-4 5-3-0 3-5 3z',
   progress:  'M12 3a9 9 0 109 9h-9z',
   family:    'M8 11a3 3 0 100-6 3 3 0 000 6zM2 20a6 6 0 0112 0M17 11a3 3 0 100-6M16 20a6 6 0 016-6',
-  pricing:   'M12 2v20M17 6H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'
+  pricing:   'M12 2v20M17 6H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',
+  publish:   'M12 19V5M5 12l7-7 7 7M4 21h16'
 };
 
 const NC_NAV = [
@@ -1128,7 +1129,8 @@ const NC_NAV = [
   { name: 'Channel', icon: 'analytics', items: [
       ['app.html', 'Studio', 'studio', 'studio'], ['analytics.html', 'Analytics', 'analytics', 'analytics']] },
   { name: 'Create', icon: 'editor', items: [
-      ['editor.html', 'Editor', 'editor', 'editor'], ['trends.html', 'Trend Spotter', 'trends', 'trends']] },
+      ['editor.html', 'Editor', 'editor', 'editor'], ['publish.html', 'Publish', '', 'publish'],
+      ['trends.html', 'Trend Spotter', 'trends', 'trends']] },
   { name: 'AI', icon: 'ai', items: [
       ['ai.html', 'NovaClip AI', 'ai', 'ai'], ['coder.html', 'Coder', '', 'coder']] },
   { name: 'Games', icon: 'games', items: [
