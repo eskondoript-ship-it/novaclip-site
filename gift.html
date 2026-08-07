@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip Gifts — make a little box for a friend</title>
+<meta name='description' content='Fill a little box with notes, doodles, a badge and some points, then send your friend one link. They unwrap it one thing at a time.'>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
+body { background: #05060A; color: #EAF2FF; margin-left: 200px; min-height: 100vh; overflow-x: hidden; }
+
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); overflow-y: auto; }
+.sidebar a { font-size: 1.05rem; text-decoration: none; color: #EAF2FF; display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background .2s; }
+.sidebar a:hover { background: rgba(114,9,183,0.25); }
+.sidebar a.on { background: linear-gradient(135deg,#F72585,#7209B7,#4CC9F0); color: #fff; border-radius: 12px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: .78rem; opacity: .6; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: .95rem; background: rgba(255,255,255,.05); color: #EAF2FF; border: 1px solid rgba(255,255,255,.15); border-radius: 10px; padding: 9px; }
+
+.wrap { max-width: 960px; margin: 0 auto; padding: 30px 26px 80px; }
+h1 { font-size: 1.95rem; font-weight: 750; letter-spacing: -.02em; }
+h1 .g { background: linear-gradient(90deg,#F72585,#7209B7,#4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lede { color: #8A97B4; margin-top: 9px; line-height: 1.65; max-width: 60ch; }
+h2 { font-size: 1.05rem; margin: 26px 0 11px; font-weight: 650; }
+
+.picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(128px,100%),1fr)); gap: 10px; }
+.picker button { padding: 14px 10px; border-radius: 15px; border: 1px solid rgba(255,255,255,.11); background: rgba(255,255,255,.04); color: #EAF2FF; cursor: pointer; font-size: .84rem; font-weight: 600; display: grid; gap: 6px; justify-items: center; line-height: 1.3; }
+.picker button:hover { border-color: #7209B7; background: rgba(114,9,183,.16); }
+.picker button span { font-size: 1.5rem; }
+
+#items { display: grid; gap: 10px; margin-top: 12px; }
+.item { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 15px; padding: 13px 15px; display: flex; gap: 12px; align-items: flex-start; }
+.item .ic { font-size: 1.4rem; line-height: 1; }
+.item .bd { flex: 1; min-width: 0; }
+.item .lb { font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: #7E8AA6; margin-bottom: 5px; }
+.item input, .item textarea, .item select { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,.13); background: rgba(255,255,255,.04); color: #EAF2FF; font: inherit; font-size: .93rem; resize: vertical; }
+.item .x { background: none; border: 0; color: #7E8AA6; cursor: pointer; font-size: 1.15rem; padding: 0 4px; }
+.item .x:hover { color: #FF6B9D; }
+.empty { color: #7E8AA6; font-size: .92rem; padding: 18px; border: 1px dashed rgba(255,255,255,.14); border-radius: 15px; text-align: center; }
+
+canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11px; background: #0F1420; border: 1px solid rgba(255,255,255,.13); touch-action: none; display: block; cursor: crosshair; }
+.padrow { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+.padrow button { padding: 5px 11px; font-size: .78rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.13); background: rgba(255,255,255,.04); color: #A8B4CE; cursor: pointer; }
+.swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.swatch.on { border-color: #fff; }
+
+.go { padding: 13px 26px; border-radius: 30px; border: 0; cursor: pointer; font-weight: 700; color: #fff; background: linear-gradient(90deg,#F72585,#7209B7); font-size: .98rem; }
+.go:disabled { opacity: .45; cursor: default; }
+.alt { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.2); color: #EAF2FF; }
+.note { color: #7E8AA6; font-size: .85rem; line-height: 1.65; margin-top: 12px; }
+
+#link { display: none; margin-top: 20px; background: rgba(76,201,240,.07); border: 1px solid rgba(76,201,240,.35); border-radius: 16px; padding: 17px 19px; }
+#link input { width: 100%; margin-top: 9px; padding: 11px 13px; border-radius: 11px; border: 1px solid rgba(255,255,255,.15); background: rgba(0,0,0,.35); color: #EAF2FF; font-size: .85rem; font-family: ui-monospace, Menlo, monospace; }
+#link .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+#err { color: #FF6B9D; font-size: .9rem; margin-top: 10px; display: none; }
+
+/* ---- unwrapping ---- */
+#open { display: none; text-align: center; padding: 40px 0 60px; }
+#open h1 { font-size: 2.1rem; }
+#box { width: 190px; height: 190px; margin: 34px auto; cursor: pointer; position: relative; transition: transform .3s; }
+#box:hover { transform: scale(1.05); }
+#box .lid, #box .base { position: absolute; left: 0; right: 0; border-radius: 12px; background: linear-gradient(140deg,#F72585,#7209B7); box-shadow: 0 14px 44px rgba(247,37,133,.4); }
+#box .base { bottom: 0; height: 132px; }
+#box .lid { top: 0; height: 58px; transition: transform .7s cubic-bezier(.3,1.5,.5,1), opacity .7s; }
+#box.open .lid { transform: translateY(-130px) rotate(-17deg); opacity: 0; }
+#box .rib { position: absolute; left: 50%; top: 0; bottom: 0; width: 20px; margin-left: -10px; background: rgba(255,255,255,.28); border-radius: 3px; }
+#gifts { display: grid; gap: 13px; max-width: 470px; margin: 0 auto; }
+.gift { background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.11); border-radius: 17px; padding: 20px; opacity: 0; transform: translateY(22px) scale(.96); transition: opacity .5s, transform .5s; text-align: left; }
+.gift.in { opacity: 1; transform: none; }
+.gift .lb { font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: #7E8AA6; margin-bottom: 8px; }
+.gift .big { font-size: 1.12rem; line-height: 1.65; }
+.gift .huge { font-size: 3.2rem; text-align: center; }
+.gift img, .gift canvas { width: 100%; border-radius: 11px; display: block; }
+.gift a { color: #4CC9F0; word-break: break-all; }
+#conf { position: fixed; inset: 0; pointer-events: none; z-index: 9990; }
+
+@media (max-width: 760px) {
+  body { margin-left: 0; padding-bottom: 74px; }
+  .sidebar { flex-direction: row; top: auto; width: 100%; height: 64px; padding: 0; overflow-x: auto; align-items: center; }
+  .sidebar .themewrap { display: none; }
+  .sidebar a { padding: 10px 14px; font-size: .9rem; white-space: nowrap; }
+  .wrap { padding: 22px 16px 70px; }
+  h1 { font-size: 1.6rem; }
+}
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <!-- nova.js builds the links; this is only the shell it fills -->
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<canvas id='conf'></canvas>
+
+<!-- ---------- making one ---------- -->
+<div class='wrap' id='make'>
+  <h1>A little box of <span class='g'>goodies</span></h1>
+  <p class='lede'>Fill a box with small things for one friend — a note, a doodle, a badge, some of
+    your points — then send them a single link. They unwrap it one thing at a time.</p>
+
+  <h2>Add something to the box</h2>
+  <div class='picker' id='picker'></div>
+
+  <h2>In the box <span id='count' style='color:#7E8AA6;font-weight:400'></span></h2>
+  <div id='items'></div>
+
+  <h2>Who is it for?</h2>
+  <div class='item'><div class='ic'>🎁</div><div class='bd'>
+    <div class='lb'>Their name</div>
+    <input id='to' maxlength='20' placeholder='e.g. Sam'>
+  </div></div>
+
+  <div style='margin-top:20px'><button class='go' id='wrapit'>Wrap it up</button></div>
+  <div id='err'></div>
+
+  <div id='link'>
+    <b>Wrapped. Send them this link.</b>
+    <input id='url' readonly>
+    <div class='row'>
+      <button class='go alt' id='copy'>Copy link</button>
+      <button class='go alt' id='share'>Share</button>
+      <button class='go alt' id='preview'>Open it yourself</button>
+    </div>
+    <p class='note'>The whole box is inside the link itself — there is no server here holding it.
+      That is why it works with no account, and also why a link that gets cut short by a chat app
+      will not open. If it does not work, paste it as plain text rather than letting the app shorten it.</p>
+  </div>
+
+  <p class='note'>Everything you type is checked the same way names are. Boxes are for people you
+    actually know. Nothing is uploaded — the link is the box.</p>
+</div>
+
+<!-- ---------- opening one ---------- -->
+<div class='wrap' id='open'>
+  <h1 id='oTitle'>Someone left you <span class='g'>a box</span></h1>
+  <p class='lede' id='oFrom' style='margin:9px auto 0'></p>
+  <div id='box'><div class='base'></div><div class='lid'><div class='rib'></div></div></div>
+  <p id='oHint' style='color:#7E8AA6'>Tap the box</p>
+  <div id='gifts'></div>
+  <div style='margin-top:30px'>
+    <a href='gift.html' class='go' style='text-decoration:none;display:inline-block'>Make one back</a>
+  </div>
+</div>
+
+<script src='nova.js'></script>
+<script>
+/* ============================================================================
+   A LITTLE BOX OF GOODIES
+   ============================================================================
+   One person makes a box for one friend and sends a link. The friend opens it
+   and the things inside appear one at a time rather than all at once, because
+   the unwrapping is most of the point — a list of six items shown instantly is
+   just a list.
+
+   HOW IT TRAVELS. The entire box is encoded into the URL fragment. Not a
+   database row, not an upload: the '#' part of the link is the box. This is
+   worth understanding because it decides everything else about the feature:
+
+     - it works with no account, no server and no moderation queue
+     - the fragment is never sent to any web server, not even the one hosting
+       this page, so nobody can read a box in transit
+     - nobody can take a box down, edit it, or count how many were opened
+     - a very long box makes a very long link, and some chat apps shorten links
+       past a certain length. So the size is capped at 1800 characters and the
+       user is told why rather than being handed a link that quietly breaks.
+
+   The doodle is stored as its stroke coordinates quantised to single bytes,
+   not as a PNG. A 320x240 PNG data URL is around 8 kB, which would blow the
+   link on its own; the same drawing as strokes is a few hundred characters.
+   ============================================================================ */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const MAX_LINK = 1800;
+
+  /* ---- what can go in ---------------------------------------------------- */
+  const KINDS = {
+    note:    { icon: '💌', label: 'A note',       lb: 'Your note' },
+    reason:  { icon: '⭐', label: 'Why they’re great', lb: 'One thing you like about them' },
+    badge:   { icon: '🏅', label: 'A badge',      lb: 'Pick one' },
+    doodle:  { icon: '🎨', label: 'A doodle',     lb: 'Draw something' },
+    points:  { icon: '💎', label: 'Some points',  lb: 'How many of your points' },
+    song:    { icon: '🎵', label: 'A song or video', lb: 'A YouTube link' },
+    dare:    { icon: '🎯', label: 'A challenge',  lb: 'Something to try this week' }
+  };
+  const BADGES = ['🏅','👑','🔥','🚀','🌟','🦄','🍪','🎧','🎬','💜','🐐','⚡'];
+
+  let items = [];
+
+  /* ---- builder ----------------------------------------------------------- */
+  $('picker').innerHTML = Object.keys(KINDS).map(k =>
+    '<button data-k="' + k + '"><span>' + KINDS[k].icon + '</span>' + KINDS[k].label + '</button>').join('');
+  $('picker').querySelectorAll('button').forEach(b => b.onclick = () => add(b.dataset.k));
+
+  function add(kind) {
+    if (items.length >= 6) { fail('Six things is a full box. Take one out first.'); return; }
+    items.push({ k: kind, v: kind === 'badge' ? '🏅' : (kind === 'points' ? 25 : ''), s: [] });
+    drawItems();
+  }
+
+  function drawItems() {
+    $('count').textContent = items.length ? '(' + items.length + ' of 6)' : '';
+    if (!items.length) {
+      $('items').innerHTML = '<div class="empty">Nothing in it yet. Pick something above.</div>';
+      return;
+    }
+    $('items').innerHTML = items.map((it, i) => {
+      const K = KINDS[it.k];
+      let field;
+      if (it.k === 'note' || it.k === 'reason' || it.k === 'dare') {
+        field = '<textarea rows="2" maxlength="240" data-i="' + i + '" placeholder="' +
+          (it.k === 'note' ? 'Say something to them…' :
+           it.k === 'reason' ? 'They always…' : 'I dare you to…') + '">' + esc(it.v) + '</textarea>';
+      } else if (it.k === 'badge') {
+        field = '<div class="padrow">' + BADGES.map(b =>
+          '<button class="bdg' + (b === it.v ? ' on' : '') + '" data-i="' + i + '" data-b="' + b +
+          '" style="font-size:1.15rem;padding:5px 8px' + (b === it.v ? ';border-color:#4CC9F0' : '') + '">' + b + '</button>').join('') + '</div>';
+      } else if (it.k === 'points') {
+        field = '<select data-i="' + i + '">' + [10, 25, 50, 100].map(n =>
+          '<option value="' + n + '"' + (+it.v === n ? ' selected' : '') + '>' + n + ' points</option>').join('') +
+          '</select><div class="lb" style="margin:7px 0 0">Taken off your own balance when you wrap it.</div>';
+      } else if (it.k === 'song') {
+        field = '<input data-i="' + i + '" placeholder="https://youtube.com/watch?v=…" value="' + esc(it.v) + '">';
+      } else if (it.k === 'doodle') {
+        field = '<canvas class="pad" data-i="' + i + '" width="320" height="240"></canvas>' +
+          '<div class="padrow">' +
+          ['#FF6B9D','#4CC9F0','#FFD166','#7CFF9E','#C9A7FF','#FFFFFF'].map((c, j) =>
+            '<button class="swatch' + (j === 0 ? ' on' : '') + '" data-i="' + i + '" data-c="' + c +
+            '" style="background:' + c + '"></button>').join('') +
+          '<button class="undo" data-i="' + i + '">Undo</button>' +
+          '<button class="clr" data-i="' + i + '">Clear</button></div>';
+      }
+      return '<div class="item"><div class="ic">' + K.icon + '</div><div class="bd">' +
+        '<div class="lb">' + K.lb + '</div>' + field + '</div>' +
+        '<button class="x" data-rm="' + i + '" title="Take it out">✕</button></div>';
+    }).join('');
+
+    const I = $('items');
+    I.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { items.splice(+b.dataset.rm, 1); drawItems(); });
+    I.querySelectorAll('textarea[data-i], input[data-i], select[data-i]').forEach(f =>
+      f.oninput = f.onchange = () => { items[+f.dataset.i].v = f.value; });
+    I.querySelectorAll('.bdg').forEach(b => b.onclick = () => { items[+b.dataset.i].v = b.dataset.b; drawItems(); });
+    I.querySelectorAll('canvas.pad').forEach(setupPad);
+  }
+
+  /* ---- the doodle pad ----------------------------------------------------
+     Strokes are kept as arrays of x,y in 0-255 and replayed on the other side.
+     Quantising to a byte costs nothing visible at this size and keeps the link
+     short enough to survive a chat app. */
+  function setupPad(cv) {
+    const i = +cv.dataset.i, it = items[i], x = cv.getContext('2d');
+    let colour = '#FF6B9D', drawing = false, cur = null;
+
+    function repaint() {
+      x.fillStyle = '#0F1420'; x.fillRect(0, 0, 320, 240);
+      x.lineCap = x.lineJoin = 'round'; x.lineWidth = 3.5;
+      it.s.forEach(st => {
+        x.strokeStyle = st.c; x.beginPath();
+        st.p.forEach((p, n) => { const px = p[0] / 255 * 320, py = p[1] / 255 * 240;
+          n ? x.lineTo(px, py) : x.moveTo(px, py); });
+        x.stroke();
+      });
+    }
+    repaint();
+
+    const at = e => {
+      const r = cv.getBoundingClientRect();
+      return [Math.round((e.clientX - r.left) / r.width * 255),
+              Math.round((e.clientY - r.top) / r.height * 255)];
+    };
+    cv.addEventListener('pointerdown', e => {
+      if (it.s.length >= 40) return;
+      drawing = true; cv.setPointerCapture(e.pointerId);
+      cur = { c: colour, p: [at(e)] }; it.s.push(cur); repaint();
+    });
+    cv.addEventListener('pointermove', e => {
+      if (!drawing) return;
+      const p = at(e), last = cur.p[cur.p.length - 1];
+      /* one point every few pixels — sampling every event would triple the
+         link length for a line that looks identical */
+      if (Math.abs(p[0] - last[0]) + Math.abs(p[1] - last[1]) < 3) return;
+      if (cur.p.length < 60) cur.p.push(p);
+      repaint();
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev =>
+      cv.addEventListener(ev, () => { drawing = false; }));
+
+    const row = cv.nextElementSibling;
+    row.querySelectorAll('.swatch').forEach(s => s.onclick = () => {
+      colour = s.dataset.c;
+      row.querySelectorAll('.swatch').forEach(o => o.classList.toggle('on', o === s));
+    });
+    row.querySelector('.undo').onclick = () => { it.s.pop(); repaint(); };
+    row.querySelector('.clr').onclick = () => { it.s = []; repaint(); };
+  }
+
+  function esc(s) { return String(s || '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
+  function fail(m) { $('err').textContent = m; $('err').style.display = 'block'; }
+
+  /* base64url so the fragment survives being pasted anywhere */
+  function pack(o) {
+    const s = unescape(encodeURIComponent(JSON.stringify(o)));
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function unpack(t) {
+    const s = atob(t.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decodeURIComponent(escape(s)));
+  }
+
+  /* ---- wrap it ----------------------------------------------------------- */
+  $('wrapit').onclick = () => {
+    $('err').style.display = 'none';
+    const to = $('to').value.trim();
+    if (!to) return fail('Who is it for? Put their name in.');
+    if (!items.length) return fail('The box is empty. Put at least one thing in it.');
+
+    /* Same check a display name goes through. A gift link gets forwarded, and
+       "it was only for one friend" stops being true the moment it does. */
+    const words = [to].concat(items.filter(i => typeof i.v === 'string').map(i => i.v)).join(' ');
+    if (window.ncModerate) {
+      const m = ncModerate(words);
+      if (!m.ok) return fail('Something in there will not send. Boxes are meant to be nice ones.');
+    }
+
+    let pts = 0;
+    for (const it of items) {
+      if (it.k === 'points') pts += +it.v || 0;
+      if ((it.k === 'note' || it.k === 'reason' || it.k === 'dare') && !String(it.v).trim())
+        return fail('One of the notes is still blank.');
+      if (it.k === 'song' && !/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(it.v))
+        return fail('The song needs to be a YouTube link, or take it out of the box.');
+      if (it.k === 'doodle' && !it.s.length) return fail('The doodle is still blank.');
+    }
+    const have = (window.getPts ? getPts() : 0);
+    if (pts > have) return fail('You are gifting ' + pts + ' points but you have ' + have + '.');
+
+    const box = {
+      t: to,
+      f: (window.ncName && ncName()) || 'A friend',
+      a: (window.ncAvatar && ncAvatar()) || '⭐',
+      d: Date.now(),
+      /* an id so the same box cannot be claimed for points twice */
+      i: Math.random().toString(36).slice(2, 10),
+      it: items.map(x => x.k === 'doodle' ? { k: 'doodle', s: x.s } : { k: x.k, v: x.v })
+    };
+    /* an uploaded profile picture is a data URL, far too big for a link */
+    if (box.a.startsWith('data:')) box.a = '⭐';
+
+    const url = location.origin + location.pathname + '#g=' + pack(box);
+    if (url.length > MAX_LINK) {
+      return fail('That box makes a link ' + url.length + ' characters long, and chat apps start ' +
+        'cutting links around ' + MAX_LINK + '. Shorten a note or simplify the doodle.');
+    }
+
+    if (pts && window.addPts) addPts(-pts);
+
+    $('url').value = url;
+    $('link').style.display = 'block';
+    $('link').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (typeof logSkill === 'function') logSkill('community');
+  };
+
+  $('copy').onclick = () => navigator.clipboard.writeText($('url').value)
+    .then(() => { $('copy').textContent = 'Copied'; setTimeout(() => $('copy').textContent = 'Copy link', 1600); });
+  $('share').onclick = () => {
+    const u = $('url').value;
+    if (navigator.share) navigator.share({ title: 'A little box for you', url: u }).catch(() => {});
+    else navigator.clipboard.writeText(u).then(() => alert('Link copied — paste it to them.'));
+  };
+  $('preview').onclick = () => { location.href = $('url').value; location.reload(); };
+
+  drawItems();
+
+  /* ---- opening one ------------------------------------------------------- */
+  const frag = (location.hash.match(/#g=(.+)$/) || [])[1];
+  if (frag) {
+    let box = null;
+    try { box = unpack(frag); } catch (e) {}
+    if (!box || !box.it) {
+      $('make').style.display = 'none';
+      $('open').style.display = 'block';
+      $('box').style.display = 'none';
+      $('oTitle').textContent = 'That link did not survive the trip';
+      $('oFrom').textContent = 'Part of it is missing — chat apps sometimes cut long links in half. ' +
+        'Ask them to send it again as plain text.';
+      $('oHint').style.display = 'none';
+    } else {
+      $('make').style.display = 'none';
+      $('open').style.display = 'block';
+      $('oTitle').innerHTML = (box.t ? esc(box.t) + ', someone left you ' : 'Someone left you ') + '<span class="g">a box</span>';
+      $('oFrom').textContent = 'From ' + box.a + ' ' + box.f;
+
+      let opened = false;
+      $('box').onclick = () => {
+        if (opened) return;
+        opened = true;
+        $('box').classList.add('open');
+        $('oHint').textContent = '';
+        confetti();
+        setTimeout(() => reveal(box), 620);
+      };
+    }
+  }
+
+  function reveal(box) {
+    const claimedKey = 'nc_gifts_claimed';
+    let claimed = [];
+    try { claimed = JSON.parse(localStorage.getItem(claimedKey) || '[]'); } catch (e) {}
+    const already = claimed.indexOf(box.i) >= 0;
+
+    box.it.forEach((it, n) => {
+      const d = document.createElement('div');
+      d.className = 'gift';
+      let body = '';
+      if (it.k === 'note')   body = '<div class="lb">A note</div><div class="big">' + esc(it.v) + '</div>';
+      if (it.k === 'reason') body = '<div class="lb">Why you’re great</div><div class="big">' + esc(it.v) + '</div>';
+      if (it.k === 'dare')   body = '<div class="lb">A challenge</div><div class="big">' + esc(it.v) + '</div>';
+      if (it.k === 'badge')  body = '<div class="lb">A badge</div><div class="huge">' + esc(it.v) + '</div>';
+      if (it.k === 'song')   body = '<div class="lb">Listen to this</div><div class="big"><a href="' +
+        esc(it.v) + '" target="_blank" rel="noopener noreferrer">' + esc(it.v) + '</a></div>';
+      if (it.k === 'points') {
+        body = '<div class="lb">Points</div><div class="huge">💎 ' + (+it.v || 0) + '</div>';
+        if (already) body += '<div class="lb" style="margin-top:8px">Already added to your balance.</div>';
+      }
+      if (it.k === 'doodle') body = '<div class="lb">A doodle for you</div><canvas width="320" height="240"></canvas>';
+      d.innerHTML = body;
+      $('gifts').appendChild(d);
+
+      if (it.k === 'doodle') {
+        const x = d.querySelector('canvas').getContext('2d');
+        x.fillStyle = '#0F1420'; x.fillRect(0, 0, 320, 240);
+        x.lineCap = x.lineJoin = 'round'; x.lineWidth = 3.5;
+        (it.s || []).forEach(st => {
+          x.strokeStyle = st.c; x.beginPath();
+          st.p.forEach((p, i) => { const px = p[0] / 255 * 320, py = p[1] / 255 * 240;
+            i ? x.lineTo(px, py) : x.moveTo(px, py); });
+          x.stroke();
+        });
+      }
+      /* one at a time, which is the difference between a gift and a list */
+      setTimeout(() => d.classList.add('in'), 220 + n * 620);
+    });
+
+    if (!already) {
+      const pts = box.it.reduce((s, i) => s + (i.k === 'points' ? (+i.v || 0) : 0), 0);
+      if (pts && window.addPts) addPts(pts);
+      claimed.push(box.i);
+      try { localStorage.setItem(claimedKey, JSON.stringify(claimed.slice(-60))); } catch (e) {}
+    }
+  }
+
+  /* ---- confetti ---------------------------------------------------------- */
+  function confetti() {
+    const cv = $('conf'), x = cv.getContext('2d');
+    cv.width = innerWidth; cv.height = innerHeight;
+    const cols = ['#F72585','#7209B7','#4CC9F0','#FFD166','#7CFF9E'];
+    const bits = Array.from({ length: 110 }, () => ({
+      x: innerWidth / 2 + (Math.random() - .5) * 180, y: innerHeight * .45,
+      vx: (Math.random() - .5) * 11, vy: -Math.random() * 13 - 4,
+      r: Math.random() * 5 + 3, c: cols[Math.floor(Math.random() * cols.length)],
+      a: Math.random() * Math.PI, va: (Math.random() - .5) * .3
+    }));
+    let t = 0;
+    (function step() {
+      x.clearRect(0, 0, cv.width, cv.height);
+      let live = 0;
+      bits.forEach(b => {
+        b.vy += .34; b.x += b.vx; b.y += b.vy; b.a += b.va;
+        if (b.y < cv.height + 30) live++;
+        x.save(); x.translate(b.x, b.y); x.rotate(b.a);
+        x.fillStyle = b.c; x.globalAlpha = Math.max(0, 1 - t / 170);
+        x.fillRect(-b.r, -b.r / 2, b.r * 2, b.r); x.restore();
+      });
+      if (live && ++t < 180) requestAnimationFrame(step);
+      else x.clearRect(0, 0, cv.width, cv.height);
+    })();
+  }
+})();
+</script>
+</body>
+</html>
