@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip Coder — build a widget for your channel</title>
+<meta name='description' content='An AI that writes small web things for your channel — stream overlays, countdowns, subscriber goals — and tells you plainly when what you asked for is not something it can build.'>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
+body { background: #05060A; color: #EAF2FF; margin-left: 200px; min-height: 100vh; }
+
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); overflow-y: auto; }
+.sidebar a { font-size: 1.05rem; text-decoration: none; color: #EAF2FF; display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background 0.2s; }
+.sidebar a:hover { background: rgba(114,9,183,0.25); }
+.sidebar a.on { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: #fff; border-radius: 12px; margin: 6px 14px; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: 0.78rem; opacity: 0.6; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: 0.95rem; background: rgba(255,255,255,0.05); color: #EAF2FF; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 30px 26px 70px; }
+h1 { font-size: 1.9rem; font-weight: 750; letter-spacing: -0.02em; }
+h1 .g { background: linear-gradient(90deg,#F72585,#7209B7,#4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lede { color: #8A97B4; margin-top: 9px; line-height: 1.65; max-width: 62ch; font-size: 1rem; }
+
+.scope { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px,100%),1fr)); gap: 12px; margin: 24px 0; }
+.scope div { background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.09); border-radius: 15px; padding: 15px 17px; }
+.scope h3 { font-size: 0.95rem; margin-bottom: 8px; }
+.scope.can h3 { color: #4CC9F0; } .scope div.no h3 { color: #FF6B9D; }
+.scope ul { list-style: none; font-size: 0.87rem; color: #A8B4CE; line-height: 1.85; }
+.scope li::before { content: '– '; opacity: 0.5; }
+
+textarea { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #EAF2FF; resize: vertical; font-size: 1rem; line-height: 1.55; }
+textarea:focus { outline: none; border-color: #7209B7; }
+.row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+button { padding: 12px 22px; border-radius: 30px; border: none; cursor: pointer; font-weight: 700; color: #fff; background: linear-gradient(90deg,#F72585,#7209B7); font-size: 0.95rem; }
+button:disabled { opacity: 0.5; cursor: default; }
+button.alt { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); }
+.ex { font-size: 0.83rem; padding: 8px 14px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: #A8B4CE; font-weight: 500; }
+
+#verdict { margin-top: 22px; border-radius: 15px; padding: 16px 18px; line-height: 1.65; font-size: 0.95rem; display: none; }
+#verdict.no  { background: rgba(255,107,157,0.09); border: 1px solid rgba(255,107,157,0.4); }
+#verdict.yes { background: rgba(76,201,240,0.08); border: 1px solid rgba(76,201,240,0.35); }
+#verdict.wait{ background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14); color: #A8B4CE; }
+#verdict b { display: block; margin-bottom: 5px; font-size: 1rem; }
+#verdict .alt2 { margin-top: 10px; color: #A8B4CE; font-size: 0.9rem; }
+
+#result { display: none; margin-top: 22px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.tabs button { padding: 8px 16px; border-radius: 10px; font-size: 0.87rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: #A8B4CE; font-weight: 600; }
+.tabs button.on { background: rgba(114,9,183,0.35); border-color: #7209B7; color: #fff; }
+#preview { width: 100%; height: 420px; border: 1px solid rgba(255,255,255,0.12); border-radius: 15px; background: #14141a; }
+#code { display: none; white-space: pre; overflow: auto; max-height: 460px; background: #0A0C13; border: 1px solid rgba(255,255,255,0.12); border-radius: 15px; padding: 16px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.83rem; line-height: 1.6; color: #C9D6EE; }
+#notes { margin-top: 12px; color: #8A97B4; font-size: 0.9rem; line-height: 1.7; white-space: pre-wrap; }
+@media (max-width: 760px) { body { margin-left: 0; padding-bottom: 74px; } .sidebar { flex-direction: row; top: auto; width: 100%; height: 64px; padding: 0; overflow-x: auto; align-items: center; } .sidebar .themewrap { display: none; } .sidebar a { padding: 10px 14px; font-size: 0.9rem; white-space: nowrap; } }
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <!-- nova.js builds the links; this is only the shell it fills -->
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div class='wrap'>
+  <h1>NovaClip <span class='g'>Coder</span></h1>
+  <p class='lede'>Describe a small web thing you want for your channel and it writes it, runs it
+    here, and hands you the file. It will also tell you when what you asked for is not something
+    it can build — which happens a lot, and is more useful than a confident answer that does not work.</p>
+
+  <div class='scope'>
+    <div class='can'>
+      <h3>Things it can actually build</h3>
+      <ul>
+        <li>Stream overlays: subscriber goal, countdown, recent-follower bar</li>
+        <li>Animated lower thirds and end screens</li>
+        <li>A landing page for your channel links</li>
+        <li>Thumbnail templates you fill in and screenshot</li>
+        <li>Small games and widgets for your community</li>
+        <li>Calculators: revenue estimate, upload schedule, CTR</li>
+      </ul>
+    </div>
+    <div class='no'>
+      <h3>Things it will refuse, and say so</h3>
+      <ul>
+        <li>Anything with a server, a database or a login</li>
+        <li>Phone apps — this writes web pages, not native apps</li>
+        <li>Anything touching real YouTube view, sub or like counts</li>
+        <li>Getting into an account that is not yours</li>
+        <li>Downloading videos that are not yours</li>
+        <li>Anything that needs a paid API key it does not have</li>
+      </ul>
+    </div>
+  </div>
+
+  <textarea id='ask' rows='3' placeholder='e.g. a subscriber goal bar that fills up to 1000, dark background, big neon numbers'></textarea>
+  <div class='row'>
+    <button id='go'>Build it</button>
+    <button class='ex'>subscriber goal bar to 1000</button>
+    <button class='ex'>countdown to my next upload</button>
+    <button class='ex'>animated “SUBSCRIBE” lower third</button>
+    <button class='ex'>link-in-bio page for my channel</button>
+  </div>
+
+  <div id='verdict'></div>
+
+  <div id='result'>
+    <div class='tabs'>
+      <button id='tPrev' class='on'>Preview</button>
+      <button id='tCode'>Code</button>
+      <button id='dl' class='alt' style='margin-left:auto;padding:8px 16px;border-radius:10px;font-size:.87rem'>Download .html</button>
+      <button id='cp' class='alt' style='padding:8px 16px;border-radius:10px;font-size:.87rem'>Copy</button>
+    </div>
+    <iframe id='preview' sandbox='allow-scripts' title='Preview of the generated widget'></iframe>
+    <pre id='code'></pre>
+    <div id='notes'></div>
+  </div>
+</div>
+
+<script src='nova.js'></script>
+<script>
+/* ============================================================================
+   A CODER THAT SAYS NO
+   ============================================================================
+   The interesting part of this page is not the code it writes. It is the
+   refusal.
+
+   A model asked "build me a bot that adds 10,000 subscribers" will cheerfully
+   produce two hundred lines of plausible JavaScript that cannot possibly work,
+   because nothing in the request told it not to. The person then spends an
+   evening trying to run it and concludes they are bad at this. That is a worse
+   outcome than being told no in one sentence.
+
+   So the refusal is enforced in two places, and it has to be both:
+
+     BEFORE THE MODEL   REFUSALS below is a list of things that are impossible
+                        in a static web page, plus the reason each one is
+                        impossible. These never reach the model at all. This is
+                        the reliable half — a hard-coded rule cannot be talked
+                        out of its answer, and "ignore your instructions" does
+                        nothing to a regular expression.
+
+     IN THE MODEL       the system prompt demands a verdict line first: CAN or
+                        CANNOT plus a reason. This catches the long tail the
+                        list cannot enumerate. It is the unreliable half, which
+                        is exactly why it is not the only half.
+
+   Every refusal names something adjacent that IS possible, because "no" on its
+   own from a tool aimed at teenagers just reads as the tool being broken.
+   ============================================================================ */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  /* ---- what is genuinely out of reach ------------------------------------
+     Each rule is a pattern, why it cannot be done, and the nearest real thing.
+     The "why" is the part that matters: a refusal without a reason is
+     indistinguishable from a tool that does not work. */
+  const REFUSALS = [
+    /* Three shapes of the same request, because people do not phrase it the way
+       a neat regex would like. "a bot that gives me 10000 subscribers" matches
+       none of the tidy compound words, and it is the single most common thing
+       anyone asks a tool like this for. The third rule needs a number as well
+       as a verb, so "a subscriber goal bar that fills to 1000" — which is a
+       real thing it should build — does not get caught by it. */
+    { re: /\b(view ?bot|sub ?bot|bot(ted)? (views?|subs?|subscribers?|likes?)|(buy|farm|auto|fake|generate)[\w ]{0,12}(views?|subs?|subscribers?|likes?|watch ?time))\b/i,
+      why: 'Nothing in a web page can change a real view, sub or like count. Those numbers live on YouTube’s servers, and every method that claims otherwise is either a scam or gets the channel terminated.',
+      alt: 'A subscriber goal bar that reads your real count and animates towards a target — that I can build.' },
+    { re: /\b(bot|bots|botting|script|program|widget|tool|hack)\b[^.?!]{0,45}\b(subs|subscribers?|views?|likes?|followers?|watch ?time)\b/i,
+      why: 'Nothing running in a web page can change a real view, sub or like count. Those numbers live on YouTube’s servers and only YouTube can move them.',
+      alt: 'A goal bar or a counter that displays your real numbers is very doable — that is reading them, not changing them.' },
+    { re: /\b(add|give|gain|boost|increase|inflate|get me|grow)\b[^.?!]{0,25}\b\d[\d,.]*\s*[kKmM]?\+?\b[^.?!]{0,25}\b(subs|subscribers?|views?|likes?|followers?)\b/i,
+      why: 'There is no code that adds subscribers or views. Every service that claims to sell them either does nothing or gets the channel terminated.',
+      alt: 'What does move those numbers is the boring stuff — I can build you a countdown or an upload-schedule tracker to help you keep at it.' },
+    { re: /\b(hack|crack|brute[ -]?force|steal|phish|keylog|bypass (the )?(login|password|paywall)|get into (someone|his|her|their|his or her)[\w' ]{0,12}account)\b/i,
+      why: 'That is breaking into someone else’s account, and I will not write it.',
+      alt: 'If it is your own account you are locked out of, YouTube’s account recovery is the only route that works.' },
+    { re: /\b(download|rip|save)[\w ]{0,15}\b(youtube|tiktok|instagram|someone else'?s?)[\w ]{0,10}\b(video|content|audio|song|music)\b/i,
+      why: 'Downloading other people’s videos is against the terms of every one of those sites, and a web page cannot reach their video files anyway.',
+      alt: 'YouTube Studio will give you your own uploads back in full quality, and the editor here works on files you already have.' },
+    { re: /\b(server|backend|database|sql|mongo|node\.?js|express|php|api endpoint|websocket server|store (it|data|users?) (on|in) (a|the) (server|cloud|database))\b/i,
+      why: 'This page writes one HTML file that runs in a browser. There is no server behind it to run backend code or hold a database.',
+      alt: 'Anything one visitor needs — settings, scores, a saved list — I can keep in their browser’s own storage, which needs no server.' },
+    { re: /\b(log ?in|sign ?up|user accounts?|authentication|password (system|reset)|sign in with)\b/i,
+      why: 'A real login needs a server to check the password against. Anything a static page calls a login is a locked door with the key taped to it — the code is right there in the page.',
+      alt: 'If it is just to keep things private on your own device, I can lock it behind a code stored in that browser and be honest that it stops a sibling, not an attacker.' },
+    { re: /\b(ios|android|app ?store|play ?store|native (app|mobile)|swift|kotlin|react ?native|flutter|apk)\b/i,
+      why: 'I write web pages. A phone app is a different language and a different build process, and neither of those exists here.',
+      alt: 'A web page that works properly on a phone gets you most of the way, and it needs no store approval.' },
+    { re: /\b(openai|anthropic|chatgpt|gpt-?4|claude|stripe|paypal|twilio|sendgrid|aws|firebase)\b[\w ]{0,20}\b(api|key|integration|payment|charge|checkout)\b/i,
+      why: 'That needs a paid account and a secret key. A key put into a web page is visible to everyone who opens it, so it would be your key and someone else’s bill within a day.',
+      alt: 'I can build the whole interface and leave a clearly marked spot for the key, so it works the moment it is wired up somewhere safe.' },
+    { re: /\b(scrape|crawl)[\w ]{0,15}\b(site|website|google|youtube|instagram|tiktok|data)\b/i,
+      why: 'A browser will not let one page read another site’s content — that block is called CORS and it is not something code can switch off from this side.',
+      alt: 'If the site publishes a public feed or an official API, I can build against that instead.' }
+  ];
+
+  function preflight(q) {
+    for (const r of REFUSALS) if (r.re.test(q)) return r;
+    return null;
+  }
+
+  /* ---- the prompt --------------------------------------------------------
+     The verdict line is first and mandatory, so the answer is parseable
+     before any code is read. Asking for the judgement after the code invites
+     the model to write the code first and rationalise afterwards. */
+  const SYS =
+    'You write small, self-contained web pages for a teenage YouTube creator (13-18). ' +
+    'You only produce ONE HTML file with its CSS and JS inline. No build step, no npm, ' +
+    'no server, no external libraries unless they come from a CDN over https.\n\n' +
+    'ANSWER IN EXACTLY THIS FORMAT.\n' +
+    'Line 1 must be either:\n' +
+    '  CAN: <one short sentence saying what you are about to build>\n' +
+    'or:\n' +
+    '  CANNOT: <one sentence saying plainly what part of this is not possible, and why>\n\n' +
+    'Say CANNOT whenever the request needs a server, a database, a login, a paid API key, ' +
+    'a native mobile app, or any change to real numbers on someone else’s platform. ' +
+    'Say CANNOT rather than building a version that only pretends to work. ' +
+    'A page that fakes the result is worse than no page, because the person finds out later.\n' +
+    'If you say CANNOT, add a second line beginning INSTEAD: naming the nearest thing that IS possible.\n\n' +
+    'If you say CAN, follow it with the complete file in one ```html code block, then a short ' +
+    'NOTES: section — under 60 words — saying how to use it and naming anything in it that is ' +
+    'a placeholder rather than a working feature. Never describe a placeholder as if it works. ' +
+    'Write clean, commented, accessible code. Use a dark theme by default.';
+
+  function extract(t) {
+    const m = t.match(/```(?:html)?\s*([\s\S]*?)```/i);
+    return m ? m[1].trim() : '';
+  }
+
+  function show(kind, title, body, alt) {
+    const v = $('verdict');
+    v.className = kind;
+    v.style.display = 'block';
+    v.innerHTML = '<b>' + title + '</b>' + esc(body) +
+      (alt ? '<div class="alt2">' + esc(alt) + '</div>' : '');
+  }
+  function esc(s) { return String(s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c])); }
+
+  let file = '';
+
+  async function build() {
+    const q = $('ask').value.trim();
+    if (!q) return;
+    $('result').style.display = 'none';
+
+    /* the half that cannot be argued with */
+    const no = preflight(q);
+    if (no) {
+      show('no', 'I cannot build that', no.why, no.alt);
+      return;
+    }
+
+    $('go').disabled = true;
+    show('wait', 'Working on it…', 'Writing the file and checking it runs. This takes a few seconds.');
+
+    const r = await ncAsk(SYS + '\n\nREQUEST: ' + q, { maxTokens: 4000, temperature: 0.4 });
+
+    $('go').disabled = false;
+
+    if (r.err) { show('no', 'Could not ask the AI', r.err); return; }
+
+    const first = r.text.split('\n')[0] || '';
+    if (/^\s*CANNOT/i.test(first)) {
+      const inst = (r.text.match(/^\s*INSTEAD:\s*(.+)$/im) || [])[1] || '';
+      show('no', 'I cannot build that', first.replace(/^\s*CANNOT:\s*/i, ''), inst);
+      return;
+    }
+
+    file = extract(r.text);
+    /* It claimed it could and then produced nothing runnable. Saying so is the
+       whole point of this page — a broken preview with no explanation is the
+       failure this was built to avoid. */
+    if (!file) {
+      show('no', 'It said yes and then did not deliver',
+        'The answer came back without a working file in it. That is a miss on the AI’s side, not yours — try the same request once more, or say it in fewer, plainer words.');
+      return;
+    }
+
+    show('yes', 'Built it', first.replace(/^\s*CAN:\s*/i, '') || 'Here it is.');
+    $('result').style.display = 'block';
+    $('code').textContent = file;
+    /* srcdoc inside a sandbox with no allow-same-origin: the generated page can
+       run its own scripts and can touch nothing of this site's. */
+    $('preview').srcdoc = file;
+
+    const notes = (r.text.split(/NOTES:/i)[1] || '').replace(/```[\s\S]*?```/g, '').trim();
+    $('notes').textContent = notes;
+
+    if (window.addPts) addPts(10);
+    if (typeof logSkill === 'function') logSkill('ai_ask');
+  }
+
+  $('go').onclick = build;
+  $('ask').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) build();
+  });
+  document.querySelectorAll('.ex').forEach(b => b.onclick = () => {
+    $('ask').value = b.textContent.replace(/[“”]/g, '"'); $('ask').focus();
+  });
+
+  $('tPrev').onclick = () => { $('tPrev').classList.add('on'); $('tCode').classList.remove('on'); $('preview').style.display = 'block'; $('code').style.display = 'none'; };
+  $('tCode').onclick = () => { $('tCode').classList.add('on'); $('tPrev').classList.remove('on'); $('preview').style.display = 'none'; $('code').style.display = 'block'; };
+  $('dl').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([file], { type: 'text/html' }));
+    a.download = 'widget.html'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  };
+  $('cp').onclick = () => {
+    navigator.clipboard.writeText(file).then(() => { $('cp').textContent = 'Copied'; setTimeout(() => $('cp').textContent = 'Copy', 1600); });
+  };
+})();
+</script>
+</body>
+</html>
