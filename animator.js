@@ -435,3 +435,336 @@
     addEventListener('keydown', e => { if (e.key === 'Escape' && ui.classList.contains('on')) { stop(); ui.classList.remove('on'); } });
   }
 })();
+
+
+/* ============================================================================
+   REMOVE SOMETHING FROM A PICTURE
+   ============================================================================
+   Paint over the thing you do not want and it is replaced with what the
+   surrounding image says should be behind it. Same job as cleanup.pictures,
+   done here in the browser: nothing is uploaded, which for a site used by
+   teenagers is not a small detail — the photo never leaves the device.
+
+   HOW IT WORKS, since "AI magic" is not an explanation. It is exemplar-based
+   inpainting. The hole is filled from its edge inward, one ring at a time. For
+   each boundary pixel the algorithm searches the nearby image for the 9x9
+   patch that best matches the known part of its surroundings, and copies the
+   middle of that patch in. Because it always works from the boundary, each
+   ring it fills becomes context for the next one — which is how a fence or a
+   brick wall continues through the hole instead of smearing.
+
+   It is not a diffusion model and it will not invent a face that was hidden
+   behind someone. It is very good at removing a person from grass, a sign from
+   a wall, a stranger from a beach — anything whose background is texture. On a
+   busy background you will see it repeat a detail. That is the honest limit of
+   the method, and the panel says so rather than letting you find out.
+   ============================================================================ */
+(function () {
+  'use strict';
+  if (!/editor\.html/i.test(location.pathname) && !document.getElementById('root')) return;
+
+  const css = document.createElement('style');
+  css.textContent = [
+    '#ncRmBtn{position:fixed;right:18px;bottom:212px;z-index:995;display:flex;align-items:center;gap:8px;',
+    'padding:11px 16px;border:0;border-radius:30px;cursor:pointer;font:600 13.5px system-ui,sans-serif;',
+    'color:#05070E;background:linear-gradient(110deg,#7CFF9E,#00E5FF);box-shadow:0 8px 26px rgba(0,229,255,.35)}',
+    'body.ncplaying #ncRmBtn{display:none}',
+    '#ncRm{position:fixed;inset:0;z-index:99994;display:none;place-items:center;padding:18px;',
+    'background:rgba(4,6,12,.92);backdrop-filter:blur(10px);font-family:system-ui,sans-serif}',
+    '#ncRm.on{display:grid}',
+    '#ncRmC{width:100%;max-width:900px;max-height:94vh;overflow:auto;background:#0B0E16;color:#EAF2FF;',
+    'border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:24px}',
+    '#ncRmC h2{font-size:1.2rem;font-weight:650;margin-bottom:5px}',
+    '#ncRmC .sub{color:#8A97B4;font-size:.9rem;line-height:1.6;margin-bottom:16px}',
+    '#ncRmCv{width:100%;border-radius:14px;background:#0F1420;border:1px solid rgba(255,255,255,.12);',
+    'touch-action:none;display:block;cursor:crosshair}',
+    '#ncRm .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;align-items:center}',
+    '#ncRm button.b{padding:10px 17px;border:0;border-radius:11px;cursor:pointer;font:600 13.5px system-ui;',
+    'color:#05070E;background:linear-gradient(110deg,#7CFF9E,#00E5FF)}',
+    '#ncRm button.b.alt{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:#EAF2FF}',
+    '#ncRm button.b:disabled{opacity:.45;cursor:default}',
+    '#ncRm label{font-size:12.5px;color:#8A97B4}',
+    '#ncRmSay{border-radius:13px;padding:12px 15px;font-size:13.5px;line-height:1.6;margin-top:12px;display:none;',
+    'background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#A8B4CE}',
+    '@media (max-width:700px){#ncRmBtn{bottom:auto;top:58px;right:12px;padding:9px 13px;font-size:12.5px}}'
+  ].join('');
+  document.head.appendChild(css);
+
+  const btn = document.createElement('button');
+  btn.id = 'ncRmBtn';
+  btn.innerHTML = '<span style="font-size:15px">\u2702\ufe0f</span> Remove something';
+  btn.title = 'Paint over something to take it out of a photo';
+
+  const ui = document.createElement('div');
+  ui.id = 'ncRm';
+  ui.innerHTML =
+    '<div id="ncRmC">' +
+      '<h2>Remove something from a picture</h2>' +
+      '<p class="sub">Open a photo, paint over what you want gone, then press Remove. ' +
+      'It works best when what is behind the thing is texture \u2014 grass, sky, a wall, sand. ' +
+      'Nothing is uploaded; the picture never leaves this device.</p>' +
+      '<canvas id="ncRmCv" width="800" height="600"></canvas>' +
+      '<div class="row">' +
+        '<label for="ncRmFile" class="b" style="display:inline-block;color:#05070E">Open a photo</label>' +
+        '<input type="file" id="ncRmFile" accept="image/*" style="display:none">' +
+        '<label>Brush <input type="range" id="ncRmSize" min="6" max="70" step="2" value="26"></label>' +
+        '<button class="b alt" id="ncRmUndo">Undo stroke</button>' +
+        '<button class="b alt" id="ncRmClear">Clear paint</button>' +
+        '<button class="b" id="ncRmGo">Remove it</button>' +
+        '<button class="b alt" id="ncRmSave">Save PNG</button>' +
+      '</div>' +
+      '<div id="ncRmSay"></div>' +
+      '<div class="row"><button class="b alt" id="ncRmClose">Close</button></div>' +
+    '</div>';
+
+  function boot() {
+    if (document.getElementById('ncRmBtn')) return;
+    document.body.appendChild(btn);
+    document.body.appendChild(ui);
+    wire();
+  }
+  if (document.readyState === 'loading') addEventListener('DOMContentLoaded', boot);
+  else boot();
+
+  function wire() {
+    const $ = id => document.getElementById(id);
+    const cv = $('ncRmCv'), ctx = cv.getContext('2d', { willReadFrequently: true });
+    let base = null;            // the photo, as ImageData
+    let mask = null;            // Uint8Array, 1 = painted out
+    let strokes = [];           // for undo: each entry is the mask before that stroke
+    let painting = false, brush = 26;
+
+    function say(t) { const s = $('ncRmSay'); s.style.display = t ? 'block' : 'none'; s.textContent = t || ''; }
+
+    function repaint() {
+      if (!base) return;
+      ctx.putImageData(base, 0, 0);
+      if (!mask) return;
+      /* The paint is drawn as a translucent overlay rather than into the pixels,
+         so the original is never damaged by marking it up. */
+      const ov = ctx.getImageData(0, 0, cv.width, cv.height), d = ov.data;
+      for (let i = 0, p = 0; i < mask.length; i++, p += 4) {
+        if (!mask[i]) continue;
+        d[p] = d[p] * 0.35 + 255 * 0.65;
+        d[p + 1] = d[p + 1] * 0.35 + 46 * 0.65;
+        d[p + 2] = d[p + 2] * 0.35 + 138 * 0.65;
+      }
+      ctx.putImageData(ov, 0, 0);
+    }
+
+    $('ncRmFile').onchange = e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const img = new Image();
+      img.onload = () => {
+        /* Capped at 1100px on the long edge. The patch search is O(hole x
+           window) and a 12-megapixel phone photo would take minutes for a
+           result nobody can tell apart from this one. */
+        const s = Math.min(1, 1100 / Math.max(img.naturalWidth, img.naturalHeight));
+        cv.width = Math.round(img.naturalWidth * s);
+        cv.height = Math.round(img.naturalHeight * s);
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        base = ctx.getImageData(0, 0, cv.width, cv.height);
+        mask = new Uint8Array(cv.width * cv.height);
+        strokes = [];
+        repaint();
+        say('Paint over what you want gone. Cover it completely, and a little past its edge.');
+      };
+      img.onerror = () => say('Could not read that file. Try a JPG or PNG.');
+      img.src = URL.createObjectURL(f);
+    };
+
+    $('ncRmSize').oninput = e => { brush = +e.target.value; };
+
+    const at = e => {
+      const r = cv.getBoundingClientRect();
+      return [Math.round((e.clientX - r.left) * cv.width / r.width),
+              Math.round((e.clientY - r.top) * cv.height / r.height)];
+    };
+    function dab(x, y) {
+      const rad = brush / 2, r2 = rad * rad;
+      for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) {
+        if (dx * dx + dy * dy > r2) continue;
+        const px = Math.round(x + dx), py = Math.round(y + dy);
+        if (px < 0 || py < 0 || px >= cv.width || py >= cv.height) continue;
+        mask[py * cv.width + px] = 1;
+      }
+    }
+    cv.addEventListener('pointerdown', e => {
+      if (!base) return;
+      painting = true;
+      strokes.push(Uint8Array.from(mask));
+      if (strokes.length > 12) strokes.shift();
+      try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+      const [x, y] = at(e); dab(x, y); repaint(); e.preventDefault();
+    });
+    cv.addEventListener('pointermove', e => {
+      if (!painting) return;
+      const [x, y] = at(e); dab(x, y); repaint(); e.preventDefault();
+    });
+    ['pointerup', 'pointercancel'].forEach(ev => cv.addEventListener(ev, () => { painting = false; }));
+
+    $('ncRmUndo').onclick = () => {
+      if (!strokes.length) return;
+      mask = strokes.pop(); repaint();
+    };
+    $('ncRmClear').onclick = () => {
+      if (!mask) return;
+      mask = new Uint8Array(cv.width * cv.height); strokes = []; repaint();
+    };
+
+    $('ncRmGo').onclick = () => {
+      if (!base) return say('Open a photo first.');
+      let n = 0; for (let i = 0; i < mask.length; i++) if (mask[i]) n++;
+      if (!n) return say('Nothing is painted yet.');
+      if (n > mask.length * 0.45)
+        return say('That is nearly half the picture. There is not enough left for it to work out ' +
+                   'what belongs there \u2014 paint over less.');
+
+      $('ncRmGo').disabled = true;
+      say('Working\u2026 filling ' + n.toLocaleString() + ' pixels from the edges inward. ' +
+          'A big area takes a few seconds.');
+      /* Two frames before starting: one to paint the message, one to let the
+         browser actually show it. The fill blocks the main thread, so without
+         this the "working" text never appears. */
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const t0 = performance.now();
+        try {
+          base = inpaint(base, mask, cv.width, cv.height);
+          mask = new Uint8Array(cv.width * cv.height);
+          strokes = [];
+          repaint();
+          say('Done in ' + ((performance.now() - t0) / 1000).toFixed(1) + 's. ' +
+              'Paint over anything it got wrong and run it again \u2014 it works on the new picture.');
+          if (window.addPts) addPts(5);
+        } catch (err) {
+          say('That did not work: ' + err.message);
+        }
+        $('ncRmGo').disabled = false;
+      }));
+    };
+
+    $('ncRmSave').onclick = () => {
+      if (!base) return say('Nothing to save yet.');
+      /* Save the CLEAN image, not the canvas — the canvas has the paint
+         overlay drawn on it. */
+      const out = document.createElement('canvas');
+      out.width = cv.width; out.height = cv.height;
+      out.getContext('2d').putImageData(base, 0, 0);
+      out.toBlob(bl => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(bl);
+        a.download = 'cleaned.png';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        say('Saved cleaned.png');
+      }, 'image/png');
+    };
+
+    btn.onclick = () => ui.classList.add('on');
+    $('ncRmClose').onclick = () => ui.classList.remove('on');
+    ui.addEventListener('click', e => { if (e.target === ui) ui.classList.remove('on'); });
+    addEventListener('keydown', e => { if (e.key === 'Escape' && ui.classList.contains('on')) ui.classList.remove('on'); });
+  }
+
+  /* --- exemplar-based inpainting, filled from the boundary inward --- */
+  function inpaint(image, hole, W, H) {
+    const d = new Uint8ClampedArray(image.data);
+    const unknown = Uint8Array.from(hole);
+    const P = 4;                       // patch half-width: 9x9 window
+    const SEARCH = 90;                 // how far to look for a donor patch
+    const idx = (x, y) => (y * W + x) * 4;
+
+    let remaining = 0;
+    for (let i = 0; i < unknown.length; i++) if (unknown[i]) remaining++;
+
+    let guard = 0;
+    while (remaining > 0 && guard++ < 4000) {
+      /* The boundary: unknown pixels with at least one known neighbour.
+         Filling only these, then recomputing, is the onion peel. */
+      const edge = [];
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (!unknown[y * W + x]) continue;
+        if ((x > 0 && !unknown[y * W + x - 1]) || (x < W - 1 && !unknown[y * W + x + 1]) ||
+            (y > 0 && !unknown[(y - 1) * W + x]) || (y < H - 1 && !unknown[(y + 1) * W + x])) {
+          edge.push([x, y]);
+        }
+      }
+      if (!edge.length) break;
+
+      /* Highest confidence first: the boundary pixel with the most known
+         neighbours has the most context to match against, so it is the one
+         whose guess is most likely to be right. */
+      edge.sort((a, b) => known(b[0], b[1]) - known(a[0], a[1]));
+
+      const wrote = [];
+      for (let e = 0; e < edge.length; e++) {
+        const [x, y] = edge[e];
+        const best = findPatch(x, y);
+        if (best) {
+          const s = idx(best[0], best[1]), t = idx(x, y);
+          d[t] = d[s]; d[t + 1] = d[s + 1]; d[t + 2] = d[s + 2]; d[t + 3] = 255;
+          wrote.push(y * W + x);
+        }
+      }
+      if (!wrote.length) break;
+      wrote.forEach(i => { unknown[i] = 0; remaining--; });
+    }
+
+    /* Anything the search could never place — a hole larger than the search
+       window, or one touching an edge with no texture near it — is closed by
+       averaging its known neighbours so no magenta paint survives. */
+    for (let pass = 0; pass < 40 && remaining > 0; pass++) {
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (!unknown[y * W + x]) continue;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const px = x + dx, py = y + dy;
+          if (px < 0 || py < 0 || px >= W || py >= H || unknown[py * W + px]) continue;
+          const s = idx(px, py); r += d[s]; g += d[s + 1]; b += d[s + 2]; n++;
+        }
+        if (n < 2) continue;
+        const t = idx(x, y);
+        d[t] = r / n; d[t + 1] = g / n; d[t + 2] = b / n; d[t + 3] = 255;
+        unknown[y * W + x] = 0; remaining--;
+      }
+    }
+    return new ImageData(d, W, H);
+
+    function known(x, y) {
+      let n = 0;
+      for (let dy = -P; dy <= P; dy++) for (let dx = -P; dx <= P; dx++) {
+        const px = x + dx, py = y + dy;
+        if (px >= 0 && py >= 0 && px < W && py < H && !unknown[py * W + px]) n++;
+      }
+      return n;
+    }
+
+    /* Sum of squared differences over the known pixels of the patch. The
+         donor must itself be fully known, or the hole copies its own hole. */
+    function findPatch(x, y) {
+      let bx = -1, by = -1, bestErr = Infinity;
+      const x0 = Math.max(P, x - SEARCH), x1 = Math.min(W - P - 1, x + SEARCH);
+      const y0 = Math.max(P, y - SEARCH), y1 = Math.min(H - P - 1, y + SEARCH);
+      const step = (x1 - x0) * (y1 - y0) > 40000 ? 2 : 1;   // thin the search on big windows
+      for (let cy = y0; cy <= y1; cy += step) for (let cx = x0; cx <= x1; cx += step) {
+        if (unknown[cy * W + cx]) continue;
+        let err = 0, n = 0, bad = false;
+        for (let dy = -P; dy <= P && !bad; dy += 2) for (let dx = -P; dx <= P; dx += 2) {
+          const sx = cx + dx, sy = cy + dy, tx = x + dx, ty = y + dy;
+          if (sx < 0 || sy < 0 || sx >= W || sy >= H) { bad = true; break; }
+          if (unknown[sy * W + sx]) { bad = true; break; }
+          if (tx < 0 || ty < 0 || tx >= W || ty >= H || unknown[ty * W + tx]) continue;
+          const a = idx(sx, sy), b = idx(tx, ty);
+          const dr = d[a] - d[b], dg = d[a + 1] - d[b + 1], db = d[a + 2] - d[b + 2];
+          err += dr * dr + dg * dg + db * db; n++;
+          if (err > bestErr * n) { bad = true; break; }        // early out
+        }
+        if (bad || n < 4) continue;
+        const e = err / n;
+        if (e < bestErr) { bestErr = e; bx = cx; by = cy; }
+      }
+      return bx < 0 ? null : [bx, by];
+    }
+  }
+})();
