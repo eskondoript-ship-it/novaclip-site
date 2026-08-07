@@ -1080,6 +1080,140 @@ function ncProfile() {
 }
 
 /* ============================================================================
+   THE SIDEBAR
+   ============================================================================
+   Eleven links in a flat list did not fit on a laptop. The last three fell off
+   the bottom of the screen, which is the same as not having them.
+
+   So they are grouped by what you are trying to do, and the groups are the
+   thing that scrolls rather than the links:
+
+     Channel   Studio, Analytics        your numbers
+     Create    Editor, Trend Spotter    making the video
+     AI        NovaClip AI, Coder       asking something to do it for you
+     Games     Games, Typing race       the fun end
+     Socials   Gifts                    other people
+     You       Progress, Family, Pricing
+
+   On a short screen every group except the one you are in starts closed, which
+   turns eleven rows into five and always fits. On a tall screen they all start
+   open, because hiding things people can already see is just extra clicks.
+   Either way the sidebar scrolls, so nothing can fall off the bottom again.
+
+   Built here rather than in each page's markup. The nav had already drifted —
+   some pages listed six links, some nine — and the only cure for that is one
+   copy that every page gets.
+   ============================================================================ */
+const NC_NAV = [
+  { items: [['index.html', 'Home', 'home']] },
+  { name: 'Channel', items: [['app.html', 'Studio', 'studio'], ['analytics.html', 'Analytics', 'analytics']] },
+  { name: 'Create',  items: [['editor.html', 'Editor', 'editor'], ['trends.html', 'Trend Spotter', 'trends']] },
+  { name: 'AI',      items: [['ai.html', 'NovaClip AI', 'ai'], ['coder.html', 'Coder', '']] },
+  { name: 'Games',   items: [['game.html', 'Games', 'sniper'], ['typing.html', 'Typing race', '']] },
+  { name: 'Socials', items: [['gift.html', 'Gifts', '']] },
+  { name: 'You',     items: [['progress.html', 'Progress', 'progress'], ['parent.html', 'Family', 'family'],
+                             ['pricing.html', 'Pricing', 'pricing']] }
+];
+
+function ncNav() {
+  const bar = document.querySelector('.sidebar');
+  if (!bar || document.getElementById('ncnav')) return;
+
+  if (!document.getElementById('ncnavcss')) {
+    const st = document.createElement('style');
+    st.id = 'ncnavcss';
+    st.textContent = [
+      /* the bar itself: it scrolls, so a long nav can never be cut off again */
+      '.sidebar{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;',
+      'scrollbar-color:rgba(255,255,255,.18) transparent}',
+      '.sidebar::-webkit-scrollbar{width:6px}',
+      '.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px}',
+      '#ncnav{display:flex;flex-direction:column;gap:1px;padding:0 10px}',
+      /* the group header — a button, because it toggles */
+      '#ncnav .ncgh{display:flex;align-items:center;justify-content:space-between;width:100%;',
+      'padding:9px 10px 5px;background:none;border:0;cursor:pointer;text-align:left;',
+      'font:700 10.5px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;',
+      'color:#6F7C99}',
+      '#ncnav .ncgh:hover{color:#9FB0D0}',
+      '#ncnav .ncgh .ncar{transition:transform .18s;font-size:9px;opacity:.75}',
+      '#ncnav .ncg.shut .ncar{transform:rotate(-90deg)}',
+      /* The layout lives here, not in an inline style. An inline display:flex
+         beats any stylesheet rule, so collapsing would silently do nothing. */
+      '#ncnav .ncgi{display:flex;flex-direction:column;gap:1px}',
+      '#ncnav .ncg.shut .ncgi{display:none}',
+      /* the links, overriding each page\'s own .sidebar a rules */
+      '.sidebar #ncnav a.ncl{display:flex;align-items:center;gap:9px;margin:0;',
+      'padding:8px 11px;border-radius:9px;font:600 14.5px/1.25 Segoe UI,system-ui,sans-serif;',
+      'color:#C6D2E8;text-decoration:none;background:none;transition:background .16s,color .16s}',
+      '.sidebar #ncnav a.ncl:hover{background:rgba(114,9,183,.28);color:#fff}',
+      '.sidebar #ncnav a.ncl.on{background:linear-gradient(135deg,#F72585,#7209B7,#4CC9F0);color:#fff}',
+      '.sidebar #ncnav a.ncl .ncd{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.35;flex:0 0 auto}',
+      '.sidebar #ncnav a.ncl.on .ncd{opacity:1}',
+      /* phones keep the horizontal strip the pages already switch to */
+      '@media (max-width:760px){#ncnav{flex-direction:row;padding:0;gap:0}',
+      '#ncnav .ncgh{display:none}#ncnav .ncg{display:flex}#ncnav .ncg.shut .ncgi{display:flex}',
+      '.sidebar #ncnav a.ncl{white-space:nowrap;padding:9px 13px;border-radius:0}}'
+    ].join('');
+    document.head.appendChild(st);
+  }
+
+  /* Any link the page shipped with is replaced. Keeping them would mean two
+     navigations disagreeing about where things are. */
+  [...bar.querySelectorAll('a')].forEach(a => {
+    if (a.id === 'ncbrand') return;
+    a.remove();
+  });
+
+  const here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  const nav = document.createElement('nav');
+  nav.id = 'ncnav';
+
+  /* On a short screen, only the group you are in is open. 820px is roughly
+     where an 11-row list stops fitting once the profile, the logo and the
+     language box have taken their share. */
+  const roomy = window.innerHeight >= 820;
+
+  NC_NAV.forEach(group => {
+    const mine = group.items.some(it => it[0].toLowerCase() === here);
+    const g = document.createElement('div');
+    g.className = 'ncg' + (group.name && !mine && !roomy ? ' shut' : '');
+
+    if (group.name) {
+      const h = document.createElement('button');
+      h.className = 'ncgh';
+      h.type = 'button';
+      h.innerHTML = '<span>' + group.name + '</span><span class="ncar">▼</span>';
+      h.setAttribute('aria-expanded', String(!g.classList.contains('shut')));
+      h.onclick = () => {
+        g.classList.toggle('shut');
+        h.setAttribute('aria-expanded', String(!g.classList.contains('shut')));
+      };
+      g.appendChild(h);
+    }
+
+    const box = document.createElement('div');
+    box.className = 'ncgi';
+    group.items.forEach(([href, label, key]) => {
+      const a = document.createElement('a');
+      a.className = 'ncl' + (href.toLowerCase() === here ? ' on' : '');
+      a.href = href;
+      /* data-t goes on the label span, never on the <a>. applyLang() assigns
+         textContent, which on the anchor would delete the dot inside it. */
+      a.innerHTML = '<span class="ncd"></span><span' +
+        (key ? ' data-t="' + key + '"' : '') + '>' + label + '</span>';
+      box.appendChild(a);
+    });
+    g.appendChild(box);
+    nav.appendChild(g);
+  });
+
+  /* above the language box, below the logo and the profile button */
+  const tail = bar.querySelector('.themewrap');
+  tail ? bar.insertBefore(nav, tail) : bar.appendChild(nav);
+}
+
+
+/* ============================================================================
    THE SITE'S AI KEY, AND ONE WAY TO ASK
    ============================================================================
    Every AI feature on the site used to reach the model its own way. That is
@@ -1165,6 +1299,7 @@ window.addEventListener('DOMContentLoaded', () => {
   dedupeChrome();
   ncBrand();
   ncProfile();
+  ncNav();
   ncScreenTime();
   ncMiniAI();
   // warm the channel cache in the background so message one already has it
@@ -1177,21 +1312,6 @@ window.addEventListener('DOMContentLoaded', () => {
   applyLang(lang());
   refreshPanels();
 
-  // extra sidebar links (Family / Pricing) injected on every page
-  const sb = document.querySelector('.sidebar .themewrap');
-  if (sb && !document.getElementById('ncfamlink')) {
-    /* Pages that live outside the original nav. Added here rather than pasted
-       into nineteen files, which is how the nav drifted out of step before. */
-    [['typing.html', 'Typing race'], ['gift.html', 'Gifts'], ['coder.html', 'Coder']].forEach(([href, label]) => {
-      if (document.querySelector('.sidebar a[href="' + href + '"]')) return;
-      const a = document.createElement('a'); a.href = href; a.textContent = label;
-      sb.parentNode.insertBefore(a, sb);
-    });
-    const prg = document.createElement('a'); prg.id = 'ncproglink'; prg.href = 'progress.html'; prg.setAttribute('data-t','progress'); prg.textContent = tr('progress');
-    const fam = document.createElement('a'); fam.id = 'ncfamlink'; fam.href = 'parent.html'; fam.setAttribute('data-t','family'); fam.textContent = tr('family');
-    const pri = document.createElement('a'); pri.href = 'pricing.html'; pri.setAttribute('data-t','pricing'); pri.textContent = tr('pricing');
-    sb.parentNode.insertBefore(prg, sb); sb.parentNode.insertBefore(fam, sb); sb.parentNode.insertBefore(pri, sb);
-  }
   applyLang(lang());
 
   applySeason();
