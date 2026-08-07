@@ -3,1023 +3,726 @@
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>NovaClip — the AI studio for teen creators</title>
-<meta name='description' content='Edit, analyse and grow a YouTube channel from one browser tab. A real timeline editor, real YouTube analytics, 501 creator tools — nothing to install, nothing uploaded.'>
-<link rel='canonical' href='https://eskondoript-ship-it.github.io/novaclip-site/'>
-<meta name='robots' content='index, follow, max-image-preview:large'>
-<meta name='theme-color' content='#05070E'>
-<link rel='icon' href='logo.svg' type='image/svg+xml'>
+<title>NovaClip — Run your channel like a game</title>
+
+<!-- Search engines and link previews. A page with no description gets whatever
+     Google scrapes off it, and a link with no card is a bare blue URL in a chat. -->
+<meta name='description' content='NovaClip is a free creator toolkit for 13-18 year olds: AI coaching, a browser video editor, trend research that only shows what a channel your size can reach, and points you earn for using it.'>
+<meta name='theme-color' content='#05060A'>
+<meta name='author' content='NovaClip'>
+<link rel='canonical' href='https://novaclip.pages.dev/'>
 
 <meta property='og:type' content='website'>
 <meta property='og:site_name' content='NovaClip'>
-<meta property='og:title' content='NovaClip — the AI studio for teen creators'>
-<meta property='og:description' content='A real timeline editor, real YouTube analytics and 501 creator tools, in one browser tab.'>
+<meta property='og:title' content='NovaClip — Run your channel like a game'>
+<meta property='og:description' content='AI coaching, a browser editor, trend research sized to your channel, and points for every session. Free, no downloads.'>
+<meta property='og:url' content='https://novaclip.pages.dev/'>
+<meta property='og:image' content='https://novaclip.pages.dev/social-card.png'>
+<meta property='og:image:alt' content='NovaClip — a creator toolkit for teens'>
+
 <meta name='twitter:card' content='summary_large_image'>
-
+<meta name='twitter:title' content='NovaClip — Run your channel like a game'>
+<meta name='twitter:description' content='AI coaching, a browser editor, trend research sized to your channel, and points for every session. Free, no downloads.'>
+<meta name='twitter:image' content='https://novaclip.pages.dev/social-card.png'>
+<!-- NOTE: og:url / canonical / the image path must match where you actually host
+     this. Put a 1200x630 social-card.png next to index.html; until that file
+     exists the cards fall back to a plain text preview. -->
 <style>
-/* ============================================================================
-   NOVACLIP
-   ============================================================================
-   The whole visual system in one place. Three rules keep it at 60fps on a
-   phone, and every effect below obeys them:
+:root{ --void:#05060A; --void2:#0A0C14; --cyan:#00F0FF; --magenta:#FF2E97; --lime:#B6FF3C; --white:#EAF2FF; --dim:#7E8AA6; --line:rgba(120,140,200,0.14); }
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--void);color:var(--white);font-family:'Segoe UI',-apple-system,sans-serif;overflow-x:hidden;line-height:1.5}
+::selection{background:var(--magenta);color:#fff}
+a{color:inherit;text-decoration:none}
 
-   1. Animate transform and opacity only. Nothing else can be composited on the
-      GPU, and anything else forces layout on every frame.
-   2. One requestAnimationFrame loop for the whole page. Particles, parallax
-      and the pointer glow all read from the same tick rather than each
-      starting their own.
-   3. Nothing animates that is not on screen. Reveals are driven by an
-      IntersectionObserver and the particle field stops when the hero scrolls
-      away.
+/* SIDEBAR (kept from your site) */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:200px;background:rgba(8,9,14,0.88);backdrop-filter:blur(20px);display:flex;flex-direction:column;align-items:stretch;padding:20px 0;gap:8px;z-index:998;border-right:1px solid var(--line)}
+.sidebar a{font-size:1.05rem;color:var(--white);display:flex;align-items:center;gap:12px;padding:12px 20px;font-weight:600;transition:.25s;position:relative}
+.sidebar a::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan);transform:scaleY(0);transition:.25s}
+.sidebar a:hover{background:rgba(0,240,255,0.07);padding-left:26px}
+.sidebar a:hover::before{transform:scaleY(1)}
+.sidebar a.aidot{background:linear-gradient(135deg,var(--magenta),#7209B7,var(--cyan));background-size:200% 200%;color:#fff;border-radius:10px;margin:6px 14px;animation:gradShift 4s ease infinite}
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.sidebar .themewrap{margin-top:auto;padding:16px 20px}
+.sidebar .themewrap label{display:block;font-size:0.78rem;opacity:0.6;margin-bottom:6px}
+.sidebar select{width:100%;font-size:0.95rem;background:rgba(255,255,255,0.05);color:var(--white);border:1px solid var(--line);border-radius:8px;padding:9px}
 
-   And one rule that matters more than the other three: all of it switches off
-   under prefers-reduced-motion. A page this animated is genuinely unpleasant
-   for people who asked for less of it, and some of these effects are a
-   migraine trigger.
-   ============================================================================ */
+.content{margin-left:200px;position:relative;z-index:2}
+@media(max-width:760px){.content{margin-left:0}.sidebar{display:none}}
 
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* loading state + skip link */
+#boot{position:fixed;inset:0;z-index:9999;background:var(--void);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease}
+#boot.gone{opacity:0;pointer-events:none}
+.bootinner{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:.9rem;letter-spacing:2px;text-transform:uppercase}
+.bootdot{width:10px;height:10px;border-radius:50%;background:var(--cyan);animation:bootpulse 1s ease-in-out infinite}
+@keyframes bootpulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.skip{position:absolute;left:-9999px;top:0;background:var(--cyan);color:#00151a;padding:10px 18px;border-radius:0 0 10px 0;font-weight:800;z-index:9998}
+.skip:focus{left:0}
 
-:root {
-  --ink:   #05070E;
-  --ink2:  #080C16;
-  --panel: #0C1220;
-  --line:  rgba(255,255,255,0.09);
-  --txt:   #E8EEFF;
-  --dim:   #8A97B4;
-  --cyan:  #00E5FF;
-  --violet:#7C5CFF;
-  --pink:  #FF3D9A;
-  --lime:  #B6FF4A;
-  --amber: #FFB443;
-  --grad:  linear-gradient(110deg, var(--violet), var(--cyan) 48%, var(--pink));
-  --easeOut: cubic-bezier(.16,1,.3,1);
+/* ===== ANIMATED BACKGROUND LAYERS ===== */
+.grid-floor{position:fixed;left:200px;right:0;bottom:0;height:44vh;z-index:0;pointer-events:none;perspective:340px;overflow:hidden;opacity:0.5}
+@media(max-width:760px){.grid-floor{left:0}}
+.grid-floor::before{content:'';position:absolute;inset:-40% -20% -10% -20%;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:44px 44px;transform:rotateX(72deg);transform-origin:bottom;animation:floor 16s linear infinite}
+@keyframes floor{from{background-position:0 0}to{background-position:0 44px}}
+#orbs{position:fixed;inset:0;left:200px;z-index:0;pointer-events:none;overflow:hidden}
+@media(max-width:760px){#orbs{left:0}}
+.orb{position:absolute;border-radius:50%;filter:blur(85px);opacity:.42}
+.orb.a{width:460px;height:460px;background:#7209B7;top:-90px;left:12%;animation:f1 14s ease-in-out infinite}
+.orb.b{width:390px;height:390px;background:var(--magenta);top:42%;right:4%;animation:f2 18s ease-in-out infinite}
+.orb.c{width:420px;height:420px;background:var(--cyan);bottom:-110px;left:28%;animation:f3 16s ease-in-out infinite}
+@keyframes f1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,80px)}}
+@keyframes f2{0%,100%{transform:translate(0,0)}50%{transform:translate(-70px,50px)}}
+@keyframes f3{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-60px)}}
+#stars{position:fixed;inset:0;left:200px;z-index:0;pointer-events:none}
+@media(max-width:760px){#stars{left:0}}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 3s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.15}50%{opacity:.9}}
+.scanline{position:fixed;top:0;left:200px;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),var(--magenta),transparent);z-index:1;pointer-events:none;animation:scan 7s linear infinite;opacity:.5}
+@media(max-width:760px){.scanline{left:0}}
+@keyframes scan{0%{top:-2px}100%{top:100vh}}
+
+/* ===== HERO ===== */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:60px 7vw;position:relative}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:0.8rem;letter-spacing:3px;text-transform:uppercase;color:var(--lime);margin-bottom:24px;font-weight:700;animation:fadeSlide 1s .2s both}
+.eyebrow::before{content:'';width:26px;height:1px;background:var(--lime);animation:growLine 1s .4s both}
+@keyframes growLine{from{width:0}to{width:26px}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+h1{font-size:clamp(2.8rem,8vw,6.4rem);font-weight:800;line-height:0.94;letter-spacing:-3px;max-width:14ch}
+h1 .w1{display:inline-block;animation:fadeSlide .8s .3s both}
+h1 .w2{display:inline-block;animation:fadeSlide .8s .45s both}
+h1 .n{color:var(--cyan);text-shadow:0 0 40px rgba(0,240,255,.4);display:inline-block;animation:fadeSlide .8s .6s both,neonPulse 3s 1.5s ease-in-out infinite}
+h1 .m{color:var(--magenta);text-shadow:0 0 40px rgba(255,46,151,.4);display:inline-block;animation:fadeSlide .8s .75s both,neonPulse2 3s 2s ease-in-out infinite}
+@keyframes neonPulse{0%,100%{text-shadow:0 0 40px rgba(0,240,255,.4)}50%{text-shadow:0 0 70px rgba(0,240,255,.8),0 0 20px rgba(0,240,255,.6)}}
+@keyframes neonPulse2{0%,100%{text-shadow:0 0 40px rgba(255,46,151,.4)}50%{text-shadow:0 0 70px rgba(255,46,151,.8),0 0 20px rgba(255,46,151,.6)}}
+.console{margin:28px 0 32px;font-family:'Consolas',monospace;font-size:clamp(.95rem,1.6vw,1.15rem);color:var(--dim);max-width:620px;min-height:3.2em;animation:fadeSlide 1s .9s both}
+.console .cursor{color:var(--cyan);animation:cur .8s step-end infinite}
+@keyframes cur{50%{opacity:0}}
+.herobtns{display:flex;gap:16px;flex-wrap:wrap;align-items:center;animation:fadeSlide 1s 1.1s both}
+.btn-primary{background:linear-gradient(90deg,var(--cyan),#7df5ff);color:#00151a;font-weight:800;padding:16px 38px;border-radius:40px;font-size:1rem;border:none;cursor:pointer;transition:.3s;position:relative;overflow:hidden;box-shadow:0 0 24px rgba(0,240,255,.35);animation:btnBreath 3s ease-in-out infinite}
+@keyframes btnBreath{0%,100%{box-shadow:0 0 24px rgba(0,240,255,.35)}50%{box-shadow:0 0 44px rgba(0,240,255,.65)}}
+.btn-primary::before{content:'';position:absolute;inset:-3px;border-radius:44px;background:conic-gradient(from 0deg,var(--cyan),var(--magenta),var(--lime),var(--cyan));z-index:-1;animation:spinBorder 3.5s linear infinite;filter:blur(6px);opacity:.7}
+@keyframes spinBorder{to{transform:rotate(360deg)}}
+.btn-primary::after{content:'';position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:btnShine 3s ease-in-out infinite}
+@keyframes btnShine{0%{left:-80%}60%,100%{left:130%}}
+.btn-primary:hover{box-shadow:0 0 60px rgba(0,240,255,.9);transform:translateY(-3px) scale(1.03)}
+.btn-ghost{color:var(--white);font-weight:600;padding:14px 30px;border-radius:40px;border:1px solid rgba(255,255,255,.25);font-size:1rem;transition:.3s;position:relative}
+.btn-ghost:hover{border-color:var(--magenta);color:var(--magenta);box-shadow:0 0 30px rgba(255,46,151,.4);transform:translateY(-2px)}
+.hero-meta{margin-top:50px;display:flex;gap:44px;flex-wrap:wrap;font-size:.82rem;color:var(--dim);animation:fadeSlide 1s 1.3s both}
+.hero-meta b{font-size:1.5rem;font-weight:800;display:block;letter-spacing:-1px}
+.cy{color:var(--cyan)}.mg{color:var(--magenta)}.lm{color:var(--lime)}
+.scroll-hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:var(--dim);font-size:.78rem;letter-spacing:3px;animation:bob 2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translate(-50%,0);opacity:.5}50%{transform:translate(-50%,10px);opacity:1}}
+
+/* ===== SECTIONS ===== */
+section{padding:70px 7vw;position:relative}
+.sec-label{font-size:.78rem;letter-spacing:4px;text-transform:uppercase;color:var(--dim);margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.sec-label .bar{width:34px;height:2px;background:var(--magenta);animation:barPulse 2.4s ease-in-out infinite}
+@keyframes barPulse{0%,100%{box-shadow:0 0 0 rgba(255,46,151,0)}50%{box-shadow:0 0 14px rgba(255,46,151,.9)}}
+.sec-h{font-size:clamp(2rem,5vw,3.8rem);font-weight:800;letter-spacing:-2px;line-height:1.02}
+.sec-h .thin{display:block;color:var(--dim);font-weight:300}
+.lead{font-size:1.1rem;color:var(--dim);max-width:46ch;margin-top:20px;line-height:1.8}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
+@media(max-width:820px){.split{grid-template-columns:1fr}}
+.slideL{opacity:0;transform:translateX(-70px);transition:opacity 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}
+.slideR{opacity:0;transform:translateX(70px);transition:opacity 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}
+.reveal{opacity:0;transform:translateY(56px);transition:opacity 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}
+.slideL.in,.slideR.in,.reveal.in{opacity:1;transform:none}
+.visual{height:340px;display:flex;align-items:center;justify-content:center}
+
+/* SPINNING RINGS (AI) */
+.ring-wrap{width:250px;height:250px;position:relative;animation:floaty 5s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+.ring{position:absolute;inset:0;border-radius:50%;border:3px solid transparent}
+.ring.r1{border-top-color:var(--magenta);border-right-color:var(--magenta);animation:spin 4s linear infinite;box-shadow:0 0 40px rgba(255,46,151,.4)}
+.ring.r2{inset:28px;border-bottom-color:var(--cyan);border-left-color:var(--cyan);animation:spin 3s linear infinite reverse;box-shadow:0 0 40px rgba(0,240,255,.4)}
+.ring.r3{inset:56px;border-top-color:var(--lime);border-left-color:var(--lime);animation:spin 5s linear infinite;box-shadow:0 0 40px rgba(182,255,60,.4)}
+.ring-core{position:absolute;inset:92px;border-radius:50%;background:radial-gradient(circle,#fff,var(--cyan));box-shadow:0 0 60px var(--cyan);display:flex;align-items:center;justify-content:center;font-size:1.9rem;animation:pulse 2s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+
+/* DUEL BARS */
+.duel{width:320px;display:flex;flex-direction:column;gap:16px}
+.duel .bar{height:46px;border-radius:4px;display:flex;align-items:center;padding:0 18px;font-weight:800;color:#04121a;position:relative;overflow:hidden}
+.duel .bar::after{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:btnShine 2.6s ease-in-out infinite}
+.duel .b1{background:linear-gradient(90deg,var(--magenta),#ff6ab8);animation:grow1 3s ease-in-out infinite;color:#fff}
+.duel .b2{background:linear-gradient(90deg,var(--cyan),#7ff7ff);animation:grow2 3s ease-in-out infinite}
+@keyframes grow1{0%,100%{width:60%}50%{width:96%}}
+@keyframes grow2{0%,100%{width:88%}50%{width:55%}}
+.duel .vs{text-align:center;font-size:1.6rem;font-weight:900;color:var(--lime);text-shadow:0 0 22px var(--lime);animation:pulse 1.4s ease-in-out infinite}
+
+/* XP + rewards */
+.xp-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--dim);margin-bottom:8px;font-family:monospace}
+.xp-bar{height:12px;border-radius:6px;background:#12161f;overflow:hidden;position:relative}
+.xp-fill{height:100%;width:0;background:linear-gradient(90deg,var(--lime),var(--cyan));transition:width 1.6s cubic-bezier(.2,.8,.2,1);position:relative}
+.xp-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);background-size:200% 100%;animation:xpshine 2s linear infinite}
+@keyframes xpshine{from{background-position:200% 0}to{background-position:-200% 0}}
+.reward{display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid var(--line);border-radius:4px;background:var(--void2);transition:.3s;margin-top:12px}
+.reward:hover{border-color:var(--magenta);transform:translateX(8px);box-shadow:0 0 30px rgba(255,46,151,.2)}
+.reward .amt{font-family:monospace;font-weight:800;font-size:1.25rem;color:var(--lime);min-width:64px}
+.reward .txt b{display:block}.reward .txt span{color:var(--dim);font-size:.85rem}
+
+/* TICKER */
+.ticker{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:38px 0;overflow:hidden;margin:30px 0}
+.tk{display:flex;gap:60px;white-space:nowrap;animation:scrollx 24s linear infinite;font-weight:800;font-size:clamp(1.3rem,3vw,2.2rem);letter-spacing:-1px}
+.tk b{color:var(--cyan)}.tk i{color:var(--magenta);font-style:normal}.tk u{color:var(--lime);text-decoration:none}
+@keyframes scrollx{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* TOOL ROWS with hover glow */
+.tool{padding:18px 20px;border-left:2px solid var(--line);transition:.3s;cursor:default}
+.tool:hover{border-left-color:var(--cyan);background:linear-gradient(90deg,rgba(0,240,255,.07),transparent);padding-left:28px}
+.tool h4{font-size:1.05rem;display:flex;gap:10px;align-items:center}
+.tool span{color:var(--dim);font-size:.9rem}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:24px;margin-top:28px}
+.stat-num{font-size:3.2rem;font-weight:800;background:linear-gradient(90deg,var(--magenta),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-2px}
+.stat-label{color:var(--dim);margin-top:2px;font-size:.9rem}
+
+/* FINAL */
+.final{text-align:center;padding:110px 7vw}
+.final h2{font-size:clamp(2.4rem,6.5vw,5rem);font-weight:800;letter-spacing:-2.5px;line-height:.98;margin-bottom:14px}
+.final .g{color:var(--lime);text-shadow:0 0 46px rgba(182,255,60,.45);animation:neonLime 3s ease-in-out infinite}
+@keyframes neonLime{0%,100%{text-shadow:0 0 46px rgba(182,255,60,.45)}50%{text-shadow:0 0 80px rgba(182,255,60,.85)}}
+.final p{color:var(--dim);max-width:40ch;margin:0 auto 30px}
+.creditsrow{margin-top:38px;display:flex;flex-direction:column;align-items:center;gap:9px}
+.btn-credits{background:transparent;color:var(--white);font-weight:700;padding:12px 30px;border-radius:40px;border:1px solid var(--line);font-size:.92rem;cursor:pointer;transition:.3s}
+.btn-credits:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 26px rgba(0,240,255,.25);transform:translateY(-2px)}
+.creditsnote{color:var(--dim);font-size:.78rem;max-width:44ch;line-height:1.6}
+footer{border-top:1px solid var(--line);padding:32px 7vw;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--dim);font-size:.85rem}
+footer a:hover{color:var(--cyan)}
+/* rising neon particles */
+.particle{position:fixed;bottom:-10px;border-radius:50%;pointer-events:none;z-index:1;animation:rise linear infinite}
+@keyframes rise{from{transform:translateY(0);opacity:0}10%{opacity:.8}90%{opacity:.5}to{transform:translateY(-110vh);opacity:0}}
+/* staggered reward entrance */
+.reward{opacity:0;transform:translateX(40px)}
+.reward.in{opacity:1;transform:none;transition:opacity .7s,transform .7s}
+.reward:nth-child(3).in{transition-delay:.15s}
+.reward:nth-child(4).in{transition-delay:.3s}
+.reward:nth-child(5).in{transition-delay:.45s}
+/* interactive tilt on visuals */
+.ring-wrap:hover{animation-play-state:paused;transform:scale(1.06) rotate(4deg);transition:.4s}
+.duel:hover .vs{animation-duration:.6s}
+.tk:hover{animation-play-state:paused}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+/* scroll progress bar */
+#scrollbar{position:fixed;top:0;left:0;height:3px;width:0;z-index:999;background:linear-gradient(90deg,var(--cyan),var(--magenta),var(--lime));box-shadow:0 0 12px var(--cyan)}
+/* mouse-follow glow */
+#mouseglow{position:fixed;width:400px;height:400px;border-radius:50%;pointer-events:none;z-index:1;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(0,240,255,0.08),transparent 65%);transition:opacity .3s;mix-blend-mode:screen}
+/* animated section header underline sweep */
+.sec-h{position:relative}
+.split.in .sec-h::after,.section.in .sec-h::after{content:'';position:absolute;left:0;bottom:-10px;height:3px;width:70px;background:linear-gradient(90deg,var(--cyan),var(--magenta));border-radius:2px;animation:hgrow .8s .3s both}
+@keyframes hgrow{from{width:0;opacity:0}to{width:70px;opacity:1}}
+/* magnetic button pop */
+.btn-primary,.btn-ghost{will-change:transform}
+/* card entrance stagger via nth */
+.card{transition:opacity .7s,transform .7s,border-color .3s,box-shadow .3s}
+/* floating tilt on tool rows */
+.tool{transition:.3s}
+.tool:hover{transform:translateX(6px) scale(1.01)}
+/* hero title letter shimmer */
+h1 .n,h1 .m{background-size:200% auto}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.slideL,.slideR{opacity:1;transform:none}#scrollbar,#mouseglow{display:none}}
+
+/* ===== EXTRA 3D + MOTION ===== */
+.content { perspective: 1500px; }
+
+/* cards tilt in 3D toward the cursor */
+.card, .tool, .plan { transform-style: preserve-3d; transition: transform .35s cubic-bezier(.2,.9,.3,1.2), box-shadow .35s, border-color .3s; }
+.card:hover, .tool:hover {
+  transform: translateY(-8px) rotateX(6deg) rotateY(-4deg) scale(1.03);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.55), 0 0 44px rgba(0,240,255,0.16);
 }
 
-html { scroll-behavior: smooth; background: var(--ink); }
-body {
-  background: var(--ink); color: var(--txt); overflow-x: hidden;
-  font-family: 'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
-  letter-spacing: -0.011em;
+/* headline letters drop in with depth */
+h1 span { display: inline-block; animation: dropIn .9s cubic-bezier(.2,.9,.3,1.3) both; }
+h1 span:nth-child(1){animation-delay:.05s} h1 span:nth-child(2){animation-delay:.12s}
+h1 span:nth-child(3){animation-delay:.19s} h1 span:nth-child(4){animation-delay:.26s}
+h1 span:nth-child(5){animation-delay:.33s} h1 span:nth-child(6){animation-delay:.40s}
+@keyframes dropIn { from { opacity:0; transform: translateY(-40px) rotateX(-70deg) scale(.85); } to { opacity:1; transform:none; } }
+
+/* floating orbs drifting in 3D space */
+.orb3d { position: fixed; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: 0; opacity: .3; }
+.orb3d.a { width: 380px; height: 380px; background: #00F0FF; top: 8%; left: -6%; animation: orbA 26s ease-in-out infinite alternate; }
+.orb3d.b { width: 460px; height: 460px; background: #FF2E97; bottom: 4%; right: -8%; animation: orbB 32s ease-in-out infinite alternate; }
+.orb3d.c { width: 300px; height: 300px; background: #B6FF3C; top: 52%; left: 42%; animation: orbC 22s ease-in-out infinite alternate; opacity:.18; }
+@keyframes orbA { to { transform: translate3d(140px, 90px, 120px) scale(1.25); } }
+@keyframes orbB { to { transform: translate3d(-160px, -70px, 80px) scale(1.18); } }
+@keyframes orbC { to { transform: translate3d(-120px, 110px, -60px) scale(.85); } }
+
+/* animated grid floor sliding into the distance */
+.gridfloor {
+  position: fixed; left:0; right:0; bottom:0; height: 46vh; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(0,240,255,0.13) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,46,151,0.10) 1px, transparent 1px);
+  background-size: 62px 62px;
+  transform: perspective(420px) rotateX(66deg);
+  transform-origin: bottom center;
+  animation: gridRun 3.2s linear infinite;
+  mask-image: linear-gradient(to top, #000 5%, transparent 92%);
+  -webkit-mask-image: linear-gradient(to top, #000 5%, transparent 92%);
 }
-::selection { background: rgba(124,92,255,.45); color: #fff; }
-:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 8px; }
-a { color: inherit; text-decoration: none; }
-img, canvas, svg { display: block; max-width: 100%; }
+@keyframes gridRun { to { background-position: 0 62px, 0 0; } }
 
-/* ---- loading screen --------------------------------------------------------
-   Two seconds at most, and it removes itself on `load` regardless — a splash
-   that can outlive the page it is covering is a broken page. */
-#boot { position: fixed; inset: 0; z-index: 999; display: grid; place-items: center;
-  background: var(--ink); transition: opacity .7s var(--easeOut), visibility .7s; }
-#boot.gone { opacity: 0; visibility: hidden; pointer-events: none; }
-#boot .bmark { width: 62px; height: 62px; animation: bootPulse 1.6s ease-in-out infinite; }
-#boot .bbar { width: 190px; height: 2px; margin-top: 26px; border-radius: 2px;
-  background: rgba(255,255,255,.09); overflow: hidden; }
-#boot .bbar i { display: block; height: 100%; width: 0; background: var(--grad); transition: width .25s linear; }
-#boot .bw { font-size: 11px; letter-spacing: .34em; color: var(--dim); margin-top: 16px; text-transform: uppercase; }
-@keyframes bootPulse { 0%,100% { transform: scale(1); opacity: .85 } 50% { transform: scale(1.1); opacity: 1 } }
+/* buttons: 3D press */
+.btn-primary, .btn-ghost { transform-style: preserve-3d; transition: transform .25s cubic-bezier(.2,.9,.3,1.5), box-shadow .25s; }
+.btn-primary:hover { transform: translateY(-5px) rotateX(9deg) scale(1.05); box-shadow: 0 18px 40px rgba(0,240,255,0.32); }
+.btn-primary:active { transform: translateY(-1px) scale(.97); }
 
-/* ---- cursor ----------------------------------------------------------------
-   Pointer-only. A custom cursor on a touch screen is 40 lines of code chasing
-   a finger that is already touching the thing it points at. */
-#cur, #curdot { position: fixed; top: 0; left: 0; z-index: 900; pointer-events: none;
-  border-radius: 50%; will-change: transform; mix-blend-mode: difference; }
-#cur { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1.5px solid rgba(255,255,255,.55);
-  transition: width .28s var(--easeOut), height .28s var(--easeOut), margin .28s var(--easeOut),
-              background .28s, border-color .28s; }
-#cur.big { width: 74px; height: 74px; margin: -37px 0 0 -37px;
-  background: rgba(255,255,255,.14); border-color: transparent; }
-#curdot { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; background: #fff; }
-@media (pointer: coarse), (prefers-reduced-motion: reduce) { #cur, #curdot { display: none } }
-@media (pointer: fine) { body, a, button { cursor: none } }
+/* section headings sweep up */
+h2 { animation: riseIn .8s cubic-bezier(.2,.9,.3,1.15) both; }
+@keyframes riseIn { from { opacity:0; transform: translateY(28px) rotateX(-22deg); } to { opacity:1; transform:none; } }
 
-/* ---- background ------------------------------------------------------------
-   Four layers, all fixed and all behind the content: an animated mesh
-   gradient, three drifting aurora blobs, two light beams, and a particle
-   canvas. Together they are the "depth" of the page and they cost one
-   composite each because nothing among them ever triggers layout. */
-.bg { position: fixed; inset: 0; z-index: -10; overflow: hidden; pointer-events: none; }
-.mesh { position: absolute; inset: -14%; opacity: .6; filter: blur(58px); will-change: transform;
-  background:
-    radial-gradient(38% 44% at 22% 26%, rgba(124,92,255,.62), transparent 60%),
-    radial-gradient(34% 38% at 78% 22%, rgba(0,229,255,.42), transparent 62%),
-    radial-gradient(40% 42% at 62% 78%, rgba(255,61,154,.36), transparent 62%),
-    radial-gradient(30% 34% at 14% 76%, rgba(182,255,74,.16), transparent 60%);
-  animation: meshDrift 26s ease-in-out infinite alternate; }
-@keyframes meshDrift {
-  0%   { transform: translate3d(0,0,0) scale(1) rotate(0deg) }
-  50%  { transform: translate3d(-3%,2%,0) scale(1.08) rotate(4deg) }
-  100% { transform: translate3d(3%,-2%,0) scale(1.04) rotate(-3deg) }
+/* stat numbers count-pulse */
+.stat b, .kpi .n { animation: statPop 3.2s ease-in-out infinite; display:inline-block; }
+@keyframes statPop { 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.09);} }
+
+/* sidebar links slide + glow */
+.sidebar a { transition: transform .25s cubic-bezier(.2,.9,.3,1.3), background .25s, color .25s; }
+.sidebar a:hover { transform: translateX(7px) scale(1.03); }
+
+/* comment cards float in */
+#cList > div { animation: cardIn .5s cubic-bezier(.2,.9,.3,1.15) both; }
+@keyframes cardIn { from { opacity:0; transform: translateY(16px) rotateX(-14deg); } to { opacity:1; transform:none; } }
+
+/* subtle page-wide parallax on scroll */
+.orb3d { will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ===== FLOATING YOUTUBE TILES =====
+   The hero had orbs, stars and a grid — atmosphere, but nothing that said what
+   the site is FOR. These do: the mark of the platform you are here to grow on,
+   drifting behind the headline.
+
+   Tiles rather than bare glyphs, because a red play button floating on its own
+   reads as a stray icon; set into a dark rounded square with a hairline edge it
+   reads as a card, which is the language the rest of the page already speaks.
+
+   Each one gets its own duration, delay and size from nth-child — a set of
+   identical animations started together looks like a carousel, and the whole
+   point is that they never quite line up. Behind the text, never clickable, and
+   completely still for anyone who asked for less motion. */
+/* z-index 0 and the hero's own content lifted above it. A positioned layer with
+   z-index 1 beats non-positioned text, which put the tiles ON TOP of the
+   headline — the one place they must never be. */
+.ytfloat { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.hero > :not(.ytfloat) { position: relative; z-index: 2; }
+.ytf {
+  position: absolute; display: grid; place-items: center;
+  width: 62px; height: 62px; border-radius: 19px;
+  background: rgba(14,14,18,0.92);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+  animation: ytdrift 12s ease-in-out infinite;
+  will-change: transform;
 }
-.beam { position: absolute; top: -25%; width: 240px; height: 155%; opacity: .1; will-change: transform, opacity;
-  background: linear-gradient(to bottom, transparent, var(--cyan), transparent);
-  filter: blur(34px); }
-.beam.b1 { left: 12%; transform: rotate(14deg); animation: beamSweep 17s ease-in-out infinite; }
-.beam.b2 { right: 16%; transform: rotate(-12deg);
-  background: linear-gradient(to bottom, transparent, var(--violet), transparent);
-  animation: beamSweep 22s ease-in-out infinite reverse; }
-@keyframes beamSweep { 0%,100% { opacity: .06; transform: translateX(-40px) rotate(14deg) }
-                       50%     { opacity: .17; transform: translateX(40px) rotate(11deg) } }
-#dust { position: absolute; inset: 0; opacity: .8; }
-/* Plain overlay rather than mix-blend-mode: a blend mode over the whole
-   viewport forces everything under it into one buffer and re-blends it every
-   frame, which is a very large bill for a texture nobody consciously sees. */
-.grain { position: absolute; inset: 0; opacity: .05;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.vign { position: absolute; inset: 0;
-  background: radial-gradient(78% 62% at 50% 38%, transparent, rgba(2,4,9,.82)); }
-
-/* The pointer glow. Lives in the background layer so it never intercepts a
-   click, and it is moved by transform rather than left/top. */
-#glow { position: fixed; z-index: -9; width: 460px; height: 460px; margin: -230px 0 0 -230px;
-  border-radius: 50%; pointer-events: none; opacity: 0; will-change: transform;
-  background: radial-gradient(circle, rgba(124,92,255,.20), rgba(0,229,255,.07) 42%, transparent 66%);
-  transition: opacity .6s; }
-@media (pointer: coarse) { #glow { display: none } }
-
-/* ---- shell ----------------------------------------------------------------- */
-.wrap { width: min(1220px, 100% - 44px); margin-inline: auto; }
-@media (max-width: 560px) { .wrap { width: calc(100% - 30px) } }
-section { position: relative; padding: clamp(72px, 11vw, 148px) 0; }
-
-/* ---- navigation ------------------------------------------------------------ */
-#nav { position: fixed; inset-inline: 0; top: 0; z-index: 300; padding: 14px 0;
-  transition: padding .35s var(--easeOut), background .35s, backdrop-filter .35s; }
-#nav.stuck { padding: 8px 0; background: rgba(5,7,14,.72); backdrop-filter: blur(18px) saturate(160%);
-  border-bottom: 1px solid var(--line); }
-.navin { display: flex; align-items: center; gap: 10px; }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.02em; font-size: 16px; }
-.brand img { width: 30px; height: 30px; transition: transform .4s var(--easeOut); }
-.brand:hover img { transform: rotate(-12deg) scale(1.12); }
-.nlinks { display: none; margin-left: 22px; gap: 2px; }
-@media (min-width: 1000px) { .nlinks { display: flex } }
-.nlinks a { position: relative; padding: 8px 13px; font-size: 14px; color: var(--dim);
-  border-radius: 10px; transition: color .22s; }
-.nlinks a::after { content: ''; position: absolute; left: 13px; right: 13px; bottom: 4px; height: 1.5px;
-  background: var(--grad); transform: scaleX(0); transform-origin: left; transition: transform .3s var(--easeOut); }
-.nlinks a:hover { color: var(--txt); }
-.nlinks a:hover::after { transform: scaleX(1); }
-.nright { margin-left: auto; display: flex; align-items: center; gap: 9px; }
-.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  border: 0; border-radius: 13px; padding: 12px 22px; font: inherit; font-size: 14.5px; font-weight: 550;
-  cursor: pointer; white-space: nowrap; will-change: transform;
-  transition: transform .18s var(--easeOut), box-shadow .3s, background .25s; }
-.btn.pri { background: var(--grad); color: #05070E; font-weight: 650;
-  box-shadow: 0 8px 34px -10px rgba(124,92,255,.7); }
-.btn.pri:hover { box-shadow: 0 14px 48px -8px rgba(124,92,255,.95); }
-.btn.gho { border: 1px solid var(--line); color: var(--txt); background: rgba(255,255,255,.045); }
-.btn.gho:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.22); }
-.btn.big { padding: 16px 32px; font-size: 16px; border-radius: 15px; }
-.burger { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px;
-  border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--txt); cursor: pointer; }
-@media (min-width: 1000px) { .burger { display: none } }
-#mob { position: fixed; inset: 62px 14px auto; z-index: 290; display: none; padding: 10px;
-  border-radius: 20px; border: 1px solid var(--line); background: rgba(9,12,22,.97);
-  backdrop-filter: blur(20px); box-shadow: 0 30px 90px -30px #000;
-  opacity: 0; transform: translateY(-12px) scale(.97); transition: opacity .3s var(--easeOut), transform .3s var(--easeOut); }
-#mob.on { display: block; opacity: 1; transform: none; }
-#mob a { display: block; padding: 13px 15px; border-radius: 12px; font-size: 15px; color: var(--txt); }
-#mob a:hover { background: rgba(255,255,255,.07); }
-
-/* ---- scroll progress ------------------------------------------------------- */
-#prog { position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 400;
-  background: var(--grad); box-shadow: 0 0 14px rgba(124,92,255,.9); }
-
-/* ---- reveals ---------------------------------------------------------------
-   One class, four variants, all transform+opacity. The stagger is a
-   transition-delay written by script, which is cheaper than four keyframe
-   animations and lets a group of any size share one rule. */
-.rv { opacity: 0; transform: translateY(30px); filter: blur(6px);
-  transition: opacity .9s var(--easeOut), transform .9s var(--easeOut), filter .9s var(--easeOut); }
-.rv.l  { transform: translateX(-40px) }
-.rv.r  { transform: translateX(40px) }
-.rv.s  { transform: scale(.92) }
-.rv.in { opacity: 1; transform: none; filter: none; }
-
-/* ---- hero ------------------------------------------------------------------ */
-.hero { min-height: 100svh; display: flex; align-items: center; padding-top: 92px; }
-.eyebrow { display: inline-flex; align-items: center; gap: 9px; padding: 7px 15px; border-radius: 99px;
-  border: 1px solid var(--line); background: rgba(255,255,255,.05);
-  font-size: 12.5px; color: var(--dim); margin-bottom: 26px; }
-.eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); font-style: normal;
-  box-shadow: 0 0 10px var(--lime); animation: pip 2.4s ease-in-out infinite; }
-@keyframes pip { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
-
-h1 { font-size: clamp(2.7rem, 7.4vw, 5.6rem); line-height: .98; font-weight: 630;
-  letter-spacing: -.045em; max-width: 15ch; }
-/* white-space:pre is load-bearing. Each character gets its own inline-block
-   span, and an inline-block containing a single space collapses it to nothing
-   — which silently runs every word of the headline together. */
-h1 .wd { display: inline-block; white-space: nowrap; }
-h1 .ch { display: inline-block; opacity: 0;
-  transform: translateY(.5em) rotateX(-72deg);
-  transform-origin: 50% 100%; animation: chIn .8s var(--easeOut) forwards; }
-@keyframes chIn { to { opacity: 1; transform: none } }
-.g { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
-  background-size: 220% 100%; animation: gShift 7s ease-in-out infinite alternate; }
-@keyframes gShift { to { background-position: 100% 0 } }
-.sub { color: var(--dim); font-size: clamp(1rem, 1.55vw, 1.2rem); max-width: 56ch; margin-top: 26px; }
-.hero-cta { display: flex; gap: 13px; flex-wrap: wrap; margin-top: 38px; }
-.trust { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 34px; font-size: 13px; color: var(--dim); }
-.trust span { display: inline-flex; align-items: center; gap: 7px; }
-.tk { color: var(--lime); }
-
-/* ---- the dashboard mock ----------------------------------------------------
-   A drawn approximation of the real editor rather than a screenshot: it is
-   4KB of markup instead of a 300KB PNG, it is sharp on every display, it
-   animates, and it cannot go out of date the way a screenshot silently does. */
-.stage { position: relative; margin-top: clamp(56px, 8vw, 96px); perspective: 1600px; }
-.win { position: relative; border-radius: 20px; overflow: hidden; transform-style: preserve-3d;
-  border: 1px solid var(--line); background: linear-gradient(180deg, rgba(16,22,38,.96), rgba(8,11,20,.98));
-  box-shadow: 0 60px 130px -50px rgba(0,0,0,.95), 0 0 0 1px rgba(255,255,255,.03) inset;
-  transform: rotateX(11deg) scale(.97); transition: transform 1.2s var(--easeOut); will-change: transform; }
-.stage.in .win { transform: rotateX(0deg) scale(1); }
-.wbar { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid var(--line);
-  background: rgba(255,255,255,.02); }
-.dot { width: 10px; height: 10px; border-radius: 50%; }
-.wtitle { margin-left: 10px; font-size: 12px; color: var(--dim); }
-.wbody { display: grid; grid-template-columns: 168px 1fr; min-height: 300px; }
-@media (max-width: 700px) { .wbody { grid-template-columns: 1fr } .wside { display: none } }
-.wside { border-right: 1px solid var(--line); padding: 14px 12px; }
-.wside b { display: block; font-size: 10px; letter-spacing: .16em; color: var(--dim); text-transform: uppercase; margin: 4px 0 10px; }
-.wside u { display: flex; align-items: center; gap: 9px; text-decoration: none; font-size: 12.5px;
-  color: var(--dim); padding: 7px 9px; border-radius: 9px; }
-.wside u.on { color: var(--txt); background: rgba(124,92,255,.18); }
-.wside u i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; font-style: normal; }
-.wmain { padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-.canv { flex: 1; min-height: 132px; border-radius: 13px; position: relative; overflow: hidden;
-  background: linear-gradient(125deg, #101a33, #1b1030 55%, #071a24);
-  border: 1px solid var(--line); display: grid; place-items: center; }
-.canv::after { content: ''; position: absolute; inset: 0;
-  background: radial-gradient(60% 80% at 30% 20%, rgba(0,229,255,.20), transparent 60%),
-              radial-gradient(50% 70% at 76% 76%, rgba(255,61,154,.18), transparent 62%);
-  animation: meshDrift 15s ease-in-out infinite alternate; }
-.play { position: relative; z-index: 1; width: 52px; height: 52px; border-radius: 50%;
-  display: grid; place-items: center; background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.24);
-  animation: ring 3s ease-out infinite; }
-@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.28) }
-                  70%,100% { box-shadow: 0 0 0 26px rgba(255,255,255,0) } }
-.tl { display: flex; flex-direction: column; gap: 7px; }
-.trk { height: 24px; border-radius: 7px; background: rgba(255,255,255,.045); position: relative; overflow: hidden; }
-.clip { position: absolute; top: 3px; bottom: 3px; border-radius: 5px; }
-.ph { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--lime); left: 8%;
-  box-shadow: 0 0 12px var(--lime); animation: scrub 7s ease-in-out infinite; }
-@keyframes scrub { 0%,100% { left: 6% } 50% { left: 82% } }
-
-/* Floating UI windows around the mock. Hidden below 1180px, where they would
-   sit on top of the thing they are meant to be decorating. */
-.floaters { position: absolute; inset: -34px -14px auto; pointer-events: none; display: none; }
-@media (min-width: 1180px) { .floaters { display: block } }
-.fl { position: absolute; padding: 13px 15px; border-radius: 15px; font-size: 12.5px;
-  border: 1px solid var(--line); background: rgba(11,15,27,.94);
-  box-shadow: 0 26px 60px -26px rgba(0,0,0,.95); animation: bob 8s ease-in-out infinite;
-  will-change: transform; }
-.fl b { display: block; font-size: 13px; margin-bottom: 3px; }
-.fl span { color: var(--dim); }
-.fl .spark { display: flex; gap: 3px; align-items: flex-end; height: 22px; margin-top: 8px; }
-.fl .spark i { width: 5px; border-radius: 2px; background: var(--grad); animation: eq 1.5s ease-in-out infinite; }
-@keyframes eq { 0%,100% { transform: scaleY(.4) } 50% { transform: scaleY(1) } }
-@keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-16px) } }
-.fl.f1 { top: 8px;  left: -62px;  animation-delay: -1s }
-.fl.f2 { top: 148px; right: -54px; animation-delay: -3.4s }
-.fl.f3 { top: 320px; left: -44px;  animation-delay: -5.2s }
-
-/* ---- marquee --------------------------------------------------------------- */
-.mq { overflow: hidden; border-block: 1px solid var(--line); padding: 17px 0;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-          mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
-.mqrow { display: flex; gap: 14px; width: max-content; animation: slide 42s linear infinite; }
-.mqrow.rev { animation-direction: reverse; animation-duration: 54s; margin-top: 12px; }
-@keyframes slide { to { transform: translateX(-50%) } }
-.chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px; border-radius: 99px;
-  border: 1px solid var(--line); font-size: 13px; color: var(--dim); white-space: nowrap;
-  background: rgba(255,255,255,.02); }
-.chip.live { color: var(--txt); border-color: rgba(0,229,255,.34); background: rgba(0,229,255,.07); }
-.chip.live i { width: 5px; height: 5px; border-radius: 50%; background: var(--cyan);
-  box-shadow: 0 0 9px var(--cyan); font-style: normal; }
-.chip.soon i { font-style: normal; font-size: 10px; letter-spacing: .1em; color: var(--amber);
-  border: 1px solid rgba(255,180,67,.4); border-radius: 5px; padding: 1px 5px; }
-
-/* ---- headings -------------------------------------------------------------- */
-.kick { display: block; font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
-  color: var(--dim); margin-bottom: 16px; }
-h2 { font-size: clamp(2rem, 4.4vw, 3.4rem); line-height: 1.04; font-weight: 620; letter-spacing: -.038em; max-width: 20ch; }
-.lede { color: var(--dim); max-width: 58ch; margin-top: 20px; font-size: clamp(1rem,1.35vw,1.1rem); }
-
-/* ---- cards ----------------------------------------------------------------- */
-.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px,100%), 1fr)); gap: 18px; margin-top: 48px; }
-/* No backdrop-filter here on purpose. Nine of these on screen at once meant
-   nine readbacks of everything behind them on every frame, which was most of
-   the page's cost; against a dark background a flat translucent fill is
-   indistinguishable. */
-.card { position: relative; display: block; padding: 26px; border-radius: 20px; overflow: hidden;
-  border: 1px solid var(--line); background: rgba(255,255,255,.03);
-  transition: transform .4s var(--easeOut), border-color .35s, background .35s; }
-.card::before { content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1px;
-  background: var(--grad); opacity: 0; transition: opacity .35s;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude; }
-.card:hover::before { opacity: .75; }
-.card:hover { background: rgba(255,255,255,.045); transform: translateY(-5px); }
-.card .ic { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; font-size: 20px;
-  border: 1px solid var(--line); background: rgba(255,255,255,.04); }
-.card h3 { margin-top: 20px; font-size: 17.5px; font-weight: 600; letter-spacing: -.02em; }
-.card p { margin-top: 9px; font-size: 14.5px; color: var(--dim); line-height: 1.62; }
-.card .go { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; font-size: 13.5px;
-  color: var(--cyan); font-weight: 550; }
-.card .go em { font-style: normal; transition: transform .3s var(--easeOut); }
-.card:hover .go em { transform: translateX(5px); }
-.tagl { position: absolute; top: 20px; right: 20px; font-size: 10px; letter-spacing: .12em;
-  text-transform: uppercase; padding: 4px 9px; border-radius: 6px;
-  border: 1px solid rgba(0,229,255,.34); color: var(--cyan); background: rgba(0,229,255,.07); }
-.tagl.soon { border-color: rgba(255,180,67,.36); color: var(--amber); background: rgba(255,180,67,.06); }
-
-/* ---- the scroll story ------------------------------------------------------ */
-.story { display: grid; gap: 42px; margin-top: 52px; }
-@media (min-width: 950px) { .story { grid-template-columns: 1fr 1fr; gap: 68px; align-items: start } }
-.steps { display: flex; flex-direction: column; gap: 8px; }
-.step { padding: 22px 24px; border-radius: 17px; border: 1px solid transparent; cursor: pointer;
-  transition: background .4s, border-color .4s; }
-.step.on { background: rgba(255,255,255,.035); border-color: var(--line); }
-.step h3 { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 12px; letter-spacing: -.02em; }
-.step h3 u { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 9px; flex: 0 0 auto;
-  font-size: 12px; text-decoration: none; border: 1px solid var(--line); color: var(--dim); }
-.step.on h3 u { background: var(--grad); color: #05070E; border-color: transparent; font-weight: 700; }
-.step p { color: var(--dim); font-size: 14.5px; margin-top: 9px; max-height: 0; overflow: hidden;
-  transition: max-height .5s var(--easeOut), margin .4s, opacity .4s; opacity: 0; }
-.step.on p { max-height: 130px; opacity: 1; margin-top: 11px; }
-.shot { position: sticky; top: 110px; border-radius: 20px; overflow: hidden; min-height: 320px;
-  border: 1px solid var(--line); background: linear-gradient(160deg, rgba(16,22,38,.9), rgba(8,11,20,.96));
-  display: grid; place-items: center; padding: 30px; }
-.shot .big { font-size: clamp(2.6rem,5.6vw,4.4rem); font-weight: 640; letter-spacing: -.045em; text-align: center; }
-.shot .cap { color: var(--dim); font-size: 14px; text-align: center; margin-top: 12px; max-width: 34ch; }
-
-/* ---- audience -------------------------------------------------------------- */
-.who { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 42px; }
-.who span { padding: 11px 19px; border-radius: 99px; border: 1px solid var(--line); font-size: 14px;
-  color: var(--dim); transition: color .3s, border-color .3s, transform .3s var(--easeOut); }
-.who span:hover { color: var(--txt); border-color: rgba(124,92,255,.6); transform: translateY(-3px); }
-
-/* ---- numbers --------------------------------------------------------------- */
-.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px,100%), 1fr)); gap: 16px; margin-top: 48px; }
-.num { padding: 28px; border-radius: 18px; border: 1px solid var(--line); background: rgba(255,255,255,.022); }
-.num b { display: block; font-size: clamp(2.2rem,4vw,3rem); font-weight: 640; letter-spacing: -.04em;
-  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.num span { color: var(--dim); font-size: 13.5px; display: block; margin-top: 6px; }
-
-/* ---- faq ------------------------------------------------------------------- */
-.faq { margin-top: 44px; border-top: 1px solid var(--line); }
-.q { border-bottom: 1px solid var(--line); }
-.q > button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 20px;
-  padding: 24px 4px; background: none; border: 0; color: inherit; font: inherit; font-size: 16.5px;
-  font-weight: 550; text-align: left; cursor: pointer; letter-spacing: -.02em; }
-.q .pl { color: var(--dim); transition: transform .35s var(--easeOut); flex: 0 0 auto; font-size: 21px; }
-.q.open .pl { transform: rotate(45deg); color: var(--cyan); }
-.q .a { max-height: 0; overflow: hidden; transition: max-height .45s var(--easeOut); }
-.q.open .a { max-height: 340px; }
-.q .a p { color: var(--dim); font-size: 15px; line-height: 1.72; padding: 0 4px 26px; max-width: 70ch; }
-
-/* ---- final ----------------------------------------------------------------- */
-.final { position: relative; border-radius: 30px; padding: clamp(48px,7vw,86px) 30px; text-align: center;
-  overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.022); }
-.final::before { content: ''; position: absolute; inset: -50%; background: var(--grad); opacity: .17;
-  filter: blur(100px); animation: meshDrift 20s ease-in-out infinite alternate; }
-.final > * { position: relative; }
-.final h2 { margin-inline: auto; }
-
-/* ---- footer ---------------------------------------------------------------- */
-footer { border-top: 1px solid var(--line); padding: 62px 0 34px; }
-.fcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px,100%), 1fr)); gap: 34px; }
-.fcols h4 { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; }
-.fcols a { display: block; padding: 6px 0; font-size: 14px; color: var(--dim); transition: color .25s; }
-.fcols a:hover { color: var(--txt); }
-.fbot { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-top: 46px; padding-top: 24px;
-  border-top: 1px solid var(--line); color: var(--dim); font-size: 13.5px; }
-
-/* ---- touch + reduced motion ------------------------------------------------ */
-@media (pointer: coarse) and (hover: none) {
-  .nlinks a, .fcols a, #mob a, .who span { min-height: 44px; display: flex; align-items: center; }
-  .fcols a { padding: 11px 0; }
-  .btn { min-height: 46px; }
-  .q > button { padding: 20px 4px; }
+.ytf svg { width: 26px; height: 26px; display: block; }
+/* Two paths, not one. The first version was a single up-and-down between two
+   keyframes: measured, it moved 6-18px in three seconds in a dead straight
+   line, which reads as a twitch rather than as floating. A four-point loop with
+   a horizontal component drifts instead — and giving half the tiles the mirror
+   path stops six squares rising and falling as one. Still slow, still small:
+   the biggest excursion is 26px on a 62px tile. */
+@keyframes ytdrift {
+  0%, 100% { transform: translate3d(0, 0, 0)        rotate(0deg); }
+  25%      { transform: translate3d(9px, -14px, 0)   rotate(2deg); }
+  50%      { transform: translate3d(2px, -26px, 0)   rotate(-1.5deg); }
+  75%      { transform: translate3d(-8px, -12px, 0)  rotate(-3deg); }
 }
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto }
-  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important;
-    transition-duration: .001ms !important; }
-  .rv { opacity: 1 !important; transform: none !important; filter: none !important }
-  h1 .ch { opacity: 1 !important; transform: none !important }
-  .stage .win { transform: none !important }
-  #dust, .beam, #glow { display: none !important }
+@keyframes ytdrift2 {
+  0%, 100% { transform: translate3d(0, 0, 0)        rotate(0deg); }
+  25%      { transform: translate3d(-10px, -11px, 0) rotate(-2.5deg); }
+  50%      { transform: translate3d(-3px, -24px, 0)  rotate(1deg); }
+  75%      { transform: translate3d(11px, -13px, 0)  rotate(3deg); }
 }
+.ytf:nth-child(even) { animation-name: ytdrift2; }
+/* Placed AROUND the text, not under it. The first pass scattered them evenly
+   and one landed behind the R of "Run" and another under the buttons — the
+   headline still won on z-index, but a tile half-hidden behind a letter just
+   looks like a mistake. The copy occupies roughly x 21-59% / y 20-56%, so
+   these live outside that box. */
+.ytf:nth-child(1) { top: 8%;  left: 10%; animation-duration: 9s; animation-delay: -1s; }
+.ytf:nth-child(2) { top: 12%; left: 66%; animation-duration: 12s; animation-delay: -4s; width: 50px; height: 50px; border-radius: 15px; }
+.ytf:nth-child(3) { top: 40%; left: 86%; animation-duration: 8s;  animation-delay: -6s; width: 72px; height: 72px; border-radius: 22px; }
+.ytf:nth-child(4) { top: 90%; left: 5%;  animation-duration: 11s; animation-delay: -2s; width: 46px; height: 46px; border-radius: 14px; opacity: .75; }
+.ytf:nth-child(5) { top: 66%; left: 72%; animation-duration: 8.5s; animation-delay: -7s; opacity: .9; }
+.ytf:nth-child(6) { top: 26%; left: 92%; animation-duration: 13s; animation-delay: -3s; width: 40px; height: 40px; border-radius: 12px; opacity: .55; }
+.ytf svg .yt-body { fill: #FF0033; filter: drop-shadow(0 0 7px rgba(255,0,51,0.55)); }
+.ytf svg .yt-play { fill: #fff; }
+/* on a phone the hero text fills the width, so the ones that would sit under it go */
+@media (max-width: 860px) { .ytf:nth-child(2), .ytf:nth-child(5), .ytf:nth-child(6) { display: none; } }
+@media (prefers-reduced-motion: reduce) { .ytf { animation: none !important; } }
+
+
+h1 .hl1, h1 .hl2 { display:block; unicode-bidi:isolate; }
+h1 .hl1 b, h1 .hl2 b { font-weight:inherit; }
+h1 .n { color:#00F0FF; }
+h1 .m { color:#FF2E97; }
+/* in RTL keep each line internally correct and right-aligned */
+html[dir='rtl'] h1 .hl1, html[dir='rtl'] h1 .hl2 { direction:rtl; text-align:right; }
+html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 </style>
 </head>
 <body>
-
-<div id='boot'>
-  <div style='display:grid;place-items:center'>
-    <img class='bmark' src='logo.svg' alt=''>
-    <div class='bbar'><i id='bfill'></i></div>
-    <div class='bw'>NovaClip</div>
+<!-- Shown until the page is ready, so the first paint is not a half-built hero. -->
+<div id='boot' role='status' aria-live='polite'><div class='bootinner'><span class='bootdot'></span>Loading NovaClip…</div></div>
+<a class='skip' href='#main'>Skip to content</a>
+<div class='sidebar'>
+  <a href='index.html' data-t='home'>Home</a>
+  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='analytics'>Analytics</a>
+  <a href='trends.html' data-t='trends'>Trend Spotter</a>
+  <a href='editor.html' data-t='editor'>Editor</a>
+  <a href='game.html' data-t='sniper'>Games</a>
+  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
   </div>
 </div>
 
-<div id='cur'></div><div id='curdot'></div>
-<div id='prog'></div>
-<div id='glow'></div>
+<div id='orbs'><div class='orb a'></div><div class='orb b'></div><div class='orb c'></div></div>
+<div id='stars'></div>
+<div class='grid-floor'></div>
 
-<div class='bg' aria-hidden='true'>
-  <div class='mesh'></div>
-  <div class='beam b1'></div><div class='beam b2'></div>
-  <canvas id='dust'></canvas>
-  <div class='grain'></div><div class='vign'></div>
-</div>
+<div id='scrollbar'></div>
+<div class='orb3d a'></div><div class='orb3d b'></div><div class='orb3d c'></div>
+<div class='gridfloor'></div>
+<div id='mouseglow'></div>
 
-<!-- ══ NAV ══ -->
-<header id='nav'>
-  <div class='wrap navin'>
-    <a class='brand' href='index.html'><img src='logo.svg' alt=''>NovaClip</a>
-    <nav class='nlinks'>
-      <a href='app.html' data-t='studio'>Studio</a>
-      <a href='editor.html' data-t='editor'>Editor</a>
-      <a href='analytics.html' data-t='analytics'>Analytics</a>
-      <a href='tools.html'>Tools</a>
-      <a href='trends.html' data-t='trends'>Trends</a>
-      <a href='ai.html' data-t='ai'>NovaClip AI</a>
-      <a href='game.html' data-t='sniper'>Games</a>
-    </nav>
-    <div class='nright'>
-      <a class='btn pri mag' href='app.html' data-t='startchannel'>Open the Studio</a>
-      <button class='burger' id='burger' aria-label='Menu' aria-expanded='false'>&#9776;</button>
-    </div>
+<div class='content' id='main'>
+
+<header class='hero'>
+  <div class='ytfloat' aria-hidden='true'>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
   </div>
+  <span class='eyebrow' data-t='eyebrow'>For teen creators · 13–18</span>
+  <h1><span class='hl1' data-t='hero_line1'>Run your <b class='n'>channel</b></span><span class='hl2' data-t='hero_line2'>like a <b class='m'>game.</b></span></h1>
+  <div class='console' aria-hidden='true'><span id='type'></span><span class='cursor'>▋</span></div>
+  <div class='herobtns'>
+    <a href='app.html'><button class='btn-primary' data-t='startchannel'>Start your channel →</button></a>
+    <a href='#play' class='btn-ghost' data-t='seerewards'>See the rewards</a>
+  </div>
+  <div class='hero-meta'>
+    <div><b class='cy' data-count='3'>0</b> <span data-t='meta_ai'>AI tutors on call</span></div>
+    <div><b class='mg' data-count='1'>0</b> <span data-t='meta_editor'>browser editor</span></div>
+    <div><b class='lm'>∞</b> <span data-t='meta_rewards'>quests &amp; rewards</span></div>
+  </div>
+  <div class='scroll-hint' data-t='scrolldown'>▼ SCROLL</div>
 </header>
-<div id='mob'></div>
 
-<!-- ══ HERO ══ -->
-<section class='hero'>
-  <div class='wrap'>
-    <span class='eyebrow rv'><i></i> For teen creators &middot; 13&ndash;18</span>
-    <h1 id='h1'>Your whole channel, <span class='g'>one tab.</span></h1>
-    <p class='sub rv'>A real timeline editor, real YouTube analytics and 501 creator tools &mdash;
-      running in the browser you already have open. Nothing to install. Nothing uploaded.</p>
-    <div class='hero-cta rv'>
-      <a class='btn pri big mag' href='app.html'>Open the Studio</a>
-      <a class='btn gho big' href='editor.html'>Try the editor &rarr;</a>
+<!-- AI / SMART COACHING with rings -->
+<section class='split' id='ai'>
+  <div class='slideL'>
+    <div class='sec-label'><span class='bar'></span> 01 — Learn &amp; build</div>
+    <h2 class='sec-h' data-t='sec1_h1'>Smart<span class='thin' data-t='sec1_h2'>Coaching</span></h2>
+    <p class='lead' data-t='card_ai_d'>Three tutors — YouTube, Space and Business — spin up answers in your language, tuned to teen creators. Ask, learn, level up.</p>
+    <div style='margin-top:22px'>
+      <div class='tool'><h4><span data-t='coach1'>Channel Coach</span></h4><span><span data-t='coach1d'>Titles, hooks, growth that actually works</span>.</span></div>
+      <div class='tool'><h4><span data-t='coach2'>Space Tutor</span></h4><span><span data-t='coach2d'>Turn curiosity into content people watch</span>.</span></div>
+      <div class='tool'><h4><span data-t='coach3'>Money Tutor</span></h4><span><span data-t='coach3d'>Side hustles and smart moves, explained simply</span>.</span></div>
     </div>
-    <div class='trust rv'>
-      <span><b class='tk'>&#10003;</b> Free, no card</span>
-      <span><b class='tk'>&#10003;</b> Nothing installs</span>
-      <span><b class='tk'>&#10003;</b> Your files stay on your device</span>
-      <span><b class='tk'>&#10003;</b> 20 languages</span>
-    </div>
-
-    <div class='stage' id='stage'>
-      <div class='floaters'>
-        <div class='fl f1'><b>Watch time</b><span>Real, from your channel</span>
-          <div class='spark'><i style='height:10px'></i><i style='height:17px;animation-delay:.1s'></i><i style='height:13px;animation-delay:.2s'></i><i style='height:22px;animation-delay:.3s'></i><i style='height:16px;animation-delay:.4s'></i><i style='height:21px;animation-delay:.5s'></i></div></div>
-        <div class='fl f2'><b>Export finished</b><span>1080p &middot; recorded in-browser</span></div>
-        <div class='fl f3'><b>97 sound effects</b><span>Generated, not downloaded</span></div>
-      </div>
-
-      <div class='win'>
-        <div class='wbar'>
-          <span class='dot' style='background:#FF5F57'></span>
-          <span class='dot' style='background:#FEBC2E'></span>
-          <span class='dot' style='background:#28C840'></span>
-          <span class='wtitle'>NovaClip Studio &mdash; my-first-short.mp4</span>
-        </div>
-        <div class='wbody'>
-          <div class='wside'>
-            <b>Studio</b>
-            <u class='on'><i></i>Editor</u>
-            <u><i></i>Analytics</u>
-            <u><i></i>Tools</u>
-            <u><i></i>Trends</u>
-            <b style='margin-top:16px'>Assistant</b>
-            <u><i></i>Channel coach</u>
-            <u><i></i>Title ideas</u>
-          </div>
-          <div class='wmain'>
-            <div class='canv'>
-              <div class='play'><svg width='16' height='18' viewBox='0 0 16 18'><path d='M0 0l16 9-16 9z' fill='#fff'/></svg></div>
-            </div>
-            <div class='tl'>
-              <div class='trk'><span class='clip' style='left:3%;width:38%;background:linear-gradient(90deg,#7C5CFF,#00E5FF)'></span>
-                              <span class='clip' style='left:44%;width:29%;background:linear-gradient(90deg,#00E5FF,#7C5CFF)'></span>
-                              <span class='clip' style='left:75%;width:21%;background:linear-gradient(90deg,#FF3D9A,#7C5CFF)'></span>
-                              <span class='ph'></span></div>
-              <div class='trk'><span class='clip' style='left:8%;width:52%;background:rgba(182,255,74,.5)'></span>
-                              <span class='clip' style='left:63%;width:30%;background:rgba(182,255,74,.35)'></span></div>
-              <div class='trk'><span class='clip' style='left:20%;width:22%;background:rgba(255,180,67,.45)'></span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  </div>
+  <div class='visual slideR'>
+    <div class='ring-wrap'><div class='ring r1'></div><div class='ring r2'></div><div class='ring r3'></div><div class='ring-core'></div></div>
   </div>
 </section>
 
-<!-- ══ MARQUEE ══ -->
-<div class='mq' aria-label='What NovaClip does'>
-  <div class='mqrow' id='mq1'></div>
-  <div class='mqrow rev' id='mq2'></div>
+<!-- DUELS -->
+<section class='split'>
+  <div class='visual slideL'>
+    <div class='duel'>
+      <div class='bar b1'><span data-t='duel_you'>YOU</span></div>
+      <div class='vs' data-t='duel_vs'>VS</div>
+      <div class='bar b2'><span data-t='duel_rival'>RIVAL</span></div>
+    </div>
+  </div>
+  <div class='slideR'>
+    <div class='sec-label'><span class='bar'></span> <span data-t='duel_label'>02 — Fight fair</span></div>
+    <h2 class='sec-h' data-t='sec2_h1'>Fair<span class='thin' data-t='sec2_h2'>Fights</span></h2>
+    <p class='lead' data-t='card_duel_d'>Only battle channels within 20k subs of you. Watch the bars clash — subs and views decide the winner. Win and bank points.</p>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class='ticker'>
+  <div class='tk'>
+    <span data-t='ticker'><b>AI TUTORS</b> · <i>VIDEO EDITOR</i> · <u>CHANNEL DUELS</u> · <b>TREND RADAR</b> · <i>GAMES</i> · <u>ANALYTICS</u> · <b>REWARDS</b> · </span>
+    <span data-t='ticker'><b>AI TUTORS</b> · <i>VIDEO EDITOR</i> · <u>CHANNEL DUELS</u> · <b>TREND RADAR</b> · <i>GAMES</i> · <u>ANALYTICS</u> · <b>REWARDS</b> · </span>
+  </div>
 </div>
 
-<!-- ══ THESIS ══ -->
-<section id='why'>
-  <div class='wrap'>
-    <span class='kick rv'>The point</span>
-    <h2 class='rv'>Five tabs, five sign-ups, five things to remember. <span class='g'>Or one.</span></h2>
-    <p class='lede rv'>Editing in one app, checking numbers in another, hunting a thumbnail size in a
-      third, and pasting into a fourth to write a title. NovaClip puts the parts that matter in one
-      place &mdash; and runs them on your machine, so there is nothing to upload and nothing to wait for.</p>
-    <div class='grid3' id='live'></div>
+<!-- PLAY & EARN with XP -->
+<section class='split' id='play'>
+  <div class='slideL'>
+    <div class='sec-label'><span class='bar'></span> <span data-t='sec_play'>03 — Play &amp; earn</span></div>
+    <h2 class='sec-h' data-t='play_h'>Every action<span class='thin'>earns.</span></h2>
+    <p class='lead' data-t='card_quest_d'>Ask the AI, edit a clip, win a duel, top the sniper board — it all feeds one XP bar. Hit the milestones, bank real rewards.</p>
+  </div>
+  <div class='slideR'>
+    <div class='xp-row'><span data-t='xp_progress'>YOUR PROGRESS</span><span id='xpnum'>0 XP</span></div>
+    <div class='xp-bar'><div class='xp-fill' id='xpfill'></div></div>
+    <div class='reward'><span class='amt'>100</span><div class='txt'><b data-t='rw1_t'>1 day of NovaClip Pro</b><span data-t='rw1_d'>Your first unlock — one quest away.</span></div></div>
+    <div class='reward'><span class='amt'>450</span><div class='txt'><b data-t='rw2_t'>1 week of Pro</b><span data-t='rw2_d'>Editor exports, priority AI.</span></div></div>
+    <div class='reward'><span class='amt'>1250</span><div class='txt'><b data-t='rw3_t'>1 month of Pro</b><span data-t='rw3_d'>The grind pays off.</span></div></div>
   </div>
 </section>
 
-<!-- ══ HOW ══ -->
-<section id='how'>
-  <div class='wrap'>
-    <span class='kick rv'>How it goes</span>
-    <h2 class='rv'>Idea to published, without leaving the tab</h2>
-    <div class='story'>
-      <div class='steps' id='steps'></div>
-      <div class='shot'><div><div class='big g' id='shotBig'>01</div><p class='cap' id='shotCap'></p></div></div>
-    </div>
+<!-- STATS -->
+<section>
+  <div class='reveal'>
+    <div class='sec-label'><span class='bar'></span> <span data-t='sec_nums'>By the numbers</span></div>
+    <h2 class='sec-h' data-t='nums_h'>Built<span class='thin'>Different</span></h2>
+  </div>
+  <div class='stats reveal'>
+    <div><div class='stat-num' data-count='20'>0</div><div class='stat-label' data-t='st_languages'>Languages</div></div>
+    <div><div class='stat-num' data-count='2'>0</div><div class='stat-label' data-t='st_games'>Games</div></div>
+    <div><div class='stat-num' data-count='6'>0</div><div class='stat-label' data-t='st_tools'>Tools</div></div>
+    <div><div class='stat-num' data-count='0'>0</div><div class='stat-label' data-t='st_downloads'>Downloads</div></div>
   </div>
 </section>
 
-<!-- ══ AUDIENCE ══ -->
-<section id='who'>
-  <div class='wrap'>
-    <span class='kick rv'>Who it is for</span>
-    <h2 class='rv'>Built for people starting out, not for agencies</h2>
-    <p class='lede rv'>NovaClip is made for 13&ndash;18 year olds learning to run a channel. There is an
-      age check on the way in, the assistant is tuned for that age, and the whole thing is free
-      because a teenager should not need a card to learn to edit.</p>
-    <div class='who rv' id='who'></div>
-  </div>
-</section>
-
-<!-- ══ NUMBERS ══ -->
-<section id='numbers'>
-  <div class='wrap'>
-    <span class='kick rv'>Where it stands</span>
-    <h2 class='rv'>Numbers we can actually show you</h2>
-    <p class='lede rv'>No invented user counts. Everything here you can check by opening the site.</p>
-    <div class='nums' id='nums'></div>
-  </div>
-</section>
-
-<!-- ══ ROADMAP ══ -->
-<section id='next'>
-  <div class='wrap'>
-    <span class='kick rv'>Not built yet</span>
-    <h2 class='rv'>The AI features that need a server</h2>
-    <p class='lede rv'>Everything above runs on your own machine, which is why it is free and why
-      nothing you open gets uploaded. The features below cannot work that way &mdash; they need a
-      model running somewhere and somebody paying for it. They are listed here so the plan is
-      visible, not so the feature count looks bigger.</p>
-    <div class='grid3' id='soon'></div>
-  </div>
-</section>
-
-<!-- ══ FAQ ══ -->
-<section id='faq'>
-  <div class='wrap'>
-    <span class='kick rv'>Questions</span>
-    <h2 class='rv'>The ones worth answering</h2>
-    <div class='faq' id='faqlist'></div>
-  </div>
-</section>
-
-<!-- ══ FINAL ══ -->
-<section id='start'>
-  <div class='wrap'>
-    <div class='final rv s'>
-      <h2>Open it and make something</h2>
-      <p class='lede' style='margin:18px auto 0'>No sign-up screen, no trial, no card. The editor is
-        one click away and it works right now.</p>
-      <div class='hero-cta' style='justify-content:center;margin-top:32px'>
-        <a class='btn pri big mag' href='app.html'>Open the Studio</a>
-        <a class='btn gho big' href='tools.html'>Browse 501 tools</a>
-      </div>
+<!-- FINAL -->
+<section class='final'>
+  <div class='reveal'>
+    <h2 data-t='final_h'>Your channel's <span class='g'>next level</span><br>starts in a tab.</h2>
+    <p data-t='final_p'>Free to start. No downloads. Just you, the tools, and the grind.</p>
+    <a href='app.html'><button class='btn-primary' data-t='final_btn'>Open the Studio →</button></a>
+    <!-- The models in the arena were made by other people. Their licences ask for a
+         credit with a link, so the credit lives here where anyone can find it. -->
+    <div class='creditsrow'>
+      <a href='credits.html'><button class='btn-credits' data-t='credits_btn'>Credits</button></a>
+      <div class='creditsnote' data-t='credits_note'>The 3D models, animations and sounds in NovaClip — and who made them.</div>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class='wrap'>
-    <div class='fcols'>
-      <div>
-        <a class='brand' href='index.html' style='margin-bottom:14px'><img src='logo.svg' alt=''>NovaClip</a>
-        <p style='color:var(--dim);font-size:14px;max-width:30ch'>The AI studio for teen creators.
-          Runs in your browser; your files never leave your device.</p>
-      </div>
-      <div><h4>Studio</h4>
-        <a href='app.html'>Dashboard</a><a href='editor.html'>Editor</a>
-        <a href='analytics.html'>Analytics</a><a href='tools.html'>Tools</a>
-        <a href='trends.html'>Trend Spotter</a></div>
-      <div><h4>More</h4>
-        <a href='ai.html'>NovaClip AI</a><a href='game.html'>Games</a>
-        <a href='credits.html'>Credits</a><a href='#next'>Roadmap</a></div>
-      <div><h4>Free tools</h4>
-        <a href='tools.html?t=sz-youtube-thumbnail'>Thumbnail size</a>
-        <a href='tools.html?t=soundboard'>Sound effects</a>
-        <a href='tools.html?t=cleanup'>Remove an object</a>
-        <a href='tools.html?t=animate-drawing'>Animate a drawing</a></div>
-    </div>
-    <div class='fbot'>
-      <span>&copy; 2026 NovaClip</span>
-      <span>Everything runs in your browser</span>
-    </div>
-  </div>
+  <div>© 2026 NovaClip · Built by eskon</div>
+  <div><a href='credits.html' data-t='credits_btn'>Credits</a> &nbsp;·&nbsp; <a href='https://novaclip.streamlit.app' target='_blank' data-t='footer'>Classic app</a></div>
 </footer>
 
-<script src='nova.js'></script>
+</div>
+
 <script>
-/* ============================================================================
-   NOVACLIP — page runtime
-   ============================================================================
-   Every effect the brief asked for, on one animation frame and two throttled
-   pointer handlers. The whole file is about 260 lines against the ~180KB of
-   library it would take to express the same thing in a framework, and it is
-   what lets the page stay a single file that works offline.
-   ============================================================================ */
+// Hide the loading state once the page is up (and no later than 4s, so a slow
+// font or image can never leave someone staring at a spinner).
 (function () {
-  'use strict';
-  const $ = id => document.getElementById(id);
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const coarse = matchMedia('(pointer: coarse)').matches;
+  const boot = document.getElementById('boot');
+  if (!boot) return;
+  const done = () => { boot.classList.add('gone'); setTimeout(() => boot.remove(), 400); };
+  if (document.readyState === 'complete') done();
+  else window.addEventListener('load', done, { once: true });
+  setTimeout(done, 4000);
+})();
 
-  /* ---- content -----------------------------------------------------------
-     Kept as data rather than markup so that the honest split — what runs today
-     against what does not — is one flag per row and cannot drift out of step
-     with the badge printed next to it. */
-  const LIVE = [
-    ['\u{1F3AC}', 'Timeline editor', 'Cut, trim, layer and title on a real multi-track timeline. It exports by recording the canvas, so the file you get is a file, not a promise.', 'editor.html'],
-    ['\u{1F4CA}', 'Your real analytics', 'Watch time, traffic sources, geography, demographics and revenue, read from the YouTube Analytics API with your permission.', 'analytics.html'],
-    ['\u{1F9F0}', '501 creator tools', 'Every social image size, every character limit, engagement maths, converters and formatters. Each does one job properly.', 'tools.html'],
-    ['\u{1F5BC}', 'Remove an object', 'Paint over something in a photo and the surrounding texture grows in over it. Runs on your device; the photo never moves.', 'tools.html?t=cleanup'],
-    ['\u{1F50A}', '97 sound effects', 'Generated in the browser from a recipe, not downloaded from anywhere. Save any of them as a WAV.', 'tools.html?t=soundboard'],
-    ['\u{1F9E0}', 'Channel coach', 'An assistant that knows your channel and answers in your language, tuned for creators your age rather than for agencies.', 'ai.html'],
-    ['\u{270F}', 'Animate a drawing', 'Photograph a character you drew, drop a skeleton on it, and it walks, waves or dances. Records to video.', 'tools.html?t=animate-drawing'],
-    ['\u{1F3F7}', 'Titles, tags, hashtags', 'Live counters against every real platform cap, plus prompt builders that assemble a proper request for whichever assistant you use.', 'tools.html?t=lim-youtube-title'],
-    ['\u{1F3AE}', 'Quests and rewards', 'Progress you actually earn, from work you actually did. Certificates unlock on evidence, not on a button press.', 'app.html']
-  ];
+// STAR FIELD
+const sf = document.getElementById('stars');
+for (let i = 0; i < 28; i++) {   // 70 stars was 70 animated nodes for decoration
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random()*2.4+1;
+  s.style.width = sz+'px'; s.style.height = sz+'px';
+  s.style.left = Math.random()*100+'%';
+  s.style.top = Math.random()*100+'%';
+  s.style.animationDelay = (Math.random()*3)+'s';
+  sf.appendChild(s);
+}
+addEventListener('scroll',()=>{ sf.style.transform='translateY('+(scrollY*-0.25)+'px)'; });
 
-  const SOON = [
-    ['Auto clip generator', 'Find the good 30 seconds in a long video by itself.'],
-    ['Speech to text', 'Transcribe a video without sending it anywhere. Needs a model too large to ship in a page.'],
-    ['Automatic captions', 'Burned-in subtitles, timed from the transcript above.'],
-    ['Subtitle translation', 'The interface is already in 20 languages. Subtitles are a different problem.'],
-    ['Text to speech &amp; voice cloning', 'Both need a hosted model. Cloning also needs consent rules we have not written.'],
-    ['Background removal on video', 'Works on stills today. Per-frame on video needs a GPU.'],
-    ['Face and object tracking', 'Realistic in a browser eventually. Not yet at a watchable frame rate.'],
-    ['Noise removal', 'Simple filtering is close. Doing it without wrecking the voice is not.'],
-    ['AI music generator', 'The sound effects are synthesised locally. Music is a model.'],
-    ['Upscaling &amp; frame interpolation', 'Both are per-frame neural work. Server, GPU, cost.'],
-    ['Cloud projects &amp; collaboration', 'The moment work is stored for you, it is stored somewhere. That needs a privacy policy we would have to mean.'],
-    ['Template marketplace', 'Worth building once there are enough creators to fill it.']
-  ];
+// TYPING CONSOLE (language aware)
+const linesByLang = {
+  en:['booting creator console…','ask the AI → get a viral title in seconds','cut a clip → drop a transition → export','win a duel → +20 XP → unlock rewards','ready when you are.'],
+  pt:['a iniciar consola de criador…','pergunta à IA → título viral em segundos','corta um clip → mete uma transição → exporta','ganha um duelo → +20 XP → desbloqueia recompensas','pronto quando tu estiveres.'],
+  fr:['démarrage de la console créateur…','demande à l’IA → un titre viral en secondes','coupe un clip → ajoute une transition → exporte','gagne un duel → +20 XP → débloque des récompenses','prêt quand tu l’es.'],
+  de:['Creator-Konsole startet…','frag die KI → viraler Titel in Sekunden','Clip schneiden → Übergang setzen → exportieren','Duell gewinnen → +20 XP → Belohnungen freischalten','bereit, wenn du es bist.'],
+  fa:['کنسول سازنده در حال راه‌اندازی…','از هوش مصنوعی بپرس → عنوان وایرال در چند ثانیه','کلیپ را برش بزن → ترنزیشن بگذار → خروجی بگیر','دوئل را ببر → +۲۰ امتیاز → جوایز را باز کن','هر وقت آماده بودی.']
+};
+function genericLines() {
+  const t = (k, fallback) => (typeof tr === 'function' && tr(k)) ? tr(k) : fallback;
+  return [ t('coach1', 'Channel Coach'), t('card_ai_d', 'Ask the AI, get a title in seconds'),
+           t('card_quest_d', 'Every action earns'), t('final_p', 'Free to start. No downloads.') ];
+}
+const el = document.getElementById('type');
+let li=0, ci=0, del=false;
+function typeLoop(){
+  const code = (typeof lang==='function') ? lang() : 'en';
+  /* Only five languages have their own console lines. Rather than dropping a
+     Japanese reader into English, borrow the translated UI strings that already
+     exist for all twenty and build the lines from those. */
+  const lines = linesByLang[code] || genericLines();
+  const full = lines[li % lines.length];
+  if(!del){ el.textContent = full.slice(0, ci++); if(ci > full.length){ del=true; setTimeout(typeLoop, li%lines.length===lines.length-1?3600:1300); return; } }
+  else { el.textContent = full.slice(0, ci--); if(ci<0){ del=false; li++; ci=0; } }
+  setTimeout(typeLoop, del?20:40);
+}
+setTimeout(typeLoop, 900);
 
-  const STEPS = [
-    ['Bring your footage', 'Drop a clip straight from your phone or camera. It is read from disk by the page &mdash; there is no upload step, so there is no wait and no progress bar.'],
-    ['Cut it', 'Trim, split, layer, add titles and sound on a real timeline. Every change is instant because nothing is round-tripping to a server.'],
-    ['Make it fit', 'Exact thumbnail and cover sizes for every platform, live character counters against the real caps, and the maths behind reach and engagement.'],
-    ['Publish and watch', 'Export a real file, put it up, then read what actually happened &mdash; watch time, where viewers came from, who they were.']
-  ];
+// SCROLL REVEALS
+const io = new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:0.18});
+document.querySelectorAll('.reveal,.slideL,.slideR,.split,.section').forEach(x=>io.observe(x));
 
-  const WHO = ['YouTubers','Shorts creators','TikTok creators','Instagram creators','Streamers',
-    'Podcasters','Students','School clubs','Teachers','Anyone learning to edit'];
+// SCROLL PROGRESS BAR
+addEventListener('scroll',()=>{
+  const sc = document.documentElement.scrollTop || document.body.scrollTop;
+  const h = (document.documentElement.scrollHeight - document.documentElement.clientHeight);
+  document.getElementById('scrollbar').style.width = (h>0? (sc/h*100):0) + '%';
+});
 
-  const NUMS = [
-    [501, 'Tools, each with real code behind it', ''],
-    [97,  'Sound effects, generated not downloaded', ''],
-    [20,  'Languages across the interface', ''],
-    [0,   'Bytes of your footage sent to a server', '']
-  ];
+// MOUSE-FOLLOW GLOW
+const mg = document.getElementById('mouseglow');
+addEventListener('mousemove', e => { mg.style.left = e.clientX + 'px'; mg.style.top = e.clientY + 'px'; });
 
-  const FAQ = [
-    ['Is it really free?',
-     'Yes. There is no paid tier, no trial and no card. The reason is structural rather than generous: everything runs on your own machine, so a visitor who edits ten videos costs the same to serve as one who reads this page and leaves.'],
-    ['Do my videos get uploaded?',
-     'No. The editor reads your file from disk with the browser’s own file reader and works on it in the tab. There is no upload endpoint in this project. Open your network tab and watch nothing happen — or load the page, turn your Wi-Fi off, and keep editing.'],
-    ['What about the analytics page?',
-     'That one does talk to Google, because it has to: it reads your own YouTube figures from the YouTube Analytics API after you sign in and grant permission. It is the only part of the site that sends anything anywhere, and it sends a request for your data, never your data.'],
-    ['Which AI features actually exist?',
-     'The assistant is real and has a backend. The title, description and hook tools build a properly-formed prompt and hand it to you. Everything in the “not built yet” section above is exactly that — not built. We would rather say so than have you find out after signing up.'],
-    ['Why the age check?',
-     'The site is made for 13–18 year olds and the assistant is tuned for that. The check is a single question on the way in, and the answer stays in your browser.'],
-    ['Does it work on a phone?',
-     'Yes — every page, and the game has proper touch controls. The editor is more comfortable on a bigger screen simply because timelines are wide, but nothing is blocked.'],
-    ['Do I need an account?',
-     'Not to edit, use the tools or play. Connecting YouTube for analytics needs a Google sign-in, which is Google’s, not ours.']
-  ];
-
-  /* ---- loading screen ---------------------------------------------------- */
-  (function boot() {
-    const el = $('boot'), fill = $('bfill');
-    let p = 0;
-    const t = setInterval(() => { p = Math.min(92, p + Math.random() * 24); fill.style.width = p + '%'; }, 110);
-    const done = () => {
-      clearInterval(t); fill.style.width = '100%';
-      setTimeout(() => { el.classList.add('gone'); setTimeout(() => el.remove(), 800); }, 190);
-    };
-    /* Whichever comes first. A splash that outlives its page is a broken page,
-       so the timeout is a hard ceiling rather than a fallback. */
-    if (document.readyState === 'complete') done(); else addEventListener('load', done);
-    setTimeout(done, 2200);
-  })();
-
-  /* ---- build the sections ------------------------------------------------ */
-  $('live').innerHTML = LIVE.map(([ic, h, p, href]) =>
-    '<a class="card rv tilt" href="' + href + '"><span class="tagl">Live</span>' +
-    '<span class="ic">' + ic + '</span><h3>' + h + '</h3><p>' + p + '</p>' +
-    '<span class="go">Open<em>&rarr;</em></span></a>').join('');
-
-  $('soon').innerHTML = SOON.map(([h, p]) =>
-    '<div class="card rv"><span class="tagl soon">Planned</span>' +
-    '<h3 style="margin-top:6px">' + h + '</h3><p>' + p + '</p></div>').join('');
-
-  $('who').innerHTML = WHO.map(w => '<span>' + w + '</span>').join('');
-
-  $('nums').innerHTML = NUMS.map(([n, label]) =>
-    '<div class="num rv"><b data-count="' + n + '">0</b><span>' + label + '</span></div>').join('');
-
-  $('steps').innerHTML = STEPS.map(([h, p], i) =>
-    '<div class="step rv l' + (i === 0 ? ' on' : '') + '" data-i="' + i + '">' +
-    '<h3><u>' + String(i + 1).padStart(2, '0') + '</u>' + h + '</h3><p>' + p + '</p></div>').join('');
-
-  $('faqlist').innerHTML = FAQ.map(([q, a]) =>
-    '<div class="q rv"><button><span>' + q + '</span><span class="pl">+</span></button>' +
-    '<div class="a"><p>' + a + '</p></div></div>').join('');
-
-  const chips = LIVE.map(l => '<span class="chip live"><i></i>' + l[1] + '</span>')
-    .concat(SOON.map(s => '<span class="chip soon"><i>soon</i>' + s[0] + '</span>'));
-  /* Doubled, because a marquee that translates -50% needs two identical halves
-     to loop without a visible jump. */
-  $('mq1').innerHTML = chips.slice(0, 11).join('').repeat(2);
-  $('mq2').innerHTML = chips.slice(11).join('').repeat(2);
-
-  const mob = $('mob'), burger = $('burger');
-  mob.innerHTML = [...document.querySelectorAll('.nlinks a')]
-    .map(a => '<a href="' + a.getAttribute('href') + '">' + a.textContent + '</a>').join('') +
-    '<a href="app.html" style="color:var(--cyan)">Open the Studio &rarr;</a>';
-  burger.onclick = e => { e.stopPropagation();
-    burger.setAttribute('aria-expanded', String(mob.classList.toggle('on'))); };
-  addEventListener('click', e => {
-    if (!mob.contains(e.target) && e.target !== burger) {
-      mob.classList.remove('on'); burger.setAttribute('aria-expanded', 'false');
-    }
+// 3D CARD TILT toward the cursor
+document.querySelectorAll('.card, .tool').forEach(c => {
+  c.addEventListener('mousemove', e => {
+    const r = c.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    c.style.transform = 'translateY(-8px) rotateY(' + (px * 14) + 'deg) rotateX(' + (-py * 14) + 'deg) scale(1.03)';
   });
+  c.addEventListener('mouseleave', () => { c.style.transform = ''; });
+});
 
-  /* ---- headline, character by character ---------------------------------- */
-  (function split() {
-    const h1 = $('h1');
-    let i = 0;
-    (function walk(node) {
-      [...node.childNodes].forEach(n => {
-        /* The gradient span animates whole. Splitting clipped text into
-           per-character spans gives each one its own stacking context, and
-           background-clip:text then stops painting through them entirely —
-           the words simply vanish. */
-        if (n.nodeType === 1 && n.classList.contains('g')) {
-          n.classList.add('ch');
-          n.style.animationDelay = still ? '0s' : (0.26 + i * 0.026) + 's';
-          i += 3; return;
-        }
-        if (n.nodeType === 3) {
-          const f = document.createDocumentFragment();
-          /* Split into words first, then characters inside each word. Every
-             character is an inline-block, so without a nowrap wrapper the
-             browser may break the line between any two of them — which put
-             the comma of "channel," alone on the next line. */
-          n.textContent.split(/(\s+)/).forEach(word => {
-            if (!word) return;
-            if (/^\s+$/.test(word)) { f.appendChild(document.createTextNode(word)); return; }
-            const w = document.createElement('span');
-            w.className = 'wd';
-            [...word].forEach(c => {
-              const s = document.createElement('span');
-              s.className = 'ch'; s.textContent = c;
-              s.style.animationDelay = still ? '0s' : (0.26 + i++ * 0.026) + 's';
-              w.appendChild(s);
-            });
-            f.appendChild(w);
-          });
-          node.replaceChild(f, n);
-        } else if (n.nodeType === 1) walk(n);
-      });
-    })(h1);
-  })();
+// PARALLAX on the floating orbs
+addEventListener('scroll', () => {
+  const y = window.scrollY;
+  const a = document.querySelector('.orb3d.a'), b = document.querySelector('.orb3d.b');
+  if (a) a.style.marginTop = (y * 0.12) + 'px';
+  if (b) b.style.marginTop = (-y * 0.08) + 'px';
+}, { passive: true });
 
-  /* ---- reveals ------------------------------------------------------------ */
-  const pending = new Set(document.querySelectorAll('.rv, .stage'));
-  const groups = new Map();
-  pending.forEach(el => {
-    const n = groups.get(el.parentElement) || 0;
-    groups.set(el.parentElement, n + 1);
-    if (!still) el.style.transitionDelay = Math.min(n, 7) * 65 + 'ms';
+// MAGNETIC BUTTONS
+document.querySelectorAll('.btn-primary,.btn-ghost').forEach(b => {
+  b.addEventListener('mousemove', e => {
+    const r = b.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
+    b.style.transform = 'translate(' + dx*0.18 + 'px,' + (dy*0.18 - 2) + 'px)';
   });
-  function reveal(el) {
-    if (!pending.has(el)) return;
-    pending.delete(el); io.unobserve(el);
-    el.classList.add('in');
-    countUp(el);
-  }
-  const io = new IntersectionObserver(
-    es => es.forEach(e => { if (e.isIntersecting) reveal(e.target); }),
-    { rootMargin: '0px 0px -10% 0px', threshold: 0.06 });
-  pending.forEach(el => io.observe(el));
-  /* A fast flick can hand the observer one entry where the element went in and
-     back out between frames, and it stays hidden for the rest of the visit.
-     This sweeps whatever is left on geometry; the set only ever shrinks. */
-  function sweep() {
-    if (!pending.size) return removeEventListener('scroll', sweep);
-    [...pending].forEach(el => { if (el.getBoundingClientRect().top < innerHeight * 0.94) reveal(el); });
-  }
-  addEventListener('scroll', sweep, { passive: true });
-  addEventListener('resize', sweep, { passive: true });
-  sweep();
+  b.addEventListener('mouseleave', () => { b.style.transform = ''; });
+});
 
-  function countUp(host) {
-    const el = host.matches && host.matches('.num') ? host.querySelector('b') : null;
-    if (!el || el.dataset.done) return;
-    el.dataset.done = '1';
-    const target = +el.dataset.count;
-    if (still || !target) { el.textContent = target; return; }
-    const t0 = performance.now();
-    (function tick(t) {
-      /* Clamped at both ends. A requestAnimationFrame timestamp is the start
-         of the frame, which can be *earlier* than the performance.now() call
-         that captured t0 — that makes k negative, and 1-(1-k)^3 with a
-         negative k is negative, so the counter briefly displayed "-4". */
-      const k = Math.max(0, Math.min(1, (t - t0) / 1300));
-      el.textContent = k >= 1 ? target : Math.round(target * (1 - Math.pow(1 - k, 3)));
-      if (k < 1) requestAnimationFrame(tick);
-    })(t0);
-    /* Whatever happens to the frame loop, the number ends up right. On a
-       loaded machine the last frame can arrive late enough to be dropped, and
-       a counter frozen at 492 that should read 501 is worse than no animation
-       at all. */
-    setTimeout(function () { el.textContent = target; }, 1500);
-  }
+// COUNTING NUMBERS
+const nio = new IntersectionObserver(es=>{es.forEach(e=>{
+  if(!e.isIntersecting)return;
+  const el=e.target; if(el.dataset.done)return; el.dataset.done='1';
+  const t=parseInt(el.dataset.count), sfx=el.dataset.suffix||'';
+  let c=0; const step=Math.max(1,Math.ceil(t/40));
+  const iv=setInterval(()=>{c+=step;if(c>=t){c=t;clearInterval(iv)}el.textContent=c+sfx;},28);
+})},{threshold:0.5});
+document.querySelectorAll('[data-count]').forEach(x=>nio.observe(x));
 
-  /* ---- the scroll story --------------------------------------------------- */
-  (function story() {
-    const steps = [...document.querySelectorAll('.step')];
-    const big = $('shotBig'), cap = $('shotCap');
-    function pick(i) {
-      steps.forEach((s, n) => s.classList.toggle('on', n === i));
-      big.textContent = String(i + 1).padStart(2, '0');
-      cap.textContent = STEPS[i][0];
+// XP BAR
+const xio = new IntersectionObserver(es=>{es.forEach(e=>{
+  if(!e.isIntersecting||e.target.dataset.x)return; e.target.dataset.x='1';
+  document.getElementById('xpfill').style.width='68%';
+  let n=0; const iv=setInterval(()=>{n+=17;if(n>=850){n=850;clearInterval(iv)}document.getElementById('xpnum').textContent=n+' XP';},24);
+})},{threshold:0.4});
+xio.observe(document.getElementById('play'));
+
+// ORB PARALLAX
+addEventListener('scroll',()=>{ document.querySelectorAll('.orb').forEach((o,i)=>{ o.style.transform='translateY('+(scrollY*(0.04+i*0.03))+'px)'; }); });
+
+// RISING NEON PARTICLES
+const pcolors=['#00F0FF','#FF2E97','#B6FF3C'];
+for(let i=0;i<18;i++){
+  const p=document.createElement('div');
+  p.className='particle';
+  const sz=Math.random()*4+2;
+  p.style.width=sz+'px';p.style.height=sz+'px';
+  p.style.left=(200+Math.random()*(innerWidth-200))+'px';
+  const col=pcolors[i%3];
+  p.style.background=col;p.style.boxShadow='0 0 8px '+col;
+  p.style.animationDuration=(9+Math.random()*14)+'s';
+  p.style.animationDelay=(Math.random()*12)+'s';
+  document.body.appendChild(p);
+}
+
+// STAGGERED REWARD ENTRANCE
+const rio=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:0.3});
+document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
+</script>
+
+<!-- COMMUNITY COMMENTS -->
+<div class='section reveal' id='community' style='padding:60px 0'>
+  <h2 class='sec-h' style='font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;margin-bottom:10px'>Creator <span class='g'>Community</span></h2>
+  <p class='lead' style='margin-bottom:20px'>Share wins, ask for feedback, hype each other up. Every post is checked automatically — bullying and swearing are blocked before they're ever posted.</p>
+
+  <div style='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:20px;max-width:760px'>
+    <input id='cName' type='text' maxlength='20' placeholder='Your creator name' style='width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:#0A0C14;color:#EAF2FF;margin-bottom:10px;font-size:0.95rem'>
+    <textarea id='cText' rows='3' maxlength='300' placeholder='Say something kind or useful…' style='width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:#0A0C14;color:#EAF2FF;font-size:0.95rem;resize:vertical'></textarea>
+    <div style='display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap'>
+      <button id='cPost' style='padding:12px 26px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a'>Post comment</button>
+      <span id='cMsg' style='font-size:0.85rem;color:#7E8AA6'></span>
+    </div>
+    <div class='notice' style='margin-top:14px;font-size:0.82rem;color:#7E8AA6;border-left:3px solid #B6FF3C;padding-left:12px'>Be kind. Harassment or swearing gives you a strike — <b>three strikes is a 7-day suspension</b>.</div>
+  </div>
+
+  <div id='cList' style='max-width:760px;margin-top:20px'></div>
+</div>
+
+<script>
+(function () {
+  const KEY = 'nc_comments';
+  function load() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } }
+  function save(l) { localStorage.setItem(KEY, JSON.stringify(l.slice(-50))); }
+  function esc(s) { return s.replace(/[<>&]/g, c => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;' }[c])); }
+  function ago(t) {
+    const s = Math.floor((Date.now() - t) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s/60) + 'm ago';
+    if (s < 86400) return Math.floor(s/3600) + 'h ago';
+    return Math.floor(s/86400) + 'd ago';
+  }
+  function render() {
+    const list = load();
+    const box = document.getElementById('cList');
+    if (!list.length) { box.innerHTML = '<p style="color:#7E8AA6;font-size:0.9rem">No comments yet — be the first.</p>'; return; }
+    box.innerHTML = list.slice().reverse().map(c =>
+      '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;margin-bottom:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+      '<b style="color:#00F0FF">' + esc(c.name) + '</b>' +
+      '<span style="color:#7E8AA6;font-size:0.78rem">' + ago(c.at) + '</span></div>' +
+      '<div style="color:#b8bccb;line-height:1.6;font-size:0.94rem">' + esc(c.text) + '</div></div>'
+    ).join('');
+  }
+  document.getElementById('cPost').onclick = function () {
+    const msg = document.getElementById('cMsg');
+    if (window.ncSuspendedFor && ncSuspendedFor()) { ncCheckSuspension(); return; }
+    const name = document.getElementById('cName').value.trim();
+    const text = document.getElementById('cText').value.trim();
+    if (name.length < 2) { msg.textContent = 'Add a creator name first.'; msg.style.color = '#FF2E97'; return; }
+    if (text.length < 2) { msg.textContent = 'Write something first.'; msg.style.color = '#FF2E97'; return; }
+
+    const check = window.ncModerate ? ncModerate(name + ' ' + text) : { ok: true };
+    if (!check.ok) {
+      const res = ncStrike(check.severity === 'abuse' ? 'Harassment in a comment' : 'Swearing in a comment');
+      if (res.suspended) { ncCheckSuspension(); return; }
+      msg.style.color = '#FF2E97';
+      msg.textContent = check.severity === 'abuse'
+        ? 'Blocked — that looks like bullying. Strike ' + res.strikes + ' of 3.'
+        : 'Blocked — please keep it clean. Strike ' + res.strikes + ' of 3.';
+      return;
     }
-    steps.forEach((s, i) => s.addEventListener('click', () => pick(i)));
-    pick(0);
-    /* On the way down the section, the step nearest the middle of the screen
-       is the one being read. */
-    addEventListener('scroll', () => {
-      if (!steps.length) return;
-      const mid = innerHeight / 2;
-      let best = 0, bd = Infinity;
-      steps.forEach((s, i) => {
-        const r = s.getBoundingClientRect();
-        const d = Math.abs(r.top + r.height / 2 - mid);
-        if (d < bd) { bd = d; best = i; }
-      });
-      if (bd < innerHeight * 0.5) pick(best);
-    }, { passive: true });
-  })();
-
-  /* ---- faq ---------------------------------------------------------------- */
-  document.querySelectorAll('.q button').forEach(b => b.onclick = () => {
-    const q = b.parentElement, was = q.classList.contains('open');
-    document.querySelectorAll('.q').forEach(x => x.classList.remove('open'));
-    q.classList.toggle('open', !was);
-  });
-
-  /* ---- scroll progress + sticky nav --------------------------------------- */
-  const prog = $('prog'), nav = $('nav');
-  addEventListener('scroll', () => {
-    const h = document.documentElement.scrollHeight - innerHeight;
-    prog.style.width = (h > 0 ? scrollY / h * 100 : 0) + '%';
-    nav.classList.toggle('stuck', scrollY > 20);
-  }, { passive: true });
-
-  if (still) return;
-
-  /* ======================================================================
-     From here down is decoration, and none of it runs under reduced motion.
-     ====================================================================== */
-
-  /* ---- one frame loop for pointer glow, cursor, parallax and particles ---- */
-  let px = innerWidth / 2, py = innerHeight / 2;   // raw pointer
-  let gx = px, gy = py, cx = px, cy = py;          // eased followers
-  const glow = $('glow'), cur = $('cur'), dot = $('curdot');
-  const floaters = [...document.querySelectorAll('.fl')];
-
-  if (!coarse) {
-    addEventListener('pointermove', e => {
-      px = e.clientX; py = e.clientY;
-      glow.style.opacity = '1';
-      dot.style.transform = 'translate3d(' + px + 'px,' + py + 'px,0)';
-    }, { passive: true });
-  }
-
-  /* Particles. Count scales with the viewport so a phone draws forty and a
-     desktop draws a hundred and twenty, and the loop stops entirely once the
-     hero has scrolled away — there is nothing to look at, so there is no
-     reason to spend a frame on it. */
-  const cvs = $('dust'), ctx = cvs.getContext('2d');
-  let W = 0, H = 0, dots = [];
-  function size() {
-    const r = Math.min(devicePixelRatio || 1, 2);
-    W = cvs.width = innerWidth * r; H = cvs.height = innerHeight * r;
-    cvs.style.width = innerWidth + 'px'; cvs.style.height = innerHeight + 'px';
-    ctx.scale(r, r);
-    const n = Math.round(Math.min(120, Math.max(34, innerWidth * innerHeight / 17000)));
-    dots = Array.from({ length: n }, () => ({
-      x: Math.random() * innerWidth, y: Math.random() * innerHeight,
-      r: Math.random() * 1.6 + 0.4,
-      vx: (Math.random() - .5) * 0.16, vy: -(Math.random() * 0.22 + 0.05),
-      a: Math.random() * 0.45 + 0.12
-    }));
-  }
-  size();
-  addEventListener('resize', size);
-
-  let ticking = true;
-  addEventListener('scroll', () => { ticking = scrollY < innerHeight * 1.3; }, { passive: true });
-
-  (function frame() {
-    requestAnimationFrame(frame);
-
-    /* pointer followers, eased so nothing snaps */
-    gx += (px - gx) * 0.07; gy += (py - gy) * 0.07;
-    cx += (px - cx) * 0.19; cy += (py - cy) * 0.19;
-    if (!coarse) {
-      glow.style.transform = 'translate3d(' + gx + 'px,' + gy + 'px,0)';
-      cur.style.transform = 'translate3d(' + cx + 'px,' + cy + 'px,0)';
-    }
-
-    /* parallax on the floating windows, from scroll and pointer together */
-    const k = scrollY * 0.035;
-    floaters.forEach((f, i) => {
-      const d = 0.5 + i * 0.35;
-      f.style.marginTop = (-k * d).toFixed(1) + 'px';
-      f.style.marginLeft = ((gx - innerWidth / 2) * 0.012 * d).toFixed(1) + 'px';
-    });
-
-    if (!ticking) return;
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
-    for (const p of dots) {
-      p.x += p.vx; p.y += p.vy;
-      if (p.y < -6) { p.y = innerHeight + 6; p.x = Math.random() * innerWidth; }
-      if (p.x < -6) p.x = innerWidth + 6; else if (p.x > innerWidth + 6) p.x = -6;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, 6.283);
-      ctx.fillStyle = 'rgba(190,215,255,' + p.a + ')';
-      ctx.fill();
-    }
-  })();
-
-  /* ---- magnetic buttons + cursor states ----------------------------------- */
-  if (!coarse) {
-    document.querySelectorAll('.mag').forEach(b => {
-      b.addEventListener('pointermove', e => {
-        const r = b.getBoundingClientRect();
-        b.style.transform = 'translate(' +
-          ((e.clientX - r.left - r.width / 2) * 0.28).toFixed(1) + 'px,' +
-          ((e.clientY - r.top - r.height / 2) * 0.4).toFixed(1) + 'px)';
-      });
-      b.addEventListener('pointerleave', () => { b.style.transform = ''; });
-    });
-    document.querySelectorAll('a, button, .step, .who span').forEach(el => {
-      el.addEventListener('pointerenter', () => cur.classList.add('big'));
-      el.addEventListener('pointerleave', () => cur.classList.remove('big'));
-    });
-  }
-
-  /* ---- 3D tilt on the feature cards --------------------------------------- */
-  if (!coarse) {
-    document.querySelectorAll('.tilt').forEach(c => {
-      c.addEventListener('pointermove', e => {
-        const r = c.getBoundingClientRect();
-        const x = (e.clientX - r.left) / r.width - .5;
-        const y = (e.clientY - r.top) / r.height - .5;
-        c.style.transform = 'perspective(900px) rotateX(' + (-y * 7).toFixed(2) +
-          'deg) rotateY(' + (x * 9).toFixed(2) + 'deg) translateY(-5px)';
-      });
-      c.addEventListener('pointerleave', () => { c.style.transform = ''; });
-    });
-  }
+    const list = load();
+    list.push({ name: name, text: text, at: Date.now() });
+    save(list);
+    document.getElementById('cText').value = '';
+    msg.style.color = '#B6FF3C';
+    msg.textContent = 'Posted!';
+    render();
+  };
+  render();
 })();
 </script>
-<script>window.addEventListener('load', function () { if (window.ncAgeGate) ncAgeGate(); });</script>
+
+<script src='nova.js'></script>
+<script>window.addEventListener('load', function(){ if (window.ncAgeGate) ncAgeGate(); });</script>
 </body>
 </html>
