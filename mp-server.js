@@ -71,13 +71,35 @@ const num = (v, lo, hi) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : 0;
 };
-const DEV_API_KEY = "novaclip-dev-secret";
-const url = new URL(req.url);
-const auth = req.headers.get("Authorization");
+/* ---------------------------------------------------------------------------
+   WHO IS ALLOWED TO CONNECT
+   ---------------------------------------------------------------------------
+   The key is read from the environment, never written here. This file is in a
+   public repository: a key committed into it is readable by everyone who opens
+   the repo, which makes it a password taped to the door.
 
-if (auth !== `Bearer ${DEV_API_KEY}`) {
-  return new Response("Unauthorized", { status: 401 });
+     Deno Deploy -> your project -> Settings -> Environment Variables
+       NC_API_KEY = <something long and random>
+
+   It is checked from the QUERY STRING, not the Authorization header. That is
+   not laziness — a browser cannot set headers on `new WebSocket(url)`. There is
+   no API for it. Header auth here would reject every real player while letting
+   through anything with curl, which is precisely backwards.
+
+   With no NC_API_KEY set the server stays open, exactly as it was before. That
+   is deliberate: a typo in an environment variable would otherwise turn every
+   player away with a 401 and no clue why, and an unreachable game is a worse
+   outcome than an open one for a relay that holds nothing but positions.
+--------------------------------------------------------------------------- */
+const API_KEY = (typeof Deno !== 'undefined' && Deno.env ? (Deno.env.get('NC_API_KEY') || '') : '');
+
+function authorised(req, url) {
+  if (!API_KEY) return true;                      // not configured = open
+  if (url.searchParams.get('key') === API_KEY) return true;
+  const auth = req.headers.get('Authorization');  // for curl and monitoring
+  return auth === 'Bearer ' + API_KEY;
 }
+
 function send(ws, obj) {
   try { if (ws.readyState === 1) ws.send(JSON.stringify(obj)); } catch (e) { /* gone */ }
 }
@@ -270,6 +292,15 @@ const JSON_HEADERS = {
 
 Deno.serve((req) => {
   const url = new URL(req.url);
+
+  /* The bare '/' health check is never gated. Deno Deploy pings it, and a
+     server that 401s its own health check reads as down. */
+  if (!authorised(req, url) && url.pathname !== '/') {
+    return new Response('Unauthorized', {
+      status: 401,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
 
   // a plain GET is the lobby asking what is going on, or someone checking it is alive
   if (req.headers.get('upgrade') !== 'websocket') {
