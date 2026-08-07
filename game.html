@@ -361,6 +361,22 @@ body.ncplaying #tc { display: block; }
    Two columns: the gun and what it does on the left, the five slots on the
    right. The stat block is the point of the screen, so it is always visible
    while you browse attachments rather than hidden behind a tooltip. */
+#missions { position: fixed; inset: 0; z-index: 61; display: none; background: rgba(4,6,12,0.88); overflow-y: auto; padding: 26px 18px; }
+#missions.show { display: block; }
+.mspanel { max-width: 720px; margin: 0 auto; background: #0d1522; border: 1px solid rgba(108,195,255,0.35);
+  border-radius: 18px; padding: 22px; }
+#missionlist { display: grid; gap: 10px; }
+.msrow { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 13px; padding: 12px 14px; }
+.msrow.done { border-color: rgba(74,222,128,0.5); background: rgba(74,222,128,0.07); }
+.mstop { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.mstop b { font-size: 0.98rem; }
+.mstop span { font-size: 0.78rem; color: #ffd24a; font-weight: 700; }
+.msrow.done .mstop span { color: #4ade80; }
+.msdesc { font-size: 0.83rem; color: #8A97B4; margin: 3px 0 8px; }
+.msbar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.09); overflow: hidden; }
+.msbar i { display: block; height: 100%; background: linear-gradient(90deg,#6cc3ff,#4ade80); }
+.msrow.done .msbar i { background: #4ade80; }
+.mscount { font-size: 0.74rem; color: #7E8AA6; margin-top: 4px; text-align: right; }
 #gunsmith { position: fixed; inset: 0; z-index: 60; display: none; background: rgba(4,6,12,0.86);
             backdrop-filter: blur(10px); overflow-y: auto; padding: 24px 16px; }
 #gunsmith.show { display: block; }
@@ -743,6 +759,21 @@ body.ncplaying #tc { display: block; }
     <div class='wsel' id='wsel'></div>
     <div class='lbnote' id='loadnote' style='text-align:center; margin-top:8px'></div>
     <button id='gunsmithBtn' class='pillbtn' type='button' style='margin-top:12px' data-t='g_mods'>MODIFICATIONS</button>
+    <button id='missionBtn' class='pillbtn' type='button' style='margin-top:8px'>MISSIONS <span id='missiondone' style='opacity:.7'></span></button>
+  </div>
+
+  <!-- ===== MISSIONS ===== -->
+  <div id='missions'>
+    <div class='mspanel'>
+      <div class='gshead'>
+        <div>
+          <div class='gstitle'>MISSIONS</div>
+          <div class='gssub'>Points for playing differently, not for playing more. Progress carries between matches.</div>
+        </div>
+        <button id='msclose' class='pillbtn' type='button'>Done</button>
+      </div>
+      <div id='missionlist'></div>
+    </div>
   </div>
 
   <!-- ===== GUNSMITH ===== -->
@@ -1223,6 +1254,12 @@ const CUSTOM_MODELS = {
   arms: 'free_fps_arms_gameready_-_rigged.glb',
   armsScale: 1.0, armsX: 0, armsY: 0, armsZ: 0,
   armsRotX: 0, armsRotY: 0, armsRotZ: 0,
+  /* How far each hand is rolled about the finger axis, in degrees, to bring the
+     palm onto the weapon instead of showing its back. There is no convention
+     for which way a rig builds a hand, so this cannot be derived — hold H in a
+     match to dial it in against the model you actually loaded, and the tuner
+     writes the numbers back here for you to paste. */
+  handRollR: 0, handRollL: 0,
   /* The monitor now straps to the left forearm bone when the arms are rigged,
      so these are nudges FROM the forearm rather than a position in the frame.
      They used to be an absolute spot, and left at the old -0.15/-0.10/0.10 the
@@ -1573,6 +1610,8 @@ function keyName(code) {
 }
 let bots = [], tracers = [], obstacles = [], planted = [];
 let thirdPerson = false, scoped = false, running = false, shopOpen = false, inShop = false;
+/* Reset at every deploy — a mission about one match must not read the last one. */
+let matchDeaths = 0, firstBloodTaken = false;
 let timeLeft = 300, safeLeft = 60, enemyScore = 0;
 const SHOP_MAX_VISITS = 13; let shopVisits = 0;
 let curWeap = 'sniper', playerColor = parseInt(localStorage.getItem('nc_char') || '0xFF2E97');
@@ -1921,7 +1960,25 @@ function renderGunsmith() {
     };
   }
 
-  // ---- the numbers ----
+  renderGunsmithStats();
+  renderGunsmithSlots();
+}
+
+/* ---------------------------------------------------------------------------
+   WHY THESE ARE TWO FUNCTIONS
+
+   They used to be one, and fitting an attachment was impossible because of it.
+   Hovering a tile set the preview and called renderGunsmith(), which rewrites
+   #gsslots.innerHTML — destroying the very tile the cursor was over and
+   building a new one in its place. A click is only delivered when mousedown
+   and mouseup happen on the SAME element, so the click never landed. Worse,
+   the fresh node under the cursor fired its own mouseenter, which re-rendered
+   again, so the grid rebuilt itself continuously for as long as you hovered.
+
+   The preview is a numbers-panel concern, so now it only redraws the numbers.
+   The tiles are rebuilt when the build actually changes and at no other time.
+--------------------------------------------------------------------------- */
+function renderGunsmithStats() {
   const now = statCard(gsWeap);
   const next = gsPreview ? statCard(gsWeap, gsPreview.slot, gsPreview.id) : null;
   const S = now.raw;
@@ -1936,8 +1993,9 @@ function renderGunsmith() {
     (S.scope ? ' · scoped field of view <b>' + Math.round(25 * S.zoom) + '°</b>' : ' · no sight') +
     '</div>';
   document.getElementById('gsstats').innerHTML = html;
+}
 
-  // ---- the five slots ----
+function renderGunsmithSlots() {
   const fitted = attachOf(gsWeap);
   document.getElementById('gsslots').innerHTML = ATTACH_SLOTS.map(slot => {
     const opts = Object.keys(ATTACHMENTS).filter(id => ATTACHMENTS[id].slot === slot.id);
@@ -1955,10 +2013,16 @@ function renderGunsmith() {
     return '<div class="gsslot"><div class="sn">' + slot.name + '</div><div class="gsopts">' + cells.join('') + '</div></div>';
   }).join('');
 
+  /* Hover redraws the NUMBERS only. Touching #gsslots here is what broke
+     clicking, so it is deliberately left alone. */
   document.querySelectorAll('#gsslots .gsopt').forEach(el => {
-    el.onmouseenter = () => { gsPreview = { slot: el.dataset.slot, id: el.dataset.id }; renderGunsmith(); };
-    el.onmouseleave = () => { gsPreview = null; renderGunsmith(); };
-    el.onclick = () => pickAttachment(el.dataset.slot, el.dataset.id);
+    el.onmouseenter = () => { gsPreview = { slot: el.dataset.slot, id: el.dataset.id }; renderGunsmithStats(); };
+    el.onmouseleave = () => { gsPreview = null; renderGunsmithStats(); };
+    /* pointerup rather than click: on a touchscreen a click arrives ~300ms
+       later and after any scroll, and the tiles are the main thing a phone
+       player taps. */
+    el.onpointerup = e => { e.preventDefault(); pickAttachment(el.dataset.slot, el.dataset.id); };
+    el.onclick = e => e.preventDefault();
   });
 }
 
@@ -2100,6 +2164,15 @@ renderWSel();
 renderMapPick();
 document.getElementById('gunsmithBtn').onclick = openGunsmith;
 document.getElementById('gsclose').onclick = closeGunsmith;
+document.getElementById('missionBtn').onclick = () => {
+  document.getElementById('missions').classList.add('show'); renderMissions();
+};
+document.getElementById('msclose').onclick = () =>
+  document.getElementById('missions').classList.remove('show');
+document.addEventListener('keydown', e => {
+  if (e.code === 'Escape' && document.getElementById('missions').classList.contains('show'))
+    document.getElementById('missions').classList.remove('show');
+});
 // Escape closes it, the way every panel on this page does
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Escape' && document.getElementById('gunsmith').classList.contains('show')) closeGunsmith();
@@ -2236,16 +2309,19 @@ function init() {
        yellow hut into somebody's downloaded environment would look like litter and
        block a doorway, so on an uploaded map it is a button instead — same shop,
        same visit limit, no geometry. */
-    /* The arena's shop sits where the map was designed around it. An uploaded
-       map gets one placed in the first clear spot found, and only falls back to
-       the HUD button if the whole level is solid. */
-    if (curMap().id === 'arena') { shopPlaced = true; buildShop(); }
-    else {
-      const spot = findShopSpot();
-      if (spot) { SHOP.x = spot.x; SHOP.z = spot.z; shopPlaced = true; buildShop();
-                  console.log('shop placed at', spot.x.toFixed(1), spot.z.toFixed(1)); }
-      else console.warn('no clear ground for the shop on this map \u2014 using the HUD button');
-    }
+    /* THE SHOP IS DIGITAL NOW, on every map.
+
+       It used to be a yellow hut you walked to, parked in the middle of the
+       arena. That cost more than it gave: it ate the centre of the map, it was
+       a sight-line blocker nobody chose, and buying anything meant crossing
+       open ground and standing still in the one building every other player
+       knew the location of. The safe timer existed to paper over exactly that.
+
+       shopPlaced stays false, so shopIsButton() is true and the HUD button
+       does the work \u2014 the same shop, the same visit limit, no geometry and no
+       walk. The building code below is kept, unused, because a map that wants
+       a physical shop back only needs this line to change. */
+    shopPlaced = false;
   }
 
   // build fighters + gun. If custom .glb models are set, load them first; otherwise build immediately.
@@ -2968,21 +3044,26 @@ function buildWorld() {
     }
   }
 
-  /* ---- THE CROSSROADS PLATFORM ----
-     The two roads already cross at the middle of the map, which makes it the
-     one place everybody passes through — so that is where the high ground goes.
-     Four ramps, one per approach, so no team owns the only way up, and a
-     parapet on all four sides so holding it is a fight rather than a free kill.
-     3.2 metres is high enough to shoot over everything at ground level and low
-     enough that falling off is survivable. */
-  raisedDeck(0, 0, 30, 30, 3.2);
-  rampUp(0, -21.5, 3.4, 13, 3.2, '+z');    // from the north road
-  rampUp(0,  21.5, 3.4, 13, 3.2, '-z');    // from the south road
-  rampUp(-21.5, 0, 3.4, 13, 3.2, '+x');    // from the west
-  rampUp( 21.5, 0, 3.4, 13, 3.2, '-x');    // from the east
-  // a shot-up bus shelter on the deck, so the top is not a bare table
-  box(5, 2.4, 2.2, 0x4d5a52, -8, 3.2 + 1.2, -7, true);
-  box(2.2, 2.4, 5, 0x4d5a52, 8, 3.2 + 1.2, 7, true);
+  /* ---- THE CROSSROADS, LEFT OPEN ----
+     There was a 30x30 raised deck here with four ramps onto it. It is gone.
+
+     The idea was that the crossroads is where everyone passes, so it should be
+     the high ground. In practice a platform in the exact middle of a symmetric
+     map is the strongest position on it, it is visible from everywhere, and the
+     match collapses into whoever climbed it first — while everyone else fights
+     around the outside of a wall they cannot see past. Taking it out gives the
+     centre back as somewhere to move THROUGH.
+
+     The two flank towers below still provide high ground. The difference is
+     that they are off-centre, so taking one gives you an angle rather than the
+     whole map, and there is a real cost to being up there.
+
+     Cover at the crossroads instead — waist-high, breaks the sight line down
+     both roads without owning them. */
+  box(5, 2.4, 2.2, 0x4d5a52, -9, 1.2, -8, true);
+  box(2.2, 2.4, 5, 0x4d5a52,  9, 1.2,  8, true);
+  box(3.4, 1.3, 1.1, 0xd0c4a0, -7, 0.65, 7, true, 0.3);
+  box(1.1, 1.3, 3.4, 0xd0c4a0,  7, 0.65, -7, true, -0.2);
 
   /* ---- FLANK TOWERS ----
      Two of them, one on each diagonal, so each side has a long angle onto the
@@ -3757,6 +3838,68 @@ function ikReach(chain, tip, target, iters) {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   MAKING A HAND GRIP SOMETHING
+
+   ikReach() moves the WRIST to a point. It says nothing about which way the
+   hand faces, so the hand kept whatever rotation it had in the model's rest
+   pose — which for every FPS-arms rig is a flat, open hand. That is why the
+   backs of the hands were pointing at the camera and why nothing looked held:
+   the hands were at the gun, not on it.
+
+   A hand needs two things to read as gripping: the fingers have to run ACROSS
+   the thing being held, and the palm has to face it. So:
+
+     1. find which way the fingers point, from the wrist to its children
+     2. rotate the hand so that direction matches where the fingers should go
+     3. roll about that axis until the palm faces the weapon
+
+   Step 3 is the one that cannot be derived. Palm direction depends on how the
+   artist built the rig and there is no convention — so it is a number, with a
+   sane default and a live tuner (hold H in a match) because whoever is looking
+   at the model can fix it in ten seconds and no amount of cleverness here can.
+--------------------------------------------------------------------------- */
+function fingerDir(hand) {
+  /* Where the fingers go, in world space. Averaging the children handles a
+     hand with five finger chains and one with a single stub bone equally. */
+  const w = new THREE.Vector3(), c = new THREE.Vector3(), sum = new THREE.Vector3();
+  hand.getWorldPosition(w);
+  let n = 0;
+  hand.children.forEach(ch => {
+    if (!ch.isBone) return;
+    ch.getWorldPosition(c); sum.add(c); n++;
+  });
+  if (!n) {
+    /* No children: fall back to continuing the forearm's line, which is the
+       direction an outstretched hand points. */
+    if (hand.parent && hand.parent.isBone) {
+      hand.parent.getWorldPosition(c);
+      return w.clone().sub(c).normalize();
+    }
+    return new THREE.Vector3(0, -1, 0);
+  }
+  return sum.divideScalar(n).sub(w).normalize();
+}
+
+function orientHand(hand, wantDir, roll) {
+  if (!hand || !hand.parent) return;
+  hand.updateMatrixWorld(true);
+  const have = fingerDir(hand);
+  if (have.lengthSq() < 1e-8 || wantDir.lengthSq() < 1e-8) return;
+
+  const q = new THREE.Quaternion().setFromUnitVectors(have, wantDir.clone().normalize());
+  if (roll) q.premultiply(new THREE.Quaternion().setFromAxisAngle(wantDir.clone().normalize(), roll));
+
+  /* Compose in world space, then bring the result back into the parent's frame
+     — the bone's own rotation is relative to the forearm, and writing a world
+     quaternion straight onto it is the classic way to get a hand on backwards. */
+  const wq = new THREE.Quaternion(), pq = new THREE.Quaternion();
+  hand.getWorldQuaternion(wq);
+  hand.parent.getWorldQuaternion(pq);
+  hand.quaternion.copy(pq.invert()).multiply(q).multiply(wq);
+  hand.updateMatrixWorld(true);
+}
+
 function buildUploadedArms(wbox) {
   const g = new THREE.Group();
   const inner = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone)
@@ -3836,11 +3979,47 @@ function buildUploadedArms(wbox) {
   holder.position.add(seat.clone().sub(anchor));
   g.updateMatrixWorld(true);
 
-  /* POSE. Each hand is pulled onto its point on the weapon. This is the whole
-     fix: the arms are no longer placed near the gun, they are bent onto it. */
+  /* POSE. Each hand is pulled onto its point on the weapon, then turned so it
+     is gripping rather than merely touching. */
   if (rigged) {
+    const H = CUSTOM_MODELS;
     ikReach([upperR, foreR], handR, tR, 16);
-    if (handL && foreL && upperL && upperL.isBone) ikReach([upperL, foreL], handL, tL, 16);
+    /* Trigger hand: fingers wrap across the grip, so they point to the LEFT
+       and slightly down from the shooter's view. Support hand mirrors it. */
+    orientHand(handR, new THREE.Vector3(-1, -0.55, -0.15),
+               (H.handRollR == null ? 0 : H.handRollR) * Math.PI / 180);
+
+    const leftOk = handL && foreL && upperL && upperL.isBone;
+    if (leftOk) {
+      ikReach([upperL, foreL], handL, tL, 16);
+      orientHand(handL, new THREE.Vector3(1, -0.55, -0.15),
+                 (H.handRollL == null ? 0 : H.handRollL) * Math.PI / 180);
+    } else if (handL) {
+      /* The left wrist was found but not a full chain above it — some rigs name
+         the upper arm something findHandBone's parent walk does not reach. The
+         arm would otherwise hang in its rest pose while the right one gripped,
+         which is what "the other one is lagging" looks like. Walk up until
+         there are two real bones and use those. */
+      let a = handL.parent, b2 = a && a.parent;
+      if (a && a.isBone && b2 && b2.isBone) {
+        ikReach([b2, a], handL, tL, 16);
+        orientHand(handL, new THREE.Vector3(1, -0.55, -0.15),
+                   (H.handRollL == null ? 0 : H.handRollL) * Math.PI / 180);
+      } else {
+        console.warn('left arm has no usable bone chain — it will not grip. ' +
+                     'Bone names seen near the wrist: ' + (handL.name || '?'));
+      }
+    }
+
+    /* Did it actually land? A chain that cannot reach leaves the hand short of
+       the target, and a hand hanging half a weapon away is the single most
+       obvious thing wrong with a viewmodel. Say so rather than shipping it
+       silently — the tuner can fix reach with armsScale. */
+    const chk = new THREE.Vector3();
+    handR.getWorldPosition(chk);
+    if (chk.distanceTo(tR) > 0.09)
+      console.warn('right hand stopped ' + chk.distanceTo(tR).toFixed(2) +
+                   ' from the grip — arms may be scaled too small. Hold H in a match to tune.');
     g.updateMatrixWorld(true);
   }
 
@@ -4255,6 +4434,67 @@ const SFX_NAMES = { sniper:'rifle', smg:'smg', pistol:'pistol', shotgun:'shotgun
 const SFX_FILE = '';
 let actx = null, sfxGain = null, boomBuf = null, sfxReady = false;
 
+/* ---------------------------------------------------------------------------
+   THE SOUND PACK  —  drop real audio in and it takes over
+
+   Every sound in this game is synthesised, which is why it needs no files and
+   why it sounds like a game from 1994. Any entry below whose file is actually
+   present is loaded and played INSTEAD of the synth; anything missing falls
+   back, silently, so the game never breaks because a download did not happen.
+
+   TO USE IT: download the clip, rename it to the filename on the right, and
+   put it in the same folder as game.html. Nothing else to change.
+
+   Keep them SHORT. These fire constantly — a two-second clip on 'hit' will
+   overlap itself into mush. Under 1s for anything combat, under 3s for the
+   jumpscare and the round stingers. MP3, OGG and WAV all decode fine.
+
+   One caution worth stating plainly: sounds from a site like MyInstants are
+   mostly other people's copyrighted audio — memes, film lines, TV clips. That
+   is fine for a project you and your friends play. It is NOT fine if you ever
+   put ads on this, sell it, or ship it to a store, and "everyone does it" is
+   not a defence that has ever worked. If this becomes something real, the same
+   filenames take royalty-free clips from Freesound or Pixabay instead.
+--------------------------------------------------------------------------- */
+const SOUND_PACK = {
+  jumpscare: 'sfx-jumpscare.mp3',   // the mine going off in your face — the big one
+  headshot:  'sfx-headshot.mp3',    // a clean kill
+  kill:      'sfx-kill.mp3',        // any other kill
+  death:     'sfx-death.mp3',       // you died
+  hurt:      'sfx-hurt.mp3',        // you got hit
+  pickup:    'sfx-pickup.mp3',      // bought something / picked something up
+  reload:    'sfx-reload.mp3',
+  mission:   'sfx-mission.mp3',     // a mission completed
+  win:       'sfx-win.mp3',         // round won
+  lose:      'sfx-lose.mp3',        // round lost
+  mineBeep:  'sfx-minebeep.mp3'     // the faint tick a mine makes when you are close
+};
+const packBuf = {};
+
+function loadSoundPack() {
+  Object.keys(SOUND_PACK).forEach(name => {
+    const file = SOUND_PACK[name];
+    if (!file) return;
+    fetch(file)
+      .then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(b => actx.decodeAudioData(b))
+      .then(buf => { packBuf[name] = buf; console.log('sound pack: ' + name + ' <- ' + file); })
+      .catch(() => { /* not downloaded yet — the synth covers it */ });
+  });
+}
+
+/* Returns true if a real clip played, so callers can skip the synth. */
+function playPack(name, vol) {
+  const buf = packBuf[name];
+  if (!buf || !sfxReady || !actx || actx.state !== 'running') return false;
+  try {
+    const s = actx.createBufferSource(); s.buffer = buf;
+    const g = actx.createGain(); g.gain.value = vol == null ? 1 : vol;
+    s.connect(g); g.connect(sfxGain); s.start();
+    return true;
+  } catch (e) { return false; }
+}
+
 function sfxInit() {
   if (actx) return;
   const AC = window.AudioContext || window.webkitAudioContext;
@@ -4264,6 +4504,7 @@ function sfxInit() {
   sfxGain.gain.value = 0.55;
   sfxGain.connect(actx.destination);
   sfxReady = true;
+  loadSoundPack();
   if (SFX_FILE) {
     fetch(SFX_FILE).then(r => r.arrayBuffer())
       .then(b => actx.decodeAudioData(b))
@@ -4464,6 +4705,8 @@ function engineUpdate(speed, topSpeed) {
 /* One entry point. Everything in the game calls sfx('name'). */
 function sfx(name) {
   if (!sfxReady || !actx || actx.state !== 'running') return;
+  /* A downloaded clip wins over the synth for anything it covers. */
+  if (playPack(name)) return;
   try {
     switch (name) {
       /* Same four layers each time; the numbers are what make a shotgun a
@@ -4938,6 +5181,13 @@ function startMatch() {
   lockPointer();
   running = true; c4Ready = false; c4Timer = 20; shopVisits = 0; setPts(pts());
   resetAmmo();
+  /* Fresh mines every round, in fresh places — the whole point is not knowing
+     where they are, and a fixed field would be memorised by the third match. */
+  placeMines(20);
+  matchDeaths = 0; firstBloodTaken = false;
+  /* Fitting all five slots is a state of the build, not an event, so it is
+     checked at deploy rather than waiting for something to happen. */
+  missionEvent('slots', fittedIds(curWeap).length);
   // no smoke or debris left hanging in the air from the last round
   fx.forEach(f => scene.remove(f.mesh)); fx = [];
   shake.amp = 0; shake.t = 0; speedoLast = -1;
@@ -4960,6 +5210,101 @@ function startMatch() {
   if (mm === 'random') mpConnect('', lbName(), mapId);
   else if (mm === 'code') mpConnect(localStorage.getItem('nc_room') || '', lbName(), mapId);
 }
+/* ---------------------------------------------------------------------------
+   VIEWMODEL TUNER  —  hold H
+
+   The hands are fitted to whatever arms model is loaded by measuring its
+   bones, and that gets the position right. What it cannot get right on its own
+   is the roll of each hand, because there is no convention for which way a rig
+   builds a palm — it is a property of the model, not something derivable from
+   it. Nine values here, live, against the arms you actually have.
+
+   It writes to localStorage so a reload keeps it, and prints the block to paste
+   into CUSTOM_MODELS so the setting survives for everyone else too.
+--------------------------------------------------------------------------- */
+const VM_KEYS = [
+  ['armsScale', 0.3, 2.5, 0.01], ['armsX', -0.6, 0.6, 0.005],
+  ['armsY', -0.6, 0.6, 0.005],   ['armsZ', -0.6, 0.6, 0.005],
+  ['armsRotX', -180, 180, 1],    ['armsRotY', -180, 180, 1],
+  ['armsRotZ', -180, 180, 1],    ['handRollR', -180, 180, 1],
+  ['handRollL', -180, 180, 1]
+];
+try {
+  const saved = JSON.parse(localStorage.getItem('nc_vm') || '{}');
+  VM_KEYS.forEach(([k]) => { if (typeof saved[k] === 'number') CUSTOM_MODELS[k] = saved[k]; });
+} catch (e) {}
+
+function vmSave() {
+  const o = {};
+  VM_KEYS.forEach(([k]) => { o[k] = CUSTOM_MODELS[k]; });
+  try { localStorage.setItem('nc_vm', JSON.stringify(o)); } catch (e) {}
+}
+
+function vmPanel() {
+  let p = document.getElementById('vmtune');
+  if (p) return p;
+  p = document.createElement('div');
+  p.id = 'vmtune';
+  p.style.cssText = 'position:fixed;left:14px;top:14px;z-index:70;width:270px;padding:13px 15px;' +
+    'background:rgba(8,12,20,0.93);border:1px solid rgba(108,195,255,0.4);border-radius:14px;' +
+    'color:#EAF2FF;font:12px/1.45 Segoe UI,system-ui,sans-serif;display:none';
+  p.innerHTML = '<b style="font-size:13px">Viewmodel · hold H</b>' +
+    '<div style="color:#7E8AA6;margin:4px 0 9px">Roll turns the palm onto the gun.</div>' +
+    VM_KEYS.map(([k, lo, hi, st]) =>
+      '<label style="display:block;margin-bottom:7px">' + k +
+      ' <span id="vmv_' + k + '" style="float:right;color:#6cc3ff"></span>' +
+      '<input type="range" id="vm_' + k + '" min="' + lo + '" max="' + hi + '" step="' + st +
+      '" style="width:100%"></label>').join('') +
+    '<button id="vmcopy" style="width:100%;margin-top:6px;padding:7px;border-radius:9px;border:0;' +
+    'cursor:pointer;background:#6cc3ff;color:#04121a;font-weight:700">Copy these numbers</button>' +
+    '<button id="vmreset" style="width:100%;margin-top:5px;padding:6px;border-radius:9px;cursor:pointer;' +
+    'background:none;border:1px solid rgba(255,255,255,0.2);color:#EAF2FF">Reset</button>';
+  document.body.appendChild(p);
+
+  const sync = () => VM_KEYS.forEach(([k]) => {
+    const s = document.getElementById('vm_' + k);
+    s.value = CUSTOM_MODELS[k] || 0;
+    document.getElementById('vmv_' + k).textContent = (+s.value).toFixed(k.includes('Rot') || k.includes('Roll') ? 0 : 3);
+  });
+  VM_KEYS.forEach(([k]) => {
+    document.getElementById('vm_' + k).oninput = e => {
+      CUSTOM_MODELS[k] = parseFloat(e.target.value);
+      document.getElementById('vmv_' + k).textContent =
+        CUSTOM_MODELS[k].toFixed(k.includes('Rot') || k.includes('Roll') ? 0 : 3);
+      vmSave(); refitWeapon();
+    };
+  });
+  document.getElementById('vmcopy').onclick = () => {
+    const txt = VM_KEYS.map(([k]) => '  ' + k + ': ' + (CUSTOM_MODELS[k] || 0) + ',').join('\n');
+    navigator.clipboard.writeText(txt).then(() => {
+      document.getElementById('vmcopy').textContent = 'Copied — paste into CUSTOM_MODELS';
+      setTimeout(() => { document.getElementById('vmcopy').textContent = 'Copy these numbers'; }, 2200);
+    });
+    console.log('CUSTOM_MODELS viewmodel block:\n' + txt);
+  };
+  document.getElementById('vmreset').onclick = () => {
+    VM_KEYS.forEach(([k]) => { CUSTOM_MODELS[k] = k === 'armsScale' ? 1 : 0; });
+    vmSave(); sync(); refitWeapon();
+  };
+  p.__sync = sync;
+  return p;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code !== 'KeyH' || e.repeat) return;
+  /* Not while typing a room code, and not while the shop or gunsmith is up. */
+  const t = document.activeElement;
+  if (t && /input|textarea/i.test(t.tagName)) return;
+  const p = vmPanel();
+  p.style.display = 'block';
+  p.__sync();
+});
+document.addEventListener('keyup', e => {
+  if (e.code !== 'KeyH') return;
+  const p = document.getElementById('vmtune');
+  if (p) p.style.display = 'none';
+});
+
 document.addEventListener('mousemove', (e) => {
   if (!pointerLocked()) return;
   const sens = scoped ? 0.0009 : 0.0022;
@@ -5282,8 +5627,27 @@ function shoot() {
     }
     if (hit) {
       let dmg = scoped ? W.scopedDmg : W.dmg;
-      sfx('hit');
-      hit.hp -= dmg; if (hit.hp <= 0) killBot(hit);
+      /* HEADSHOTS. The ray already knows where it struck, so this costs one
+         comparison: the top ~20% of a body-height box is the head. Double
+         damage, its own sound, and it counts toward the Headhunter mission.
+         Measured against the bot's own box rather than a fixed height, so a
+         crouching or differently-scaled model is judged on its own size. */
+      let head = false;
+      if (hitPt) {
+        const bb = new THREE.Box3().setFromObject(hit.mesh);
+        const h = bb.max.y - bb.min.y;
+        if (h > 0.5 && hitPt.y > bb.min.y + h * 0.80) head = true;
+      }
+      if (head) { dmg *= 2; if (!playPack('headshot')) sfx('hit'); }
+      else sfx('hit');
+      hit.hp -= dmg;
+      if (hit.hp <= 0) {
+        if (head) missionEvent('headshot');
+        /* A suppressor fitted is what the Quiet Professional asks for — read
+           off the build rather than tracked separately, so it cannot drift. */
+        if (fittedIds(curWeap).indexOf('suppress') >= 0) missionEvent('quietkill');
+        killBot(hit);
+      } else if (head) missionEvent('headshot');
     }
   }
 
@@ -5315,6 +5679,9 @@ function shoot() {
 
 function killBot(b) {
   if (b.team === PLAYER_TEAM) return;   // friendly fire is off
+  /* First blood is the opening kill of the MATCH, not your first kill — so it
+     is claimed here, once, and only if nobody has taken it yet. */
+  if (!firstBloodTaken) { firstBloodTaken = true; missionEvent('firstblood'); }
   b.alive = false; b.mesh.visible = false; if (b.tag) b.tag.visible = false; player.kills++;
   document.getElementById('mescore').textContent = player.kills;
   earn(MODES[mode].perKill, 'kill'); addFeed('You ' + b.name); updateBoard();
@@ -5389,6 +5756,7 @@ function plantC4() {
   m.position.set(player.x, 0.12, player.z); scene.add(m);
   planted.push({ mesh: m, kind: 'c4', stuck: true, t: 0 });
   addFeed('C4 planted \u2014 X to detonate');
+  missionEvent('c4');
 }
 function detonate() {
   const blow = planted.filter(p => p.kind === 'c4' || (p.kind === 'sticky' && p.stuck));
@@ -5484,7 +5852,7 @@ function explode(pos, radius) {
   if (d < near) shakeCamera(Math.min(0.85, (1 - d / near) * (0.25 + R * 0.045)), 0.45);
 
   // damage: unchanged, and still the only thing here that touches gameplay
-  bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const dd = b.mesh.position.distanceTo(pos); if (dd < radius) { b.hp -= 120*(1-dd/radius)+30; if (b.hp <= 0) killBot(b); } });
+  bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const dd = b.mesh.position.distanceTo(pos); if (dd < radius) { b.hp -= 120*(1-dd/radius)+30; if (b.hp <= 0) { missionEvent('nadekill'); killBot(b); } } });
 }
 
 function shakeCamera(amp, time) {
@@ -5611,7 +5979,7 @@ function updateNades(dt) {
             b.hp -= p.dmg || TANK_SHELL_DMG;
             if (b.hp <= 0) {
               b.alive = false; b.mesh.visible = false;
-              if (p.owner.driver === 'player') { player.kills++; earn(MODES[mode].perKill, 'tank kill'); updateBoard(); }
+              if (p.owner.driver === 'player') { player.kills++; earn(MODES[mode].perKill, 'tank kill'); missionEvent('tankkill'); updateBoard(); }
               setTimeout(() => respawnBot(b), 3500);
             }
           }
@@ -5783,7 +6151,7 @@ function damagePlayer(amt, from) {
   if (playerTank && !leaningOut) { damageTank(playerTank, amt * 0.6, false); return; }
   player.hp -= amt; sfx('hurt'); document.getElementById('hpbar').style.width = Math.max(0, player.hp) + '%';
   const df = document.getElementById('dmgflash'); df.style.opacity = '1'; setTimeout(() => df.style.opacity = '0', 120);
-  if (player.hp <= 0) { player.deaths++; sfx('death'); playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
+  if (player.hp <= 0) { player.deaths++; matchDeaths++; sfx('death'); playOneShot('death', 1600); player.hp = 100; document.getElementById('hpbar').style.width = '100%'; if (from) { from.kills++; updateBoard(); } addFeed((from ? from.name : 'Someone') + ' You (respawned)'); respawnPlayer(); c4Ready = false; c4Timer = 20; }
 }
 
 // ---------- player + camera ----------
@@ -6187,6 +6555,12 @@ function endMatch() {
   }
   if (bonus) setPts(pts() + bonus);
   const totalEarned = killPts + bonus;
+
+  /* Won it without dying once. Checked here because it is the only moment both
+     halves of the condition are known. */
+  if (won && matchDeaths === 0) missionEvent('flawless');
+  if (!playPack(won ? 'win' : 'lose')) sfx(won ? 'pickup' : 'death');
+  clearMines();
 
   /* Straight onto the boards. The local one is written no matter what; the world
      one is posted if an endpoint is configured, and a failed post leaves the run
@@ -7078,6 +7452,263 @@ function updateStrikes(dt) {
   });
 })();
 
+/* ===========================================================================
+   JUMPSCARE MINES
+   ===========================================================================
+   Twenty of them, scattered, and deliberately almost invisible: a dark disc a
+   couple of centimetres proud of the ground, the colour of wet tarmac, sitting
+   on a road that is already grey. You will not spot one by scanning the floor
+   at a run.
+
+   Almost invisible is not the same as unfair, and the difference is the whole
+   design. Three things give a mine away to a player who is paying attention:
+
+     THE TELL     it flashes for one frame every couple of seconds. Nothing you
+                  see peripherally, everything you see if you are looking at it.
+     THE SOUND    a faint tick inside four metres, getting faster as you close.
+                  Headphones beat eyesight here, which is the point.
+     THE SPEED    the trigger radius is 1.5m at a sprint and 0.75m crouched, so
+                  moving carefully genuinely finds them. Crouch-walking a road
+                  you do not trust is a real tactic rather than a slower one.
+
+   It hurts (35) but never kills outright from full health — a scare you cannot
+   do anything about is just a punishment. The jump comes from the noise and the
+   screen, not the damage.
+
+   Bots trip them too. A mine that only ever catches the human is a cheat with
+   extra steps, and watching a bot set one off across the map is how you learn
+   they exist.
+=========================================================================== */
+const MINES = [];
+let mineTick = 0, jumpEl = null;
+
+function clearMines() {
+  MINES.forEach(m => { if (m.mesh) scene.remove(m.mesh); });
+  MINES.length = 0;
+}
+
+function placeMines(n) {
+  clearMines();
+  if (!scene || typeof THREE === 'undefined') return;
+  const geo = new THREE.CylinderGeometry(0.30, 0.34, 0.045, 14);
+  for (let i = 0; i < n; i++) {
+    let x = 0, z = 0, ok = false;
+    for (let t = 0; t < 40 && !ok; t++) {
+      x = (Math.random() - 0.5) * ARENA * 1.7;
+      z = (Math.random() - 0.5) * ARENA * 1.7;
+      /* Not on top of a spawn, and not inside anything solid — a mine you
+         cannot walk onto is a mine that never fires. */
+      const nearSpawn = Math.hypot(x, z - ARENA * 0.8) < 22 || Math.hypot(x, z + ARENA * 0.8) < 22;
+      ok = !nearSpawn && !(typeof blockedAt === 'function' && blockedAt(x, z));
+    }
+    if (!ok) continue;
+    const mat = new THREE.MeshStandardMaterial({ color: 0x3c4148, roughness: 0.95, metalness: 0.15 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, 0.022, z);
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+    MINES.push({ x: x, z: z, mesh: mesh, mat: mat, live: true, phase: Math.random() * 2.4 });
+  }
+}
+
+function jumpscareOverlay() {
+  if (jumpEl) return jumpEl;
+  jumpEl = document.createElement('div');
+  jumpEl.id = 'jumpscare';
+  jumpEl.style.cssText = 'position:fixed;inset:0;z-index:45;display:none;pointer-events:none;' +
+    'background:#000;align-items:center;justify-content:center';
+  /* Drawn rather than an image file: no download, no 404, and it cannot be a
+     genuinely horrible picture that somebody swapped in. A cartoon shock face
+     is the right level for a game teenagers play. */
+  const c = document.createElement('canvas');
+  c.width = 420; c.height = 420;
+  const x = c.getContext('2d');
+  x.fillStyle = '#0a0a0c'; x.fillRect(0, 0, 420, 420);
+  x.fillStyle = '#d8d2c4';
+  x.beginPath(); x.ellipse(210, 215, 128, 160, 0, 0, 7); x.fill();
+  x.fillStyle = '#fff';
+  x.beginPath(); x.ellipse(163, 178, 34, 40, 0, 0, 7); x.fill();
+  x.beginPath(); x.ellipse(257, 178, 34, 40, 0, 0, 7); x.fill();
+  x.fillStyle = '#111';
+  x.beginPath(); x.arc(163, 184, 16, 0, 7); x.fill();
+  x.beginPath(); x.arc(257, 184, 16, 0, 7); x.fill();
+  x.beginPath(); x.ellipse(210, 300, 40, 54, 0, 0, 7); x.fill();     // open mouth
+  x.strokeStyle = '#111'; x.lineWidth = 9; x.lineCap = 'round';
+  x.beginPath(); x.moveTo(126, 128); x.lineTo(196, 148); x.stroke();  // angry brows
+  x.beginPath(); x.moveTo(294, 128); x.lineTo(224, 148); x.stroke();
+  c.style.cssText = 'width:min(74vh,74vw);height:min(74vh,74vw);image-rendering:auto';
+  jumpEl.appendChild(c);
+  document.body.appendChild(jumpEl);
+  return jumpEl;
+}
+
+function triggerMine(m, byBot) {
+  if (!m.live) return;
+  m.live = false;
+  if (m.mesh) { scene.remove(m.mesh); m.mesh = null; }
+
+  if (byBot) {
+    /* Somebody else found it. You hear it and see the flash, you do not get
+       the screen — that is what makes them feel like part of the map. */
+    if (typeof boom === 'function') { try { boom(m.x, 0.3, m.z, 0.5); } catch (e) {} }
+    else sfx('boom');
+    return;
+  }
+
+  if (!playPack('jumpscare')) {
+    /* The synth stand-in: a scream-shaped shriek over a bang. Not as good as a
+       real clip, which is exactly why SOUND_PACK.jumpscare exists. */
+    sfx('bigboom');
+    try {
+      blip('sawtooth', 900, 0.55, 0.42, 190);
+      noiseThrough('bandpass', 2600, 4, 0.35, 0.30, 0.02);
+    } catch (e) {}
+  }
+
+  const el = jumpscareOverlay();
+  el.style.display = 'flex';
+  setTimeout(() => { el.style.display = 'none'; }, 420);
+  if (typeof shake === 'function') { try { shake(1.4); } catch (e) {} }
+
+  /* Never a kill from full health. A scare you could not have avoided should
+     cost you the fight, not the round. */
+  const dmg = Math.min(35, Math.max(0, player.hp - 5));
+  if (dmg > 0) damagePlayer(dmg, null);
+  addFeed('You stepped on a mine');
+  missionEvent('mine');
+}
+
+function updateMines(dt) {
+  if (!MINES.length || !running) return;
+  mineTick += dt;
+
+  const crouching = !!(typeof crouched !== 'undefined' && crouched);
+  const trigger = crouching ? 0.75 : 1.5;
+  let nearest = 1e9;
+
+  for (let i = 0; i < MINES.length; i++) {
+    const m = MINES[i];
+    if (!m.live) continue;
+    const d = Math.hypot(player.x - m.x, player.z - m.z);
+    if (d < trigger && !playerTank) { triggerMine(m, false); continue; }
+    if (d < nearest) nearest = d;
+
+    /* The tell: one bright frame every 2.4s, out of phase per mine so they do
+       not blink in unison and give the whole field away at once. */
+    if (m.mat) {
+      const ph = (mineTick + m.phase) % 2.4;
+      m.mat.emissive = m.mat.emissive || new THREE.Color(0x000000);
+      const hot = ph < 0.06 ? 1 : 0;
+      m.mat.emissive.setRGB(hot * 0.45, 0, 0);
+    }
+
+    // bots find them too
+    if (typeof bots !== 'undefined') {
+      for (let b = 0; b < bots.length; b++) {
+        const bt = bots[b];
+        if (!bt.alive) continue;
+        if (Math.hypot(bt.x - m.x, bt.z - m.z) < 1.4) {
+          triggerMine(m, true);
+          bt.hp -= 45;
+          if (bt.hp <= 0 && typeof killBot === 'function') { try { killBot(bt, null); } catch (e) {} }
+          break;
+        }
+      }
+    }
+  }
+
+  /* The sound tell: faster the closer you are, nothing past four metres. */
+  if (nearest < 4) {
+    const gap = 0.18 + (nearest / 4) * 0.75;
+    if (mineTick - (updateMines.lastBeep || 0) > gap) {
+      updateMines.lastBeep = mineTick;
+      if (!playPack('mineBeep', 0.35)) {
+        try { blip('sine', 2100, 0.03, 0.05, 2100); } catch (e) {}
+      }
+    }
+  }
+}
+
+
+/* ===========================================================================
+   MISSIONS
+   ===========================================================================
+   Nine of them, each worth points, each finishable in a match or two. They are
+   deliberately about doing something different rather than doing more of the
+   same — "get 40 kills" is not a mission, it is the game with a number on it.
+
+   Progress is saved as you go, so a mission half-done in one match carries into
+   the next. Completing one pays out immediately rather than at the end of the
+   round: the reward should land while you still remember what you did.
+=========================================================================== */
+const MISSIONS = [
+  { id: 'first_blood', name: 'First blood',      desc: 'Get the opening kill of a match',       goal: 1,  pts: 40 },
+  { id: 'headhunter',  name: 'Headhunter',       desc: 'Land 10 headshots',                     goal: 10, pts: 120 },
+  { id: 'sapper',      name: 'Sapper',           desc: 'Survive 5 mines',                       goal: 5,  pts: 90 },
+  { id: 'demolition',  name: 'Demolition',       desc: 'Plant C4 three times',                  goal: 3,  pts: 80 },
+  { id: 'armoured',    name: 'Armoured',         desc: 'Get 5 kills from a tank',               goal: 5,  pts: 110 },
+  { id: 'quiet',       name: 'Quiet professional', desc: 'Get 8 kills with a suppressor fitted', goal: 8, pts: 130 },
+  { id: 'gunsmith',    name: 'Gunsmith',         desc: 'Fit an attachment in all five slots',   goal: 5,  pts: 100 },
+  { id: 'grenadier',   name: 'Grenadier',        desc: 'Kill 6 with grenades',                  goal: 6,  pts: 100 },
+  { id: 'survivor',    name: 'Survivor',         desc: 'Win a match without dying',             goal: 1,  pts: 150 }
+];
+
+let MISSION_PROG = {};
+try { MISSION_PROG = JSON.parse(localStorage.getItem('nc_missions') || '{}') || {}; } catch (e) { MISSION_PROG = {}; }
+function saveMissions() { try { localStorage.setItem('nc_missions', JSON.stringify(MISSION_PROG)); } catch (e) {} }
+function missionState(id) { return MISSION_PROG[id] || (MISSION_PROG[id] = { n: 0, done: false }); }
+
+/* One entry point for the whole system, so adding a mission never means
+   hunting through the game for the right place to increment something. */
+function missionEvent(kind, amount) {
+  const add = amount == null ? 1 : amount;
+  const map = {
+    mine: 'sapper', headshot: 'headhunter', c4: 'demolition',
+    tankkill: 'armoured', quietkill: 'quiet', nadekill: 'grenadier',
+    firstblood: 'first_blood', slots: 'gunsmith', flawless: 'survivor'
+  };
+  const id = map[kind];
+  if (!id) return;
+  const M = MISSIONS.find(m => m.id === id);
+  const st = missionState(id);
+  if (st.done) return;
+  /* 'slots' reports a total rather than an increment — it is a state of your
+     build, not a thing that happened. */
+  st.n = (kind === 'slots') ? Math.max(st.n, add) : st.n + add;
+  if (st.n >= M.goal) {
+    st.done = true; st.n = M.goal;
+    setPts(pts() + M.pts);
+    if (!playPack('mission')) sfx('pickup');
+    addFeed('MISSION COMPLETE — ' + M.name + '  +' + M.pts + ' pts');
+    if (typeof logSkill === 'function') logSkill('arena_mvp');
+  }
+  saveMissions();
+  renderMissions();
+}
+
+function renderMissions() {
+  const box = document.getElementById('missionlist');
+  if (!box) return;
+  const done = MISSIONS.filter(m => missionState(m.id).done).length;
+  const hd = document.getElementById('missiondone');
+  if (hd) hd.textContent = done + ' / ' + MISSIONS.length;
+  box.innerHTML = MISSIONS.map(m => {
+    const st = missionState(m.id);
+    const pc = Math.round(Math.min(1, st.n / m.goal) * 100);
+    return '<div class="msrow' + (st.done ? ' done' : '') + '">' +
+      '<div class="mstop"><b>' + m.name + '</b><span>' + (st.done ? 'DONE' : '+' + m.pts + ' pts') + '</span></div>' +
+      '<div class="msdesc">' + m.desc + '</div>' +
+      '<div class="msbar"><i style="width:' + pc + '%"></i></div>' +
+      '<div class="mscount">' + Math.min(st.n, m.goal) + ' / ' + m.goal + '</div></div>';
+  }).join('');
+}
+
+/* Now that MISSIONS exists, fill the panel and the button's counter. Calling
+   this from the button-wiring block above threw "cannot access MISSIONS before
+   initialization": a const is not hoisted, and that code runs thousands of
+   lines earlier than this declaration. */
+renderMissions();
+
 function animate() {
   requestAnimationFrame(animate);
   const now = performance.now(); let dt = (now - gclock.last)/1000; gclock.last = now; if (dt > 0.1) dt = 0.1;
@@ -7098,6 +7729,7 @@ function animate() {
   if (strikeHudT <= 0) { strikeHudT = 1; buildLoadoutHUD(); }
   updateCamera(dt); updateShake(dt); updateFx(dt); updateSpeedo(dt);
   updateTracers(dt); updateRounds(dt); mpUpdate(dt);
+  if (running && !shopOpen) updateMines(dt);
   if (mapLamp) mapLamp.position.set(camera.position.x, camera.position.y + 1.2, camera.position.z);
   renderer.render(scene, camera);
 }
