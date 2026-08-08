@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Publish — NovaClip</title>
+<meta name='description' content='Drop in a clip and NovaClip plans the edit with the tools it actually has, writes the title, description and tags if you want it to, and holds it until the time you choose.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#05070E;--panel:#0C1220;--line:rgba(255,255,255,.1);--txt:#E8EEFF;--dim:#8A97B4;
+  --cyan:#00E5FF;--violet:#7C5CFF;--pink:#FF3D9A;--lime:#B6FF4A;--amber:#FFB443;
+  --grad:linear-gradient(110deg,var(--violet),var(--cyan) 48%,var(--pink))}
+body{background:var(--ink);color:var(--txt);min-height:100vh;margin-left:200px;
+  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--cyan)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px}
+.wrap{width:min(880px,100% - 34px);margin:0 auto;padding:26px 0 80px}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:200px;background:rgba(12,12,16,.85);
+  backdrop-filter:blur(20px);display:flex;flex-direction:column;padding:20px 0;gap:4px;
+  z-index:998;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto}
+.sidebar .themewrap{margin-top:auto;padding:16px 20px}
+.sidebar .themewrap label{display:block;font-size:.78rem;opacity:.6;margin-bottom:6px}
+.sidebar select{width:100%;font-size:.95rem;background:rgba(255,255,255,.05);color:var(--txt);
+  border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px}
+
+.hero{position:relative}
+.hero::before{content:"";position:absolute;left:-90px;top:-130px;width:460px;height:290px;
+  background:radial-gradient(closest-side,rgba(124,92,255,.28),transparent 72%);filter:blur(28px);z-index:-1}
+h1{font-size:clamp(2rem,5.4vw,3rem);font-weight:680;letter-spacing:-.042em;line-height:1.03}
+h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--dim);margin-top:14px;max-width:60ch}
+h2{font-size:1.15rem;font-weight:650;letter-spacing:-.02em;margin:0 0 4px}
+.sub{color:var(--dim);font-size:13.5px;margin-bottom:14px}
+
+.step{border:1px solid var(--line);border-radius:20px;padding:24px;margin-top:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012))}
+.step.off{opacity:.45;pointer-events:none}
+.n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:8px;font:700 12px/1 monospace;
+  background:var(--grad);color:#05070E;margin-right:9px;vertical-align:2px}
+
+.drop{border:2px dashed rgba(255,255,255,.16);border-radius:16px;padding:34px 20px;text-align:center;
+  cursor:pointer;transition:border-color .2s,background .2s}
+.drop:hover,.drop.over{border-color:var(--cyan);background:rgba(0,229,255,.05)}
+.drop b{display:block;font-size:15px;margin-bottom:5px}
+.drop span{font-size:13px;color:var(--dim)}
+video{width:100%;border-radius:14px;background:#000;margin-top:14px;max-height:340px}
+.meta{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--dim);margin-top:10px}
+.meta b{color:var(--txt);font-weight:600}
+
+.choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px}
+.choice button{text-align:left;padding:17px 18px;border-radius:15px;cursor:pointer;font:inherit;
+  border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--txt);transition:.18s}
+.choice button:hover{border-color:rgba(124,92,255,.6);background:rgba(124,92,255,.1);transform:translateY(-2px)}
+.choice button b{display:block;font-size:15px;font-weight:640;margin-bottom:4px}
+.choice button span{font-size:12.5px;color:var(--dim);line-height:1.55}
+
+label.f{display:block;font-size:12.5px;color:var(--dim);margin:15px 0 6px}
+input[type=text],input[type=datetime-local],textarea,select{width:100%;padding:12px 14px;border-radius:12px;
+  border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--txt);font:inherit;font-size:15px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:rgba(0,229,255,.5)}
+.cnt{float:right;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.cnt.over{color:var(--pink)}
+
+.tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:12.5px;
+  background:rgba(124,92,255,.16);border:1px solid rgba(124,92,255,.35)}
+.tag button{background:none;border:0;color:var(--dim);cursor:pointer;font-size:14px;line-height:1;padding:0}
+.tag button:hover{color:var(--pink)}
+
+.go{padding:12px 24px;border-radius:30px;border:0;cursor:pointer;font:inherit;font-weight:680;font-size:14.5px;
+  color:#05070E;background:var(--grad);box-shadow:0 8px 26px -8px rgba(124,92,255,.7);transition:.16s}
+.go:hover{transform:translateY(-2px)}
+.go:disabled{opacity:.45;transform:none;cursor:default}
+.alt{padding:12px 22px;border-radius:30px;cursor:pointer;font:inherit;font-weight:600;font-size:14.5px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--txt)}
+.alt:hover{background:rgba(255,255,255,.1)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+
+.say{border-radius:13px;padding:13px 16px;font-size:13.5px;line-height:1.65;margin-top:14px;display:none}
+.say.yes{background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.32)}
+.say.no{background:rgba(255,61,154,.08);border:1px solid rgba(255,61,154,.4)}
+.say.wait{background:rgba(255,255,255,.05);border:1px solid var(--line);color:#A8B4CE}
+.say b{display:block;margin-bottom:4px}
+
+.plan{margin-top:14px;display:grid;gap:9px}
+.pstep{display:flex;gap:12px;padding:13px 15px;border-radius:13px;border:1px solid var(--line);
+  background:rgba(255,255,255,.025)}
+.pstep .t{font:700 12px/1.5 ui-monospace,monospace;color:var(--cyan);flex:0 0 62px;font-variant-numeric:tabular-nums}
+.pstep .d{flex:1;min-width:0;font-size:14px}
+.pstep .d i{display:block;font-style:normal;font-size:12.5px;color:var(--dim);margin-top:3px}
+.pstep .tool{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--violet);margin-top:5px}
+
+canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(--line);display:block;margin-top:12px}
+
+.queue{display:grid;gap:10px;margin-top:14px}
+.qrow{display:flex;align-items:center;gap:13px;padding:14px 16px;border-radius:14px;
+  border:1px solid var(--line);background:rgba(255,255,255,.025)}
+.qrow .when{font:700 13px/1.4 ui-monospace,monospace;color:var(--amber);flex:0 0 130px}
+.qrow .ttl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px}
+.qrow button{background:none;border:0;color:var(--dim);cursor:pointer;font-size:17px}
+.qrow button:hover{color:var(--pink)}
+.empty{padding:26px;text-align:center;color:var(--dim);font-size:14px;border:1px dashed var(--line);border-radius:15px}
+.note{color:var(--dim);font-size:12.5px;line-height:1.7;margin-top:16px;padding:14px 16px;
+  border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--line)}
+.note b{color:var(--txt)}
+
+@media (max-width:760px){
+  body{margin-left:0;padding-bottom:74px}
+  .sidebar{flex-direction:row;top:auto;width:100%;height:64px;padding:0;overflow-x:auto;align-items:center}
+  .sidebar .themewrap{display:none}
+  .wrap{padding:22px 0 70px}
+  .qrow{flex-wrap:wrap}.qrow .when{flex:1 0 100%}
+}
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <!-- nova.js builds the links; this is only the shell it fills -->
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div class='wrap'>
+  <div class='hero'>
+    <h1>Add a clip, <span class='g'>then decide</span></h1>
+    <p class='lede'>Drop a video in. NovaClip can plan the edit using the tools it actually has,
+      write the title, description and tags, and hold the whole thing until the time you pick
+      — or you can do any of it yourself. It asks first rather than deciding for you.</p>
+  </div>
+
+  <!-- 1 ---------------------------------------------------------------- -->
+  <div class='step'>
+    <h2><span class='n'>1</span>The clip</h2>
+    <p class='sub'>It stays on your device. Nothing is uploaded by opening it here.</p>
+    <div class='drop' id='drop'>
+      <b>Drop a video here, or click to choose one</b>
+      <span>MP4, WebM or MOV</span>
+    </div>
+    <input type='file' id='file' accept='video/*' style='display:none'>
+    <video id='vid' controls style='display:none'></video>
+    <div class='meta' id='vmeta' style='display:none'></div>
+  </div>
+
+  <!-- 2 ---------------------------------------------------------------- -->
+  <div class='step off' id='s2'>
+    <h2><span class='n'>2</span>Who does what?</h2>
+    <p class='sub'>Pick per job. You can change your mind on any of them afterwards.</p>
+    <div class='choice' id='pick'></div>
+  </div>
+
+  <!-- 3 ---------------------------------------------------------------- -->
+  <div class='step off' id='s3'>
+    <h2><span class='n'>3</span>The edit</h2>
+    <p class='sub'>A plan you carry out in the Editor. It only ever suggests tools that exist here.</p>
+    <label class='f' for='about'>What is the video about?</label>
+    <textarea id='about' rows='2' placeholder='e.g. me and my brother trying every flavour of crisps and ranking them'></textarea>
+    <div class='row'>
+      <button class='go' id='planBtn'>Plan the edit</button>
+      <button class='alt' id='skipPlan'>I will edit it myself</button>
+    </div>
+    <div class='say' id='planSay'></div>
+    <div class='plan' id='planOut'></div>
+  </div>
+
+  <!-- 4 ---------------------------------------------------------------- -->
+  <div class='step off' id='s4'>
+    <h2><span class='n'>4</span>Title, description, tags</h2>
+    <p class='sub'>Written for you, or by you. The counters are YouTube's real limits.</p>
+    <label class='f' for='title'>Title <span class='cnt' id='cTitle'>0 / 100</span></label>
+    <input type='text' id='title' maxlength='100' placeholder='What the video is'>
+    <label class='f' for='desc'>Description <span class='cnt' id='cDesc'>0 / 5000</span></label>
+    <textarea id='desc' rows='5' placeholder='The first two lines are what people see before they press more.'></textarea>
+    <label class='f' for='tagin'>Tags <span class='cnt' id='cTags'>0 / 500 characters</span></label>
+    <input type='text' id='tagin' placeholder='Type a tag and press Enter'>
+    <div class='tags' id='tagbox'></div>
+    <div class='row'>
+      <button class='go' id='metaBtn'>Write these for me</button>
+      <button class='alt' id='copyMeta'>Copy all</button>
+    </div>
+    <div class='say' id='metaSay'></div>
+  </div>
+
+  <!-- 5 ---------------------------------------------------------------- -->
+  <div class='step off' id='s5'>
+    <h2><span class='n'>5</span>Thumbnail</h2>
+    <p class='sub'>Grabbed from the clip at the moment you choose, with your text over it.</p>
+    <label class='f' for='tScrub'>Frame <span class='cnt' id='tTime'>0:00</span></label>
+    <input type='range' id='tScrub' min='0' max='100' value='25' style='width:100%'>
+    <label class='f' for='tText'>Text on it (short — it is read at the size of a stamp)</label>
+    <input type='text' id='tText' maxlength='24' placeholder='e.g. WE RANKED THEM ALL'>
+    <canvas id='thumb' width='1280' height='720'></canvas>
+    <div class='row'>
+      <button class='go' id='dlThumb'>Save thumbnail</button>
+      <button class='alt' id='suggestText'>Suggest the text</button>
+    </div>
+    <div class='say' id='thumbSay'></div>
+  </div>
+
+  <!-- 6 ---------------------------------------------------------------- -->
+  <div class='step off' id='s6'>
+    <h2><span class='n'>6</span>When it goes out</h2>
+    <p class='sub'>Pick a time. Read the note underneath before you rely on it.</p>
+    <label class='f' for='when'>Date and time</label>
+    <input type='datetime-local' id='when'>
+    <div class='row'>
+      <button class='go' id='schedBtn'>Add to the schedule</button>
+      <button class='alt' id='bestTime'>When should I post?</button>
+    </div>
+    <div class='say' id='schedSay'></div>
+
+    <h2 style='margin-top:26px'>Scheduled</h2>
+    <div class='queue' id='queue'></div>
+
+    <p class='note'><b>What this schedule is, honestly.</b> NovaClip is a website with no server
+      behind it. A website cannot upload anything while its tab is closed — there is nothing left
+      running to do it. So this holds the plan, the title, the description, the tags and the
+      thumbnail together, and when the time comes it reminds you and hands you everything ready to
+      paste into YouTube in one go. What it will never do is tell you a video went out when it did
+      not. If you want a video to publish while you are asleep, upload it to YouTube now and use
+      <b>YouTube's own scheduled publishing</b> in Studio — that runs on their servers, and it works.</p>
+  </div>
+</div>
+
+<script src='nova.js'></script>
+<script>
+/* ============================================================================
+   PUBLISH
+   ============================================================================
+   The order here is the order the work actually happens in, and step 2 exists
+   because the request was "ask after they click add clip" rather than assume.
+   Every job — the edit, the words, the thumbnail — can be done by the AI or by
+   the person, chosen per job, changeable afterwards.
+
+   THE HONEST PART, which is most of the design:
+
+   A static site cannot upload a video on a schedule. There is no server, and a
+   browser tab that is closed is not running. Everything else on this page is
+   real work done locally; the schedule is a plan plus a reminder, and it says
+   so in the box rather than in a tooltip nobody opens. Pretending otherwise
+   would mean somebody finds out their video never went out by checking their
+   channel the next day, which is the worst possible way to learn it.
+
+   The AI is bounded the same way the Coder is. It is told exactly which tools
+   exist in this editor and told to say so when a request needs one that does
+   not — so "add a 3D camera orbit" comes back as a no rather than a step you
+   cannot carry out.
+   ============================================================================ */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  /* The tools the plan is allowed to reference. This list is the contract:
+     anything outside it has to come back as a refusal. */
+  const TOOLS = [
+    'cut / trim a clip', 'split at the playhead', 'reorder clips on the timeline',
+    'speed up or slow down', 'crossfade, wipe, slide and zoom transitions',
+    'text and titles', 'captions typed on a text track', 'stickers and memes',
+    'colour: brightness, contrast, saturation, warmth', 'filters including night vision and hologram',
+    'volume per clip and fade in / out', 'background music from the Audio tab',
+    'sound effects from the SFX tab', 'remove an object from a frame (the Remove tool)',
+    'animate a drawing (the Animate tool)', 'zoom and reposition a clip'
+  ];
+  const NOT_HERE = ['background removal', 'object tracking', 'voice cloning', 'beat sync',
+                    'auto-subtitles from speech', '3D camera moves', 'motion tracking text'];
+
+  let file = null, dur = 0;
+  const state = { plan: 'ai', words: 'ai', thumb: 'ai' };
+  let tags = [];
+
+  /* ---- 1. the clip ------------------------------------------------------- */
+  $('drop').onclick = () => $('file').click();
+  ['dragover', 'dragenter'].forEach(e => $('drop').addEventListener(e, ev => {
+    ev.preventDefault(); $('drop').classList.add('over');
+  }));
+  ['dragleave', 'drop'].forEach(e => $('drop').addEventListener(e, ev => {
+    ev.preventDefault(); $('drop').classList.remove('over');
+  }));
+  $('drop').addEventListener('drop', ev => {
+    const f = ev.dataTransfer && ev.dataTransfer.files[0];
+    if (f) takeFile(f);
+  });
+  $('file').onchange = e => { if (e.target.files[0]) takeFile(e.target.files[0]); };
+
+  function takeFile(f) {
+    if (!/^video\//.test(f.type)) {
+      $('drop').innerHTML = '<b>That is not a video</b><span>Try an MP4, WebM or MOV.</span>';
+      return;
+    }
+    file = f;
+    const v = $('vid');
+    v.src = URL.createObjectURL(f);
+    v.style.display = 'block';
+    v.onloadedmetadata = () => {
+      dur = v.duration;
+      $('vmeta').style.display = 'flex';
+      $('vmeta').innerHTML =
+        '<span><b>' + fmt(dur) + '</b> long</span>' +
+        '<span><b>' + v.videoWidth + '×' + v.videoHeight + '</b></span>' +
+        '<span><b>' + (f.size / 1048576).toFixed(1) + ' MB</b></span>' +
+        '<span>' + (v.videoWidth >= v.videoHeight ? 'landscape' : 'portrait — Shorts shape') + '</span>';
+      /* Step 2 is the question the request asked for: it opens the moment a
+         clip is in, and nothing past it is reachable until it is answered. */
+      $('s2').classList.remove('off');
+      $('s2').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      drawThumb();
+    };
+  }
+  function fmt(s) {
+    s = Math.max(0, Math.round(s || 0));
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  /* ---- 2. who does what -------------------------------------------------- */
+  const JOBS = [
+    ['plan',  'The edit',   'Which cuts, which transitions, where the text goes.'],
+    ['words', 'The words',  'Title, description and tags.'],
+    ['thumb', 'The thumbnail', 'The frame and the text on it.']
+  ];
+  function drawPick() {
+    $('pick').innerHTML = JOBS.map(([k, name, desc]) =>
+      '<button data-k="' + k + '"><b>' + name + '</b><span>' + desc + '</span>' +
+      '<span style="display:block;margin-top:9px;font-weight:700;color:' +
+      (state[k] === 'ai' ? 'var(--cyan)">NovaClip does it' : 'var(--amber)">I do it') +
+      '</span></button>').join('');
+    $('pick').querySelectorAll('button').forEach(b => b.onclick = () => {
+      state[b.dataset.k] = state[b.dataset.k] === 'ai' ? 'me' : 'ai';
+      drawPick(); openSteps();
+    });
+  }
+  function openSteps() {
+    ['s3', 's4', 's5', 's6'].forEach(id => $(id).classList.remove('off'));
+    /* The buttons that ask the AI are hidden for a job you took yourself —
+       leaving them there is how a "you do it" choice quietly stops meaning
+       anything. */
+    $('planBtn').style.display = state.plan === 'ai' ? '' : 'none';
+    $('metaBtn').style.display = state.words === 'ai' ? '' : 'none';
+    $('suggestText').style.display = state.thumb === 'ai' ? '' : 'none';
+  }
+  drawPick();
+
+  function say(el, kind, title, body) {
+    const s = $(el);
+    s.className = 'say ' + kind; s.style.display = 'block';
+    s.innerHTML = '<b>' + title + '</b>' + esc(body);
+  }
+  function esc(t) { return String(t).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c])); }
+
+  /* ---- 3. the edit plan -------------------------------------------------- */
+  $('skipPlan').onclick = () => { state.plan = 'me'; drawPick(); openSteps();
+    say('planSay', 'yes', 'Yours', 'Skipped. Open the Editor when you are ready.'); };
+
+  $('planBtn').onclick = async () => {
+    if (!file) return;
+    const about = $('about').value.trim();
+    if (!about) return say('planSay', 'no', 'Tell it what the video is', 'One sentence is enough.');
+    if (typeof window.ncAsk !== 'function')
+      return say('planSay', 'no', 'The AI is not loaded', 'nova.js did not load on this page.');
+
+    $('planBtn').disabled = true;
+    say('planSay', 'wait', 'Thinking…', 'Working out an edit that only uses tools this editor has.');
+
+    const prompt =
+      'You are planning an edit for a teenage YouTube creator, inside an editor whose ENTIRE ' +
+      'tool set is:\n- ' + TOOLS.join('\n- ') + '\n\n' +
+      'These do NOT exist here and must never appear in a step: ' + NOT_HERE.join(', ') + '.\n\n' +
+      'The clip is ' + fmt(dur) + ' long, ' + ($('vid').videoWidth >= $('vid').videoHeight ?
+        'landscape' : 'vertical (Shorts)') + '. It is about: ' + about + '\n\n' +
+      'Answer with ONE line of JSON, nothing else:\n' +
+      '{"ok":true,"steps":[{"at":"0:00","do":"<what to do>","why":"<one short reason>",' +
+      '"tool":"<the exact tool name from the list>"}]}\n' +
+      'Between 4 and 8 steps, in time order, each at a real timestamp inside the clip. ' +
+      'The first step must be about the opening five seconds, because that is what decides ' +
+      'whether anyone stays.\n' +
+      'If the video genuinely cannot be improved with only these tools, answer ' +
+      '{"ok":false,"why":"<one sentence naming what is missing>"}. Do not invent a tool to fill a gap.';
+
+    const r = await window.ncAsk(prompt, { maxTokens: 1200, temperature: 0.5 });
+    $('planBtn').disabled = false;
+    if (r.err) return say('planSay', 'no', 'Could not reach the AI', r.err);
+
+    let j = null;
+    try { j = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [''])[0]); } catch (e) {}
+    if (!j) return say('planSay', 'no', 'The answer came back unreadable', 'Try again.');
+    if (j.ok === false) return say('planSay', 'no', 'It says no', j.why || 'Not possible with these tools.');
+
+    /* A step naming a tool that is not here is dropped rather than shown. The
+       prompt forbids it; this is what makes the rule true. */
+    const steps = (j.steps || []).filter(s =>
+      s && s.do && !NOT_HERE.some(n => (s.tool + ' ' + s.do).toLowerCase().includes(n.toLowerCase())));
+    const dropped = (j.steps || []).length - steps.length;
+
+    $('planOut').innerHTML = steps.map(s =>
+      '<div class="pstep"><div class="t">' + esc(s.at || '') + '</div><div class="d">' +
+      esc(s.do) + (s.why ? '<i>' + esc(s.why) + '</i>' : '') +
+      (s.tool ? '<div class="tool">' + esc(s.tool) + '</div>' : '') + '</div></div>').join('');
+    say('planSay', 'yes', steps.length + ' steps',
+      'Open the Editor and work down the list.' +
+      (dropped ? '  (' + dropped + ' step' + (dropped > 1 ? 's' : '') +
+       ' dropped for naming a tool this editor does not have.)' : ''));
+    if (window.addPts) addPts(5);
+    if (typeof logSkill === 'function') logSkill('editing');
+  };
+
+  /* ---- 4. the words ------------------------------------------------------ */
+  function counts() {
+    const t = $('title').value.length, d = $('desc').value.length;
+    const tg = tags.join(',').length;
+    $('cTitle').textContent = t + ' / 100';
+    $('cDesc').textContent = d + ' / 5000';
+    $('cTags').textContent = tg + ' / 500 characters';
+    $('cTitle').classList.toggle('over', t > 100);
+    $('cDesc').classList.toggle('over', d > 5000);
+    $('cTags').classList.toggle('over', tg > 500);
+  }
+  ['title', 'desc'].forEach(id => $(id).oninput = counts);
+
+  function drawTags() {
+    $('tagbox').innerHTML = tags.map((t, i) =>
+      '<span class="tag">' + esc(t) + '<button data-i="' + i + '" aria-label="remove">×</button></span>').join('');
+    $('tagbox').querySelectorAll('button').forEach(b =>
+      b.onclick = () => { tags.splice(+b.dataset.i, 1); drawTags(); counts(); });
+    counts();
+  }
+  $('tagin').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const v = e.target.value.trim().replace(/,/g, '');
+    if (v && tags.indexOf(v) < 0 && tags.length < 30) tags.push(v);
+    e.target.value = '';
+    drawTags();
+  });
+
+  $('metaBtn').onclick = async () => {
+    const about = $('about').value.trim();
+    if (!about) return say('metaSay', 'no', 'Tell it what the video is', 'Use the box in step 3.');
+    if (typeof window.ncAsk !== 'function') return say('metaSay', 'no', 'The AI is not loaded', '');
+    $('metaBtn').disabled = true;
+    say('metaSay', 'wait', 'Writing…', '');
+    const r = await window.ncAsk(
+      'Write YouTube metadata for a video by a creator aged 13-18. The video is about: ' + about +
+      '\nIt is ' + fmt(dur) + ' long and ' + ($('vid').videoWidth >= $('vid').videoHeight ? 'landscape' : 'vertical') + '.\n' +
+      'Answer with ONE line of JSON and nothing else:\n' +
+      '{"title":"<under 70 characters, says what the video IS, no clickbait that the video does not pay off>",' +
+      '"description":"<2 short paragraphs. The FIRST LINE must work on its own, because that is all ' +
+      'anyone sees before pressing more. No links to anything that needs an account.>",' +
+      '"tags":["8 to 12 tags, lowercase, no # symbol, specific rather than generic"]}\n' +
+      'Never write a title that promises something the description does not support.',
+      { maxTokens: 900, temperature: 0.75 });
+    $('metaBtn').disabled = false;
+    if (r.err) return say('metaSay', 'no', 'Could not reach the AI', r.err);
+    let j = null;
+    try { j = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [''])[0]); } catch (e) {}
+    if (!j) return say('metaSay', 'no', 'Unreadable answer', 'Try again.');
+    if (j.title) $('title').value = String(j.title).slice(0, 100);
+    if (j.description) $('desc').value = String(j.description).slice(0, 5000);
+    if (Array.isArray(j.tags)) { tags = j.tags.map(t => String(t).replace(/[#,]/g, '').trim()).filter(Boolean).slice(0, 15); }
+    drawTags();
+    say('metaSay', 'yes', 'Written', 'Change anything you do not like — it is a draft, not an instruction.');
+    if (window.addPts) addPts(5);
+  };
+
+  $('copyMeta').onclick = () => {
+    const txt = 'TITLE\n' + $('title').value + '\n\nDESCRIPTION\n' + $('desc').value +
+                '\n\nTAGS\n' + tags.join(', ');
+    navigator.clipboard.writeText(txt).then(() => {
+      $('copyMeta').textContent = 'Copied';
+      setTimeout(() => { $('copyMeta').textContent = 'Copy all'; }, 1700);
+    });
+  };
+
+  /* ---- 5. the thumbnail -------------------------------------------------- */
+  function drawThumb() {
+    const v = $('vid'), c = $('thumb'), x = c.getContext('2d');
+    if (!v.videoWidth) return;
+    const t = (+$('tScrub').value / 100) * (dur || 0);
+    $('tTime').textContent = fmt(t);
+    /* Seeking is asynchronous; draw on the seeked event or you capture the
+       frame you were already showing. */
+    const paint = () => {
+      x.fillStyle = '#000'; x.fillRect(0, 0, 1280, 720);
+      const s = Math.max(1280 / v.videoWidth, 720 / v.videoHeight);
+      const w = v.videoWidth * s, h = v.videoHeight * s;
+      x.drawImage(v, (1280 - w) / 2, (720 - h) / 2, w, h);
+      const txt = $('tText').value.trim().toUpperCase();
+      if (txt) {
+        /* A dark band behind the words: text straight onto video is unreadable
+           the moment the frame behind it is light. */
+        x.fillStyle = 'rgba(0,0,0,0.55)';
+        x.fillRect(0, 720 - 220, 1280, 220);
+        x.font = '900 96px Impact, "Arial Black", sans-serif';
+        x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.lineWidth = 14; x.strokeStyle = '#000'; x.lineJoin = 'round';
+        x.strokeText(txt, 640, 720 - 110, 1180);
+        x.fillStyle = '#FFD166';
+        x.fillText(txt, 640, 720 - 110, 1180);
+      }
+      v.removeEventListener('seeked', paint);
+    };
+    v.addEventListener('seeked', paint);
+    if (Math.abs(v.currentTime - t) < 0.05) paint(); else v.currentTime = t;
+  }
+  $('tScrub').oninput = drawThumb;
+  $('tText').oninput = drawThumb;
+
+  $('dlThumb').onclick = () => {
+    $('thumb').toBlob(b => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b); a.download = 'thumbnail.png'; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      say('thumbSay', 'yes', 'Saved thumbnail.png', '1280×720, which is what YouTube asks for.');
+    }, 'image/png');
+  };
+
+  $('suggestText').onclick = async () => {
+    const about = $('about').value.trim() || $('title').value.trim();
+    if (!about) return say('thumbSay', 'no', 'Nothing to go on', 'Fill in step 3 or the title first.');
+    if (typeof window.ncAsk !== 'function') return say('thumbSay', 'no', 'The AI is not loaded', '');
+    say('thumbSay', 'wait', 'Thinking…', '');
+    const r = await window.ncAsk(
+      'Give ONE line of thumbnail text for a video about: ' + about +
+      '. Under 20 characters, upper case, no quotes, no emoji, no full stop. ' +
+      'It has to be readable at the size of a postage stamp, so short beats clever. ' +
+      'Reply with the words only.', { maxTokens: 60, temperature: 0.9 });
+    if (r.err) return say('thumbSay', 'no', 'Could not reach the AI', r.err);
+    const v = r.text.trim().replace(/^["']|["'.]$/g, '').slice(0, 24);
+    $('tText').value = v; drawThumb();
+    say('thumbSay', 'yes', 'Try this', v);
+  };
+
+  /* ---- 6. the schedule --------------------------------------------------- */
+  let queue = [];
+  try { queue = JSON.parse(localStorage.getItem('nc_queue') || '[]'); } catch (e) { queue = []; }
+  function saveQueue() { try { localStorage.setItem('nc_queue', JSON.stringify(queue.slice(0, 40))); } catch (e) {} }
+
+  function drawQueue() {
+    if (!queue.length) {
+      $('queue').innerHTML = '<div class="empty">Nothing scheduled.</div>';
+      return;
+    }
+    queue.sort((a, b) => a.at - b.at);
+    $('queue').innerHTML = queue.map((q, i) => {
+      const d = new Date(q.at);
+      const late = q.at < Date.now();
+      return '<div class="qrow"><span class="when" style="' + (late ? 'color:var(--pink)' : '') + '">' +
+        d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' · ' +
+        d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) +
+        (late ? ' (due)' : '') + '</span>' +
+        '<span class="ttl">' + esc(q.title || 'Untitled') + '</span>' +
+        '<button data-c="' + i + '" title="Copy everything">⧉</button>' +
+        '<button data-x="' + i + '" title="Remove">×</button></div>';
+    }).join('');
+    $('queue').querySelectorAll('[data-x]').forEach(b =>
+      b.onclick = () => { queue.splice(+b.dataset.x, 1); saveQueue(); drawQueue(); });
+    $('queue').querySelectorAll('[data-c]').forEach(b =>
+      b.onclick = () => {
+        const q = queue[+b.dataset.c];
+        navigator.clipboard.writeText('TITLE\n' + q.title + '\n\nDESCRIPTION\n' + q.desc +
+          '\n\nTAGS\n' + (q.tags || []).join(', '));
+        b.textContent = '✓';
+        setTimeout(() => { b.textContent = '⧉'; }, 1400);
+      });
+  }
+
+  $('schedBtn').onclick = () => {
+    const when = $('when').value;
+    if (!when) return say('schedSay', 'no', 'Pick a time first', '');
+    const at = new Date(when).getTime();
+    if (!isFinite(at)) return say('schedSay', 'no', 'That date did not parse', '');
+    if (at < Date.now()) return say('schedSay', 'no', 'That is in the past', 'Pick a time still to come.');
+    if (!$('title').value.trim()) return say('schedSay', 'no', 'It needs a title', 'Step 4.');
+    queue.push({ at: at, title: $('title').value.trim(), desc: $('desc').value, tags: tags.slice(),
+                 file: file ? file.name : '' });
+    saveQueue(); drawQueue();
+    const hrs = Math.round((at - Date.now()) / 3600000);
+    const days = Math.round(hrs / 24);
+    const gap = hrs < 1 ? 'under an hour'
+              : hrs < 24 ? hrs + (hrs === 1 ? ' hour' : ' hours')
+              : days + (days === 1 ? ' day' : ' days');
+    say('schedSay', 'yes', 'Held for you',
+      'In about ' + gap +
+      '. Open this page then and everything is ready to paste. Read the note below — ' +
+      'this does not upload on its own.');
+  };
+
+  $('bestTime').onclick = async () => {
+    if (typeof window.ncAsk !== 'function') return say('schedSay', 'no', 'The AI is not loaded', '');
+    say('schedSay', 'wait', 'Thinking…', '');
+    const r = await window.ncAsk(
+      'A creator aged 13-18 asks when to post this video: ' + ($('about').value.trim() || $('title').value.trim() || 'a video') +
+      '. Answer in under 45 words. Give one specific day and time window and the reason. ' +
+      'Be honest that posting time matters far less than the first five seconds of the video, ' +
+      'and say so in one clause. No invented statistics.',
+      { maxTokens: 160, temperature: 0.6 });
+    if (r.err) return say('schedSay', 'no', 'Could not reach the AI', r.err);
+    say('schedSay', 'yes', 'Suggestion', r.text.trim());
+  };
+
+  /* Anything already due gets said out loud on arrival, once. */
+  drawQueue();
+  const due = queue.filter(q => q.at <= Date.now());
+  if (due.length) {
+    say('schedSay', 'yes', due.length + ' ready to go',
+      'The time you picked has come round. Use the copy button on the row to take the title, ' +
+      'description and tags in one go.');
+    if (window.toast) toast(due.length + ' scheduled video' + (due.length > 1 ? 's are' : ' is') + ' due');
+  }
+})();
+</script>
+</body>
+</html>
