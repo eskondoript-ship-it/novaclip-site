@@ -387,6 +387,28 @@ function saveHist(subject,q,a) { const h = JSON.parse(localStorage.getItem('nc_h
    ============================================================ */
 const NC_SERVER = '';          // e.g. 'https://novaclip-server.you.workers.dev'
 
+/* The address, with a local override in front of it.
+
+   NC_SERVER above is the real setting and the one to fill in for everybody.
+   But nova.js is 220 kB, and re-pasting the whole file to change one URL is
+   enough friction that the URL does not get changed — so a value in
+   localStorage under `nc_server` wins when it is set. That makes "I deployed
+   the Worker, does it work?" a thing you can answer in ten seconds from the
+   browser console:
+
+       localStorage.setItem('nc_server', 'https://your-worker.workers.dev')
+
+   It only affects the browser it is typed into. When you are happy, put it in
+   NC_SERVER so everyone else gets it too. */
+function ncServer() {
+  try {
+    const o = localStorage.getItem('nc_server');
+    if (o && /^https:\/\//.test(o)) return o.replace(/\/$/, '');
+  } catch (e) {}
+  return (NC_SERVER || '').replace(/\/$/, '');
+}
+window.ncServer = ncServer;
+
 /* What travels. Deliberately NOT nc_yt: that holds a YouTube OAuth token, and a
    token on someone else's server is a token you no longer control. The channel
    name is copied into nc_name instead, which is all the rest of the site needs. */
@@ -1121,7 +1143,8 @@ const NC_ICONS = {
   progress:  'M12 3a9 9 0 109 9h-9z',
   family:    'M8 11a3 3 0 100-6 3 3 0 000 6zM2 20a6 6 0 0112 0M17 11a3 3 0 100-6M16 20a6 6 0 016-6',
   pricing:   'M12 2v20M17 6H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',
-  publish:   'M12 19V5M5 12l7-7 7 7M4 21h16'
+  publish:   'M12 19V5M5 12l7-7 7 7M4 21h16',
+  community: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75'
 };
 
 const NC_NAV = [
@@ -1135,7 +1158,8 @@ const NC_NAV = [
       ['ai.html', 'NovaClip AI', 'ai', 'ai'], ['coder.html', 'Coder', '', 'coder']] },
   { name: 'Games', icon: 'games', items: [
       ['game.html', 'Games', 'sniper', 'games'], ['typing.html', 'Typing race', '', 'typing']] },
-  { name: 'Socials', icon: 'gift', items: [['gift.html', 'Gifts', '', 'gift']] },
+  { name: 'Socials', icon: 'gift', items: [
+      ['community.html', 'Community', '', 'community'], ['gift.html', 'Gifts', '', 'gift']] },
   { name: 'You', icon: 'progress', items: [
       ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
       ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
@@ -1477,20 +1501,63 @@ function applySeason() {
   const SLURS_AND_ABUSE = ['idiot','stupid','loser','ugly','fat','dumb','hate you','kill yourself','kys','shut up','freak','worthless','nobody likes you','trash','moron','pathetic','disgusting','retard','noob'];
   const SWEARS = ['fuck','shit','bitch','asshole','bastard','dick','cunt','whore','slut','piss','damn','crap','wank','prick'];
 
-  function normalise(s) {
-    return (s || '').toLowerCase()
+  /* Words that legitimately contain a banned one. Checked and removed FIRST,
+     because the cost of a false positive here is a two-day suspension for
+     somebody who typed "Scunthorpe" or "shiitake". This list is the difference
+     between a filter and a trap, and it is meant to grow. */
+  const INNOCENT = ['scunthorpe','shiitake','shitake','cocktail','cockpit','cockney','peacock',
+    'assignment','assassin','assess','assist','associate','assume','bass','class','glass','grass',
+    'pass','mass','embarrass','compass','analysis','canal','dickens','dickinson','dictionary',
+    'penistone','lightwater','clitheroe','arsenal','sussex','essex','middlesex','hancock',
+    'butter','shuttle','titan','titanic','matsushita','damnation','crappie'];
+
+  /* Two foldings, because one cannot catch both cases. Collapsing a repeated
+     letter to ONE turns "fuuuck" into "fuck" but also "book" into "bok";
+     collapsing to TWO keeps "book" but leaves "shiiiit" as "shiit". Testing both
+     catches the padding without mangling ordinary words. */
+  function foldBase(v) {
+    return String(v || '').toLowerCase()
       .replace(/[3]/g, 'e').replace(/[1!|]/g, 'i').replace(/[0]/g, 'o')
       .replace(/[4@]/g, 'a').replace(/[5$]/g, 's').replace(/[7]/g, 't')
-      .replace(/[^a-z\s]/g, ' ');
+      .replace(/[^a-z]+/g, ' ')
+      .trim();
+  }
+  function foldVariants(v) {
+    let base = ' ' + foldBase(v) + ' ';
+    INNOCENT.forEach(w => { base = base.split(w).join(' '); });
+    return [base.replace(/(.)\1{2,}/g, '$1$1'), base.replace(/(.)\1+/g, '$1')];
   }
 
-  // returns { ok, severity: 'clean'|'swear'|'abuse', hits: [] }
+  /* Whole words only. A plain includes() finds a swear inside "classic" and
+     "grasshopper". Three trailing letters are allowed so -s, -ed, -er and -ing
+     all still land — "fucking" is the base word plus three, and capping at two
+     let it straight through. Three is only safe because INNOCENT above is
+     subtracted first: without it, "shitake" is "shit" plus three as well. */
+  function hitsWord(text, word) {
+    if (word.includes(' ')) return text.includes(word);
+    return new RegExp('(^| )' + word + '[a-z]{0,3}( |$)').test(text);
+  }
+
+  /* Someone spacing a word out — "f u c k". Only single letters standing alone
+     are joined up, so ordinary sentences are never squashed into false hits. */
+  function spacedOut(v) {
+    const m = foldBase(v).match(/\b(?:[a-z] ){2,}[a-z]\b/g);
+    return m ? m.join(' ').replace(/ /g, '') : '';
+  }
+
+  /* THIS MUST MATCH THE WORKER. The server runs the same test on arrival and
+     suspends on a hit. If this one were more lenient the page would tell
+     someone their message was fine and the server would ban them for it —
+     a trap, not moderation. Change one, change both. */
   window.ncModerate = function (text) {
-    const t = normalise(text);
+    const vars = foldVariants(text);
+    const spaced = spacedOut(text);
     const hits = [];
     let severity = 'clean';
-    SWEARS.forEach(w => { if (t.includes(w)) { hits.push(w); severity = 'swear'; } });
-    SLURS_AND_ABUSE.forEach(w => { if (t.includes(w)) { hits.push(w); severity = 'abuse'; } });
+    const test = w => vars.some(v => hitsWord(v, w)) ||
+                      (spaced && spaced.includes(w.replace(/ /g, '')) && w.replace(/ /g,'').length >= 4);
+    SWEARS.forEach(w => { if (test(w)) { hits.push(w); severity = 'swear'; } });
+    SLURS_AND_ABUSE.forEach(w => { if (test(w)) { hits.push(w); severity = 'abuse'; } });
     return { ok: severity === 'clean', severity, hits };
   };
 
