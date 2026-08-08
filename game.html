@@ -1330,7 +1330,7 @@ const CUSTOM_MODELS = {
      cone. It is auto-fitted to missileLength metres and turned nose-down, so a
      model built along any axis lands pointing the right way; missileFlip turns
      it end for end if yours arrives tail-first. */
-  missile: 'zolfaghar.glb', missileScale: 1.0, missileLength: 3.2, missileFlip: false,
+  missile: 'zolfaghar.glb', missileScale: 1.0, missileLength: 3.2, missileFlip: true,
 
   // Each animation is its own .glb file (convert each pack FBX to glb, keep the names).
   characterAnims: {
@@ -1639,6 +1639,7 @@ let thirdPerson = false, scoped = false, running = false, shopOpen = false, inSh
 /* Reset at every deploy — a mission about one match must not read the last one. */
 let matchDeaths = 0, firstBloodTaken = false;
 let timeLeft = 300, safeLeft = 60, enemyScore = 0;
+let roundLength = 300;   // what timeLeft started at, for anything measuring elapsed time
 const SHOP_MAX_VISITS = 13; let shopVisits = 0;
 let curWeap = 'sniper', playerColor = parseInt(localStorage.getItem('nc_char') || '0xFF2E97');
 let inv = { frag: 0, sticky: 0 };
@@ -5291,6 +5292,8 @@ function startMatch() {
   /* Fresh mines every round, in fresh places — the whole point is not knowing
      where they are, and a fixed field would be memorised by the third match. */
   placeMines(20);
+  enemyStrikeIn = 26 + Math.random() * 20;
+  roundLength = timeLeft;
   matchDeaths = 0; firstBloodTaken = false;
   /* Fitting all five slots is a state of the build, not an event, so it is
      checked at deploy rather than waiting for something to happen. */
@@ -5786,6 +5789,10 @@ function shoot() {
 
 function killBot(b) {
   if (b.team === PLAYER_TEAM) return;   // friendly fire is off
+  const range = Math.hypot(player.x - b.mesh.position.x, player.z - b.mesh.position.z);
+  missionEvent('kill');
+  if (range > 60) missionEvent('longshot');
+  if (range < 10) missionEvent('pointblank');
   /* First blood is the opening kill of the MATCH, not your first kill — so it
      is claimed here, once, and only if nobody has taken it yet. */
   if (!firstBloodTaken) { firstBloodTaken = true; missionEvent('firstblood'); }
@@ -5959,7 +5966,7 @@ function explode(pos, radius) {
   if (d < near) shakeCamera(Math.min(0.85, (1 - d / near) * (0.25 + R * 0.045)), 0.45);
 
   // damage: unchanged, and still the only thing here that touches gameplay
-  bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const dd = b.mesh.position.distanceTo(pos); if (dd < radius) { b.hp -= 120*(1-dd/radius)+30; if (b.hp <= 0) { missionEvent('nadekill'); killBot(b); } } });
+  bots.forEach(b => { if (!b.alive || b.team === PLAYER_TEAM) return; const dd = b.mesh.position.distanceTo(pos); if (dd < radius) { b.hp -= 120*(1-dd/radius)+30; if (b.hp <= 0) { missionEvent(radius >= RPG_BLAST ? 'rpgkill' : 'nadekill'); killBot(b); } } });
 }
 
 function shakeCamera(amp, time) {
@@ -6224,7 +6231,21 @@ function updateBots(dt) {
         const acc = Math.min(0.92, M.botHit * E.hit);
         const hurt = M.dmg * E.dmg;
         // engage further out on the bigger map, and fire faster within the burst
-        if (pd < ARENA) for (let s = 0; s < M.burst + E.burst; s++) setTimeout(() => { if (!b.alive || !running || inShop) return; botFire(b, new THREE.Vector3(player.x, 1.5, player.z), acc, () => damagePlayer(hurt + Math.random()*hurt*0.5, b)); }, s*95);
+        /* RANGE. This was `pd < ARENA` — 210 metres, the whole map. A bot on
+           the far treeline could shoot you across the entire arena with the
+           same accuracy as one in your face, which is why fighting felt like
+           being sniped from nowhere.
+
+           BOT_RANGE is where they stop engaging at all. Inside it, accuracy
+           falls off with distance: full at BOT_CLOSE, a quarter at the edge.
+           Distance is now the thing that decides a fight, which is what makes
+           cover and closing the gap mean something. */
+        if (pd < BOT_RANGE) {
+          const falloff = pd <= BOT_CLOSE ? 1
+            : Math.max(0.25, 1 - (pd - BOT_CLOSE) / (BOT_RANGE - BOT_CLOSE) * 0.75);
+          const rangedAcc = acc * falloff;
+          for (let s = 0; s < M.burst + E.burst; s++) setTimeout(() => { if (!b.alive || !running || inShop) return; botFire(b, new THREE.Vector3(player.x, 1.5, player.z), rangedAcc, () => damagePlayer(hurt + Math.random()*hurt*0.5, b)); }, s*95);
+        }
       } else {
         const others = bots.filter(o => o !== b && o.alive && o.team !== b.team);
         if (others.length) { const o = others[Math.floor(Math.random()*others.length)]; const od = Math.hypot(o.mesh.position.x - b.mesh.position.x, o.mesh.position.z - b.mesh.position.z); if (od > 0.5) b.mesh.lookAt(o.mesh.position.x, 1.2, o.mesh.position.z); botFire(b, o.mesh.position.clone().setY(1.2), 0.30 * edgeFor(b.team).hit, () => { o.hp -= 45 * edgeFor(b.team).dmg; if (o.hp <= 0) { o.alive = false; o.mesh.visible = false; b.kills++; addFeed(b.name + ' ' + o.name); updateBoard(); setTimeout(() => respawnBot(o), 3500); } }); }
@@ -6665,6 +6686,8 @@ function endMatch() {
 
   /* Won it without dying once. Checked here because it is the only moment both
      halves of the condition are known. */
+  missionEvent('match');
+  missionEvent('attachments', Object.keys(ATTACH_OWNED).length);
   if (won && matchDeaths === 0) missionEvent('flawless');
   if (!playPack(won ? 'win' : 'lose')) sfx(won ? 'pickup' : 'death');
   clearMines();
@@ -6736,7 +6759,17 @@ const TANK_COUNT = 4;
 const TANK_HP = 500, TANK_SHELL_DMG = 120, TANK_RELOAD = 2.6;
 /* The RPG: flat, fast and heavier than a tank shell. Gravity is a tenth of the
    shell's, so over 100 m it drops about half a metre instead of five. */
-const RPG_SPEED = 115, RPG_GRAVITY = 1.2, RPG_DMG = 190, RPG_BLAST = 11;
+/* A rocket that takes a second and a half to cross a street is a rocket you
+   walk away from. At 260 it is a snap decision for whoever is on the other end,
+   which is what a launcher should feel like. Gravity drops with it so the arc
+   stays roughly the same shape over the distance. */
+const RPG_SPEED = 260, RPG_GRAVITY = 0.55, RPG_DMG = 190, RPG_BLAST = 11;
+
+/* How far a bot will fight, and how far it stays fully accurate. 78 metres is
+   about the length of the road between the two bases' halves — long enough to
+   hold an angle, short enough that crossing open ground is your decision
+   rather than a death sentence. */
+const BOT_RANGE = 78, BOT_CLOSE = 26;
 let tanks = [], playerTank = null, leaningOut = false;
 
 /* A vehicle drives along its -Z axis, because that is the direction the hull is
@@ -7351,7 +7384,10 @@ function updateWeather(dt) {
    a session. Still stored against the wall clock in localStorage rather than a
    per-round counter, so ending a match or reloading does not refill it early. */
 const STRIKE_COOLDOWN_MS = 90 * 1000;   // 1m 30s
-const STRIKE_FLIGHT = 3.2, STRIKE_RADIUS = 16, STRIKE_DMG = 220;
+/* 3.2 seconds gave everyone in the blast radius time to stroll out of it. 1.1
+   is still enough to hear it coming and dive, which is the whole drama of a
+   strike, without being a countdown you can ignore. */
+const STRIKE_FLIGHT = 1.1, STRIKE_RADIUS = 16, STRIKE_DMG = 220;
 
 function strikeReadyAt() {
   const v = parseInt(localStorage.getItem('nc_strike_at') || '0', 10);
@@ -7483,25 +7519,70 @@ function buildMissile() {
   return g;
 }
 
-function callStrike(wx, wz) {
-  if (!strikeAvailable()) { addFeed('Strike on cooldown \u2014 ' + strikeWaitText()); return; }
-  localStorage.setItem('nc_strike_at', String(Date.now() + STRIKE_COOLDOWN_MS));
-  buildLoadoutHUD();
+/* One launch, used by both sides. `mine` decides who gets credited for the
+   kills and what colour the ground marker is — everything else about a missile
+   is the same whoever pressed the button. */
+function launchStrike(wx, wz, mine) {
   const name = MISSILES[Math.floor(Math.random() * MISSILES.length)];
-
   const m = buildMissile();
   m.position.set(wx, 190, wz);
   scene.add(m);
   sfx('incoming');                        // you hear it before you see it
 
-  // ground marker so the target area is obvious from the field
+  /* Ground marker. Red is yours, amber is theirs — at a glance from across the
+     map you need to know whether to run to it or away from it. */
   const ring = new THREE.Mesh(new THREE.RingGeometry(STRIKE_RADIUS - 1.2, STRIKE_RADIUS, 40),
-    new THREE.MeshBasicMaterial({ color: 0xff3b3b, transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
+    new THREE.MeshBasicMaterial({ color: mine ? 0xff3b3b : 0xffb443,
+      transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
   ring.rotation.x = -Math.PI / 2; ring.position.set(wx, 0.08, wz);
   scene.add(ring);
 
-  strikes.push({ x: wx, z: wz, t: STRIKE_FLIGHT, mesh: m, ring: ring });
-  addFeed(name + ' inbound \u2014 ' + STRIKE_FLIGHT.toFixed(1) + 's');
+  strikes.push({ x: wx, z: wz, t: STRIKE_FLIGHT, mesh: m, ring: ring, mine: !!mine });
+  addFeed((mine ? '' : 'ENEMY ') + name + ' inbound \u2014 ' + STRIKE_FLIGHT.toFixed(1) + 's');
+  return true;
+}
+
+function callStrike(wx, wz) {
+  if (!strikeAvailable()) { addFeed('Strike on cooldown \u2014 ' + strikeWaitText()); return; }
+  localStorage.setItem('nc_strike_at', String(Date.now() + STRIKE_COOLDOWN_MS));
+  buildLoadoutHUD();
+  launchStrike(wx, wz, true);
+}
+
+/* ---------------------------------------------------------------------------
+   THE OTHER SIDE CALLS THEM TOO
+
+   It aims at where you WERE when it launched, not where you are when it lands.
+   A homing strike is not a fight, it is a countdown to being hit — this one is
+   avoidable by moving, which is the only version that is any fun to be under.
+
+   It also never fires in the first twenty seconds of a round, and never while
+   you are in the shop, so you are not killed by something you had no chance to
+   see coming.
+--------------------------------------------------------------------------- */
+let enemyStrikeIn = 26 + Math.random() * 20;
+
+function updateEnemyStrikes(dt) {
+  if (!running || shopOpen || inShop) return;
+  /* Twenty seconds of grace, measured from the round length actually in play
+     rather than a field on MODES that does not exist — reading an undefined
+     there makes the comparison NaN, which is false, which silently removes the
+     grace period entirely. */
+  if (roundLength - timeLeft < 20) return;
+  enemyStrikeIn -= dt;
+  if (enemyStrikeIn > 0) return;
+  enemyStrikeIn = 34 + Math.random() * 26;
+
+  /* A live enemy has to be around to have called it in. If they are all dead
+     the strike does not arrive out of thin air. */
+  const callers = bots.filter(b => b.alive && b.team !== PLAYER_TEAM);
+  if (!callers.length) return;
+
+  /* Scattered a few metres off you, so standing still is punished and moving
+     is rewarded, rather than it being a coin flip. */
+  const off = 5 + Math.random() * 7, ang = Math.random() * Math.PI * 2;
+  launchStrike(player.x + Math.cos(ang) * off, player.z + Math.sin(ang) * off, false);
+  if (typeof toast === 'function') toast('INCOMING — move');
 }
 
 function updateStrikes(dt) {
@@ -7530,7 +7611,7 @@ function updateStrikes(dt) {
       if (b.hp <= 0) {
         b.alive = false; b.mesh.visible = false;
         if (b.inVehicle) { b.inVehicle.crew = null; b.inVehicle = null; }
-        if (b.team !== PLAYER_TEAM) { player.kills++; killed++; }
+        if (b.team !== PLAYER_TEAM) { if (s.mine) player.kills++; killed++; }
         setTimeout(() => respawnBot(b), 3500);
       }
     });
@@ -7541,7 +7622,15 @@ function updateStrikes(dt) {
     });
     // it does not care whose side you are on
     if (Math.hypot(player.x - s.x, player.z - s.z) < STRIKE_RADIUS) damagePlayer(90, null);
-    if (killed) { earn(MODES[mode].perKill * killed, 'strike (' + killed + ')'); updateBoard(); }
+    if (killed && s.mine) { earn(MODES[mode].perKill * killed, 'strike (' + killed + ')');
+                            missionEvent('strikekill', killed); updateBoard(); }
+    else if (killed) updateBoard();
+    /* Walked out of one of theirs. Only counts if you were near enough for it
+       to have been a real threat — standing across the map is not dodging. */
+    if (!s.mine) {
+      const d = Math.hypot(player.x - s.x, player.z - s.z);
+      if (d >= STRIKE_RADIUS && d < STRIKE_RADIUS * 2.6) missionEvent('dodged');
+    }
     strikes.splice(i, 1);
   }
 }
@@ -7699,6 +7788,11 @@ function updateMines(dt) {
     const d = Math.hypot(player.x - m.x, player.z - m.z);
     if (d < trigger && !playerTank) { triggerMine(m, false); continue; }
     if (d < nearest) nearest = d;
+    /* Came close enough to have stepped on it, then left again without doing
+       so. Credited once per mine — walking back and forth over the same one is
+       not ten mines found. */
+    if (d < trigger + 1.6) m.brushed = true;
+    else if (m.brushed && d > 6) { m.brushed = false; if (!m.counted) { m.counted = true; missionEvent('minefound'); } }
 
     /* The tell: one bright frame every 2.4s, out of phase per mine so they do
        not blink in unison and give the whole field away at once. */
@@ -7757,7 +7851,20 @@ const MISSIONS = [
   { id: 'quiet',       name: 'Quiet professional', desc: 'Get 8 kills with a suppressor fitted', goal: 8, pts: 130 },
   { id: 'gunsmith',    name: 'Gunsmith',         desc: 'Fit an attachment in all five slots',   goal: 5,  pts: 100 },
   { id: 'grenadier',   name: 'Grenadier',        desc: 'Kill 6 with grenades',                  goal: 6,  pts: 100 },
-  { id: 'survivor',    name: 'Survivor',         desc: 'Win a match without dying',             goal: 1,  pts: 150 }
+  { id: 'survivor',    name: 'Survivor',         desc: 'Win a match without dying',             goal: 1,  pts: 150 },
+
+  /* Second wave. These are about the systems that did not exist when the first
+     nine were written — strikes, mines coming the other way, the launcher —
+     plus a few long ones worth chasing across several evenings. */
+  { id: 'airsupport',   name: 'Air support',    desc: 'Kill 6 with missile strikes',            goal: 6,   pts: 130 },
+  { id: 'dodger',       name: 'Dodger',         desc: 'Survive 4 enemy missile strikes',        goal: 4,   pts: 120 },
+  { id: 'rocketeer',    name: 'Rocketeer',      desc: 'Get 5 kills with the launcher',          goal: 5,   pts: 120 },
+  { id: 'sweeper',      name: 'Sweeper',        desc: 'Walk past 10 mines without setting one off', goal: 10, pts: 140 },
+  { id: 'longshot',     name: 'Long shot',      desc: 'Kill 3 people from over 60 metres',      goal: 3,   pts: 110 },
+  { id: 'closequarters',name: 'Close quarters', desc: 'Get 8 kills inside 10 metres',           goal: 8,   pts: 100 },
+  { id: 'collector',    name: 'Collector',      desc: 'Own 8 different attachments',            goal: 8,   pts: 160 },
+  { id: 'regular',      name: 'Regular',        desc: 'Finish 15 matches',                      goal: 15,  pts: 200 },
+  { id: 'centurion',    name: 'Centurion',      desc: 'Get 100 kills in total',                 goal: 100, pts: 300 }
 ];
 
 let MISSION_PROG = {};
@@ -7772,7 +7879,10 @@ function missionEvent(kind, amount) {
   const map = {
     mine: 'sapper', headshot: 'headhunter', c4: 'demolition',
     tankkill: 'armoured', quietkill: 'quiet', nadekill: 'grenadier',
-    firstblood: 'first_blood', slots: 'gunsmith', flawless: 'survivor'
+    firstblood: 'first_blood', slots: 'gunsmith', flawless: 'survivor',
+    strikekill: 'airsupport', dodged: 'dodger', rpgkill: 'rocketeer',
+    minefound: 'sweeper', longshot: 'longshot', pointblank: 'closequarters',
+    attachments: 'collector', match: 'regular', kill: 'centurion'
   };
   const id = map[kind];
   if (!id) return;
@@ -7781,7 +7891,11 @@ function missionEvent(kind, amount) {
   if (st.done) return;
   /* 'slots' reports a total rather than an increment — it is a state of your
      build, not a thing that happened. */
-  st.n = (kind === 'slots') ? Math.max(st.n, add) : st.n + add;
+  /* Some of these report a TOTAL rather than something that just happened —
+     how many slots are filled, how many attachments are owned. Adding those
+     would count the same thing again on every check. */
+  const totals = { slots: 1, attachments: 1 };
+  st.n = totals[kind] ? Math.max(st.n, add) : st.n + add;
   if (st.n >= M.goal) {
     st.done = true; st.n = M.goal;
     setPts(pts() + M.pts);
@@ -7836,7 +7950,7 @@ function animate() {
   if (strikeHudT <= 0) { strikeHudT = 1; buildLoadoutHUD(); }
   updateCamera(dt); updateShake(dt); updateFx(dt); updateSpeedo(dt);
   updateTracers(dt); updateRounds(dt); mpUpdate(dt);
-  if (running && !shopOpen) updateMines(dt);
+  if (running && !shopOpen) { updateMines(dt); updateEnemyStrikes(dt); }
   if (mapLamp) mapLamp.position.set(camera.position.x, camera.position.y + 1.2, camera.position.z);
   renderer.render(scene, camera);
 }
