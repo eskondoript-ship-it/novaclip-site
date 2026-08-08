@@ -113,10 +113,35 @@ body.ncplaying .themewrap { display: none !important; }
    Everything below is hidden unless the primary input is coarse, so a desktop
    never sees a pixel of it, and it only appears once a match is running.
    ============================================================================ */
+/* ---- the "how are you playing" chooser ---- */
+#inputask { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center;
+  background: rgba(4,6,12,0.93); backdrop-filter: blur(10px); padding: 20px;
+  font-family: 'Segoe UI', system-ui, sans-serif; }
+.iabox { width: 100%; max-width: 660px; background: #0B0E16; color: #EAF2FF;
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 22px; padding: 30px; }
+.iabox h2 { font-size: 1.5rem; font-weight: 680; letter-spacing: -.02em; margin-bottom: 7px; }
+.iabox p { color: #8A97B4; font-size: 0.92rem; line-height: 1.6; margin-bottom: 20px; }
+.iagrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px,100%),1fr)); gap: 13px; }
+.iagrid button { position: relative; text-align: left; padding: 20px; border-radius: 17px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.13); background: rgba(255,255,255,0.03); color: #EAF2FF;
+  font: inherit; transition: transform .16s, border-color .16s, background .16s; }
+.iagrid button:hover { transform: translateY(-3px); border-color: rgba(0,229,255,0.6);
+  background: rgba(0,229,255,0.07); }
+.iagrid button.sug { border-color: rgba(0,229,255,0.55); background: rgba(0,229,255,0.06); }
+.iagrid .ic { display: block; font-size: 30px; margin-bottom: 10px; }
+.iagrid b { display: block; font-size: 1.05rem; font-weight: 660; margin-bottom: 5px; }
+.iagrid i { display: block; font-style: normal; font-size: 0.83rem; color: #8A97B4; line-height: 1.55; }
+.iagrid em { display: inline-block; margin-top: 11px; font-style: normal; font-size: 0.7rem;
+  font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: #04121a;
+  background: #00E5FF; border-radius: 20px; padding: 3px 10px; }
+#inputBtn { margin-top: 10px; }
+
 #tc { position: fixed; inset: 0; z-index: 40; display: none;
       pointer-events: none; touch-action: none; user-select: none; -webkit-user-select: none; }
-body.ncplaying #tc { display: block; }
-@media (pointer: fine) { #tc { display: none !important; } }
+/* Shown by the choice, not by the device. A touchscreen laptop reports a
+   coarse pointer and used to get thumb sticks over a working keyboard. */
+body.ncplaying.nctouch #tc { display: block; }
+body.nckbm #tc { display: none !important; }
 
 /* The look area is everything on the right that is not a button. A drag here
    turns you; a tap does nothing, so it cannot be mistaken for a shot. */
@@ -760,6 +785,7 @@ body.ncplaying #tc { display: block; }
     <div class='lbnote' id='loadnote' style='text-align:center; margin-top:8px'></div>
     <button id='gunsmithBtn' class='pillbtn' type='button' style='margin-top:12px' data-t='g_mods'>MODIFICATIONS</button>
     <button id='missionBtn' class='pillbtn' type='button' style='margin-top:8px'>MISSIONS <span id='missiondone' style='opacity:.7'></span></button>
+    <button id='inputBtn' class='pillbtn' type='button'><span id='inputTag'>Controls</span></button>
   </div>
 
   <!-- ===== MISSIONS ===== -->
@@ -2167,6 +2193,10 @@ document.getElementById('gsclose').onclick = closeGunsmith;
 document.getElementById('missionBtn').onclick = () => {
   document.getElementById('missions').classList.add('show'); renderMissions();
 };
+/* Change it whenever — picking the same device up in a different way (a tablet
+   into a keyboard case, a laptop folded flat) changes the right answer. */
+document.getElementById('inputBtn').onclick = () => askInput();
+applyInputMode();
 document.getElementById('msclose').onclick = () =>
   document.getElementById('missions').classList.remove('show');
 document.addEventListener('keydown', e => {
@@ -5151,11 +5181,86 @@ function coverDistance(origin, dir, maxDist) {
 }
 function camDir() { return new THREE.Vector3(-Math.sin(player.yaw)*Math.cos(player.pitch), Math.sin(player.pitch), -Math.cos(player.yaw)*Math.cos(player.pitch)); }
 
+/* ===========================================================================
+   HOW ARE YOU PLAYING?
+   ===========================================================================
+   The controls used to be decided by matchMedia('(pointer: coarse)'). That is
+   a good guess and it is wrong often enough to matter:
+
+     - a touchscreen laptop reports coarse AND fine, and got thumb sticks
+       covering a third of the screen while a perfectly good keyboard sat there
+     - a tablet with a keyboard case reports coarse, and got no keyboard support
+     - a phone plugged into a monitor, a Surface, a Chromebook in tent mode —
+       all of them guessable, none of them reliably
+
+   So it asks, once, before the first match. The detected answer is preselected
+   so the common case is one tap, the choice is remembered, and there is a
+   button in the lobby to change it — because the right answer changes when you
+   pick the same device up in a different way.
+=========================================================================== */
+function inputMode() {
+  try { const v = localStorage.getItem('nc_input'); if (v === 'touch' || v === 'kbm') return v; } catch (e) {}
+  return '';
+}
+function setInputMode(v) {
+  try { localStorage.setItem('nc_input', v); } catch (e) {}
+  applyInputMode();
+}
+function guessInput() {
+  /* Coarse pointer with no fine pointer is a phone or a tablet. Anything with
+     a fine pointer available has a mouse or a trackpad, whatever else it has. */
+  const coarse = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  const fine = matchMedia('(pointer: fine)').matches;
+  return (coarse && !fine) ? 'touch' : 'kbm';
+}
+function inputIsTouch() { return (inputMode() || guessInput()) === 'touch'; }
+
+function applyInputMode() {
+  const touch = inputIsTouch();
+  document.body.classList.toggle('nctouch', touch);
+  document.body.classList.toggle('nckbm', !touch);
+  const tag = document.getElementById('inputTag');
+  if (tag) tag.textContent = touch ? 'Controls: touch buttons' : 'Controls: keyboard & mouse';
+}
+
+function askInput(then) {
+  const guess = guessInput();
+  const o = document.createElement('div');
+  o.id = 'inputask';
+  o.innerHTML =
+    '<div class="iabox">' +
+      '<h2>How are you playing?</h2>' +
+      '<p>This decides whether you get on-screen buttons or the keyboard. ' +
+      'You can change it any time from the lobby.</p>' +
+      '<div class="iagrid">' +
+        '<button data-m="kbm" class="' + (guess === 'kbm' ? 'sug' : '') + '">' +
+          '<span class="ic">⌨️</span><b>Keyboard &amp; mouse</b>' +
+          '<i>WASD to move, mouse to aim, click to fire. The screen stays clear.</i>' +
+          (guess === 'kbm' ? '<em>Looks like this one</em>' : '') + '</button>' +
+        '<button data-m="touch" class="' + (guess === 'touch' ? 'sug' : '') + '">' +
+          '<span class="ic">📱</span><b>Phone or tablet</b>' +
+          '<i>A thumb stick on the left, fire and jump on the right, drag to look.</i>' +
+          (guess === 'touch' ? '<em>Looks like this one</em>' : '') + '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(o);
+  o.querySelectorAll('button').forEach(b => b.onclick = () => {
+    setInputMode(b.dataset.m);
+    o.remove();
+    if (then) then();
+  });
+}
+
 // ---------- controls ----------
 document.getElementById('startBtn').onclick = () => {
-  document.getElementById('overlay').style.display = 'none';
-  // run the deployment loading sequence, then drop into the match
-  runDeploySequence(startMatch);
+  const go = () => {
+    document.getElementById('overlay').style.display = 'none';
+    // run the deployment loading sequence, then drop into the match
+    runDeploySequence(startMatch);
+  };
+  /* Asked before the overlay closes, so the answer is given against the lobby
+     rather than over a match that has already started. */
+  if (!inputMode()) askInput(go); else go();
 };
 
 /* Pointer lock is a mouse concept. On a handset there is no pointer to lock,
@@ -5164,7 +5269,9 @@ document.getElementById('startBtn').onclick = () => {
    use the on-screen controls instead. The renderer check matters too: these
    run from click handlers that exist before the scene has finished building. */
 function lockPointer() {
-  if (matchMedia('(pointer: coarse)').matches) return;
+  /* Locking the pointer for someone using thumb sticks hides their cursor and
+     gives nothing back, so it follows the chosen mode rather than the device. */
+  if (inputIsTouch()) return;
   if (!renderer || !renderer.domElement || !renderer.domElement.requestPointerLock) return;
   try { renderer.domElement.requestPointerLock(); } catch (e) {}
 }
@@ -8064,8 +8171,13 @@ try {
    the same clamp the mouse path uses.
    ============================================================================ */
 (function touchControls() {
-  const coarse = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
-  if (!coarse) return;
+  /* Wired whenever the hardware could deliver a touch, and shown only when the
+     player picked touch. Bailing on the old coarse-pointer test meant a
+     touchscreen laptop that CHOSE touch got a control layer with no handlers
+     attached to it. */
+  const canTouch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0
+                   || 'ontouchstart' in window;
+  if (!canTouch) return;
 
   const $ = id => document.getElementById(id);
   const ring = $('tcRing'), nub = $('tcNub');
