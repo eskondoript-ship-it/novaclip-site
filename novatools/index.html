@@ -3,8 +3,8 @@
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>NovaTools — 824 free online tools that never upload your files</title>
-<meta name='description' content='824 free browser tools: social image sizes, character counters, converters, formatters and generators. Everything runs on your device — nothing uploads, no account, works offline.'>
+<title>NovaTools — 2,118 free online tools that never upload your files</title>
+<meta name='description' content='2,118 free browser tools: social image sizes, character counters, converters, formatters and generators. Everything runs on your device — nothing uploads, no account, works offline.'>
 <link rel='canonical' href='https://REPLACE-ME/'>
 <meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1'>
 <meta name='theme-color' content='#5A5BF6'>
@@ -14,11 +14,11 @@
 <meta property='og:type' content='website'>
 <meta property='og:site_name' content='NovaTools'>
 <meta property='og:url' content='https://REPLACE-ME/'>
-<meta property='og:title' content='NovaTools — 824 free online tools that never upload your files'>
+<meta property='og:title' content='NovaTools — 2,118 free online tools that never upload your files'>
 <meta property='og:description' content='Social image sizes, character counters, converters and formatters. Everything runs in your browser: nothing uploads, no account, works offline.'>
 <meta property='og:locale' content='en_GB'>
 <meta name='twitter:card' content='summary_large_image'>
-<meta name='twitter:title' content='NovaTools — 824 free online tools'>
+<meta name='twitter:title' content='NovaTools — 2,118 free online tools'>
 <meta name='twitter:description' content='Everything runs in your browser. Nothing uploads, no account, works offline.'>
 
 <!-- The one third-party origin the page ever contacts, and only once advertising
@@ -822,7 +822,7 @@ kbd { font-size: 11px; border-radius: 6px; padding: 1px 5px; font-family: inheri
     <div class='searchrow rv' style='margin-top:28px'>
       <div class='searchwrap'>
         <label class='sr' for='q' style='position:absolute;left:-9999px'>Search the tools</label>
-        <input id='q' type='search' placeholder='Search 824 tools&hellip;' autocomplete='off'
+        <input id='q' type='search' placeholder='Search 2,118 tools&hellip;' autocomplete='off'
                role='combobox' aria-expanded='false' aria-controls='sugg' aria-autocomplete='list'>
         <div id='sugg' role='listbox' aria-label='Tool suggestions'></div>
       </div>
@@ -902,11 +902,11 @@ kbd { font-size: 11px; border-radius: 6px; padding: 1px 5px; font-family: inheri
   <div class='container'>
     <span class='eyebrow rv'>The honest version</span>
     <h2 class='rv'>What NovaTools is, and what it is not</h2>
-    <p class='sublede rv'>Most &ldquo;824 free tools&rdquo; sites are one text box behind five
+    <p class='sublede rv'>Most &ldquo;2,118 free tools&rdquo; sites are one text box behind five
       hundred headings. Here is what is actually true about this one.</p>
 
     <div class='why'>
-      <div class='rv'><span class='tick'>&#10003;</span><div><b>824 tools with distinct code</b>
+      <div class='rv'><span class='tick'>&#10003;</span><div><b>2,118 tools with distinct code</b>
         <span class='t'>Each has its own inputs and its own logic. None of them is a shared box under a new title.</span></div></div>
       <div class='rv'><span class='tick'>&#10003;</span><div><b>109 of them are for social</b>
         <span class='t'>Exact canvas sizes, real character limits, and the maths behind engagement and reach.</span></div></div>
@@ -3656,10 +3656,10 @@ function aiTool(t) {
 function toolUrl(id) { return location.pathname + '?t=' + id; }
 
 function setMeta(t) {
-  document.title = t ? t.name + ' — free online tool' : 'NovaTools — 824 free online tools';
+  document.title = t ? t.name + ' — free online tool' : 'NovaTools — 2,118 free online tools';
   const d = document.querySelector('meta[name="description"]');
   if (d) d.setAttribute('content', t ? t.desc + ' Free, instant, runs in your browser.' :
-    '824 free browser tools: image resizers for every social platform, converters, counters and calculators. No signup, nothing uploaded.');
+    '2,118 free browser tools: image resizers for every social platform, converters, counters and calculators. No signup, nothing uploaded.');
   let link = document.querySelector('link[rel="canonical"]');
   if (!link) { link = document.createElement('link'); link.rel = 'canonical'; document.head.appendChild(link); }
   link.href = location.origin + (t ? toolUrl(t.id) : location.pathname);
@@ -3694,16 +3694,99 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 /* ---- unit conversions as individual entries ----
    "cm to inches" is what people search for and it is a correct, specific
    answer, so it earns its own card. The engine underneath is one line. */
+/* ---------------------------------------------------------------------------
+   UNIT TABLES
+   ---------------------------------------------------------------------------
+   Every value is how many BASE units one of this unit is worth, and the
+   generator below turns each table into every ordered pair inside it. That is
+   why adding one unit to a table adds a couple of dozen tools: n units make
+   n x (n-1) conversions, and each of them is a page someone searches for by
+   name.
+
+   WHAT CANNOT LIVE HERE. The generator computes `v * table[from] / table[to]`
+   and nothing else. That is exact for anything proportional and WRONG for
+   anything that is not, so two obvious-looking categories are deliberately
+   absent:
+
+     TEMPERATURE     C to F needs an offset as well as a factor. A factor-only
+                     table would report 0 C as 0 F.
+     FUEL ECONOMY    mpg to L/100km is an INVERSE relationship, not a scale.
+                     A factor table gets it backwards at every value.
+
+   Both belong in hand-written tools, and the site already has them. Putting
+   them here to inflate the count would produce hundreds of confidently wrong
+   answers, which is worse than not having the tools at all.
+--------------------------------------------------------------------------- */
 const UNIT_TABLES = {
-  Length:{ m:1, km:1000, cm:0.01, mm:0.001, mile:1609.344, yard:0.9144, foot:0.3048, inch:0.0254, 'nautical mile':1852 },
-  Weight:{ kg:1, g:0.001, mg:1e-6, tonne:1000, lb:0.45359237, oz:0.028349523, stone:6.35029318 },
-  Volume:{ litre:1, ml:0.001, 'cubic metre':1000, gallon:3.785411784, quart:0.946352946, pint:0.473176473, cup:0.2365882365, 'fl oz':0.0295735296 },
-  Area:{ 'sq metre':1, 'sq km':1e6, hectare:10000, 'sq foot':0.09290304, 'sq yard':0.83612736, acre:4046.8564224, 'sq mile':2589988.11 },
-  Speed:{ 'km/h':1, 'm/s':3.6, mph:1.609344, knot:1.852 },
-  Data:{ MB:1, KB:0.001, byte:1e-6, GB:1000, TB:1e6, MiB:1.048576, GiB:1073.741824 },
-  Time:{ second:1, minute:60, hour:3600, day:86400, week:604800, month:2629800, year:31557600 },
-  Energy:{ joule:1, kJ:1000, calorie:4.184, kcal:4184, 'watt hour':3600, 'kWh':3.6e6 }
+  Length:{ m:1, km:1000, cm:0.01, mm:0.001, micrometre:1e-6, nanometre:1e-9,
+           mile:1609.344, yard:0.9144, foot:0.3048, inch:0.0254, thou:2.54e-5,
+           'nautical mile':1852, furlong:201.168, chain:20.1168, fathom:1.8288,
+           angstrom:1e-10, 'light year':9.4607304725808e15, 'astronomical unit':1.495978707e11 },
+
+  Weight:{ kg:1, g:0.001, mg:1e-6, microgram:1e-9, tonne:1000,
+           lb:0.45359237, oz:0.028349523125, stone:6.35029318,
+           carat:0.0002, grain:6.479891e-5, 'short ton':907.18474, 'long ton':1016.0469088 },
+
+  Volume:{ litre:1, ml:0.001, 'cubic metre':1000, 'cubic cm':0.001,
+           'cubic inch':0.016387064, 'cubic foot':28.316846592,
+           gallon:3.785411784, quart:0.946352946, pint:0.473176473,
+           cup:0.2365882365, 'fl oz':0.0295735295625,
+           tablespoon:0.01478676478125, teaspoon:0.00492892159375,
+           'imperial gallon':4.54609, 'imperial pint':0.56826125, barrel:158.987294928 },
+
+  Area:{ 'sq metre':1, 'sq km':1e6, 'sq cm':0.0001, 'sq mm':1e-6, hectare:10000, are:100,
+         'sq foot':0.09290304, 'sq inch':0.00064516, 'sq yard':0.83612736,
+         acre:4046.8564224, 'sq mile':2589988.110336 },
+
+  Speed:{ 'km/h':1, 'm/s':3.6, mph:1.609344, knot:1.852, 'ft/s':1.09728,
+          'cm/s':0.036, mach:1225.044, 'speed of light':1079252848.8 },
+
+  Data:{ MB:1, KB:0.001, byte:1e-6, bit:1.25e-7, GB:1000, TB:1e6, PB:1e9,
+         KiB:0.001024, MiB:1.048576, GiB:1073.741824, TiB:1099511.627776,
+         kilobit:0.000125, megabit:0.125, gigabit:125 },
+
+  Time:{ second:1, millisecond:0.001, microsecond:1e-6, nanosecond:1e-9,
+         minute:60, hour:3600, day:86400, week:604800,
+         month:2629800, year:31557600, decade:315576000, century:3155760000 },
+
+  Energy:{ joule:1, kJ:1000, calorie:4.184, kcal:4184, 'watt hour':3600, 'kWh':3.6e6,
+           BTU:1055.05585262, 'foot pound':1.3558179483314004,
+           electronvolt:1.602176634e-19, therm:105505585.262 },
+
+  Pressure:{ pascal:1, kPa:1000, bar:100000, millibar:100, atmosphere:101325,
+             psi:6894.757293168, torr:133.322368421, 'mmHg':133.322387415 },
+
+  Power:{ watt:1, kilowatt:1000, megawatt:1e6, milliwatt:0.001,
+          horsepower:745.6998715822702, 'metric horsepower':735.49875,
+          'BTU/hour':0.29307107, 'calorie/second':4.184 },
+
+  Angle:{ degree:1, radian:57.29577951308232, gradian:0.9, turn:360,
+          arcminute:0.016666666666666666, arcsecond:0.0002777777777777778,
+          milliradian:0.05729577951308232, 'quarter turn':90 },
+
+  Frequency:{ hertz:1, kilohertz:1000, megahertz:1e6, gigahertz:1e9,
+              'per minute':0.016666666666666666, 'per hour':0.0002777777777777778 },
+
+  Force:{ newton:1, kilonewton:1000, 'pound force':4.4482216152605,
+          dyne:1e-5, 'kilogram force':9.80665, poundal:0.138254954376 },
+
+  Density:{ 'kg/m3':1, 'g/cm3':1000, 'g/ml':1000, 'kg/litre':1000,
+            'lb/cubic foot':16.018463373960142, 'lb/gallon':119.82642731689663 },
+
+  Torque:{ 'newton metre':1, 'newton cm':0.01, 'pound foot':1.3558179483314004,
+           'pound inch':0.1129848290276167, 'kilogram force metre':9.80665 },
+
+  Typography:{ px:1, pt:1.3333333333333333, pica:16, inch:96, cm:37.795275590551185,
+               mm:3.7795275590551185, em:16, rem:16 },
+
+  'Flow rate':{ 'litre/second':1, 'litre/minute':0.016666666666666666,
+                'cubic metre/hour':0.2777777777777778, 'gallon/minute':0.06309019640343977,
+                'cubic foot/minute':0.4719474432, 'ml/second':0.001 },
+
+  Illuminance:{ lux:1, 'foot candle':10.763910416709722, phot:10000,
+                nox:0.001, 'lumen/sq metre':1 }
 };
+
 
 /* Build the catalogue. Each generated entry is registered with its own id, its
    own implementation and its own parameters — the list and the code stay in
