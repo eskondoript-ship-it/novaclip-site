@@ -4116,20 +4116,54 @@ render();
   if (id && TOOLS.some(x => x.id === id)) open(id, true); else setMeta(null);
 })();
 
+/* The conversions worth showing a search engine on day one. Most of the
+   converter catalogue is generated — 1,632 pairs from the same template — and a
+   brand-new domain whose sitemap is mostly near-identical templated pages is
+   exactly what the helpful-content system is looking for. These are the pairs
+   people actually type into a search box, written as the catalogue's own unit
+   keys, and they are the only generated conversions the launch sitemap lists. */
+const LAUNCH_PAIRS = [
+  'mile|km', 'km|mile', 'inch|cm', 'cm|inch', 'foot|m', 'm|foot', 'yard|m', 'm|km', 'km|m',
+  'mm|inch', 'inch|mm', 'cm|m', 'nautical mile|km',
+  'kg|lb', 'lb|kg', 'oz|g', 'g|oz', 'stone|kg', 'kg|stone', 'tonne|lb', 'g|kg', 'lb|oz',
+  'litre|gallon', 'gallon|litre', 'ml|fl oz', 'fl oz|ml',
+  'cup|ml', 'pint|litre', 'litre|ml', 'quart|litre', 'imperial gallon|litre',
+  'sq metre|sq foot', 'sq foot|sq metre', 'acre|hectare', 'hectare|acre', 'sq km|sq mile',
+  'km/h|mph', 'mph|km/h', 'm/s|km/h', 'km/h|m/s', 'knot|km/h', 'mph|m/s',
+  'MB|GB', 'GB|MB', 'GB|TB', 'KB|MB', 'MB|KB', 'GiB|GB', 'megabit|MB', 'byte|bit', 'gigabit|GB',
+  'hour|minute', 'minute|second', 'day|hour', 'week|day', 'year|day', 'millisecond|second', 'month|day',
+  'watt|horsepower', 'horsepower|watt', 'kilowatt|horsepower', 'watt|kilowatt',
+  'joule|calorie', 'calorie|joule', 'kcal|kJ', 'kWh|joule',
+  'bar|psi', 'psi|bar', 'atmosphere|psi', 'kPa|psi', 'pascal|bar',
+  'degree|radian', 'radian|degree', 'turn|degree',
+  'px|pt', 'pt|px', 'px|inch', 'inch|px', 'px|cm',
+  'newton|pound force', 'pound force|newton',
+  'hertz|kilohertz', 'megahertz|gigahertz'
+];
+
 /* A one-line sitemap dump, so the file that search engines need can be produced
    from the catalogue rather than maintained by hand and drifting out of date.
-   Run ncSitemap('https://yourdomain.com/') in the console and save the result. */
-window.ncSitemap = function (base) {
+   Run ncSitemap('https://yourdomain.com/') in the console and save the result.
+   ncSitemap(base, { launch: true }) leaves out the generated conversion pairs
+   apart from LAUNCH_PAIRS — that is the file to submit before approval. */
+window.ncSitemap = function (base, opts) {
   base = base || location.origin + '/';
+  const launch = !!(opts && opts.launch);
   const today = new Date().toISOString().slice(0, 10);
   const url = (loc, pri) => '  <url><loc>' + base + loc + '</loc><lastmod>' + today +
     '</lastmod><priority>' + pri + '</priority></url>';
   const pages = ['about.html', 'blog.html', 'pricing.html', 'contact.html',
                  'privacy.html', 'terms.html', 'cookies.html', 'disclaimer.html'];
+  const want = new Set(LAUNCH_PAIRS.map(p => p.toLowerCase()));
+  const keep = t => {
+    if (!launch || !/^u-/.test(t.id)) return true;
+    const m = /^(.+?) to (.+)$/.exec(t.name || '');
+    return !!m && want.has((m[1] + '|' + m[2]).toLowerCase());
+  };
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     [url('', '1.0')]
       .concat(pages.map(p => url(p, p === 'blog.html' ? '0.8' : '0.6')))
-      .concat(TOOLS.map(t => url('?t=' + t.id, '0.5')))
+      .concat(TOOLS.filter(keep).map(t => url('?t=' + t.id, /^u-/.test(t.id) && launch ? '0.4' : '0.5')))
       .join('\n') +
     '\n</urlset>\n\nBlog posts are files rather than catalogue entries, so add them by hand.';
 };

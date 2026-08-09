@@ -169,6 +169,28 @@ copy(ncSitemap('https://yourdomain.com/'))
 It is built from the live catalogue, so it cannot list a tool that does not
 exist. Add the content and blog pages to the top of the file by hand.
 
+### Two sitemaps, and which one to submit
+
+`sitemap.xml` lists everything: 2,135 URLs, of which 1,632 are conversion pairs
+generated from the same template.
+
+`sitemap-launch.xml` lists 590: every page, every hand-written tool, and the 87
+conversions people actually search for. Submit **this one** while the site is
+new and waiting on AdSense. A brand-new domain whose sitemap is mostly
+near-identical templated pages is what Google's helpful-content system is
+looking for, and the converters are the part of the catalogue least able to
+defend itself on quality. Nothing is hidden — the tools all still work and are
+linked from the directory; they are simply not the first thing a crawler meets.
+
+Once the site is approved, point `robots.txt` at `sitemap.xml` and resubmit.
+The trimmed file regenerates the same way as the full one:
+
+```js
+copy(ncSitemap('https://yourdomain.com/', { launch: true }))
+```
+
+The conversions it keeps are the `LAUNCH_PAIRS` list in `index.html`.
+
 ## Licence
 
 MIT — see `LICENSE`.
