@@ -1442,12 +1442,19 @@ function ncEditorTools() {
                  document.body.hasAttribute('data-nc-editor-tools');
   if (!wanted) return;
   if (document.getElementById('ncanimjs')) return;
-  const s = document.createElement('script');
-  s.id = 'ncanimjs';
-  s.src = 'animator.js';
-  s.onerror = () => console.warn('animator.js is not on the server yet — ' +
-    'the Animate and Remove buttons will not appear until it is uploaded.');
-  document.body.appendChild(s);
+  /* Two files, two tools, and they are not the same thing:
+       animator.js  the limb puppet, plus the object remover
+       motionlab.js the paper cut-out effect (paperanimator's Motion Lab)
+     Loaded separately so one missing file does not take the other down. */
+  [['ncanimjs', 'animator.js', 'Animate a drawing and Remove something'],
+   ['ncmljs', 'motionlab.js', 'Paper animation']].forEach(function (f) {
+    const s = document.createElement('script');
+    s.id = f[0];
+    s.src = f[1];
+    s.onerror = () => console.warn(f[1] + ' is not on the server yet — the ' +
+      f[2] + ' button will not appear until it is uploaded.');
+    document.body.appendChild(s);
+  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
