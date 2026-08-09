@@ -10,7 +10,7 @@ the folder to any static host and it works.
 
 | file | what it is |
 |---|---|
-| `index.html` | The application. Self-contained: styling, code and all 498 tools. |
+| `index.html` | The application. Self-contained: styling, code and all 824 tools. |
 | `nt-config.js` | **The only file you have to edit.** IDs, endpoints, your domain. |
 | `nt.css` | Shared stylesheet for the content pages. |
 | `nt.js` | Shared runtime: navbar, footer, ad slots, measurement, forms. |
