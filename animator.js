@@ -120,6 +120,7 @@
   const btn = document.createElement('button');
   btn.id = 'ncPaBtn';
   btn.innerHTML = '<span style="font-size:15px">🎨</span> Animate a drawing';
+  window.__ncOpenAnimator = function () { ui.classList.add('on'); };
   btn.title = 'Turn a drawing into a moving clip';
 
   const ui = document.createElement('div');
@@ -170,7 +171,7 @@
 
   function boot() {
     if (document.getElementById('ncPaBtn')) return;
-    document.body.appendChild(btn);
+    if (!window.__ncRailTools) document.body.appendChild(btn);
     document.body.appendChild(ui);
     wire();
   }
@@ -492,6 +493,7 @@
 
   const btn = document.createElement('button');
   btn.id = 'ncRmBtn';
+  /* No rail tab for this one, so its button stays whatever the rail does. */
   btn.innerHTML = '<span style="font-size:15px">\u2702\ufe0f</span> Remove something';
   btn.title = 'Paint over something to take it out of a photo';
 
@@ -519,7 +521,7 @@
 
   function boot() {
     if (document.getElementById('ncRmBtn')) return;
-    document.body.appendChild(btn);
+    if (!window.__ncRailTools) document.body.appendChild(btn);
     document.body.appendChild(ui);
     wire();
   }
