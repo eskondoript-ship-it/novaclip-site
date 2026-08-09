@@ -385,11 +385,18 @@ ncFit.textContent =
 ":root { --nc-rail: clamp(164px, 13vw, 232px); }" +
 "@media (min-width: 761px) {" +
   "body { margin-left: var(--nc-rail); }" +
+  /* Not every page offsets the body. index.html offsets a .content wrapper
+     instead, so the body rule above stacked on top of its own 200px and the
+     hero started 432px in — the dead strip beside the sidebar. Where a
+     wrapper does the offsetting, it keeps doing it and the body stands down. */
+  "body:has(.content) { margin-left: 0; }" +
+  ".content { margin-left: var(--nc-rail); }" +
   ".sidebar { width: var(--nc-rail); }" +
   /* The labels scale with the rail, or a 232px rail is a 164px rail with more
      empty space in it. */
   ".sidebar a, .sidebar .navlink { font-size: clamp(13px, .62vw + 8.6px, 15px); }" +
   ".sidebar .themewrap { padding: 16px clamp(12px, 1.1vw, 20px); }" +
+
 "}" +
 
 /* Text that is comfortable on a 1280 laptop is small on a 2560 monitor, and
@@ -1266,7 +1273,7 @@ function ncNav() {
 
       /* group header */
       '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;',
-      'padding:13px 9px 6px;background:none;border:0;cursor:pointer;text-align:left;',
+      'padding:clamp(7px,1.15vh,14px) 9px clamp(3px,.55vh,7px);background:none;border:0;cursor:pointer;text-align:left;',
       'font:700 10px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.15em;text-transform:uppercase;',
       'color:#5D6A88;transition:color .18s}',
       '#ncnav .ncgh:hover{color:#A8B8D8}',
@@ -1281,7 +1288,15 @@ function ncNav() {
       /* the row. position:relative for the active rail; the gradient sits in a
          ::before at opacity 0 so hovering fades it rather than snapping. */
       '.sidebar #ncnav a.ncl{position:relative;display:flex;align-items:center;gap:11px;margin:0;',
-      'padding:9px 12px;border-radius:11px;font:600 14px/1.2 Segoe UI,system-ui,sans-serif;',
+      /* Sixteen links at a fixed 50px each, plus six group headers and the
+         brand and profile blocks, is 1112px of nav. That fits a 1280x800
+         laptop only because the groups collapse below 820px tall — between
+         about 860 and 1120 nothing collapses and nothing fits either, so the
+         rail scrolls and the last two links sit under the fold. A nav you
+         have to scroll to reach is a nav with a hidden half. The row height
+         is a share of the window now: tighter on a short screen, roomier on
+         a tall one. */
+      'padding:clamp(5px,.8vh,10px) 12px;border-radius:11px;font:600 14px/1.2 Segoe UI,system-ui,sans-serif;',
       'color:#98A6C4;text-decoration:none;background:none;isolation:isolate;',
       'transition:color .18s,transform .18s}',
       '.sidebar #ncnav a.ncl::before{content:"";position:absolute;inset:0;border-radius:11px;z-index:-1;',
@@ -1337,10 +1352,18 @@ function ncNav() {
   const nav = document.createElement('nav');
   nav.id = 'ncnav';
 
-  /* On a short screen, only the group you are in is open. 820px is roughly
-     where an 11-row list stops fitting once the profile, the logo and the
-     language box have taken their share. */
-  const roomy = window.innerHeight >= 820;
+  /* On a short screen, only the group you are in is open.
+
+     This used to be `innerHeight >= 820`, a number picked when the list had
+     eleven rows. It has sixteen now, so between roughly 860 and 1130 tall
+     nothing collapsed and nothing fitted either: the rail scrolled and the
+     last links sat under the fold, which is the one thing a nav must never
+     do. Guessing a new number would just move the broken band somewhere else.
+
+     So it is measured instead. Build it open, and if it does not fit, shut
+     every group except the one you are in and measure again. The threshold
+     is "does this fit", which is the actual question. */
+  let roomy = true;
 
   NC_NAV.forEach(group => {
     const mine = group.items.some(it => it[0].toLowerCase() === here);
@@ -1383,6 +1406,20 @@ function ncNav() {
   /* above the language box, below the logo and the profile button */
   const tail = bar.querySelector('.themewrap');
   tail ? bar.insertBefore(nav, tail) : bar.appendChild(nav);
+  /* Now it is in the document and can be measured. A shut group is display:none,
+     so this settles in one pass — no loop, no layout thrash. */
+  requestAnimationFrame(function () {
+    const rail = nav.closest('.sidebar') || nav.parentElement;
+    if (!rail || rail.scrollHeight <= rail.clientHeight + 2) return;
+    nav.querySelectorAll('.ncg').forEach(function (g) {
+      if (g.querySelector('a.ncl.on, a.ncl[aria-current]')) return;
+      if (!g.querySelector('.ncgh')) return;          // ungrouped rows stay put
+      g.classList.add('shut');
+      const h = g.querySelector('.ncgh');
+      if (h) h.setAttribute('aria-expanded', 'false');
+    });
+  });
+
 }
 
 
