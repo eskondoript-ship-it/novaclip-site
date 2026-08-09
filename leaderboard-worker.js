@@ -1,5 +1,20 @@
 /* NovaClip — accounts, saves and the world leaderboard
    ============================================================================
+   THERE ARE TWO WORKERS. THIS IS NOT THE AI ONE.
+
+     THIS FILE        accounts, saves, leaderboard, community.
+                      Needs a KV binding called DB.
+                      Its address goes in nova.js -> NC_SERVER.
+
+     ai-worker.js     the only thing that talks to Gemini.
+                      Needs a secret called GEMINI_API_KEY.
+                      Its address goes in nova.js -> NC_AI_WORKER.
+
+   They are not interchangeable. Pasting this file into the AI worker makes
+   every AI request answer 500 with "KV namespace DB is not bound", because the
+   check below runs before any routing and this file has no AI code in it. If
+   that is the error you are chasing, you want ai-worker.js instead.
+   ============================================================================
    One Cloudflare Worker behind the whole site. It does two jobs:
 
      ACCOUNTS + SAVES   your points, skills, certificates, saved ideas and AI

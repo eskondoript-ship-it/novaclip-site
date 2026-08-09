@@ -1,5 +1,19 @@
 /* NovaClip — the AI worker
    ============================================================================
+   THERE ARE TWO WORKERS. THIS IS THE AI ONE.
+
+     THIS FILE               the only thing that talks to Gemini.
+                             Needs a secret called GEMINI_API_KEY.
+                             Its address goes in nova.js -> NC_AI_WORKER.
+
+     leaderboard-worker.js   accounts, saves, leaderboard, community.
+                             Needs a KV binding called DB.
+                             Its address goes in nova.js -> NC_SERVER.
+
+   Deploy them as two separate Workers with two separate addresses. If the AI
+   pages answer 500 with "KV namespace DB is not bound", the other file is
+   deployed here by mistake — replace it with this one.
+
    Every AI feature on the site (the AI page, Coder, Trend Spotter, Publish, the
    paper animator) calls ncAsk() in nova.js, and ncAsk() posts here. This Worker
    is the only place NovaClip's Gemini key exists.
