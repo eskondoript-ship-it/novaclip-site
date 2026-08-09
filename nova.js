@@ -428,8 +428,12 @@ ncFit.textContent =
   "body { padding-bottom: 74px; margin-left: 0; }" +
 "}" +
 
-":root { font-size: clamp(15px, .22vw + 13.2px, 17.5px); }" +
-"@media (min-width: 761px) { body { font-size: clamp(15px, .22vw + 13.2px, 17.5px); } }";
+/* A font ramp used to sit here, growing the root size on wider screens. It
+   was the wrong instinct: a bigger screen should show MORE, not the same
+   amount larger. The home page h1 is sized in rem, so the ramp inflated a
+   headline by 9% at 1920 that already wrapped to three lines and pushed the
+   buttons off a short laptop. The root size is left alone. */
+"";
 document.head.appendChild(ncFit);
 
 function applyTheme(name) { const t = THEMES[name] || THEMES['Dark']; document.documentElement.style.setProperty('--bg',t[0]); document.documentElement.style.setProperty('--box',t[1]); document.documentElement.style.setProperty('--txt',t[2]); document.body.dataset.theme = name; localStorage.setItem('nc_theme',name); }
