@@ -271,11 +271,17 @@
     });
 
     if (!client) return;
-    var s = el('script', {
-      async: '', crossorigin: 'anonymous',
-      src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(client)
-    });
-    document.head.appendChild(s);
+    /* nt-config.js emits the loader from the head, where AdSense's verifier
+       looks for it. This is the fallback for a page that somehow loaded nt.js
+       without it — never a second copy, which would double every request. */
+    if (!window.__ntAdsLoader) {
+      var s = el('script', {
+        async: '', crossorigin: 'anonymous',
+        src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(client)
+      });
+      document.head.appendChild(s);
+      window.__ntAdsLoader = true;
+    }
     if (C.adsense.autoAds) {
       document.head.appendChild(el('script', null,
         '(adsbygoogle=window.adsbygoogle||[]).push({google_ad_client:"' + client + '",enable_page_level_ads:true});'));

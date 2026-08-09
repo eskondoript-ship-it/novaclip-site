@@ -81,6 +81,10 @@
   }
  ]
 }</script>
+<!-- Site configuration. In the head, and parser-blocking, so the AdSense
+     loader it emits is in the document head before the body is parsed —
+     which is where AdSense's verifier looks for it. -->
+<script src='../nt-config.js'></script>
 </head>
 <body>
 <a class='skip' href='#main'>Skip to content</a>
@@ -206,7 +210,6 @@ is: take some input, compute something, give it back, forget it.</p>
 <div class='wrap'><div class='adslot' data-ad='aboveFooter'></div></div>
 <footer class='foot' id='ntfoot'></footer>
 
-<script src='../nt-config.js'></script>
 <script src='../nt.js' defer></script>
 </body>
 </html>

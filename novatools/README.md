@@ -64,6 +64,12 @@ Nothing loads until `adsense.client` is set. Before that: no script tag, no
 request, no cookie, no consent banner, and every slot stays `display:none`
 rather than leaving a labelled hole in the page.
 
+`nt-config.js` sits in the `<head>` of every page and emits the AdSense loader
+itself, so the tag is in the head during the initial parse rather than appended
+later by a deferred script. `nt.js` then fills the slots. That split exists
+because AdSense's verifier looks in the head of the HTML, and "we couldn't find
+the code on your site" is otherwise the first thing you hit.
+
 ```js
 adsense: {
   client: 'ca-pub-0000000000000000',
@@ -102,6 +108,96 @@ footer that links only to pages that exist.
 What you still have to do: put it on a real domain, get it indexed, and replace
 `ads.txt` with the line AdSense gives you once approved. Applying with zero
 indexed pages is the most common rejection.
+
+### Setting up AdSense, in order
+
+The order matters. Steps 1–3 happen before you apply; 4–8 after you are
+approved, which takes anywhere from a day to a few weeks.
+
+**1. Get the site live on the domain and indexed.**
+Set `origin` in `nt-config.js`, replace every `REPLACE-ME`, submit
+`sitemap-launch.xml` in Search Console, and wait until Search Console's Pages
+report shows real indexed pages. Do not apply before this. "Site not
+available" and "low value content" are both usually this.
+
+**2. Create the AdSense account** at adsense.google.com and add the site.
+AdSense will give you a publisher ID in the form `ca-pub-0000000000000000`.
+
+**3. Put the publisher ID in `nt-config.js` and redeploy.**
+
+```js
+adsense: {
+  client: 'ca-pub-0000000000000000',
+  slots: { /* leave all of these empty for now */ }
+}
+```
+
+That one line is the verification snippet. `nt-config.js` is in the `<head>` of
+every page and is parser-blocking, so the AdSense loader is in the head before
+the body is parsed — which is where AdSense's checker looks. With the client
+set and every slot still empty, the loader is present and no ad unit renders,
+which is exactly the state AdSense wants to review.
+
+Confirm it worked before clicking Request Review: open the live site, View
+Source, and search for `adsbygoogle`. If it is not there, the deploy did not
+pick up your edit.
+
+Then click **Request review** in AdSense and wait.
+
+**4. Once approved, replace `ads.txt`.**
+Copy the exact line from AdSense → Sites → Ads.txt. It looks like:
+
+```
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+```
+
+The whole file is that one line. Until you do this AdSense shows "Earnings at
+risk", and it is right to — without `ads.txt` anyone can claim to sell your
+inventory.
+
+**5. Create ad units.** AdSense → Ads → By ad unit → Display ad. Make one per
+placement you want, name it after the placement, choose **Responsive**, and
+copy the `data-ad-slot` number — the 10 digits, not the whole snippet. You do
+not need the HTML AdSense shows you; this project builds the tag itself.
+
+**6. Paste the numbers into `slots`.**
+
+```js
+slots: {
+  belowHero: '1234567890',
+  aboveFooter: '0987654321',
+  inArticle: '',            // still off
+  ...
+}
+```
+
+Turn them on one at a time and give each a week. A placement with no number
+renders nothing, so this is a safe way to find out which ones actually earn
+rather than just annoy.
+
+**7. Leave `autoAds: false`.** Auto ads let Google insert units anywhere it
+likes, including on top of a tool someone is mid-way through using. On a site
+whose whole point is "it just works in your browser", that is a bad trade.
+
+**8. Check it on a phone.** Most of the traffic a tool site gets is mobile, and
+`aboveFooter` plus `belowHero` on a small screen is already two units on a
+short page. If it looks like an ad farm to you, it looks like one to a reviewer.
+
+### If AdSense rejects you
+
+The rejection email names a reason, and the two common ones have specific fixes
+rather than general ones:
+
+- **"Low value content"** — usually the converters. 1,637 of the tools are
+  generated from one template, and a crawler that meets them first sees a wall
+  of near-identical pages. That is what `sitemap-launch.xml` exists for; make
+  sure that is the one submitted, and that the eight blog articles are indexed.
+- **"Site not available"** — almost always the snippet, not the site. Check
+  step 3, and check that the domain you added in AdSense matches the one that
+  actually serves the site, including www / non-www.
+
+You can reapply. Fix the named reason first; reapplying unchanged just spends
+the wait again.
 
 ## Measurement
 

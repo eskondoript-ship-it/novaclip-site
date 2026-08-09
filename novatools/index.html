@@ -714,6 +714,10 @@ kbd { font-size: 11px; border-radius: 6px; padding: 1px 5px; font-family: inheri
   .fc, .scrolldown, .final::before { animation: none !important; }
 }
 </style>
+<!-- Site configuration. In the head, and parser-blocking, so the AdSense
+     loader it emits is in the document head before the body is parsed —
+     which is where AdSense's verifier looks for it. -->
+<script src='nt-config.js'></script>
 </head>
 <body>
 <a class='ntskip' href='#tools'>Skip to the tools</a>
@@ -4462,7 +4466,6 @@ $('roadmapchips').innerHTML = ['AI writer', 'Blog generator', 'Email writer', 'P
      policy that governs them is in one place rather than copied per page. Both
      files are optional: if they are missing, every tool above still works and
      nothing else on the page changes. -->
-<script src='nt-config.js'></script>
 <script src='nt.js' defer></script>
 </body>
 </html>
