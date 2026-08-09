@@ -1363,7 +1363,7 @@ async function ncAsk(prompt, opts) {
   const own = ncAIKey();
   let data = null, err = '';
   try {
-    let r;
+    let r, raw;
     if (ncKeyLooksReal(own)) {
       r = await fetch(NC_AI_DIRECT + model + ':generateContent?key=' + encodeURIComponent(own.trim()),
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -1372,10 +1372,33 @@ async function ncAsk(prompt, opts) {
     } else {
       r = await fetch(NC_AI_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: model, payload: body }) });
-      if (r.status === 429) err = 'The shared AI is busy. Add your own key in your profile to skip the queue.';
     }
-    if (!err && !r.ok) err = 'The AI service answered ' + r.status + '.';
-    if (!err) data = await r.json();
+
+    /* Read the body once, as text, before deciding anything. Both Google and
+       ai-worker.js explain a failure in the body; the status alone is the least
+       useful part of it. "The AI service answered 500." is what this page used
+       to say when the worker was sitting there telling us its key was missing. */
+    if (!err) { try { raw = await r.text(); } catch (e) { raw = ''; } }
+
+    if (!err && !r.ok) {
+      let reason = '';
+      try {
+        const j = JSON.parse(raw || '{}');
+        reason = j.error && (typeof j.error === 'string' ? j.error : j.error.message) || '';
+      } catch (e) {}
+      err = reason || ('The AI service answered ' + r.status + '.');
+      /* A 5xx with nothing to say is the one case where the status really is all
+         we know, so name the likely cause rather than leaving a bare number. */
+      if (!reason && r.status >= 500) {
+        err = 'The AI service answered ' + r.status + '. That usually means the ' +
+              'NovaClip worker is misconfigured — open ' + NC_AI_WORKER + '/health to see. ' +
+              'Adding your own key in your profile works around it.';
+      }
+    }
+    if (!err) {
+      try { data = JSON.parse(raw); }
+      catch (e) { err = 'The AI service sent something that was not an answer.'; }
+    }
   } catch (e) {
     err = 'Could not reach the AI. Check your connection.';
   }
