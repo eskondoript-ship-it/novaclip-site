@@ -4504,26 +4504,42 @@ const SFX_DIR = 'sfx/';
 /* [files, max seconds]. Several files means pick one at random. */
 const SOUND_PACK = {
   // ---- combat: frequent, so short and capped hard ----
-  hurt:      [['sfx-fart.mp3'], 0.35],                       // you got hit — 0.31s, the shortest thing here
-  reload:    [['sfx-not-my-problema.mp3'], 0.9],
-  pickup:    [['sfx-apple-pay.mp3'], 1.2],                   // bought something: an actual payment chime
-  kill:      [['sfx-hee-hee.mp3', 'sfx-67.mp3', 'sfx-bruh.mp3'], 1.4],
-  headshot:  [['sfx-rizz.mp3', 'sfx-faaah.mp3'], 1.5],
-  death:     [['sfx-death-fortnite.mp3', 'sfx-oh-hell-nah.mp3'], 1.8],
+  hit:       [['sfx-vine-boom.mp3', 'sfx-punch.mp3', 'sfx-bone-crack.mp3',
+               'sfx-metal-pipe.mp3'], 0.45],                 // every bullet that connects — the tightest cap here
+  hurt:      [['sfx-fart.mp3'], 0.35],                       // you got hit — 0.31s, the shortest thing in the pack
+  reload:    [['sfx-not-my-problema.mp3', 'sfx-whatsapp-button.mp3'], 0.9],
+  pickup:    [['sfx-apple-pay.mp3', 'sfx-taco-bell-bong.mp3', 'sfx-ding.mp3'], 1.2],
+  kill:      [['sfx-hee-hee.mp3', 'sfx-67.mp3', 'sfx-bruh.mp3',
+               'sfx-ronaldo.mp3', 'sfx-cristiano-ronaldo.mp3'], 1.4],
+  headshot:  [['sfx-rizz.mp3', 'sfx-faaah.mp3', 'sfx-get-out.mp3'], 1.5],
+  death:     [['sfx-death-fortnite.mp3', 'sfx-oh-hell-nah.mp3',
+               'sfx-sad-violin.mp3', 'sfx-cursed-plankton.mp3'], 1.8],
   mineBeep:  [['sfx-error.mp3'], 0.4],                       // ticks over and over near a mine
 
   // ---- one-offs: rarer, so they get room to land ----
-  jumpscare: [['sfx-chicken-scream.mp3', 'sfx-sussy.mp3'], 2.5],
-  mission:   [['sfx-hala-madrid.mp3', 'sfx-tiki-tiki.mp3'], 3],
-  win:       [['sfx-porto-goal.mp3', 'sfx-lamine-yamal.mp3', 'sfx-mbappe.mp3'], 5],
-  lose:      [['sfx-sad-meow.mp3', 'sfx-rip-granny.mp3', 'sfx-du-bist.mp3'], 5],
+  incoming:  [['sfx-siren-alarm.mp3', 'sfx-samsung-alarm.mp3',
+               'sfx-undertaker-bell.mp3'], 2],               // a strike is on its way to you
+  jumpscare: [['sfx-chicken-scream.mp3', 'sfx-sussy.mp3',
+               'sfx-knock-spooky.mp3', 'sfx-door-knocking.mp3'], 2.5],
+  mission:   [['sfx-hala-madrid.mp3', 'sfx-tiki-tiki.mp3',
+               'sfx-among-us-reveal.mp3', 'sfx-haaland.mp3'], 3],
+  win:       [['sfx-porto-goal.mp3', 'sfx-lamine-yamal.mp3', 'sfx-mbappe.mp3',
+               'sfx-tecnologia.mp3', 'sfx-sigma-music.mp3', 'sfx-cucurella.mp3',
+               'sfx-aura-farming.mp3'], 5],
+  lose:      [['sfx-sad-meow.mp3', 'sfx-rip-granny.mp3', 'sfx-du-bist.mp3',
+               'sfx-nao-chora.mp3', 'sfx-homer.mp3', 'sfx-skibidi.mp3',
+               'sfx-aww-so-cute.mp3'], 5],
 
   /* The rest of the pack: songs and ringtones, too long to be a sound effect
      and too good to leave out. One plays as a round begins. */
   roundStart: [['sfx-default-dance.mp3', 'sfx-spiderman.mp3', 'sfx-indian-song.mp3',
                 'sfx-german-song.mp3', 'sfx-verity.mp3', 'sfx-dexter.mp3',
                 'sfx-yo-phone.mp3', 'sfx-german-ringtone.mp3',
-                'sfx-whatsapp-bass.mp3', 'sfx-iphone-notification.mp3'], 4]
+                'sfx-whatsapp-bass.mp3', 'sfx-iphone-notification.mp3',
+                'sfx-nokia.mp3', 'sfx-iphone-ringtone.mp3', 'sfx-discord-call.mp3',
+                'sfx-na-na-na.mp3', 'sfx-wide-putin.mp3', 'sfx-wide-putin-full.mp3',
+                'sfx-putin-loud.mp3', 'sfx-car-horn.mp3', 'sfx-metal-pipe-falling.mp3',
+                'sfx-pump-shotgun.mp3', 'sfx-unnamed.mp3'], 4]
 };
 
 const packBuf = {};        // slot -> [AudioBuffer, ...] in the order listed
