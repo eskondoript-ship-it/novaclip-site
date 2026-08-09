@@ -1432,7 +1432,15 @@ window.ncKeyLooksReal = ncKeyLooksReal; window.ncAsk = ncAsk;
    that was too big to be worth doing.
    ============================================================================ */
 function ncEditorTools() {
-  if (!/editor\.html/i.test(location.pathname) && !document.getElementById('root')) return;
+  /* This used to also fire on any page with a #root, as a catch for the editor
+     being served from a directory URL. #root is React's usual mount point, so
+     the moment a second React page existed — the typing game — the editor's
+     Animate and Remove buttons appeared on top of it. The opt-in below is the
+     same escape hatch without the false positive: put data-nc-editor-tools on
+     the body of any page that genuinely wants them. */
+  const wanted = /editor\.html/i.test(location.pathname) ||
+                 document.body.hasAttribute('data-nc-editor-tools');
+  if (!wanted) return;
   if (document.getElementById('ncanimjs')) return;
   const s = document.createElement('script');
   s.id = 'ncanimjs';
