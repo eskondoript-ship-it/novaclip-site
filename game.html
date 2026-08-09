@@ -4466,62 +4466,101 @@ const SFX_FILE = '';
 let actx = null, sfxGain = null, boomBuf = null, sfxReady = false;
 
 /* ---------------------------------------------------------------------------
-   THE SOUND PACK  —  drop real audio in and it takes over
+   THE SOUND PACK  —  real audio, and it takes over from the synth
 
-   Every sound in this game is synthesised, which is why it needs no files and
-   why it sounds like a game from 1994. Any entry below whose file is actually
-   present is loaded and played INSTEAD of the synth; anything missing falls
-   back, silently, so the game never breaks because a download did not happen.
+   Every sound in this game is synthesised, which is why it needed no files and
+   why it sounded like a game from 1994. The clips in sfx/ are loaded and played
+   INSTEAD of the synth; anything that fails to load falls back to the synth,
+   silently, so a missing file never breaks the game.
 
-   TO USE IT: download the clip, rename it to the filename on the right, and
-   put it in the same folder as game.html. Nothing else to change.
+   TWO THINGS THE PACK HAS TO SOLVE, because the clips are meme sounds rather
+   than game audio and they were not made for this:
 
-   Keep them SHORT. These fire constantly — a two-second clip on 'hit' will
-   overlap itself into mush. Under 1s for anything combat, under 3s for the
-   jumpscare and the round stingers. MP3, OGG and WAV all decode fine.
+   LENGTH.  They run from 0.31s (fart) to 32.7s (Du bist gut genug). A 25-second
+            song on 'death' is still playing three deaths later, and a two-second
+            clip on 'hit' overlaps itself into mush. So every slot carries a `max`
+            in seconds and the source is stopped there. The clip is never edited;
+            it is just cut off, which is all a game needs.
 
-   One caution worth stating plainly: sounds from a site like MyInstants are
-   mostly other people's copyrighted audio — memes, film lines, TV clips. That
-   is fine for a project you and your friends play. It is NOT fine if you ever
-   put ads on this, sell it, or ship it to a store, and "everyone does it" is
-   not a defence that has ever worked. If this becomes something real, the same
-   filenames take royalty-free clips from Freesound or Pixabay instead.
+   REPEATS. The same bark on every single kill stops being funny at about the
+            fourth one. A slot may list several clips and one is picked at
+            random each time.
+
+   Slots and their real event names come from sfx() below — anything sfx() is
+   called with that matches a key here plays the clip instead. Add a key, add a
+   sound; there is no other wiring.
+
+   COPYRIGHT, plainly, because these are now real files in the repository and
+   not a suggestion: these are MyInstants rips — songs, film lines, TV clips,
+   footballers' commentary. Fine for something you and your friends play. NOT
+   fine once there are ads on it, or it is sold, or it goes to a store, and
+   "everyone does it" has never once worked as a defence. You are already
+   putting AdSense on NovaTools; if NovaClip ever carries ads too, these have to
+   be replaced. The slots below take any file, so swapping in royalty-free clips
+   from Freesound or Pixabay is a one-line change per sound, not a rewrite.
 --------------------------------------------------------------------------- */
+const SFX_DIR = 'sfx/';
+
+/* [files, max seconds]. Several files means pick one at random. */
 const SOUND_PACK = {
-  jumpscare: 'sfx-jumpscare.mp3',   // the mine going off in your face — the big one
-  headshot:  'sfx-headshot.mp3',    // a clean kill
-  kill:      'sfx-kill.mp3',        // any other kill
-  death:     'sfx-death.mp3',       // you died
-  hurt:      'sfx-hurt.mp3',        // you got hit
-  pickup:    'sfx-pickup.mp3',      // bought something / picked something up
-  reload:    'sfx-reload.mp3',
-  mission:   'sfx-mission.mp3',     // a mission completed
-  win:       'sfx-win.mp3',         // round won
-  lose:      'sfx-lose.mp3',        // round lost
-  mineBeep:  'sfx-minebeep.mp3'     // the faint tick a mine makes when you are close
+  // ---- combat: frequent, so short and capped hard ----
+  hurt:      [['sfx-fart.mp3'], 0.35],                       // you got hit — 0.31s, the shortest thing here
+  reload:    [['sfx-not-my-problema.mp3'], 0.9],
+  pickup:    [['sfx-apple-pay.mp3'], 1.2],                   // bought something: an actual payment chime
+  kill:      [['sfx-hee-hee.mp3', 'sfx-67.mp3', 'sfx-bruh.mp3'], 1.4],
+  headshot:  [['sfx-rizz.mp3', 'sfx-faaah.mp3'], 1.5],
+  death:     [['sfx-death-fortnite.mp3', 'sfx-oh-hell-nah.mp3'], 1.8],
+  mineBeep:  [['sfx-error.mp3'], 0.4],                       // ticks over and over near a mine
+
+  // ---- one-offs: rarer, so they get room to land ----
+  jumpscare: [['sfx-chicken-scream.mp3', 'sfx-sussy.mp3'], 2.5],
+  mission:   [['sfx-hala-madrid.mp3', 'sfx-tiki-tiki.mp3'], 3],
+  win:       [['sfx-porto-goal.mp3', 'sfx-lamine-yamal.mp3', 'sfx-mbappe.mp3'], 5],
+  lose:      [['sfx-sad-meow.mp3', 'sfx-rip-granny.mp3', 'sfx-du-bist.mp3'], 5],
+
+  /* The rest of the pack: songs and ringtones, too long to be a sound effect
+     and too good to leave out. One plays as a round begins. */
+  roundStart: [['sfx-default-dance.mp3', 'sfx-spiderman.mp3', 'sfx-indian-song.mp3',
+                'sfx-german-song.mp3', 'sfx-verity.mp3', 'sfx-dexter.mp3',
+                'sfx-yo-phone.mp3', 'sfx-german-ringtone.mp3',
+                'sfx-whatsapp-bass.mp3', 'sfx-iphone-notification.mp3'], 4]
 };
-const packBuf = {};
+
+const packBuf = {};        // slot -> [AudioBuffer, ...] in the order listed
 
 function loadSoundPack() {
   Object.keys(SOUND_PACK).forEach(name => {
-    const file = SOUND_PACK[name];
-    if (!file) return;
-    fetch(file)
-      .then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
-      .then(b => actx.decodeAudioData(b))
-      .then(buf => { packBuf[name] = buf; console.log('sound pack: ' + name + ' <- ' + file); })
-      .catch(() => { /* not downloaded yet — the synth covers it */ });
+    const files = SOUND_PACK[name][0];
+    packBuf[name] = [];
+    files.forEach((file, i) => {
+      fetch(SFX_DIR + file)
+        .then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+        .then(b => actx.decodeAudioData(b))
+        .then(buf => { packBuf[name][i] = buf; })
+        .catch(() => { /* missing or undecodable — the synth covers this slot */ });
+    });
   });
 }
 
 /* Returns true if a real clip played, so callers can skip the synth. */
 function playPack(name, vol) {
-  const buf = packBuf[name];
-  if (!buf || !sfxReady || !actx || actx.state !== 'running') return false;
+  const slot = SOUND_PACK[name];
+  const bufs = (packBuf[name] || []).filter(Boolean);
+  if (!slot || !bufs.length || !sfxReady || !actx || actx.state !== 'running') return false;
   try {
+    const buf = bufs[(Math.random() * bufs.length) | 0];
     const s = actx.createBufferSource(); s.buffer = buf;
     const g = actx.createGain(); g.gain.value = vol == null ? 1 : vol;
-    s.connect(g); g.connect(sfxGain); s.start();
+    s.connect(g); g.connect(sfxGain);
+    /* Stop at the slot's limit, and fade the last 60ms so cutting a song off
+       mid-note is a fade rather than a click. */
+    const max = Math.min(slot[1], buf.duration);
+    const end = actx.currentTime + max;
+    if (max < buf.duration) {
+      g.gain.setValueAtTime(g.gain.value, Math.max(actx.currentTime, end - 0.06));
+      g.gain.linearRampToValueAtTime(0.0001, end);
+    }
+    s.start(0, 0, max);
     return true;
   } catch (e) { return false; }
 }
@@ -5289,6 +5328,9 @@ function startMatch() {
   lockPointer();
   running = true; c4Ready = false; c4Timer = 20; shopVisits = 0; setPts(pts());
   resetAmmo();
+  /* A different song every round, at half volume so it sits under the game
+     rather than over it. Nothing happens if the pack did not load. */
+  playPack('roundStart', 0.5);
   /* Fresh mines every round, in fresh places — the whole point is not knowing
      where they are, and a fixed field would be memorised by the third match. */
   placeMines(20);
