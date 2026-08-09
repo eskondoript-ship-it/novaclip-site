@@ -1,6 +1,6 @@
 # NovaTools
 
-498 single-purpose tools that run entirely in the visitor's browser, plus the
+2,119 single-purpose tools that run entirely in the visitor's browser, plus the
 content and legal pages a site needs before it can carry advertising.
 
 Static files. No build step, no framework, no server, no package manager. Copy
@@ -10,7 +10,7 @@ the folder to any static host and it works.
 
 | file | what it is |
 |---|---|
-| `index.html` | The application. Self-contained: styling, code and all 2,118 tools. |
+| `index.html` | The application. Self-contained: styling, code and all 2,119 tools. |
 | `nt-config.js` | **The only file you have to edit.** IDs, endpoints, your domain. |
 | `nt.css` | Shared stylesheet for the content pages. |
 | `nt.js` | Shared runtime: navbar, footer, ad slots, measurement, forms. |

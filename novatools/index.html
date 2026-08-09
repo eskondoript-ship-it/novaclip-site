@@ -3,8 +3,8 @@
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>NovaTools — 2,118 free online tools that never upload your files</title>
-<meta name='description' content='2,118 free browser tools: social image sizes, character counters, converters, formatters and generators. Everything runs on your device — nothing uploads, no account, works offline.'>
+<title>NovaTools — 2,119 free online tools that never upload your files</title>
+<meta name='description' content='2,119 free browser tools: social image sizes, character counters, converters, formatters and generators. Everything runs on your device — nothing uploads, no account, works offline.'>
 <link rel='canonical' href='https://REPLACE-ME/'>
 <meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1'>
 <meta name='theme-color' content='#5A5BF6'>
@@ -14,11 +14,11 @@
 <meta property='og:type' content='website'>
 <meta property='og:site_name' content='NovaTools'>
 <meta property='og:url' content='https://REPLACE-ME/'>
-<meta property='og:title' content='NovaTools — 2,118 free online tools that never upload your files'>
+<meta property='og:title' content='NovaTools — 2,119 free online tools that never upload your files'>
 <meta property='og:description' content='Social image sizes, character counters, converters and formatters. Everything runs in your browser: nothing uploads, no account, works offline.'>
 <meta property='og:locale' content='en_GB'>
 <meta name='twitter:card' content='summary_large_image'>
-<meta name='twitter:title' content='NovaTools — 2,118 free online tools'>
+<meta name='twitter:title' content='NovaTools — 2,119 free online tools'>
 <meta name='twitter:description' content='Everything runs in your browser. Nothing uploads, no account, works offline.'>
 
 <!-- The one third-party origin the page ever contacts, and only once advertising
@@ -826,7 +826,7 @@ kbd { font-size: 11px; border-radius: 6px; padding: 1px 5px; font-family: inheri
     <div class='searchrow rv' style='margin-top:28px'>
       <div class='searchwrap'>
         <label class='sr' for='q' style='position:absolute;left:-9999px'>Search the tools</label>
-        <input id='q' type='search' placeholder='Search 2,118 tools&hellip;' autocomplete='off'
+        <input id='q' type='search' placeholder='Search 2,119 tools&hellip;' autocomplete='off'
                role='combobox' aria-expanded='false' aria-controls='sugg' aria-autocomplete='list'>
         <div id='sugg' role='listbox' aria-label='Tool suggestions'></div>
       </div>
@@ -906,11 +906,11 @@ kbd { font-size: 11px; border-radius: 6px; padding: 1px 5px; font-family: inheri
   <div class='container'>
     <span class='eyebrow rv'>The honest version</span>
     <h2 class='rv'>What NovaTools is, and what it is not</h2>
-    <p class='sublede rv'>Most &ldquo;2,118 free tools&rdquo; sites are one text box behind five
+    <p class='sublede rv'>Most &ldquo;2,119 free tools&rdquo; sites are one text box behind five
       hundred headings. Here is what is actually true about this one.</p>
 
     <div class='why'>
-      <div class='rv'><span class='tick'>&#10003;</span><div><b>2,118 tools with distinct code</b>
+      <div class='rv'><span class='tick'>&#10003;</span><div><b>2,119 tools with distinct code</b>
         <span class='t'>Each has its own inputs and its own logic. None of them is a shared box under a new title.</span></div></div>
       <div class='rv'><span class='tick'>&#10003;</span><div><b>109 of them are for social</b>
         <span class='t'>Exact canvas sizes, real character limits, and the maths behind engagement and reach.</span></div></div>
@@ -1110,6 +1110,8 @@ const TOOLS = [
     desc:'Trade quality for size and see the saving before you download.' },
   { id:'img-convert', cat:'images', name:'Image format converter',
     desc:'PNG, JPEG and WebP in any direction.' },
+  { id:'img-stretch', cat:'images', name:'Image stretcher',
+    desc:'Squash or stretch a picture sideways. Wide Putin, wide anything.' },
   { id:'img-datauri', cat:'images', name:'Image to data URI',
     desc:'Base64 data URL for embedding straight into CSS or HTML.' },
   { id:'favicon', cat:'images', name:'Favicon set',
@@ -1909,6 +1911,47 @@ const IMPL = {
         if(!img) return setOut('Choose an image first.',true);
         const f=$('f').value, ext=f.split('/')[1].replace('jpeg','jpg');
         drawTo(img,img.naturalWidth,img.naturalHeight,f,0.92,(blob,url)=>{ dl(url,'converted.'+ext); setOut('Saved as '+ext.toUpperCase()+'  ·  '+kb(blob.size)); });
+      };
+    }
+  },
+  /* Stretching is the whole joke behind wide-anything memes, and the maths is
+     one line: draw the image into a canvas of a different width and let the
+     browser resample it. Height stays put so the distortion reads as width
+     rather than as a resize. */
+  'img-stretch': {
+    html: imgPick() +
+      '<div class="field"><label>Width <span id="wv">200%</span></label>' +
+      '<input id="w2" type="range" min="20" max="400" step="5" value="200"></div>' +
+      '<div class="field"><label>Height <span id="hv">100%</span></label>' +
+      '<input id="h2" type="range" min="20" max="400" step="5" value="100"></div>' +
+      '<div class="btns"><button class="go" id="go">Stretch &amp; download</button>' +
+      '<button class="alt" id="wide">Make it wide</button>' +
+      '<button class="alt" id="tall">Make it tall</button>' +
+      '<button class="alt" id="reset">Reset</button></div>' + outBox +
+      '<p class="note">The picture is resampled, so pushing much past 200% goes soft. ' +
+      'PNG in, PNG out — transparency survives.</p>',
+    wire() {
+      let img = null;
+      const show = () => {
+        $('wv').textContent = $('w2').value + '%';
+        $('hv').textContent = $('h2').value + '%';
+        if (img) setOut('Output: ' + Math.round(img.naturalWidth * $('w2').value / 100) + ' x ' +
+          Math.round(img.naturalHeight * $('h2').value / 100) + ' px' +
+          '  (from ' + img.naturalWidth + ' x ' + img.naturalHeight + ')');
+      };
+      onImg(i => { img = i; show(); });
+      $('w2').oninput = show; $('h2').oninput = show;
+      $('wide').onclick  = () => { $('w2').value = 250; $('h2').value = 100; show(); };
+      $('tall').onclick  = () => { $('w2').value = 100; $('h2').value = 250; show(); };
+      $('reset').onclick = () => { $('w2').value = 100; $('h2').value = 100; show(); };
+      $('go').onclick = () => {
+        if (!img) return setOut('Choose an image first.', true);
+        const w = Math.max(1, Math.round(img.naturalWidth  * $('w2').value / 100));
+        const h = Math.max(1, Math.round(img.naturalHeight * $('h2').value / 100));
+        drawTo(img, w, h, 'image/png', 0.92, (blob, url) => {
+          dl(url, 'stretched.png');
+          setOut('Saved ' + w + ' x ' + h + ' px  ·  ' + kb(blob.size));
+        });
       };
     }
   },
@@ -3660,10 +3703,10 @@ function aiTool(t) {
 function toolUrl(id) { return location.pathname + '?t=' + id; }
 
 function setMeta(t) {
-  document.title = t ? t.name + ' — free online tool' : 'NovaTools — 2,118 free online tools';
+  document.title = t ? t.name + ' — free online tool' : 'NovaTools — 2,119 free online tools';
   const d = document.querySelector('meta[name="description"]');
   if (d) d.setAttribute('content', t ? t.desc + ' Free, instant, runs in your browser.' :
-    '2,118 free browser tools: image resizers for every social platform, converters, counters and calculators. No signup, nothing uploaded.');
+    '2,119 free browser tools: image resizers for every social platform, converters, counters and calculators. No signup, nothing uploaded.');
   let link = document.querySelector('link[rel="canonical"]');
   if (!link) { link = document.createElement('link'); link.rel = 'canonical'; document.head.appendChild(link); }
   link.href = location.origin + (t ? toolUrl(t.id) : location.pathname);
