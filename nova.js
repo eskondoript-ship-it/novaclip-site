@@ -361,11 +361,80 @@ ncFit.textContent =
 /* Nothing on these pages is meant to scroll sideways. This is the safety net
    that turns an overflow into a clipped edge rather than a broken page — the
    overflows themselves are fixed at the source, this is for the next one. */
-"html { overflow-x:hidden; }";
+"html { overflow-x:hidden; }" +
+
+/* ---------------------------------------------------------------------------
+   ONE RAIL WIDTH FOR EVERY SCREEN
+
+   Twelve pages each hard-code a 200px sidebar and a matching 200px body
+   margin. 200px is 22% of a 900px laptop and 8% of a 2560px monitor: cramped
+   on one, a stripe of wasted chrome on the other. It is a share of the window
+   here instead, clamped so it never gets too thin to read a label or so wide
+   it starts competing with the page.
+
+   clamp() does this in CSS, so there is no resize listener and no reflow on
+   drag — the browser recomputes it as the window changes, including when a
+   phone is rotated.
+
+   This block is appended after every page's own <style>, and the selectors
+   are no more specific than theirs, so it wins on source order alone. That is
+   also why it is scoped above 760px: below that each page turns the rail into
+   a bottom strip with its own rules, and overriding those would put the nav
+   back down the left of a phone.
+   --------------------------------------------------------------------------- */
+":root { --nc-rail: clamp(164px, 13vw, 232px); }" +
+"@media (min-width: 761px) {" +
+  "body { margin-left: var(--nc-rail); }" +
+  ".sidebar { width: var(--nc-rail); }" +
+  /* The labels scale with the rail, or a 232px rail is a 164px rail with more
+     empty space in it. */
+  ".sidebar a, .sidebar .navlink { font-size: clamp(13px, .62vw + 8.6px, 15px); }" +
+  ".sidebar .themewrap { padding: 16px clamp(12px, 1.1vw, 20px); }" +
+"}" +
+
+/* Text that is comfortable on a 1280 laptop is small on a 2560 monitor, and
+   the whole site is px-sized so nothing scales on its own. A gentle ramp:
+   16px at 1280, 17px at about 1800, capped at 17.5. Deliberately narrow —
+   a big jump here reflows every page at once. */
+/* ---------------------------------------------------------------------------
+   ONE MOBILE NAV, BECAUSE FOUR PAGES HAD NONE
+
+   Each page wrote its own phone rules and they disagreed. Measured at 390px:
+   ai, coder, gift, publish and typing turned the rail into a 64px strip along
+   the bottom — the intended shape. credits, index, progress and trends set
+   display:none, so a phone got no navigation whatsoever. analytics, app, pro
+   and tools left it vertical at ~390px tall, half the screen.
+
+   The rail is one component built by ncNav(), so its phone shape belongs here
+   rather than seventeen times over. Pages that already had it right are
+   unaffected; the rest now match them.
+   --------------------------------------------------------------------------- */
+"@media (max-width: 760px) {" +
+  ".sidebar {" +
+    "display: flex; flex-direction: row; align-items: center;" +
+    "top: auto; bottom: 0; left: 0; right: 0;" +
+    /* border-box or the 4px padding is added to the 100% and the strip is
+       wider than the screen — community.html measured 394 on a 390 phone. */
+    /* 100% resolves against the containing block, and an ancestor with a
+       filter or transform makes that something other than the viewport —
+       community.html resolved it to 394 on a 390px phone and put a
+       horizontal scrollbar on the page. 100vw is the viewport by
+       definition, so it is the ceiling. */
+    "width: 100%; max-width: 100vw; height: 64px; padding: 0 4px; box-sizing: border-box;" +
+    "overflow-x: auto; overflow-y: hidden;" +
+  "}" +
+  ".sidebar .themewrap { display: none; }" +
+  /* Reserve the strip's height, or the last thing on every page sits under it. */
+  "body { padding-bottom: 74px; margin-left: 0; }" +
+"}" +
+
+":root { font-size: clamp(15px, .22vw + 13.2px, 17.5px); }" +
+"@media (min-width: 761px) { body { font-size: clamp(15px, .22vw + 13.2px, 17.5px); } }";
 document.head.appendChild(ncFit);
 
 function applyTheme(name) { const t = THEMES[name] || THEMES['Dark']; document.documentElement.style.setProperty('--bg',t[0]); document.documentElement.style.setProperty('--box',t[1]); document.documentElement.style.setProperty('--txt',t[2]); document.body.dataset.theme = name; localStorage.setItem('nc_theme',name); }
 function toast(msg) { const t = document.getElementById('nctoast'); if (!t) return; t.textContent = msg; t.style.display = 'block'; clearTimeout(t.hideTimer); t.hideTimer = setTimeout(() => { t.style.display = 'none'; }, 3000); }
+window.toast = toast;   /* editor.html calls this for a missing tool script */
 function getPts() { return parseInt(localStorage.getItem('nc_points') || '0'); }
 function checkUnlocks(pts) { const u = JSON.parse(localStorage.getItem('nc_unlocked') || '[]'); for (const [need,name] of QUESTS.concat(ACHIEVEMENTS)) { if (pts >= need && !u.includes(name)) { u.push(name); setTimeout(() => toast('UNLOCKED: ' + name), 1200); } } localStorage.setItem('nc_unlocked', JSON.stringify(u)); }
 function addPts(n) { const p = getPts() + n; localStorage.setItem('nc_points', p); ncSyncSoon(); const b = document.getElementById('ncpts'); if (b) b.textContent = p + ' pts'; toast('+' + n + ' pts!'); checkUnlocks(p); refreshPanels(); }
