@@ -3,200 +3,600 @@
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>NovaClip AI</title>
+<title>NovaClip AI — six tools for your channel</title>
+<meta name='description' content='Coach, video director, clip finder, title tester, SEO and thumbnails. Six AI tools that each do one job properly, and say so when they cannot.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
-body { background: #060608; color: #f4f4f6; display: flex; flex-direction: column; height: 100vh; margin-left: 200px; overflow: hidden; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#05070E;--panel:#0C1220;--line:rgba(255,255,255,.1);--txt:#E8EEFF;--dim:#8A97B4;
+  --cyan:#00E5FF;--violet:#7C5CFF;--pink:#FF3D9A;--lime:#B6FF4A;--amber:#FFB443;
+  --grad:linear-gradient(110deg,var(--violet),var(--cyan) 48%,var(--pink))}
+body{background:var(--ink);color:var(--txt);min-height:100vh;margin-left:200px;
+  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--cyan)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px}
+.wrap{position:relative;z-index:2;width:min(1000px,100% - 34px);margin:0 auto;padding:26px 0 80px}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:200px;background:rgba(12,12,16,.85);
+  backdrop-filter:blur(20px);display:flex;flex-direction:column;padding:20px 0;gap:4px;
+  z-index:998;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto}
+.sidebar .themewrap{margin-top:auto;padding:16px 20px}
+.sidebar .themewrap label{display:block;font-size:.78rem;opacity:.6;margin-bottom:6px}
+.sidebar select{width:100%;font-size:.95rem;background:rgba(255,255,255,.05);color:var(--txt);
+  border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px}
 
-.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: stretch; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); }
-.sidebar a { font-size: 1.05rem; text-decoration: none; color: #f4f4f6; display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background 0.2s; }
-.sidebar a:hover { background: rgba(114,9,183,0.25); }
-.sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
-.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
-.sidebar .themewrap label { display: block; font-size: 0.78rem; opacity: 0.6; margin-bottom: 6px; }
-.sidebar select { width: 100%; font-size: 0.95rem; background: rgba(255,255,255,0.05); color: #f4f4f6; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px; }
+/* ---- the drifting orbs, from the uploaded design. Three of them, blurred to
+   the point of being light rather than shapes, on long out-of-sync loops so
+   the background never visibly repeats. They are behind everything and take no
+   pointer events. ---- */
+#orbs{position:fixed;inset:0;left:200px;z-index:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.30}
+.orb.a{width:460px;height:460px;background:#7C5CFF;top:-120px;left:12%;animation:o1 21s ease-in-out infinite}
+.orb.b{width:380px;height:380px;background:#FF3D9A;bottom:-90px;right:6%;animation:o2 26s ease-in-out infinite}
+.orb.c{width:320px;height:320px;background:#00E5FF;top:38%;right:26%;animation:o3 33s ease-in-out infinite}
+@keyframes o1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,70px) scale(1.12)}}
+@keyframes o2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-70px,-50px) scale(.9)}}
+@keyframes o3{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,60px)}}
+@media (prefers-reduced-motion:reduce){.orb{animation:none}}
 
-#orbs { position: fixed; inset: 0; left: 200px; z-index: 0; pointer-events: none; overflow: hidden; }
-.orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4; }
-.orb.a { width: 420px; height: 420px; background: #7209B7; top: -80px; left: 20%; animation: f1 15s ease-in-out infinite; }
-.orb.b { width: 360px; height: 360px; background: #F72585; bottom: -60px; right: 8%; animation: f2 18s ease-in-out infinite; }
-@keyframes f1 { 0%,100% { transform: translate(0,0);} 50% { transform: translate(50px,60px);} }
-@keyframes f2 { 0%,100% { transform: translate(0,0);} 50% { transform: translate(-60px,-40px);} }
+.hero{position:relative}
+h1{font-size:clamp(2rem,5.4vw,3.1rem);font-weight:680;letter-spacing:-.042em;line-height:1.03}
+h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--dim);margin-top:14px;max-width:64ch}
+h2{font-size:1.15rem;font-weight:650;letter-spacing:-.02em;margin:0 0 4px}
+.sub{color:var(--dim);font-size:13.5px;margin-bottom:14px}
 
-header { position: relative; z-index: 2; padding: 20px 28px; font-weight: 800; font-size: 1.4rem; }
-header .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* ---- tool switcher ---- */
+.tabs{display:flex;gap:8px;margin:26px 0 20px;flex-wrap:wrap}
+.tab{position:relative;display:flex;align-items:center;gap:9px;padding:11px 17px;border-radius:14px;
+  font:inherit;font-size:14px;font-weight:600;cursor:pointer;color:var(--dim);
+  border:1px solid var(--line);background:rgba(255,255,255,.03);transition:.18s}
+.tab:hover{color:var(--txt);border-color:rgba(124,92,255,.5);transform:translateY(-2px)}
+.tab svg{width:16px;height:16px;flex:0 0 auto}
+.tab.on{color:#05070E;border-color:transparent;background:var(--grad);
+  box-shadow:0 8px 24px -8px rgba(124,92,255,.8)}
 
-#panels { position: relative; z-index: 2; padding: 0 28px 10px; max-width: 820px; width: 100%; margin: 0 auto; display: flex; gap: 10px; flex-wrap: wrap; }
-details { background: rgba(255,255,255,0.04); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 10px 16px; flex: 1; min-width: 200px; }
-summary { cursor: pointer; font-weight: 700; }
-details div { margin-top: 8px; font-size: 0.88rem; line-height: 1.6; opacity: 0.85; }
+.panel{display:none}
+.panel.on{display:block;animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{border:1px solid var(--line);border-radius:20px;padding:24px;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.014));
+  backdrop-filter:blur(8px)}
 
-#aiout { position: relative; z-index: 2; flex: 1; overflow-y: auto; padding: 20px 28px; white-space: pre-wrap; font-size: 1.02rem; line-height: 1.7; max-width: 820px; width: 100%; margin: 0 auto; }
-#aiout .msg { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; }
-#aiimg { position: relative; z-index: 2; max-width: 500px; width: 90%; border-radius: 16px; margin: 16px auto; display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+textarea,input[type=text],select.f{width:100%;padding:13px 15px;border-radius:13px;border:1px solid var(--line);
+  background:rgba(0,0,0,.32);color:var(--txt);font:inherit;font-size:15px;resize:vertical}
+textarea:focus,input:focus,select.f:focus{outline:none;border-color:rgba(0,229,255,.5)}
+label.f{display:block;font-size:12.5px;color:var(--dim);margin:15px 0 6px}
+.cnt{float:right;font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;align-items:center}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:12px}
+.go{padding:12px 24px;border-radius:30px;border:0;cursor:pointer;font:inherit;font-weight:680;font-size:14.5px;
+  color:#05070E;background:var(--grad);box-shadow:0 8px 26px -8px rgba(124,92,255,.7);transition:.16s}
+.go:hover{transform:translateY(-2px)}
+.go:disabled{opacity:.45;transform:none;cursor:default}
+.alt{padding:11px 20px;border-radius:30px;cursor:pointer;font:inherit;font-weight:600;font-size:14px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--txt)}
+.alt:hover{background:rgba(255,255,255,.1)}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.chips button{padding:6px 13px;border-radius:20px;font-size:12.5px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--dim)}
+.chips button:hover{color:var(--txt);border-color:rgba(124,92,255,.5)}
 
-#controls { position: relative; z-index: 2; padding: 16px 28px 22px; border-top: 1px solid rgba(255,255,255,0.08); max-width: 820px; width: 100%; margin: 0 auto; background: rgba(6,6,8,0.6); backdrop-filter: blur(10px); }
-#subject { width: 100%; padding: 11px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #f4f4f6; margin-bottom: 10px; font-size: 0.95rem; }
-#askbox { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #f4f4f6; resize: none; font-size: 1rem; }
-#askbox:focus { outline: none; border-color: #7209B7; }
-.smallbtn { margin-top: 10px; margin-right: 8px; padding: 12px 22px; border-radius: 30px; border: none; cursor: pointer; font-weight: 700; color: white; background: linear-gradient(90deg, #F72585, #7209B7); font-size: 0.95rem; transition: transform 0.2s, box-shadow 0.2s; }
-.smallbtn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(247,37,133,0.4); }
-.smallbtn.alt { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); }
+.say{border-radius:13px;padding:14px 16px;font-size:13.5px;line-height:1.65;margin-top:15px;display:none}
+.say.yes{background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.32)}
+.say.no{background:rgba(255,61,154,.08);border:1px solid rgba(255,61,154,.45)}
+.say.wait{background:rgba(255,255,255,.05);border:1px solid var(--line);color:#A8B4CE}
+.say b{display:block;margin-bottom:4px}
+.out{margin-top:18px;white-space:pre-wrap;font-size:15px;line-height:1.75}
+
+/* ---- a score dial, used by the director and the title tester ---- */
+.score{display:flex;align-items:center;gap:16px;padding:17px 19px;border-radius:16px;
+  border:1px solid var(--line);background:rgba(255,255,255,.03);margin-bottom:14px}
+.dial{--v:0;position:relative;width:66px;height:66px;flex:0 0 auto;border-radius:50%;
+  background:conic-gradient(var(--cyan) calc(var(--v)*1%), rgba(255,255,255,.08) 0)}
+.dial::after{content:attr(data-v);position:absolute;inset:6px;border-radius:50%;background:#0B0F1A;
+  display:grid;place-items:center;font:700 17px/1 ui-monospace,monospace;color:var(--cyan)}
+.score .t{flex:1;min-width:0}
+.score .t b{display:block;font-size:15.5px;font-weight:650}
+.score .t span{font-size:12.5px;color:var(--dim)}
+
+/* ---- scene list ---- */
+.scene{display:flex;gap:14px;padding:15px 17px;border-radius:15px;border:1px solid var(--line);
+  background:rgba(255,255,255,.025);margin-bottom:10px}
+.scene .tm{flex:0 0 76px;font:700 12px/1.5 ui-monospace,monospace;color:var(--cyan);font-variant-numeric:tabular-nums}
+.scene .bd{flex:1;min-width:0}
+.scene .bd b{display:block;font-size:14.5px;margin-bottom:3px}
+.scene .bd i{display:block;font-style:normal;font-size:13px;color:var(--dim);margin-top:4px}
+.scene .sfx{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--amber);background:rgba(255,180,67,.12);padding:3px 9px;border-radius:20px}
+
+/* ---- clip cards ---- */
+.clip{border:1px solid var(--line);border-radius:16px;padding:17px 19px;margin-bottom:11px;
+  background:rgba(255,255,255,.025)}
+.clip .hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.clip .hd b{flex:1;min-width:0;font-size:15.5px;font-weight:650}
+.clip .v{font:700 13px/1 ui-monospace,monospace;padding:5px 10px;border-radius:20px;
+  background:rgba(182,255,74,.14);color:var(--lime)}
+.clip .len{font-size:12px;color:var(--dim)}
+.clip .q{margin-top:10px;padding:11px 14px;border-left:3px solid var(--violet);
+  background:rgba(124,92,255,.08);border-radius:0 10px 10px 0;font-size:14px;font-style:italic}
+.clip dl{margin-top:11px;display:grid;gap:7px}
+.clip dt{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#5C6883}
+.clip dd{font-size:13.5px;color:#C6D2E8}
+
+.tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.tag{padding:5px 12px;border-radius:20px;font-size:12.5px;background:rgba(124,92,255,.16);
+  border:1px solid rgba(124,92,255,.35)}
+img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;display:none;
+  box-shadow:0 20px 50px -20px rgba(0,0,0,.9)}
+
+.note{color:var(--dim);font-size:12.5px;line-height:1.7;margin-top:18px;padding:14px 16px;
+  border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--line)}
+.note b{color:var(--txt)}
+
+@media (max-width:760px){
+  body{margin-left:0;padding-bottom:74px}
+  #orbs{left:0}
+  .sidebar{flex-direction:row;top:auto;width:100%;height:64px;padding:0;overflow-x:auto;align-items:center}
+  .sidebar .themewrap{display:none}
+  .wrap{padding:22px 0 70px}
+  .tab{padding:10px 13px;font-size:13px}
+  .scene{flex-direction:column;gap:6px}.scene .tm{flex:none}
+}
 </style>
 </head>
 <body>
 <div class='sidebar'>
-  <a href='index.html' data-t='home'>Home</a>
-  <a href='app.html' data-t='studio'>Studio</a>
-  <a href='analytics.html' data-t='analytics'>Analytics</a>
-  <a href='trends.html' data-t='trends'>Trend Spotter</a>
-  <a href='editor.html' data-t='editor'>Editor</a>
-  <a href='game.html' data-t='sniper'>Games</a>
-  <a href='ai.html' class='aidot' data-t='ai'>NovaClip AI</a>
+  <!-- nova.js builds the links; this is only the shell it fills -->
   <div class='themewrap'>
     <label data-t='language'>Language</label>
     <select id='langpick'></select>
   </div>
 </div>
 
-<div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
+<div id='orbs'><div class='orb a'></div><div class='orb b'></div><div class='orb c'></div></div>
 
-<header><span class='grad' data-t='ai_h'>NovaClip AI</span></header>
-<!-- Rewards, Achievements and History now live on their own page (progress.html)
-     so the tutor screen is just the conversation. -->
-<div id='aiout'><div class='msg'>Yo! Pick your tutor, then ask away (+5 pts), cook a thumbnail with (+10 pts), or plan a whole video with (+10 pts) fr fr</div></div>
-<img id='aiimg'>
-<div id='controls'>
-  <select id='subject'>
-    <option value='youtube'>YouTube Coach</option>
-    <option value='space'>Asteroid Tutor</option>
-    <option value='business'>Business Tutor</option>
-  </select>
-  <textarea id='askbox' rows='2' placeholder='Ask NovaClip anything...'></textarea>
-  <div>
-    <button id='askbtn' class='smallbtn' data-t='ask'>Ask</button>
-    <button id='thumbbtn' class='smallbtn alt' data-t='thumb'>Thumbnail</button>
-    <button id='vidbtn' class='smallbtn alt' data-t='video'>Video maker</button>
+<div class='wrap'>
+  <div class='hero'>
+    <h1>NovaClip <span class='g'>AI</span></h1>
+    <p class='lede'>Six tools that each do one job. They give you specifics rather than encouragement,
+      and when something will not work they say so before you spend a weekend on it.</p>
   </div>
+
+  <div class='tabs' id='tabs'></div>
+
+  <!-- ============ COACH ============ -->
+  <div class='panel on' id='pCoach'>
+    <div class='card'>
+      <h2>Ask the coach</h2>
+      <p class='sub'>Three options and a pick, not a paragraph of "stay consistent".</p>
+      <div class='two'>
+        <div>
+          <label class='f' for='subject'>What about?</label>
+          <select id='subject' class='f'>
+            <option value='youtube'>YouTube &amp; Shorts growth</option>
+            <option value='gaming'>Gaming clips</option>
+            <option value='business'>Money &amp; side hustles</option>
+            <option value='space'>Space &amp; science</option>
+          </select>
+        </div>
+        <div>
+          <label class='f'>Voice</label>
+          <button class='alt' id='vibe' style='width:100%'>—</button>
+        </div>
+      </div>
+      <label class='f' for='askbox'>Your question</label>
+      <textarea id='askbox' rows='3' placeholder='e.g. my views drop after 20 seconds, what do I actually change?'></textarea>
+      <div class='chips'>
+        <button>why do people click off early?</button>
+        <button>3 title ideas for a Minecraft build video</button>
+        <button>how long should a Short be?</button>
+        <button>is posting daily worth it?</button>
+      </div>
+      <div class='row'><button class='go' id='askbtn'>Ask</button></div>
+      <div class='say' id='coachSay'></div>
+      <div class='out' id='coachOut'></div>
+    </div>
+  </div>
+
+  <!-- ============ DIRECTOR ============ -->
+  <div class='panel' id='pDirector'>
+    <div class='card'>
+      <h2>Video director</h2>
+      <p class='sub'>An idea in, a shot-by-shot plan out — hook, scenes, sound, and a CTR guess.</p>
+      <label class='f' for='idea'>The idea</label>
+      <textarea id='idea' rows='2' placeholder='e.g. I try every energy drink and rank them'></textarea>
+      <label class='f' for='platform'>Made for</label>
+      <select id='platform' class='f'>
+        <option>YouTube Shorts</option><option>TikTok</option>
+        <option>Instagram Reels</option><option>A full YouTube video</option>
+      </select>
+      <div class='row'><button class='go' id='dirBtn'>Plan it</button></div>
+      <div class='say' id='dirSay'></div>
+      <div id='dirOut' style='margin-top:18px'></div>
+    </div>
+  </div>
+
+  <!-- ============ CLIP FINDER ============ -->
+  <div class='panel' id='pClips'>
+    <div class='card'>
+      <h2>Clip finder</h2>
+      <p class='sub'>Paste what was said and it picks the moments worth cutting out.</p>
+      <label class='f' for='trans'>Transcript or notes <span class='cnt' id='cTrans'>0</span></label>
+      <textarea id='trans' rows='7' placeholder='Paste a transcript, subtitles, or just what you remember saying.'></textarea>
+      <label class='f' for='clipLen'>Clip length to aim for</label>
+      <select id='clipLen' class='f'><option>15s</option><option selected>30s</option><option>45s</option><option>60s</option></select>
+      <div class='row'><button class='go' id='clipBtn'>Find the clips</button></div>
+      <div class='say' id='clipSay'></div>
+      <div id='clipOut' style='margin-top:18px'></div>
+    </div>
+  </div>
+
+  <!-- ============ TITLE TESTER ============ -->
+  <div class='panel' id='pTitles'>
+    <div class='card'>
+      <h2>Title tester</h2>
+      <p class='sub'>Write a few and it scores them against each other, with the reason.</p>
+      <label class='f' for='titles'>One title per line</label>
+      <textarea id='titles' rows='5' placeholder='I built a house in one day&#10;24 hours building a house&#10;This took me 24 hours'></textarea>
+      <label class='f' for='tAbout'>What the video actually is</label>
+      <input type='text' id='tAbout' placeholder='So it can tell you which title lies'>
+      <div class='row'><button class='go' id='titleBtn'>Score them</button></div>
+      <div class='say' id='titleSay'></div>
+      <div id='titleOut' style='margin-top:18px'></div>
+    </div>
+  </div>
+
+  <!-- ============ SEO ============ -->
+  <div class='panel' id='pSeo'>
+    <div class='card'>
+      <h2>SEO hub</h2>
+      <p class='sub'>A description that reads like a person wrote it, plus tags worth having.</p>
+      <label class='f' for='seoAbout'>What is the video?</label>
+      <textarea id='seoAbout' rows='3' placeholder='e.g. a tutorial on making thumbnails in Canva for free'></textarea>
+      <div class='row'><button class='go' id='seoBtn'>Write it</button></div>
+      <div class='say' id='seoSay'></div>
+      <div id='seoOut' style='margin-top:18px'></div>
+    </div>
+  </div>
+
+  <!-- ============ THUMBNAIL ============ -->
+  <div class='panel' id='pThumb'>
+    <div class='card'>
+      <h2>Thumbnail lab</h2>
+      <p class='sub'>Generated at 16:9. Read it at the size of a stamp before you use it.</p>
+      <label class='f' for='thumbIdea'>Describe the thumbnail</label>
+      <textarea id='thumbIdea' rows='2' placeholder='e.g. me looking shocked next to a giant stack of energy drinks, bright yellow background'></textarea>
+      <div class='row'>
+        <button class='go' id='thumbBtn'>Make it</button>
+        <button class='alt' id='thumbSave' style='display:none'>Save it</button>
+      </div>
+      <div class='say' id='thumbSay'></div>
+      <img id='thumbOut' alt='The generated thumbnail'>
+    </div>
+  </div>
+
+  <p class='note'><b>Where the answers come from.</b> Every tool here goes through the same
+    <code>ncAsk()</code> as the rest of the site: NovaClip's shared key by default, or your own from
+    your profile if you have added one. Nothing you type is stored anywhere except your own history
+    on this device. <b>Check anything it tells you about numbers.</b> It is told not to invent
+    statistics and it mostly does not, but "mostly" is not "never", and a made-up figure looks
+    exactly like a real one.</p>
 </div>
 
-<script>
-const WORKER_URL = 'https://novaclip-ai.eskondori-pt.workers.dev';
-
-async function askGemini(model, payload) {
-  const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: model, payload: payload }) });
-  return r.json();
-}
-function setOut(text) { document.getElementById('aiout').innerHTML = '<div class="msg">' + text.replace(/</g,'&lt;') + '</div>'; }
-
-const SLANG = 'Talk in HEAVY gen z slang: fr fr, no cap, ong, lowkey, highkey, W, L, bet, rizz, cooked, ate, slay, bussin, deadass, its giving, valid, hits different, goated, sheesh, sigma, delulu. Pack slang into almost every sentence but keep it readable and actually helpful. Use emojis. ';
-const PERSONAS = {
-  youtube: 'You are NovaClip, a YouTube coach for teen creators 13-18, expert in titles, trends and growth hacks. ',
-  space: 'You are NovaClip, a fun space tutor for teens, expert in asteroids, planets and NASA missions. ',
-  business: 'You are NovaClip, a business and money tutor for teens, expert in side hustles, saving and entrepreneurship. '
-};
-const PLAIN = 'Write in clear, friendly, everyday English. No slang. Keep it short and genuinely useful. ';
-
-/* ============================================================================
-   WHAT THE TUTOR IS, NOT JUST WHAT IT SOUNDS LIKE
-   The old prompt was one line of costume — "you are a coach, use slang" — and
-   nothing about how to actually answer. So it produced confident paragraphs
-   with no specifics in them, which is the failure mode of every thin system
-   prompt: it has a voice and no method.
-
-   This gives it a method. Three rules, all of them things a fourteen-year-old
-   can act on within the hour:
-
-     BE SPECIFIC   a number, an example or a step, never "make good content".
-     BE HONEST     say when something will not work and why, rather than being
-                   encouraging about a bad idea. Being nice about a plan that
-                   will fail is not kindness.
-     BE SAFE       these are minors. No personal details, no meeting strangers,
-                   no money-making scheme that needs their parents' card, and
-                   anything about their own safety goes to a trusted adult.
-
-   The persona sits on top of that rather than replacing it, so Gen Z mode
-   changes the voice and not the quality of the answer.
-   ============================================================================ */
-const METHOD =
-  'HOW TO ANSWER. Always be concrete: give a number, a real example, or a step they can do today — ' +
-  'never vague advice like "make good content" or "stay consistent" on its own. ' +
-  'If they ask for a title, give three options and say which you would pick and why. ' +
-  'If their plan will not work, say so plainly and give the reason before you offer the alternative; ' +
-  'do not be encouraging about something that will waste their time. ' +
-  'If you do not know, say you do not know rather than inventing statistics. ' +
-  'End with one single next action. ' +
-  'SAFETY: your reader is 13-18. Never ask for or repeat personal details, never suggest meeting anyone ' +
-  'from the internet, never suggest anything that needs a parent\'s card or bank account without saying to ask them first, ' +
-  'and if they mention being hurt, bullied or unsafe, tell them to talk to a trusted adult and stop the lesson there. ';
-
-/* Pro buys thinking time, not a different personality. A free answer is short
-   because a long one costs money to generate; a Pro answer gets the room to
-   show its working. */
-function proDepth() {
-  return (typeof ncProHas === 'function' && ncProHas('tools'))
-    ? { words: 400, extra: 'Take your time. Show your reasoning, give a worked example, and add one thing they have not thought of. ' }
-    : { words: 180, extra: '' };
-}
-
-function persona() {
-  const genz = (typeof ncGenZ === 'function') ? ncGenZ() : true;
-  return PERSONAS[document.getElementById('subject').value] + METHOD + (genz ? SLANG : PLAIN) +
-    proDepth().extra +
-    (typeof langInstruction === 'function' ? langInstruction() : '');
-}
-function subjectName() { return document.getElementById('subject').selectedOptions[0].textContent; }
-
-document.getElementById('askbtn').onclick = async () => {
-  const q = document.getElementById('askbox').value;
-  if (!q) return;
-  document.getElementById('aiimg').style.display = 'none';
-  setOut('Cooking...');
-  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Keep it under ' + proDepth().words + ' words. Question: ' + q }] }] });
-  if (data.candidates && data.candidates[0].content.parts[0].text) {
-    setOut(data.candidates[0].content.parts[0].text);
-    saveHist(subjectName(), q, data.candidates[0].content.parts[0].text);
-    addPts(5);
-    if (typeof logSkill === 'function') logSkill('ai_ask');
-  } else { setOut('The AI is cooked rn try again in a minute.'); }
-};
-
-document.getElementById('thumbbtn').onclick = async () => {
-  const q = document.getElementById('askbox').value || 'exciting gaming video';
-  setOut('Painting your thumbnail... (10-20s)');
-  const data = await askGemini('gemini-2.5-flash-image', { contents: [{ parts: [{ text: 'Generate a bold YouTube thumbnail image, 16:9, vivid colors, high contrast, about: ' + q }] }] });
-  let done = false;
-  if (data.candidates) {
-    for (const p of data.candidates[0].content.parts) {
-      if (p.inlineData) {
-        const img = document.getElementById('aiimg');
-        img.src = 'data:image/png;base64,' + p.inlineData.data;
-        img.style.display = 'block';
-        setOut('It ate. Right-click to save it');
-        saveHist(subjectName(), 'Thumbnail: ' + q, 'image generated');
-        addPts(10);
-        if (typeof logSkill === 'function') logSkill('ai_ask');
-        done = true;
-      }
-    }
-  }
-  if (!done) setOut('Could not generate the image rn (image model may be busy). Try again in a minute.');
-};
-
-document.getElementById('vidbtn').onclick = async () => {
-  const q = document.getElementById('askbox').value;
-  if (!q) { setOut('Type your video idea first, then hit'); return; }
-  document.getElementById('aiimg').style.display = 'none';
-  setOut('Directing your video...');
-  const data = await askGemini('gemini-2.5-flash', { contents: [{ parts: [{ text: persona() + 'Create a complete video plan for this idea: ' + q + '. Give me: 1) A viral title, 2) A 3-second hook line, 3) Full script outline scene by scene, 4) Shot list with camera angles, 5) Music and sound effect suggestions, 6) A thumbnail concept. Format it clearly with the numbers.' }] }] });
-  if (data.candidates && data.candidates[0].content.parts[0].text) {
-    setOut(data.candidates[0].content.parts[0].text);
-    saveHist(subjectName(), 'Video plan: ' + q, data.candidates[0].content.parts[0].text);
-    addPts(10);
-    if (typeof logSkill === 'function') logSkill('ai_ask');
-  } else { setOut('The AI is cooked rn try again in a minute.'); }
-};
-</script>
 <script src='nova.js'></script>
+<script>
+/* ============================================================================
+   NOVACLIP AI — six tools
+   ============================================================================
+   Ported from the uploaded React/Vite project rather than dropped in as one.
+   That project is about 4,600 lines of TypeScript across ten components, built
+   with Vite and served by an Express process holding a Gemini key. This site
+   is hand-written static HTML with no build step, so bringing it across as-is
+   would have meant a compiled bundle nobody can edit and a second server to
+   keep alive — and the last time a compiled bundle went in here, a one-line
+   script tag went missing in it for a week.
+
+   So the TOOLS came across and the framework did not:
+
+     Coach            was AiCoachTab        — kept the safety method already here
+     Video director   was VideoDirectorTab  — same scene schema
+     Clip finder      was TranscriptClipTab — same virality/hook/quote fields
+     Title tester     was TitleTesterTab
+     SEO hub          was SeoHubTab
+     Thumbnail lab    was ThumbnailLabTab
+     Drifting orbs    was BackgroundOrbs    — three keyframes, no library
+
+   The parts that were already better here were left alone: the tab bar is the
+   site's nav, points and history are the site's, and Progress and the landing
+   page already exist as pages of their own.
+
+   Its Express endpoints are not needed either. ncAsk() already routes to the
+   Worker or to the reader's own key, so the API key never reaches the browser
+   and there is nothing new to deploy.
+   ============================================================================ */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const esc = t => String(t == null ? '' : t).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+
+  /* ---- tabs -------------------------------------------------------------- */
+  const TOOLS = [
+    ['Coach', 'coach', 'M12 3l2.2 5.6L20 11l-5.8 2.4L12 19l-2.2-5.6L4 11l5.8-2.4z'],
+    ['Director', 'director', 'M3 6h18v12H3zM7 6v12M17 6v12M3 12h18'],
+    ['Clip finder', 'clips', 'M6 3v12a3 3 0 106 0V3M18 3v12a3 3 0 11-6 0'],
+    ['Title tester', 'titles', 'M4 7V5h16v2M9 5v14M15 5v14M7 19h10'],
+    ['SEO', 'seo', 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3'],
+    ['Thumbnail', 'thumb', 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6']
+  ];
+  $('tabs').innerHTML = TOOLS.map(([label, id, d], i) =>
+    '<button class="tab' + (i ? '' : ' on') + '" data-t="' + id + '">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>' + label + '</button>').join('');
+  const panelOf = id => $('p' + id[0].toUpperCase() + id.slice(1));
+  $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => {
+    $('tabs').querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
+    TOOLS.forEach(([, id]) => panelOf(id).classList.toggle('on', id === b.dataset.t));
+  });
+
+  function say(el, kind, title, body) {
+    const s = $(el);
+    s.className = 'say ' + kind; s.style.display = 'block';
+    s.innerHTML = '<b>' + esc(title) + '</b>' + esc(body || '');
+  }
+  function busy(el, on, what) {
+    if (on) say(el, 'wait', 'Thinking…', what || '');
+    else $(el).style.display = 'none';
+  }
+  function reward(n) { if (window.addPts) addPts(n); if (typeof logSkill === 'function') logSkill('ai_ask'); }
+
+  /* JSON out of a model that was asked for JSON but sometimes wraps it in
+     prose or a code fence anyway. */
+  function readJson(text) {
+    if (!text) return null;
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    const raw = fenced ? fenced[1] : (text.match(/[{[][\s\S]*[}\]]/) || [''])[0];
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+
+  /* ---- voice + persona --------------------------------------------------- */
+  const SLANG = 'Talk in heavy Gen Z slang: fr fr, no cap, ong, lowkey, highkey, W, L, bet, rizz, ' +
+    'cooked, ate, slay, deadass, its giving, valid, hits different, goated, sheesh. Pack it in, ' +
+    'but the advice underneath still has to be sharp and specific. Use emojis. ';
+  const PLAIN = 'Write in clear, friendly, everyday English. No slang. Short and genuinely useful. ';
+  const PERSONAS = {
+    youtube: 'You are NovaClip, a YouTube and Shorts growth coach for creators aged 13-18. You know ' +
+             'retention curves, hooks, thumbnails and what the algorithm actually rewards. ',
+    gaming:  'You are NovaClip, a gaming clip coach. You help creators turn gameplay into Shorts ' +
+             'and TikToks that people finish. ',
+    business:'You are NovaClip, a money and side-hustle tutor for teenagers. Realistic about what a ' +
+             'teenager can actually earn, and honest about what is a scam. ',
+    space:   'You are NovaClip, a space and science tutor for teenagers. Rockets, black holes, ' +
+             'missions, and why any of it matters. '
+  };
+
+  /* The safety method, kept word for word from the page this replaces. It is
+     the part that makes this usable by a fourteen-year-old, and it is not
+     something the uploaded project had. */
+  const METHOD =
+    'HOW TO ANSWER. Always be concrete: give a number, a real example, or a step they can do today — ' +
+    'never vague advice like "make good content" or "stay consistent" on its own. ' +
+    'If they ask for a title, give three options and say which you would pick and why. ' +
+    'If their plan will not work, say so plainly and give the reason before you offer the alternative; ' +
+    'do not be encouraging about something that will waste their time. ' +
+    'If you do not know, say you do not know rather than inventing statistics. ' +
+    'End with one single next action. ' +
+    'SAFETY: your reader is 13-18. Never ask for or repeat personal details, never suggest meeting anyone ' +
+    'from the internet, never suggest anything that needs a parent\'s card or bank account without saying ' +
+    'to ask them first, and if they mention being hurt, bullied or unsafe, tell them to talk to a trusted ' +
+    'adult and stop the lesson there. ';
+
+  function proDepth() {
+    return (typeof ncProHas === 'function' && ncProHas('tools'))
+      ? { words: 400, extra: 'Take your time. Show your reasoning, give a worked example, and add one thing they have not thought of. ' }
+      : { words: 180, extra: '' };
+  }
+  const genz = () => (typeof ncGenZ === 'function') ? ncGenZ() : true;
+  function persona() {
+    return PERSONAS[$('subject').value] + METHOD + (genz() ? SLANG : PLAIN) + proDepth().extra +
+           (typeof langInstruction === 'function' ? langInstruction() : '');
+  }
+  function paintVibe() { $('vibe').textContent = genz() ? 'Gen Z 🔥' : 'Plain English'; }
+  $('vibe').onclick = () => {
+    /* The site-wide toggle, not a second one that disagrees with it. */
+    try { localStorage.setItem('nc_genz', genz() ? '0' : '1'); } catch (e) {}
+    paintVibe();
+  };
+  paintVibe();
+
+  document.querySelectorAll('#pCoach .chips button').forEach(b =>
+    b.onclick = () => { $('askbox').value = b.textContent; $('askbox').focus(); });
+
+  /* ---- 1. coach ---------------------------------------------------------- */
+  $('askbtn').onclick = async () => {
+    const q = $('askbox').value.trim();
+    if (!q) return;
+    $('askbtn').disabled = true; $('coachOut').textContent = '';
+    busy('coachSay', true);
+    const r = await ncAsk(persona() + 'Keep it under ' + proDepth().words + ' words. Question: ' + q,
+                          { maxTokens: 1200 });
+    $('askbtn').disabled = false;
+    if (r.err) return say('coachSay', 'no', 'Could not reach the AI', r.err);
+    busy('coachSay', false);
+    $('coachOut').textContent = r.text;
+    if (window.saveHist) saveHist($('subject').selectedOptions[0].textContent, q, r.text);
+    reward(5);
+  };
+
+  /* ---- 2. video director ------------------------------------------------- */
+  $('dirBtn').onclick = async () => {
+    const idea = $('idea').value.trim();
+    if (!idea) return say('dirSay', 'no', 'Tell it the idea first', '');
+    $('dirBtn').disabled = true; $('dirOut').innerHTML = '';
+    busy('dirSay', true, 'Writing the shot list.');
+    const r = await ncAsk(
+      'You are NovaClip AI Video Director, planning a video for a creator aged 13-18. ' + METHOD +
+      '\nPlatform: ' + $('platform').value + '\nIdea: "' + idea + '"\n\n' +
+      'Reply with ONE JSON object and nothing else:\n' +
+      '{"viralTitle":"short high-CTR title that the video actually delivers",' +
+      '"ctrScore":0-100,"hook3Sec":"the word-for-word first three seconds",' +
+      '"targetAudience":"who this is for",' +
+      '"scenes":[{"sceneNum":1,"timeframe":"0s - 3s","visual":"camera and motion",' +
+      '"script":"what is said","sfx":"a sound effect"}]}\n' +
+      'Four to six scenes. ctrScore is your honest estimate, not a flattering one — ' +
+      'a dull idea should score low and the title should not promise what the idea cannot pay off.',
+      { maxTokens: 1800, temperature: 0.7 });
+    $('dirBtn').disabled = false;
+    if (r.err) return say('dirSay', 'no', 'Could not reach the AI', r.err);
+    const j = readJson(r.text);
+    if (!j || !j.scenes) return say('dirSay', 'no', 'The answer came back unreadable', 'Try again.');
+    busy('dirSay', false);
+    $('dirOut').innerHTML =
+      '<div class="score"><div class="dial" style="--v:' + (+j.ctrScore || 0) + '" data-v="' + (+j.ctrScore || 0) + '"></div>' +
+      '<div class="t"><b>' + esc(j.viralTitle) + '</b><span>Its own CTR estimate' +
+      (j.targetAudience ? ' · for ' + esc(j.targetAudience) : '') + '</span></div></div>' +
+      '<div class="clip"><dl><dt>The first three seconds</dt><dd style="font-size:15px;color:var(--txt)">' +
+      esc(j.hook3Sec) + '</dd></dl></div>' +
+      (j.scenes || []).map(s =>
+        '<div class="scene"><div class="tm">' + esc(s.timeframe || '') + '</div><div class="bd">' +
+        '<b>' + esc(s.visual || '') + '</b><i>' + esc(s.script || '') + '</i>' +
+        (s.sfx ? '<span class="sfx">' + esc(s.sfx) + '</span>' : '') + '</div></div>').join('');
+    reward(10);
+  };
+
+  /* ---- 3. clip finder ---------------------------------------------------- */
+  $('trans').oninput = () => { $('cTrans').textContent = $('trans').value.length + ' characters'; };
+  $('clipBtn').onclick = async () => {
+    const t = $('trans').value.trim();
+    if (t.length < 120) return say('clipSay', 'no', 'Not enough to work with',
+      'Paste at least a couple of paragraphs — it needs something to choose between.');
+    $('clipBtn').disabled = true; $('clipOut').innerHTML = '';
+    busy('clipSay', true, 'Reading it through.');
+    const r = await ncAsk(
+      'You are NovaClip AI Clip Extractor. Read this transcript and pick the 3-4 moments that would ' +
+      'stand alone as a Short. Target length ' + $('clipLen').value + '.\n\nTranscript:\n"""' +
+      t.slice(0, 12000) + '"""\n\n' +
+      'Reply with ONE JSON object and nothing else:\n' +
+      '{"summary":"one sentence on what this is",' +
+      '"viralClips":[{"title":"clip title","viralityScore":0-100,"hook":"opening line",' +
+      '"estimatedDuration":"25s","keyQuote":"the exact words from the transcript",' +
+      '"caption":"a caption with three hashtags","editingTips":"how to cut it"}]}\n' +
+      'keyQuote must be copied from the transcript, not invented. If nothing in it is worth ' +
+      'clipping, say so with an empty viralClips array and explain why in summary.',
+      { maxTokens: 2200, temperature: 0.6 });
+    $('clipBtn').disabled = false;
+    if (r.err) return say('clipSay', 'no', 'Could not reach the AI', r.err);
+    const j = readJson(r.text);
+    if (!j) return say('clipSay', 'no', 'The answer came back unreadable', 'Try again.');
+    if (!j.viralClips || !j.viralClips.length)
+      return say('clipSay', 'no', 'Nothing worth clipping in there', j.summary || '');
+    say('clipSay', 'yes', j.viralClips.length + ' worth cutting', j.summary || '');
+    $('clipOut').innerHTML = j.viralClips.map(c =>
+      '<div class="clip"><div class="hd"><b>' + esc(c.title) + '</b>' +
+      '<span class="v">' + (+c.viralityScore || 0) + '</span>' +
+      '<span class="len">' + esc(c.estimatedDuration || '') + '</span></div>' +
+      (c.keyQuote ? '<div class="q">“' + esc(c.keyQuote) + '”</div>' : '') +
+      '<dl>' +
+      (c.hook ? '<dt>Open with</dt><dd>' + esc(c.hook) + '</dd>' : '') +
+      (c.caption ? '<dt>Caption</dt><dd>' + esc(c.caption) + '</dd>' : '') +
+      (c.editingTips ? '<dt>Cut it like this</dt><dd>' + esc(c.editingTips) + '</dd>' : '') +
+      '</dl></div>').join('');
+    reward(10);
+  };
+
+  /* ---- 4. title tester --------------------------------------------------- */
+  $('titleBtn').onclick = async () => {
+    const list = $('titles').value.split('\n').map(s => s.trim()).filter(Boolean);
+    if (list.length < 2) return say('titleSay', 'no', 'Give it at least two', 'It scores them against each other.');
+    $('titleBtn').disabled = true; $('titleOut').innerHTML = '';
+    busy('titleSay', true);
+    const r = await ncAsk(
+      'Score these YouTube titles for a creator aged 13-18. The video is: ' +
+      ($('tAbout').value.trim() || 'not described') + '\n\nTitles:\n' +
+      list.map((t, i) => (i + 1) + '. ' + t).join('\n') + '\n\n' +
+      'Reply with ONE JSON object and nothing else:\n' +
+      '{"best":1,"why":"one sentence on why that one",' +
+      '"scores":[{"title":"the title","score":0-100,"good":"its strongest bit",' +
+      '"bad":"its weakest bit, or a warning if it promises what the video does not deliver"}]}\n' +
+      'Mark a title down hard if it promises something the described video cannot pay off — ' +
+      'a title that wins the click and loses the viewer is worse than a dull one.',
+      { maxTokens: 1400, temperature: 0.5 });
+    $('titleBtn').disabled = false;
+    if (r.err) return say('titleSay', 'no', 'Could not reach the AI', r.err);
+    const j = readJson(r.text);
+    if (!j || !j.scores) return say('titleSay', 'no', 'The answer came back unreadable', 'Try again.');
+    say('titleSay', 'yes', 'It would use number ' + (j.best || 1), j.why || '');
+    $('titleOut').innerHTML = j.scores
+      .slice().sort((a, b) => (+b.score || 0) - (+a.score || 0))
+      .map(s => '<div class="score"><div class="dial" style="--v:' + (+s.score || 0) + '" data-v="' +
+        (+s.score || 0) + '"></div><div class="t"><b>' + esc(s.title) + '</b>' +
+        '<span style="color:var(--lime)">+ ' + esc(s.good || '') + '</span><br>' +
+        '<span style="color:var(--pink)">− ' + esc(s.bad || '') + '</span></div></div>').join('');
+    reward(5);
+  };
+
+  /* ---- 5. SEO ------------------------------------------------------------ */
+  $('seoBtn').onclick = async () => {
+    const about = $('seoAbout').value.trim();
+    if (!about) return say('seoSay', 'no', 'Describe the video first', '');
+    $('seoBtn').disabled = true; $('seoOut').innerHTML = '';
+    busy('seoSay', true);
+    const r = await ncAsk(
+      'Write YouTube SEO for a creator aged 13-18. The video: ' + about + '\n\n' +
+      'Reply with ONE JSON object and nothing else:\n' +
+      '{"description":"two short paragraphs; the FIRST LINE has to work alone because that is all ' +
+      'anyone reads before pressing more",' +
+      '"tags":["10-14 tags, lowercase, no # symbol, specific not generic"],' +
+      '"searches":["4 things a real person would actually type to find this"]}\n' +
+      'No keyword stuffing and no tag that has nothing to do with the video — both get the video ' +
+      'buried rather than found.',
+      { maxTokens: 1200, temperature: 0.7 });
+    $('seoBtn').disabled = false;
+    if (r.err) return say('seoSay', 'no', 'Could not reach the AI', r.err);
+    const j = readJson(r.text);
+    if (!j) return say('seoSay', 'no', 'The answer came back unreadable', 'Try again.');
+    busy('seoSay', false);
+    $('seoOut').innerHTML =
+      '<div class="clip"><dl><dt>Description</dt><dd style="white-space:pre-wrap;font-size:14.5px;color:var(--txt)">' +
+      esc(j.description || '') + '</dd></dl>' +
+      '<div class="tags">' + (j.tags || []).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' +
+      (j.searches && j.searches.length
+        ? '<dl style="margin-top:13px"><dt>People would search</dt><dd>' +
+          j.searches.map(esc).join(' · ') + '</dd></dl>' : '') +
+      '<div class="row"><button class="alt" id="seoCopy">Copy the description</button></div></div>';
+    $('seoCopy').onclick = () => {
+      navigator.clipboard.writeText((j.description || '') + '\n\n' + (j.tags || []).join(', '));
+      $('seoCopy').textContent = 'Copied';
+      setTimeout(() => { $('seoCopy').textContent = 'Copy the description'; }, 1600);
+    };
+    reward(5);
+  };
+
+  /* ---- 6. thumbnail ------------------------------------------------------ */
+  $('thumbBtn').onclick = async () => {
+    const idea = $('thumbIdea').value.trim();
+    if (!idea) return say('thumbSay', 'no', 'Describe it first', '');
+    $('thumbBtn').disabled = true; $('thumbOut').style.display = 'none'; $('thumbSave').style.display = 'none';
+    busy('thumbSay', true, 'Painting it — this one takes 10 to 20 seconds.');
+    const r = await ncAsk(
+      'Generate a YouTube thumbnail image, 16:9, bold and high contrast, readable when it is the ' +
+      'size of a postage stamp. Nothing frightening or adult — it is for a channel run by a ' +
+      'teenager. About: ' + idea,
+      { model: 'gemini-2.5-flash-image' });
+    $('thumbBtn').disabled = false;
+    if (r.err) return say('thumbSay', 'no', 'Could not reach the AI', r.err);
+    if (!r.image) return say('thumbSay', 'no', 'No image came back',
+      'The image model may be busy. The text models on the other tabs are unaffected — try again in a minute.');
+    say('thumbSay', 'yes', 'Done', 'Shrink it on screen before you commit — if it does not read small, it does not work.');
+    $('thumbOut').src = r.image; $('thumbOut').style.display = 'block';
+    $('thumbSave').style.display = '';
+    $('thumbSave').onclick = () => {
+      const a = document.createElement('a');
+      a.href = r.image; a.download = 'thumbnail.png'; a.click();
+    };
+    reward(10);
+  };
+})();
+</script>
 </body>
 </html>
