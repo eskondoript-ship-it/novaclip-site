@@ -1250,7 +1250,7 @@ const NC_NAV = [
   { name: 'Create', icon: 'editor', items: [
       ['editor.html', 'Editor', 'editor', 'editor'], ['publish.html', 'Publish', '', 'publish']] },
   { items: [['studio-ai.html', 'AI', 'ai', 'ai']] },
-  { items: [['games.html', 'Games', 'games', 'games']] },
+  { items: [['game.html', 'Games', 'games', 'games']] },
   { items: [['socials.html', 'Socials', 'socials', 'gift']] },
   { name: 'You', icon: 'progress', items: [
       ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
