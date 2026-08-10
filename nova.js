@@ -384,7 +384,11 @@ ncFit.textContent =
    --------------------------------------------------------------------------- */
 ":root { --nc-rail: clamp(164px, 13vw, 232px); }" +
 "@media (min-width: 761px) {" +
-  "body { margin-left: var(--nc-rail); }" +
+  /* Only pages that actually HAVE a rail get pushed over by it. editor.html,
+     game.html, trends.html, parent.html and pricing.html have no .sidebar —
+     they were getting a 232px left margin for a rail that was not there, which
+     shoved the editor's inspector panel off the right edge of the screen. */
+  "body:has(.sidebar) { margin-left: var(--nc-rail); }" +
   /* Not every page offsets the body. index.html offsets a .content wrapper
      instead, so the body rule above stacked on top of its own 200px and the
      hero started 432px in — the dead strip beside the sidebar. Where a
@@ -403,7 +407,7 @@ ncFit.textContent =
   /* The labels scale with the rail, or a 232px rail is a 164px rail with more
      empty space in it. */
   ".sidebar a, .sidebar .navlink { font-size: clamp(13px, .62vw + 8.6px, 15px); }" +
-  ".sidebar .themewrap { padding: 16px clamp(12px, 1.1vw, 20px); }" +
+  ".sidebar .themewrap { padding: 14px clamp(14px, 1.1vw, 20px) 22px; }" +
 
 "}" +
 
@@ -1247,7 +1251,7 @@ const NC_NAV = [
       ['editor.html', 'Editor', 'editor', 'editor'], ['publish.html', 'Publish', '', 'publish']] },
   { items: [['studio-ai.html', 'AI', 'ai', 'ai']] },
   { items: [['games.html', 'Games', 'games', 'games']] },
-  { items: [['socials.html', 'Socials', 'gift', 'socials']] },
+  { items: [['socials.html', 'Socials', 'socials', 'gift']] },
   { name: 'You', icon: 'progress', items: [
       ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
       ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
