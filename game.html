@@ -641,10 +641,10 @@ body.nckbm #tc { display: none !important; }
 <body>
 <div id='game'></div>
 <a id='backLink' href='index.html'>← Back to NovaClip</a>
-<div id='gamenav'>
-  <button class='gnav active' data-game='arena'>Strike Arena</button>
-  <button class='gnav' data-game='flappy'>Nova Flap</button>
-</div>
+<!-- The Strike Arena / Nova Flap switcher used to sit here. The arena has been
+     removed from the site; this page is Nova Flap. Its code below is inert —
+     nothing calls init() and no element shows it — rather than being cut out
+     of eight thousand lines of interdependent 3D by hand. -->
 
 <!-- ===== NOVA FLAP ===== -->
 <div id='flappy'>
@@ -8201,6 +8201,19 @@ document.getElementById('bindReset').onclick = () => { BINDS = Object.assign({},
     }
   };
 })();
+
+/* Straight into Nova Flap, and the arena's chrome never appears. */
+window.addEventListener('load', function () {
+  try {
+    if (typeof ncShowFlappy === 'function') ncShowFlappy(true);
+    ['hud','board','ptsbadge','ammo','hp','loadout','feed','c4badge','viewTag',
+     'safebadge','shopprompt','overlay','game'].forEach(function (id) {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    const tb = document.querySelector('.topbar'); if (tb) tb.style.display = 'none';
+    if (typeof running !== 'undefined') running = false;
+  } catch (e) { console.warn('Nova Flap boot:', e); }
+});
 
 document.querySelectorAll('.gnav').forEach(btn => {
   btn.onclick = () => {

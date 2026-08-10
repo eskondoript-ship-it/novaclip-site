@@ -389,9 +389,17 @@ ncFit.textContent =
      instead, so the body rule above stacked on top of its own 200px and the
      hero started 432px in — the dead strip beside the sidebar. Where a
      wrapper does the offsetting, it keeps doing it and the body stands down. */
-  "body:has(.content) { margin-left: 0; }" +
-  ".content { margin-left: var(--nc-rail); }" +
+  "body:has(.content), body:has(.shell) { margin-left: 0; }" +
+  ".content, .shell { margin-left: var(--nc-rail); }" +
   ".sidebar { width: var(--nc-rail); }" +
+  /* The reading column was centred in whatever space the rail left over, which
+     on a 1920 screen is 760px of text floating in 1688px of room — a 400px
+     dead strip against the sidebar on ai, community, publish, progress and
+     trends. Pinned to the same ~60px the home page uses, and allowed to grow
+     to 1120px before it stops, so wide screens gain content rather than
+     margin. The slack goes to the right, where nothing is competing with it. */
+  ".wrap { margin-left: clamp(24px, 3.6vw, 64px); margin-right: auto;" +
+  " width: min(1120px, 100% - clamp(24px, 3.6vw, 64px)); }" +
   /* The labels scale with the rail, or a 232px rail is a 164px rail with more
      empty space in it. */
   ".sidebar a, .sidebar .navlink { font-size: clamp(13px, .62vw + 8.6px, 15px); }" +
@@ -1231,15 +1239,15 @@ const NC_NAV = [
   { items: [['index.html', 'Home', 'home', 'home']] },
   { name: 'Channel', icon: 'analytics', items: [
       ['app.html', 'Studio', 'studio', 'studio'], ['analytics.html', 'Analytics', 'analytics', 'analytics']] },
+  /* Eleven rows became six. Trend Spotter moved inside the editor, and the
+     three pairs that were always visited together are one page each with
+     tabs — a shorter rail that fits without scrolling, and one fewer click to
+     get between two things you use together. */
   { name: 'Create', icon: 'editor', items: [
-      ['editor.html', 'Editor', 'editor', 'editor'], ['publish.html', 'Publish', '', 'publish'],
-      ['trends.html', 'Trend Spotter', 'trends', 'trends']] },
-  { name: 'AI', icon: 'ai', items: [
-      ['ai.html', 'NovaClip AI', 'ai', 'ai'], ['coder.html', 'Coder', '', 'coder']] },
-  { name: 'Games', icon: 'games', items: [
-      ['game.html', 'Games', 'sniper', 'games'], ['typing.html', 'Typing race', '', 'typing']] },
-  { name: 'Socials', icon: 'gift', items: [
-      ['community.html', 'Community', '', 'community'], ['gift.html', 'Gifts', '', 'gift']] },
+      ['editor.html', 'Editor', 'editor', 'editor'], ['publish.html', 'Publish', '', 'publish']] },
+  { items: [['studio-ai.html', 'AI', 'ai', 'ai']] },
+  { items: [['games.html', 'Games', 'games', 'games']] },
+  { items: [['socials.html', 'Socials', 'gift', 'socials']] },
   { name: 'You', icon: 'progress', items: [
       ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
       ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
@@ -1567,11 +1575,25 @@ function ncEditorTools() {
   });
 }
 
+/* Pages that are hosted inside another page — Games, AI, Socials each put two
+   existing pages behind tabs — must not draw a second sidebar inside the first
+   one, or a second points badge over it. The host adds ?embed=1; everything
+   else about the page behaves normally. */
+const NC_EMBED = /[?&]embed=1/.test(location.search);
+window.NC_EMBED = NC_EMBED;
+
 window.addEventListener('DOMContentLoaded', () => {
+  if (NC_EMBED) {
+    const st = document.createElement('style');
+    st.textContent = '.sidebar,#ncpts,#nctoast{display:none!important}' +
+                     'body{margin-left:0!important;padding-bottom:0!important}' +
+                     '.content{margin-left:0!important}';
+    document.head.appendChild(st);
+  }
   dedupeChrome();
   ncBrand();
   ncProfile();
-  ncNav();
+  if (!NC_EMBED) ncNav();
   ncEditorTools();
   ncScreenTime();
   ncMiniAI();
