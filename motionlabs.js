@@ -267,14 +267,14 @@
 
   const btn = document.createElement('button');
   btn.id = 'ncMlBtn';
-  btn.innerHTML = '<span style="font-size:15px">📄</span> Motion Lab';
+  btn.innerHTML = '<span style="font-size:15px">📄</span> Animation Studio';
   btn.title = 'Turn any picture into a paper cut-out clip';
 
   const ui = document.createElement('div');
   ui.id = 'ncMl';
   ui.innerHTML =
     '<div class="box">' +
-      '<h2>Motion Lab</h2>' +
+      '<h2>Animation Studio</h2>' +
       '<p class="sub">Any picture becomes a piece of cut-out paper: torn edges, grain, a shadow ' +
       'and the wobble of stop-motion. Nothing is uploaded.</p>' +
       '<div class="cols">' +
@@ -327,9 +327,9 @@
 
   function boot() {
     if (!document.body) return;
-    /* The editor's own left rail has a Motion Lab tab now. The floating button
-       is the fallback for a page that has this script but not the rail — two
-       ways in at once is just clutter, so only one of them is ever added. */
+    /* The editor's own left rail has an Animation Studio tab now. The floating
+       button is the fallback for a page that has this script but not the rail —
+       two ways in at once is just clutter, so only one of them is ever added. */
     if (!window.__ncRailTools) document.body.appendChild(btn);
     document.body.appendChild(ui);
     wire();
