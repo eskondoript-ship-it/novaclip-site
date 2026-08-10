@@ -407,7 +407,7 @@ ncFit.textContent =
   /* The labels scale with the rail, or a 232px rail is a 164px rail with more
      empty space in it. */
   ".sidebar a, .sidebar .navlink { font-size: clamp(13px, .62vw + 8.6px, 15px); }" +
-  ".sidebar .themewrap { padding: 16px clamp(12px, 1.1vw, 20px); }" +
+  ".sidebar .themewrap { padding: 14px clamp(14px, 1.1vw, 20px) 22px; }" +
 
 "}" +
 
@@ -1251,7 +1251,7 @@ const NC_NAV = [
       ['editor.html', 'Editor', 'editor', 'editor'], ['publish.html', 'Publish', '', 'publish']] },
   { items: [['studio-ai.html', 'AI', 'ai', 'ai']] },
   { items: [['games.html', 'Games', 'games', 'games']] },
-  { items: [['socials.html', 'Socials', 'gift', 'socials']] },
+  { items: [['socials.html', 'Socials', 'socials', 'gift']] },
   { name: 'You', icon: 'progress', items: [
       ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
       ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
