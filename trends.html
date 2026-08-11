@@ -77,6 +77,13 @@ canvas{width:100%;height:300px;display:block}
 .meter .bar{height:8px;border-radius:999px;background:rgba(120,140,200,.12);overflow:hidden}
 .meter .bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--magenta))}
 
+.pill.create{color:#05060A;background:linear-gradient(135deg,var(--cyan),var(--magenta));border-color:transparent;font-weight:700}
+.pill.create:hover{filter:brightness(1.1)}
+.oppbar{display:flex;align-items:center;gap:12px;background:rgba(120,140,200,.1);border-radius:999px;padding:4px 6px}
+.oppbar span{font-size:17px;font-weight:800;min-width:40px;text-align:center;color:var(--lime)}
+.oppbar i{display:block;height:14px;border-radius:999px;background:linear-gradient(90deg,var(--lime),var(--cyan),var(--magenta));transition:width .4s}
+.opp p{color:var(--dim);font-size:12.5px;margin-top:8px}
+
 .note{color:var(--dim);font-size:12.5px;text-align:center;margin-top:34px}
 .note b{color:var(--lime)}
 .empty{color:var(--dim);padding:26px;text-align:center;font-size:14px}
@@ -86,7 +93,7 @@ canvas{width:100%;height:300px;display:block}
   .stats{grid-template-columns:1fr}
   .grid{grid-template-columns:1fr}
   canvas{height:220px}
-  .tbl th:nth-child(3),.tbl td:nth-child(3){display:none}
+  .tbl th:nth-child(4),.tbl td:nth-child(4){display:none}
 }
 </style>
 </head>
@@ -148,6 +155,7 @@ canvas{width:100%;height:300px;display:block}
             <th data-t='tr_cat'>Category</th>
             <th class='right' data-t='tr_views'>Views</th>
             <th class='right' data-t='tr_7d'>7-day change</th>
+            <th class='right' data-t='tr_opp'>Opportunity</th>
           </tr></thead>
           <tbody id='trBody'></tbody>
         </table>
@@ -160,6 +168,14 @@ canvas{width:100%;height:300px;display:block}
           <span class='tag' data-t='tr_detail'>Trend deep-dive</span>
         </div>
         <div class='meters' id='trDMeters'></div>
+        <div style='display:flex;gap:10px;flex-wrap:wrap;margin-top:14px'>
+          <button class='pill create' data-t='tr_create' data-create>Create Video →</button>
+          <button class='pill' data-t='tr_opp' data-opp>Opportunity score</button>
+        </div>
+        <div class='opp' id='trOpp' style='display:none'>
+          <div class='oppbar'><span id='trOppScore'>0</span><i id='trOppFill'></i></div>
+          <p data-t='tr_opp_s'>An opportunity score weighs growth speed against competition. Higher is a better bet right now.</p>
+        </div>
       </div>
     </section>
 
@@ -201,6 +217,19 @@ canvas{width:100%;height:300px;display:block}
   };
 
   var catKey = function (c) { return 'cat_' + c; };
+
+  /* Opportunity score — a transparent formula, not a magic number:
+     growth speed minus competition drag. Shown next to every trend and in
+     the deep-dive so a user can see WHY a number is what it is. */
+  var COMP = { low: 6, medium: 12, high: 20 };
+  var CATC = { gaming: 8, sports: 6, music: 8, tech: 6, comedy: 10, food: 6, art: 5, dance: 7, football: 7, cricket: 7, beauty: 8, finance: 4, science: 4, pop: 8, history: 4, travel: 5, pets: 6, animals: 6, design: 4, fashion: 7, edu: 5, nature: 4, business: 4, career: 4, snooker: 6, drink: 6 };
+  function opp(t) {
+    var comp = t.competition || (t.views >= 1500000 ? 'high' : t.views >= 800000 ? 'medium' : 'low');
+    var s = t.growth * 1.8;
+    s -= COMP[comp] || 10;
+    s -= (CATC[t.cat] || 6) * 0.6;
+    return Math.max(8, Math.min(99, Math.round(s)));
+  }
 
   var curCat = 'all';
   var curQ = '';
@@ -249,13 +278,16 @@ canvas{width:100%;height:300px;display:block}
         '<td class="nm"></td>' +
         '<td class="cat"></td>' +
         '<td class="right"></td>' +
-        '<td class="right"></td>';
+        '<td class="right"></td>' +
+        '<td class="right up"></td>';
       tr.childNodes[0].textContent = t.name;
       tr.childNodes[1].dataset.t = catKey(t.cat);
       tr.childNodes[1].textContent = t.cat.replace(/^./, function (x) { return x.toUpperCase(); });
       tr.childNodes[2].textContent = fmt(t.views);
       tr.childNodes[3].textContent = (t.growth >= 0 ? '+' : '') + t.growth + '%';
       tr.childNodes[3].className = 'right ' + (t.up ? 'up' : 'dn');
+      tr.childNodes[4].textContent = opp(t);
+      tr.childNodes[4].title = 'Opportunity score — growth speed minus competition';
       tr.onclick = function () { sel = t; render(); };
       body.appendChild(tr);
     });
@@ -325,6 +357,24 @@ canvas{width:100%;height:300px;display:block}
   }
 
   $('trQ').addEventListener('input', function () { curQ = this.value; render(); });
+
+  /* deep-dive: Create Video hands the trend to the Pipeline dashboard */
+  document.querySelector('[data-create]').onclick = function () {
+    try { localStorage.setItem('nc_active_trend', sel.name); } catch (e) {}
+    location.href = 'pipeline.html?trend=' + encodeURIComponent(sel.name);
+  };
+  var oppBtn = document.querySelector('[data-opp]');
+  oppBtn.onclick = function () {
+    var box = $('trOpp');
+    var on = box.style.display !== 'block';
+    box.style.display = on ? 'block' : 'none';
+    oppBtn.classList.toggle('on', on);
+    if (on) {
+      var s = opp(sel);
+      $('trOppScore').textContent = s;
+      $('trOppFill').style.width = s + '%';
+    }
+  };
 
   window.addEventListener('resize', drawChart);
   render();
