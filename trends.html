@@ -358,10 +358,10 @@ canvas{width:100%;height:300px;display:block}
 
   $('trQ').addEventListener('input', function () { curQ = this.value; render(); });
 
-  /* deep-dive: Create Video hands the trend to the Pipeline dashboard */
+  /* deep-dive: Create Video hands the trend to the editor */
   document.querySelector('[data-create]').onclick = function () {
     try { localStorage.setItem('nc_active_trend', sel.name); } catch (e) {}
-    location.href = 'pipeline.html?trend=' + encodeURIComponent(sel.name);
+    location.href = 'editor.html';
   };
   var oppBtn = document.querySelector('[data-opp]');
   oppBtn.onclick = function () {

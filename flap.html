@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
+<title>NovaFlap — NovaClip</title>
+<meta name='description' content='Flap a Nova bird through the gradient pipes. Score, best, restart — all in the browser.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:#05070E;overflow:hidden;touch-action:manipulation;
+  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{display:block;width:100vw;height:100vh}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#E8EEFF}
+#hud .logo{font-size:clamp(2.4rem,8vw,4.6rem);font-weight:800;letter-spacing:-.04em;line-height:1;
+  background:linear-gradient(110deg,#7C5CFF,#00E5FF 48%,#FF3D9A);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 8px 30px rgba(124,92,255,.45))}
+#hud .tag{margin-top:10px;font-size:clamp(.85rem,2.6vw,1.05rem);color:#8A97B4;max-width:34ch;line-height:1.6}
+#hud .key{margin-top:16px;display:inline-flex;gap:8px;align-items:center;font-size:.8rem;color:#8A97B4}
+#hud .key kbd{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);border-radius:8px;
+  padding:4px 9px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.75rem;color:#E8EEFF}
+#hud.hide{opacity:0;transition:opacity .25s}
+#score{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:6;font:800 clamp(2rem,7vw,3.4rem)/1 ui-monospace,Menlo,Consolas,monospace;
+  color:#fff;text-shadow:0 4px 22px rgba(0,0,0,.55);display:none;font-variant-numeric:tabular-nums}
+#best{position:fixed;top:20px;right:22px;z-index:6;font:700 13px/1 ui-monospace,Menlo,Consolas,monospace;color:#8A97B4;display:none}
+#best b{display:block;text-align:right;margin-top:5px;font-size:1.25rem;color:#fff;text-shadow:0 3px 14px rgba(0,0,0,.5)}
+#ov{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;background:rgba(5,7,14,.55);backdrop-filter:blur(6px)}
+#ov .card{border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:30px 34px;text-align:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));box-shadow:0 30px 80px -30px rgba(0,0,0,.9);min-width:min(300px,86vw)}
+#ov h2{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;
+  background:linear-gradient(110deg,#00E5FF,#FF3D9A);-webkit-background-clip:text;background-clip:text;color:transparent}
+#ov .big{font:800 3.2rem/1 ui-monospace,Menlo,Consolas,monospace;color:#fff;margin:16px 0 4px}
+#ov .new{display:none;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B6FF4A}
+#ov .bestline{color:#8A97B4;font-size:.9rem;margin-bottom:22px}
+#ov button{margin-top:4px;padding:13px 34px;border-radius:30px;border:0;cursor:pointer;font:inherit;font-weight:700;font-size:1rem;color:#05070E;
+  background:linear-gradient(110deg,#7C5CFF,#00E5FF 48%,#FF3D9A);box-shadow:0 12px 34px -10px rgba(124,92,255,.8);transition:transform .15s}
+#ov button:hover{transform:translateY(-2px)}
+#ov .hint{margin-top:14px;font-size:.78rem;color:#8A97B4}
+@media (max-width:760px){#hud .tag{display:none}}
+</style>
+</head>
+<body>
+<canvas id='g'></canvas>
+<div id='score'>0</div>
+<div id='best'>BEST<b id='bestVal'>0</b></div>
+<div id='hud'>
+  <div class='logo'>NovaFlap</div>
+  <p class='tag'>A Nova bird, gradient pipes, one job: keep flapping.</p>
+  <div class='key'><kbd>Space</kbd> or <kbd>&uarr;</kbd> or <kbd>tap</kbd></div>
+</div>
+<div id='ov'>
+  <div class='card'>
+    <h2>Game over</h2>
+    <div class='new'>New best!</div>
+    <div class='big' id='ovScore'>0</div>
+    <div class='bestline'>Best <span id='ovBest'>0</span></div>
+    <button id='again'>Play again</button>
+    <div class='hint'>Space, tap, or click to flap</div>
+  </div>
+</div>
+<script>
+/* ============================================================================
+   NOVAFLAP — a tiny flappy bird in the NovaClip palette.
+   Plain canvas + requestAnimationFrame with delta time, so it runs the same
+   at 60Hz and 144Hz. No assets: the bird, pipes and ground are drawn, and the
+   jump/score blips are generated with WebAudio so it works offline.
+   ============================================================================ */
+(function () {
+  'use strict';
+  const cv = document.getElementById('g'), x = cv.getContext('2d');
+  const scoreEl = document.getElementById('score'), bestEl = document.getElementById('best'),
+        bestVal = document.getElementById('bestVal'), hud = document.getElementById('hud'),
+        ov = document.getElementById('ov'), ovScore = document.getElementById('ovScore'),
+        ovBest = document.getElementById('ovBest'), again = document.getElementById('again');
+
+  const BEST_KEY = 'nc_flap_best';
+  let best = 0;
+  try { best = +localStorage.getItem(BEST_KEY) || 0; } catch (e) {}
+  bestVal.textContent = best;
+
+  let W = 0, H = 0, DPR = 1, groundH = 0;
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.width = innerWidth * DPR;
+    H = cv.height = innerHeight * DPR;
+    cv.style.width = innerWidth + 'px';
+    cv.style.height = innerHeight + 'px';
+    groundH = Math.max(70, H * 0.09) * DPR;
+    x.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  resize();
+  addEventListener('resize', resize);
+
+  const S = {
+    state: 'ready',            // ready | play | dead
+    t: 0,
+    bird: { y: 0, vy: 0 },
+    pipes: [],
+    gap: 150, dist: 215, speed: 190,
+    score: 0, newBest: false, flash: 0,
+    wob: 0
+  };
+
+  const G = 1500, FLAP = -440, PIPE_W = 64;
+
+  function birdX() { return Math.min(150, W * 0.26); }
+
+  function reset(run) {
+    S.state = run ? 'play' : 'ready';
+    S.t = 0; S.score = 0; S.newBest = false; S.flash = 0;
+    S.bird.y = H * 0.42; S.bird.vy = 0; S.pipes = [];
+    if (run) { hud.classList.add('hide'); ov.style.display = 'none'; }
+  }
+
+  function over() {
+    S.state = 'dead';
+    if (S.score > best) {
+      best = S.score; S.newBest = true;
+      try { localStorage.setItem(BEST_KEY, best); } catch (e) {}
+    }
+    ovScore.textContent = S.score;
+    ovBest.textContent = best;
+    bestVal.textContent = best;
+    ov.querySelector('.new').style.display = S.newBest ? 'block' : 'none';
+    ov.style.display = 'flex';
+    blip(720, 0.14, 'triangle', 0.25);
+  }
+
+  function flap() {
+    if (S.state === 'ready') { reset(true); return; }
+    if (S.state !== 'play') return;
+    S.bird.vy = FLAP;
+    S.wob = 1;
+    blip(440, 0.08, 'square', 0.2);
+  }
+
+  /* ---- tiny WebAudio blips, no asset files ------------------------------ */
+  let actx = null;
+  function blip(freq, dur, type, gain) {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.value = gain || 0.15;
+      o.connect(g); g.connect(actx.destination);
+      const t = actx.currentTime;
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t); o.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+
+  /* ---- input ------------------------------------------------------------- */
+  function tap(e) { e.preventDefault(); flap(); }
+  ['pointerdown'].forEach(ev => cv.addEventListener(ev, tap));
+  addEventListener('keydown', e => {
+    if (e.repeat) return;
+    if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); flap(); }
+    if (e.code === 'Space' && S.state === 'ready') e.preventDefault();
+    if ((e.code === 'Enter' || e.code === 'Space') && S.state === 'dead') { reset(true); }
+  });
+  again.addEventListener('click', () => reset(true));
+
+  function scoreFor() {
+    return { w: W, h: H, gap: S.gap * DPR, dist: S.dist * DPR, speed: S.speed * DPR, g: G * DPR,
+             flapv: -FLAP * DPR, pw: PIPE_W * DPR, ground: groundH };
+  }
+
+  function step(dt) {
+    S.t += dt;
+    const f = scoreFor();
+
+    if (S.state === 'ready') {
+      S.bird.y = H * 0.42 + Math.sin(S.t * 3) * 9;
+    } else if (S.state === 'play') {
+      S.bird.vy += f.g * dt;
+      S.bird.y += S.bird.vy * dt;
+      if (S.bird.y > H - f.ground - 17 * DPR) { S.bird.y = H - f.ground - 17 * DPR; over(); }
+
+      /* spawn */
+      const last = S.pipes[S.pipes.length - 1];
+      if (!last || last.x < W - f.dist) {
+        const center = H * 0.42 + (Math.random() - 0.5) * H * 0.3;
+        const gap = f.gap * (0.85 + Math.random() * 0.3);
+        S.pipes.push({ x: W + 40, gap: gap, cy: center, passed: false });
+      }
+
+      /* move, cull, score */
+      for (let i = S.pipes.length - 1; i >= 0; i--) {
+        const p = S.pipes[i];
+        p.x -= f.speed * dt;
+        if (!p.passed && p.x + f.pw < birdX()) {
+          p.passed = true; S.score++;
+          scoreEl.textContent = S.score;
+          blip(660, 0.09, 'triangle', 0.22);
+        }
+        if (p.x < -f.pw - 40) S.pipes.splice(i, 1);
+      }
+
+      /* collisions */
+      const bx = birdX(), by = S.bird.y, br = 14 * DPR;
+      for (const p of S.pipes) {
+        if (bx + br > p.x && bx - br < p.x + f.pw) {
+          const topB = p.cy - p.gap / 2, botB = p.cy + p.gap / 2;
+          if (by - br < topB || by + br > botB) { S.flash = 1; over(); break; }
+        }
+      }
+    }
+
+    S.wob = Math.max(0, S.wob - dt * 4);
+  }
+
+  /* ---- drawing ----------------------------------------------------------- */
+  const gradBg = () => {
+    const g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#070A14'); g.addColorStop(0.55, '#0C1124'); g.addColorStop(1, '#10163a');
+    return g;
+  };
+  function orb(cx, cy, r, col) {
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.fillRect(cx - r, cy - r, r * 2, r * 2);
+  }
+
+  function draw() {
+    const f = scoreFor();
+
+    x.fillStyle = gradBg(); x.fillRect(0, 0, W, H);
+    orb(W * 0.2, H * 0.18, 300 * DPR, 'rgba(124,92,255,.30)');
+    orb(W * 0.82, H * 0.72, 340 * DPR, 'rgba(255,61,154,.22)');
+    orb(W * 0.6, H * 0.3, 240 * DPR, 'rgba(0,229,255,.16)');
+
+    /* stars */
+    x.fillStyle = 'rgba(232,238,255,.5)';
+    for (let i = 0; i < 60; i++) {
+      const px = (i * 137.5) % W, py = (i * 89.3) % (H * 0.55);
+      const a = 0.25 + 0.5 * Math.abs(Math.sin(S.t * 0.8 + i));
+      x.globalAlpha = a;
+      x.fillRect(px, py, 2 * DPR, 2 * DPR);
+    }
+    x.globalAlpha = 1;
+
+    /* pipes */
+    for (const p of S.pipes) {
+      const topH = p.cy - p.gap / 2, botY = p.cy + p.gap / 2;
+      pipe(p.x, 0, topH);
+      pipe(p.x, botY, H - botY - f.ground);
+    }
+
+    /* ground */
+    const gy = H - f.ground;
+    const gg = x.createLinearGradient(0, gy, 0, H);
+    gg.addColorStop(0, '#131A2E'); gg.addColorStop(1, '#0A0E1C');
+    x.fillStyle = gg; x.fillRect(0, gy, W, f.ground);
+    x.fillStyle = 'rgba(0,229,255,.55)'; x.fillRect(0, gy, W, 2 * DPR);
+    x.fillStyle = 'rgba(255,255,255,.10)';
+    for (let i = 0; i < W / 26; i++) {
+      const off = (i * 26 + S.t * 60) % (W + 26) - 26;
+      x.fillRect(off, gy + f.ground * 0.6, 13, 2 * DPR);
+    }
+
+    /* bird — tilt by velocity, a little wobble on flap */
+    const bx = birdX(), by = S.bird.y, br = 15 * DPR;
+    const ang = S.state === 'play' ? Math.max(-0.5, Math.min(0.9, S.bird.vy / 1400)) : Math.sin(S.t * 3) * 0.12;
+    x.save();
+    x.translate(bx, by);
+    x.rotate(ang);
+    x.shadowColor = 'rgba(255,61,154,.55)'; x.shadowBlur = 22 * DPR;
+    const bg = x.createLinearGradient(-br, -br, br, br);
+    bg.addColorStop(0, '#00E5FF'); bg.addColorStop(1, '#7C5CFF');
+    x.fillStyle = bg;
+    x.beginPath(); x.arc(0, 0, br, 0, Math.PI * 2); x.fill();
+    x.shadowBlur = 0;
+    x.fillStyle = '#fff';
+    x.beginPath(); x.arc(br * 0.35, -br * 0.3, br * 0.28, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#05070E';
+    x.beginPath(); x.arc(br * 0.48, -br * 0.3, br * 0.13, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = '#FFB443'; x.lineWidth = 3 * DPR; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(br * 0.5, br * 0.45); x.lineTo(br * 1.15, br * 0.55); x.stroke();
+    x.restore();
+
+    /* hit flash */
+    if (S.flash > 0) {
+      S.flash = Math.max(0, S.flash - 0.04);
+      x.fillStyle = 'rgba(255,61,154,' + S.flash * 0.35 + ')';
+      x.fillRect(0, 0, W, H);
+    }
+  }
+
+  function pipe(px, py, ph) {
+    const g = x.createLinearGradient(px, 0, px + PIPE_W * DPR, 0);
+    g.addColorStop(0, '#7C5CFF'); g.addColorStop(0.5, '#00E5FF'); g.addColorStop(1, '#FF3D9A');
+    x.fillStyle = g;
+    x.fillRect(px, py, PIPE_W * DPR, ph);
+    x.fillStyle = 'rgba(255,255,255,.22)';
+    x.fillRect(px + 4 * DPR, py, 8 * DPR, ph);
+    const rim = 9 * DPR;
+    x.fillStyle = 'rgba(255,255,255,.14)';
+    if (ph > 0) x.fillRect(px - rim, py, PIPE_W * DPR + rim * 2, rim);
+  }
+
+  /* ---- main loop --------------------------------------------------------- */
+  let lastT = 0;
+  function frame(now) {
+    const dt = Math.min((now - lastT) / 1000, 0.033);
+    lastT = now;
+    step(dt);
+    draw();
+
+    const f = scoreFor();
+    scoreEl.style.display = S.state === 'play' ? 'block' : 'none';
+    bestEl.style.display = (S.state === 'play' || S.state === 'dead') ? 'block' : 'none';
+    bestVal.textContent = best;
+    ov.style.display = S.state === 'dead' ? 'flex' : 'none';
+    hud.style.display = S.state === 'ready' ? 'flex' : 'none';
+
+    requestAnimationFrame(frame);
+  }
+  reset(false);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
