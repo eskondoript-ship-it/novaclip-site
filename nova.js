@@ -661,9 +661,15 @@ ncFit.textContent =
      instead, so the body rule above stacked on top of its own 200px and the
      hero started 432px in — the dead strip beside the sidebar. Where a
      wrapper does the offsetting, it keeps doing it and the body stands down. */
-  "body:has(.content), body:has(.shell) { margin-left: 0; }" +
-  ".content, .shell { margin-left: var(--nc-rail); }" +
+  "body:has(.content), body:has(.shell), body:has(.main) { margin-left: 0; }" +
+  ".content, .shell, .main { margin-left: var(--nc-rail); }" +
   ".sidebar { width: var(--nc-rail); }" +
+  /* The brand and the first nav rows sat 20px of page padding plus a further
+     margin below the rail's own top edge, which put the logo a thumb's width
+     from the top on every page. The rail is the site's top edge now — the
+     padding above it was wasted space, so it is pulled up to sit near it. */
+  ".sidebar { padding-top: 8px; }" +
+  "#ncprof { margin-top: 2px; }" +
   /* The reading column was centred in whatever space the rail left over, which
      on a 1920 screen is 760px of text floating in 1688px of room — a 400px
      dead strip against the sidebar on ai, community, publish, progress and
@@ -1342,7 +1348,7 @@ function ncProfile() {
 
   const box = document.createElement('button');
   box.id = 'ncprof';
-  box.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;margin:14px 0 6px;' +
+  box.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;margin:2px 0 6px;' +
     'padding:9px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);' +
     'background:rgba(255,255,255,0.03);color:inherit;font:inherit;cursor:pointer;text-align:left';
   function paint() {
@@ -1687,19 +1693,6 @@ function ncNav() {
   /* above the language box, below the logo and the profile button */
   const tail = bar.querySelector('.themewrap');
   tail ? bar.insertBefore(nav, tail) : bar.appendChild(nav);
-  /* Now it is in the document and can be measured. A shut group is display:none,
-     so this settles in one pass — no loop, no layout thrash. */
-  requestAnimationFrame(function () {
-    const rail = nav.closest('.sidebar') || nav.parentElement;
-    if (!rail || rail.scrollHeight <= rail.clientHeight + 2) return;
-    nav.querySelectorAll('.ncg').forEach(function (g) {
-      if (g.querySelector('a.ncl.on, a.ncl[aria-current]')) return;
-      if (!g.querySelector('.ncgh')) return;          // ungrouped rows stay put
-      g.classList.add('shut');
-      const h = g.querySelector('.ncgh');
-      if (h) h.setAttribute('aria-expanded', 'false');
-    });
-  });
 
 }
 
