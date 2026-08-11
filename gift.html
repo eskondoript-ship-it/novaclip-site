@@ -4,7 +4,7 @@
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaGift — a little box for a friend</title>
-<meta name='description' content='Fill a NovaGift box with notes, doodles, a badge and some points, then send your friend one link. They unwrap it one thing at a time.'>
+<meta name='description' content='Fill a NovaGift box with notes, doodles, a badge and some NovaCoins, then send your friend one link. They unwrap it one thing at a time.'>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
 body { background: #05060A; color: #EAF2FF; margin-left: 200px; min-height: 100vh; overflow-x: hidden; }
@@ -99,7 +99,7 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
 <div class='wrap' id='make'>
   <h1>Nova<span class='g'>Gift</span></h1>
   <p class='lede'>Fill a box with small things for one friend — a note, a doodle, a badge, some of
-    your points — then send them a single link. They unwrap it one thing at a time.</p>
+    your NovaCoins — then send them a single link. They unwrap it one thing at a time.</p>
 
   <h2>Add something to the box</h2>
   <div class='picker' id='picker'></div>
@@ -220,7 +220,7 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
           '" style="font-size:1.15rem;padding:5px 8px' + (b === it.v ? ';border-color:#4CC9F0' : '') + '">' + b + '</button>').join('') + '</div>';
       } else if (it.k === 'points') {
         field = '<select data-i="' + i + '">' + [10, 25, 50, 100].map(n =>
-          '<option value="' + n + '"' + (+it.v === n ? ' selected' : '') + '>' + n + ' points</option>').join('') +
+          '<option value="' + n + '"' + (+it.v === n ? ' selected' : '') + '>' + n + ' NovaCoins</option>').join('') +
           '</select><div class="lb" style="margin:7px 0 0">Taken off your own balance when you wrap it.</div>';
       } else if (it.k === 'song') {
         field = '<input data-i="' + i + '" placeholder="https://youtube.com/watch?v=…" value="' + esc(it.v) + '">';
@@ -335,7 +335,7 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
       if (it.k === 'doodle' && !it.s.length) return fail('The doodle is still blank.');
     }
     const have = (window.getPts ? getPts() : 0);
-    if (pts > have) return fail('You are gifting ' + pts + ' points but you have ' + have + '.');
+    if (pts > have) return fail('You are gifting ' + pts + ' NovaCoins but you have ' + have + '.');
 
     const box = {
       t: to,

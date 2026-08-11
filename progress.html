@@ -128,7 +128,7 @@ function renderProgress() {
   if (fill && note) {
     if (next) {
       fill.style.width = Math.max(2, Math.min(100, pts / next[0] * 100)) + '%';
-      note.textContent = (next[0] - pts) + ' points to ' + next[1].replace(/^\s*/, '');
+      note.textContent = (next[0] - pts) + ' NovaCoins to ' + next[1].replace(/^\s*/, '');
     } else {
       fill.style.width = '100%';
       note.textContent = 'Every reward unlocked.';
