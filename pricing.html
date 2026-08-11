@@ -354,6 +354,11 @@ function guessCurrency() {
   return 'eur';
 }
 let billCycle = localStorage.getItem('nc_billcycle') || 'month';
+if (!['month', 'year', 'once'].includes(billCycle)) billCycle = 'month';
+/* Keep the lit toggle in step with the saved cycle. Without this a returning
+   visitor who picked Yearly or One-time saw the prices for their choice while
+   the "Monthly" pill stayed lit, which read as the toggle being broken. */
+document.querySelectorAll('.bt').forEach(b => b.classList.toggle('active', b.dataset.cycle === billCycle));
 function renderPrices(cur) {
   localStorage.setItem('nc_currency', cur);
   const yearly = billCycle === 'year';
@@ -449,7 +454,11 @@ function planUnitPrice(card) {
 function addToCart(card) {
   const t = card.querySelector('h3');
   const name = t ? t.textContent.trim() : 'Plan';
-  const isSub = !!(card.querySelector('.price') && card.querySelector('.price .per'));
+  /* A plan is a subscription only if it is one of the `.sub` cards. The
+     certificates carry a `.per` too (`.per.once`), and counting those as
+     subscriptions put a bought certificate in the cart labelled "Billed
+     monthly" and treated it as something that renews. */
+  const isSub = card.dataset.kind === 'sub';
   const cycle = isSub ? billCycle : 'once';
   const unit = planUnitPrice(card);
   const found = CART.find(i => i.name === name && i.cycle === cycle);
@@ -1389,12 +1398,12 @@ else initCheckout();
         <div><label class='colab'>CVC</label><input type='text' id='coCvc' name='cvc' autocomplete='cc-csc' inputmode='numeric' maxlength='4' placeholder='123'></div>
       </div>
       <div class='conotice'><b>Demo checkout.</b> This does not take real payment and no card details are stored or sent anywhere. Live payments require a Stripe account and a server.</div>
-      <button class='cobtn' id='coPay'>Confirm subscription</button>
+      <button class='cobtn' id='coPay'>Confirm payment</button>
       <div class='coerr' id='coErr'></div>
     </div>
     <div class='costep' id='coStep2' style='display:none'>
       <div class='cotick'></div>
-      <h2>Subscription confirmed</h2>
+      <h2>Payment confirmed</h2>
       <p class='cosub'>A confirmation has been sent to <b id='coSentTo'>—</b>.</p>
       <div class='cosummary' id='coSummary'></div>
       <div id='certIssued' style='display:none'>
