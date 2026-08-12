@@ -1702,6 +1702,26 @@ function ncNav() {
 const NC_AI_WORKER = 'https://novaclip-ai.eskondori-pt.workers.dev';
 const NC_AI_DIRECT = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
+/* The active AI provider. ?ncai=openrouter on the URL or the nc_ai_provider
+   localStorage value override the default for the whole site — every feature
+   that calls ncAsk honors it, so one selection swaps every AI feature at once.
+   Unknown ids fall back to gemini, the always-on default. */
+function ncActiveProvider() {
+  try {
+    const q = new URLSearchParams(location.search).get('ncai');
+    if (q && /^(gemini|openrouter|openai)$/.test(q)) return q;
+    const ls = localStorage.getItem('nc_ai_provider');
+    if (ls && /^(gemini|openrouter|openai)$/.test(ls)) return ls;
+  } catch (e) { /* storage may be off in a privacy mode — fall through */ }
+  return 'gemini';
+}
+
+function ncDefaultModel(provider) {
+  if (provider === 'openrouter') return 'openai/gpt-4o-mini';
+  if (provider === 'openai') return 'gpt-4o-mini';
+  return 'gemini-2.5-flash';
+}
+
 function ncAIKey()     { try { return localStorage.getItem('nc_ai_key') || ''; } catch (e) { return ''; } }
 function ncSetAIKey(k) { try { k ? localStorage.setItem('nc_ai_key', k) : localStorage.removeItem('nc_ai_key'); } catch (e) {} }
 
@@ -1712,17 +1732,23 @@ function ncKeyLooksReal(k) { return /^AIza[\w-]{30,}$/.test((k || '').trim()); }
 
 /* Returns { text, image, err }. It never throws and it never returns a made-up
    answer: if the model could not be reached, err says so and text is empty, so
-   callers can tell "it said nothing" apart from "it could not be asked". */
+   callers can tell "it said nothing" apart from "it could not be asked".
+
+   opts: { provider, model, temperature, maxTokens }. provider defaults to the
+   active selection (ncActiveProvider); model defaults per provider. A personal
+   key applies only to gemini — an AIza key cannot be spent at OpenRouter or
+   OpenAI, so those two always go through the worker's shared key. */
 async function ncAsk(prompt, opts) {
   opts = opts || {};
-  const model = opts.model || 'gemini-2.5-flash';
+  const provider = opts.provider || ncActiveProvider();
+  const model = opts.model || ncDefaultModel(provider);
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: opts.temperature == null ? 0.7 : opts.temperature }
   };
   if (opts.maxTokens) body.generationConfig.maxOutputTokens = opts.maxTokens;
 
-  const own = ncAIKey();
+  const own = provider === 'gemini' ? ncAIKey() : '';
   let data = null, err = '';
   try {
     let r, raw;
@@ -1733,7 +1759,7 @@ async function ncAsk(prompt, opts) {
       else if (r.status === 429) err = 'Your own key is out of quota for now.';
     } else {
       r = await fetch(NC_AI_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: model, payload: body }) });
+        body: JSON.stringify({ provider: provider, model: model, payload: body }) });
     }
 
     /* Read the body once, as text, before deciding anything. Both Google and
@@ -1779,6 +1805,7 @@ async function ncAsk(prompt, opts) {
 
 window.ncAIKey = ncAIKey; window.ncSetAIKey = ncSetAIKey;
 window.ncKeyLooksReal = ncKeyLooksReal; window.ncAsk = ncAsk;
+window.ncActiveProvider = ncActiveProvider; window.ncDefaultModel = ncDefaultModel;
 
 /* ============================================================================
    THE EDITOR'S EXTRA TOOLS

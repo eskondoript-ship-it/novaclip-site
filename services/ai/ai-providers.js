@@ -7,26 +7,34 @@
    LAYERS, BOTTOM TO TOP
 
      PROVIDER      one vendor adapter. Talks to a model. Knows nothing about the
-                   site. GeminiProvider here is live and talks through ncAsk()
-                   (Cloudflare Worker with the shared key, or the reader's own
-                   key straight to Google — the site's existing two routes).
+                   site. All three adapters here are live and talk through
+                   ncAsk() in nova.js, which routes to the Cloudflare Worker
+                   (where the vendor keys live) or, for Gemini, straight to
+                   Google with a key of the reader's own.
 
      REGISTRY      maps a provider id to its adapter. The active one is picked
                    here once, at boot, so a swap is one line and never touches
-                   the pages that call ncAI.
+                   the pages that call ncAI. A deployment can also pin one
+                   without editing code (?ncai=openrouter on the URL, or
+                   localStorage nc_ai_provider) — ncAsk() honors the same
+                   selection, so the whole site swaps together.
 
      ncAI.ask()    what the rest of NovaClip calls. Signature and return shape
                    are identical to ncAsk(), which every AI feature already uses:
                      { text, image, err }   // err set means the model could not
                                            // answer — never a made-up reply.
 
-   SWAPPING PROVIDERS (what a real deployment would do)
-     OpenRouter and OpenAI are stubbed below with honest errors and a TODO.
-     To make one live:
-       1. add its API key as a SECRET on the Cloudflare Worker (never in HTML),
-       2. extend ai-worker.js with a whitelisted model list for that vendor,
-       3. fill in its ask() here.
-     The pages never need to change: they already call ncAI.ask().
+   WHICH PROVIDER ANSWERS
+     gemini      Google, via ncAsk(). The site's default.
+     openrouter  OpenRouter. Routes through the worker's OPENROUTER_API_KEY.
+     openai      OpenAI. Routes through the worker's OPENAI_API_KEY.
+
+   ENABLING A VENDOR
+     The adapters below are live, but a vendor only actually answers when its
+     key is set on the Cloudflare Worker (Settings > Variables and Secrets):
+     GEMINI_API_KEY, OPENROUTER_API_KEY, OPENAI_API_KEY. Missing key means
+     ncAsk() comes back with an honest err naming the missing secret. No code
+     change is needed — the pages already call ncAI.ask().
 
    NOTHING HERE CAN FAKE AN ANSWER. If no provider can answer, ask() returns
    { text:'', image:'', err:'...' } — exactly what ncAsk already returns — and
@@ -41,9 +49,10 @@
   /* ---- the interface every provider implements -------------------------
      ask(prompt, opts) -> Promise<{ text, image, err }>
         opts: { model, temperature, maxTokens }
-     The Gemini adapter is the only live one: it delegates to the site's
-     existing ncAsk() (worker first, personal key second), so it inherits the
-     site's rate-limit messaging, timeout handling and error strings. */
+     All three adapters delegate to ncAsk() in nova.js, so they inherit the
+     site's worker routing, rate-limit messaging, timeout handling and error
+     strings. The only difference between them is which provider id reaches
+     the worker. */
   class AIProvider {
     constructor(id, name) {
       this.id = id;
@@ -53,53 +62,53 @@
     async ask(prompt, opts) { throw new Error(this.id + ' does not implement ask()'); }
   }
 
+  /* The one guard every adapter needs: ncAsk lives in nova.js, which loads on
+     every page. If it is missing, the core did not load — say so rather than
+     throwing a TypeError. */
+  function viaNcAsk(provider, prompt, opts) {
+    if (typeof window.ncAsk !== 'function') {
+      return Promise.resolve({
+        text: '',
+        image: '',
+        err: 'NovaClip core (nova.js) did not load — no AI is available.'
+      });
+    }
+    const o = opts || {};
+    return window.ncAsk(prompt, { provider: provider, model: o.model, temperature: o.temperature, maxTokens: o.maxTokens });
+  }
+
   class GeminiProvider extends AIProvider {
     constructor() {
       super('gemini', 'Google Gemini');
     }
-    async ask(prompt, opts) {
-      if (typeof window.ncAsk !== 'function') {
-        return { text: '', image: '', err: 'NovaClip core (nova.js) did not load — no AI is available.' };
-      }
-      return window.ncAsk(prompt, opts || {});
+    ask(prompt, opts) {
+      return viaNcAsk('gemini', prompt, opts);
     }
   }
 
-  /* TODO(vendor-lock): OpenRouter. To enable: add the OPENROUTER_API_KEY
-     secret to the Worker, whitelist model ids there, and replace this stub's
-     err with a real request. The ask() shape must not change. */
   class OpenRouterProvider extends AIProvider {
     constructor() {
       super('openrouter', 'OpenRouter');
     }
-    async ask() {
-      return {
-        text: '',
-        image: '',
-        err: 'OpenRouter is not enabled on this build. Add OPENROUTER_API_KEY to the Cloudflare Worker, then wire OpenRouterProvider.ask() in services/ai/ai-providers.js.'
-      };
+    ask(prompt, opts) {
+      return viaNcAsk('openrouter', prompt, opts);
     }
   }
 
-  /* TODO(vendor-lock): OpenAI. Same story as OpenRouter — the key belongs on
-     the Worker, never in the page. */
   class OpenAIProvider extends AIProvider {
     constructor() {
       super('openai', 'OpenAI');
     }
-    async ask() {
-      return {
-        text: '',
-        image: '',
-        err: 'OpenAI is not enabled on this build. Add OPENAI_API_KEY to the Cloudflare Worker, then wire OpenAIProvider.ask() in services/ai/ai-providers.js.'
-      };
+    ask(prompt, opts) {
+      return viaNcAsk('openai', prompt, opts);
     }
   }
 
   /* ---- registry ---------------------------------------------------------
      env override lets a deployment pin a vendor without editing code:
         ?ncai=openrouter   or   localStorage nc_ai_provider = 'openrouter'
-     Unknown ids fall back to gemini, which is the only live adapter. */
+     Unknown ids fall back to gemini. The same selection drives ncAsk() in
+     nova.js, so the two layers can never disagree about the active provider. */
   const PROVIDERS = {
     gemini: new GeminiProvider(),
     openrouter: new OpenRouterProvider(),
@@ -127,7 +136,7 @@
 
   function list() {
     return Object.keys(PROVIDERS).map(function (id) {
-      return { id: id, name: PROVIDERS[id].name, live: id === 'gemini' };
+      return { id: id, name: PROVIDERS[id].name, live: true };
     });
   }
 
