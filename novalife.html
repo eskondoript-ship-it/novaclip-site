@@ -4,7 +4,7 @@
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaLife — a life you look after with NovaCoins</title>
-<meta name='description' content='NovaLife is a virtual life inside NovaClip. Earn NovaCoins around the site and spend them on food, water, energy and fun for your character — a safe place to learn how money works.'>
+<meta name='description' content='NovaLife is a virtual life inside NovaClip at 1:1 scale. Nova is born, grows up, goes to school and university, works a career, marries, raises a family and retires — one real day is one year of life, and NovaCoins are the money that pays for all of it.'>
 <link rel='icon' href='logo.svg' type='image/svg+xml'>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -16,7 +16,7 @@ body{background:var(--ink);color:var(--txt);min-height:100vh;margin-left:200px;
   font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:var(--cyan)}
 :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px}
-.wrap{position:relative;z-index:2;width:min(1000px,100% - 34px);margin:0 auto;padding:26px 0 90px}
+.wrap{position:relative;z-index:2;width:min(1040px,100% - 34px);margin:0 auto;padding:26px 0 90px}
 .sidebar{position:fixed;left:0;top:0;bottom:0;width:200px;background:rgba(12,12,16,.85);
   backdrop-filter:blur(20px);display:flex;flex-direction:column;padding:20px 0;gap:4px;
   z-index:998;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto}
@@ -33,24 +33,39 @@ a{color:var(--cyan)}
 @keyframes o1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,70px) scale(1.12)}}
 @keyframes o2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-70px,-50px) scale(.9)}}
 @keyframes o3{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,60px)}}
-@media (prefers-reduced-motion:reduce){.orb,.pet,.blob{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.orb,.pet,.blob,.stagechip{animation:none!important}}
 
 h1{font-size:clamp(2rem,5.4vw,3.1rem);font-weight:680;letter-spacing:-.042em;line-height:1.03}
 h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lede{color:var(--dim);margin-top:14px;max-width:66ch}
-h2{font-size:1.05rem;font-weight:680;letter-spacing:-.02em;margin:34px 0 4px}
+.lede{color:var(--dim);margin-top:14px;max-width:70ch}
+h2{font-size:1.05rem;font-weight:680;letter-spacing:-.02em;margin:30px 0 4px}
 h2 .bar{display:inline-block;width:26px;height:3px;border-radius:3px;background:var(--grad);
   vertical-align:middle;margin-right:10px}
 .sect{color:var(--dim);font-size:13.5px;margin-bottom:16px}
+.scale{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 13px;border-radius:20px;
+  border:1px dashed rgba(0,229,255,.4);color:var(--cyan);font-size:12.5px;font-weight:600}
+
+/* ---- tabs ---- */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 20px;padding:8px;border:1px solid var(--line);
+  border-radius:20px;background:rgba(255,255,255,.03);position:sticky;top:10px;z-index:20;backdrop-filter:blur(12px)}
+.tabbtn{flex:1;min-width:120px;padding:11px 12px;border-radius:14px;border:1px solid transparent;cursor:pointer;
+  font:inherit;font-size:13.5px;font-weight:650;color:var(--dim);background:transparent;transition:.16s;white-space:nowrap}
+.tabbtn:hover{color:var(--txt);background:rgba(255,255,255,.05)}
+.tabbtn.on{color:#05070E;background:var(--grad);box-shadow:0 8px 22px -8px rgba(124,92,255,.7)}
+.panel{display:none;animation:fade .35s ease}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* ---- wallet strip ---- */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:12px;margin:26px 0 20px}
-.stat{border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(165px,100%),1fr));gap:12px;margin:0 0 8px}
+.stat{border:1px solid var(--line);border-radius:16px;padding:13px 15px;
   background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.014))}
 .stat .k{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
-.stat b{display:block;font-size:22px;font-weight:760;font-variant-numeric:tabular-nums;margin-top:4px}
+.stat b{display:block;font-size:21px;font-weight:760;font-variant-numeric:tabular-nums;margin-top:4px}
 .stat b.neg{color:#FF7A9B}.stat b.pos{color:var(--lime)}
+.stat b.pink{color:var(--pink)}
 .stat .c{color:var(--amber);font-size:13px}
+.stat .s{font-size:12px;color:var(--dim);font-weight:600;margin-top:2px}
 
 /* ---- pet card ---- */
 .petcard{display:grid;grid-template-columns:minmax(230px,330px) 1fr;gap:22px;margin-top:22px;
@@ -59,9 +74,11 @@ h2 .bar{display:inline-block;width:26px;height:3px;border-radius:3px;background:
 .pet{display:flex;flex-direction:column;align-items:center;gap:12px}
 .pet .stage{position:relative;width:200px;height:170px;display:grid;place-items:center}
 .pet .blob{animation:bob 3.4s ease-in-out infinite;filter:drop-shadow(0 14px 26px rgba(124,92,255,.35))}
+.pet .blob.baby{transform:scale(.78);filter:drop-shadow(0 10px 20px rgba(0,229,255,.3))}
+.pet .blob.senior{filter:drop-shadow(0 14px 26px rgba(138,151,180,.35))}
 .pet .blob svg{width:180px;height:180px;display:block}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-.nm{display:flex;align-items:center;gap:8px}
+.nm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
 .nm b{font-size:20px;font-weight:760;letter-spacing:-.02em}
 .nm input{width:130px;padding:7px 11px;border-radius:10px;border:1px solid var(--line);
   background:rgba(0,0,0,.32);color:var(--txt);font:inherit;font-size:14px}
@@ -72,6 +89,8 @@ h2 .bar{display:inline-block;width:26px;height:3px;border-radius:3px;background:
 .mood.ok{color:var(--amber);border-color:rgba(255,180,67,.4)}
 .mood.sad{color:#FF9DB7;border-color:rgba(255,157,183,.4)}
 .mood.sick{color:#FF7A9B;border-color:rgba(255,122,155,.5)}
+.stagechip{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:20px;
+  font-size:12.5px;font-weight:700;border:1px solid rgba(124,92,255,.5);color:#C9B8FF;background:rgba(124,92,255,.12)}
 
 /* ---- need bars ---- */
 .needs{display:flex;flex-direction:column;justify-content:center;gap:14px}
@@ -83,7 +102,6 @@ h2 .bar{display:inline-block;width:26px;height:3px;border-radius:3px;background:
 .bar i{display:block;height:100%;border-radius:6px;transition:width .55s ease,background .55s ease;
   background:linear-gradient(90deg,var(--lime),var(--cyan))}
 .bar.low i{background:linear-gradient(90deg,#FF5C7A,#FFB443)}
-.bar span{display:block;height:100%}
 .tip{margin-top:14px;font-size:13.5px;color:var(--dim);min-height:22px;font-style:italic}
 .tip b{color:var(--amber)}
 
@@ -101,6 +119,7 @@ h2 .bar{display:inline-block;width:26px;height:3px;border-radius:3px;background:
 .item p{font-size:12px;color:var(--dim);line-height:1.5}
 .item .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}
 .item .cost{font-size:14px;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums}
+.item .locked{font-size:11px;color:var(--dim)}
 .owned{margin-top:14px;font-size:13px;color:var(--dim);min-height:20px}
 
 /* ---- buttons ---- */
@@ -113,6 +132,7 @@ h2 .bar{display:inline-block;width:26px;height:3px;border-radius:3px;background:
 .alt{padding:10px 18px;border-radius:30px;cursor:pointer;font:inherit;font-weight:600;font-size:13.5px;
   background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--txt)}
 .alt:hover{background:rgba(255,255,255,.1)}
+.alt:disabled{opacity:.4;cursor:default}
 
 /* ---- chores ---- */
 .chores{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}
@@ -151,6 +171,80 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
 .lrow .tm{font-size:12px;color:var(--dim)}
 .empty{color:var(--dim);font-size:13.5px;padding:8px 2px}
 
+/* ---- life story ---- */
+.track{position:relative;height:34px;margin:30px 8px 6px}
+.track .rail{position:absolute;left:0;right:0;top:15px;height:6px;border-radius:6px;background:rgba(255,255,255,.08)}
+.track .fill{position:absolute;left:0;top:15px;height:6px;border-radius:6px;background:var(--grad)}
+.tmark{position:absolute;top:5px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:5px}
+.tmark .dot{width:14px;height:14px;border-radius:50%;background:var(--ink);border:2px solid var(--line)}
+.tmark.cur .dot{background:var(--pink);border-color:var(--pink);box-shadow:0 0 0 5px rgba(255,61,154,.18)}
+.tmark span{font-size:11px;color:var(--dim);white-space:nowrap}
+.tmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:22px;flex-wrap:wrap;gap:6px}
+.tmeta b{color:var(--pink)}
+.mils{display:flex;flex-direction:column;gap:9px}
+.mil{display:flex;align-items:center;gap:13px;padding:12px 15px;border:1px solid var(--line);border-radius:15px;
+  background:rgba(255,255,255,.025)}
+.mil .mi{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;
+  background:rgba(255,255,255,.06)}
+.mil.done{opacity:.85}
+.mil.done .mi{background:rgba(182,255,74,.14)}
+.mil.next{border-color:rgba(255,180,67,.45);background:rgba(255,180,67,.06)}
+.mil.next .mi{background:rgba(255,180,67,.16)}
+.mil.lock{opacity:.45}
+.mil b{font-size:13.5px;font-weight:650;flex:1;min-width:0}
+.mil .ag{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid2 .card{min-width:0}
+
+/* ---- education & career ---- */
+.card{border:1px solid var(--line);border-radius:20px;padding:20px;display:grid;gap:13px;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.014))}
+.card h3{font-size:15px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.card h3 .em{width:34px;height:34px;border-radius:11px;background:var(--grad);display:grid;place-items:center;font-size:16px}
+.card .row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.card .row .l{font-size:13px;color:var(--dim)}
+.card .row b{font-size:15px;font-weight:720}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.kpi .kv{border:1px solid var(--line);border-radius:13px;padding:10px 12px;background:rgba(255,255,255,.03)}
+.kpi .kv span{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.kpi .kv b{font-size:16px;font-weight:720;font-variant-numeric:tabular-nums;margin-top:2px;display:block}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:12px;font-weight:700}
+.badge.got{color:var(--lime);background:rgba(182,255,74,.1);border:1px solid rgba(182,255,74,.35)}
+.badge.want{color:var(--amber);background:rgba(255,180,67,.1);border:1px solid rgba(255,180,67,.35)}
+.jobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));gap:10px}
+.job{border:1px solid var(--line);border-radius:16px;padding:13px 14px;display:flex;flex-direction:column;gap:7px;
+  background:rgba(255,255,255,.03);transition:.16s}
+.job.here{border-color:rgba(124,92,255,.6);background:rgba(124,92,255,.08)}
+.job.locked{opacity:.5}
+.job b{font-size:13.5px;font-weight:660;display:flex;align-items:center;gap:8px}
+.job p{font-size:12px;color:var(--dim);line-height:1.45;flex:1}
+.job .sal{font-size:14px;font-weight:720;color:var(--lime);font-variant-numeric:tabular-nums}
+.job .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+/* ---- family ---- */
+.lovetrack{height:12px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden}
+.lovetrack i{display:block;height:100%;border-radius:8px;transition:width .5s ease;
+  background:linear-gradient(90deg,var(--pink),var(--amber))}
+.fam{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(210px,100%),1fr));gap:10px}
+.famc{border:1px solid var(--line);border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:center;
+  background:rgba(255,255,255,.03)}
+.famc .fi{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:20px;flex:0 0 auto}
+.famc b{font-size:14px;font-weight:680;display:block}
+.famc span{font-size:12px;color:var(--dim)}
+.famc .grown{opacity:.6}
+
+/* ---- legacy ---- */
+.legacy{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:12px}
+.leg{border:1px solid var(--line);border-radius:18px;padding:16px;background:rgba(255,255,255,.025)}
+.leg .li{font-size:26px}
+.leg b{font-size:15px;font-weight:720;display:block;margin-top:6px}
+.leg .age{color:var(--pink);font-weight:760;font-size:13px}
+.leg p{font-size:12.5px;color:var(--dim);line-height:1.5;margin-top:5px}
+.heritage{border:1px dashed rgba(182,255,74,.4);border-radius:20px;padding:18px 20px;margin-bottom:16px;
+  background:rgba(182,255,74,.05);display:grid;gap:8px}
+.heritage b{color:var(--lime);font-size:15px}
+.heritage p{font-size:13px;color:var(--dim)}
+
 @media (max-width:760px){
   body{margin-left:0;padding-bottom:74px}
   #orbs{left:0}
@@ -159,6 +253,9 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
   .wrap{padding:22px 0 70px}
   .petcard{grid-template-columns:1fr}
   .need{grid-template-columns:24px 1fr auto}
+  .grid2{grid-template-columns:1fr}
+  .tabs{position:static}
+  .tabbtn{min-width:0}
 }
 </style>
 </head>
@@ -175,53 +272,100 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
 
 <div class='wrap'>
   <h1>Nova<span class='g'>Life</span></h1>
-  <p class='lede'>Nova is a little life to look after. You earn NovaCoins everywhere else on NovaClip —
-    editing, games, AI, everything — and spend them here on food, water, energy and fun.
-    It is a safe place to learn how money works: earn, choose, save, and look after what you have.</p>
+  <p class='lede'>Nova lives a whole life at real scale: born today, school at six, university at eighteen,
+    a career from your twenties, a family, a retirement — one real day is one year of life.
+    NovaCoins are the money that pays for every bit of it, so you learn how a real life is paid for:
+    earn, study, choose, save, marry, raise, retire.</p>
+  <span class='scale'>⏳ 1 real day = 1 year of Nova's life</span>
 
   <div class='stats' id='stats'></div>
 
-  <div class='petcard'>
-    <div class='pet'>
-      <div class='stage'>
-        <div class='blob'><svg id='pet' viewBox='0 0 160 150' aria-hidden='true'></svg></div>
+  <div class='tabs' id='tabs'></div>
+
+  <!-- CHARACTER -->
+  <div class='panel' id='tab-char'>
+    <div class='petcard'>
+      <div class='pet'>
+        <div class='stage'>
+          <div class='blob' id='blob'><svg id='pet' viewBox='0 0 160 150' aria-hidden='true'></svg></div>
+        </div>
+        <div class='nm'>
+          <b id='petname'>Nova</b>
+          <input id='namein' maxlength='20' placeholder='New name' aria-label='Rename your character'>
+          <button class='alt' id='rename'>Rename</button>
+        </div>
+        <span class='stagechip' id='stagechip'></span>
+        <span class='mood' id='mood'></span>
       </div>
-      <div class='nm'>
-        <b id='petname'>Nova</b>
-        <input id='namein' maxlength='20' placeholder='New name' aria-label='Rename your character'>
-        <button class='alt' id='rename'>Rename</button>
-      </div>
-      <span class='mood' id='mood'></span>
+      <div class='needs' id='needs'></div>
     </div>
-    <div class='needs' id='needs'></div>
+    <p class='tip' id='tip'></p>
   </div>
 
-  <p class='tip' id='tip'></p>
+  <!-- LIFE STORY -->
+  <div class='panel' id='tab-life'>
+    <h2><span class='bar'></span>Your life, year by year</h2>
+    <p class='sect'>Nova is on year <b id='lyear'></b> of a full life. Every milestone below is real and stays.</p>
+    <div id='track'></div>
+    <div class='tmeta' id='tmeta'></div>
+    <div class='mils' id='mils'></div>
+  </div>
 
-  <h2><span class='bar'></span>Shop</h2>
-  <p class='sect'>Buy things for Nova with your NovaCoins. Every choice costs something.</p>
-  <div class='shop' id='shop'></div>
-  <p class='owned' id='owned'></p>
+  <!-- SCHOOL & WORK -->
+  <div class='panel' id='tab-work'>
+    <div class='grid2'>
+      <div class='card' id='edcard'></div>
+      <div class='card' id='careercard'></div>
+    </div>
+  </div>
 
-  <h2><span class='bar'></span>Earn NovaCoins</h2>
-  <p class='sect'>Small chores earn small coins. Doing them again later earns more — this is how money comes in.</p>
-  <div class='chores' id='chores'></div>
+  <!-- FAMILY -->
+  <div class='panel' id='tab-family'>
+    <div class='card' id='familycard'></div>
+    <h2><span class='bar'></span>Children</h2>
+    <p class='sect'>A child grows a year every real day, and needs feeding while they do.</p>
+    <div class='fam' id='kids'></div>
+  </div>
 
-  <h2><span class='bar'></span>Savings goal</h2>
-  <p class='sect'>Save up for something bigger. Money you put away is money you decide not to spend today.</p>
-  <div class='goalcard' id='goalcard'></div>
+  <!-- MONEY -->
+  <div class='panel' id='tab-money'>
+    <h2><span class='bar'></span>Shop</h2>
+    <p class='sect'>Buy things for Nova with your NovaCoins. Every choice costs something.</p>
+    <div class='shop' id='shop'></div>
+    <p class='owned' id='owned'></p>
 
-  <h2><span class='bar'></span>Money journal</h2>
-  <p class='sect'>Every coin in and out, so you can see where your money goes.</p>
-  <div class='ledger' id='ledger'></div>
+    <h2><span class='bar'></span>Side work</h2>
+    <p class='sect'>Small chores earn small coins. Doing them again later earns more — this is how extra money comes in.</p>
+    <div class='chores' id='chores'></div>
+
+    <h2><span class='bar'></span>Savings goal</h2>
+    <p class='sect'>Save up for something bigger. Money you put away is money you decide not to spend today.</p>
+    <div class='goalcard' id='goalcard'></div>
+
+    <h2><span class='bar'></span>Money journal</h2>
+    <p class='sect'>Every coin in and out, so you can see where your money goes.</p>
+    <div class='ledger' id='ledger'></div>
+  </div>
+
+  <!-- LEGACY -->
+  <div class='panel' id='tab-legacy'>
+    <div id='heritage'></div>
+    <h2><span class='bar'></span>Legacy hall</h2>
+    <p class='sect'>Lives that have been lived. Each one was paid for in NovaCoins, and the family wealth carries on.</p>
+    <div class='legacy' id='legacy'></div>
+  </div>
 </div>
 
 <script src='nova.js'></script>
 <script>
 (function () {
   var $ = function (s) { return document.getElementById(s); };
-  var LS = { state:'nc_life_state', time:'nc_life_time', name:'nc_life_name', ledger:'nc_life_ledger',
-    savings:'nc_life_savings', goal:'nc_life_goal', earn:'nc_life_earn', owned:'nc_life_owned' };
+  var LS = { life:'nc_life_state', time:'nc_life_time', name:'nc_life_name', ledger:'nc_life_ledger',
+    savings:'nc_life_savings', goal:'nc_life_goal', earn:'nc_life_earn', owned:'nc_life_owned',
+    legacy:'nc_life_legacy' };
+
+  var ONE_DAY = 86400000;   /* one real day = one year of Nova's life */
+  var MAX_AGE = 90;
 
   var NEEDS = [
     { id:'food', icon:'🍗', label:'Food', decay:2.5 },
@@ -253,26 +397,119 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     { icon:'⌨️', label:'Play the typing race', amt:7, cd:30*60e3, href:'game.html#typing' },
     { icon:'🎬', label:'Make a video in the Editor', amt:10, cd:60*60e3, href:'editor.html' }
   ];
+  var JOBS = [
+    { id:'retail',  icon:'🛍️', label:'Shop assistant', salary:9,  minAge:16, part:true,
+      desc:'Evenings and weekends. A first taste of earning.' },
+    { id:'cafe',    icon:'☕', label:'Caf\u00e9 barista', salary:11, minAge:16, part:true,
+      desc:'Rush hours, tips, and your first payslip.' },
+    { id:'delivery',icon:'🛵', label:'Delivery rider', salary:12, minAge:16, part:true,
+      desc:'Outdoors, and paid a little better for the weather.' },
+    { id:'admin',   icon:'🗂️', label:'Office assistant', salary:16, minAge:18,
+      desc:'Filing, phones, and learning how offices work.' },
+    { id:'sales',   icon:'📈', label:'Sales associate', salary:19, minAge:18,
+      desc:'A base wage, then commission on top.' },
+    { id:'trades',  icon:'🔧', label:'Tradesperson', salary:22, minAge:18,
+      desc:'Skilled hands are always wanted.' },
+    { id:'coder',   icon:'💻', label:'Software developer', salary:34, minAge:22, degree:true,
+      desc:'Build things people use. Needs a degree.' },
+    { id:'engineer',icon:'🛠️', label:'Engineer', salary:38, minAge:22, degree:true,
+      desc:'Design, test, improve. Needs a degree.' },
+    { id:'doctor',  icon:'🩺', label:'Doctor', salary:44, minAge:22, degree:true,
+      desc:'Years of study, then a lifetime of trust.' }
+  ];
+  var PARTNER_NAMES = ['Ava','Noah','Mia','Leo','Zoe','Sam','Luna','Kai','Ivy','Theo','Nina','Omar'];
+  var BABY_NAMES = ['Rex','Ruby','Milo','Lily','Finn','Nora','Ollie','Isla','Juno','Ada','Rio','Sky'];
   var TIPS = [
     'Needs cost NovaCoins. Earn more than you spend, and the rest becomes savings.',
     'Every purchase is a choice: a snack now, or save for something bigger later.',
     'Small chores add up. Five coins a day is 35 in a week — that is a deluxe meal.',
+    'School is free, but neglect lowers your grades. Grades decide whether university is free.',
+    'A degree nearly doubles what a career can pay. Study while you are young.',
+    'Living costs arrive every single day as an adult. A salary that only covers bills is a trap.',
+    'Put money away before you spend it — savings goals beat good intentions.',
+    'A family costs coins: babies, allowances, then university all over again.',
     'The money journal shows where your coins went. Check it before you buy.',
-    'Money is a tool, not a toy: spend on what matters, save the rest.',
     'If Nova gets sick, the cheapest fix is an early snack — neglect costs more.'
   ];
 
-  var state = { food:80, water:80, energy:80, fun:80 };
-  var first = true;
+  /* ---- the life itself ---- */
+  function freshLife() {
+    return {
+      born: Date.now(),
+      needs: { food:80, water:80, energy:80, fun:80 },
+      grades: 70,
+      uni: { enrolled:false, years:0 },
+      job: null,              /* { id, startedAge } */
+      retiredJob: null,       /* label of last job, for the story */
+      pension: 0,
+      retired: false,
+      partner: null,          /* { name, love } while dating */
+      spouse: null,           /* { name, love, trait, sinceAge } */
+      kids: [],               /* { name, age, movedOut } */
+      earned: 0               /* coins earned across this whole life */
+    };
+  }
+  var life = freshLife();
+  var first = false;
 
-  function balance() {
+  function loadLife() {
+    try {
+      var s = JSON.parse(localStorage.getItem(LS.life) || 'null');
+      if (s && s.born) { life = s; }
+      else { first = true; life = freshLife(); }
+    } catch (e) { first = true; life = freshLife(); }
+    NEEDS.forEach(function (n) {
+      if (!life.needs) life.needs = {};
+      if (!isFinite(life.needs[n.id])) life.needs[n.id] = 80;
+      life.needs[n.id] = Math.min(100, Math.max(0, life.needs[n.id]));
+    });
+    if (!life.uni) life.uni = { enrolled:false, years:0 };
+    if (!life.kids) life.kids = [];
+    if (!isFinite(life.earned)) life.earned = 0;
+  }
+  function saveLife() {
+    localStorage.setItem(LS.life, JSON.stringify(life));
+    localStorage.setItem(LS.time, String(Date.now()));
+    if (window.ncSyncSoon) ncSyncSoon();
+  }
+
+  function ageYears() {
+    return Math.floor((Date.now() - life.born) / ONE_DAY);
+  }
+  function dayNumber() {
+    return Math.floor(Date.now() / ONE_DAY);
+  }
+
+  function stage(age) {
+    if (age < 6)  return { key:'baby',  icon:'🍼', label:'Baby' };
+    if (age < 13) return { key:'child', icon:'🎒', label:'Child' };
+    if (age < 18) return { key:'teen',  icon:'🎧', label:'Teenager' };
+    if (age < 22) return { key:'young', icon:'🎓', label:'Young adult' };
+    if (age < 65) return { key:'adult', icon:'🧑‍💼', label:'Adult' };
+    return { key:'senior', icon:'👴', label:'Senior' };
+  }
+
+  /* ---- money helpers ---- */
+  function wallet() {
     return (typeof getPts === 'function') ? getPts() : parseInt(localStorage.getItem('nc_points') || '0');
   }
   function setBalance(n) {
     localStorage.setItem('nc_points', Math.max(0, n));
-    var b = document.getElementById('ncpts'); if (b) b.textContent = '🪙 ' + balance();
+    var b = document.getElementById('ncpts'); if (b) b.textContent = '🪙 ' + wallet();
     if (window.ncSyncSoon) ncSyncSoon();
     if (window.refreshPanels) refreshPanels();
+  }
+  function addWallet(n) {
+    if (typeof addPts === 'function') { addPts(n); }
+    else setBalance(wallet() + n);
+    if (n > 0) life.earned += n;
+    saveLife();
+  }
+  function spend(n, label) {
+    if (wallet() < n) { toastNow('Not enough NovaCoins \u2014 earn some first.'); return false; }
+    addWallet(-n);
+    ledgerAdd(-n, label);
+    return true;
   }
   function toastNow(msg) { if (typeof toast === 'function') toast(msg); }
   function ledgerAdd(amt, label) {
@@ -282,35 +519,156 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     localStorage.setItem(LS.ledger, JSON.stringify(l));
   }
 
-  function load() {
-    try {
-      var s = JSON.parse(localStorage.getItem(LS.state) || '');
-      if (s && typeof s === 'object') { first = false; state = s; }
-    } catch (e) {}
-    NEEDS.forEach(function (n) {
-      if (!isFinite(state[n.id])) state[n.id] = 80;
-      state[n.id] = Math.min(100, Math.max(0, state[n.id]));
+  /* ---- economy values ---- */
+  function billsToday() {
+    var age = ageYears();
+    if (age < 18) return 0;
+    return life.retired ? 5 : 8;
+  }
+  function spouseIncome() {
+    if (!life.spouse || life.retired) return 0;
+    return (life.spouse.trait === 'works') ? 5 : 0;
+  }
+  function kidsCostToday() {
+    var total = 0;
+    life.kids.forEach(function (k) {
+      if (k.movedOut) return;
+      if (k.age < 6) total += 2;
+      else if (k.age < 18) total += 3;
     });
-    /* needs drain in real time; a long break can leave Nova sick */
-    var last = parseInt(localStorage.getItem(LS.time) || '0');
-    var now = Date.now();
-    if (last) {
-      var h = Math.min(120, (now - last) / 3600000);
-      NEEDS.forEach(function (n) { state[n.id] = Math.max(0, state[n.id] - n.decay * h); });
+    return total;
+  }
+  function salaryFor(job) {
+    var yw = ageYears() - job.startedAge;
+    var mult = yw >= 25 ? 2 : (yw >= 12 ? 1.5 : 1);
+    return Math.round(job.salary * mult);
+  }
+  function currentSalary() {
+    if (life.retired) return life.pension;
+    if (!life.job) return 0;
+    return salaryFor(life.job);
+  }
+  function jobById(id) {
+    for (var i = 0; i < JOBS.length; i++) if (JOBS[i].id === id) return JOBS[i];
+    return null;
+  }
+  function jobEligible(j) {
+    var age = ageYears();
+    if (age < j.minAge) return false;
+    if (j.degree && life.uni.years < 4) return false;
+    return true;
+  }
+  function incomeToday() {
+    return currentSalary() + spouseIncome();
+  }
+
+  /* ---- the passage of days: everything life-sized happens here ---- */
+  function passDay() {
+    var age = ageYears();
+    var msg = [];
+
+    /* school: 6-17, grades follow care. Neglect lowers them. */
+    if (age >= 6 && age <= 17) {
+      var avg = NEEDS.reduce(function (a, n) { return a + life.needs[n.id]; }, 0) / NEEDS.length;
+      life.grades = Math.min(100, Math.max(0, life.grades + Math.round((avg / 100 - 0.5) * 10)));
     }
-    localStorage.setItem(LS.state, JSON.stringify(state));
+
+    /* university: 18-21, one year per real day. Tired students repeat a year. */
+    if (life.uni.enrolled && age >= 18 && age < 22) {
+      if (life.needs.energy >= 30) {
+        life.uni.years++;
+        msg.push('🎓 A year of university done (' + life.uni.years + ' of 4).');
+        if (life.uni.years >= 4) msg.push('🎉 Graduated \u2014 a degree!');
+      } else {
+        msg.push('😴 Too tired to study \u2014 that university year was repeated.');
+      }
+    }
+
+    /* work: pays the salary, costs the energy. No energy, no pay. */
+    if (life.job && !life.retired) {
+      var job = jobById(life.job.id);
+      if (life.needs.energy >= 15) {
+        life.needs.energy = Math.max(0, life.needs.energy - 25);
+        var pay = salaryFor(life.job);
+        addWallet(pay);
+        ledgerAdd(pay, '💼 ' + job.icon + ' ' + job.label + ' pay');
+        msg.push('💼 Payday: +' + pay + ' \u2014 ' + job.label + '.');
+      } else {
+        msg.push('😴 Too exhausted to work today \u2014 no pay.');
+      }
+    }
+
+    /* pension: retired, half of the last salary, for life. */
+    if (life.retired && life.pension > 0) {
+      addWallet(life.pension);
+      ledgerAdd(life.pension, '🌅 Pension');
+      msg.push('🌅 Pension: +' + life.pension + '.');
+    }
+
+    /* living costs: adults pay them, every single day. */
+    var bills = billsToday();
+    if (bills > 0) {
+      addWallet(-bills);
+      ledgerAdd(-bills, '🏠 Living costs' + (life.retired ? ' (retired)' : ''));
+      msg.push('🏠 Living costs: \u2212' + bills + '.');
+    }
+
+    /* spouse: a working spouse earns, a home-spouse brightens life. */
+    if (life.spouse) {
+      if (life.spouse.trait === 'works' && !life.retired) {
+        addWallet(5);
+        ledgerAdd(5, '💍 ' + life.spouse.name + '\u2019s pay');
+        msg.push('💍 ' + life.spouse.name + ' brought home 5 \u2014 two incomes pay bills easier.');
+      } else if (life.spouse.trait === 'home') {
+        life.needs.fun = Math.min(100, life.needs.fun + 6);
+        msg.push('🏡 ' + life.spouse.name + ' made the home a happy one (fun +6).');
+      }
+    }
+
+    /* kids: they grow a year per day, and cost money while they grow. */
+    life.kids.forEach(function (k) {
+      k.age++;
+      if (k.age >= 18 && !k.movedOut) { k.movedOut = true; msg.push('🕊️ ' + k.name + ' turned 18 and moved out.'); }
+      if (k.movedOut) return;
+      var cost = k.age < 6 ? 2 : 3;
+      addWallet(-cost);
+      ledgerAdd(-cost, '👶 ' + k.name + '\u2019s care');
+      msg.push('👶 ' + k.name + ' cost ' + cost + ' to feed and look after.');
+    });
+
+    saveLife();
+    if (msg.length) render();
+    return msg;
+  }
+
+  /* real-time tick: needs decay continuously, and each day boundary fires passDay */
+  var lastTick = parseInt(localStorage.getItem(LS.time) || '0');
+  var lastDay = dayNumber();
+  function tick() {
+    var now = Date.now();
+    if (!lastTick) lastTick = now;
+    var h = Math.min(120, (now - lastTick) / 3600000);
+    NEEDS.forEach(function (n) {
+      life.needs[n.id] = Math.max(0, life.needs[n.id] - n.decay * h);
+    });
+    lastTick = now;
     localStorage.setItem(LS.time, String(now));
+
+    var d = dayNumber();
+    var days = d - lastDay;
+    if (days > 0) {
+      lastDay = d;
+      var guard = 0;
+      while (days > 0 && guard < 8) { passDay(); days--; guard++; }
+    }
+    saveLife();
+    render();
   }
 
-  function save() {
-    localStorage.setItem(LS.state, JSON.stringify(state));
-    localStorage.setItem(LS.time, String(Date.now()));
-    if (window.ncSyncSoon) ncSyncSoon();
-  }
-
+  /* ---- character ---- */
   function mood() {
-    var avg = NEEDS.reduce(function (a, n) { return a + state[n.id]; }, 0) / NEEDS.length;
-    var low = NEEDS.some(function (n) { return state[n.id] <= 0; });
+    var avg = NEEDS.reduce(function (a, n) { return a + life.needs[n.id]; }, 0) / NEEDS.length;
+    var low = NEEDS.some(function (n) { return life.needs[n.id] <= 0; });
     if (low) return { key:'sick', icon:'🤒', label:'Sick' };
     if (avg >= 70) return { key:'happy', icon:'😄', label:'Happy' };
     if (avg >= 45) return { key:'ok', icon:'🙂', label:'Okay' };
@@ -352,45 +710,392 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     $('pet').innerHTML = petSVG(m.key);
     $('mood').className = 'mood ' + m.key;
     $('mood').textContent = m.icon + ' ' + m.label;
+    var st = stage(ageYears());
+    $('stagechip').textContent = st.icon + ' ' + st.label + ' \u00b7 ' + ageYears() + ' y.o.';
+    $('blob').className = 'blob' + (st.key === 'baby' ? ' baby' : (st.key === 'senior' ? ' senior' : ''));
   }
 
   function renderNeeds() {
     $('needs').innerHTML = NEEDS.map(function (n) {
-      var v = Math.round(state[n.id]);
+      var v = Math.round(life.needs[n.id]);
       var cls = v < 30 ? 'bar low' : 'bar';
       return "<div class='need'><span class='ni'>" + n.icon + "</span><div class='nl'>" + n.label +
         "<div class='" + cls + "'><i style='width:" + v + "%'></i></div></div>" +
         "<span class='nv'>" + v + "%</span></div>";
     }).join('');
-  }
-
-  function renderCare() {
     var wrap = document.createElement('div'); wrap.className = 'care';
     CARE.forEach(function (c) {
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'go sm';
-      b.textContent = c.icon + ' ' + c.label + ' · ' + c.cost + ' 🪙';
+      b.textContent = c.icon + ' ' + c.label + ' \u00b7 ' + c.cost + ' \ud83e\ude99';
       b.onclick = function () { care(c); };
       wrap.appendChild(b);
     });
     $('needs').appendChild(wrap);
   }
 
+  /* ---- stats ---- */
+  function weekTotals() {
+    var l = []; try { l = JSON.parse(localStorage.getItem(LS.ledger) || '[]'); } catch (e) {}
+    var cut = Date.now() - 7 * ONE_DAY, earned = 0, spent = 0;
+    l.forEach(function (r) { if (r.t >= cut) { if (r.amt > 0) earned += r.amt; else spent += -r.amt; } });
+    return { earned: earned, spent: spent };
+  }
+  function savings() { return parseInt(localStorage.getItem(LS.savings) || '0'); }
+
   function renderStats() {
+    var age = ageYears();
     var wk = weekTotals();
+    var net = incomeToday() - billsToday() - kidsCostToday();
+    var st = stage(age);
     $('stats').innerHTML =
-      "<div class='stat'><span class='k'>Balance</span><b id='wbal'><span class='c'>🪙</span> " + balance() + "</b></div>" +
-      "<div class='stat'><span class='k'>Savings</span><b>" + savings() + " <span class='c'>🪙</span></b></div>" +
-      "<div class='stat'><span class='k'>Spent this week</span><b class='neg'>" + wk.spent + "</b></div>" +
-      "<div class='stat'><span class='k'>Earned this week</span><b class='pos'>+" + wk.earned + "</b></div>";
+      "<div class='stat'><span class='k'>Balance</span><b id='wbal'><span class='c'>\ud83e\ude99</span> " + wallet() + "</b></div>" +
+      "<div class='stat'><span class='k'>Savings</span><b>" + savings() + " <span class='c'>\ud83e\ude99</span></b></div>" +
+      "<div class='stat'><span class='k'>Life year</span><b class='pink'>" + age + "</b><span class='s'>" + st.icon + ' ' + st.label + "</span></div>" +
+      "<div class='stat'><span class='k'>Income / day</span><b class='pos'>+" + incomeToday() + "</b><span class='s'>salary \u00b7 pension \u00b7 spouse</span></div>" +
+      "<div class='stat'><span class='k'>Costs / day</span><b class='neg'>\u2212" + (billsToday() + kidsCostToday()) + "</b><span class='s'>living \u00b7 kids</span></div>" +
+      "<div class='stat'><span class='k'>This week</span><b class='pos'>+" + wk.earned + "</b><span class='s'>earned \u00b7 <b class='neg'>spent " + wk.spent + "</b></span></div>";
   }
 
+  /* ---- tabs ---- */
+  var TABS = [
+    { id:'char', label:'\ud83e\udde0 Character' },
+    { id:'life', label:'\ud83d\udcc8 Life story' },
+    { id:'work', label:'\ud83d\udc69\u200d\ud83c\udfeb School & work' },
+    { id:'family', label:'\ud83d\udc6a Family' },
+    { id:'money', label:'\ud83e\ude99 Money' },
+    { id:'legacy', label:'\ud83c\udffb Legacy' }
+  ];
+  function renderTabs() {
+    $('tabs').innerHTML = TABS.map(function (t) {
+      return "<button class='tabbtn' type='button' data-t='" + t.id + "'>" + t.label + "</button>";
+    }).join('');
+    $('tabs').querySelectorAll('button').forEach(function (b) {
+      b.onclick = function () { switchTab(b.dataset.t); };
+    });
+  }
+  function switchTab(id) {
+    $('tabs').querySelectorAll('button').forEach(function (b) {
+      b.className = 'tabbtn' + (b.dataset.t === id ? ' on' : '');
+    });
+    TABS.forEach(function (t) {
+      var p = $('tab-' + t.id);
+      if (p) p.className = 'panel' + (t.id === id ? ' on' : '');
+    });
+  }
+
+  /* ---- life story ---- */
+  function renderLife() {
+    var age = ageYears();
+    $('lyear').textContent = age;
+    var pct = Math.min(100, age / MAX_AGE * 100);
+    var marks = [
+      { at:6, label:'School' }, { at:13, label:'Teens' }, { at:18, label:'Uni' },
+      { at:22, label:'Work' }, { at:65, label:'Retire' }, { at:MAX_AGE, label:'100%' }
+    ];
+    var track = "<div class='track'><div class='rail'></div><div class='fill' style='width:" + pct + "%'></div>";
+    marks.forEach(function (m) {
+      track += "<div class='tmark" + (age >= m.at ? ' cur' : '') + "' style='left:" + (m.at / MAX_AGE * 100) + "%'>" +
+        "<span class='dot'></span><span>" + m.label + "</span></div>";
+    });
+    track += "</div>";
+    $('track').innerHTML = track;
+    $('tmeta').innerHTML = '<span>Born year 0 \u2014 now on year <b>' + age + '</b> of a full life.</span>' +
+      '<span>' + (age >= 80 ? 'A full life \u2014 check the Legacy tab.' : 'Next chapter coming as the years pass.') + '</span>';
+
+    var mils = [];
+    mils.push({ done:true, icon:'👶', txt:'Born', age:'year 0' });
+    if (age >= 6) mils.push({ done:true, icon:'🎒', txt:'Started school', age:'age 6' });
+    if (age >= 18) mils.push({ done:age >= 18, icon:'🎓', txt:'Finished school' + (life.grades >= 70 ? ' with a diploma' : ''), age:'age 18' });
+    if (life.uni.enrolled && life.uni.years < 4) mils.push({ next:true, icon:'📚', txt:'At university (year ' + life.uni.years + ' of 4)', age:'ages 18\u201321' });
+    if (life.uni.years >= 4) mils.push({ done:true, icon:'🎉', txt:'Graduated with a degree', age:'age 22' });
+    if (!life.uni.enrolled && age >= 18 && age < 22) mils.push({ next:true, icon:'📚', txt:'University is open until 21 \u2014 enroll for a degree', age:'ages 18\u201321' });
+    if (life.job) mils.push({ done:true, icon:'💼', txt:'Started working as ' + jobById(life.job.id).label, age:'age ' + life.job.startedAge });
+    if (!life.job && age >= 16) mils.push({ next:true, icon:'💼', txt:'Start a job to earn a salary', age:'from 16' });
+    if (life.spouse) mils.push({ done:true, icon:'💍', txt:'Married ' + life.spouse.name, age:'age ' + life.spouse.sinceAge });
+    else if (age >= 18) mils.push({ next:true, icon:'💍', txt:'Meet someone and build a family', age:'from 18' });
+    life.kids.forEach(function (k) {
+      mils.push({ done:true, icon:k.movedOut ? '🕊️' : '👶', txt:k.name + (k.movedOut ? ' \u2014 grown and moved out' : ' \u2014 a child'), age:'age ' + k.age });
+    });
+    if (life.retired) mils.push({ done:true, icon:'🌅', txt:'Retired, pension ' + life.pension + '/day', age:'age 65' });
+    else if (age >= 60) mils.push({ next:true, icon:'🌅', txt:'Retire and take the pension', age:'from 60' });
+    if (age >= 80) mils.push({ next:true, icon:'🏛️', txt:'A full life lived \u2014 pass the torch in Legacy', age:'80+' });
+
+    var html = '';
+    for (var i = 0; i < mils.length; i++) {
+      var m = mils[i];
+      html += "<div class='mil" + (m.done ? ' done' : (m.next ? ' next' : ' lock')) + "'>" +
+        "<span class='mi'>" + m.icon + "</span><b>" + m.txt + "</b>" +
+        (m.age ? "<span class='ag'>" + m.age + "</span>" : '') + "</div>";
+    }
+    $('mils').innerHTML = html;
+  }
+
+  /* ---- school & career ---- */
+  function renderEducation() {
+    var age = ageYears();
+    var el = $('edcard');
+    var degree = life.uni.years >= 4;
+    var head = "<h3><span class='em'>\ud83c\udf93</span> Education</h3>";
+
+    var status;
+    if (degree) status = "<span class='badge got'>\ud83c\udf93 Degree \u2014 high-earning jobs unlocked</span>";
+    else if (life.uni.enrolled) status = "<span class='badge want'>\ud83d\udcda University year " + life.uni.years + " of 4</span>";
+    else if (age < 6) status = "<span class='badge want'>\ud83c\udf7c Too young for school \u2014 play and grow</span>";
+    else if (age <= 17) status = "<span class='badge want'>\ud83c\udf93 In school</span>";
+    else status = "<span class='badge want'>\ud83c\udf93 Left school" + (life.grades >= 70 ? ' with a diploma' : ' without a diploma') + "</span>";
+
+    var grades = life.grades;
+    var gcls = grades < 50 ? 'bar low' : 'bar';
+    var html = head + "<div class='row'><span class='l'>School record</span>" + status + "</div>" +
+      "<div class='bar " + gcls + "'><i style='width:" + grades + "%'></i></div>" +
+      "<div class='row'><span class='l'>Grades: <b>" + Math.round(grades) + "/100</b></span>" +
+      "<span class='l'>" + (grades >= 85 ? 'Scholarship range \u2014 free university.' : 'Keep care up to lift grades.') + "</span></div>";
+
+    if (!degree && age >= 18 && age < 22 && !life.uni.enrolled) {
+      var free = grades >= 85;
+      html += "<div class='row'><span class='l'>University (ages 18\u201321):</span></div>" +
+        "<p style='font-size:13px;color:var(--dim)'>" + (free
+          ? 'Your grades earn a free scholarship. Four years, then a degree that doubles your earning power.'
+          : 'Four years and 120 \ud83e\ude99 tuition. A degree doubles your earning power.') + "</p>" +
+        "<button class='go sm' id='enroll' type='button'>" + (free ? 'Enroll \u2014 free scholarship' : 'Enroll \u2014 pay 120 \ud83e\ude99') + "</button>";
+    }
+    if (life.uni.enrolled && !degree) {
+      html += "<div class='row'><span class='l'>Progress</span><b>" + life.uni.years + "/4 years</b></div>" +
+        "<div class='lovetrack'><i style='width:" + (life.uni.years / 4 * 100) + "%'></i></div>" +
+        "<p style='font-size:13px;color:var(--dim)'>Keep energy above 30% on study days or a year gets repeated. " +
+        (age >= 22 ? 'Study window is over \u2014 ' + (degree ? '' : 'no degree this time.') : '') + "</p>";
+    }
+    el.innerHTML = html;
+    var en = $('enroll');
+    if (en) en.onclick = function () {
+      if (!life.uni.enrolled) {
+        if (life.grades >= 85) { life.uni.enrolled = true; ledgerAdd(0, '\ud83c\udf93 University \u2014 scholarship'); toastNow('\ud83c\udf93 Enrolled on a scholarship. Study from 18 to 21.'); }
+        else if (!spend(120, '\ud83c\udf93 University tuition')) return;
+        else { life.uni.enrolled = true; toastNow('\ud83c\udf93 Enrolled. Study from 18 to 21.'); }
+        saveLife(); render();
+      }
+    };
+  }
+
+  function renderCareer() {
+    var age = ageYears();
+    var el = $('careercard');
+    var html = "<h3><span class='em'>\ud83d\udcbc</span> Career</h3>";
+
+    if (life.retired) {
+      html += "<div class='kpi'><div class='kv'><span>Pension</span><b>+" + life.pension + "/day</b></div>" +
+        "<div class='kv'><span>Retired from</span><b>" + (life.retiredJob || '\u2014') + "</b></div></div>" +
+        "<p style='font-size:13px;color:var(--dim)'>Retirement income is half of your last salary, paid every day for life. " +
+        "The bills are lighter too \u2014 \u22125/day instead of \u22128.</p>";
+    } else if (life.job) {
+      var job = jobById(life.job.id);
+      var yw = age - life.job.startedAge;
+      var mult = yw >= 25 ? '2\u00d7' : (yw >= 12 ? '1.5\u00d7' : '\u00d71');
+      html += "<div class='row'><span class='l'>" + job.icon + ' ' + job.label + "</span>" +
+        "<b class='pos'>+" + salaryFor(life.job) + "/day</b></div>" +
+        "<div class='kpi'><div class='kv'><span>Years there</span><b>" + yw + "</b></div>" +
+        "<div class='kv'><span>Tenure bonus</span><b>" + mult + "</b></div>" +
+        "<div class='kv'><span>Retirement</span><b>age 65</b></div></div>" +
+        "<p style='font-size:13px;color:var(--dim)'>Energy under 15% on a work day means no pay that day. " +
+        (age >= 60 ? "You can retire now." : "Work long enough and your pay rises: 12 years = 1.5\u00d7, 25 years = 2\u00d7.") + "</p>" +
+        (age >= 60 ? "<button class='alt' id='retirebtn' type='button'>Retire \u2014 pension " + Math.round(salaryFor(life.job) / 2) + "/day</button>" : '');
+    } else {
+      var eligible = JOBS.filter(jobEligible);
+      var locked = JOBS.filter(function (j) { return !jobEligible(j); });
+      html += "<div class='row'><span class='l'>No job yet</span>" +
+        "<span class='l'>" + (age < 16 ? 'Jobs open from age 16.' : 'Pick a role below.') + "</span></div>";
+      if (eligible.length) {
+        html += "<div class='jobs'>" + eligible.map(function (j) {
+          return "<div class='job'><b>" + j.icon + ' ' + j.label + "</b><p>" + j.desc + "</p>" +
+            "<div class='row'><span class='sal'>+" + j.salary + "/day</span>" +
+            "<button class='go sm' type='button' data-job='" + j.id + "'>Start</button></div></div>";
+        }).join('') + "</div>";
+      }
+      if (locked.length && age >= 16) {
+        html += "<div class='jobs' style='margin-top:10px'>" + locked.map(function (j) {
+          var why = age < j.minAge ? 'from age ' + j.minAge : 'needs a degree';
+          return "<div class='job locked'><b>" + j.icon + ' ' + j.label + "</b><p>" + j.desc + "</p>" +
+            "<div class='row'><span class='sal'>+" + j.salary + "/day</span><span class='locked'>\ud83d\udd12 " + why + "</span></div></div>";
+        }).join('') + "</div>";
+      }
+      if (age < 16) html += "<p style='font-size:13px;color:var(--dim)'>You are " + age + ". Careers start at 16 with a part-time job; a degree unlocks the best ones.</p>";
+    }
+    el.innerHTML = html;
+
+    var rb = $('retirebtn');
+    if (rb) rb.onclick = function () {
+      var job = jobById(life.job.id);
+      life.pension = Math.round(salaryFor(life.job) / 2);
+      life.retiredJob = job.label;
+      life.retired = true;
+      ledgerAdd(0, '\ud83c\udf05 Retired');
+      toastNow('\ud83c\udf05 Retired. Pension ' + life.pension + '/day from now on.');
+      saveLife(); render();
+    };
+    el.querySelectorAll('[data-job]').forEach(function (b) {
+      b.onclick = function () { startJob(b.dataset.job); };
+    });
+  }
+
+  function startJob(id) {
+    var j = jobById(id);
+    if (!j || !jobEligible(j)) { toastNow('That job is not available yet.'); return; }
+    life.job = { id: id, startedAge: ageYears() };
+    ledgerAdd(0, '💼 Started as ' + j.label);
+    toastNow('💼 Now working as ' + j.label + ' \u2014 +' + j.salary + '/day (more with tenure).');
+    saveLife(); render();
+  }
+
+  /* ---- family ---- */
+  function renderFamily() {
+    var age = ageYears();
+    var el = $('familycard');
+    var html = "<h3><span class='em'>\ud83d\udc6a</span> Family & love</h3>";
+
+    if (age < 18) {
+      html += "<p style='font-size:13px;color:var(--dim)'>You are " + age + ". Family life starts at 18 \u2014 first school, then a career, then a home of your own.</p>";
+    } else if (life.spouse) {
+      var sp = life.spouse;
+      html += "<div class='row'><span class='l'>" + (sp.trait === 'works' ? '\ud83d\udcbc' : '\ud83c\udfe0') + ' ' + sp.name + '</span>' +
+        "<b>Married since age " + sp.sinceAge + "</b></div>" +
+        "<div class='lovetrack'><i style='width:" + sp.love + "%'></i></div>" +
+        "<p style='font-size:13px;color:var(--dim)'>" + (sp.trait === 'works'
+          ? sp.name + ' works too \u2014 +5/day while you both work. Two incomes make bills lighter.'
+          : sp.name + ' keeps the home \u2014 +6 fun every day. Money is not the only currency.') + "</p>";
+      if (age >= 22 && age <= 50 && life.kids.length < 4) {
+        html += "<button class='go' id='babybtn' type='button'>\ud83d\udc76 Have a baby \u2014 60 \ud83e\ude99</button>";
+      } else if (age > 50 && life.kids.length < 4) {
+        html += "<p style='font-size:13px;color:var(--dim)'>The window for starting a family closes at 50.</p>";
+      }
+    } else if (life.partner) {
+      var p = life.partner;
+      html += "<div class='row'><span class='l'>Dating " + p.name + "</span><b>" + Math.round(p.love) + "% love</b></div>" +
+        "<div class='lovetrack'><i style='width:" + p.love + "%'></i></div>" +
+        "<div class='fld' style='margin-top:6px'>" +
+        "<button class='go sm' id='datebtn' type='button'>\ud83c\udf79 Go on a date \u2014 12 \ud83e\ude99</button>" +
+        (p.love >= 60
+          ? "<button class='go' id='proposebtn' type='button'>\ud83d\udc8d Propose \u2014 220 \ud83e\ude99</button>"
+          : "<span class='l' style='align-self:center'>Keep dating until love reaches 60%.</span>") + "</div>";
+    } else {
+      html += "<p style='font-size:13px;color:var(--dim)'>A home of your own starts with someone to share it with. Meeting people costs a little \u2014 so does dating.</p>" +
+        "<button class='go' id='meetbtn' type='button'>\ud83d\udc65 Meet someone \u2014 8 \ud83e\ude99</button>";
+    }
+    el.innerHTML = html;
+
+    var meet = $('meetbtn');
+    if (meet) meet.onclick = function () {
+      if (!spend(8, '💑 Met someone new')) return;
+      var taken = [life.spouse ? life.spouse.name : '', localStorage.getItem(LS.name) || 'Nova'];
+      var name = pickName(PARTNER_NAMES, taken);
+      life.partner = { name: name, love: 15 };
+      saveLife(); render();
+      toastNow('💑 You met ' + name + '. Take them on dates to build love.');
+    };
+    var date = $('datebtn');
+    if (date) date.onclick = function () {
+      if (!life.partner) return;
+      if (!spend(12, '🌹 A date with ' + life.partner.name)) return;
+      life.partner.love = Math.min(100, life.partner.love + Math.round(Math.max(2, 14 - life.partner.love * 0.08)));
+      saveLife(); render();
+      toastNow('🌹 Great date \u2014 love is ' + Math.round(life.partner.love) + '%.');
+    };
+    var prop = $('proposebtn');
+    if (prop) prop.onclick = function () {
+      if (!life.partner || life.partner.love < 60) return;
+      if (!spend(220, '💍 Wedding with ' + life.partner.name)) return;
+      life.spouse = { name: life.partner.name, love: life.partner.love, trait: Math.random() < 0.6 ? 'works' : 'home', sinceAge: ageYears() };
+      life.partner = null;
+      ledgerAdd(0, '💍 Married ' + life.spouse.name);
+      toastNow('💍 You married ' + life.spouse.name + '. Two incomes, or a happy home \u2014 every family is different.');
+      saveLife(); render();
+    };
+    var baby = $('babybtn');
+    if (baby) baby.onclick = function () {
+      if (!life.spouse || life.kids.length >= 4) return;
+      if (!spend(60, '👶 A new baby')) return;
+      life.kids.push({ name: pickName(BABY_NAMES, []), age: 0, movedOut: false });
+      saveLife(); render();
+      toastNow('👶 A baby! They grow a year every real day, and cost coins to raise.');
+    };
+
+    var kidsEl = $('kids');
+    if (!life.kids.length) {
+      kidsEl.innerHTML = "<div class='empty'>No children yet." + (age < 18 ? ' A family comes after school.' : '') + "</div>";
+    } else {
+      kidsEl.innerHTML = life.kids.map(function (k) {
+        var icon = k.movedOut ? '🕊️' : (k.age < 6 ? '👶' : (k.age < 13 ? '🧒' : (k.age < 18 ? '🧑' : '👤')));
+        return "<div class='famc" + (k.movedOut ? ' grown' : '') + "'><span class='fi'>" + icon + "</span>" +
+          "<div><b>" + k.name + "</b><span>" + (k.movedOut ? 'Grown up, moved out at 18' : 'Age ' + k.age + (k.age < 6 ? ' \u00b7 care 2/day' : (k.age < 18 ? ' \u00b7 allowance 3/day' : ''))) + "</span></div></div>";
+      }).join('');
+    }
+  }
+
+  function pickName(list, taken) {
+    var pool = list.slice();
+    for (var i = 0; i < 8 && pool.length; i++) {
+      var n = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+      if (taken.indexOf(n) < 0) return n;
+    }
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  /* ---- legacy ---- */
+  function renderLegacy() {
+    var age = ageYears();
+    var arr = []; try { arr = JSON.parse(localStorage.getItem(LS.legacy) || '[]'); } catch (e) {}
+    var her = $('heritage');
+    if (age >= 80) {
+      her.innerHTML = "<b>\ud83c\udffb A full life \u2014 " + age + " years lived.</b>" +
+        "<p>When you are ready, pass the torch: this life is saved to the Legacy hall, the family keeps its NovaCoins, and a new life begins at year 0.</p>" +
+        "<button class='go' id='torch' type='button'>\ud83d\udd25 Pass the torch \u2014 start a new life</button>";
+      $('torch').onclick = passTorch;
+    } else {
+      her.innerHTML = "<b>\ud83c\udffb The torch passes at 80.</b>" +
+        "<p>Every life is one pass through school, work and family. Live this one fully \u2014 the Legacy hall shows lives already lived.</p>";
+    }
+    var el = $('legacy');
+    if (!arr.length) {
+      el.innerHTML = "<div class='empty'>No lives lived yet. This is the first one.</div>";
+      return;
+    }
+    el.innerHTML = arr.map(function (l) {
+      var bits = [];
+      if (l.job) bits.push(l.job);
+      if (l.degree) bits.push('a degree');
+      if (l.married) bits.push('married');
+      if (l.kids > 0) bits.push(l.kids + ' child' + (l.kids > 1 ? 'ren' : ''));
+      bits.push('earned ' + l.earned + ' \ud83e\ude99 in total');
+      return "<div class='leg'><span class='li'>\ud83c\udffb</span><b>" + l.name + "</b>" +
+        "<span class='age'>lived " + l.age + " years</span><p>" + bits.join(' \u00b7 ') + "</p></div>";
+    }).join('');
+  }
+
+  function passTorch() {
+    var arr = []; try { arr = JSON.parse(localStorage.getItem(LS.legacy) || '[]'); } catch (e) {}
+    arr.unshift({
+      name: localStorage.getItem(LS.name) || 'Nova',
+      age: ageYears(),
+      job: life.retiredJob || (life.job ? jobById(life.job.id).label : ''),
+      degree: life.uni.years >= 4,
+      married: !!life.spouse,
+      kids: life.kids.length,
+      earned: life.earned
+    });
+    localStorage.setItem(LS.legacy, JSON.stringify(arr.slice(0, 30)));
+    life = freshLife();
+    saveLife();
+    toastNow('🔥 Passed the torch. A new life begins at year 0 \u2014 the family keeps its NovaCoins.');
+    render();
+  }
+
+  /* ---- money: shop, chores, savings, ledger ---- */
   function renderShop() {
     var owned = []; try { owned = JSON.parse(localStorage.getItem(LS.owned) || '[]'); } catch (e) {}
     $('shop').innerHTML = SHOP.map(function (it) {
       return "<div class='item'><div class='top'><span class='it'><span>" + it.icon + "</span></span>" +
         "<b>" + it.label + "</b></div><p>" + it.note + "</p>" +
-        "<div class='row'><span class='cost'>" + it.cost + " 🪙</span>" +
+        "<div class='row'><span class='cost'>" + it.cost + " \ud83e\ude99</span>" +
         "<button class='go sm' type='button' data-i='" + it.label + "'>" + (owned.indexOf(it.label) > -1 ? 'Again' : 'Buy') + "</button></div></div>";
     }).join('');
     $('shop').querySelectorAll('button').forEach(function (b, i) {
@@ -419,10 +1124,10 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     $('chores').innerHTML = CHORES.map(function (c) {
       var left = cooldownLeft(c);
       var ready = left <= 0;
-      var btn = ready ? "Earn " + c.amt + " 🪙" : fmtCD(left);
+      var btn = ready ? "Earn " + c.amt + " \ud83e\ude99" : fmtCD(left);
       return "<div class='chore'><span class='ci'><span>" + c.icon + "</span></span>" +
         "<div class='ct'><b>" + c.label + "</b><span class='cs'>" + (ready
-          ? '+<b>' + c.amt + '</b> 🪙' + (c.href ? ' · <a href="' + c.href + '">go</a>' : '')
+          ? '+<b>' + c.amt + '</b> \ud83e\ude99' + (c.href ? ' \u00b7 <a href="' + c.href + '">go</a>' : '')
           : 'Come back in ' + fmtCD(left)) + "</span></div>" +
         "<button class='go sm' type='button' data-c='" + c.label + "'" + (ready ? '' : ' disabled') + ">" + btn + "</button></div>";
     }).join('');
@@ -440,7 +1145,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     if (!g || !g.label || !(g.target > 0)) {
       el.innerHTML = "<div class='fld'>" +
         "<input type='text' id='gname' placeholder='Your goal, e.g. Deluxe meal every day' maxlength='40'>" +
-        "<input type='number' id='gtarget' placeholder='Target 🪙' min='1' max='99999'>" +
+        "<input type='number' id='gtarget' placeholder='Target \ud83e\ude99' min='1' max='99999'>" +
         "<button class='go' id='gset' type='button'>Set goal</button></div>";
       var set = function () {
         var label = ($('gname').value || '').trim();
@@ -454,10 +1159,10 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     }
     var pct = Math.min(100, Math.round(sav / g.target * 100));
     var reached = sav >= g.target;
-    el.innerHTML = "<div class='gl'>" + (reached ? '🎉 ' : '') + g.label +
+    el.innerHTML = "<div class='gl'>" + (reached ? '\ud83c\udf89 ' : '') + g.label +
       (reached ? ' <span class="done">goal reached!</span>' : '') + "</div>" +
       "<div class='gpbar'><i style='width:" + pct + "%'></i></div>" +
-      "<div class='gmeta'><span>" + sav + " 🪙 saved of " + g.target + " 🪙 (" + pct + "%)</span>" +
+      "<div class='gmeta'><span>" + sav + " \ud83e\ude99 saved of " + g.target + " \ud83e\ude99 (" + pct + "%)</span>" +
       "<button class='alt' id='gnew' type='button'>Change goal</button></div>" +
       "<div class='fld'><input type='number' id='gput' value='5' min='1' max='99999' aria-label='Coins to put in savings'>" +
       "<button class='go' id='gputbtn' type='button'>Put in savings</button>" +
@@ -465,30 +1170,21 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     $('gnew').onclick = function () { localStorage.removeItem(LS.goal); renderGoal(); };
     $('gputbtn').onclick = function () {
       var n = Math.max(1, parseInt($('gput').value, 10) || 1);
-      if (balance() < n) { toastNow('Not enough NovaCoins to put away.'); return; }
-      setBalance(balance() - n);
+      if (wallet() < n) { toastNow('Not enough NovaCoins to put away.'); return; }
+      addWallet(-n);
+      ledgerAdd(-n, '\ud83c\udfe6 Put into savings');
       localStorage.setItem(LS.savings, String(savings() + n));
-      ledgerAdd(-n, '🏦 Put into savings');
-      toastNow('+ ' + n + ' 🪙 put away.');
+      toastNow('+ ' + n + ' \ud83e\ude99 put away.');
       render();
     };
     if (reached) $('gout').onclick = function () {
       var take = savings();
-      setBalance(balance() + take);
+      addWallet(take);
       localStorage.setItem(LS.savings, '0');
-      ledgerAdd(take, '🎉 Took savings out');
-      toastNow('+ ' + take + ' 🪙 back in your wallet.');
+      ledgerAdd(take, '\ud83c\udf89 Took savings out');
+      toastNow('+ ' + take + ' \ud83e\ude99 back in your wallet.');
       render();
     };
-  }
-
-  function savings() { return parseInt(localStorage.getItem(LS.savings) || '0'); }
-
-  function weekTotals() {
-    var l = []; try { l = JSON.parse(localStorage.getItem(LS.ledger) || '[]'); } catch (e) {}
-    var cut = Date.now() - 7 * 86400000, earned = 0, spent = 0;
-    l.forEach(function (r) { if (r.t >= cut) { if (r.amt > 0) earned += r.amt; else spent += -r.amt; } });
-    return { earned: earned, spent: spent };
   }
 
   function ago(t) {
@@ -504,22 +1200,22 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     if (!l.length) { $('ledger').innerHTML = "<div class='empty'>Nothing yet. Earn a coin and it shows up here.</div>"; return; }
     $('ledger').innerHTML = l.slice(0, 15).map(function (r) {
       var sign = r.amt >= 0 ? 'p' : 'm';
-      var txt = (r.amt >= 0 ? '+' : '\u2212') + Math.abs(r.amt) + ' 🪙';
+      var txt = (r.amt >= 0 ? '+' : '\u2212') + Math.abs(r.amt) + ' \ud83e\ude99';
       return "<div class='lrow'><span class='amt " + sign + "'>" + txt + "</span>" +
         "<span class='lab'>" + r.label + "</span><span class='tm'>" + ago(r.t) + "</span></div>";
     }).join('');
   }
 
   function buy(it) {
-    if (balance() < it.cost) { toastNow('Not enough NovaCoins — earn some first.'); return; }
-    setBalance(balance() - it.cost);
+    if (wallet() < it.cost) { toastNow('Not enough NovaCoins \u2014 earn some first.'); return; }
+    addWallet(-it.cost);
     ledgerAdd(-it.cost, it.icon + ' ' + it.label);
-    state[it.need] = Math.min(100, state[it.need] + it.amt);
-    if (it.also) state[it.also] = Math.min(100, state[it.also] + it.amt2);
-    save();
+    life.needs[it.need] = Math.min(100, life.needs[it.need] + it.amt);
+    if (it.also) life.needs[it.also] = Math.min(100, life.needs[it.also] + it.amt2);
+    saveLife();
     var owned = []; try { owned = JSON.parse(localStorage.getItem(LS.owned) || '[]'); } catch (e) {}
     if (owned.indexOf(it.label) < 0) { owned.push(it.label); localStorage.setItem(LS.owned, JSON.stringify(owned)); }
-    toastNow(it.icon + ' +' + it.amt + (it.also ? ' +' + it.amt2 : '') + ' — ' + it.label + '.');
+    toastNow(it.icon + ' +' + it.amt + (it.also ? ' +' + it.amt2 : '') + ' \u2014 ' + it.label + '.');
     render();
   }
 
@@ -527,7 +1223,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
 
   function earn(chore) {
     if (cooldownLeft(chore) > 0) return;
-    if (typeof addPts === 'function') addPts(chore.amt); else setBalance(balance() + chore.amt);
+    addWallet(chore.amt);
     ledgerAdd(chore.amt, chore.icon + ' ' + chore.label);
     var e = {}; try { e = JSON.parse(localStorage.getItem(LS.earn) || '{}'); } catch (err) {}
     e[chore.label] = Date.now();
@@ -539,22 +1235,27 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     renderStats();
     renderPet();
     renderNeeds();
-    renderCare();
+    renderLife();
+    renderEducation();
+    renderCareer();
+    renderFamily();
     renderShop();
     renderChores();
     renderGoal();
     renderLedger();
+    renderLegacy();
   }
 
   /* rotating money lesson */
   var ti = 0;
   function nextTip() { $('tip').innerHTML = '<b>Money tip.</b> ' + TIPS[ti++ % TIPS.length]; }
 
-  /* countdown keeps ticking even while you read the shop */
   setInterval(function () { renderChores(); }, 1000);
   setInterval(nextTip, 8000);
+  setInterval(tick, 30000);
 
-  load();
+  loadLife();
+  lastDay = Math.floor(Date.now() / ONE_DAY);
   $('namein').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') doRename(); });
   $('rename').onclick = doRename;
   function doRename() {
@@ -563,10 +1264,13 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     renderPet();
   }
 
+  renderTabs();
+  switchTab('char');
   render();
+  tick();
   nextTip();
   if (first) setTimeout(function () {
-    toastNow('👋 Welcome to NovaLife. Care for Nova, earn NovaCoins, and watch the money add up.');
+    toastNow('👋 Welcome to NovaLife. Nova was born today \u2014 one real day is one year of life. Care, study, work, and build a life.');
   }, 600);
 })();
 </script>
