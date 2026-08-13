@@ -290,11 +290,11 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
 
 <div class='wrap'>
   <h1>Nova<span class='g'>Life</span></h1>
-  <p class='lede'>Nova lives a whole life at real scale: born today, school at six, university at eighteen,
+  <p class='lede' id='lede'>Nova lives a whole life at real scale: born today, school at six, university at eighteen,
     a career from your twenties, a family, a retirement — one real day is one year of life.
     NovaCoins are the money that pays for every bit of it, so you learn how a real life is paid for:
     earn, study, choose, save, marry, raise, retire.</p>
-  <span class='scale'>⏳ 1 real day = 1 year of Nova's life</span>
+  <span class='scale' id='scalebadge'>⏳ 1 real day = 1 year of Nova's life</span>
 
   <div class='stats' id='stats'></div>
 
@@ -317,7 +317,8 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
         </div>
         <span class='stagechip' id='stagechip'></span>
         <span class='mood' id='mood'></span>
-        <span class='ticklehint'>Tap Nova to tickle</span>
+        <span class='ticklehint' id='ticklehint'>Tap Nova to tickle</span>
+        <button class='alt' id='talkbtn' type='button'>🎤 Talk to Nova</button>
       </div>
       <div class='needs' id='needs'></div>
     </div>
@@ -352,20 +353,20 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
 
   <!-- MONEY -->
   <div class='panel' id='tab-money'>
-    <h2><span class='bar'></span>Shop</h2>
+    <h2 id='moneyshop'><span class='bar'></span>Shop</h2>
     <p class='sect'>Buy things for Nova with your NovaCoins. Every choice costs something.</p>
     <div class='shop' id='shop'></div>
     <p class='owned' id='owned'></p>
 
-    <h2><span class='bar'></span>Side work</h2>
-    <p class='sect'>Small chores earn small coins. The two real ones — a typing race and an editor export — only pay out once you actually finish them. Doing any chore again later earns more.</p>
+    <h2 id='sidework'><span class='bar'></span>Side work</h2>
+    <p class='sect' id='sideworkdesc'>Small chores earn small coins. The two real ones — a typing race and an editor export — only pay out once you actually finish them. Doing any chore again later earns more.</p>
     <div class='chores' id='chores'></div>
 
-    <h2><span class='bar'></span>Savings goal</h2>
+    <h2 id='savingshead'><span class='bar'></span>Savings goal</h2>
     <p class='sect'>Save up for something bigger. Money you put away is money you decide not to spend today.</p>
     <div class='goalcard' id='goalcard'></div>
 
-    <h2><span class='bar'></span>Money journal</h2>
+    <h2 id='journalhead'><span class='bar'></span>Money journal</h2>
     <p class='sect'>Every coin in and out, so you can see where your money goes.</p>
     <div class='ledger' id='ledger'></div>
   </div>
@@ -380,6 +381,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
 </div>
 
 <script src='nova.js'></script>
+<script src='biometric.js' defer></script>
 <script>
 (function () {
   var $ = function (s) { return document.getElementById(s); };
@@ -467,6 +469,49 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     'The money journal shows where your coins went. Check it before you buy.',
     'If Nova gets sick, the cheapest fix is an early snack — neglect costs more.'
   ];
+  var GZTIPS = [
+    'Needs cost coins. Earn more than u spend, rest goes to the stash.',
+    'Every buy is a choice: a snack now, or save for sumthin bigger later.',
+    'Small chores add up. 5 coins a day = 35 a week \u2014 that is a deluxe meal.',
+    'School is free, but neglect drops ur grades. Grades decide if uni is free.',
+    'A degree nearly doubles ur pay. Study while ur young.',
+    'Living costs hit every single day as an adult. A salary that only covers bills is a trap.',
+    'Put money away before u spend it \u2014 savings goals beat good intentions.',
+    'A family costs coins: babies, allowances, then uni all over again.',
+    'The coin log shows where ur coins went. Check it before u buy.',
+    'If Nova gets sick, the cheapest fix is an early snack \u2014 neglect costs more.'
+  ];
+
+  /* ---- gen-z mode: the same life, slanged labels ---- */
+  function gzOn() { return window.ncGenZ ? ncGenZ() : false; }
+  var GZ = {
+    '\ud83e\udde0 Character': '\ud83e\udde0 ur Nova',
+    '\ud83d\udcc8 Life story': '\ud83d\udcc8 ur story',
+    '\ud83d\udc69\u200d\ud83c\udfeb School & work': '\ud83d\udc69\u200d\ud83c\udfeb school n work',
+    '\ud83d\udc6a Family': '\ud83d\udc6a fam',
+    '\ud83e\ude99 Money': '\ud83e\ude99 the bag',
+    '\ud83c\udffb Legacy': '\ud83c\udffb legacy',
+    'Sick': 'sick', 'Happy': 'happy', 'Okay': 'mid', 'Sad': 'sad',
+    'Baby': 'baby', 'Child': 'kid', 'Teenager': 'teen', 'Young adult': 'young adult', 'Adult': 'adult', 'Senior': 'senior',
+    'Food': 'grub', 'Water': 'h2o', 'Energy': 'juice', 'Fun': 'vibes',
+    'Feed': 'feed', 'Play': 'play', 'Nap': 'nap',
+    'Balance': 'the bag', 'Savings': 'stash', 'Life year': 'life year',
+    'Income / day': 'income / day', 'Costs / day': 'costs / day', 'This week': 'this week',
+    'Take out the trash': 'take out the trash', 'Water the plants': 'water the plants',
+    'Tidy your room': 'tidy ur room', 'Read for 10 minutes': 'read for 10 mins',
+    'Play the typing race': 'run the typing race', 'Make a video in the Editor': 'drop a vid in the Editor',
+    'finish a typing race': 'finish a typing race', 'export a video in the Editor': 'export a vid in the Editor',
+    'Rattle': 'rattle', 'Teddy': 'teddy', 'Blocks': 'blocks', 'Ball': 'ball',
+    '🪇 rattles it!': '🪇 rattles it fr!', '\ud83e\uddf8 hugs the teddy!': '\ud83e\uddf8 teddy hug fr!',
+    '\ud83e\uddf1 stacks blocks!': '\ud83e\uddf1 tower = W', '\u26bd rolls the ball!': '\u26bd ball oop!',
+    'hehe!': 'hehe fr!', 'tee-hee!': 'tee-hee fr!', 'tickle tickle!': 'tickle tickle ngl!',
+    'heehee!': 'heehee!', 'giggle!': 'giggle fr!', '\ud83e\udd2d': '\ud83e\udd2d', 'hehehe!': 'hehehe no cap!',
+    'Shop': 'the shop', 'Side work': 'side quests', 'Savings goal': 'savings goal', 'Money journal': 'coin log',
+    'Tap Nova to tickle': 'tap Nova fr', '\ud83c\udfa4 Talk to Nova': '\ud83c\udfa4 talk to Nova',
+    'Baby toys': 'baby toys',
+    '⏳ 1 real day = 1 year of Nova\u2019s life': '⏳ 1 real day = 1 whole Nova year fr'
+  };
+  function gzt(s) { return gzOn() ? (GZ[s] || s) : s; }
 
   /* ---- the life itself ---- */
   function freshLife() {
@@ -517,12 +562,12 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
   }
 
   function stage(age) {
-    if (age < 6)  return { key:'baby',  icon:'🍼', label:'Baby' };
-    if (age < 13) return { key:'child', icon:'🎒', label:'Child' };
-    if (age < 18) return { key:'teen',  icon:'🎧', label:'Teenager' };
-    if (age < 22) return { key:'young', icon:'🎓', label:'Young adult' };
-    if (age < 65) return { key:'adult', icon:'🧑‍💼', label:'Adult' };
-    return { key:'senior', icon:'👴', label:'Senior' };
+    if (age < 6)  return { key:'baby',  icon:'\ud83c\udf7c', label:gzt('Baby') };
+    if (age < 13) return { key:'child', icon:'\ud83c\udf92', label:gzt('Child') };
+    if (age < 18) return { key:'teen',  icon:'\ud83c\udfa7', label:gzt('Teenager') };
+    if (age < 22) return { key:'young', icon:'\ud83c\udf93', label:gzt('Young adult') };
+    if (age < 65) return { key:'adult', icon:'\ud83e\uddd1\u200d\ud83d\udcbc', label:gzt('Adult') };
+    return { key:'senior', icon:'\ud83d\udc74', label:gzt('Senior') };
   }
 
   /* ---- money helpers ---- */
@@ -705,10 +750,10 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
   function mood() {
     var avg = NEEDS.reduce(function (a, n) { return a + life.needs[n.id]; }, 0) / NEEDS.length;
     var low = NEEDS.some(function (n) { return life.needs[n.id] <= 0; });
-    if (low) return { key:'sick', icon:'🤒', label:'Sick' };
-    if (avg >= 70) return { key:'happy', icon:'😄', label:'Happy' };
-    if (avg >= 45) return { key:'ok', icon:'🙂', label:'Okay' };
-    return { key:'sad', icon:'😢', label:'Sad' };
+    if (low) return { key:'sick', icon:'\ud83e\udd22', label:gzt('Sick') };
+    if (avg >= 70) return { key:'happy', icon:'\ud83d\ude04', label:gzt('Happy') };
+    if (avg >= 45) return { key:'ok', icon:'\ud83d\ude42', label:gzt('Okay') };
+    return { key:'sad', icon:'\ud83d\ude22', label:gzt('Sad') };
   }
 
   function petSVG(m) {
@@ -755,7 +800,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     $('needs').innerHTML = NEEDS.map(function (n) {
       var v = Math.round(life.needs[n.id]);
       var cls = v < 30 ? 'bar low' : 'bar';
-      return "<div class='need'><span class='ni'>" + n.icon + "</span><div class='nl'>" + n.label +
+      return "<div class='need'><span class='ni'>" + n.icon + "</span><div class='nl'>" + gzt(n.label) +
         "<div class='" + cls + "'><i style='width:" + v + "%'></i></div></div>" +
         "<span class='nv'>" + v + "%</span></div>";
     }).join('');
@@ -763,7 +808,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     CARE.forEach(function (c) {
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'go sm';
-      b.textContent = c.icon + ' ' + c.label + ' \u00b7 ' + c.cost + ' \ud83e\ude99';
+      b.textContent = c.icon + ' ' + gzt(c.label) + ' \u00b7 ' + c.cost + ' \ud83e\ude99';
       b.onclick = function () { care(c); };
       wrap.appendChild(b);
     });
@@ -793,7 +838,9 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     life.needs.fun = Math.min(100, life.needs.fun + 4);
     saveLife();
     wiggle();
-    showBubble(TICKLE_REACTS[Math.floor(Math.random() * TICKLE_REACTS.length)]);
+    tickleSound();
+    var reacts = TICKLE_REACTS;
+    showBubble(gzt(reacts[Math.floor(Math.random() * reacts.length)]));
     renderNeeds(); renderStats();
   }
   function toyById(label) {
@@ -810,7 +857,8 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     life.needs.fun = Math.min(100, life.needs.fun + t.fun);
     saveLife();
     wiggle();
-    showBubble(TOY_REACTS[label] || 'plays!');
+    toySound();
+    showBubble(gzt(TOY_REACTS[label] || 'plays!'));
     renderNeeds(); renderToys(); renderStats();
   }
   function renderToys() {
@@ -819,19 +867,147 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     if (st.key !== 'baby') { el.style.display = 'none'; el.innerHTML = ''; return; }
     el.style.display = '';
     var used = {}; try { used = JSON.parse(localStorage.getItem(LS.toys) || '{}'); } catch (e) {}
-    el.innerHTML = "<h2><span class='bar'></span>Baby toys</h2>" +
+    el.innerHTML = "<h2><span class='bar'></span>" + gzt('Baby toys') + "</h2>" +
       "<p class='sect'>Babies play, and play is food for fun. Every toy helps, but a baby gets bored \u2014 each toy needs a short rest before it works again.</p>" +
       "<div class='toys'>" + TOYS.map(function (t) {
         var left = (used[t.label] || 0) + t.cd - Date.now();
         var ready = left <= 0;
         return "<button class='toy' type='button' data-t='" + t.label + "'" + (ready ? '' : ' disabled') + ">" +
-          "<span>" + t.icon + "</span><b>" + t.label + "</b>" +
+          "<span>" + t.icon + "</span><b>" + gzt(t.label) + "</b>" +
           (ready ? "<span class='cd'>+" + t.fun + " fun</span>" : "<span class='cd'>" + fmtCD(left) + "</span>") +
           "</button>";
       }).join('') + "</div>";
     el.querySelectorAll('button').forEach(function (b) {
       if (b.disabled) return;
       b.onclick = function () { playToy(b.dataset.t); };
+    });
+  }
+
+  /* ---- sound + talk: Nova reacts like a pet, not a stat card ---- */
+  var actx = null;
+  function audio() {
+    try {
+      if (!actx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        actx = new AC();
+      }
+      if (actx.state === 'suspended') actx.resume();
+      return actx;
+    } catch (e) { return null; }
+  }
+  function beep(freq, dur, type, vol, delay) {
+    var a = audio(); if (!a) return;
+    try {
+      var t0 = a.currentTime + (delay || 0);
+      var o = a.createOscillator(), g = a.createGain();
+      o.type = type || 'sine';
+      o.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(vol || 0.14, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + (dur || 0.12));
+      o.connect(g); g.connect(a.destination);
+      o.start(t0); o.stop(t0 + (dur || 0.12) + 0.02);
+    } catch (e) {}
+  }
+  var tickleStreak = 0, lastTickleAt = 0;
+  function tickleSound() {
+    var now = Date.now();
+    if (now - lastTickleAt < 900) tickleStreak = Math.min(6, tickleStreak + 1);
+    else tickleStreak = 1;
+    lastTickleAt = now;
+    var base = 620 + tickleStreak * 90;
+    beep(base, 0.09, 'sine', 0.14);
+    beep(base * 1.5, 0.09, 'sine', 0.12, 0.07);
+    beep(base * 2, 0.13, 'sine', 0.1, 0.14);
+  }
+  function toySound() {
+    beep(523, 0.1, 'triangle', 0.15);
+    beep(659, 0.1, 'triangle', 0.15, 0.1);
+    beep(784, 0.15, 'triangle', 0.15, 0.2);
+  }
+  var TTS = window.speechSynthesis || null;
+  function talkSpeak(text) {
+    if (!TTS) return;
+    try {
+      TTS.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.pitch = 1.9; u.rate = 1.05;
+      var voices = TTS.getVoices();
+      for (var i = 0; i < voices.length; i++) {
+        if (/female|girl|Zira|Samantha|Karen|Google UK English Female|Google US English Female/i.test(voices[i].name)) {
+          u.voice = voices[i]; break;
+        }
+      }
+      TTS.speak(u);
+    } catch (e) {}
+  }
+  var talking = false, talkRecog = null, bioVoiceWasOn = false;
+  function setTalkBtn(txt, disabled) {
+    var b = $('talkbtn');
+    if (b) { b.textContent = txt; b.disabled = !!disabled; }
+  }
+  function restoreBioVoice() {
+    if (window.ncBiometric && bioVoiceWasOn) {
+      try { ncBiometric.startVoice(); } catch (e) {}
+    }
+    bioVoiceWasOn = false;
+  }
+  function stopTalking() {
+    talking = false;
+    if (talkRecog) { try { talkRecog.stop(); } catch (e) {} talkRecog = null; }
+    restoreBioVoice();
+    setTalkBtn(gzt('\ud83c\udfa4 Talk to Nova'), false);
+  }
+  function toggleTalk() {
+    if (talking) { stopTalking(); return; }
+    if (TTS) { try { TTS.cancel(); } catch (e) {} }
+    if (window.ncBiometric) {
+      try {
+        bioVoiceWasOn = typeof ncBiometric.voiceOn === 'function' ? ncBiometric.voiceOn() : !!ncBiometric.voiceOn;
+        if (bioVoiceWasOn) ncBiometric.stopVoice();
+      } catch (e) { bioVoiceWasOn = false; }
+    }
+    var SRR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SRR) {
+      talkSpeak(gzOn() ? 'Say it and I will say it back!' : 'Say something, and I will say it back!');
+      showBubble(gzt('Nova repeats what you say!'));
+      restoreBioVoice();
+      return;
+    }
+    talking = true;
+    talkRecog = new SRR();
+    talkRecog.lang = 'en-US';
+    talkRecog.interimResults = false;
+    talkRecog.maxAlternatives = 1;
+    setTalkBtn('\ud83c\udfa4 listening\u2026', true);
+    talkRecog.onresult = function (ev) {
+      var said = '';
+      try { said = ev.results[0][0].transcript; } catch (e) {}
+      if (said) {
+        talkSpeak(gzOn() ? 'fr, ' + said : said + '.');
+        showBubble('\ud83d\udde3\ufe0f ' + said);
+      }
+      stopTalking();
+    };
+    talkRecog.onerror = function () { showBubble(gzt('Couldn\u2019t hear you \u2014 try again.')); stopTalking(); };
+    talkRecog.onend = function () { if (talking) stopTalking(); };
+    try { talkRecog.start(); } catch (e) { showBubble(gzt('Couldn\u2019t start listening.')); stopTalking(); }
+  }
+
+  /* static texts that live in the HTML get the slang layer too */
+  var STATIC_H = [['moneyshop', 'Shop'], ['sidework', 'Side work'], ['savingshead', 'Savings goal'], ['journalhead', 'Money journal']];
+  function applyStaticGz() {
+    if (!gzOn()) return;
+    var lede = $('lede'); if (lede) lede.textContent =
+      '\ud83d\udc76 Nova be living a whole life at real scale: born today, school at six, uni at eighteen, a career from ur twenties, a fam, retirement \u2014 one real day = one year of life. NovaCoins be the money that pays for every bit of it, so u learn how a real life is paid for: earn, study, choose, save, marry, raise, retire.';
+    var sd = $('sideworkdesc'); if (sd) sd.textContent =
+      'Small chores earn small coins fr. The two real ones \u2014 a typing race and an editor export \u2014 only pay out once u actually finish them. Doing any chore again later earns more.';
+    var sb = $('scalebadge'); if (sb) sb.textContent = gzt('⏳ 1 real day = 1 year of Nova\u2019s life');
+    var th = $('ticklehint'); if (th) th.textContent = gzt('Tap Nova to tickle');
+    if (!talking) setTalkBtn(gzt('\ud83c\udfa4 Talk to Nova'), false);
+    STATIC_H.forEach(function (s) {
+      var el = $(s[0]);
+      if (el) el.innerHTML = "<span class='bar'></span>" + gzt(s[1]);
     });
   }
 
@@ -850,12 +1026,12 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     var net = incomeToday() - billsToday() - kidsCostToday();
     var st = stage(age);
     $('stats').innerHTML =
-      "<div class='stat'><span class='k'>Balance</span><b id='wbal'><span class='c'>\ud83e\ude99</span> " + wallet() + "</b></div>" +
-      "<div class='stat'><span class='k'>Savings</span><b>" + savings() + " <span class='c'>\ud83e\ude99</span></b></div>" +
-      "<div class='stat'><span class='k'>Life year</span><b class='pink'>" + age + "</b><span class='s'>" + st.icon + ' ' + st.label + "</span></div>" +
-      "<div class='stat'><span class='k'>Income / day</span><b class='pos'>+" + incomeToday() + "</b><span class='s'>salary \u00b7 pension \u00b7 spouse</span></div>" +
-      "<div class='stat'><span class='k'>Costs / day</span><b class='neg'>\u2212" + (billsToday() + kidsCostToday()) + "</b><span class='s'>living \u00b7 kids</span></div>" +
-      "<div class='stat'><span class='k'>This week</span><b class='pos'>+" + wk.earned + "</b><span class='s'>earned \u00b7 <b class='neg'>spent " + wk.spent + "</b></span></div>";
+      "<div class='stat'><span class='k'>" + gzt('Balance') + "</span><b id='wbal'><span class='c'>\ud83e\ude99</span> " + wallet() + "</b></div>" +
+      "<div class='stat'><span class='k'>" + gzt('Savings') + "</span><b>" + savings() + " <span class='c'>\ud83e\ude99</span></b></div>" +
+      "<div class='stat'><span class='k'>" + gzt('Life year') + "</span><b class='pink'>" + age + "</b><span class='s'>" + st.icon + ' ' + st.label + "</span></div>" +
+      "<div class='stat'><span class='k'>" + gzt('Income / day') + "</span><b class='pos'>+" + incomeToday() + "</b><span class='s'>salary \u00b7 pension \u00b7 spouse</span></div>" +
+      "<div class='stat'><span class='k'>" + gzt('Costs / day') + "</span><b class='neg'>\u2212" + (billsToday() + kidsCostToday()) + "</b><span class='s'>living \u00b7 kids</span></div>" +
+      "<div class='stat'><span class='k'>" + gzt('This week') + "</span><b class='pos'>+" + wk.earned + "</b><span class='s'>earned \u00b7 <b class='neg'>spent " + wk.spent + "</b></span></div>";
   }
 
   /* ---- tabs ---- */
@@ -869,7 +1045,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
   ];
   function renderTabs() {
     $('tabs').innerHTML = TABS.map(function (t) {
-      return "<button class='tabbtn' type='button' data-t='" + t.id + "'>" + t.label + "</button>";
+      return "<button class='tabbtn' type='button' data-t='" + t.id + "'>" + gzt(t.label) + "</button>";
     }).join('');
     $('tabs').querySelectorAll('button').forEach(function (b) {
       b.onclick = function () { switchTab(b.dataset.t); };
@@ -1195,7 +1371,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     var owned = []; try { owned = JSON.parse(localStorage.getItem(LS.owned) || '[]'); } catch (e) {}
     $('shop').innerHTML = SHOP.map(function (it) {
       return "<div class='item'><div class='top'><span class='it'><span>" + it.icon + "</span></span>" +
-        "<b>" + it.label + "</b></div><p>" + it.note + "</p>" +
+        "<b>" + gzt(it.label) + "</b></div><p>" + it.note + "</p>" +
         "<div class='row'><span class='cost'>" + it.cost + " \ud83e\ude99</span>" +
         "<button class='go sm' type='button' data-i='" + it.label + "'>" + (owned.indexOf(it.label) > -1 ? 'Again' : 'Buy') + "</button></div></div>";
     }).join('');
@@ -1236,8 +1412,8 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     return null;
   }
   function choreSub(c) {
-    if (c.kind === 'typing') return 'finish a typing race';
-    if (c.kind === 'editor') return 'export a video in the Editor';
+    if (c.kind === 'typing') return gzt('finish a typing race');
+    if (c.kind === 'editor') return gzt('export a video in the Editor');
     return '';
   }
 
@@ -1248,7 +1424,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
       var ready = left <= 0;
       var active = q && q.label === c.label;
       var card = "<div class='chore'><span class='ci'><span>" + c.icon + "</span></span>" +
-        "<div class='ct'><b>" + c.label + "</b><span class='cs'>";
+        "<div class='ct'><b>" + gzt(c.label) + "</b><span class='cs'>";
       if (!ready) {
         return card + 'Come back in ' + fmtCD(left) + "</span></div>" +
           "<button class='go sm' type='button' disabled>" + fmtCD(left) + "</button></div>";
@@ -1416,11 +1592,15 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     renderGoal();
     renderLedger();
     renderLegacy();
+    applyStaticGz();
   }
 
   /* rotating money lesson */
   var ti = 0;
-  function nextTip() { $('tip').innerHTML = '<b>Money tip.</b> ' + TIPS[ti++ % TIPS.length]; }
+  function nextTip() {
+    var i = ti++ % TIPS.length;
+    $('tip').innerHTML = '<b>Money tip.</b> ' + (gzOn() ? GZTIPS[i] : TIPS[i]);
+  }
 
   setInterval(function () { renderChores(); renderToys(); }, 1000);
   setInterval(nextTip, 8000);
@@ -1437,6 +1617,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
   $('pet').addEventListener('keydown', function (ev) {
     if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tickle(); }
   });
+  $('talkbtn').onclick = toggleTalk;
   function doRename() {
     var v = ($('namein').value || '').trim();
     if (v) { localStorage.setItem(LS.name, v.slice(0, 20)); $('namein').value = ''; }
