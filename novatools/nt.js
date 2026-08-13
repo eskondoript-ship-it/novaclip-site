@@ -64,7 +64,7 @@
 
   /* ---------------------------------------------------------------------------
      SEO: finish what the static tags started
-     Each page hard-codes its canonical and Open Graph URLs with a mynovatools.com
+     Each page hard-codes its canonical and Open Graph URLs with a REPLACE-ME
      host, because a crawler that does not run scripts still needs to read them.
      If nt-config.js knows the real origin, patch them here too — that way
      setting one value fixes every page even if the find-and-replace was missed.
@@ -74,11 +74,11 @@
     $$('link[rel="canonical"], meta[property^="og:"], meta[name^="twitter:"]').forEach(function (n) {
       var a = n.hasAttribute('href') ? 'href' : 'content';
       var v = n.getAttribute(a);
-      if (v && v.indexOf('mynovatools.com') > -1) n.setAttribute(a, v.replace(/https?:\/\/mynovatools.com/g, origin));
+      if (v && v.indexOf('REPLACE-ME') > -1) n.setAttribute(a, v.replace(/https?:\/\/REPLACE-ME/g, origin));
     });
     $$('script[type="application/ld+json"]').forEach(function (n) {
-      if (n.textContent.indexOf('mynovatools.com') > -1) {
-        n.textContent = n.textContent.replace(/https?:\/\/mynovatools.com/g, origin);
+      if (n.textContent.indexOf('REPLACE-ME') > -1) {
+        n.textContent = n.textContent.replace(/https?:\/\/REPLACE-ME/g, origin);
       }
     });
     if (C.analytics.searchConsole && !$('meta[name="google-site-verification"]')) {
