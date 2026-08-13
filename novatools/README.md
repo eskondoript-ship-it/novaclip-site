@@ -28,9 +28,9 @@ You lose advertising and analytics, not tools.
 
 Two places, and they must agree:
 
-- `nt-config.js` → `origin: 'https://yourdomain.com'` (no trailing slash)
-- Find and replace `https://REPLACE-ME` with your domain across every `.html`
-  file, plus `robots.txt` and `sitemap.xml`
+- `nt-config.js` → `origin: 'https://mynovatools.com'` (no trailing slash)
+- Every `.html` file, plus `robots.txt` and both sitemaps, already carry
+  `https://mynovatools.com`. If the domain ever changes, find and replace it.
 
 Canonical and Open Graph tags are written into each page so a crawler that does
 not run scripts still reads them. `nt.js` also patches them from `origin` at
@@ -51,7 +51,7 @@ and if your situation is unusual, have them reviewed.
 
 - Add the property in Search Console; verify with the meta tag
   (`analytics.searchConsole`) or a DNS record
-- Submit `https://yourdomain.com/sitemap.xml`
+- Submit `https://mynovatools.com/sitemap-launch.xml`
 - Check that `robots.txt` resolves
 
 A custom domain is worth the ~£10/year. Ad networks approve `yoursite.com` far
@@ -115,7 +115,7 @@ The order matters. Steps 1–3 happen before you apply; 4–8 after you are
 approved, which takes anywhere from a day to a few weeks.
 
 **1. Get the site live on the domain and indexed.**
-Set `origin` in `nt-config.js`, replace every `REPLACE-ME`, submit
+Set `origin` in `nt-config.js` (already `https://mynovatools.com`), submit
 `sitemap-launch.xml` in Search Console, and wait until Search Console's Pages
 report shows real indexed pages. Do not apply before this. "Site not
 available" and "low value content" are both usually this.
