@@ -361,9 +361,64 @@ function ncWatchLang() {
   mo.observe(document.body, { childList: true, subtree: true });
 }
 
+/* One corner control, not two.
+   The language picker and the vibe switch each appended their own fixed box to
+   the bottom-left of any page without a sidebar. They landed on the same
+   corner, so they covered each other — and on pricing they sat on top of the
+   first plan card, hiding its "Start free trial" button and its last bullet.
+   Both now live in one box that stays collapsed behind a small button, so the
+   page underneath is never obscured. Returns the body the controls go into. */
+function ncCornerBox() {
+  let box = document.getElementById('ncCorner');
+  if (box) return box.querySelector('.nccbody');
+
+  const st = document.createElement('style');
+  st.textContent =
+    '#ncCorner{position:fixed;left:14px;bottom:14px;z-index:99994;display:flex;' +
+      'flex-direction:column-reverse;align-items:flex-start;gap:8px}' +
+    '#ncCorner .nccbtn{width:38px;height:38px;display:grid;place-items:center;cursor:pointer;' +
+      'border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(12,14,20,.92);' +
+      'color:#EAF2FF;box-shadow:0 8px 26px rgba(0,0,0,.45);padding:0}' +
+    '#ncCorner .nccbtn:hover{border-color:rgba(0,240,255,.55)}' +
+    '#ncCorner .nccbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;' +
+      'stroke-width:2;stroke-linecap:round}' +
+    '#ncCorner .nccbody{width:190px;border-radius:12px;padding:10px 12px;' +
+      'background:rgba(10,12,20,.92);backdrop-filter:blur(8px);' +
+      'border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 26px rgba(0,0,0,.45)}' +
+    '#ncCorner .nccbody[hidden]{display:none}' +
+    '#ncCorner .nccbody select{width:100%;padding:8px 10px;border-radius:10px;' +
+      'border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);' +
+      'color:#EAF2FF;font:600 13px inherit;cursor:pointer}' +
+    '@media (max-width:760px){#ncCorner{bottom:74px}}';
+  document.head.appendChild(st);
+
+  box = document.createElement('div');
+  box.id = 'ncCorner';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'nccbtn';
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-controls', 'ncCornerBody');
+  btn.setAttribute('aria-label', tr('vibe') + ' / ' + (LANGS[lang()] || 'Language'));
+  btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/>' +
+    '<path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg>';
+  const body = document.createElement('div');
+  body.className = 'nccbody themewrap';
+  body.id = 'ncCornerBody';
+  body.hidden = true;
+  box.append(btn, body);
+  document.body.appendChild(box);
+
+  const setOpen = o => { body.hidden = !o; btn.setAttribute('aria-expanded', String(o)); };
+  btn.addEventListener('click', e => { e.stopPropagation(); setOpen(body.hidden); });
+  document.addEventListener('click', e => { if (!box.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+  return body;
+}
+
 /* The floating corner picker for pages that were never given one — editor,
    trends, parent and pricing have no #langpick, so without this there was no
-   way to switch language on them at all. Same look as the site's mini chrome. */
+   way to switch language on them at all. */
 function ncEnsureLangPick() {
   if (NC_EMBED) return;
   if (document.getElementById('langpick')) return;
@@ -373,13 +428,7 @@ function ncEnsureLangPick() {
   for (const c in LANGS) { const o = document.createElement('option'); o.value = c; o.textContent = LANGS[c]; pick.appendChild(o); }
   pick.value = lang();
   pick.onchange = () => applyLang(pick.value);
-  const st = document.createElement('style');
-  st.textContent = '#ncLangPick{position:fixed;left:16px;bottom:16px;z-index:99994;' +
-    'padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);' +
-    'background:rgba(12,14,20,.92);color:#EAF2FF;font:600 13px inherit;' +
-    'box-shadow:0 8px 26px rgba(0,0,0,.45);cursor:pointer;max-width:150px}';
-  document.head.appendChild(st);
-  document.body.appendChild(pick);
+  ncCornerBox().appendChild(pick);
 }
 
 /* ===== PHRASE LAYER — for UI that was never given data-t keys =====
@@ -2298,15 +2347,7 @@ function applySeason() {
        not — and on those the switch simply never appeared, so the mode was
        unreachable from half the site. Fall back to a small floating control in
        the corner rather than skipping the page. */
-    let wrap = document.querySelector('.themewrap');
-    if (!wrap) {
-      wrap = document.createElement('div');
-      wrap.className = 'themewrap';
-      wrap.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:900;width:190px;' +
-        'background:rgba(10,12,20,0.82);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);' +
-        'border-radius:12px;padding:10px 12px;';
-      document.body.appendChild(wrap);
-    }
+    let wrap = document.querySelector('.themewrap') || ncCornerBox();
     const on = ncGenZ();
     const d = document.createElement('div');
     d.id = 'genzwrap';

@@ -113,6 +113,9 @@
     giveMicForFace: { en: 'Face captured. Now allow the microphone.', fa: 'صورت ثبت شد. حالا اجازه میکروفون را بدهید.', es: 'Rostro capturado. Permite el micrófono.', pt: 'Rosto capturado. Autoriza o microfone.', fr: 'Visage capturé. Autorise le micro.', de: 'Gesicht erfasst. Mikrofon erlauben.', ar: 'تم التقاط الوجه. اسمح بالميكروفون.' },
     listenReady: { en: 'Listening for commands...', fa: 'در حال گوش دادن...', es: 'Escuchando...', pt: 'A ouvir...', fr: 'À l’écoute...', de: 'Höre zu...', ar: 'جارٍ الاستماع...' },
     cmdGo: { en: 'Taking you to {p}...', fa: 'در حال رفتن به {p}...', es: 'Yendo a {p}...', pt: 'A ir para {p}...', fr: 'Direction {p}...', de: 'Gehe zu {p}...', ar: 'جاري الانتقال إلى {p}...' },
+    cmdLang: { en: 'Switching to {l}...', fa: 'تغییر به {l}...', es: 'Cambiando a {l}...', pt: 'A mudar para {l}...', fr: 'Passage en {l}...', de: 'Wechsle zu {l}...', ar: 'التبديل إلى {l}...' },
+    cmdFxOn: { en: 'Applied the {f} effect.', fa: 'افکت {f} اعمال شد.', es: 'Efecto {f} aplicado.', pt: 'Efeito {f} aplicado.', fr: 'Effet {f} appliqué.', de: 'Effekt {f} angewendet.', ar: 'تم تطبيق تأثير {f}.' },
+    cmdFxNo: { en: 'Opened Effects, but {f} is not on screen — pick a clip first.', fa: 'پنل افکت باز شد، اما {f} دیده نمی‌شود — اول یک کلیپ را انتخاب کنید.', es: 'Abrí Efectos, pero {f} no aparece — elige un clip primero.', pt: 'Abri Efeitos, mas {f} não aparece — escolhe um clipe primeiro.', fr: 'Effets ouvert, mais {f} n’apparaît pas — choisis un clip d’abord.', de: 'Effekte geöffnet, aber {f} ist nicht sichtbar — wähle zuerst einen Clip.', ar: 'تم فتح التأثيرات، لكن {f} غير ظاهر — اختر مقطعًا أولًا.' },
     cmdUnknown: { en: 'Command not recognized. Try: open studio, go home, help.', fa: 'فرمان شناسایی نشد. بگویید: استودیو را باز کن، برو خانه، کمک.', es: 'Comando no reconocido.', pt: 'Comando não reconhecido.', fr: 'Commande inconnue.', de: 'Befehl unbekannt.', ar: 'أمر غير معروف.' },
     speechLang: { en: 'Commands are matched in all 20 languages the picker offers; anything unlisted falls back to English.', fa: 'فرمان‌ها در هر ۲۰ زبان شناسایی می‌شوند.', es: 'Los comandos se reconocen en los 20 idiomas.', pt: 'Os comandos são reconhecidos nas 20 línguas.', fr: 'Les commandes sont reconnues dans les 20 langues.', de: 'Befehle werden in allen 20 Sprachen erkannt.', ar: 'تُفهم الأوامر بجميع اللغات العشرين.' },
     micListening: { en: 'Mic listening', fa: 'میکروفون فعال', es: 'Micrófono activo', pt: 'Microfone ativo', fr: 'Micro actif', de: 'Mikrofon aktiv', ar: 'الميكروفون يعمل' }
@@ -599,17 +602,17 @@
     en: ['sign in', 'log in', 'sign me in', 'log me in', 'login', 'authenticate'],
     zh: ['登录', '登陆'],
     hi: ['साइन इन', 'लॉग इन'],
-    es: ['iniciar sesión', 'entrar'],
+    es: ['iniciar sesión', 'inicia sesión', 'entrar', 'conectar'],
     ar: ['تسجيل الدخول', 'دخول'],
     fr: ['connecte moi', 'se connecter'],
     bn: ['সাইন ইন', 'লগ ইন'],
-    pt: ['iniciar sessão', 'entrar'],
+    pt: ['iniciar sessão', 'inicia sessão', 'entrar'],
     ru: ['войти', 'вход'],
     ur: ['سائن ان', 'لاگ ان'],
     id: ['masuk', 'login'],
-    de: ['anmelden', 'einloggen'],
+    de: ['anmelden', 'einloggen', 'melde mich an'],
     ja: ['ログイン', 'サインイン'],
-    tr: ['giriş yap', 'oturum aç'],
+    tr: ['giriş yap', 'oturum aç', 'giriş'],
     ko: ['로그인'],
     fa: ['ورود', 'وارد شو'],
     uk: ['увійти', 'вхід'],
@@ -888,8 +891,245 @@
     if (Array.isArray(list)) extraCommands = extraCommands.concat(list);
   }
 
+  /* ------------------------------------------------------------------
+   * Commands that carry a value.
+   * NAV matching is a plain substring test. It can tell that the words
+   * "the language" were said, but not which language was asked for, so
+   * these run before NAV and read the value out of the transcript
+   * themselves. Each one only fires when its trigger AND its value are
+   * both present, which is what keeps them from swallowing ordinary
+   * navigation.
+   * ------------------------------------------------------------------ */
+
+  /* Endonym first, then English, then the exonyms people actually say
+     when their own interface is in another language. */
+  var LANGNAMES = {
+    en: ['english','inglés','ingles','anglais','englisch','inglese','angielski','английский','انگلیسی','الإنجليزية','英語','英语','영어','अंग्रेज़ी','ingilizce','tiếng anh'],
+    zh: ['中文','chinese','mandarin','chino','chinois','chinesisch','cinese','chiński','китайский','چینی','الصينية','中国語','중국어','चीनी','çince','tiếng trung'],
+    hi: ['हिन्दी','hindi','hindou','hindisch','хинди','ہندی','الهندية','ヒンディー語','힌디어','hintçe','tiếng hindi'],
+    es: ['español','espanol','spanish','espagnol','spanisch','spagnolo','hiszpański','испанский','اسپانیایی','الإسبانية','スペイン語','스페인어','स्पेनिश','ispanyolca','tiếng tây ban nha'],
+    ar: ['العربية','arabic','árabe','arabe','arabisch','arabo','arabski','арабский','عربی','アラビア語','아랍어','अरबी','arapça','tiếng ả rập'],
+    fr: ['français','francais','french','francés','französisch','francese','francuski','французский','فرانسوی','الفرنسية','フランス語','프랑스어','फ़्रेंच','fransızca','tiếng pháp'],
+    bn: ['বাংলা','bengali','bangla','bengalí','bengalisch','бенгальский','بنگالی','البنغالية','ベンガル語','벵골어','बंगाली','bengalce','tiếng bengal'],
+    pt: ['português','portugues','portuguese','portugués','portugiesisch','portoghese','portugalski','португальский','پرتغالی','البرتغالية','ポルトガル語','포르투갈어','पुर्तगाली','portekizce','tiếng bồ đào nha'],
+    ru: ['русский','russian','ruso','russe','russisch','russo','rosyjski','روسی','الروسية','ロシア語','러시아어','रूसी','rusça','tiếng nga'],
+    ur: ['اردو','urdu','ourdou','урду','الأردية','ウルドゥー語','우르두어','उर्दू','urduca','tiếng urdu'],
+    id: ['bahasa indonesia','indonesian','indonesio','indonésien','indonesisch','indonesiano','индонезийский','اندونزیایی','الإندونيسية','インドネシア語','인도네시아어','endonezce','tiếng indonesia'],
+    de: ['deutsch','german','alemán','aleman','allemand','tedesco','niemiecki','немецкий','آلمانی','الألمانية','ドイツ語','독일어','जर्मन','almanca','tiếng đức'],
+    ja: ['日本語','japanese','japonés','japonais','japanisch','giapponese','japoński','японский','ژاپنی','اليابانية','일본어','जापानी','japonca','tiếng nhật'],
+    tr: ['türkçe','turkce','turkish','turco','turc','türkisch','turecki','турецкий','ترکی','التركية','トルコ語','터키어','तुर्की','tiếng thổ nhĩ kỳ'],
+    ko: ['한국어','korean','coreano','coréen','koreanisch','koreański','корейский','کره ای','الكورية','韓国語','कोरियाई','korece','tiếng hàn'],
+    fa: ['فارسی','persian','farsi','persa','perse','persisch','персидский','الفارسية','ペルシャ語','페르시아어','फ़ारसी','farsça','tiếng ba tư'],
+    uk: ['українська','ukrainian','ucraniano','ukrainien','ukrainisch','ukraiński','украинский','اوکراینی','الأوكرانية','ウクライナ語','우크라이나어','ukraynaca','tiếng ukraina'],
+    it: ['italiano','italian','italien','italienisch','włoski','итальянский','ایتالیایی','الإيطالية','イタリア語','이탈리아어','इतालवी','italyanca','tiếng ý'],
+    pl: ['polski','polish','polaco','polonais','polnisch','polacco','польский','لهستانی','البولندية','ポーランド語','폴란드어','polonyaca','tiếng ba lan'],
+    vi: ['tiếng việt','vietnamese','vietnamita','vietnamien','vietnamesisch','wietnamski','вьетнамский','ویتنامی','الفيتنامية','ベトナム語','베트남어','vietnamca']
+  };
+
+  /* "change the language" and friends. The value is found separately, so
+     these only have to spot the intent. */
+  var SAY_LANGSET = {
+    en: ['change the language','switch the language','set the language','change language','switch language','language to','speak to me in','talk to me in','say it in'],
+    zh: ['切换语言','更改语言','改成','换语言'],
+    hi: ['भाषा बदलो','भाषा बदलें','भाषा करो'],
+    es: ['cambia el idioma','cambiar el idioma','cambiar idioma','idioma a','habla en'],
+    ar: ['غير اللغة','تغيير اللغة','اللغة إلى'],
+    fr: ['change la langue','changer la langue','langue en','parle en'],
+    bn: ['ভাষা পরিবর্তন','ভাষা বদলাও'],
+    pt: ['mudar o idioma','muda o idioma','mudar idioma','idioma para','fala em'],
+    ru: ['смени язык','измени язык','поменяй язык','язык на'],
+    ur: ['زبان تبدیل','زبان بدلو'],
+    id: ['ganti bahasa','ubah bahasa','bahasa ke'],
+    de: ['sprache ändern','ändere die sprache','wechsle die sprache','sprache auf','sprich'],
+    ja: ['言語を変更','言語を切り替え','言語にして'],
+    tr: ['dili değiştir','dil değiştir','diline geç'],
+    ko: ['언어 변경','언어 바꿔','언어로'],
+    fa: ['زبان را عوض کن','تغییر زبان','زبان به'],
+    uk: ['зміни мову','змінити мову','мову на'],
+    it: ['cambia lingua','cambiare lingua','lingua in','parla in'],
+    pl: ['zmień język','zmiana języka','język na'],
+    vi: ['đổi ngôn ngữ','thay đổi ngôn ngữ','ngôn ngữ sang']
+  };
+
+  /* Google writes its own name in the local script in plenty of places. */
+  var SAY_GOOGLE = ['google','جوجل','گوگل','гугл','グーグル','구글','谷歌','गूगल','গুগল','гуґл'];
+
+  /* The editor's own panel names, and what people call them out loud. */
+  var EDITOR_PANELS = {
+    Effects:     ['effect','effects','efecto','effet','effekt','effetto','эффект','efekt','افکت','تأثير','エフェクト','효과','प्रभाव','efek','hiệu ứng','特效'],
+    Transitions: ['transition','transitions','transición','transizione','übergang','переход','przejście','ترنزیشن','انتقال','トランジション','전환','chuyển cảnh','转场'],
+    Text:        ['text','texto','texte','testo','текст','tekst','متن','نص','テキスト','텍스트','chữ','文字'],
+    Memes:       ['meme','memes','мем','ميم','ミーム','밈','chế'],
+    SFX:         ['sound effect','sound effects','sfx','sonido','son','geräusch','звук','dźwięk','صدا','صوت','効果音','효과음','âm thanh','音效'],
+    Stickers:    ['sticker','stickers','pegatina','autocollant','aufkleber','стикер','naklejka','استیکر','ملصق','ステッカー','스티커','nhãn dán','贴纸'],
+    Audio:       ['audio','música','music','musique','musik','музыка','muzyka','موسیقی','موسيقى','オーディオ','오디오','nhạc','音频'],
+    Media:       ['media','clip','clips','medios','médias','medien','медиа','media'],
+    AI:          ['ai panel','ai tools']
+  };
+
+  /* Effects the editor actually ships. Spoken by name, matched by name. */
+  var EDITOR_FX = ['glitch','vhs','shake','zoom','blur','invert','sepia','mirror','neon','spin','bounce','fade','speed'];
+
+  /* "edit this video with this effect" — the generic form, where no
+     particular effect is named. Opens the editor on the Effects panel. */
+  var SAY_EDITFX = {
+    en: ['edit this video','edit the video','add an effect','apply an effect','put an effect','with this effect','with an effect','effect on this'],
+    zh: ['编辑这个视频','加特效','添加特效'],
+    hi: ['यह वीडियो एडिट','प्रभाव जोड़ो'],
+    es: ['edita este video','editar este video','añadir un efecto','aplicar un efecto','con este efecto'],
+    ar: ['عدل هذا الفيديو','أضف تأثير'],
+    fr: ['modifie cette vidéo','monter cette vidéo','ajoute un effet','avec cet effet'],
+    bn: ['এই ভিডিও এডিট','প্রভাব যোগ'],
+    pt: ['edita este vídeo','editar este vídeo','adicionar um efeito','com este efeito'],
+    ru: ['отредактируй это видео','добавь эффект','с этим эффектом'],
+    ur: ['یہ ویڈیو ایڈیٹ','اثر شامل'],
+    id: ['edit video ini','tambah efek','dengan efek ini'],
+    de: ['bearbeite dieses video','füge einen effekt hinzu','mit diesem effekt'],
+    ja: ['この動画を編集','エフェクトを追加'],
+    tr: ['bu videoyu düzenle','efekt ekle','bu efektle'],
+    ko: ['이 영상 편집','효과 추가'],
+    fa: ['این ویدیو را ویرایش کن','افکت اضافه کن'],
+    uk: ['відредагуй це відео','додай ефект'],
+    it: ['modifica questo video','aggiungi un effetto','con questo effetto'],
+    pl: ['edytuj to wideo','dodaj efekt','z tym efektem'],
+    vi: ['sửa video này','thêm hiệu ứng','với hiệu ứng này']
+  };
+
+  /* Longest name first, so "tiếng tây ban nha" is not beaten by "tiếng anh"
+     and "bahasa indonesia" is not beaten by a bare "indonesia". */
+  var LANGNAME_INDEX = (function () {
+    var rows = [], code, i;
+    for (code in LANGNAMES) {
+      for (i = 0; i < LANGNAMES[code].length; i++) rows.push([clean(LANGNAMES[code][i]), code]);
+    }
+    rows.sort(function (a, b) { return b[0].length - a[0].length; });
+    return rows;
+  })();
+
+  function pickLang(t) {
+    for (var i = 0; i < LANGNAME_INDEX.length; i++) {
+      if (LANGNAME_INDEX[i][0] && t.indexOf(LANGNAME_INDEX[i][0]) !== -1) return LANGNAME_INDEX[i][1];
+    }
+    return null;
+  }
+
+  function pickFrom(t, list) {
+    var best = null, i, p;
+    for (i = 0; i < list.length; i++) {
+      p = clean(list[i]);
+      if (p && t.indexOf(p) !== -1 && (!best || p.length > best.length)) best = p;
+    }
+    return best;
+  }
+
+  function pickPanel(t) {
+    var name, hit, best = null;
+    for (name in EDITOR_PANELS) {
+      hit = pickFrom(t, EDITOR_PANELS[name]);
+      if (hit && (!best || hit.length > best.hit.length)) best = { panel: name, hit: hit };
+    }
+    return best;
+  }
+
+  var HERE = (location.pathname.split('/').pop() || 'index.html').split('?')[0];
+
+  /* The editor is a React page: its panels are buttons with visible
+     labels, and an effect is only clickable once its panel is open. So
+     this drives the same controls a person would, and says so plainly
+     when the control is not there rather than pretending it worked. */
+  function runEditorIntent(panel, fx) {
+    function byText(txt) {
+      var els = document.querySelectorAll('button,[role="button"],li,div[class]'), i, el, s;
+      for (i = 0; i < els.length; i++) {
+        el = els[i];
+        s = (el.textContent || '').trim().toLowerCase();
+        if (s === txt.toLowerCase() && el.offsetParent !== null) return el;
+      }
+      return null;
+    }
+    var tab = byText(panel);
+    if (tab) tab.click();
+    if (!fx) return;
+    setTimeout(function () {
+      var b = byText(fx);
+      if (b) { b.click(); flash(ui2('cmdFxOn', { '{f}': fx })); }
+      else flash(ui2('cmdFxNo', { '{f}': fx }));
+    }, 450);
+  }
+
+  function goEditor(panel, fx) {
+    if (HERE === 'editor.html') { runEditorIntent(panel || 'Effects', fx); return; }
+    try { sessionStorage.setItem('nc_editor_intent', JSON.stringify({ panel: panel || 'Effects', fx: fx || '' })); } catch (e) {}
+    flash(ui2('cmdGo', { '{p}': 'editor.html' }));
+    setTimeout(function () { location.href = 'editor.html'; }, 650);
+  }
+
+  function goGoogle() {
+    if (HERE === 'app.html') {
+      var b = document.getElementById('gbtn');
+      if (b) { b.click(); return; }
+    }
+    try { sessionStorage.setItem('nc_signin_intent', 'google'); } catch (e) {}
+    flash(ui2('cmdGo', { '{p}': 'app.html' }));
+    setTimeout(function () { location.href = 'app.html'; }, 650);
+  }
+
+  /* Run whatever the last page was asked to do, now that we are here. */
+  function claimIntent() {
+    var v;
+    try { v = sessionStorage.getItem('nc_signin_intent'); } catch (e) { v = null; }
+    if (v === 'google' && HERE === 'app.html') {
+      try { sessionStorage.removeItem('nc_signin_intent'); } catch (e) {}
+      setTimeout(function () { var b = document.getElementById('gbtn'); if (b) b.click(); }, 900);
+    }
+    try { v = sessionStorage.getItem('nc_editor_intent'); } catch (e) { v = null; }
+    if (v && HERE === 'editor.html') {
+      try { sessionStorage.removeItem('nc_editor_intent'); } catch (e) {}
+      var o = {};
+      try { o = JSON.parse(v) || {}; } catch (e) {}
+      setTimeout(function () { runEditorIntent(o.panel || 'Effects', o.fx || ''); }, 2200);
+    }
+  }
+
+  function smartCmd(t) {
+    var L = langCode(), code, fx, panel;
+
+    /* Sign in with a named provider. Reuses the sign-in phrases already
+       written for every language, so only the provider is new. */
+    if (pickFrom(t, SAY_GOOGLE) && hasPhrase(t, sayList({ say: SAY_SIGNIN }))) {
+      return { type: 'smart', run: goGoogle };
+    }
+
+    /* Change the language to a named one. */
+    if (hasPhrase(t, (SAY_LANGSET[L] || SAY_LANGSET.en))) {
+      code = pickLang(t);
+      if (code) return { type: 'smart', run: function () {
+        flash(ui2('cmdLang', { '{l}': (typeof LANGS !== 'undefined' && LANGS[code]) || code }));
+        if (typeof applyLang === 'function') applyLang(code);
+      } };
+    }
+
+    /* A named effect, with or without a verb around it. */
+    fx = pickFrom(t, EDITOR_FX);
+    panel = pickPanel(t);
+    if (fx && (panel || hasPhrase(t, (SAY_EDITFX[L] || SAY_EDITFX.en)))) {
+      return { type: 'smart', run: function () { goEditor('Effects', fx); } };
+    }
+    /* "edit this video with this effect" — no effect named, so just open
+       the editor on the panel they asked for. */
+    if (hasPhrase(t, (SAY_EDITFX[L] || SAY_EDITFX.en))) {
+      return { type: 'smart', run: function () { goEditor(panel ? panel.panel : 'Effects', ''); } };
+    }
+    if (panel && HERE === 'editor.html') {
+      return { type: 'smart', run: function () { runEditorIntent(panel.panel, fx || ''); } };
+    }
+    return null;
+  }
+
   function matchCmd(text) {
-    var t = clean(text), i, k;
+    var t = clean(text), i, k, sm;
+    sm = smartCmd(t);
+    if (sm) return sm;
     for (i = 0; i < extraCommands.length; i++) {
       if (hasPhrase(t, extraCommands[i].say)) return { type: 'custom', cmd: extraCommands[i] };
     }
@@ -920,6 +1160,7 @@
       setTimeout(function () { location.href = r.page; }, 650);
       return;
     }
+    if (r.type === 'smart') { try { r.run(); } catch (e) {} fire('command', { phrase: raw, name: 'smart' }); return; }
     if (r.type === 'signin') openPanel();
     else if (r.type === 'signout') signOut();
     else if (r.type === 'stop') { stopVoice(); flash(ui('vcmdOff')); }
@@ -1446,6 +1687,10 @@
   function boot() {
     buildUI();
     render();
+    /* A command spoken on the last page may have been asking for something
+       that only exists on this one — the Google button, an editor panel.
+       Finish it here. */
+    claimIntent();
     if (store.get(VCMD_KEY, '0') === '1') setTimeout(startVoice, 800);
   }
   if (document.readyState === 'loading') {
