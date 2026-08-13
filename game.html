@@ -58,10 +58,7 @@ a{color:inherit;text-decoration:none}
 <script>
 /* Two pages, one address. The tab you are on is in the URL as #<name>, so a
    link or a reload lands where you left rather than always on the first tab. */
-/* Nova Arena is a link, not a frame. It takes the pointer with
-   requestPointerLock and draws its own full-height rail, neither of which
-   survives being boxed into an iframe alongside two other tabs. */
-const TABS = [{"key": "typing", "label": "Typing race", "src": "typing.html?embed=1"}, {"key": "flap", "label": "Nova Flap", "src": "flap.html?embed=1"}, {"key": "arena", "label": "Nova Arena", "href": "arena.html"}];
+const TABS = [{"key": "typing", "label": "Typing race", "src": "typing.html?embed=1"}, {"key": "flap", "label": "Nova Flap", "src": "flap.html?embed=1"}];
 
 const tabs = document.getElementById('tabs');
 const frames = document.getElementById('frames');
@@ -73,8 +70,6 @@ TABS.forEach((t, i) => {
   b.setAttribute('role', 'tab');
   b.dataset.k = t.key;
   tabs.appendChild(b);
-
-  if (t.href) return;
 
   const f = document.createElement('iframe');
   f.dataset.k = t.key;
@@ -88,7 +83,6 @@ TABS.forEach((t, i) => {
 
 function show(key) {
   const t = TABS.find(x => x.key === key) || TABS[0];
-  if (t.href) { location.href = t.href; return; }
   tabs.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.k === t.key));
   frames.querySelectorAll('iframe').forEach(f => {
     const on = f.dataset.k === t.key;
