@@ -57,20 +57,20 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 
 <div class='wrap'>
   <a class='backlnk' href='index.html'>← Back to NovaClip</a>
-  <h1><span class='g'>Family Dashboard</span></h1>
-  <p class='sub'>Parental controls for NovaClip. See what your kid is working on, get alerts if harassment shows up in their YouTube comments, and keep ads away from them — ads and offers only ever appear here, on the parent side, never in the kid's tools.</p>
+  <h1><span class='g' data-t='fam_dash'>Family Dashboard</span></h1>
+  <p class='sub' data-t='par_sub'>Parental controls for NovaClip. See what your kid is working on, get alerts if harassment shows up in their YouTube comments, and keep ads away from them — ads and offers only ever appear here, on the parent side, never in the kid's tools.</p>
 
   <!-- PIN GATE -->
   <div class='card' id='gate'>
-    <h3>Parent access <small>First time: set a 5-digit PIN and a security question. You'll need the PIN every visit; the question recovers access if you forget it. The kid's pages never show this dashboard.</small></h3>
+    <h3><span data-t='par_access'>Parent access</span> <small data-t='par_access_s'>First time: set a 5-digit PIN and a security question. You'll need the PIN every visit; the question recovers access if you forget it. The kid's pages never show this dashboard.</small></h3>
     <div id='setupfields'>
       <div id='setuponly'>
-        <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06); margin-bottom:14px;'><b>Parents only.</b> This one-time setup confirms it's really you — not your child — before parental controls are created.</div>
+        <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06); margin-bottom:14px;'><b data-t='par_only'>Parents only.</b> <span data-t='par_setup_note'>This one-time setup confirms it's really you — not your child — before parental controls are created.</span></div>
         <input type='email' id='parentSetupEmail' placeholder='Parent email address'>
-        <button class='btn' id='sendcodebtn' style='margin-bottom:12px;'>Send confirmation code</button>
+        <button class='btn' id='sendcodebtn' style='margin-bottom:12px;' data-t='par_sendcode'>Send confirmation code</button>
         <div id='codebox' style='display:none;'>
           <input type='text' id='confcode' placeholder='6-digit code from your email' maxlength='6' inputmode='numeric'>
-          <label class='sm' style='display:block; font-size:0.85rem; color:#7E8AA6; margin:6px 0 3px;'>Your child's age</label>
+          <label class='sm' style='display:block; font-size:0.85rem; color:#7E8AA6; margin:6px 0 3px;' data-t='par_age'>Your child's age</label>
           <input type='text' id='kidage' placeholder="Child's age (13–18)" maxlength='2' inputmode='numeric'>
         </div>
       </div>
@@ -87,55 +87,55 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
         <input type='text' id='seca' placeholder='Answer to your security question'>
       </div>
     </div>
-    <button class='btn' id='pinbtn' style='display:none;'>Unlock</button>
-    <button class='btn' id='forgotbtn' style='background:transparent; border:1px solid rgba(255,255,255,0.2); color:#7E8AA6; margin-left:8px; display:none;'>Forgot PIN?</button>
+    <button class='btn' id='pinbtn' style='display:none;' data-t='par_unlock'>Unlock</button>
+    <button class='btn' id='forgotbtn' style='background:transparent; border:1px solid rgba(255,255,255,0.2); color:#7E8AA6; margin-left:8px; display:none;' data-t='par_forgot'>Forgot PIN?</button>
     <div class='notice' id='pinmsg' style='display:none;'></div>
 
     <div id='recoverbox' style='display:none; margin-top:14px;'>
       <div id='secqlabel' style='color:#00F0FF; font-weight:700; margin-bottom:8px;'></div>
       <input type='text' id='recanswer' placeholder='Your answer'>
       <input type='password' id='newpin' placeholder='New 5-digit PIN' maxlength='5' inputmode='numeric'>
-      <button class='btn' id='resetbtn'>Reset PIN</button>
+      <button class='btn' id='resetbtn' data-t='par_reset'>Reset PIN</button>
     </div>
   </div>
 
   <div id='dash'>
     <!-- ACTIVITY -->
     <div class='card'>
-      <h3>Activity overview <small>Live from this device's NovaClip usage.</small></h3>
-      <div class='stat'><b id='s_pts'>0</b><span>points earned</span></div>
-      <div class='stat'><b id='s_chats'>0</b><span>AI chats</span></div>
-      <div class='stat'><b id='s_scans'>0</b><span>trend scans</span></div>
-      <div class='stat'><b id='s_unlocks'>0</b><span>rewards unlocked</span></div>
-      <h3 style='margin-top:14px'>Recent AI activity</h3>
+      <h3><span data-t='par_activity'>Activity overview</span> <small data-t='par_activity_s'>Live from this device's NovaClip usage.</small></h3>
+      <div class='stat'><b id='s_pts'>0</b><span data-t='par_pts'>NovaCoins earned</span></div>
+      <div class='stat'><b id='s_chats'>0</b><span data-t='par_chats'>AI chats</span></div>
+      <div class='stat'><b id='s_scans'>0</b><span data-t='par_scans'>trend scans</span></div>
+      <div class='stat'><b id='s_unlocks'>0</b><span data-t='par_unlocks'>rewards unlocked</span></div>
+      <h3 style='margin-top:14px' data-t='par_recent_ai'>Recent AI activity</h3>
       <div class='log' id='actlog'>—</div>
     </div>
 
     <!-- HARASSMENT SCANNER -->
     <div class='card'>
-      <h3>Comment safety scanner <small>Scans the newest comments on your kid's uploads for harassment or bullying. Uses the YouTube connection made in Studio.</small></h3>
+      <h3><span data-t='par_scanner'>Comment safety scanner</span> <small data-t='par_scanner_s'>Scans the newest comments on your kid's uploads for harassment or bullying. Uses the YouTube connection made in Studio.</small></h3>
       <input type='email' id='parentEmail' placeholder='Parent alert email (used for the report draft)'>
-      <button class='btn pink' id='scanBtn'>Scan latest comments</button>
+      <button class='btn pink' id='scanBtn' data-t='par_scan_btn'>Scan latest comments</button>
       <div id='scanout' style='margin-top:12px'></div>
       <div class='notice'>How reporting works: flagged comments appear here instantly for the parent. "Report to YouTube" opens YouTube's official reporting flow for that exact comment (YouTube doesn't allow apps to file reports directly — a human must confirm). "Email me this" opens a pre-written alert to your email so there's a record.</div>
     </div>
 
     <!-- ADS -->
     <div class='card'>
-      <h3>Ads & offers <small>This is the only place ads exist in NovaClip.</small></h3>
-      <p style='color:#b8bccb; font-size:0.95rem; line-height:1.7'>NovaClip never shows advertising inside the kid's tools, games, or editor. Sponsored offers and plan upgrades appear only on this parent dashboard.</p>
+      <h3><span data-t='par_ads'>Ads & offers</span> <small data-t='par_ads_s'>This is the only place ads exist in NovaClip.</small></h3>
+      <p style='color:#b8bccb; font-size:0.95rem; line-height:1.7' data-t='par_ads_p'>NovaClip never shows advertising inside the kid's tools, games, or editor. Sponsored offers and plan upgrades appear only on this parent dashboard.</p>
     </div>
 
     <!-- BILLING / PLANS (PIN-protected because it lives inside the dashboard) -->
     <div class='card'>
-      <h3>Plans & billing <small>Manage your NovaClip subscription. Everything here sits behind your parent PIN.</small></h3>
+      <h3><span data-t='par_billing'>Plans & billing</span> <small data-t='par_billing_s'>Manage your NovaClip subscription. Everything here sits behind your parent PIN.</small></h3>
       <div id='planpick' style='display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:16px;'></div>
 
-      <h3 style='margin-top:10px'>Saved card</h3>
+      <h3 style='margin-top:10px' data-t='par_savedcard'>Saved card</h3>
       <div id='savedcard' style='display:none; background:linear-gradient(135deg,#12203a,#1a1030); border:1px solid rgba(0,240,255,0.3); border-radius:14px; padding:16px 18px; margin-bottom:12px;'>
         <div style='font-family:monospace; letter-spacing:2px; font-size:1.1rem;' id='cardnum'>•••• •••• •••• ••••</div>
         <div style='display:flex; justify-content:space-between; margin-top:8px; font-size:0.85rem; color:#b8bccb;'><span id='cardname'>—</span><span id='cardexp'>—</span></div>
-        <button class='btn' style='margin-top:12px; background:transparent; border:1px solid rgba(255,46,151,0.5); color:#FF2E97;' id='removecard'>Remove card</button>
+        <button class='btn' style='margin-top:12px; background:transparent; border:1px solid rgba(255,46,151,0.5); color:#FF2E97;' id='removecard' data-t='par_removecard'>Remove card</button>
       </div>
       <div id='cardform'>
         <input type='text' id='ccname' placeholder='Name on card'>
@@ -147,7 +147,7 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
         <label style='display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#b8bccb; margin:6px 0 12px;'>
           <input type='checkbox' id='savecard' style='accent-color:#00F0FF;'> Save this card for next time
         </label>
-        <button class='btn' id='savecardbtn'>Save payment method</button>
+        <button class='btn' id='savecardbtn' data-t='par_savecardbtn'>Save payment method</button>
       </div>
       <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06);'>Pitch build — do not enter a real card. This demonstrates the billing flow only. In production, card data would go straight to a certified payment processor (Stripe/Adyen) and never touch NovaClip's servers — we'd store only a token, never the real number.</div>
     </div>

@@ -3,8 +3,8 @@
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>NovaClip Gifts — make a little box for a friend</title>
-<meta name='description' content='Fill a little box with notes, doodles, a badge and some points, then send your friend one link. They unwrap it one thing at a time.'>
+<title>NovaGift — a little box for a friend</title>
+<meta name='description' content='Fill a NovaGift box with notes, doodles, a badge and some NovaCoins, then send your friend one link. They unwrap it one thing at a time.'>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
 body { background: #05060A; color: #EAF2FF; margin-left: 200px; min-height: 100vh; overflow-x: hidden; }
@@ -97,9 +97,9 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
 
 <!-- ---------- making one ---------- -->
 <div class='wrap' id='make'>
-  <h1>A little box of <span class='g'>goodies</span></h1>
+  <h1>Nova<span class='g'>Gift</span></h1>
   <p class='lede'>Fill a box with small things for one friend — a note, a doodle, a badge, some of
-    your points — then send them a single link. They unwrap it one thing at a time.</p>
+    your NovaCoins — then send them a single link. They unwrap it one thing at a time.</p>
 
   <h2>Add something to the box</h2>
   <div class='picker' id='picker'></div>
@@ -135,7 +135,7 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
 
 <!-- ---------- opening one ---------- -->
 <div class='wrap' id='open'>
-  <h1 id='oTitle'>Someone left you <span class='g'>a box</span></h1>
+  <h1 id='oTitle'>Someone left you <span class='g'>a NovaGift</span></h1>
   <p class='lede' id='oFrom' style='margin:9px auto 0'></p>
   <div id='box'><div class='base'></div><div class='lid'><div class='rib'></div></div></div>
   <p id='oHint' style='color:#7E8AA6'>Tap the box</p>
@@ -146,9 +146,10 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
 </div>
 
 <script src='nova.js'></script>
+<script src='biometric.js' defer></script>
 <script>
 /* ============================================================================
-   A LITTLE BOX OF GOODIES
+   NOVAGIFT
    ============================================================================
    One person makes a box for one friend and sends a link. The friend opens it
    and the things inside appear one at a time rather than all at once, because
@@ -220,7 +221,7 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
           '" style="font-size:1.15rem;padding:5px 8px' + (b === it.v ? ';border-color:#4CC9F0' : '') + '">' + b + '</button>').join('') + '</div>';
       } else if (it.k === 'points') {
         field = '<select data-i="' + i + '">' + [10, 25, 50, 100].map(n =>
-          '<option value="' + n + '"' + (+it.v === n ? ' selected' : '') + '>' + n + ' points</option>').join('') +
+          '<option value="' + n + '"' + (+it.v === n ? ' selected' : '') + '>' + n + ' NovaCoins</option>').join('') +
           '</select><div class="lb" style="margin:7px 0 0">Taken off your own balance when you wrap it.</div>';
       } else if (it.k === 'song') {
         field = '<input data-i="' + i + '" placeholder="https://youtube.com/watch?v=…" value="' + esc(it.v) + '">';
@@ -335,7 +336,7 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
       if (it.k === 'doodle' && !it.s.length) return fail('The doodle is still blank.');
     }
     const have = (window.getPts ? getPts() : 0);
-    if (pts > have) return fail('You are gifting ' + pts + ' points but you have ' + have + '.');
+    if (pts > have) return fail('You are gifting ' + pts + ' NovaCoins but you have ' + have + '.');
 
     const box = {
       t: to,
@@ -367,7 +368,7 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
     .then(() => { $('copy').textContent = 'Copied'; setTimeout(() => $('copy').textContent = 'Copy link', 1600); });
   $('share').onclick = () => {
     const u = $('url').value;
-    if (navigator.share) navigator.share({ title: 'A little box for you', url: u }).catch(() => {});
+    if (navigator.share) navigator.share({ title: 'A NovaGift for you', url: u }).catch(() => {});
     else navigator.clipboard.writeText(u).then(() => alert('Link copied — paste it to them.'));
   };
   $('preview').onclick = () => { location.href = $('url').value; location.reload(); };
@@ -390,7 +391,7 @@ canvas.pad { width: 100%; max-width: 320px; aspect-ratio: 4/3; border-radius: 11
     } else {
       $('make').style.display = 'none';
       $('open').style.display = 'block';
-      $('oTitle').innerHTML = (box.t ? esc(box.t) + ', someone left you ' : 'Someone left you ') + '<span class="g">a box</span>';
+      $('oTitle').innerHTML = (box.t ? esc(box.t) + ', someone left you ' : 'Someone left you ') + '<span class="g">a NovaGift</span>';
       $('oFrom').textContent = 'From ' + box.a + ' ' + box.f;
 
       let opened = false;

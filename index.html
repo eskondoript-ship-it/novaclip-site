@@ -7,7 +7,7 @@
 
 <!-- Search engines and link previews. A page with no description gets whatever
      Google scrapes off it, and a link with no card is a bare blue URL in a chat. -->
-<meta name='description' content='NovaClip is a free creator toolkit for 13-18 year olds: AI coaching, a browser video editor, trend research that only shows what a channel your size can reach, and points you earn for using it.'>
+<meta name='description' content='NovaClip is a free creator toolkit for 13-18 year olds: AI coaching, a browser video editor, trend research that only shows what a channel your size can reach, and NovaCoins you earn for using it.'>
 <meta name='theme-color' content='#05060A'>
 <meta name='author' content='NovaClip'>
 <link rel='canonical' href='https://novaclip.pages.dev/'>
@@ -15,14 +15,14 @@
 <meta property='og:type' content='website'>
 <meta property='og:site_name' content='NovaClip'>
 <meta property='og:title' content='NovaClip — Run your channel like a game'>
-<meta property='og:description' content='AI coaching, a browser editor, trend research sized to your channel, and points for every session. Free, no downloads.'>
+<meta property='og:description' content='AI coaching, a browser editor, trend research sized to your channel, and NovaCoins for every session. Free, no downloads.'>
 <meta property='og:url' content='https://novaclip.pages.dev/'>
 <meta property='og:image' content='https://novaclip.pages.dev/social-card.png'>
 <meta property='og:image:alt' content='NovaClip — a creator toolkit for teens'>
 
 <meta name='twitter:card' content='summary_large_image'>
 <meta name='twitter:title' content='NovaClip — Run your channel like a game'>
-<meta name='twitter:description' content='AI coaching, a browser editor, trend research sized to your channel, and points for every session. Free, no downloads.'>
+<meta name='twitter:description' content='AI coaching, a browser editor, trend research sized to your channel, and NovaCoins for every session. Free, no downloads.'>
 <meta name='twitter:image' content='https://novaclip.pages.dev/social-card.png'>
 <!-- NOTE: og:url / canonical / the image path must match where you actually host
      this. Put a 1200x630 social-card.png next to index.html; until that file
@@ -454,9 +454,9 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
     </div>
   </div>
   <div class='slideR'>
-    <div class='sec-label'><span class='bar'></span> <span data-t='duel_label'>02 — Fight fair</span></div>
+    <div class='sec-label'><span class='bar'></span> <span data-t='duel_fair'>02 — Fight fair</span></div>
     <h2 class='sec-h' data-t='sec2_h1'>Fair<span class='thin' data-t='sec2_h2'>Fights</span></h2>
-    <p class='lead' data-t='card_duel_d'>Only battle channels within 20k subs of you. Watch the bars clash — subs and views decide the winner. Win and bank points.</p>
+    <p class='lead' data-t='card_duel_d'>Only battle channels within 20k subs of you. Watch the bars clash — subs and views decide the winner. Win and bank NovaCoins.</p>
   </div>
 </section>
 
@@ -733,6 +733,7 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
 </script>
 
 <script src='nova.js'></script>
+<script src='biometric.js' defer></script>
 <script>window.addEventListener('load', function(){ if (window.ncAgeGate) ncAgeGate(); });</script>
 </body>
 </html>

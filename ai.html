@@ -56,6 +56,25 @@ h2{font-size:1.15rem;font-weight:650;letter-spacing:-.02em;margin:0 0 4px}
 .tab.on{color:#05070E;border-color:transparent;background:var(--grad);
   box-shadow:0 8px 24px -8px rgba(124,92,255,.8)}
 
+/* ---- quick-launch cards under the hero ---- */
+.launch{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:12px;margin:28px 0 6px}
+.launch button{position:relative;display:flex;gap:13px;align-items:flex-start;text-align:left;padding:16px 42px 16px 16px;
+  border-radius:18px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+  cursor:pointer;color:var(--txt);font:inherit;transition:.18s}
+.launch button:hover{border-color:rgba(124,92,255,.6);transform:translateY(-2px);box-shadow:0 14px 34px -18px rgba(124,92,255,.7)}
+.launch .li{flex:0 0 auto;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--grad);
+  box-shadow:0 6px 18px -6px rgba(124,92,255,.7)}
+.launch .li svg{width:19px;height:19px;color:#05070E}
+.launch b{display:block;font-size:14.5px;font-weight:680}
+.launch p{font-size:12px;color:var(--dim);line-height:1.5;margin-top:3px}
+.launch .ar{position:absolute;top:18px;right:15px;color:var(--dim);font-size:13px;opacity:0;transition:.18s}
+.launch button:hover .ar{opacity:1;color:var(--cyan)}
+.ico{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:10px;
+  background:var(--grad);color:#05070E;margin:0 10px -8px 0;box-shadow:0 5px 14px -5px rgba(124,92,255,.7)}
+.ico svg{width:16px;height:16px}
+.say.wait{animation:throb 1.3s ease-in-out infinite}
+@keyframes throb{0%,100%{opacity:1}50%{opacity:.5}}
+
 .panel{display:none}
 .panel.on{display:block;animation:fade .28s ease}
 @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -163,12 +182,13 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
       and when something will not work they say so before you spend a weekend on it.</p>
   </div>
 
+  <div class='launch' id='launch'></div>
   <div class='tabs' id='tabs'></div>
 
   <!-- ============ COACH ============ -->
   <div class='panel on' id='pCoach'>
     <div class='card'>
-      <h2>Ask the coach</h2>
+      <h2><span class='ico'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3l2.2 5.6L20 11l-5.8 2.4L12 19l-2.2-5.6L4 11l5.8-2.4z'/></svg></span>Ask the coach</h2>
       <p class='sub'>Three options and a pick, not a paragraph of "stay consistent".</p>
       <div class='two'>
         <div>
@@ -193,7 +213,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
         <button>how long should a Short be?</button>
         <button>is posting daily worth it?</button>
       </div>
-      <div class='row'><button class='go' id='askbtn'>Ask</button></div>
+      <div class='row'><button class='go' id='askbtn'>Ask</button><button class='alt' id='coachCopy' style='display:none'>Copy answer</button></div>
       <div class='say' id='coachSay'></div>
       <div class='out' id='coachOut'></div>
     </div>
@@ -202,7 +222,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   <!-- ============ DIRECTOR ============ -->
   <div class='panel' id='pDirector'>
     <div class='card'>
-      <h2>Video director</h2>
+      <h2><span class='ico'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M3 6h18v12H3zM7 6v12M17 6v12M3 12h18'/></svg></span>Video director</h2>
       <p class='sub'>An idea in, a shot-by-shot plan out — hook, scenes, sound, and a CTR guess.</p>
       <label class='f' for='idea'>The idea</label>
       <textarea id='idea' rows='2' placeholder='e.g. I try every energy drink and rank them'></textarea>
@@ -220,7 +240,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   <!-- ============ CLIP FINDER ============ -->
   <div class='panel' id='pClips'>
     <div class='card'>
-      <h2>Clip finder</h2>
+      <h2><span class='ico'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M6 3v12a3 3 0 106 0V3M18 3v12a3 3 0 11-6 0'/></svg></span>Clip finder</h2>
       <p class='sub'>Paste what was said and it picks the moments worth cutting out.</p>
       <label class='f' for='trans'>Transcript or notes <span class='cnt' id='cTrans'>0</span></label>
       <textarea id='trans' rows='7' placeholder='Paste a transcript, subtitles, or just what you remember saying.'></textarea>
@@ -235,7 +255,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   <!-- ============ TITLE TESTER ============ -->
   <div class='panel' id='pTitles'>
     <div class='card'>
-      <h2>Title tester</h2>
+      <h2><span class='ico'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M4 7V5h16v2M9 5v14M15 5v14M7 19h10'/></svg></span>Title tester</h2>
       <p class='sub'>Write a few and it scores them against each other, with the reason.</p>
       <label class='f' for='titles'>One title per line</label>
       <textarea id='titles' rows='5' placeholder='I built a house in one day&#10;24 hours building a house&#10;This took me 24 hours'></textarea>
@@ -250,7 +270,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   <!-- ============ SEO ============ -->
   <div class='panel' id='pSeo'>
     <div class='card'>
-      <h2>SEO hub</h2>
+      <h2><span class='ico'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3'/></svg></span>SEO hub</h2>
       <p class='sub'>A description that reads like a person wrote it, plus tags worth having.</p>
       <label class='f' for='seoAbout'>What is the video?</label>
       <textarea id='seoAbout' rows='3' placeholder='e.g. a tutorial on making thumbnails in Canva for free'></textarea>
@@ -263,7 +283,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   <!-- ============ THUMBNAIL ============ -->
   <div class='panel' id='pThumb'>
     <div class='card'>
-      <h2>Thumbnail lab</h2>
+      <h2><span class='ico'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'><path d='M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6'/></svg></span>Thumbnail lab</h2>
       <p class='sub'>Generated at 16:9. Read it at the size of a stamp before you use it.</p>
       <label class='f' for='thumbIdea'>Describe the thumbnail</label>
       <textarea id='thumbIdea' rows='2' placeholder='e.g. me looking shocked next to a giant stack of energy drinks, bright yellow background'></textarea>
@@ -285,6 +305,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
 </div>
 
 <script src='nova.js'></script>
+<script src='biometric.js' defer></script>
 <script>
 /* ============================================================================
    NOVACLIP AI — six tools
@@ -320,24 +341,31 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   const $ = id => document.getElementById(id);
   const esc = t => String(t == null ? '' : t).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
 
-  /* ---- tabs -------------------------------------------------------------- */
+  /* ---- tabs + quick-launch cards ---- */
   const TOOLS = [
-    ['Coach', 'coach', 'M12 3l2.2 5.6L20 11l-5.8 2.4L12 19l-2.2-5.6L4 11l5.8-2.4z'],
-    ['Director', 'director', 'M3 6h18v12H3zM7 6v12M17 6v12M3 12h18'],
-    ['Clip finder', 'clips', 'M6 3v12a3 3 0 106 0V3M18 3v12a3 3 0 11-6 0'],
-    ['Title tester', 'titles', 'M4 7V5h16v2M9 5v14M15 5v14M7 19h10'],
-    ['SEO', 'seo', 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3'],
-    ['Thumbnail', 'thumb', 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6']
+    ['Coach', 'coach', 'M12 3l2.2 5.6L20 11l-5.8 2.4L12 19l-2.2-5.6L4 11l5.8-2.4z', 'Three options and a pick, not a paragraph.'],
+    ['Director', 'director', 'M3 6h18v12H3zM7 6v12M17 6v12M3 12h18', 'An idea in, a shot-by-shot plan out.'],
+    ['Clip finder', 'clips', 'M6 3v12a3 3 0 106 0V3M18 3v12a3 3 0 11-6 0', 'Paste what was said, get the moments worth cutting.'],
+    ['Title tester', 'titles', 'M4 7V5h16v2M9 5v14M15 5v14M7 19h10', 'Scores a few titles against each other, with the why.'],
+    ['SEO', 'seo', 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3', 'A description and tags that read like a person wrote them.'],
+    ['Thumbnail', 'thumb', 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6', 'A 16:9 thumbnail from a one-line description.']
   ];
+  $('launch').innerHTML = TOOLS.map(([label, id, d, tag]) =>
+    '<button data-t="' + id + '"><span class="li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg></span>' +
+    '<span><b>' + label + '</b><p>' + tag + '</p></span><span class="ar">Open &rarr;</span></button>').join('');
   $('tabs').innerHTML = TOOLS.map(([label, id, d], i) =>
     '<button class="tab' + (i ? '' : ' on') + '" data-t="' + id + '">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
     'stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>' + label + '</button>').join('');
   const panelOf = id => $('p' + id[0].toUpperCase() + id.slice(1));
-  $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => {
-    $('tabs').querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
-    TOOLS.forEach(([, id]) => panelOf(id).classList.toggle('on', id === b.dataset.t));
-  });
+  function openTool(id) {
+    $('tabs').querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.t === id));
+    TOOLS.forEach(([, t]) => panelOf(t).classList.toggle('on', t === id));
+    panelOf(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => openTool(b.dataset.t));
+  $('launch').querySelectorAll('button').forEach(b => b.onclick = () => openTool(b.dataset.t));
 
   function say(el, kind, title, body) {
     const s = $(el);
@@ -424,6 +452,12 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
     if (r.err) return say('coachSay', 'no', 'Could not reach the AI', r.err);
     busy('coachSay', false);
     $('coachOut').textContent = r.text;
+    $('coachCopy').style.display = '';
+    $('coachCopy').onclick = () => {
+      navigator.clipboard.writeText($('coachOut').textContent);
+      $('coachCopy').textContent = 'Copied';
+      setTimeout(() => { $('coachCopy').textContent = 'Copy answer'; }, 1600);
+    };
     if (window.saveHist) saveHist($('subject').selectedOptions[0].textContent, q, r.text);
     reward(5);
   };

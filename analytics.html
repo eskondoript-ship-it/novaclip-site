@@ -911,13 +911,15 @@ document.addEventListener('click', async (e) => {
     'Keep it under 200 words. Never invent numbers beyond what is given.\n\n' + facts;
 
   try {
-    const r = await fetch('https://novaclip-ai.eskondori-pt.workers.dev', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
-    });
-    const d = await r.json();
-    const txt = d.reply || d.choices?.[0]?.message?.content || '';
-    out.textContent = txt || 'Could not generate a review right now — try again shortly.';
+    /* Go through ncAsk so the user's own key is used when set, the site worker
+       otherwise, and failures come back as a message instead of a thrown error.
+       The old code posted {messages:[...]} straight to the worker — the wrong
+       shape for this worker, so the review always failed silently. */
+    const res = typeof window.ncAsk === 'function'
+      ? await window.ncAsk(prompt, { maxTokens: 600, temperature: 0.7 })
+      : null;
+    if (res && !res.err) out.textContent = res.text.trim();
+    else out.textContent = (res && res.err) || 'Could not generate a review right now — try again shortly.';
   } catch (err) {
     out.textContent = 'Could not reach the AI. Check your connection and try again.';
   }
@@ -936,5 +938,6 @@ document.getElementById('compToggle').onchange = drawAll;
 boot();
 </script>
 <script src='nova.js'></script>
+<script src='biometric.js' defer></script>
 </body>
 </html>
