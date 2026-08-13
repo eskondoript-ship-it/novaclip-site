@@ -212,8 +212,28 @@ h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97,#B6FF3C); -webkit-back
   .certmini .cskills span { color:#333 !important; border-color:#999 !important; }
 }
 </style>
+<style>
+/* nova.js sizes the rail and offsets the body; these are the shell's own looks
+   plus a fallback width for a load before nova.js has run. */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--nc-rail,200px);z-index:998;
+  background:rgba(12,12,16,.85);backdrop-filter:blur(20px);display:flex;flex-direction:column;
+  padding:20px 0;gap:4px;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto}
+.sidebar .themewrap{margin-top:auto;padding:16px 20px}
+.sidebar .themewrap label{display:block;font-size:.78rem;opacity:.6;margin-bottom:6px}
+.sidebar select{width:100%;font-size:.95rem;background:rgba(255,255,255,.05);color:inherit;
+  border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px}
+</style>
 </head>
 <body>
+<!-- The rail every other page has. nova.js fills it and drives its width from
+     --nc-rail; this page only supplies the shell. -->
+<div class='sidebar'>
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
 <div class='wrap'>
   <a class='backlnk' href='index.html'>← Back to NovaClip</a>
   <h1>Plans & <span class='g'>Pricing</span></h1>

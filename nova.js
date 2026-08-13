@@ -393,8 +393,11 @@ ncFit.textContent =
      instead, so the body rule above stacked on top of its own 200px and the
      hero started 432px in — the dead strip beside the sidebar. Where a
      wrapper does the offsetting, it keeps doing it and the body stands down. */
-  "body:has(.content), body:has(.shell) { margin-left: 0; }" +
-  ".content, .shell { margin-left: var(--nc-rail); }" +
+  "body:has(.content), body:has(.shell), body:has(.main) { margin-left: 0; }" +
+  ".content, .shell, .main { margin-left: var(--nc-rail); }" +
+  /* and its own 40px inner padding becomes the same ~60px every other
+     page uses, rather than 40 on top of a 210 that is now doubled */
+  ".main { padding-left: clamp(20px, 3.4vw, 64px); }" +
   ".sidebar { width: var(--nc-rail); }" +
   /* The reading column was centred in whatever space the rail left over, which
      on a 1920 screen is 760px of text floating in 1688px of room — a 400px
@@ -402,7 +405,8 @@ ncFit.textContent =
      trends. Pinned to the same ~60px the home page uses, and allowed to grow
      to 1120px before it stops, so wide screens gain content rather than
      margin. The slack goes to the right, where nothing is competing with it. */
-  ".wrap { margin-left: clamp(24px, 3.6vw, 64px); margin-right: auto;" +
+  ".wrap { padding-left: clamp(0px, 1.2vw, 22px); padding-right: clamp(0px, 1.2vw, 22px);" +
+  " margin-left: clamp(24px, 3.6vw, 64px); margin-right: auto;" +
   " width: min(1120px, 100% - clamp(24px, 3.6vw, 64px)); }" +
   /* The labels scale with the rail, or a 232px rail is a 164px rail with more
      empty space in it. */
@@ -1459,6 +1463,22 @@ function ncNav() {
    shared by everyone here. When it is rate-limited, a key of your own is the
    difference between the feature working and a shrug.
    ============================================================================ */
+/* Google Analytics. Empty means no tag is loaded, no request is made and no
+   cookie is set — same rule as every other third party on this site. Put the
+   measurement ID here once and every NovaClip page has it. */
+const NC_GA4 = '';
+
+if (NC_GA4) {
+  const g = document.createElement('script');
+  g.async = true;
+  g.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(NC_GA4);
+  document.head.appendChild(g);
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { window.dataLayer.push(arguments); };
+  gtag('js', new Date());
+  gtag('config', NC_GA4);
+}
+
 const NC_AI_WORKER = 'https://novaclip-ai.eskondori-pt.workers.dev';
 const NC_AI_DIRECT = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
