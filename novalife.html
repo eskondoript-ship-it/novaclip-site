@@ -33,7 +33,7 @@ a{color:var(--cyan)}
 @keyframes o1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,70px) scale(1.12)}}
 @keyframes o2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-70px,-50px) scale(.9)}}
 @keyframes o3{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,60px)}}
-@media (prefers-reduced-motion:reduce){.orb,.pet,.blob,.stagechip{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.orb,.pet,.blob,.stagechip,#wiggle{animation:none!important}}
 
 h1{font-size:clamp(2rem,5.4vw,3.1rem);font-weight:680;letter-spacing:-.042em;line-height:1.03}
 h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -104,6 +104,24 @@ h2 .bar{display:inline-block;width:26px;height:3px;border-radius:3px;background:
 .bar.low i{background:linear-gradient(90deg,#FF5C7A,#FFB443)}
 .tip{margin-top:14px;font-size:13.5px;color:var(--dim);min-height:22px;font-style:italic}
 .tip b{color:var(--amber)}
+
+/* ---- play: tickle + baby toys ---- */
+.pet .blob{cursor:pointer}
+#wiggle{transform-origin:50% 92%}
+#wiggle.tickled{animation:squish .5s ease}
+@keyframes squish{0%{transform:rotate(-6deg) scale(1.07)}35%{transform:rotate(5deg) scale(.95)}70%{transform:rotate(-3deg) scale(1.03)}100%{transform:rotate(0) scale(1)}}
+.bubble{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:var(--txt);font-size:12.5px;font-weight:700;padding:4px 11px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;white-space:nowrap;z-index:3}
+.bubble.show{opacity:1;transform:translateX(-50%) translateY(-7px)}
+.ticklehint{font-size:12px;color:var(--dim);opacity:.75}
+.toyswrap{margin-top:14px}
+.toys{display:flex;gap:10px;flex-wrap:wrap}
+.toy{border:1px solid var(--line);border-radius:16px;padding:11px 15px;background:rgba(255,255,255,.03);cursor:pointer;font:inherit;color:var(--txt);display:flex;align-items:center;gap:9px;transition:.16s}
+.toy:hover{border-color:rgba(0,229,255,.5);transform:translateY(-2px)}
+.toy:disabled{opacity:.45;transform:none;cursor:default}
+.toy span{font-size:18px}
+.toy b{font-size:13px;font-weight:650}
+.toy .cd{font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+.chore .sm-cancel{padding:6px 10px;font-size:12px}
 
 /* ---- care + shop ---- */
 .care{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
@@ -287,7 +305,10 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     <div class='petcard'>
       <div class='pet'>
         <div class='stage'>
-          <div class='blob' id='blob'><svg id='pet' viewBox='0 0 160 150' aria-hidden='true'></svg></div>
+          <div class='bubble' id='bubble'></div>
+          <div id='wiggle'>
+            <div class='blob' id='blob'><svg id='pet' viewBox='0 0 160 150'></svg></div>
+          </div>
         </div>
         <div class='nm'>
           <b id='petname'>Nova</b>
@@ -296,10 +317,12 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
         </div>
         <span class='stagechip' id='stagechip'></span>
         <span class='mood' id='mood'></span>
+        <span class='ticklehint'>Tap Nova to tickle</span>
       </div>
       <div class='needs' id='needs'></div>
     </div>
     <p class='tip' id='tip'></p>
+    <div id='toys' class='toyswrap'></div>
   </div>
 
   <!-- LIFE STORY -->
@@ -335,7 +358,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     <p class='owned' id='owned'></p>
 
     <h2><span class='bar'></span>Side work</h2>
-    <p class='sect'>Small chores earn small coins. Doing them again later earns more — this is how extra money comes in.</p>
+    <p class='sect'>Small chores earn small coins. The two real ones — a typing race and an editor export — only pay out once you actually finish them. Doing any chore again later earns more.</p>
     <div class='chores' id='chores'></div>
 
     <h2><span class='bar'></span>Savings goal</h2>
@@ -362,7 +385,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
   var $ = function (s) { return document.getElementById(s); };
   var LS = { life:'nc_life_state', time:'nc_life_time', name:'nc_life_name', ledger:'nc_life_ledger',
     savings:'nc_life_savings', goal:'nc_life_goal', earn:'nc_life_earn', owned:'nc_life_owned',
-    legacy:'nc_life_legacy' };
+    legacy:'nc_life_legacy', toys:'nc_life_toys', quest:'nc_life_quest' };
 
   var ONE_DAY = 86400000;   /* one real day = one year of Nova's life */
   var MAX_AGE = 90;
@@ -394,9 +417,22 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     { icon:'🪴', label:'Water the plants', amt:4, cd:10*60e3 },
     { icon:'🛏️', label:'Tidy your room', amt:5, cd:15*60e3 },
     { icon:'📚', label:'Read for 10 minutes', amt:6, cd:30*60e3 },
-    { icon:'⌨️', label:'Play the typing race', amt:7, cd:30*60e3, href:'game.html#typing' },
-    { icon:'🎬', label:'Make a video in the Editor', amt:10, cd:60*60e3, href:'editor.html' }
+    { icon:'⌨️', label:'Play the typing race', amt:7, cd:30*60e3, href:'game.html#typing', kind:'typing' },
+    { icon:'🎬', label:'Make a video in the Editor', amt:10, cd:60*60e3, href:'editor.html', kind:'editor' }
   ];
+  var TOYS = [
+    { icon:'🪇', label:'Rattle', fun:5, cd:8*60e3 },
+    { icon:'🧸', label:'Teddy', fun:7, cd:12*60e3 },
+    { icon:'🧱', label:'Blocks', fun:9, cd:18*60e3 },
+    { icon:'⚽', label:'Ball', fun:12, cd:25*60e3 }
+  ];
+  var TICKLE_REACTS = ['hehe!', 'tee-hee!', 'tickle tickle!', 'heehee!', 'giggle!', '🤭', 'hehehe!'];
+  var TOY_REACTS = {
+    'Rattle': '🪇 rattles it!',
+    'Teddy': '🧸 hugs the teddy!',
+    'Blocks': '🧱 stacks blocks!',
+    'Ball': '⚽ rolls the ball!'
+  };
   var JOBS = [
     { id:'retail',  icon:'🛍️', label:'Shop assistant', salary:9,  minAge:16, part:true,
       desc:'Evenings and weekends. A first taste of earning.' },
@@ -732,6 +768,71 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
       wrap.appendChild(b);
     });
     $('needs').appendChild(wrap);
+  }
+
+  /* ---- play: tickle + baby toys ---- */
+  var lastTickle = 0;
+  function wiggle() {
+    var w = $('wiggle');
+    w.classList.remove('tickled');
+    void w.offsetWidth;
+    w.classList.add('tickled');
+  }
+  var bubbleTimer = null;
+  function showBubble(txt) {
+    var b = $('bubble');
+    b.textContent = txt;
+    b.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function () { b.classList.remove('show'); }, 1100);
+  }
+  function tickle() {
+    var now = Date.now();
+    if (now - lastTickle < 4000) return;
+    lastTickle = now;
+    life.needs.fun = Math.min(100, life.needs.fun + 4);
+    saveLife();
+    wiggle();
+    showBubble(TICKLE_REACTS[Math.floor(Math.random() * TICKLE_REACTS.length)]);
+    renderNeeds(); renderStats();
+  }
+  function toyById(label) {
+    for (var i = 0; i < TOYS.length; i++) if (TOYS[i].label === label) return TOYS[i];
+    return null;
+  }
+  function playToy(label) {
+    var t = toyById(label);
+    if (!t) return;
+    var used = {}; try { used = JSON.parse(localStorage.getItem(LS.toys) || '{}'); } catch (e) {}
+    if ((used[label] || 0) + t.cd > Date.now()) return;
+    used[label] = Date.now();
+    localStorage.setItem(LS.toys, JSON.stringify(used));
+    life.needs.fun = Math.min(100, life.needs.fun + t.fun);
+    saveLife();
+    wiggle();
+    showBubble(TOY_REACTS[label] || 'plays!');
+    renderNeeds(); renderToys(); renderStats();
+  }
+  function renderToys() {
+    var el = $('toys');
+    var st = stage(ageYears());
+    if (st.key !== 'baby') { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.style.display = '';
+    var used = {}; try { used = JSON.parse(localStorage.getItem(LS.toys) || '{}'); } catch (e) {}
+    el.innerHTML = "<h2><span class='bar'></span>Baby toys</h2>" +
+      "<p class='sect'>Babies play, and play is food for fun. Every toy helps, but a baby gets bored \u2014 each toy needs a short rest before it works again.</p>" +
+      "<div class='toys'>" + TOYS.map(function (t) {
+        var left = (used[t.label] || 0) + t.cd - Date.now();
+        var ready = left <= 0;
+        return "<button class='toy' type='button' data-t='" + t.label + "'" + (ready ? '' : ' disabled') + ">" +
+          "<span>" + t.icon + "</span><b>" + t.label + "</b>" +
+          (ready ? "<span class='cd'>+" + t.fun + " fun</span>" : "<span class='cd'>" + fmtCD(left) + "</span>") +
+          "</button>";
+      }).join('') + "</div>";
+    el.querySelectorAll('button').forEach(function (b) {
+      if (b.disabled) return;
+      b.onclick = function () { playToy(b.dataset.t); };
+    });
   }
 
   /* ---- stats ---- */
@@ -1120,21 +1221,68 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     return (e[chore.label] || 0) + chore.cd - Date.now();
   }
 
+  function getQuest() {
+    try { return JSON.parse(localStorage.getItem(LS.quest) || 'null'); } catch (e) { return null; }
+  }
+  function setQuest(q) {
+    if (q) localStorage.setItem(LS.quest, JSON.stringify(q));
+    else localStorage.removeItem(LS.quest);
+  }
+  function choreSignal(c) {
+    try {
+      if (c.kind === 'typing') return localStorage.getItem('typemaster.v1.games') || '[]';
+      if (c.kind === 'editor') return String((typeof getSkills === 'function' ? getSkills() : {})['edit_export'] || 0);
+    } catch (e) {}
+    return null;
+  }
+  function choreSub(c) {
+    if (c.kind === 'typing') return 'finish a typing race';
+    if (c.kind === 'editor') return 'export a video in the Editor';
+    return '';
+  }
+
   function renderChores() {
+    var q = getQuest();
     $('chores').innerHTML = CHORES.map(function (c) {
       var left = cooldownLeft(c);
       var ready = left <= 0;
-      var btn = ready ? "Earn " + c.amt + " \ud83e\ude99" : fmtCD(left);
-      return "<div class='chore'><span class='ci'><span>" + c.icon + "</span></span>" +
-        "<div class='ct'><b>" + c.label + "</b><span class='cs'>" + (ready
-          ? '+<b>' + c.amt + '</b> \ud83e\ude99' + (c.href ? ' \u00b7 <a href="' + c.href + '">go</a>' : '')
-          : 'Come back in ' + fmtCD(left)) + "</span></div>" +
-        "<button class='go sm' type='button' data-c='" + c.label + "'" + (ready ? '' : ' disabled') + ">" + btn + "</button></div>";
+      var active = q && q.label === c.label;
+      var card = "<div class='chore'><span class='ci'><span>" + c.icon + "</span></span>" +
+        "<div class='ct'><b>" + c.label + "</b><span class='cs'>";
+      if (!ready) {
+        return card + 'Come back in ' + fmtCD(left) + "</span></div>" +
+          "<button class='go sm' type='button' disabled>" + fmtCD(left) + "</button></div>";
+      }
+      if (active) {
+        var changed = choreSignal(c) !== q.sig;
+        if (changed) {
+          return card + 'Done! Tap Claim to earn +<b>' + c.amt + '</b> \ud83e\ude99.</span></div>' +
+            "<button class='go sm' type='button' data-c='" + c.label + "'>Claim " + c.amt + " \ud83e\ude99</button>" +
+            "<button class='alt sm-cancel' type='button' data-x='" + c.label + "'>Cancel</button></div>";
+        }
+        return card + 'In progress \u2014 finish it, then come back and claim. Started ' + ago(q.at) + '.</span></div>' +
+          "<button class='go sm' type='button' disabled>Not yet done</button>" +
+          "<button class='alt sm-cancel' type='button' data-x='" + c.label + "'>Cancel</button></div>";
+      }
+      if (c.kind) {
+        return card + '+<b>' + c.amt + '</b> \ud83e\ude99 \u00b7 real work: ' + choreSub(c) + '. Tap to start.</span></div>' +
+          "<button class='go sm' type='button' data-c='" + c.label + "'>Start \u00b7 " + c.amt + " \ud83e\ude99</button></div>";
+      }
+      return card + '+<b>' + c.amt + '</b> \ud83e\ude99</span></div>' +
+        "<button class='go sm' type='button' data-c='" + c.label + "'>Earn " + c.amt + " \ud83e\ude99</button></div>";
     }).join('');
-    $('chores').querySelectorAll('button').forEach(function (b) {
-      var label = b.dataset.c;
+    $('chores').querySelectorAll('button[data-c]').forEach(function (b) {
       if (b.disabled) return;
-      b.onclick = function () { earn(CHORES.filter(function (c) { return c.label === label; })[0]); };
+      b.onclick = function () {
+        earn(CHORES.filter(function (c) { return c.label === b.dataset.c; })[0]);
+      };
+    });
+    $('chores').querySelectorAll('button[data-x]').forEach(function (b) {
+      b.onclick = function () {
+        setQuest(null);
+        toastNow('Quest cancelled \u2014 nothing earned.');
+        renderChores();
+      };
     });
   }
 
@@ -1221,8 +1369,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
 
   function care(c) { buy(c); }
 
-  function earn(chore) {
-    if (cooldownLeft(chore) > 0) return;
+  function payChore(chore) {
     addWallet(chore.amt);
     ledgerAdd(chore.amt, chore.icon + ' ' + chore.label);
     var e = {}; try { e = JSON.parse(localStorage.getItem(LS.earn) || '{}'); } catch (err) {}
@@ -1230,11 +1377,36 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     localStorage.setItem(LS.earn, JSON.stringify(e));
     renderChores(); renderStats(); renderLedger();
   }
+  function startQuest(chore) {
+    var sig = choreSignal(chore);
+    if (sig === null) { toastNow('Could not verify that activity right now.'); return; }
+    setQuest({ label: chore.label, sig: sig, at: Date.now() });
+    toastNow('Go do it \u2014 finish the activity, then come back and tap Claim.');
+    if (chore.href) window.location.href = chore.href;
+    renderChores();
+  }
+  function earn(chore) {
+    if (cooldownLeft(chore) > 0) return;
+    if (chore.kind) {
+      var q = getQuest();
+      if (!q || q.label !== chore.label) { startQuest(chore); return; }
+      if (choreSignal(chore) !== q.sig) {
+        setQuest(null);
+        payChore(chore);
+        toastNow(chore.icon + ' Done \u2014 +' + chore.amt + ' \ud83e\ude99.');
+      } else {
+        toastNow('Not done yet \u2014 finish the activity first, then claim.');
+      }
+      return;
+    }
+    payChore(chore);
+  }
 
   function render() {
     renderStats();
     renderPet();
     renderNeeds();
+    renderToys();
     renderLife();
     renderEducation();
     renderCareer();
@@ -1250,7 +1422,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
   var ti = 0;
   function nextTip() { $('tip').innerHTML = '<b>Money tip.</b> ' + TIPS[ti++ % TIPS.length]; }
 
-  setInterval(function () { renderChores(); }, 1000);
+  setInterval(function () { renderChores(); renderToys(); }, 1000);
   setInterval(nextTip, 8000);
   setInterval(tick, 30000);
 
@@ -1258,6 +1430,13 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
   lastDay = Math.floor(Date.now() / ONE_DAY);
   $('namein').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') doRename(); });
   $('rename').onclick = doRename;
+  $('pet').addEventListener('click', tickle);
+  $('pet').setAttribute('tabindex', '0');
+  $('pet').setAttribute('role', 'button');
+  $('pet').setAttribute('aria-label', 'Tickle Nova');
+  $('pet').addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tickle(); }
+  });
   function doRename() {
     var v = ($('namein').value || '').trim();
     if (v) { localStorage.setItem(LS.name, v.slice(0, 20)); $('namein').value = ''; }
