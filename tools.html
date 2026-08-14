@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaClip — Tools</title>
@@ -38,8 +46,8 @@
    reason to crop a thumbnail here rather than on a site that keeps a copy.
    ============================================================================ */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
-:root { --void:#05060A; --panel:#0B0E16; --line:rgba(120,140,200,0.16); --ink:#EAF2FF; --dim:#7E8AA6;
-        --cyan:#00F0FF; --mag:#FF2E97; --lime:#B6FF3C; }
+:root { --void:var(--nc-bg,#05060A); --panel:#0B0E16; --line:rgba(120,140,200,0.16); --ink:var(--nc-text,#EAF2FF); --dim:var(--nc-dim,#7E8AA6);
+        --cyan:var(--nc-cyan,#00F0FF); --mag:var(--nc-pink,#FF2E97); --lime:var(--nc-lime,#B6FF3C); }
 body { background: var(--void); color: var(--ink); line-height: 1.5; }
 
 .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(8,9,14,0.9);
@@ -48,7 +56,7 @@ body { background: var(--void); color: var(--ink); line-height: 1.5; }
 .sidebar a { font-size: 1.05rem; color: var(--ink); text-decoration: none; display: flex; align-items: center;
              gap: 12px; padding: 12px 20px; font-weight: 600; transition: .25s; }
 .sidebar a:hover { background: rgba(0,240,255,0.08); padding-left: 26px; }
-.sidebar a.aidot { background: linear-gradient(135deg,#FF2E97,#7209B7,#00F0FF); color:#fff;
+.sidebar a.aidot { background: linear-gradient(135deg,var(--nc-pink,#FF2E97),var(--nc-violet2,#7209B7),var(--nc-cyan,#00F0FF)); color:#fff;
                    border-radius: 10px; margin: 6px 14px; }
 .sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
 .sidebar .themewrap label { display:block; font-size:.78rem; opacity:.6; margin-bottom:6px; }
@@ -70,7 +78,7 @@ h1 .g { background: linear-gradient(90deg,var(--cyan),var(--mag)); -webkit-backg
 #q:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,240,255,0.12); }
 .cats { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 22px; }
 .cat { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--line); background: rgba(255,255,255,0.04);
-       color: #cfe0f5; font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; transition: .18s; }
+       color: var(--nc-text,#cfe0f5); font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; transition: .18s; }
 .cat:hover { border-color: rgba(0,240,255,0.5); }
 .cat.on { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,0.12); }
 
@@ -110,10 +118,10 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
 @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
 .btns { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 14px; }
 .go { padding: 11px 24px; border: none; border-radius: 24px; font-weight: 800; cursor: pointer;
-      background: linear-gradient(90deg,var(--cyan),#4CC9F0); color: #04121a; font-size: .92rem; }
+      background: linear-gradient(90deg,var(--cyan),var(--nc-blue,#4CC9F0)); color: #04121a; font-size: .92rem; }
 .go:hover { box-shadow: 0 0 24px rgba(0,240,255,0.4); }
 .alt { padding: 11px 20px; border-radius: 24px; cursor: pointer; background: rgba(255,255,255,0.05);
-       border: 1px solid var(--line); color: #cfe0f5; font: inherit; font-size: .88rem; font-weight: 700; }
+       border: 1px solid var(--line); color: var(--nc-text,#cfe0f5); font: inherit; font-size: .88rem; font-weight: 700; }
 .alt:hover { border-color: var(--cyan); color: var(--cyan); }
 .out { margin-top: 14px; padding: 13px 15px; border-radius: 12px; border: 1px solid var(--line);
        background: rgba(0,0,0,0.35); white-space: pre-wrap; word-break: break-word; min-height: 46px;
@@ -125,7 +133,7 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
 .stat span { font-size: .68rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--dim); }
 .swatch { height: 46px; border-radius: 10px; border: 1px solid var(--line); margin-top: 10px; }
 .note { color: var(--dim); font-size: .8rem; line-height: 1.65; margin-top: 12px; }
-.note b { color: #cfe0ff; }
+.note b { color: var(--nc-text,#cfe0ff); }
 </style>
 </head>
 <body>

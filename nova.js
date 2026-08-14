@@ -157,6 +157,10 @@ const T = {
   duel_you: { en:"YOU", zh:"你", hi:"आप", es:"TÚ", ar:"أنت", fr:"TOI", bn:"আপনি", pt:"TU", ru:"ВЫ", ur:"آپ", id:"KAMU", de:"DU", ja:"あなた", tr:"SEN", ko:"당신", fa:"تو", uk:"ВИ", it:"TU", pl:"TY", vi:"BẠN" },
   duel_vs: { en:"VS", zh:"对战", hi:"बनाम", es:"VS", ar:"ضد", fr:"VS", bn:"বনাম", pt:"VS", ru:"ПРОТИВ", ur:"مقابل", id:"VS", de:"GEGEN", ja:"VS", tr:"VS", ko:"VS", fa:"در برابر", uk:"ПРОТИ", it:"VS", pl:"KONTRA", vi:"ĐẤU" },
   duel_rival: { en:"RIVAL", zh:"对手", hi:"प्रतिद्वंद्वी", es:"RIVAL", ar:"المنافس", fr:"RIVAL", bn:"প্রতিদ্বন্দ্বী", pt:"RIVAL", ru:"СОПЕРНИК", ur:"حریف", id:"LAWAN", de:"RIVALE", ja:"ライバル", tr:"RAKİP", ko:"라이벌", fa:"رقیب", uk:"СУПЕРНИК", it:"RIVALE", pl:"RYWAL", vi:"ĐỐI THỦ" },
+  theme: { en:"Theme", zh:"主题", hi:"थीम", es:"Tema", ar:"المظهر", fr:"Thème", bn:"থিম", pt:"Tema", ru:"Тема", ur:"تھیم", id:"Tema", de:"Design", ja:"テーマ", tr:"Tema", ko:"테마", fa:"پوسته", uk:"Тема", it:"Tema", pl:"Motyw", vi:"Giao diện" },
+  theme_light: { en:"Light", zh:"浅色", hi:"लाइट", es:"Claro", ar:"فاتح", fr:"Clair", bn:"লাইট", pt:"Claro", ru:"Светлая", ur:"لائٹ", id:"Terang", de:"Hell", ja:"ライト", tr:"Açık", ko:"라이트", fa:"روشن", uk:"Світла", it:"Chiaro", pl:"Jasny", vi:"Sáng" },
+  theme_dark: { en:"Dark", zh:"深色", hi:"डार्क", es:"Oscuro", ar:"داكن", fr:"Sombre", bn:"ডার্ক", pt:"Escuro", ru:"Тёмная", ur:"ڈارک", id:"Gelap", de:"Dunkel", ja:"ダーク", tr:"Koyu", ko:"다크", fa:"تیره", uk:"Темна", it:"Scuro", pl:"Ciemny", vi:"Tối" },
+  theme_system: { en:"System", zh:"跟随系统", hi:"सिस्टम", es:"Sistema", ar:"النظام", fr:"Système", bn:"সিস্টেম", pt:"Sistema", ru:"Системная", ur:"سسٹم", id:"Sistem", de:"System", ja:"システム", tr:"Sistem", ko:"시스템", fa:"سیستم", uk:"Системна", it:"Sistema", pl:"Systemowy", vi:"Hệ thống" },
   vibe: { en:"Vibe", zh:"风格", hi:"वाइब", es:"Estilo", ar:"الأسلوب", fr:"Style", bn:"ভাইব", pt:"Estilo", ru:"Стиль", ur:"انداز", id:"Gaya", de:"Stil", ja:"雰囲気", tr:"Tarz", ko:"분위기", fa:"حال‌وهوا", uk:"Стиль", it:"Stile", pl:"Styl", vi:"Phong cách" },
   vibe_normal: { en:"Normal", zh:"普通", hi:"सामान्य", es:"Normal", ar:"عادي", fr:"Normal", bn:"সাধারণ", pt:"Normal", ru:"Обычный", ur:"عام", id:"Normal", de:"Normal", ja:"ふつう", tr:"Normal", ko:"보통", fa:"عادی", uk:"Звичайний", it:"Normale", pl:"Zwykły", vi:"Bình thường" },
   vibe_genz: { en:"Gen\u00a0Z", zh:"Z世代", hi:"Gen\u00a0Z", es:"Gen\u00a0Z", ar:"جيل\u00a0Z", fr:"Gen\u00a0Z", bn:"Gen\u00a0Z", pt:"Gen\u00a0Z", ru:"Зумер", ur:"Gen\u00a0Z", id:"Gen\u00a0Z", de:"Gen\u00a0Z", ja:"Z世代", tr:"Z\u00a0Kuşağı", ko:"Z세대", fa:"نسل\u00a0Z", uk:"Зумер", it:"Gen\u00a0Z", pl:"Pokolenie\u00a0Z", vi:"Gen\u00a0Z" },
@@ -361,6 +365,393 @@ function ncWatchLang() {
   mo.observe(document.body, { childList: true, subtree: true });
 }
 
+
+/* ============================================================================
+   THEME — light, dark, or whatever the device says
+   ============================================================================
+   The site was dark-only, and dark was spelled out as literal hex in twenty
+   pages. Two things make one switch reach all of them:
+
+     1. Every page's own palette variables are re-declared here under
+        html[data-theme="light"]. `:root` is specificity (0,1,0) and
+        `html[data-theme="light"]` is (0,1,1), so these win without !important
+        and without editing the pages that already use variables.
+
+     2. The pages that hard-code colour had those literals rewritten to
+        var(--nc-*, #original). The fallback is the old value, so a page still
+        renders correctly on its own if this file never loads.
+
+   The choice is stored as nc_theme = system | light | dark. "system" follows
+   prefers-color-scheme and keeps following it, so a phone that flips at sunset
+   flips the site with it.
+
+   Applying the attribute is done in a tiny inline snippet in each page's
+   <head>, because nova.js is loaded at the end of <body> — by the time it runs
+   the first paint has already happened, and the switch would be a visible
+   flash of the wrong theme on every navigation.
+   --------------------------------------------------------------------------- */
+const NC_THEME_KEY = 'nc_theme';
+
+function ncThemePref() {
+  try { const v = localStorage.getItem(NC_THEME_KEY); if (v === 'light' || v === 'dark' || v === 'system') return v; } catch (e) {}
+  return 'system';
+}
+
+function ncThemeResolved(pref) {
+  const p = pref || ncThemePref();
+  if (p === 'light' || p === 'dark') return p;
+  try { return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch (e) { return 'dark'; }
+}
+
+function ncApplyTheme(pref) {
+  const p = pref || ncThemePref();
+  const t = ncThemeResolved(p);
+  const r = document.documentElement;
+  r.setAttribute('data-theme', t);
+  r.setAttribute('data-theme-pref', p);
+  /* Tells the browser which way to paint form controls, scrollbars and the
+     canvas behind the page, which CSS variables cannot reach. */
+  r.style.colorScheme = t;
+  return t;
+}
+
+function ncSetTheme(pref) {
+  try { localStorage.setItem(NC_THEME_KEY, pref); } catch (e) {}
+  /* A cross-fade over the whole page, rather than every element easing on its
+     own schedule and arriving at slightly different times. */
+  const r = document.documentElement;
+  r.classList.add('nc-theming');
+  ncApplyTheme(pref);
+  setTimeout(() => r.classList.remove('nc-theming'), 320);
+  document.querySelectorAll('.nc-themebtn').forEach(b => {
+    const on = b.dataset.theme === pref;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  try { window.dispatchEvent(new CustomEvent('nc:theme', { detail: { pref, theme: ncThemeResolved(pref) } })); } catch (e) {}
+}
+window.ncSetTheme = ncSetTheme;
+window.ncTheme = () => ncThemeResolved();
+window.ncThemePref = ncThemePref;
+
+/* Following the device means following it for as long as the page is open. */
+try {
+  matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+    if (ncThemePref() === 'system') ncApplyTheme('system');
+  });
+} catch (e) {}
+
+const ncThemeStyle = document.createElement('style');
+ncThemeStyle.id = 'nc-theme-css';
+ncThemeStyle.textContent =
+/* ---- the canonical palette, dark ---- */
+":root{" +
+  "--nc-bg:#05070E; --nc-bg2:#0C1220; --nc-bg3:#080A11; --nc-text:#EAF2FF;" +
+  "--nc-dim:#7E8AA6; --nc-dim2:#8A97B4; --nc-line:rgba(255,255,255,.10);" +
+  "--nc-line2:rgba(255,255,255,.16); --nc-cyan:#00F0FF; --nc-cyan2:#00E5FF;" +
+  "--nc-pink:#FF2E97; --nc-mag:#F72585; --nc-violet:#7C5CFF; --nc-violet2:#7209B7;" +
+  "--nc-blue:#4CC9F0; --nc-lime:#B6FF3C; --nc-amber:#FFB443;" +
+  "--nc-card:rgba(255,255,255,.04); --nc-card2:rgba(255,255,255,.06);" +
+  "--nc-shadow:rgba(0,0,0,.55);" +
+  "--nc-rail1:#0E1220; --nc-rail2:#0A0D18; --nc-rail3:#080B14;" +
+  "--nc-railline:rgba(255,255,255,.07); --nc-railglow:rgba(124,92,255,.10);" +
+  "--nc-navhead:#5D6A88; --nc-navhover:#A8B8D8; --nc-navlink:#98A6C4; --nc-navon:#FFFFFF;" +
+  "--nc-sel-bg:#0A0C14; --nc-sel-text:#EAF2FF; --nc-sel-line:rgba(0,240,255,.35);" +
+"}" +
+
+/* ---- light. The neons are the part that cannot survive the swap: #00F0FF on
+   white is about 1.3:1, which is not a colour, it is a rumour. Each accent is
+   replaced by a darker sibling of the same hue so the site keeps its identity
+   and the text keeps its contrast. ---- */
+"html[data-theme=\"light\"]{" +
+  "--nc-bg:#F5F7FB; --nc-bg2:#FFFFFF; --nc-bg3:#EAEEF6; --nc-text:#0B0E16;" +
+  "--nc-dim:#59637A; --nc-dim2:#5D6880; --nc-line:rgba(16,24,44,.12);" +
+  "--nc-line2:rgba(16,24,44,.20); --nc-cyan:#00778C; --nc-cyan2:#0A6E86;" +
+  "--nc-pink:#C4166F; --nc-mag:#BE1259; --nc-violet:#5B3FD6; --nc-violet2:#5B0F9C;" +
+  "--nc-blue:#1E7FA8; --nc-lime:#4F7A00; --nc-amber:#9A5B00;" +
+  "--nc-card:rgba(16,24,44,.035); --nc-card2:rgba(16,24,44,.06);" +
+  "--nc-shadow:rgba(16,24,44,.14);" +
+  "--nc-rail1:#FFFFFF; --nc-rail2:#F7F9FD; --nc-rail3:#EFF3FA;" +
+  "--nc-railline:rgba(16,24,44,.13); --nc-railglow:rgba(91,63,214,.10);" +
+  "--nc-navhead:#6B7690; --nc-navhover:#1B2437; --nc-navlink:#2B3448; --nc-navon:#0B0E16;" +
+  "--nc-sel-bg:#FFFFFF; --nc-sel-text:#0B0E16; --nc-sel-line:rgba(16,24,44,.22);" +
+
+  /* The families the pages declare for themselves, re-pointed at the palette
+     above. Nine pages share the first set; index and tools have their own
+     names for the same ideas. */
+  "--ink:var(--nc-bg); --panel:var(--nc-bg2); --void:var(--nc-bg); --void2:var(--nc-bg3);" +
+  "--txt:var(--nc-text); --white:var(--nc-text); --dim:var(--nc-dim);" +
+  "--line:var(--nc-line); --cyan:var(--nc-cyan); --pink:var(--nc-pink);" +
+  "--magenta:var(--nc-pink); --mag:var(--nc-mag); --violet:var(--nc-violet);" +
+  "--lime:var(--nc-lime); --amber:var(--nc-amber);" +
+  "--grad:linear-gradient(110deg,var(--nc-violet),var(--nc-cyan) 48%,var(--nc-pink));" +
+"}" +
+
+/* Body and the rail are painted per page, so they are set here rather than
+   left to whichever literal happened to be in that page's stylesheet. */
+"html[data-theme=\"light\"] body{background:var(--nc-bg);color:var(--nc-text);}" +
+"html[data-theme=\"light\"] .sidebar{background:rgba(255,255,255,.86);" +
+  "border-right:1px solid var(--nc-line);}" +
+"html[data-theme=\"light\"] .sidebar a{color:var(--nc-text);}" +
+"html[data-theme=\"light\"] .sidebar{border-right:1px solid var(--nc-line) !important;box-shadow:1px 0 0 rgba(16,24,44,.05) !important;}" +
+"html[data-theme=\"light\"] .sidebar::before{opacity:.25;}" +
+"html[data-theme=\"light\"] .sidebar a:hover{text-shadow:none !important;background:rgba(0,119,140,.09) !important;}" +
+"html[data-theme=\"light\"] .sidebar a::after{opacity:.5;}" +
+"html[data-theme=\"light\"] .card,html[data-theme=\"light\"] .panel,html[data-theme=\"light\"] .plan,html[data-theme=\"light\"] .tile,html[data-theme=\"light\"] .tool,html[data-theme=\"light\"] .box{" +
+  "background:var(--nc-bg2);border:1px solid var(--nc-line);}" +
+
+/* A white page with the dark theme's drop shadows looks like a photocopy of a
+   page. Softer, tighter, and tinted with the ink colour instead of black. */
+"html[data-theme=\"light\"] [class*=\"card\"],html[data-theme=\"light\"] [class*=\"panel\"]{" +
+  "box-shadow:0 1px 2px rgba(16,24,44,.04),0 8px 24px -12px var(--nc-shadow);}" +
+
+/* Images and video keep their own colour; the decorative blurred orbs on the
+   AI pages are pure neon on black and turn into bruises on white. */
+"html[data-theme=\"light\"] .orb{opacity:.13;}" +
+
+/* The cross-fade. Painted properties only — never `all`, which would sweep up
+   transforms and layout and make every theme flip a lurch. */
+"html.nc-theming,html.nc-theming *{transition:background-color .28s ease,color .28s ease," +
+  "border-color .28s ease,box-shadow .28s ease,fill .28s ease,stroke .28s ease !important;}" +
+"@media (prefers-reduced-motion:reduce){html.nc-theming,html.nc-theming *{transition:none !important;}}" +
+
+/* ---- the three-way switch ---- */
+".nc-themerow{display:flex;gap:0;background:var(--nc-card);border:1px solid var(--nc-line2);" +
+  "border-radius:10px;overflow:hidden;margin-top:6px;}" +
+".nc-themebtn{flex:1;padding:7px 4px;border:0;background:none;cursor:pointer;color:var(--nc-dim);" +
+  "font:inherit;font-size:.72rem;font-weight:700;display:grid;place-items:center;gap:2px;" +
+  "transition:background .18s,color .18s;}" +
+".nc-themebtn:hover{color:var(--nc-text);background:var(--nc-card2);}" +
+".nc-themebtn:focus-visible{outline:2px solid var(--nc-cyan);outline-offset:-2px;}" +
+".nc-themebtn.on{background:linear-gradient(135deg,var(--nc-violet),var(--nc-cyan));color:#04121a;}" +
+"html[data-theme=\"light\"] .nc-themebtn.on{color:#fff;}" +
+".nc-themebtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;" +
+  "stroke-linecap:round;stroke-linejoin:round;}";
+document.head.appendChild(ncThemeStyle);
+
+/* The switch itself: sun, monitor, moon. Built wherever a page keeps its
+   language box, which is the sidebar on most pages and the collapsed corner
+   control on the ones without a rail. */
+const NC_THEME_ICONS = {
+  light: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/>' +
+    '<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  system: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/>' +
+    '<path d="M8 21h8M12 17v4"/></svg>',
+  dark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 13a8.5 8.5 0 01-10-10 8.5 8.5 0 1010 10z"/></svg>'
+};
+
+function ncBuildThemeSwitch() {
+  if (NC_EMBED) return;
+  if (document.getElementById('nc-themerow')) return;
+  const host = document.querySelector('.themewrap') ||
+    (typeof ncCornerBox === 'function' ? ncCornerBox() : null);
+  if (!host) return;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'nc-themerow';
+  wrap.style.marginBottom = '14px';
+  const label = document.createElement('label');
+  label.setAttribute('data-t', 'theme');
+  label.style.cssText = 'display:block;font-size:0.78rem;opacity:0.6;margin-bottom:6px;';
+  label.textContent = tr('theme');
+  const row = document.createElement('div');
+  row.className = 'nc-themerow';
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', tr('theme'));
+
+  const pref = ncThemePref();
+  ['light', 'system', 'dark'].forEach(k => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'nc-themebtn' + (k === pref ? ' on' : '');
+    b.dataset.theme = k;
+    b.setAttribute('aria-pressed', String(k === pref));
+    b.setAttribute('title', tr('theme_' + k));
+    b.setAttribute('aria-label', tr('theme_' + k));
+    b.innerHTML = NC_THEME_ICONS[k];
+    b.addEventListener('click', () => ncSetTheme(k));
+    row.appendChild(b);
+  });
+
+  wrap.append(label, row);
+  host.insertBefore(wrap, host.firstChild);
+}
+
+
+/* ============================================================================
+   MOTION
+   ============================================================================
+   One sheet for the whole site, so the timings cannot drift between pages.
+
+   Three rules it follows:
+
+     Transform and opacity only. Those are the two properties a browser can
+     animate on the compositor without touching layout or paint, so they hold
+     60fps on a phone. Animating height, top or margin does not.
+
+     Nothing animates for longer than it takes to read. Entrances are 420ms,
+     hovers 160ms. Anything slower stops feeling like polish and starts
+     feeling like waiting.
+
+     prefers-reduced-motion turns all of it off. That setting is often set by
+     people who get motion sickness or migraines from parallax and drifting
+     panels, so it is honoured completely rather than merely shortened — and
+     because the reveal below starts elements at opacity 0, the reduced-motion
+     branch has to put them back to 1 or the page would be blank.
+   --------------------------------------------------------------------------- */
+const ncMotionStyle = document.createElement('style');
+ncMotionStyle.id = 'nc-motion-css';
+ncMotionStyle.textContent =
+
+/* ---- entrances ---- */
+"@keyframes nc-rise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:none}}" +
+"@keyframes nc-fade{from{opacity:0}to{opacity:1}}" +
+"@keyframes nc-pop{0%{opacity:0;transform:scale(.94)}60%{opacity:1;transform:scale(1.01)}100%{transform:scale(1)}}" +
+"@keyframes nc-sweep{from{background-position:200% 0}to{background-position:-200% 0}}" +
+"@keyframes nc-pulse{0%,100%{opacity:.55}50%{opacity:1}}" +
+
+/* The page itself, on arrival. Short and only opacity, so it cannot fight
+   whatever the page does with its own layout. */
+"body{animation:nc-fade .3s ease both}" +
+
+/* ---- scroll reveal ----
+   Elements are marked by script (never by CSS alone), so a page whose script
+   fails never ends up with permanently invisible content. */
+".nc-reveal{opacity:0;transform:translate3d(0,16px,0)}" +
+".nc-reveal.nc-in{animation:nc-rise .42s cubic-bezier(.22,.7,.3,1) both}" +
+
+/* ---- hover ----
+   Cards lift a little and the shadow deepens with them, which is what makes it
+   read as height rather than as the card simply moving. */
+"[class*=\"card\"],.tile,.plan,.tool,.clip,.scene{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}" +
+"@media (hover:hover){" +
+  "[class*=\"card\"]:hover,.tile:hover,.plan:hover,.tool:hover{transform:translateY(-3px);" +
+    "box-shadow:0 14px 34px -18px var(--nc-shadow,rgba(0,0,0,.55))}" +
+"}" +
+
+/* Buttons and links. The press is a real 1px dip: without it a click on a
+   touchscreen has no feedback until the next page paints. */
+"button,.btn,.go,.alt,a.button{transition:transform .14s ease,background-color .16s ease," +
+  "border-color .16s ease,color .16s ease,box-shadow .16s ease}" +
+"button:active,.btn:active,.go:active,.alt:active{transform:translateY(1px)}" +
+"@media (hover:hover){button:not(:disabled):hover,.go:not(:disabled):hover{transform:translateY(-1px)}}" +
+
+/* Rail links slide a hair toward the content they open. */
+".sidebar a,.sidebar .navlink{transition:background-color .16s ease,color .16s ease,transform .16s ease}" +
+"@media (hover:hover){.sidebar a:hover,.sidebar .navlink:hover{transform:translateX(2px)}}" +
+
+/* ---- focus ----
+   One visible ring everywhere, because several pages had none and a keyboard
+   user could not tell where they were. */
+":focus-visible{outline:2px solid var(--nc-cyan,#00F0FF);outline-offset:2px;border-radius:8px}" +
+
+/* ---- loading ----
+   A shimmer for anything the site marks as pending, instead of a dead panel. */
+".nc-skel{background:linear-gradient(90deg,var(--nc-card,rgba(255,255,255,.04)) 25%," +
+  "var(--nc-card2,rgba(255,255,255,.09)) 37%,var(--nc-card,rgba(255,255,255,.04)) 63%);" +
+  "background-size:400% 100%;animation:nc-sweep 1.4s linear infinite;border-radius:10px;color:transparent}" +
+".nc-busy{animation:nc-pulse 1.2s ease-in-out infinite}" +
+
+/* Numbers that tick should not also reflow the line they sit on. */
+"[data-nc-count]{font-variant-numeric:tabular-nums}" +
+
+"@media (prefers-reduced-motion:reduce){" +
+  "*,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;" +
+    "transition-duration:.001ms !important;scroll-behavior:auto !important}" +
+  /* the reveal starts hidden, so it has to be put back */
+  ".nc-reveal,.nc-reveal.nc-in{opacity:1 !important;transform:none !important}" +
+  "body{animation:none}" +
+"}";
+document.head.appendChild(ncMotionStyle);
+
+/* ---------------------------------------------------------------------------
+   Reveal on scroll.
+
+   Marks the repeating blocks a page is built from — cards, plans, rows — and
+   lets them arrive as they come into view, staggered a little so a grid does
+   not snap in as one slab. Anything already on screen at load is revealed
+   immediately, otherwise the top of the page would sit invisible waiting for a
+   scroll that never comes.
+   --------------------------------------------------------------------------- */
+function ncReveal() {
+  if (NC_EMBED) return;
+  let reduced = false;
+  try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  if (reduced || !('IntersectionObserver' in window)) return;
+
+  const SEL = '.card, .tile, .plan, .tool, .clip, .scene, .fitem, .row > .box, ' +
+              'section > h2, .two > div, .cards > *, .grid > *, .launch button';
+  const seen = new WeakSet();
+
+  const io = new IntersectionObserver(entries => {
+    /* Stagger by position within this batch, not by index in the document, so
+       a long page does not end up with a two-second delay near the bottom. */
+    let n = 0;
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      const el = en.target;
+      el.style.animationDelay = Math.min(n++ * 45, 270) + 'ms';
+      el.classList.add('nc-in');
+      io.unobserve(el);
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+
+  function mark(root) {
+    let els;
+    try { els = (root || document).querySelectorAll(SEL); } catch (e) { return; }
+    els.forEach(el => {
+      if (seen.has(el) || el.closest('.sidebar, #ncCorner')) return;
+      seen.add(el);
+      /* Already in view: show it now rather than animating something the
+         reader is looking at. */
+      const r = el.getBoundingClientRect();
+      if (r.top < innerHeight && r.bottom > 0) return;
+      el.classList.add('nc-reveal');
+      io.observe(el);
+    });
+  }
+
+  mark(document);
+  /* Pages that build their content from script — the AI panels, the community
+     feed — get marked as it appears. */
+  try {
+    new MutationObserver(muts => {
+      muts.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) mark(n); }));
+    }).observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+}
+
+/* ---------------------------------------------------------------------------
+   Count-up for any number the page tags with data-nc-count. Runs once, when
+   the number scrolls into view, and finishes in under a second.
+   --------------------------------------------------------------------------- */
+function ncCountUp() {
+  if (NC_EMBED || !('IntersectionObserver' in window)) return;
+  let reduced = false;
+  try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      const el = en.target;
+      io.unobserve(el);
+      const to = parseFloat(el.dataset.ncCount || el.textContent.replace(/[^\d.-]/g, ''));
+      if (!isFinite(to)) return;
+      if (reduced) { el.textContent = String(to); return; }
+      const t0 = performance.now(), dur = 900;
+      (function step(now) {
+        const p = Math.min((now - t0) / dur, 1);
+        /* ease-out: fast at the start, so the final value is readable early */
+        const v = to * (1 - Math.pow(1 - p, 3));
+        el.textContent = to % 1 ? v.toFixed(1) : String(Math.round(v));
+        if (p < 1) requestAnimationFrame(step);
+      })(performance.now());
+    });
+  }, { threshold: 0.6 });
+
+  document.querySelectorAll('[data-nc-count]').forEach(el => io.observe(el));
+}
+
 /* One corner control, not two.
    The language picker and the vibe switch each appended their own fixed box to
    the bottom-left of any page without a sidebar. They landed on the same
@@ -550,10 +941,10 @@ function certEarned(tier) { const p = certProgress(tier); return !!p && p.missin
 const style = document.createElement('style');
 style.textContent =
 /* dropdown fix: dark options everywhere (fixes white-on-white lists) */
-"select { background:#0A0C14 !important; color:#EAF2FF !important; border:1px solid rgba(0,240,255,0.35) !important; }" +
-"select option { background:#0A0C14; color:#EAF2FF; }" +
+"select { background:var(--nc-sel-bg,#0A0C14) !important; color:var(--nc-sel-text,#EAF2FF) !important; border:1px solid var(--nc-sel-line,rgba(0,240,255,0.35)) !important; }" +
+"select option { background:var(--nc-sel-bg,#0A0C14); color:var(--nc-sel-text,#EAF2FF); }" +
 /* futuristic sidebar upgrade — applies on every page over local styles */
-".sidebar { background: linear-gradient(180deg, rgba(8,9,16,0.96), rgba(10,8,20,0.96)) !important; border-right:1px solid rgba(0,240,255,0.18) !important; box-shadow: 8px 0 40px rgba(0,240,255,0.05); }" +
+".sidebar { background: linear-gradient(180deg, var(--nc-rail1,rgba(8,9,16,0.96)), var(--nc-rail2,rgba(10,8,20,0.96))) !important; border-right:1px solid rgba(0,240,255,0.18) !important; box-shadow: 8px 0 40px rgba(0,240,255,0.05); }" +
 ".sidebar::before { content:''; position:absolute; top:0; right:-1px; bottom:0; width:2px; background:linear-gradient(180deg, transparent, #00F0FF, #FF2E97, transparent); opacity:0.5; animation: ncRail 5s ease-in-out infinite; }" +
 "@keyframes ncRail { 0%,100% { opacity:0.35; } 50% { opacity:0.9; } }" +
 ".sidebar a { position:relative; letter-spacing:0.3px; transition: all 0.25s !important; }" +
@@ -992,8 +1383,8 @@ function ncBrand() {
   a.style.cssText = 'display:flex;align-items:center;gap:9px;padding:4px 20px 16px;text-decoration:none;';
   a.innerHTML =
     '<img src="logo.svg" alt="" width="30" height="30" style="flex:0 0 auto;filter:drop-shadow(0 0 10px rgba(0,240,255,0.35))">' +
-    '<span style="font-size:1.18rem;font-weight:800;letter-spacing:-0.5px;color:#EAF2FF;' +
-    'font-family:Segoe UI,-apple-system,sans-serif">Nova<span style="color:#00F0FF">Clip</span></span>';
+    '<span style="font-size:1.18rem;font-weight:800;letter-spacing:-0.5px;color:var(--nc-text,#EAF2FF);' +
+    'font-family:Segoe UI,-apple-system,sans-serif">Nova<span style="color:var(--nc-cyan,#00F0FF)">Clip</span></span>';
   bar.insertBefore(a, bar.firstChild);
 }
 
@@ -1591,9 +1982,10 @@ function ncNav() {
          panel, so it reads as a surface the content sits in front of */
       '.sidebar{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;',
       'scrollbar-color:rgba(255,255,255,.14) transparent;',
-      'background:linear-gradient(175deg,#0E1220 0%,#0A0D18 55%,#080B14 100%) !important;',
-      'border-right:1px solid rgba(255,255,255,.07) !important;',
-      'box-shadow:1px 0 0 rgba(124,92,255,.10), 18px 0 44px -30px rgba(0,0,0,.9)}',
+      'background:linear-gradient(175deg,var(--nc-rail1,#0E1220) 0%,var(--nc-rail2,#0A0D18) 55%,var(--nc-rail3,#080B14) 100%) !important;',
+      'border-right:1px solid var(--nc-railline,rgba(255,255,255,.07)) !important;',
+      'box-shadow:1px 0 0 var(--nc-railglow,rgba(124,92,255,.10)), 18px 0 44px -30px var(--nc-shadow,rgba(0,0,0,.9))}',
+      '.sidebar::-webkit-scrollbar-thumb{background:var(--nc-line2,rgba(255,255,255,.14))}',
       '.sidebar::-webkit-scrollbar{width:5px}',
       '.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}',
       '.sidebar::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.26)}',
@@ -1603,9 +1995,9 @@ function ncNav() {
       '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;',
       'padding:clamp(7px,1.15vh,14px) 9px clamp(3px,.55vh,7px);background:none;border:0;cursor:pointer;text-align:left;',
       'font:700 10px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.15em;text-transform:uppercase;',
-      'color:#5D6A88;transition:color .18s}',
-      '#ncnav .ncgh:hover{color:#A8B8D8}',
-      '#ncnav .ncgh .ncgl{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.10),transparent)}',
+      'color:var(--nc-navhead,#5D6A88);transition:color .18s}',
+      '#ncnav .ncgh:hover{color:var(--nc-navhover,#A8B8D8)}',
+      '#ncnav .ncgh .ncgl{flex:1;height:1px;background:linear-gradient(90deg,var(--nc-line2,rgba(255,255,255,.10)),transparent)}',
       '#ncnav .ncgh .ncar{width:13px;height:13px;flex:0 0 auto;transition:transform .22s cubic-bezier(.4,1.4,.5,1);opacity:.6}',
       '#ncnav .ncg.shut .ncar{transform:rotate(-90deg)}',
       /* The layout lives here, not in an inline style. An inline display:flex
@@ -1625,17 +2017,17 @@ function ncNav() {
          is a share of the window now: tighter on a short screen, roomier on
          a tall one. */
       'padding:clamp(5px,.8vh,10px) 12px;border-radius:11px;font:600 14px/1.2 Segoe UI,system-ui,sans-serif;',
-      'color:#98A6C4;text-decoration:none;background:none;isolation:isolate;',
+      'color:var(--nc-navlink,#98A6C4);text-decoration:none;background:none;isolation:isolate;',
       'transition:color .18s,transform .18s}',
       '.sidebar #ncnav a.ncl::before{content:"";position:absolute;inset:0;border-radius:11px;z-index:-1;',
       'background:linear-gradient(105deg,rgba(124,92,255,.22),rgba(0,229,255,.13));',
       'opacity:0;transition:opacity .2s}',
-      '.sidebar #ncnav a.ncl:hover{color:#EAF2FF;transform:translateX(2px)}',
+      '.sidebar #ncnav a.ncl:hover{color:var(--nc-navon,#EAF2FF);transform:translateX(2px)}',
       '.sidebar #ncnav a.ncl:hover::before{opacity:1}',
       '.sidebar #ncnav a.ncl:focus-visible{outline:2px solid #00E5FF;outline-offset:2px}',
 
       /* active: the gradient stays lit, plus a rail on the left edge */
-      '.sidebar #ncnav a.ncl.on{color:#fff}',
+      '.sidebar #ncnav a.ncl.on{color:var(--nc-navon,#fff)}',
       '.sidebar #ncnav a.ncl.on::before{opacity:1;',
       'background:linear-gradient(105deg,rgba(247,37,133,.26),rgba(124,92,255,.30) 55%,rgba(0,229,255,.18))}',
       '.sidebar #ncnav a.ncl.on::after{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);',
@@ -1655,7 +2047,7 @@ function ncNav() {
 
       /* phones: a horizontal strip, icons above labels so it stays readable */
       '@media (max-width:760px){',
-      '.sidebar{background:rgba(10,13,24,.96) !important;box-shadow:0 -8px 30px rgba(0,0,0,.6)}',
+      '.sidebar{background:var(--nc-rail1,rgba(10,13,24,.96)) !important;box-shadow:0 -8px 30px var(--nc-shadow,rgba(0,0,0,.6))}',
       '#ncnav{flex-direction:row;padding:0;gap:0}',
       '#ncnav .ncgh{display:none}#ncnav .ncg{display:flex}#ncnav .ncg.shut .ncgi{display:flex}',
       '#ncnav .ncgi{flex-direction:row}',
@@ -1938,6 +2330,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const lpick = document.getElementById('langpick');
   if (lpick) { for (const c in LANGS) { const o = document.createElement('option'); o.value = c; o.textContent = LANGS[c]; lpick.appendChild(o); } lpick.value = lang(); lpick.onchange = () => applyLang(lpick.value); }
   ncEnsureLangPick();
+  ncBuildThemeSwitch();
+  ncReveal();
+  ncCountUp();
   ncWatchLang();
   applyTheme('Dark');   // fixed dark theme — background switcher removed
   applyLang(lang());

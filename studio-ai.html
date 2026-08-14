@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>AI — NovaClip</title>
@@ -8,8 +16,8 @@
 <link rel='icon' href='logo.svg' type='image/svg+xml'>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--ink:#05070E;--panel:#0C1220;--line:rgba(255,255,255,.1);--txt:#E8EEFF;--dim:#8A97B4;
-  --cyan:#00E5FF;--violet:#7C5CFF;--pink:#FF3D9A;
+:root{--ink:var(--nc-bg,#05070E);--panel:var(--nc-bg2,#0C1220);--line:rgba(255,255,255,.1);--txt:var(--nc-text,#E8EEFF);--dim:var(--nc-dim2,#8A97B4);
+  --cyan:var(--nc-cyan2,#00E5FF);--violet:var(--nc-violet,#7C5CFF);--pink:var(--nc-pink,#FF3D9A);
   --grad:linear-gradient(110deg,var(--violet),var(--cyan) 48%,var(--pink))}
 html,body{height:100%}
 body{background:var(--ink);color:var(--txt);overflow:hidden;

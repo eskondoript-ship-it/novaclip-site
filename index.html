@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaClip — Run your channel like a game</title>
@@ -28,7 +36,7 @@
      this. Put a 1200x630 social-card.png next to index.html; until that file
      exists the cards fall back to a plain text preview. -->
 <style>
-:root{ --void:#05060A; --void2:#0A0C14; --cyan:#00F0FF; --magenta:#FF2E97; --lime:#B6FF3C; --white:#EAF2FF; --dim:#7E8AA6; --line:rgba(120,140,200,0.14); }
+:root{ --void:var(--nc-bg,#05060A); --void2:var(--nc-bg3,#0A0C14); --cyan:var(--nc-cyan,#00F0FF); --magenta:var(--nc-pink,#FF2E97); --lime:var(--nc-lime,#B6FF3C); --white:var(--nc-text,#EAF2FF); --dim:var(--nc-dim,#7E8AA6); --line:rgba(120,140,200,0.14); }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{background:var(--void);color:var(--white);font-family:'Segoe UI',-apple-system,sans-serif;overflow-x:hidden;line-height:1.5}
@@ -41,7 +49,7 @@ a{color:inherit;text-decoration:none}
 .sidebar a::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan);transform:scaleY(0);transition:.25s}
 .sidebar a:hover{background:rgba(0,240,255,0.07);padding-left:26px}
 .sidebar a:hover::before{transform:scaleY(1)}
-.sidebar a.aidot{background:linear-gradient(135deg,var(--magenta),#7209B7,var(--cyan));background-size:200% 200%;color:#fff;border-radius:10px;margin:6px 14px;animation:gradShift 4s ease infinite}
+.sidebar a.aidot{background:linear-gradient(135deg,var(--magenta),var(--nc-violet2,#7209B7),var(--cyan));background-size:200% 200%;color:#fff;border-radius:10px;margin:6px 14px;animation:gradShift 4s ease infinite}
 @keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 .sidebar .themewrap{margin-top:auto;padding:16px 20px}
 .sidebar .themewrap label{display:block;font-size:0.78rem;opacity:0.6;margin-bottom:6px}
@@ -69,7 +77,7 @@ a{color:inherit;text-decoration:none}
 #orbs{position:fixed;inset:0;left:200px;z-index:0;pointer-events:none;overflow:hidden}
 @media(max-width:760px){#orbs{left:0}}
 .orb{position:absolute;border-radius:50%;filter:blur(85px);opacity:.42}
-.orb.a{width:460px;height:460px;background:#7209B7;top:-90px;left:12%;animation:f1 14s ease-in-out infinite}
+.orb.a{width:460px;height:460px;background:var(--nc-violet2,#7209B7);top:-90px;left:12%;animation:f1 14s ease-in-out infinite}
 .orb.b{width:390px;height:390px;background:var(--magenta);top:42%;right:4%;animation:f2 18s ease-in-out infinite}
 .orb.c{width:420px;height:420px;background:var(--cyan);bottom:-110px;left:28%;animation:f3 16s ease-in-out infinite}
 @keyframes f1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,80px)}}
@@ -253,9 +261,9 @@ h1 span:nth-child(5){animation-delay:.33s} h1 span:nth-child(6){animation-delay:
 
 /* floating orbs drifting in 3D space */
 .orb3d { position: fixed; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: 0; opacity: .3; }
-.orb3d.a { width: 380px; height: 380px; background: #00F0FF; top: 8%; left: -6%; animation: orbA 26s ease-in-out infinite alternate; }
-.orb3d.b { width: 460px; height: 460px; background: #FF2E97; bottom: 4%; right: -8%; animation: orbB 32s ease-in-out infinite alternate; }
-.orb3d.c { width: 300px; height: 300px; background: #B6FF3C; top: 52%; left: 42%; animation: orbC 22s ease-in-out infinite alternate; opacity:.18; }
+.orb3d.a { width: 380px; height: 380px; background: var(--nc-cyan,#00F0FF); top: 8%; left: -6%; animation: orbA 26s ease-in-out infinite alternate; }
+.orb3d.b { width: 460px; height: 460px; background: var(--nc-pink,#FF2E97); bottom: 4%; right: -8%; animation: orbB 32s ease-in-out infinite alternate; }
+.orb3d.c { width: 300px; height: 300px; background: var(--nc-lime,#B6FF3C); top: 52%; left: 42%; animation: orbC 22s ease-in-out infinite alternate; opacity:.18; }
 @keyframes orbA { to { transform: translate3d(140px, 90px, 120px) scale(1.25); } }
 @keyframes orbB { to { transform: translate3d(-160px, -70px, 80px) scale(1.18); } }
 @keyframes orbC { to { transform: translate3d(-120px, 110px, -60px) scale(.85); } }
@@ -367,8 +375,8 @@ h2 { animation: riseIn .8s cubic-bezier(.2,.9,.3,1.15) both; }
 
 h1 .hl1, h1 .hl2 { display:block; unicode-bidi:isolate; }
 h1 .hl1 b, h1 .hl2 b { font-weight:inherit; }
-h1 .n { color:#00F0FF; }
-h1 .m { color:#FF2E97; }
+h1 .n { color:var(--nc-cyan,#00F0FF); }
+h1 .m { color:var(--nc-pink,#FF2E97); }
 /* in RTL keep each line internally correct and right-aligned */
 html[dir='rtl'] h1 .hl1, html[dir='rtl'] h1 .hl2 { direction:rtl; text-align:right; }
 html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }

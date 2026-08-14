@@ -1,46 +1,54 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaClip — Your progress</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
-body { background: #060608; color: #f4f4f6; }
+body { background: var(--nc-bg,#060608); color: var(--nc-text,#f4f4f6); }
 
 .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: stretch; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); }
-.sidebar a { font-size: 1.05rem; text-decoration: none; color: #f4f4f6; display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background 0.2s; }
+.sidebar a { font-size: 1.05rem; text-decoration: none; color: var(--nc-text,#f4f4f6); display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background 0.2s; }
 .sidebar a:hover { background: rgba(114,9,183,0.25); }
-.sidebar a.aidot { background: linear-gradient(135deg, #F72585, #7209B7, #4CC9F0); color: white; border-radius: 12px; margin: 6px 14px; }
+.sidebar a.aidot { background: linear-gradient(135deg, var(--nc-mag,#F72585), var(--nc-violet2,#7209B7), var(--nc-blue,#4CC9F0)); color: white; border-radius: 12px; margin: 6px 14px; }
 .sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
 .sidebar .themewrap label { display: block; font-size: 0.78rem; opacity: 0.6; margin-bottom: 6px; }
-.sidebar select { width: 100%; font-size: 0.95rem; background: rgba(255,255,255,0.05); color: #f4f4f6; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px; }
+.sidebar select { width: 100%; font-size: 0.95rem; background: rgba(255,255,255,0.05); color: var(--nc-text,#f4f4f6); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 9px; }
 
 #orbs { position: fixed; inset: 0; left: 200px; z-index: 0; pointer-events: none; overflow: hidden; }
 .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.35; }
-.orb.a { width: 420px; height: 420px; background: #7209B7; top: -80px; left: 18%; animation: f1 16s ease-in-out infinite; }
-.orb.b { width: 360px; height: 360px; background: #00F0FF; bottom: -70px; right: 10%; animation: f2 19s ease-in-out infinite; }
+.orb.a { width: 420px; height: 420px; background: var(--nc-violet2,#7209B7); top: -80px; left: 18%; animation: f1 16s ease-in-out infinite; }
+.orb.b { width: 360px; height: 360px; background: var(--nc-cyan,#00F0FF); bottom: -70px; right: 10%; animation: f2 19s ease-in-out infinite; }
 @keyframes f1 { 0%,100% { transform: translate(0,0);} 50% { transform: translate(45px,55px);} }
 @keyframes f2 { 0%,100% { transform: translate(0,0);} 50% { transform: translate(-50px,-35px);} }
 
 .wrap { position: relative; z-index: 2; margin-left: 200px; padding: 54px 6vw 90px; max-width: 1100px; }
 @media (max-width: 820px) { .wrap { margin-left: 0; padding: 30px 20px 70px; } .sidebar { display: none; } #orbs { left: 0; } }
 h1 { font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 800; letter-spacing: -1.5px; }
-h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+h1 .grad { background: linear-gradient(90deg, var(--nc-mag,#F72585), var(--nc-violet2,#7209B7), var(--nc-blue,#4CC9F0)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .sub { opacity: 0.75; margin: 12px 0 34px; line-height: 1.7; max-width: 60ch; }
 
 .xpcard { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 24px; margin-bottom: 30px; }
 .xptop { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-.xptop .lbl { font-size: 0.78rem; letter-spacing: 3px; text-transform: uppercase; color: #7E8AA6; }
+.xptop .lbl { font-size: 0.78rem; letter-spacing: 3px; text-transform: uppercase; color: var(--nc-dim,#7E8AA6); }
 .xptop .val { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .xpbar { height: 12px; border-radius: 8px; background: rgba(255,255,255,0.08); overflow: hidden; }
-.xpbar i { display: block; height: 100%; border-radius: 8px; background: linear-gradient(90deg, #B6FF3C, #00F0FF); transition: width .6s ease; }
-.xpnext { font-size: 0.83rem; color: #7E8AA6; margin-top: 10px; }
+.xpbar i { display: block; height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--nc-lime,#B6FF3C), var(--nc-cyan,#00F0FF)); transition: width .6s ease; }
+.xpnext { font-size: 0.83rem; color: var(--nc-dim,#7E8AA6); margin-top: 10px; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
 .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px 22px; }
 .card h2 { font-size: 1.05rem; font-weight: 800; margin-bottom: 4px; }
-.card .hint { font-size: 0.8rem; color: #7E8AA6; line-height: 1.6; margin-bottom: 14px; }
+.card .hint { font-size: 0.8rem; color: var(--nc-dim,#7E8AA6); line-height: 1.6; margin-bottom: 14px; }
 .card .body { font-size: 0.9rem; line-height: 2; }
 .card.wide { grid-column: 1 / -1; }
 
@@ -48,10 +56,10 @@ h1 .grad { background: linear-gradient(90deg, #F72585, #7209B7, #4CC9F0); -webki
 .skrow { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.07); font-size: 0.88rem; }
 .skrow:first-child { border-top: none; }
 .skrow .nm { flex: 1; }
-.skrow .ct { font-variant-numeric: tabular-nums; color: #7E8AA6; font-size: 0.82rem; white-space: nowrap; }
+.skrow .ct { font-variant-numeric: tabular-nums; color: var(--nc-dim,#7E8AA6); font-size: 0.82rem; white-space: nowrap; }
 .skrow .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.18); flex: none; }
-.skrow.on .dot { background: #B6FF3C; box-shadow: 0 0 10px rgba(182,255,60,0.6); }
-.empty { color: #7E8AA6; font-size: 0.88rem; }
+.skrow.on .dot { background: var(--nc-lime,#B6FF3C); box-shadow: 0 0 10px rgba(182,255,60,0.6); }
+.empty { color: var(--nc-dim,#7E8AA6); font-size: 0.88rem; }
 </style>
 </head>
 <body>

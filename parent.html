@@ -1,37 +1,45 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>NovaClip — Family Dashboard</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-body { background: #05060A; color: #EAF2FF; min-height: 100vh; }
-a { color: #00F0FF; text-decoration: none; }
+body { background: var(--nc-bg,#05060A); color: var(--nc-text,#EAF2FF); min-height: 100vh; }
+a { color: var(--nc-cyan,#00F0FF); text-decoration: none; }
 .wrap { max-width: 1000px; margin: 0 auto; padding: 56px 24px; }
 h1 { font-size: 2.8rem; font-weight: 800; letter-spacing: -1px; }
-h1 .g { background: linear-gradient(90deg,#00F0FF,#FF2E97); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.sub { color: #7E8AA6; margin: 14px 0 34px; line-height: 1.7; font-size: 1.15rem; max-width: 720px; }
+h1 .g { background: linear-gradient(90deg,var(--nc-cyan,#00F0FF),var(--nc-pink,#FF2E97)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sub { color: var(--nc-dim,#7E8AA6); margin: 14px 0 34px; line-height: 1.7; font-size: 1.15rem; max-width: 720px; }
 .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; padding: 30px; margin-bottom: 20px; animation: up .6s both; }
 .card h3 { margin-bottom: 12px; font-size: 1.3rem; }
-.card h3 small { color: #7E8AA6; font-weight: 400; font-size: 0.92rem; display: block; margin-top: 4px; }
+.card h3 small { color: var(--nc-dim,#7E8AA6); font-weight: 400; font-size: 0.92rem; display: block; margin-top: 4px; }
 @keyframes up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
-input[type=password], input[type=text], input[type=email] { padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.05); color: #EAF2FF; width: 100%; margin-bottom: 12px; font-size: 1.05rem; }
-.btn { padding: 14px 32px; border-radius: 30px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(90deg,#00F0FF,#4CC9F0); color: #04121a; transition: .25s; font-size: 1.05rem; }
+input[type=password], input[type=text], input[type=email] { padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.05); color: var(--nc-text,#EAF2FF); width: 100%; margin-bottom: 12px; font-size: 1.05rem; }
+.btn { padding: 14px 32px; border-radius: 30px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(90deg,var(--nc-cyan,#00F0FF),var(--nc-blue,#4CC9F0)); color: #04121a; transition: .25s; font-size: 1.05rem; }
 .btn:hover { box-shadow: 0 0 26px rgba(0,240,255,0.5); transform: translateY(-2px); }
-.btn.pink { background: linear-gradient(90deg,#FF2E97,#7209B7); color: white; }
+.btn.pink { background: linear-gradient(90deg,var(--nc-pink,#FF2E97),var(--nc-violet2,#7209B7)); color: white; }
 .stat { display: inline-block; margin: 8px 24px 8px 0; }
-.stat b { font-size: 2.2rem; color: #B6FF3C; display: block; }
-.stat span { color: #7E8AA6; font-size: 0.95rem; }
-.log { font-size: 1rem; line-height: 2; color: #b8bccb; max-height: 260px; overflow-y: auto; }
+.stat b { font-size: 2.2rem; color: var(--nc-lime,#B6FF3C); display: block; }
+.stat span { color: var(--nc-dim,#7E8AA6); font-size: 0.95rem; }
+.log { font-size: 1rem; line-height: 2; color: var(--nc-dim,#b8bccb); max-height: 260px; overflow-y: auto; }
 .flag { border: 1px solid rgba(255,46,151,0.5); background: rgba(255,46,151,0.08); border-radius: 10px; padding: 10px 14px; margin: 8px 0; font-size: 0.88rem; }
-.flag .who { color: #FF2E97; font-weight: 700; }
+.flag .who { color: var(--nc-pink,#FF2E97); font-weight: 700; }
 .flag .actions { margin-top: 6px; }
 .flag .actions a { margin-right: 14px; font-size: 0.82rem; }
-.ok { color: #B6FF3C; }
-.notice { border-left: 3px solid #00F0FF; padding: 10px 14px; background: rgba(0,240,255,0.05); font-size: 0.85rem; color: #b8bccb; border-radius: 0 10px 10px 0; margin-top: 10px; line-height: 1.6; }
+.ok { color: var(--nc-lime,#B6FF3C); }
+.notice { border-left: 3px solid var(--nc-cyan,#00F0FF); padding: 10px 14px; background: rgba(0,240,255,0.05); font-size: 0.85rem; color: var(--nc-dim,#b8bccb); border-radius: 0 10px 10px 0; margin-top: 10px; line-height: 1.6; }
 #dash { display: none; }
-.backlnk { display: inline-block; margin-bottom: 18px; color: #7E8AA6; }
+.backlnk { display: inline-block; margin-bottom: 18px; color: var(--nc-dim,#7E8AA6); }
 </style>
 <style>
 /* nova.js sizes the rail and offsets the body; these are the shell's own looks
