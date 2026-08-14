@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Photo — NovaClip</title>
+<meta name='description' content='Crop, adjust, paint and letter an image in the browser. Nothing is uploaded.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:var(--nc-bg,#05070E); --panel:var(--nc-bg2,#0C1220);
+  --line:var(--nc-line,rgba(255,255,255,.10)); --txt:var(--nc-text,#EAF2FF);
+  --dim:var(--nc-dim,#7E8AA6); --cyan:var(--nc-cyan,#00F0FF);
+  --violet:var(--nc-violet,#7C5CFF); --pink:var(--nc-pink,#FF2E97);
+  --grad:linear-gradient(110deg,var(--violet),var(--cyan) 48%,var(--pink));
+}
+html,body{height:100%}
+body{background:var(--ink);color:var(--txt);overflow:hidden;
+  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:8px}
+
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--nc-rail,200px);z-index:998;
+  background:rgba(12,12,16,.85);backdrop-filter:blur(20px);display:flex;flex-direction:column;
+  padding:20px 0;gap:4px;border-right:1px solid var(--line);overflow-y:auto}
+.sidebar .themewrap{margin-top:auto;padding:16px 20px}
+
+.shell{margin-left:var(--nc-rail,200px);height:100vh;display:grid;
+  grid-template-columns:64px minmax(0,1fr) 292px;grid-template-rows:52px minmax(0,1fr)}
+@media (max-width:900px){
+  .shell{margin-left:0;grid-template-columns:56px minmax(0,1fr);grid-template-rows:52px minmax(0,1fr) 232px}
+  #insp{grid-column:1/-1}
+}
+
+/* ---- top bar ---- */
+/* nova.js floats the points badge into the top-right corner, so the bar keeps
+   clear of it or the badge sits on top of Save. */
+.bar{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:0 84px 0 14px;
+  border-bottom:1px solid var(--line);background:var(--panel)}
+.bar .name{font-weight:700;font-size:.92rem;letter-spacing:-.01em}
+.bar .sp{flex:1}
+.bar button,.filebtn{padding:7px 14px;border-radius:9px;border:1px solid var(--line);
+  background:var(--nc-card,rgba(255,255,255,.05));color:var(--txt);font:inherit;font-size:.83rem;
+  font-weight:650;cursor:pointer;transition:border-color .15s,background .15s}
+.bar button:hover,.filebtn:hover{border-color:rgba(0,240,255,.5)}
+.bar button:disabled{opacity:.4;cursor:default}
+.bar .prim{background:var(--grad);color:#05070E;border:0}
+.filebtn{display:inline-flex;align-items:center;gap:7px}
+input[type=file]{display:none}
+
+/* ---- tool rail ---- */
+.tools{border-right:1px solid var(--line);background:var(--panel);display:flex;
+  flex-direction:column;align-items:center;gap:5px;padding:9px 0;overflow-y:auto}
+.tool{width:42px;height:42px;border-radius:12px;border:1px solid transparent;background:none;
+  display:grid;place-items:center;cursor:pointer;color:var(--dim);transition:.15s}
+.tool:hover{color:var(--txt);background:var(--nc-card,rgba(255,255,255,.05))}
+.tool.on{color:#05070E;background:var(--grad)}
+.tool svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* ---- canvas stage ---- */
+.stage{position:relative;overflow:auto;display:grid;place-items:center;padding:22px;
+  background:
+    linear-gradient(45deg,rgba(127,127,127,.10) 25%,transparent 25%,transparent 75%,rgba(127,127,127,.10) 75%),
+    linear-gradient(45deg,rgba(127,127,127,.10) 25%,transparent 25%,transparent 75%,rgba(127,127,127,.10) 75%);
+  background-size:22px 22px;background-position:0 0,11px 11px}
+#wrap{position:relative;line-height:0;box-shadow:0 18px 50px -22px rgba(0,0,0,.8)}
+#view{max-width:100%;display:block;touch-action:none;cursor:crosshair}
+#crop{position:absolute;inset:0;pointer-events:none;display:none}
+#crop .rect{position:absolute;border:1.5px dashed var(--cyan);
+  box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+.empty{text-align:center;color:var(--dim);max-width:34ch}
+.empty h2{color:var(--txt);font-size:1.15rem;font-weight:680;margin-bottom:8px}
+.empty .filebtn{margin-top:14px}
+
+/* ---- inspector ---- */
+#insp{border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:14px}
+#insp h3{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);
+  font-weight:750;margin:4px 0 10px}
+.grp{margin-bottom:18px}
+.sl{margin-bottom:11px}
+.sl label{display:flex;justify-content:space-between;font-size:.79rem;color:var(--dim);margin-bottom:5px}
+.sl label b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--cyan)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row2 button,.wide{padding:9px;border-radius:10px;border:1px solid var(--line);
+  background:var(--nc-card,rgba(255,255,255,.05));color:var(--txt);font:inherit;font-size:.8rem;
+  font-weight:620;cursor:pointer}
+.row2 button:hover,.wide:hover{border-color:rgba(0,240,255,.5)}
+.wide{width:100%;margin-top:8px}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.presets button{padding:8px 4px;border-radius:10px;border:1px solid var(--line);
+  background:var(--nc-card,rgba(255,255,255,.05));color:var(--txt);font:inherit;font-size:.74rem;
+  font-weight:620;cursor:pointer}
+.presets button:hover{border-color:rgba(0,240,255,.5)}
+.hint{font-size:.75rem;color:var(--dim);line-height:1.6;margin-top:9px}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.swatches button{width:24px;height:24px;border-radius:7px;border:1px solid var(--line);cursor:pointer}
+input[type=text]{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(0,0,0,.28);color:var(--txt);font:inherit;font-size:.85rem}
+input[type=color]{width:100%;height:34px;border:1px solid var(--line);border-radius:9px;
+  background:none;cursor:pointer;padding:2px}
+.pill{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:20px;
+  background:rgba(0,240,255,.12);color:var(--cyan);font-weight:700;margin-left:6px}
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div class='shell'>
+  <div class='bar'>
+    <span class='name'>Photo</span>
+    <span class='pill' id='dims'>no image</span>
+    <span class='sp'></span>
+    <label class='filebtn'>Open
+      <input type='file' id='file' accept='image/*'>
+    </label>
+    <button id='undo' type='button' disabled>Undo</button>
+    <button id='redo' type='button' disabled>Redo</button>
+    <button id='reset' type='button' disabled>Reset</button>
+    <button id='save' class='prim' type='button' disabled>Save PNG</button>
+  </div>
+
+  <div class='tools' id='tools'></div>
+
+  <div class='stage' id='stage'>
+    <div class='empty' id='empty'>
+      <h2>Nothing open yet</h2>
+      <p>Open a picture, or drop one anywhere on this panel. It is decoded in the
+         tab and never uploaded — there is no server in this page at all.</p>
+      <label class='filebtn'>Choose an image
+        <input type='file' id='file2' accept='image/*'>
+      </label>
+    </div>
+    <div id='wrap' style='display:none'>
+      <canvas id='view'></canvas>
+      <div id='crop'><div class='rect' id='cropRect'></div></div>
+    </div>
+  </div>
+
+  <div id='insp'></div>
+</div>
+
+<script src='nova.js'></script>
+<script src='biometric.js' defer></script>
+<script>
+/* ============================================================================
+   NovaPhoto — a small image editor that runs entirely in the tab.
+   ============================================================================
+   The model is deliberately two-layer rather than a stack of real layers:
+
+     base      a canvas holding pixels. Crop, rotate, flip, brush strokes and
+               committed text all write here, and each write pushes a snapshot
+               onto the undo stack.
+
+     adjust    brightness, contrast, saturation, hue, blur, sepia, grayscale.
+               These are NOT written to base. They are a ctx.filter string,
+               re-applied every time the view is drawn and again on export, so
+               they stay editable until the moment the file is saved and cost
+               one draw rather than a pixel pass.
+
+   Undo snapshots are ImageData rather than data URLs: an 8MP photo is ~1.5s of
+   toDataURL per step, which turns a brush stroke into a stutter.
+   ---------------------------------------------------------------------------- */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  var base = document.createElement('canvas');   // the pixels
+  var bctx = base.getContext('2d', { willReadFrequently: true });
+  var view = $('view'), vctx = view.getContext('2d');
+
+  var loaded = false, tool = 'adjust';
+  var undoStack = [], redoStack = [], MAX_UNDO = 24;
+
+  var ADJ = { brightness: 100, contrast: 100, saturate: 100, 'hue-rotate': 0, blur: 0, sepia: 0, grayscale: 0 };
+  var DEFAULT_ADJ = JSON.parse(JSON.stringify(ADJ));
+
+  var brush = { size: 18, color: '#FF2E97', mode: 'paint' };
+  var textOpt = { value: 'Nova', size: 64, color: '#FFFFFF', font: 'Geist, Inter, sans-serif' };
+
+  /* ---- filter string, used for both the view and the export ---- */
+  function filterString() {
+    return 'brightness(' + ADJ.brightness + '%) contrast(' + ADJ.contrast + '%) ' +
+           'saturate(' + ADJ.saturate + '%) hue-rotate(' + ADJ['hue-rotate'] + 'deg) ' +
+           'blur(' + ADJ.blur + 'px) sepia(' + ADJ.sepia + '%) grayscale(' + ADJ.grayscale + '%)';
+  }
+
+  function fitView() {
+    /* The element is sized in CSS pixels but the canvas keeps the image's own
+       resolution, so nothing is resampled until export. */
+    var maxW = Math.max(160, $('stage').clientWidth - 46);
+    var maxH = Math.max(160, $('stage').clientHeight - 46);
+    var s = Math.min(maxW / base.width, maxH / base.height, 1);
+    view.style.width = Math.round(base.width * s) + 'px';
+    view.style.height = Math.round(base.height * s) + 'px';
+  }
+
+  function draw() {
+    if (!loaded) return;
+    view.width = base.width; view.height = base.height;
+    vctx.setTransform(1, 0, 0, 1, 0, 0);
+    vctx.clearRect(0, 0, view.width, view.height);
+    vctx.filter = filterString();
+    vctx.drawImage(base, 0, 0);
+    vctx.filter = 'none';
+    fitView();
+    $('dims').textContent = base.width + ' × ' + base.height;
+  }
+
+  function snapshot() {
+    try {
+      undoStack.push(bctx.getImageData(0, 0, base.width, base.height));
+      if (undoStack.length > MAX_UNDO) undoStack.shift();
+      redoStack.length = 0;
+    } catch (e) { /* a cross-origin image would taint the canvas; ours never is */ }
+    syncButtons();
+  }
+
+  function restore(data) {
+    base.width = data.width; base.height = data.height;
+    bctx.putImageData(data, 0, 0);
+    draw();
+  }
+
+  function syncButtons() {
+    $('undo').disabled = !undoStack.length;
+    $('redo').disabled = !redoStack.length;
+    $('save').disabled = $('reset').disabled = !loaded;
+  }
+
+  /* ---- opening ---- */
+  function openFile(f) {
+    if (!f || !/^image\//.test(f.type)) return;
+    var url = URL.createObjectURL(f);
+    var img = new Image();
+    img.onload = function () {
+      base.width = img.naturalWidth; base.height = img.naturalHeight;
+      bctx.setTransform(1, 0, 0, 1, 0, 0);
+      bctx.clearRect(0, 0, base.width, base.height);
+      bctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      loaded = true;
+      undoStack.length = 0; redoStack.length = 0;
+      ADJ = JSON.parse(JSON.stringify(DEFAULT_ADJ));
+      $('empty').style.display = 'none';
+      $('wrap').style.display = 'block';
+      draw(); syncButtons(); paintInspector();
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); alert('That file could not be decoded as an image.'); };
+    img.src = url;
+  }
+
+  $('file').addEventListener('change', function (e) { openFile(e.target.files[0]); });
+  $('file2').addEventListener('change', function (e) { openFile(e.target.files[0]); });
+  ['dragover', 'drop'].forEach(function (ev) {
+    $('stage').addEventListener(ev, function (e) {
+      e.preventDefault();
+      if (ev === 'drop' && e.dataTransfer && e.dataTransfer.files) openFile(e.dataTransfer.files[0]);
+    });
+  });
+
+  /* ---- destructive operations ---- */
+  function rotate(deg) {
+    if (!loaded) return;
+    snapshot();
+    var w = base.width, h = base.height;
+    var tmp = document.createElement('canvas');
+    tmp.width = deg % 180 === 0 ? w : h;
+    tmp.height = deg % 180 === 0 ? h : w;
+    var t = tmp.getContext('2d');
+    t.translate(tmp.width / 2, tmp.height / 2);
+    t.rotate(deg * Math.PI / 180);
+    t.drawImage(base, -w / 2, -h / 2);
+    base.width = tmp.width; base.height = tmp.height;
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.clearRect(0, 0, base.width, base.height);
+    bctx.drawImage(tmp, 0, 0);
+    draw();
+  }
+
+  function flip(axis) {
+    if (!loaded) return;
+    snapshot();
+    var tmp = document.createElement('canvas');
+    tmp.width = base.width; tmp.height = base.height;
+    var t = tmp.getContext('2d');
+    t.translate(axis === 'x' ? tmp.width : 0, axis === 'y' ? tmp.height : 0);
+    t.scale(axis === 'x' ? -1 : 1, axis === 'y' ? -1 : 1);
+    t.drawImage(base, 0, 0);
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.clearRect(0, 0, base.width, base.height);
+    bctx.drawImage(tmp, 0, 0);
+    draw();
+  }
+
+  /* Bakes the current adjustments into the pixels. Needed before an operation
+     that has to see them — otherwise a crop would keep the untouched original
+     underneath and the sliders would apply twice. */
+  function bakeAdjust() {
+    var tmp = document.createElement('canvas');
+    tmp.width = base.width; tmp.height = base.height;
+    var t = tmp.getContext('2d');
+    t.filter = filterString();
+    t.drawImage(base, 0, 0);
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.clearRect(0, 0, base.width, base.height);
+    bctx.drawImage(tmp, 0, 0);
+    ADJ = JSON.parse(JSON.stringify(DEFAULT_ADJ));
+  }
+
+  /* ---- pointer work: brush, and the crop rectangle ---- */
+  var drag = null;
+
+  function atImage(e) {
+    var r = view.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left) * (base.width / r.width),
+      y: (e.clientY - r.top) * (base.height / r.height)
+    };
+  }
+
+  view.addEventListener('pointerdown', function (e) {
+    if (!loaded) return;
+    view.setPointerCapture(e.pointerId);
+    var p = atImage(e);
+    if (tool === 'brush') {
+      snapshot();
+      drag = { kind: 'brush', last: p };
+      strokeTo(p, p);
+    } else if (tool === 'crop') {
+      drag = { kind: 'crop', from: p, to: p };
+      $('crop').style.display = 'block';
+      drawCropBox();
+    } else if (tool === 'text') {
+      snapshot();
+      bctx.save();
+      bctx.font = '700 ' + textOpt.size + 'px ' + textOpt.font;
+      bctx.fillStyle = textOpt.color;
+      bctx.textBaseline = 'middle';
+      bctx.textAlign = 'center';
+      bctx.fillText(textOpt.value, p.x, p.y);
+      bctx.restore();
+      draw();
+    }
+  });
+
+  view.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    var p = atImage(e);
+    if (drag.kind === 'brush') { strokeTo(drag.last, p); drag.last = p; }
+    else if (drag.kind === 'crop') { drag.to = p; drawCropBox(); }
+  });
+
+  view.addEventListener('pointerup', function () {
+    if (drag && drag.kind === 'crop') applyCrop();
+    drag = null;
+  });
+
+  function strokeTo(a, b) {
+    bctx.save();
+    bctx.globalCompositeOperation = brush.mode === 'erase' ? 'destination-out' : 'source-over';
+    bctx.strokeStyle = brush.color;
+    bctx.lineWidth = brush.size;
+    bctx.lineCap = bctx.lineJoin = 'round';
+    bctx.beginPath();
+    bctx.moveTo(a.x, a.y);
+    bctx.lineTo(b.x, b.y);
+    bctx.stroke();
+    bctx.restore();
+    draw();
+  }
+
+  function cropRectPx() {
+    var x = Math.min(drag.from.x, drag.to.x), y = Math.min(drag.from.y, drag.to.y);
+    var w = Math.abs(drag.to.x - drag.from.x), h = Math.abs(drag.to.y - drag.from.y);
+    return { x: x, y: y, w: w, h: h };
+  }
+
+  function drawCropBox() {
+    var r = cropRectPx(), s = view.getBoundingClientRect().width / base.width;
+    var el = $('cropRect');
+    el.style.left = (r.x * s) + 'px'; el.style.top = (r.y * s) + 'px';
+    el.style.width = (r.w * s) + 'px'; el.style.height = (r.h * s) + 'px';
+  }
+
+  function applyCrop() {
+    var r = cropRectPx();
+    $('crop').style.display = 'none';
+    if (r.w < 8 || r.h < 8) return;          // a stray click is not a crop
+    snapshot();
+    bakeAdjust();
+    var tmp = document.createElement('canvas');
+    tmp.width = Math.round(r.w); tmp.height = Math.round(r.h);
+    tmp.getContext('2d').drawImage(base, r.x, r.y, r.w, r.h, 0, 0, tmp.width, tmp.height);
+    base.width = tmp.width; base.height = tmp.height;
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.clearRect(0, 0, base.width, base.height);
+    bctx.drawImage(tmp, 0, 0);
+    draw(); paintInspector();
+  }
+
+  /* ---- tools ---- */
+  var TOOLS = [
+    ['adjust', 'Adjust', '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'],
+    ['crop',   'Crop',   '<path d="M6 2v14a2 2 0 002 2h14M2 6h14a2 2 0 012 2v14"/>'],
+    ['brush',  'Brush',  '<path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 114.03 4.03l-8.06 8.08M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 00-3-3.02z"/>'],
+    ['text',   'Text',   '<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'],
+    ['flip',   'Rotate', '<path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/>']
+  ];
+
+  function paintTools() {
+    $('tools').innerHTML = TOOLS.map(function (t) {
+      return '<button class="tool' + (t[0] === tool ? ' on' : '') + '" data-tool="' + t[0] +
+        '" title="' + t[1] + '" aria-label="' + t[1] + '" type="button">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' + t[2] + '</svg></button>';
+    }).join('');
+    $('tools').querySelectorAll('.tool').forEach(function (b) {
+      b.onclick = function () { tool = b.dataset.tool; paintTools(); paintInspector(); };
+    });
+    view.style.cursor = tool === 'crop' ? 'crosshair' : (tool === 'brush' ? 'crosshair' : 'default');
+  }
+
+  /* ---- inspector ---- */
+  var PRESETS = {
+    'None':     { },
+    'Punch':    { contrast: 122, saturate: 132 },
+    'Faded':    { contrast: 88, saturate: 78, brightness: 108 },
+    'Mono':     { grayscale: 100, contrast: 112 },
+    'Sepia':    { sepia: 78, saturate: 108 },
+    'Cold':     { 'hue-rotate': 190, saturate: 118 },
+    'Warm':     { 'hue-rotate': 340, saturate: 116, brightness: 104 },
+    'Dream':    { blur: 1.4, brightness: 110, saturate: 120 },
+    'Noir':     { grayscale: 100, contrast: 150, brightness: 92 }
+  };
+
+  function slider(key, label, min, max, step, unit) {
+    return '<div class="sl"><label>' + label + '<b id="v_' + key + '">' + ADJ[key] + (unit || '') +
+      '</b></label><input type="range" id="s_' + key + '" min="' + min + '" max="' + max +
+      '" step="' + step + '" value="' + ADJ[key] + '"></div>';
+  }
+
+  function paintInspector() {
+    var h = '';
+    if (!loaded) {
+      $('insp').innerHTML = '<h3>Inspector</h3><p class="hint">Open an image and the ' +
+        'controls for the selected tool appear here.</p>';
+      return;
+    }
+    if (tool === 'adjust') {
+      h += '<h3>Adjust</h3><div class="grp">' +
+        slider('brightness', 'Brightness', 0, 200, 1, '%') +
+        slider('contrast', 'Contrast', 0, 200, 1, '%') +
+        slider('saturate', 'Saturation', 0, 200, 1, '%') +
+        slider('hue-rotate', 'Hue', 0, 360, 1, '°') +
+        slider('blur', 'Blur', 0, 12, .1, 'px') +
+        slider('sepia', 'Sepia', 0, 100, 1, '%') +
+        slider('grayscale', 'Black & white', 0, 100, 1, '%') +
+        '<button class="wide" id="adjReset" type="button">Reset adjustments</button></div>' +
+        '<h3>Presets</h3><div class="presets">' +
+        Object.keys(PRESETS).map(function (n) { return '<button data-p="' + n + '" type="button">' + n + '</button>'; }).join('') +
+        '</div><p class="hint">Adjustments stay live — they are re-applied on every draw and ' +
+        'baked in only when you save or crop.</p>';
+    } else if (tool === 'crop') {
+      h += '<h3>Crop</h3><p class="hint">Drag a rectangle on the image. Anything under 8 pixels ' +
+        'is treated as a stray click and ignored.</p>' +
+        '<div class="row2" style="margin-top:10px">' +
+        '<button data-ar="1" type="button">Square</button>' +
+        '<button data-ar="0" type="button">Free</button></div>' +
+        '<button class="wide" id="trim" type="button">Trim 5% border</button>';
+    } else if (tool === 'brush') {
+      h += '<h3>Brush</h3><div class="grp">' +
+        '<div class="sl"><label>Size<b id="v_bs">' + brush.size + 'px</b></label>' +
+        '<input type="range" id="s_bs" min="1" max="140" value="' + brush.size + '"></div>' +
+        '<label class="hint" for="bcol">Colour</label>' +
+        '<input type="color" id="bcol" value="' + brush.color + '">' +
+        '<div class="swatches" id="sw"></div>' +
+        '<div class="row2" style="margin-top:10px">' +
+        '<button data-bm="paint" type="button">Paint</button>' +
+        '<button data-bm="erase" type="button">Erase</button></div>' +
+        '<p class="hint">Erase cuts to transparent, which PNG keeps and JPEG does not.</p></div>';
+    } else if (tool === 'text') {
+      h += '<h3>Text</h3><div class="grp">' +
+        '<label class="hint" for="tv">Words</label><input type="text" id="tv" value="' +
+        String(textOpt.value).replace(/"/g, '&quot;') + '">' +
+        '<div class="sl" style="margin-top:10px"><label>Size<b id="v_ts">' + textOpt.size + 'px</b></label>' +
+        '<input type="range" id="s_ts" min="8" max="400" value="' + textOpt.size + '"></div>' +
+        '<label class="hint" for="tcol">Colour</label><input type="color" id="tcol" value="' + textOpt.color + '">' +
+        '<p class="hint">Click the image to place it. It is drawn into the picture at that ' +
+        'point — undo removes it, nothing else will.</p></div>';
+    } else if (tool === 'flip') {
+      h += '<h3>Rotate &amp; flip</h3><div class="row2">' +
+        '<button data-rot="-90" type="button">Left 90°</button>' +
+        '<button data-rot="90" type="button">Right 90°</button>' +
+        '<button data-fl="x" type="button">Flip across</button>' +
+        '<button data-fl="y" type="button">Flip down</button></div>';
+    }
+    $('insp').innerHTML = h;
+    wireInspector();
+  }
+
+  function wireInspector() {
+    Object.keys(ADJ).forEach(function (k) {
+      var el = $('s_' + k);
+      if (!el) return;
+      el.oninput = function () {
+        ADJ[k] = parseFloat(el.value);
+        var v = $('v_' + k);
+        if (v) v.textContent = ADJ[k] + (k === 'hue-rotate' ? '°' : (k === 'blur' ? 'px' : '%'));
+        draw();
+      };
+    });
+    if ($('adjReset')) $('adjReset').onclick = function () {
+      ADJ = JSON.parse(JSON.stringify(DEFAULT_ADJ)); draw(); paintInspector();
+    };
+    $('insp').querySelectorAll('[data-p]').forEach(function (b) {
+      b.onclick = function () {
+        ADJ = JSON.parse(JSON.stringify(DEFAULT_ADJ));
+        var p = PRESETS[b.dataset.p] || {};
+        Object.keys(p).forEach(function (k) { ADJ[k] = p[k]; });
+        draw(); paintInspector();
+      };
+    });
+    if ($('s_bs')) $('s_bs').oninput = function () {
+      brush.size = +this.value; $('v_bs').textContent = brush.size + 'px';
+    };
+    if ($('bcol')) $('bcol').oninput = function () { brush.color = this.value; };
+    if ($('sw')) {
+      ['#FF2E97', '#00F0FF', '#B6FF3C', '#FFB443', '#FFFFFF', '#05070E'].forEach(function (c) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.style.background = c; b.title = c;
+        b.onclick = function () { brush.color = c; if ($('bcol')) $('bcol').value = c; };
+        $('sw').appendChild(b);
+      });
+    }
+    $('insp').querySelectorAll('[data-bm]').forEach(function (b) {
+      b.onclick = function () { brush.mode = b.dataset.bm; };
+    });
+    if ($('tv')) $('tv').oninput = function () { textOpt.value = this.value; };
+    if ($('s_ts')) $('s_ts').oninput = function () {
+      textOpt.size = +this.value; $('v_ts').textContent = textOpt.size + 'px';
+    };
+    if ($('tcol')) $('tcol').oninput = function () { textOpt.color = this.value; };
+    $('insp').querySelectorAll('[data-rot]').forEach(function (b) {
+      b.onclick = function () { rotate(+b.dataset.rot); };
+    });
+    $('insp').querySelectorAll('[data-fl]').forEach(function (b) {
+      b.onclick = function () { flip(b.dataset.fl); };
+    });
+    if ($('trim')) $('trim').onclick = function () {
+      snapshot(); bakeAdjust();
+      var m = Math.round(Math.min(base.width, base.height) * 0.05);
+      var tmp = document.createElement('canvas');
+      tmp.width = base.width - m * 2; tmp.height = base.height - m * 2;
+      if (tmp.width < 8 || tmp.height < 8) return;
+      tmp.getContext('2d').drawImage(base, m, m, tmp.width, tmp.height, 0, 0, tmp.width, tmp.height);
+      base.width = tmp.width; base.height = tmp.height;
+      bctx.clearRect(0, 0, base.width, base.height);
+      bctx.drawImage(tmp, 0, 0);
+      draw();
+    };
+  }
+
+  /* ---- top bar ---- */
+  $('undo').onclick = function () {
+    if (!undoStack.length) return;
+    redoStack.push(bctx.getImageData(0, 0, base.width, base.height));
+    restore(undoStack.pop());
+    syncButtons();
+  };
+  $('redo').onclick = function () {
+    if (!redoStack.length) return;
+    undoStack.push(bctx.getImageData(0, 0, base.width, base.height));
+    restore(redoStack.pop());
+    syncButtons();
+  };
+  $('reset').onclick = function () {
+    ADJ = JSON.parse(JSON.stringify(DEFAULT_ADJ));
+    draw(); paintInspector();
+  };
+  $('save').onclick = function () {
+    /* Export goes through its own canvas with the filter applied, so what is
+       saved is what is on screen — including adjustments that were never
+       baked into base. */
+    var out = document.createElement('canvas');
+    out.width = base.width; out.height = base.height;
+    var o = out.getContext('2d');
+    o.filter = filterString();
+    o.drawImage(base, 0, 0);
+    var a = document.createElement('a');
+    a.download = 'novaclip-' + Date.now() + '.png';
+    a.href = out.toDataURL('image/png');
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+
+  document.addEventListener('keydown', function (e) {
+    if (!loaded) return;
+    var meta = e.ctrlKey || e.metaKey;
+    if (meta && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); $('undo').click(); }
+    else if (meta && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) {
+      e.preventDefault(); $('redo').click();
+    } else if (meta && e.key.toLowerCase() === 's') { e.preventDefault(); $('save').click(); }
+  });
+
+  addEventListener('resize', function () { if (loaded) fitView(); });
+
+  paintTools(); paintInspector(); syncButtons();
+})();
+</script>
+</body>
+</html>

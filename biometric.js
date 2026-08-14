@@ -116,6 +116,7 @@
     cmdLang: { en: 'Switching to {l}...', fa: 'تغییر به {l}...', es: 'Cambiando a {l}...', pt: 'A mudar para {l}...', fr: 'Passage en {l}...', de: 'Wechsle zu {l}...', ar: 'التبديل إلى {l}...' },
     cmdTheme: { en: 'Theme set to {t}.', fa: 'پوسته روی {t} تنظیم شد.', es: 'Tema cambiado a {t}.', pt: 'Tema mudado para {t}.', fr: 'Thème réglé sur {t}.', de: 'Design auf {t} gesetzt.', ar: 'تم ضبط المظهر على {t}.' },
     cmdClicked: { en: '{b}', fa: '{b}', es: '{b}', pt: '{b}', fr: '{b}', de: '{b}', ar: '{b}' },
+    cmdTyped: { en: 'Typed it into the box — read it, then press Ask.', fa: 'در کادر نوشته شد — بخوانید و بپرسید.', es: 'Escrito en el cuadro — léelo y pulsa Preguntar.', pt: 'Escrito na caixa — lê e carrega em Perguntar.', fr: 'Écrit dans le champ — relis, puis clique sur Demander.', de: 'Ins Feld geschrieben — lies es, dann auf Fragen klicken.', ar: 'كُتب في المربع — اقرأه ثم اضغط اسأل.' },
     cmdCopied: { en: 'Link copied.', fa: 'لینک کپی شد.', es: 'Enlace copiado.', pt: 'Ligação copiada.', fr: 'Lien copié.', de: 'Link kopiert.', ar: 'تم نسخ الرابط.' },
     theme_light: { en: 'Light', fa: 'روشن', es: 'Claro', pt: 'Claro', fr: 'Clair', de: 'Hell', ar: 'فاتح' },
     theme_dark: { en: 'Dark', fa: 'تیره', es: 'Oscuro', pt: 'Escuro', fr: 'Sombre', de: 'Dunkel', ar: 'داكن' },
@@ -250,6 +251,28 @@
       it: ['tendenze', 'trend'],
       pl: ['trendy'],
       vi: ['xu hướng']
+    } },
+    { url: 'photo.html', say: {
+      en: ['photo editor', 'edit a photo', 'photoshop', 'image editor', 'crop a picture', 'photo'],
+      zh: ['图片编辑', '修图', '照片编辑'],
+      hi: ['फ़ोटो एडिटर', 'तस्वीर एडिट'],
+      es: ['editor de fotos', 'editar foto', 'retoque'],
+      ar: ['محرر الصور', 'تعديل الصورة'],
+      fr: ['éditeur photo', 'retouche photo'],
+      bn: ['ফটো এডিটর', 'ছবি সম্পাদনা'],
+      pt: ['editor de fotos', 'editar foto'],
+      ru: ['фоторедактор', 'обработка фото'],
+      ur: ['فوٹو ایڈیٹر', 'تصویر ایڈٹ'],
+      id: ['editor foto', 'edit foto'],
+      de: ['fotoeditor', 'bild bearbeiten'],
+      ja: ['写真編集', '画像編集'],
+      tr: ['fotoğraf düzenleyici', 'resim düzenle'],
+      ko: ['사진 편집', '이미지 편집'],
+      fa: ['ویرایش عکس', 'ادیتور عکس'],
+      uk: ['фоторедактор', 'обробка фото'],
+      it: ['editor di foto', 'modifica foto'],
+      pl: ['edytor zdjęć', 'edycja zdjęcia'],
+      vi: ['chỉnh sửa ảnh', 'sửa ảnh']
     } },
     { url: 'editor.html', say: {
       en: ['editor', 'video editor', 'open the editor', 'timeline', 'edit my video'],
@@ -1183,6 +1206,13 @@
       try { sessionStorage.removeItem('nc_signin_intent'); } catch (e) {}
       setTimeout(function () { var b = document.getElementById('gbtn'); if (b) b.click(); }, 900);
     }
+    try { v = sessionStorage.getItem('nc_ai_prompt'); } catch (e) { v = null; }
+    if (v && HERE === 'ai.html') {
+      try { sessionStorage.removeItem('nc_ai_prompt'); } catch (e) {}
+      var tries = 0;
+      (function put() { if (fillAsk(v) || tries++ > 30) return; setTimeout(put, 120); })();
+    }
+
     try { v = sessionStorage.getItem('nc_editor_intent'); } catch (e) { v = null; }
     if (v && HERE === 'editor.html') {
       try { sessionStorage.removeItem('nc_editor_intent'); } catch (e) {}
@@ -1192,8 +1222,75 @@
     }
   }
 
-  function smartCmd(t) {
+  /* ------------------------------------------------------------------
+   * Dictation: "ask the AI why my views drop after 20 seconds".
+   *
+   * Everything after the trigger is the message, and it is taken from the
+   * RAW transcript rather than the cleaned one — clean() lowercases and
+   * strips punctuation, which is exactly the part of a question worth
+   * keeping. The text is parked and typed into the box on arrival, then
+   * left there: sending someone's half-heard sentence to a model without
+   * showing it to them first is not a favour.
+   * ------------------------------------------------------------------ */
+  var SAY_ASK = {
+    en: ['ask the ai','ask ai','ask nova','tell the ai','go to ai and write','go to the ai and write','write to the ai','ask the assistant'],
+    zh: ['问人工智能','问助手','告诉助手'], hi: ['एआई से पूछो','सहायक से पूछो'],
+    es: ['pregunta a la ia','preguntale a la ia','dile a la ia','escribe a la ia'],
+    ar: ['اسأل الذكاء الاصطناعي','اسأل المساعد'],
+    fr: ['demande à l ia','demande a l ia','écris à l ia','ecris a l ia','demande à l assistant'],
+    bn: ['এআইকে জিজ্ঞাসা করো'], pt: ['pergunta à ia','pergunta a ia','escreve à ia','diz à ia'],
+    ru: ['спроси ии','спроси помощника','напиши ии'],
+    ur: ['اے آئی سے پوچھو'], id: ['tanya ai','tanya asisten','tulis ke ai'],
+    de: ['frag die ki','frage die ki','schreib der ki'],
+    ja: ['エーアイに聞いて','アシスタントに聞いて'], tr: ['yapay zekaya sor','asistana sor'],
+    ko: ['인공지능에게 물어봐','어시스턴트에게 물어봐'],
+    fa: ['از هوش مصنوعی بپرس','به هوش مصنوعی بنویس'],
+    uk: ['запитай штучний інтелект','напиши штучному інтелекту'],
+    it: ['chiedi all ia','scrivi all ia'], pl: ['zapytaj sztuczną inteligencję','napisz do ai'],
+    vi: ['hỏi trí tuệ nhân tạo','hỏi trợ lý']
+  };
+
+  /* Finds the trigger in the raw sentence and hands back what follows it,
+     with its original capitals and question mark intact. */
+  function tailAfter(raw, phrases) {
+    var low = String(raw || '').toLowerCase(), i, p, at;
+    for (i = 0; i < phrases.length; i++) {
+      p = phrases[i].toLowerCase();
+      at = low.indexOf(p);
+      if (at !== -1) {
+        var rest = String(raw).slice(at + p.length).replace(/^[\s,:;."'\u2019-]+/, '').trim();
+        if (rest.length >= 2) return rest;
+      }
+    }
+    return null;
+  }
+
+  function goAsk(prompt) {
+    try { sessionStorage.setItem('nc_ai_prompt', prompt); } catch (e) {}
+    if (HERE === 'ai.html') { fillAsk(prompt); return; }
+    flash(ui2('cmdGo', { '{p}': 'ai.html' }));
+    setTimeout(function () { location.href = 'ai.html'; }, 650);
+  }
+
+  function fillAsk(prompt) {
+    var box = document.getElementById('askbox');
+    if (!box) return false;
+    box.value = prompt;
+    try { box.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
+    box.focus();
+    try { box.setSelectionRange(prompt.length, prompt.length); } catch (e) {}
+    box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    flash(ui('cmdTyped'));
+    return true;
+  }
+
+  function smartCmd(t, raw) {
     var L = langCode(), code, fx, panel;
+
+    /* Dictate a question for the AI page. Checked before anything else, or
+       "ask the AI about pricing" would be caught by the Pricing page. */
+    var said = tailAfter(raw, (SAY_ASK[L] || []).concat(SAY_ASK.en));
+    if (said) return { type: 'smart', run: function () { goAsk(said); } };
 
     /* Sign in with a named provider. Reuses the sign-in phrases already
        written for every language, so only the provider is new. */
@@ -1376,9 +1473,76 @@
     return hits.length === 1 ? hits[0] : null;
   }
 
+  /* ------------------------------------------------------------------
+   * Sentences.
+   *
+   * "Open the editor" and "hey, could you please take me to the editor?"
+   * should do the same thing. Writing both for 23 pages in 20 languages
+   * would be thousands of phrases; instead the polite framing people put
+   * in FRONT of a request is trimmed off, and whatever is left goes to
+   * the ordinary matcher.
+   *
+   * Only leading framing is removed. Anything after the destination is
+   * left alone, because that is where a dictated message lives.
+   * ------------------------------------------------------------------ */
+  var LEAD = {
+    en: ['hey nova','hey','ok nova','okay nova','please','could you please','could you','can you please','can you',
+         'would you','i want to see','i want to go to','i want to','i would like to','id like to','i need to',
+         'lets go to','let us go to','lets','take me to the','take me to','take me','bring me to','show me the','show me',
+         'go to the','go to','goto','navigate to','head to','jump to','switch to the','switch to','move to','get me to',
+         'i wanna','wanna','just','now','and','then'],
+    es: ['oye nova','oye','por favor','puedes','podrias','quiero ver','quiero ir a','quiero','llevame a','muestrame el','muestrame',
+         'vamos a','ir a','ve a','abre el','abre la','abre'],
+    pt: ['ei nova','por favor','podes','queria ver','quero ir para','quero','leva me para','mostra me o','mostra me',
+         'vamos para','ir para','vai para','abre o','abre a','abre'],
+    fr: ['salut nova','s il te plait','peux tu','pourrais tu','je veux voir','je veux aller a','je veux','emmene moi a',
+         'montre moi le','montre moi','allons a','aller a','va a','ouvre le','ouvre la','ouvre'],
+    de: ['hey nova','bitte','kannst du','koenntest du','könntest du','ich moechte','ich möchte','ich will','zeig mir das','zeig mir',
+         'bring mich zu','geh zu','gehe zu','wechsle zu','oeffne das','öffne das','oeffne','öffne'],
+    it: ['ehi nova','per favore','puoi','potresti','voglio vedere','voglio andare a','voglio','portami a','mostrami il','mostrami',
+         'andiamo a','vai a','apri il','apri la','apri'],
+    ru: ['привет нова','пожалуйста','можешь','не мог бы ты','я хочу увидеть','я хочу перейти к','я хочу','покажи мне',
+         'отведи меня к','перейди к','перейди на','иди к','открой'],
+    uk: ['привіт нова','будь ласка','можеш','я хочу побачити','я хочу перейти до','я хочу','покажи мені',
+         'перейди до','відкрий'],
+    pl: ['hej nova','proszę','czy możesz','chcę zobaczyć','chcę przejść do','chcę','pokaż mi','przejdź do','otwórz'],
+    tr: ['hey nova','lütfen','yapabilir misin','görmek istiyorum','gitmek istiyorum','istiyorum','bana göster',
+         'beni götür','git','geç','aç'],
+    nl: [],
+    ar: ['يا نوفا','من فضلك','هل يمكنك','أريد أن أرى','أريد الذهاب إلى','أريد','أرني','خذني إلى','اذهب إلى','افتح'],
+    fa: ['هی نوا','لطفا','می‌شه','میشه','می خواهم ببینم','می خواهم بروم به','می خواهم','نشانم بده','ببر من به','برو به','باز کن'],
+    ur: ['ہے نووا','براہ کرم','کیا آپ','میں دیکھنا چاہتا ہوں','میں جانا چاہتا ہوں','مجھے دکھاؤ','مجھے لے چلو','جاؤ','کھولو'],
+    hi: ['हे नोवा','कृपया','क्या आप','मुझे देखना है','मुझे जाना है','मुझे दिखाओ','मुझे ले चलो','जाओ','खोलो'],
+    bn: ['হেই নোভা','অনুগ্রহ করে','আমাকে দেখাও','আমি যেতে চাই','আমাকে নিয়ে চলো','যাও','খোলো'],
+    zh: ['嘿 nova','请','你能','我想看','我想去','带我去','给我看','去','打开','切换到'],
+    ja: ['ねえ nova','お願い','できますか','見たい','行きたい','見せて','連れて行って','行って','開いて'],
+    ko: ['헤이 nova','제발','보여줘','가고 싶어','보고 싶어','데려가','가줘','열어'],
+    id: ['hai nova','tolong','bisakah kamu','saya ingin melihat','saya ingin pergi ke','saya mau','tunjukkan',
+         'bawa saya ke','pergi ke','buka'],
+    vi: ['này nova','làm ơn','bạn có thể','tôi muốn xem','tôi muốn đến','cho tôi xem','đưa tôi đến','đi đến','mở']
+  };
+
+  /* Repeatedly trims leading framing: "can you please take me to the editor"
+     drops three phrases before it reaches "editor". Capped so a pathological
+     sentence cannot spin. */
+  function stripLead(t, L) {
+    var list = (LEAD[L] || []).concat(LEAD.en), out = t, i, p, moved = true, rounds = 0;
+    list = list.slice().sort(function (a, b) { return b.length - a.length; });
+    while (moved && rounds++ < 6) {
+      moved = false;
+      for (i = 0; i < list.length; i++) {
+        p = clean(list[i]);
+        if (!p) continue;
+        if (out.indexOf(p + ' ') === 0) { out = out.slice(p.length + 1); moved = true; break; }
+        if (out === p) return out;   /* the framing IS the whole sentence */
+      }
+    }
+    return out || t;
+  }
+
   function matchCmd(text) {
     var t = clean(text), i, k, sm;
-    sm = smartCmd(t);
+    sm = smartCmd(t, text);
     if (sm) return sm;
     for (i = 0; i < extraCommands.length; i++) {
       if (hasPhrase(t, extraCommands[i].say)) return { type: 'custom', cmd: extraCommands[i] };
@@ -1391,8 +1555,21 @@
     if (hasPhrase(t, sayList({ say: SAY_STOP }))) return { type: 'stop' };
     if (hasPhrase(t, sayList({ say: SAY_HELP }))) return { type: 'help' };
 
+    /* Still nothing. Trim the polite framing off the front and try the whole
+       matcher again on what is left, once. */
+    var lean = stripLead(t, langCode());
+    if (lean && lean !== t) {
+      for (k = 0; k < NAV.length; k++) {
+        if (hasPhrase(lean, sayList(NAV[k]))) return { type: 'nav', page: NAV[k].url };
+      }
+      if (hasPhrase(lean, sayList({ say: SAY_SIGNIN }))) return { type: 'signin' };
+      if (hasPhrase(lean, sayList({ say: SAY_SIGNOUT }))) return { type: 'signout' };
+      if (hasPhrase(lean, sayList({ say: SAY_STOP }))) return { type: 'stop' };
+      if (hasPhrase(lean, sayList({ say: SAY_HELP }))) return { type: 'help' };
+    }
+
     /* Nothing fixed matched. Fall back to whatever the page is showing. */
-    var ctl = ncMatchControl(t, langCode());
+    var ctl = ncMatchControl(lean || t, langCode());
     if (ctl) return { type: 'click', el: ctl.el, label: ctl.txt };
     return null;
   }

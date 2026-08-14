@@ -195,6 +195,20 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
             font-size: 0.86rem; color: var(--nc-text,#cfe0ff); line-height: 1.65; }
 .moneybox b { color: var(--nc-lime,#B6FF3C); font-size: 1.15rem; }
 .moneybox.off { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: var(--nc-dim,#9fb0cc); }
+
+/* ---- Channel dashboard ---- */
+#studio{margin:0 0 22px}
+.sthead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.sthead h2{font-size:1.25rem;font-weight:700;letter-spacing:-.02em}
+.stsince{font-size:.8rem;color:var(--nc-dim,#7E8AA6)}
+.stgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:12px}
+.sttile{border:1px solid var(--nc-line,rgba(255,255,255,.10));border-radius:16px;padding:16px 18px;
+  background:var(--nc-card,rgba(255,255,255,.04));display:flex;flex-direction:column;gap:4px}
+.sttile .stlab{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--nc-dim,#7E8AA6);font-weight:700}
+.sttile b{font-size:1.85rem;font-weight:750;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.15}
+.sttile i{font-style:normal;font-size:.78rem;color:var(--nc-dim,#7E8AA6)}
+#connectrow{margin:0 0 18px}
 </style>
 </head>
 <body>
@@ -221,7 +235,23 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
     <p class='hint' data-t='analytics_hint'>Connect your channel to load your analytics.</p>
   </div>
 
-  <div id='dash' style='display:none;'>
+  <!-- Channel dashboard: the shape YouTube Studio opens on — the four numbers
+       first, then the detail. Rendered before any request finishes so the page
+       has structure to look at instead of a spinner or a gate. -->
+  <section id='studio'>
+    <div class='sthead'>
+      <h2 id='stName' class='nc-skel'>Your channel</h2>
+      <span class='stsince' id='stSince'>Last 28 days</span>
+    </div>
+    <div class='stgrid'>
+      <div class='sttile'><span class='stlab'>Views</span><b id='stViews' class='nc-skel'>0</b><i id='stViewsD'></i></div>
+      <div class='sttile'><span class='stlab'>Subscribers</span><b id='stSubs' class='nc-skel'>0</b><i id='stSubsD'></i></div>
+      <div class='sttile'><span class='stlab'>Videos</span><b id='stVids' class='nc-skel'>0</b><i id='stVidsD'></i></div>
+      <div class='sttile'><span class='stlab'>Avg views / video</span><b id='stAvg' class='nc-skel'>0</b><i id='stAvgD'></i></div>
+    </div>
+  </section>
+
+  <div id='dash'>
     <div class='comprow'>
       <label class='switch'>
         <input type='checkbox' id='compToggle' checked>
@@ -316,10 +346,33 @@ function loadToken() {
 }
 function yt(url) { return fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + ytToken } }).then(r => r.json()); }
 
+/* Fills the four tiles. Called with nulls before anything has loaded, which
+   leaves the skeleton shimmer in place rather than printing a confident 0. */
+function studioFill(o) {
+  const put = (id, v, sub) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (v === null || v === undefined) { el.classList.add('nc-skel'); return; }
+    el.classList.remove('nc-skel');
+    el.textContent = typeof v === 'number' ? v.toLocaleString() : v;
+    const d = document.getElementById(id + 'D');
+    if (d && sub) d.textContent = sub;
+  };
+  o = o || {};
+  put('stViews', o.views, o.viewsSub);
+  put('stSubs', o.subs, o.subsSub);
+  put('stVids', o.videos, o.videosSub);
+  put('stAvg', o.avg, o.avgSub);
+  const n = document.getElementById('stName');
+  if (o.name) { n.classList.remove('nc-skel'); n.textContent = o.name; }
+}
+
 async function boot() {
   const tok = loadToken();
   const row = document.getElementById('connectrow');
   if (!tok) {
+    /* A banner above a live dashboard, rather than a gate instead of one. */
+    studioFill(null);
     row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">Connect in Studio</a>' +
       '<p class="hint">Analytics uses the channel you connect in Studio. Connect once there, then come back — you will stay signed in for about an hour.</p>';
     return;
@@ -328,7 +381,19 @@ async function boot() {
   row.innerHTML = '<p class="hint">Loading your channel…</p>';
   try {
     const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
-    if (d.items && d.items.length) { myStats = d.items[0]; enterDash(); }
+    if (d.items && d.items.length) {
+      myStats = d.items[0];
+      const st = myStats.statistics || {};
+      const views = +st.viewCount || 0, vids = +st.videoCount || 0;
+      studioFill({
+        name: (myStats.snippet && myStats.snippet.title) || 'Your channel',
+        views: views, subs: +st.subscriberCount || 0, videos: vids,
+        avg: vids ? Math.round(views / vids) : 0,
+        viewsSub: 'all time', subsSub: st.hiddenSubscriberCount ? 'hidden by the channel' : 'all time',
+        videosSub: 'public uploads', avgSub: 'lifetime average'
+      });
+      enterDash();
+    }
     else {
       /* Print what YouTube actually said. "Session expired" was the old catch-all
          and it is wrong as often as it is right — a disabled API, a revoked scope

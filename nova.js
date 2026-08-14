@@ -157,6 +157,7 @@ const T = {
   duel_you: { en:"YOU", zh:"你", hi:"आप", es:"TÚ", ar:"أنت", fr:"TOI", bn:"আপনি", pt:"TU", ru:"ВЫ", ur:"آپ", id:"KAMU", de:"DU", ja:"あなた", tr:"SEN", ko:"당신", fa:"تو", uk:"ВИ", it:"TU", pl:"TY", vi:"BẠN" },
   duel_vs: { en:"VS", zh:"对战", hi:"बनाम", es:"VS", ar:"ضد", fr:"VS", bn:"বনাম", pt:"VS", ru:"ПРОТИВ", ur:"مقابل", id:"VS", de:"GEGEN", ja:"VS", tr:"VS", ko:"VS", fa:"در برابر", uk:"ПРОТИ", it:"VS", pl:"KONTRA", vi:"ĐẤU" },
   duel_rival: { en:"RIVAL", zh:"对手", hi:"प्रतिद्वंद्वी", es:"RIVAL", ar:"المنافس", fr:"RIVAL", bn:"প্রতিদ্বন্দ্বী", pt:"RIVAL", ru:"СОПЕРНИК", ur:"حریف", id:"LAWAN", de:"RIVALE", ja:"ライバル", tr:"RAKİP", ko:"라이벌", fa:"رقیب", uk:"СУПЕРНИК", it:"RIVALE", pl:"RYWAL", vi:"ĐỐI THỦ" },
+  photo: { en:"Photo", zh:"图片", hi:"फ़ोटो", es:"Foto", ar:"صورة", fr:"Photo", bn:"ছবি", pt:"Foto", ru:"Фото", ur:"تصویر", id:"Foto", de:"Foto", ja:"写真", tr:"Fotoğraf", ko:"사진", fa:"عکس", uk:"Фото", it:"Foto", pl:"Zdjęcie", vi:"Ảnh" },
   biometrics: { en:"Biometrics", zh:"生物识别", hi:"बायोमेट्रिक्स", es:"Biometría", ar:"القياسات الحيوية", fr:"Biométrie", bn:"বায়োমেট্রিক্স", pt:"Biometria", ru:"Биометрия", ur:"بایومیٹرکس", id:"Biometrik", de:"Biometrie", ja:"生体認証", tr:"Biyometri", ko:"생체 인식", fa:"زیست‌سنجی", uk:"Біометрія", it:"Biometria", pl:"Biometria", vi:"Sinh trắc học" },
   theme: { en:"Theme", zh:"主题", hi:"थीम", es:"Tema", ar:"المظهر", fr:"Thème", bn:"থিম", pt:"Tema", ru:"Тема", ur:"تھیم", id:"Tema", de:"Design", ja:"テーマ", tr:"Tema", ko:"테마", fa:"پوسته", uk:"Тема", it:"Tema", pl:"Motyw", vi:"Giao diện" },
   theme_light: { en:"Light", zh:"浅色", hi:"लाइट", es:"Claro", ar:"فاتح", fr:"Clair", bn:"লাইট", pt:"Claro", ru:"Светлая", ur:"لائٹ", id:"Terang", de:"Hell", ja:"ライト", tr:"Açık", ko:"라이트", fa:"روشن", uk:"Світла", it:"Chiaro", pl:"Jasny", vi:"Sáng" },
@@ -1977,7 +1978,8 @@ const NC_NAV = [
      toolkit. Games and NovaLife are for learning and play, so they sit in
      their own Learn group instead of pretending to be creation tools. */
   { name: 'Create', icon: 'editor', items: [
-      ['editor.html', 'Editor', 'editor', 'editor'], ['publish.html', 'Publish', '', 'publish'],
+      ['editor.html', 'Editor', 'editor', 'editor'], ['photo.html', 'Photo', 'photo', 'editor'],
+      ['publish.html', 'Publish', '', 'publish'],
       ['studio-ai.html', 'AI', 'ai', 'ai']] },
   { name: 'Learn', icon: 'life', items: [
       ['novalife.html', 'NovaLife', 'life', 'life'], ['game.html', 'Games', 'games', 'games']] },
