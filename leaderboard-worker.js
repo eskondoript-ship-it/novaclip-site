@@ -274,6 +274,23 @@ async function gate(env, body) {
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+
+    /* Answered before the DB guard below, so it can report a missing binding
+       instead of failing on it. Two things are worth knowing from a browser:
+       which of the two Workers is deployed at this address, and whether its
+       binding exists. Deploying the AI Worker here is the mistake that makes
+       every community feature fail, and this is what makes it visible —
+       ai-worker.js answers /health with worker:"ai". */
+    if (new URL(request.url).pathname.replace(/\/+$/, '') === '/health') {
+      return json({
+        ok: !!env.DB,
+        worker: 'leaderboard',
+        db: env.DB ? 'bound' : 'MISSING — Settings -> Bindings -> Add -> KV namespace, variable name DB',
+        hint: env.DB ? 'Put this address in NC_SERVER in nova.js.'
+                     : 'The community pages stay offline until DB is bound.'
+      }, env.DB ? 200 : 500);
+    }
+
     if (!env.DB) return json({ error: 'KV namespace DB is not bound — see the setup notes at the top of this file' }, 500);
 
     const url = new URL(request.url);

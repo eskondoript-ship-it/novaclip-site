@@ -253,6 +253,10 @@ export default {
     if (url.pathname === '/health') {
       return json({
         ok: !!env.GEMINI_API_KEY,
+        /* Which of the two Workers is deployed here. leaderboard-worker.js
+           answers "leaderboard"; if you see that at the AI address, or "ai" at
+           the community address, the two are swapped. */
+        worker: 'ai',
         key: !!env.GEMINI_API_KEY,
         keys: { gemini: !!env.GEMINI_API_KEY, openrouter: !!env.OPENROUTER_API_KEY, openai: !!env.OPENAI_API_KEY },
         kv: !!env.RL,

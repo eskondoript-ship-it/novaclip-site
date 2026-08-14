@@ -815,10 +815,20 @@ const NC_SYNC_KEYS = ['nc_points', 'nc_skills', 'nc_certs','nc_pro','nc_subscrip
 
 function ncKey() { return localStorage.getItem('nc_key') || ''; }
 function ncCode() { return localStorage.getItem('nc_code') || ''; }
-function ncSyncOn() { return !!NC_SERVER; }
+/* ncServer() is the address — the localStorage override in front of the
+   constant. Everything that talks to the Worker has to go through it. These
+   three used the bare constant instead, so the override documented above was
+   inert: with NC_SERVER empty, '' + '/account' is a *relative* URL, and every
+   account, leaderboard and community call quietly went to the site's own host,
+   which answers a 404 HTML page and fails as "HTTP 404" rather than as "no
+   server configured". */
+function ncSyncOn() { return !!ncServer(); }
 
 async function ncApi(path, opts) {
-  const r = await fetch(NC_SERVER.replace(/\/$/, '') + path, opts);
+  const base = ncServer();
+  if (!base) throw new Error('No community server configured. Set NC_SERVER in nova.js, ' +
+    "or run localStorage.setItem('nc_server','https://your-worker.workers.dev') to try one.");
+  const r = await fetch(base + path, opts);
   const body = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
   return body;
@@ -896,7 +906,7 @@ async function ncSyncBoot() {
   } catch (e) { console.warn('sync unavailable — staying local', e); }
   window.addEventListener('pagehide', () => {
     if (!ncSyncOn() || !ncKey() || !navigator.sendBeacon) return;
-    navigator.sendBeacon(NC_SERVER.replace(/\/$/, '') + '/save',
+    navigator.sendBeacon(ncServer() + '/save',
       new Blob([JSON.stringify({ key: ncKey(), data: ncCollect() })], { type: 'application/json' }));
   });
 }

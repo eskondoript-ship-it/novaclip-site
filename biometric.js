@@ -114,6 +114,7 @@
     listenReady: { en: 'Listening for commands...', fa: 'در حال گوش دادن...', es: 'Escuchando...', pt: 'A ouvir...', fr: 'À l’écoute...', de: 'Höre zu...', ar: 'جارٍ الاستماع...' },
     cmdGo: { en: 'Taking you to {p}...', fa: 'در حال رفتن به {p}...', es: 'Yendo a {p}...', pt: 'A ir para {p}...', fr: 'Direction {p}...', de: 'Gehe zu {p}...', ar: 'جاري الانتقال إلى {p}...' },
     cmdLang: { en: 'Switching to {l}...', fa: 'تغییر به {l}...', es: 'Cambiando a {l}...', pt: 'A mudar para {l}...', fr: 'Passage en {l}...', de: 'Wechsle zu {l}...', ar: 'التبديل إلى {l}...' },
+    cmdVibe: { en: 'Vibe set to {v}.', fa: 'حال‌وهوا روی {v} تنظیم شد.', es: 'Estilo cambiado a {v}.', pt: 'Estilo mudado para {v}.', fr: 'Style réglé sur {v}.', de: 'Stil auf {v} gesetzt.', ar: 'تم ضبط الأسلوب على {v}.' },
     cmdFxOn: { en: 'Applied the {f} effect.', fa: 'افکت {f} اعمال شد.', es: 'Efecto {f} aplicado.', pt: 'Efeito {f} aplicado.', fr: 'Effet {f} appliqué.', de: 'Effekt {f} angewendet.', ar: 'تم تطبيق تأثير {f}.' },
     cmdFxNo: { en: 'Opened Effects, but {f} is not on screen — pick a clip first.', fa: 'پنل افکت باز شد، اما {f} دیده نمی‌شود — اول یک کلیپ را انتخاب کنید.', es: 'Abrí Efectos, pero {f} no aparece — elige un clip primero.', pt: 'Abri Efeitos, mas {f} não aparece — escolhe um clipe primeiro.', fr: 'Effets ouvert, mais {f} n’apparaît pas — choisis un clip d’abord.', de: 'Effekte geöffnet, aber {f} ist nicht sichtbar — wähle zuerst einen Clip.', ar: 'تم فتح التأثيرات، لكن {f} غير ظاهر — اختر مقطعًا أولًا.' },
     cmdUnknown: { en: 'Command not recognized. Try: open studio, go home, help.', fa: 'فرمان شناسایی نشد. بگویید: استودیو را باز کن، برو خانه، کمک.', es: 'Comando no reconocido.', pt: 'Comando não reconhecido.', fr: 'Commande inconnue.', de: 'Befehl unbekannt.', ar: 'أمر غير معروف.' },
@@ -995,6 +996,23 @@
     vi: ['sửa video này','thêm hiệu ứng','với hiệu ứng này']
   };
 
+  /* The vibe switch, by voice. The trigger is the word for "vibe" itself,
+     which appears nowhere in NAV, so it cannot steal a navigation phrase.
+     Note the spaceless forms: the site writes "Gen Z" with a
+     non-breaking space, and clean() drops that character, so the phrase to
+     match against is "genz". */
+  var SAY_VIBE = {
+    en: ['vibe','mode to','switch the mode'], zh: ['风格','模式'], hi: ['वाइब','मोड'],
+    es: ['estilo','modo'], ar: ['الأسلوب','الوضع'], fr: ['style','mode'],
+    bn: ['ভাইব','মোড'], pt: ['estilo','modo'], ru: ['стиль','режим'],
+    ur: ['انداز','موڈ'], id: ['gaya','mode'], de: ['stil','modus'],
+    ja: ['雰囲気','モード'], tr: ['tarz','mod'], ko: ['분위기','모드'],
+    fa: ['حال وهوا','حالت'], uk: ['стиль','режим'], it: ['stile','modalità'],
+    pl: ['styl','tryb'], vi: ['phong cách','chế độ']
+  };
+  var VIBE_GENZ = ['gen z','genz','gen zee','zoomer','z世代','зумер','نسل z','z kuşağı','z kusagi','pokolenie z','z세대','जेन z'];
+  var VIBE_NORMAL = ['normal','normale','normalny','обычный','звичайний','عادي','عادی','ふつう','普通','보통','सामान्य','সাধারণ','bình thường','zwykły','عام'];
+
   /* Longest name first, so "tiếng tây ban nha" is not beaten by "tiếng anh"
      and "bahasa indonesia" is not beaten by a bare "indonesia". */
   var LANGNAME_INDEX = (function () {
@@ -1098,6 +1116,18 @@
        written for every language, so only the provider is new. */
     if (pickFrom(t, SAY_GOOGLE) && hasPhrase(t, sayList({ say: SAY_SIGNIN }))) {
       return { type: 'smart', run: goGoogle };
+    }
+
+    /* Change the vibe. Both the trigger and the value have to be there, so
+       a bare "normal" said in passing does not flip the whole site. */
+    if (hasPhrase(t, (SAY_VIBE[L] || SAY_VIBE.en)) && typeof ncSetGenZ === 'function') {
+      var wantsGenz = !!pickFrom(t, VIBE_GENZ), wantsNormal = !!pickFrom(t, VIBE_NORMAL);
+      if (wantsGenz || wantsNormal) {
+        return { type: 'smart', run: function () {
+          ncSetGenZ(wantsGenz);
+          flash(ui2('cmdVibe', { '{v}': wantsGenz ? 'Gen Z' : 'Normal' }));
+        } };
+      }
     }
 
     /* Change the language to a named one. */
