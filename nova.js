@@ -780,7 +780,7 @@ function saveHist(subject,q,a) { const h = JSON.parse(localStorage.getItem('nc_h
    turns itself on. Left empty, everything below is inert and the site works
    exactly as it does now, offline.
    ============================================================ */
-const NC_SERVER = '';          // e.g. 'https://novaclip-server.you.workers.dev'
+const NC_SERVER = 'https://novaclip-server.eskondori-pt.workers.dev';
 
 /* The address, with a local override in front of it.
 
