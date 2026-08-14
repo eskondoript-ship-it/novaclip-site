@@ -157,6 +157,7 @@ const T = {
   duel_you: { en:"YOU", zh:"你", hi:"आप", es:"TÚ", ar:"أنت", fr:"TOI", bn:"আপনি", pt:"TU", ru:"ВЫ", ur:"آپ", id:"KAMU", de:"DU", ja:"あなた", tr:"SEN", ko:"당신", fa:"تو", uk:"ВИ", it:"TU", pl:"TY", vi:"BẠN" },
   duel_vs: { en:"VS", zh:"对战", hi:"बनाम", es:"VS", ar:"ضد", fr:"VS", bn:"বনাম", pt:"VS", ru:"ПРОТИВ", ur:"مقابل", id:"VS", de:"GEGEN", ja:"VS", tr:"VS", ko:"VS", fa:"در برابر", uk:"ПРОТИ", it:"VS", pl:"KONTRA", vi:"ĐẤU" },
   duel_rival: { en:"RIVAL", zh:"对手", hi:"प्रतिद्वंद्वी", es:"RIVAL", ar:"المنافس", fr:"RIVAL", bn:"প্রতিদ্বন্দ্বী", pt:"RIVAL", ru:"СОПЕРНИК", ur:"حریف", id:"LAWAN", de:"RIVALE", ja:"ライバル", tr:"RAKİP", ko:"라이벌", fa:"رقیب", uk:"СУПЕРНИК", it:"RIVALE", pl:"RYWAL", vi:"ĐỐI THỦ" },
+  biometrics: { en:"Biometrics", zh:"生物识别", hi:"बायोमेट्रिक्स", es:"Biometría", ar:"القياسات الحيوية", fr:"Biométrie", bn:"বায়োমেট্রিক্স", pt:"Biometria", ru:"Биометрия", ur:"بایومیٹرکس", id:"Biometrik", de:"Biometrie", ja:"生体認証", tr:"Biyometri", ko:"생체 인식", fa:"زیست‌سنجی", uk:"Біометрія", it:"Biometria", pl:"Biometria", vi:"Sinh trắc học" },
   theme: { en:"Theme", zh:"主题", hi:"थीम", es:"Tema", ar:"المظهر", fr:"Thème", bn:"থিম", pt:"Tema", ru:"Тема", ur:"تھیم", id:"Tema", de:"Design", ja:"テーマ", tr:"Tema", ko:"테마", fa:"پوسته", uk:"Тема", it:"Tema", pl:"Motyw", vi:"Giao diện" },
   theme_light: { en:"Light", zh:"浅色", hi:"लाइट", es:"Claro", ar:"فاتح", fr:"Clair", bn:"লাইট", pt:"Claro", ru:"Светлая", ur:"لائٹ", id:"Terang", de:"Hell", ja:"ライト", tr:"Açık", ko:"라이트", fa:"روشن", uk:"Світла", it:"Chiaro", pl:"Jasny", vi:"Sáng" },
   theme_dark: { en:"Dark", zh:"深色", hi:"डार्क", es:"Oscuro", ar:"داكن", fr:"Sombre", bn:"ডার্ক", pt:"Escuro", ru:"Тёмная", ur:"ڈارک", id:"Gelap", de:"Dunkel", ja:"ダーク", tr:"Koyu", ko:"다크", fa:"تیره", uk:"Темна", it:"Scuro", pl:"Ciemny", vi:"Tối" },
@@ -428,6 +429,9 @@ function ncSetTheme(pref) {
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', String(on));
   });
+  /* --bg and --box are mirrored from the palette, so they have to be taken
+     again once the palette has moved. */
+  try { if (typeof applyTheme === 'function') applyTheme('Dark'); } catch (e) {}
   try { window.dispatchEvent(new CustomEvent('nc:theme', { detail: { pref, theme: ncThemeResolved(pref) } })); } catch (e) {}
 }
 window.ncSetTheme = ncSetTheme;
@@ -1149,7 +1153,26 @@ ncFit.textContent =
 "";
 document.head.appendChild(ncFit);
 
-function applyTheme(name) { const t = THEMES[name] || THEMES['Dark']; document.documentElement.style.setProperty('--bg',t[0]); document.documentElement.style.setProperty('--box',t[1]); document.documentElement.style.setProperty('--txt',t[2]); document.body.dataset.theme = name; localStorage.setItem('nc_theme',name); }
+/* The remains of an old background switcher. Two things it used to do are
+   now actively harmful and have been removed:
+
+     It set --txt as an INLINE style on <html>. Inline styles beat every
+     stylesheet, so nine pages that read var(--txt) were pinned to #FAFAFA
+     and the light palette could not move them.
+
+     It wrote localStorage nc_theme on every page load. That key now belongs
+     to the light/dark engine, so each navigation overwrote the reader's
+     choice with the string "Dark" and the site drifted back to the default.
+
+   --bg and --box are left because typing.html still reads them, and they are
+   taken from the palette so they follow the theme like everything else. */
+function applyTheme(name) {
+  const cs = getComputedStyle(document.documentElement);
+  const pick = (v, fb) => (cs.getPropertyValue(v).trim() || fb);
+  document.documentElement.style.setProperty('--bg', pick('--nc-bg', '#0E1117'));
+  document.documentElement.style.setProperty('--box', pick('--nc-bg2', '#1E2130'));
+  document.body.dataset.theme = name;
+}
 function toast(msg) { const t = document.getElementById('nctoast'); if (!t) return; t.textContent = msg; t.style.display = 'block'; clearTimeout(t.hideTimer); t.hideTimer = setTimeout(() => { t.style.display = 'none'; }, 3000); }
 window.toast = toast;   /* editor.html calls this for a missing tool script */
 function getPts() { return parseInt(localStorage.getItem('nc_points') || '0'); }
@@ -1961,6 +1984,7 @@ const NC_NAV = [
   { items: [['socials.html', 'Socials', 'socials', 'gift']] },
   { name: 'You', icon: 'progress', items: [
       ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
+      ['biometrics.html', 'Biometrics', 'biometrics', 'signin'],
       ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
 ];
 

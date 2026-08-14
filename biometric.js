@@ -115,6 +115,7 @@
     cmdGo: { en: 'Taking you to {p}...', fa: 'در حال رفتن به {p}...', es: 'Yendo a {p}...', pt: 'A ir para {p}...', fr: 'Direction {p}...', de: 'Gehe zu {p}...', ar: 'جاري الانتقال إلى {p}...' },
     cmdLang: { en: 'Switching to {l}...', fa: 'تغییر به {l}...', es: 'Cambiando a {l}...', pt: 'A mudar para {l}...', fr: 'Passage en {l}...', de: 'Wechsle zu {l}...', ar: 'التبديل إلى {l}...' },
     cmdTheme: { en: 'Theme set to {t}.', fa: 'پوسته روی {t} تنظیم شد.', es: 'Tema cambiado a {t}.', pt: 'Tema mudado para {t}.', fr: 'Thème réglé sur {t}.', de: 'Design auf {t} gesetzt.', ar: 'تم ضبط المظهر على {t}.' },
+    cmdClicked: { en: '{b}', fa: '{b}', es: '{b}', pt: '{b}', fr: '{b}', de: '{b}', ar: '{b}' },
     cmdCopied: { en: 'Link copied.', fa: 'لینک کپی شد.', es: 'Enlace copiado.', pt: 'Ligação copiada.', fr: 'Lien copié.', de: 'Link kopiert.', ar: 'تم نسخ الرابط.' },
     theme_light: { en: 'Light', fa: 'روشن', es: 'Claro', pt: 'Claro', fr: 'Clair', de: 'Hell', ar: 'فاتح' },
     theme_dark: { en: 'Dark', fa: 'تیره', es: 'Oscuro', pt: 'Escuro', fr: 'Sombre', de: 'Dunkel', ar: 'داكن' },
@@ -359,6 +360,28 @@
       it: ['assistente', 'intelligenza artificiale'],
       pl: ['sztuczna inteligencja', 'asystent'],
       vi: ['trí tuệ nhân tạo', 'trợ lý']
+    } },
+    { url: 'biometrics.html', say: {
+      en: ['biometrics', 'face id', 'face sign in', 'voice sign in', 'face and voice', 'biometric'],
+      zh: ['生物识别', '人脸登录', '声音登录'],
+      hi: ['बायोमेट्रिक्स', 'फेस आईडी'],
+      es: ['biometría', 'identificación facial', 'acceso con la cara'],
+      ar: ['القياسات الحيوية', 'بصمة الوجه'],
+      fr: ['biométrie', 'reconnaissance faciale'],
+      bn: ['বায়োমেট্রিক্স', 'ফেস আইডি'],
+      pt: ['biometria', 'reconhecimento facial'],
+      ru: ['биометрия', 'вход по лицу'],
+      ur: ['بایومیٹرکس', 'فیس آئی ڈی'],
+      id: ['biometrik', 'wajah'],
+      de: ['biometrie', 'gesichtserkennung'],
+      ja: ['生体認証', '顔認証'],
+      tr: ['biyometri', 'yüz tanıma'],
+      ko: ['생체 인식', '얼굴 인식'],
+      fa: ['زیست سنجی', 'تشخیص چهره'],
+      uk: ['біометрія', 'вхід за обличчям'],
+      it: ['biometria', 'riconoscimento facciale'],
+      pl: ['biometria', 'rozpoznawanie twarzy'],
+      vi: ['sinh trắc học', 'nhận diện khuôn mặt']
     } },
     { url: 'progress.html', say: {
       en: ['progress', 'my progress', 'rewards', 'achievements', 'certificates', 'my points'],
@@ -1236,6 +1259,123 @@
     return null;
   }
 
+  /* ------------------------------------------------------------------
+   * Every control on the page is a command.
+   *
+   * Curating a phrase list per page would mean maintaining a second copy
+   * of every button label on the site, in twenty languages, and it would
+   * drift the first time someone renamed a tab. Instead this reads the
+   * labels the page is already showing. NovaLife's tabs, the editor's
+   * panels, "Feed", "Rename", "Get the bundle" — all speakable, in
+   * whatever language the page is currently rendered in, with nothing to
+   * keep in sync.
+   *
+   * It runs LAST, after navigation and every fixed command, so it can
+   * never shadow "go home" with some button that happens to say Home.
+   * ------------------------------------------------------------------ */
+
+  /* "click feed", "press play", "tap rename" — the verb is noise once the
+     label has been found, and people say it without thinking. */
+  var CLICK_VERBS = {
+    en: ['click on','click the','click','press the','press','tap on','tap','select the','select','choose','hit','push the','open the','open'],
+    zh: ['点击','点一下','按','选择','打开'], hi: ['क्लिक','दबाओ','चुनो','खोलो'],
+    es: ['haz clic en','haz clic','pulsa','presiona','selecciona','elige','abre'],
+    ar: ['اضغط على','اضغط','اختر','افتح'],
+    fr: ['clique sur','clique','appuie sur','appuie','sélectionne','choisis','ouvre'],
+    bn: ['ক্লিক','চাপো','বেছে নাও','খোলো'],
+    pt: ['clica em','clica','carrega em','pressiona','seleciona','escolhe','abre'],
+    ru: ['нажми на','нажми','кликни','выбери','открой'],
+    ur: ['کلک','دبائیں','منتخب کریں','کھولیں'],
+    id: ['klik','tekan','pilih','buka'], de: ['klicke auf','klick','drücke','wähle','öffne'],
+    ja: ['クリック','押して','選んで','開いて'], tr: ['tıkla','bas','seç','aç'],
+    ko: ['클릭','눌러','선택','열어'], fa: ['کلیک کن','بزن','انتخاب کن','باز کن'],
+    uk: ['натисни','клікни','вибери','відкрий'],
+    it: ['clicca su','clicca','premi','seleziona','scegli','apri'],
+    pl: ['kliknij','naciśnij','wybierz','otwórz'],
+    vi: ['nhấn vào','nhấn','bấm','chọn','mở']
+  };
+
+  function stripVerbs(t, L) {
+    var list = (CLICK_VERBS[L] || []).concat(CLICK_VERBS.en), i, v, out = t;
+    /* longest first: "click on" before "click", or "on" is left dangling */
+    list = list.slice().sort(function (a, b) { return b.length - a.length; });
+    for (i = 0; i < list.length; i++) {
+      v = clean(list[i]);
+      if (v && out.indexOf(v) === 0) { out = out.slice(v.length).replace(/^ +/, ''); break; }
+    }
+    return out;
+  }
+
+  /* Controls worth offering. Anything invisible, disabled, or belonging to
+     the biometric panel itself is skipped — the panel's own buttons are not
+     the page's, and clicking them by voice would be a loop. */
+  function ncControls() {
+    var out = [], els, i, el, txt;
+    try {
+      els = document.querySelectorAll(
+        'button,a[href],[role="button"],[role="tab"],summary,label[for],' +
+        '.tab,.chip,.pill,.fitem,.navlink,[data-t]');
+    } catch (e) { return out; }
+    for (i = 0; i < els.length; i++) {
+      el = els[i];
+      if (el.disabled) continue;
+      if (el.closest && el.closest('#ncbioPanel,#ncbioBtn,#ncCorner')) continue;
+      /* offsetParent is null for display:none and for position:fixed, so the
+         fixed case is checked separately rather than dropped. */
+      if (el.offsetParent === null) {
+        var cs;
+        try { cs = getComputedStyle(el); } catch (e) { continue; }
+        if (cs.position !== 'fixed' || cs.display === 'none' || cs.visibility === 'hidden') continue;
+      }
+      txt = clean(el.textContent || '');
+      if (!txt) txt = clean(el.getAttribute('aria-label') || el.getAttribute('title') || '');
+      /* One word is often an icon's alt text; forty characters is a paragraph
+         that happens to be inside a link. Neither is something anyone says. */
+      if (!txt || txt.length < 2 || txt.length > 42) continue;
+      out.push({ el: el, txt: txt });
+    }
+    return out;
+  }
+
+  /* clean() drops "&", so a tab reading "School & work" becomes "school work"
+     while the person says "school and work". Try the sentence again with the
+     conjunction taken out. */
+  var CONJ = ['and','y','et','und','e','i','и','та','و','と','과','와','dan','ve','ile','và','oraz','आणि','और','এবং','和'];
+  function dropConj(t) {
+    var w = t.split(' '), out = [], i;
+    for (i = 0; i < w.length; i++) if (CONJ.indexOf(w[i]) === -1) out.push(w[i]);
+    return out.join(' ');
+  }
+
+  function ncMatchControl(t, L) {
+    var said = stripVerbs(t, L), list = ncControls(), i, best = null;
+    if (!said || said.length < 2) return null;
+    var alt = dropConj(said);
+
+    /* Exact label wins outright. */
+    for (i = 0; i < list.length; i++) if (list[i].txt === said || list[i].txt === alt) return list[i];
+
+    /* Then the longest label that the sentence fully contains, so "open the
+       life story tab" finds "life story" and not "life". */
+    for (i = 0; i < list.length; i++) {
+      if (list[i].txt.length >= 3 &&
+          (said.indexOf(list[i].txt) !== -1 || alt.indexOf(list[i].txt) !== -1)) {
+        if (!best || list[i].txt.length > best.txt.length) best = list[i];
+      }
+    }
+    if (best) return best;
+
+    /* Finally the other direction: a short thing said, a longer label that
+       starts with it — "feed" for a button reading "Feed · 6". Only when the
+       match is unambiguous, or "play" would fire whichever of five buttons
+       happened to come first in the document. */
+    var hits = [];
+    for (i = 0; i < list.length; i++) {
+      if (said.length >= 3 && list[i].txt.indexOf(said) === 0) hits.push(list[i]);
+    }
+    return hits.length === 1 ? hits[0] : null;
+  }
+
   function matchCmd(text) {
     var t = clean(text), i, k, sm;
     sm = smartCmd(t);
@@ -1250,6 +1390,10 @@
     if (hasPhrase(t, sayList({ say: SAY_SIGNOUT }))) return { type: 'signout' };
     if (hasPhrase(t, sayList({ say: SAY_STOP }))) return { type: 'stop' };
     if (hasPhrase(t, sayList({ say: SAY_HELP }))) return { type: 'help' };
+
+    /* Nothing fixed matched. Fall back to whatever the page is showing. */
+    var ctl = ncMatchControl(t, langCode());
+    if (ctl) return { type: 'click', el: ctl.el, label: ctl.txt };
     return null;
   }
 
@@ -1268,6 +1412,13 @@
       flash(ui2('cmdGo', { '{p}': r.page }));
       fire('command', { phrase: raw, page: r.page });
       setTimeout(function () { location.href = r.page; }, 650);
+      return;
+    }
+    if (r.type === 'click') {
+      try { r.el.focus({ preventScroll: true }); } catch (e) {}
+      try { r.el.click(); } catch (e) {}
+      flash(ui2('cmdClicked', { '{b}': r.label }));
+      fire('command', { phrase: raw, control: r.label });
       return;
     }
     if (r.type === 'smart') { try { r.run(); } catch (e) {} fire('command', { phrase: raw, name: 'smart' }); return; }

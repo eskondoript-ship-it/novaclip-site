@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Biometrics — NovaClip</title>
+<meta name='description' content='Face and voice sign-in that never leaves your device, and the voice commands that come with it.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:var(--nc-bg,#05070E); --panel:var(--nc-bg2,#0C1220);
+  --line:var(--nc-line,rgba(255,255,255,.10)); --txt:var(--nc-text,#EAF2FF);
+  --dim:var(--nc-dim,#7E8AA6); --cyan:var(--nc-cyan,#00F0FF);
+  --violet:var(--nc-violet,#7C5CFF); --pink:var(--nc-pink,#FF2E97);
+  --lime:var(--nc-lime,#B6FF3C); --amber:var(--nc-amber,#FFB443);
+  --grad:linear-gradient(110deg,var(--violet),var(--cyan) 48%,var(--pink));
+}
+body{background:var(--ink);color:var(--txt);min-height:100vh;
+  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--cyan)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px}
+
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--nc-rail,200px);z-index:998;
+  background:rgba(12,12,16,.85);backdrop-filter:blur(20px);display:flex;flex-direction:column;
+  padding:20px 0;gap:4px;border-right:1px solid var(--line);overflow-y:auto}
+.sidebar .themewrap{margin-top:auto;padding:16px 20px}
+
+.wrap{position:relative;z-index:2;width:min(1080px,100% - 34px);margin:0 auto;padding:30px 0 90px}
+
+/* ---- the scanner: a ring that sweeps while the page is idle, and locks
+   to a solid colour once a profile exists on this device ---- */
+.hero{display:grid;grid-template-columns:190px minmax(0,1fr);gap:30px;align-items:center;
+  margin-bottom:34px}
+@media (max-width:720px){.hero{grid-template-columns:1fr;text-align:center;justify-items:center}}
+.scan{position:relative;width:180px;height:180px;display:grid;place-items:center}
+.scan svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.scan .track{fill:none;stroke:var(--line);stroke-width:6}
+.scan .arc{fill:none;stroke:url(#nbg);stroke-width:6;stroke-linecap:round;
+  stroke-dasharray:180 500;animation:nbspin 2.6s cubic-bezier(.5,0,.5,1) infinite}
+.scan.locked .arc{animation:none;stroke-dasharray:540 0;opacity:.95}
+@keyframes nbspin{to{transform:rotate(360deg);transform-origin:50% 50%}}
+.scan .face{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 35%,rgba(124,92,255,.35),transparent 65%);
+  border:1px solid var(--line)}
+.scan .face svg{position:static;width:52px;height:52px;transform:none;stroke:var(--cyan);
+  fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.scan .ping{position:absolute;inset:-6px;border-radius:50%;border:1px solid var(--cyan);
+  opacity:0;animation:nbping 2.6s ease-out infinite}
+@keyframes nbping{0%{transform:scale(.86);opacity:.5}70%{opacity:0}100%{transform:scale(1.12);opacity:0}}
+
+h1{font-size:clamp(1.9rem,4.6vw,2.9rem);font-weight:680;letter-spacing:-.04em;line-height:1.05}
+h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--dim);margin-top:12px;max-width:60ch}
+
+.status{display:inline-flex;align-items:center;gap:9px;margin-top:16px;padding:8px 15px;
+  border-radius:30px;border:1px solid var(--line);background:rgba(255,255,255,.04);
+  font-size:.85rem;font-weight:650}
+.status .dot{width:9px;height:9px;border-radius:50%;background:var(--dim);flex:0 0 auto}
+.status.on .dot{background:var(--lime);box-shadow:0 0 12px var(--lime)}
+.status.on{border-color:rgba(182,255,60,.4)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:16px}
+.card{border:1px solid var(--line);border-radius:20px;padding:22px;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015))}
+.card::after{content:'';position:absolute;left:0;right:0;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5}
+.card h2{font-size:1.05rem;font-weight:680;letter-spacing:-.015em;display:flex;align-items:center;gap:10px}
+.card h2 .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--grad);color:#05070E}
+.card h2 .ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.card p{color:var(--dim);font-size:.9rem;margin-top:9px}
+.card .go{margin-top:15px;padding:11px 20px;border-radius:30px;border:0;cursor:pointer;
+  font:inherit;font-weight:680;font-size:.9rem;color:#05070E;background:var(--grad)}
+/* var(--nc-card2) rather than a white wash: on a white page a 6% white fill
+   is not a button, it is a rumour of one. */
+.card .go.alt{background:var(--nc-card2,rgba(255,255,255,.06));color:var(--txt);
+  border:1px solid var(--nc-line2,var(--line))}
+.card .go:disabled{opacity:.5;cursor:default}
+
+.spec{margin-top:14px;display:grid;gap:7px;font-size:.8rem}
+.spec div{display:flex;gap:9px;color:var(--dim)}
+.spec b{color:var(--txt);font-weight:650;flex:0 0 92px}
+
+h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
+.sub{color:var(--dim);font-size:.88rem;margin-bottom:14px}
+
+/* ---- what you can say ---- */
+.says{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:9px}
+.say{border:1px solid var(--line);border-radius:12px;padding:10px 13px;font-size:.86rem;
+  background:rgba(255,255,255,.03);display:flex;align-items:center;gap:9px}
+.say::before{content:'“';color:var(--cyan);font-size:1.3rem;line-height:0;opacity:.8}
+.say b{font-weight:600}
+
+.note{color:var(--dim);font-size:.83rem;line-height:1.75;margin-top:26px;padding:16px 18px;
+  border-radius:14px;background:rgba(255,255,255,.025);border:1px solid var(--line)}
+.note b{color:var(--txt)}
+@media (max-width:760px){ body{padding-bottom:74px} .wrap{padding-top:22px} }
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <!-- nova.js builds the links; this is only the shell it fills -->
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div class='wrap'>
+  <div class='hero'>
+    <div class='scan' id='scan'>
+      <svg viewBox='0 0 100 100' aria-hidden='true'>
+        <defs><linearGradient id='nbg' x1='0' y1='0' x2='1' y2='1'>
+          <stop offset='0' stop-color='#7C5CFF'/><stop offset='.5' stop-color='#00F0FF'/>
+          <stop offset='1' stop-color='#FF2E97'/></linearGradient></defs>
+        <circle class='track' cx='50' cy='50' r='45'/>
+        <circle class='arc' cx='50' cy='50' r='45'/>
+      </svg>
+      <span class='ping'></span>
+      <div class='face'>
+        <svg viewBox='0 0 24 24' aria-hidden='true'>
+          <path d='M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3'/>
+          <circle cx='9' cy='10' r='1'/><circle cx='15' cy='10' r='1'/>
+          <path d='M9 15c.9.8 1.9 1.2 3 1.2s2.1-.4 3-1.2'/>
+        </svg>
+      </div>
+    </div>
+
+    <div>
+      <h1>Your face and voice, <span class='g'>on this device</span></h1>
+      <p class='lede'>Sign in by looking at the camera or saying a passphrase, then drive
+        the whole site by talking to it. Nothing is uploaded — the profile is a row in this
+        browser's storage, and deleting it is one button.</p>
+      <div class='status' id='status'><span class='dot'></span><span id='statusTxt'>Checking…</span></div>
+    </div>
+  </div>
+
+  <div class='grid'>
+    <div class='card'>
+      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3'/><circle cx='12' cy='11' r='3'/></svg></span>Face</h2>
+      <p>A 128-number descriptor of your face, from face-api.js running in the tab. Not a photo —
+        the image never leaves the canvas it was drawn on.</p>
+      <div class='spec'>
+        <div><b>Model</b><span>tiny detector + 68 landmarks + recognition net</span></div>
+        <div><b>Stored</b><span>localStorage, key <code>nc_bio_profiles</code></span></div>
+        <div><b>Needs</b><span>camera permission, and a CDN for the weights</span></div>
+      </div>
+      <button class='go' id='btnFace' type='button'>Set up face</button>
+    </div>
+
+    <div class='card'>
+      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M12 3a3 3 0 013 3v6a3 3 0 01-6 0V6a3 3 0 013-3z'/><path d='M5 11a7 7 0 0014 0M12 18v3'/></svg></span>Voice</h2>
+      <p>About 2.5 seconds of speech, averaged into 24 numbers describing the shape of your
+        voice. Sign-in compares how close two of those are.</p>
+      <div class='spec'>
+        <div><b>Method</b><span>Web Audio analyser, log-scaled spectrum</span></div>
+        <div><b>Strength</b><span>demo-grade — a good impersonation can beat it</span></div>
+        <div><b>Stored</b><span>same device, same key, never sent</span></div>
+      </div>
+      <button class='go' id='btnVoice' type='button'>Set up voice</button>
+    </div>
+
+    <div class='card'>
+      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M4 12h3l2-6 3 12 2.5-8 1.7 4H21'/></svg></span>Voice commands</h2>
+      <p>Speech recognition listening for the site's own vocabulary — every page, in
+        <b id='langCount'>20</b> languages, plus whatever buttons the page you are on is showing.</p>
+      <div class='spec'>
+        <div><b>API</b><span>Web Speech, Chrome and Edge</span></div>
+        <div><b>Off by default</b><span>the mic only opens when you turn it on</span></div>
+      </div>
+      <button class='go' id='btnVoiceCmd' type='button'>Turn on listening</button>
+      <button class='go alt' id='btnPanel' type='button'>Open the panel</button>
+    </div>
+  </div>
+
+  <h3>Things you can say</h3>
+  <p class='sub'>A sample. Anything in the rail works, and so does any button on the page you are looking at.</p>
+  <div class='says' id='says'></div>
+
+  <div class='note' id='privacy'>
+    <b>What "sign in with your face" means here.</b> It unlocks <b>this browser</b>, the way a
+    password manager uses a fingerprint — it is not a server-side identity, and it cannot prove
+    who you are to anyone else. Clearing your browser data deletes the profile, and so does the
+    button in the panel. The voiceprint in particular is honest about being demo-grade: it is
+    good enough to tell you apart from someone else in the room, not good enough to be a lock.
+  </div>
+</div>
+
+<script src='nova.js'></script>
+<script src='biometric.js' defer></script>
+<script>
+/* The page is a face for window.ncBiometric — it owns no state of its own, so
+   whatever the panel does is reflected here and nothing can disagree. */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  var SAMPLES = [
+    'go home', 'open studio', 'open the editor', 'what is trending',
+    'sign in with google', 'change the language to spanish',
+    'switch the theme to dark', 'change the vibe to gen z',
+    'edit this video with the glitch effect', 'my progress',
+    'play a game', 'copy the link', 'scroll to the top', 'what can i say'
+  ];
+
+  function drawSays() {
+    var box = $('says');
+    if (!box) return;
+    box.innerHTML = SAMPLES.map(function (s) {
+      return '<div class="say"><b></b></div>';
+    }).join('');
+    /* textContent rather than innerHTML for the phrases themselves — they are
+       data, and one day they will come from the vocabulary rather than a list
+       written here. */
+    box.querySelectorAll('.say b').forEach(function (b, i) { b.textContent = SAMPLES[i]; });
+  }
+
+  function refresh() {
+    var B = window.ncBiometric;
+    var st = $('status'), txt = $('statusTxt'), scan = $('scan');
+    if (!B) {
+      txt.textContent = 'Biometrics did not load on this page.';
+      return;
+    }
+    var inName = B.signedInName && B.signedInName();
+    if (B.isSignedIn && B.isSignedIn()) {
+      st.classList.add('on');
+      scan.classList.add('locked');
+      txt.textContent = inName ? ('Signed in as ' + inName) : 'Signed in on this device';
+    } else {
+      st.classList.remove('on');
+      scan.classList.remove('locked');
+      txt.textContent = 'Not signed in on this device';
+    }
+    var on = B.voiceOn && B.voiceOn();
+    $('btnVoiceCmd').textContent = on ? 'Stop listening' : 'Turn on listening';
+  }
+
+  function wire() {
+    var B = window.ncBiometric;
+    if (!B) { refresh(); return; }
+    $('btnFace').onclick = function () { B.enroll(); };
+    $('btnVoice').onclick = function () { B.enroll(); };
+    $('btnPanel').onclick = function () { B.open(); };
+    $('btnVoiceCmd').onclick = function () {
+      if (B.voiceOn && B.voiceOn()) B.stopVoice(); else B.startVoice();
+      setTimeout(refresh, 250);
+    };
+    /* biometric.js dispatches on document as nc:bio-<name> */
+    ['signin', 'signout', 'command'].forEach(function (ev) {
+      document.addEventListener('nc:bio-' + ev, refresh);
+    });
+    refresh();
+  }
+
+  drawSays();
+  /* biometric.js is deferred, so it may not be there on DOMContentLoaded. */
+  var tries = 0;
+  (function wait() {
+    if (window.ncBiometric || tries++ > 40) { wire(); return; }
+    setTimeout(wait, 100);
+  })();
+})();
+</script>
+</body>
+</html>
