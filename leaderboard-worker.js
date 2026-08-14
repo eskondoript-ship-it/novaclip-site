@@ -56,11 +56,23 @@
           Variable name: DB
           KV namespace: Create new, call it novaclip
         Save, then Deploy again.
-     4. Copy the worker's address (https://novaclip-server.<you>.workers.dev)
-        and put it in TWO places:
-          game.html   const LEADERBOARD_URL = '<address>/board';
-          nova.js     const NC_SERVER      = '<address>';
+     4. Check it before wiring it up: open <address>/health in a browser. It
+        answers { worker: "leaderboard", db: "bound" } when this file is the
+        one deployed here and the binding exists. If it says worker: "ai" you
+        have deployed ai-worker.js at this address; if db is MISSING, step 3
+        did not take.
+     5. Copy the worker's address (https://novaclip-server.<you>.workers.dev)
+        into ONE place:
+          nova.js     const NC_SERVER = '<address>';
+        To try it on your own machine first, without re-pasting nova.js, run
+        this in the browser console on the site — it wins over NC_SERVER for
+        that browser only:
+          localStorage.setItem('nc_server', '<address>')
      That is the whole setup. The free plan covers 100,000 requests a day.
+
+     (There used to be a second place, LEADERBOARD_URL in game.html. That was
+     the arena game's own board and the game is no longer in the site, so
+     NC_SERVER is the only setting now.)
 
    NOTES ON TRUST
      Anything a browser sends can be forged. This validates shape, clamps every
