@@ -114,6 +114,11 @@
     listenReady: { en: 'Listening for commands...', fa: 'در حال گوش دادن...', es: 'Escuchando...', pt: 'A ouvir...', fr: 'À l’écoute...', de: 'Höre zu...', ar: 'جارٍ الاستماع...' },
     cmdGo: { en: 'Taking you to {p}...', fa: 'در حال رفتن به {p}...', es: 'Yendo a {p}...', pt: 'A ir para {p}...', fr: 'Direction {p}...', de: 'Gehe zu {p}...', ar: 'جاري الانتقال إلى {p}...' },
     cmdLang: { en: 'Switching to {l}...', fa: 'تغییر به {l}...', es: 'Cambiando a {l}...', pt: 'A mudar para {l}...', fr: 'Passage en {l}...', de: 'Wechsle zu {l}...', ar: 'التبديل إلى {l}...' },
+    cmdTheme: { en: 'Theme set to {t}.', fa: 'پوسته روی {t} تنظیم شد.', es: 'Tema cambiado a {t}.', pt: 'Tema mudado para {t}.', fr: 'Thème réglé sur {t}.', de: 'Design auf {t} gesetzt.', ar: 'تم ضبط المظهر على {t}.' },
+    cmdCopied: { en: 'Link copied.', fa: 'لینک کپی شد.', es: 'Enlace copiado.', pt: 'Ligação copiada.', fr: 'Lien copié.', de: 'Link kopiert.', ar: 'تم نسخ الرابط.' },
+    theme_light: { en: 'Light', fa: 'روشن', es: 'Claro', pt: 'Claro', fr: 'Clair', de: 'Hell', ar: 'فاتح' },
+    theme_dark: { en: 'Dark', fa: 'تیره', es: 'Oscuro', pt: 'Escuro', fr: 'Sombre', de: 'Dunkel', ar: 'داكن' },
+    theme_system: { en: 'System', fa: 'سیستم', es: 'Sistema', pt: 'Sistema', fr: 'Système', de: 'System', ar: 'النظام' },
     cmdVibe: { en: 'Vibe set to {v}.', fa: 'حال‌وهوا روی {v} تنظیم شد.', es: 'Estilo cambiado a {v}.', pt: 'Estilo mudado para {v}.', fr: 'Style réglé sur {v}.', de: 'Stil auf {v} gesetzt.', ar: 'تم ضبط الأسلوب على {v}.' },
     cmdFxOn: { en: 'Applied the {f} effect.', fa: 'افکت {f} اعمال شد.', es: 'Efecto {f} aplicado.', pt: 'Efeito {f} aplicado.', fr: 'Effet {f} appliqué.', de: 'Effekt {f} angewendet.', ar: 'تم تطبيق تأثير {f}.' },
     cmdFxNo: { en: 'Opened Effects, but {f} is not on screen — pick a clip first.', fa: 'پنل افکت باز شد، اما {f} دیده نمی‌شود — اول یک کلیپ را انتخاب کنید.', es: 'Abrí Efectos, pero {f} no aparece — elige un clip primero.', pt: 'Abri Efeitos, mas {f} não aparece — escolhe um clipe primeiro.', fr: 'Effets ouvert, mais {f} n’apparaît pas — choisis un clip d’abord.', de: 'Effekte geöffnet, aber {f} ist nicht sichtbar — wähle zuerst einen Clip.', ar: 'تم فتح التأثيرات، لكن {f} غير ظاهر — اختر مقطعًا أولًا.' },
@@ -1001,6 +1006,61 @@
      Note the spaceless forms: the site writes "Gen Z" with a
      non-breaking space, and clean() drops that character, so the phrase to
      match against is "genz". */
+  /* Theme, by voice. Same shape as the vibe switch: a trigger word plus a
+     value, so "light" said in passing cannot repaint the site. */
+  var SAY_THEMESET = {
+    en: ['theme','mode','make it','turn it'], zh: ['主题','模式'], hi: ['थीम','मोड'],
+    es: ['tema','modo'], ar: ['المظهر','الوضع'], fr: ['thème','theme','mode'],
+    bn: ['থিম','মোড'], pt: ['tema','modo'], ru: ['тема','тему','режим'],
+    ur: ['تھیم','موڈ'], id: ['tema','mode'], de: ['design','modus','thema'],
+    ja: ['テーマ','モード'], tr: ['tema','mod'], ko: ['테마','모드'],
+    fa: ['پوسته','حالت'], uk: ['тема','тему','режим'], it: ['tema','modalità'],
+    pl: ['motyw','tryb'], vi: ['giao diện','chế độ']
+  };
+  var THEME_LIGHT = ['light','day','bright','claro','clair','hell','chiaro','jasny','світла','светлая','روشن','فاتح','明るい','ライト','밝게','라이트','浅色','हल्का','সাদা','açık','terang','sáng','sang'];
+  var THEME_DARK  = ['dark','night','oscuro','sombre','dunkel','scuro','ciemny','тёмная','темная','темна','تیره','داكن','ダーク','暗い','다크','어둡게','深色','डार्क','গাঢ়','koyu','gelap','tối','toi'];
+  var THEME_SYSTEM = ['system','automatic','auto','sistema','système','systeme','system','sistem','системная','системна','systemowy','سیستم','النظام','システム','시스템','跟随系统','सिस्टम','সিস্টেম','hệ thống'];
+
+  /* Things the page itself can do, with no value attached. Each one is a verb
+     the site already has a button for; this is the same action, spoken. */
+  var SAY_DO = {
+    top:    { en:['scroll to the top','go to the top','back to top','top of the page'], es:['ir arriba','al principio'], fr:['en haut','remonter'], de:['nach oben'], pt:['ir para o topo'], ru:['наверх','вверх'], ar:['إلى الأعلى'], fa:['برو بالا'], zh:['回到顶部','到顶部'], ja:['一番上へ'], ko:['맨 위로'], hi:['ऊपर जाओ'], it:['vai in alto'], pl:['do góry'], tr:['yukarı git'], uk:['вгору'], id:['ke atas'], vi:['lên đầu'], bn:['উপরে যাও'], ur:['اوپر جاؤ'] },
+    bottom: { en:['scroll to the bottom','go to the bottom','end of the page'], es:['ir abajo','al final'], fr:['en bas','descendre'], de:['nach unten'], pt:['ir para o fim'], ru:['вниз','в конец'], ar:['إلى الأسفل'], fa:['برو پایین'], zh:['到底部'], ja:['一番下へ'], ko:['맨 아래로'], hi:['नीचे जाओ'], it:['vai in basso'], pl:['na dół'], tr:['aşağı git'], uk:['вниз'], id:['ke bawah'], vi:['xuống cuối'], bn:['নিচে যাও'], ur:['نیچے جاؤ'] },
+    back:   { en:['go back','previous page'], es:['volver','atrás'], fr:['retour','reviens'], de:['zurück'], pt:['voltar'], ru:['назад'], ar:['رجوع'], fa:['برگرد'], zh:['返回','后退'], ja:['戻る'], ko:['뒤로'], hi:['वापस जाओ'], it:['torna indietro'], pl:['wstecz'], tr:['geri git'], uk:['назад'], id:['kembali'], vi:['quay lại'], bn:['ফিরে যাও'], ur:['واپس جاؤ'] },
+    reload: { en:['reload the page','refresh the page','reload'], es:['recargar'], fr:['recharger','actualise'], de:['neu laden','aktualisieren'], pt:['recarregar'], ru:['обновить страницу'], ar:['أعد تحميل'], fa:['بارگذاری مجدد'], zh:['刷新'], ja:['再読み込み'], ko:['새로고침'], hi:['पेज रीलोड'], it:['ricarica'], pl:['odśwież'], tr:['yenile'], uk:['оновити'], id:['muat ulang'], vi:['tải lại'], bn:['রিলোড'], ur:['ریفریش'] },
+    print:  { en:['print this page','print it'], es:['imprimir'], fr:['imprimer'], de:['drucken'], pt:['imprimir'], ru:['печать','распечатать'], ar:['اطبع'], fa:['چاپ کن'], zh:['打印'], ja:['印刷'], ko:['인쇄'], hi:['प्रिंट'], it:['stampa'], pl:['drukuj'], tr:['yazdır'], uk:['друкувати'], id:['cetak'], vi:['in trang'], bn:['প্রিন্ট'], ur:['پرنٹ'] },
+    fullscreen: { en:['full screen','fullscreen','go full screen'], es:['pantalla completa'], fr:['plein écran'], de:['vollbild'], pt:['ecrã inteiro','tela cheia'], ru:['полный экран'], ar:['ملء الشاشة'], fa:['تمام صفحه'], zh:['全屏'], ja:['全画面'], ko:['전체 화면'], hi:['फुल स्क्रीन'], it:['schermo intero'], pl:['pełny ekran'], tr:['tam ekran'], uk:['повний екран'], id:['layar penuh'], vi:['toàn màn hình'], bn:['ফুল স্ক্রিন'], ur:['فل اسکرین'] },
+    copylink: { en:['copy the link','copy this link','copy the address'], es:['copiar el enlace'], fr:['copier le lien'], de:['link kopieren'], pt:['copiar a ligação','copiar o link'], ru:['скопировать ссылку'], ar:['انسخ الرابط'], fa:['کپی لینک'], zh:['复制链接'], ja:['リンクをコピー'], ko:['링크 복사'], hi:['लिंक कॉपी'], it:['copia il link'], pl:['kopiuj link'], tr:['bağlantıyı kopyala'], uk:['копіювати посилання'], id:['salin tautan'], vi:['sao chép liên kết'], bn:['লিংক কপি'], ur:['لنک کاپی'] },
+    mute:   { en:['mute','be quiet','silence'], es:['silenciar'], fr:['coupe le son'], de:['stumm'], pt:['silenciar'], ru:['выключи звук'], ar:['اكتم الصوت'], fa:['بی صدا'], zh:['静音'], ja:['ミュート'], ko:['음소거'], hi:['म्यूट'], it:['muto'], pl:['wycisz'], tr:['sessize al'], uk:['вимкни звук'], id:['bisukan'], vi:['tắt tiếng'], bn:['মিউট'], ur:['خاموش کرو'] }
+  };
+
+  function ncSpokenDo(what) {
+    switch (what) {
+      case 'top':    scrollTo({ top: 0, behavior: 'smooth' }); return true;
+      case 'bottom': scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); return true;
+      case 'back':   history.back(); return true;
+      case 'reload': location.reload(); return true;
+      case 'print':  print(); return true;
+      case 'fullscreen':
+        try {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else document.documentElement.requestFullscreen();
+        } catch (e) {}
+        return true;
+      case 'copylink':
+        try { navigator.clipboard.writeText(location.href); } catch (e) {}
+        flash(ui('cmdCopied'));
+        return true;
+      case 'mute':
+        /* Every audio and video element on the page, plus the editor's own
+           stop hook if this is the editor. */
+        document.querySelectorAll('audio,video').forEach(function (m) { m.muted = true; });
+        try { if (window.__ncSfxStop) window.__ncSfxStop(); } catch (e) {}
+        return true;
+    }
+    return false;
+  }
+
   var SAY_VIBE = {
     en: ['vibe','mode to','switch the mode'], zh: ['风格','模式'], hi: ['वाइब','मोड'],
     es: ['estilo','modo'], ar: ['الأسلوب','الوضع'], fr: ['style','mode'],
@@ -1116,6 +1176,26 @@
        written for every language, so only the provider is new. */
     if (pickFrom(t, SAY_GOOGLE) && hasPhrase(t, sayList({ say: SAY_SIGNIN }))) {
       return { type: 'smart', run: goGoogle };
+    }
+
+    /* Theme. Trigger plus value, same rule as the vibe below. */
+    if (hasPhrase(t, (SAY_THEMESET[L] || SAY_THEMESET.en)) && typeof ncSetTheme === 'function') {
+      var th = pickFrom(t, THEME_SYSTEM) ? 'system'
+             : pickFrom(t, THEME_DARK) ? 'dark'
+             : pickFrom(t, THEME_LIGHT) ? 'light' : null;
+      if (th) return { type: 'smart', run: function () {
+        ncSetTheme(th);
+        flash(ui2('cmdTheme', { '{t}': ui('theme_' + th) || th }));
+      } };
+    }
+
+    /* Page verbs: scroll, back, reload, print, full screen, copy link, mute. */
+    for (var act in SAY_DO) {
+      if (hasPhrase(t, (SAY_DO[act][L] || SAY_DO[act].en))) {
+        (function (a) { act = a; })(act);
+        var chosen = act;
+        return { type: 'smart', run: function () { ncSpokenDo(chosen); } };
+      }
     }
 
     /* Change the vibe. Both the trigger and the value have to be there, so
