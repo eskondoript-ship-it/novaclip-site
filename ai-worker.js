@@ -72,6 +72,9 @@
      POST /
      { "provider": "gemini",                 // gemini | openrouter | openai
        "model": "gemini-2.5-flash",
+       "search": true,                       // OPTIONAL — ground the answer in a live
+                                             // Google Search. Gemini-only, no key of
+                                             // its own: the tool is part of the API.
        "payload": { "contents": [...], "generationConfig": {...} } }
 
      POST /tts                              // Jarvis's voice, text -> audio
@@ -79,7 +82,9 @@
 
    RESPONSE
      For gemini: Google's own JSON, unchanged, so ncAsk can read
-     candidates[].content.parts. For openrouter and openai: the answer is
+     candidates[].content.parts. A search request also carries the live results
+     in groundingMetadata.groundingChunks[].web.uri/title, which ncAsk turns
+     into a clickable source list. For openrouter and openai: the answer is
      normalized into that same shape. /tts answers with the MP3 itself. On any
      failure: { "error": "<reason a person can act on>" } with a real HTTP status.
    ============================================================================ */
@@ -198,12 +203,17 @@ function toGeminiShape(upstreamJson) {
   return null;
 }
 
-async function upstreamFetch(provider, model, payload, key, signal) {
+async function upstreamFetch(provider, model, payload, key, signal, search) {
   if (provider === 'gemini') {
+    /* Live-web grounding. Adding the google_search tool asks Google to look the
+       question up before answering and return the hits in groundingMetadata.
+       No extra key of our own is needed — the tool is billed with the prompt —
+       which is the whole reason Jarvis can search on the shared key. */
+    const body = search ? Object.assign({}, payload, { tools: [{ google_search: {} }] }) : payload;
     return fetch(GOOGLE + encodeURIComponent(model) + ':generateContent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
       signal: signal
     });
   }
@@ -426,6 +436,13 @@ export default {
       return fail(400, 'Expected { provider, model, payload: { contents: [...] } }.');
     }
 
+    /* Grounding is a Google-side tool. Refuse rather than silently ignore, so a
+       caller knows their "search the live web" request did not happen. */
+    const search = body.search === true;
+    if (search && provider !== 'gemini') {
+      return fail(400, 'Search grounding is a Gemini feature; the ' + provider + ' adapter cannot search.');
+    }
+
     /* A provider with no key on the worker is "not enabled" — a clear reason
        instead of a bare 401 from upstream. */
     if (!env[SECRET[provider]]) {
@@ -439,7 +456,7 @@ export default {
 
     let upstream;
     try {
-      upstream = await upstreamFetch(provider, model, body.payload, env[SECRET[provider]], abort.signal);
+      upstream = await upstreamFetch(provider, model, body.payload, env[SECRET[provider]], abort.signal, search);
     } catch (e) {
       clearTimeout(timer);
       return fail(504, e.name === 'AbortError'

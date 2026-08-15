@@ -323,39 +323,41 @@
       'Hit me with "call me <name>" and I\u2019ll remember. Anything else, the AI.');
   }
 
-  /* A web search with no key and no backend: DuckDuckGo's Instant Answer API is
-     open to browsers and needs none. When there is no instant answer, or the
-     request fails, fall back to opening Google in a new tab — the tab is
-     always the honest answer for "go look it up". */
+  /* A web search that returns an actual answer: it routes through ncAsk with
+     Gemini's grounding tool, so the model looks the term up on the live web and
+     comes back with a sourced answer instead of DuckDuckGo's short blurb. It
+     costs the same shared quota as any other AI call and needs no key of its
+     own. Grounding is a Gemini feature, so this one call forces the gemini
+     provider regardless of the site-wide selection. On any failure, fall back
+     to opening Google in a new tab — the tab is always the honest answer for
+     "go look it up". */
   function webSearch(term) {
-    var openTab = function () {
-      try { window.open('https://www.google.com/search?q=' + encodeURIComponent(term), '_blank', 'noopener'); } catch (e) {}
-    };
-    return fetch('https://api.duckduckgo.com/?q=' + encodeURIComponent(term) +
-                 '&format=json&no_html=1&skip_disambig=1')
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (!d) throw new Error('ddg');
-        var a = d.AbstractText || d.Answer || '';
-        if (!a) {
-          var topics = d.RelatedTopics || [];
-          for (var i = 0; i < topics.length; i++) {
-            if (topics[i] && typeof topics[i] === 'object' && topics[i].Text) { a = topics[i].Text; break; }
-          }
+    if (typeof window.ncAsk !== 'function') return fallbackSearch(term);
+    return window.ncAsk(
+      'You are JARVIS, a personal AI assistant. Search the live web for: "' + term + '". ' +
+      (gz() ? 'Answer in heavy gen-z slang with a few emojis, but stay genuinely useful. ' : 'Answer in clear, friendly everyday English. ') +
+      'Be specific, under 90 words, and don\u2019t invent numbers or links \u2014 the search results are the only source of truth.\n\n' +
+      'Search for: ' + term,
+      { provider: 'gemini', search: true, maxTokens: 400, temperature: 0.3 }
+    ).then(function (r) {
+      if (r && !r.err && r.text) {
+        var reply = r.text.trim();
+        if (r.sources && r.sources.length) {
+          reply += '\n\nSources:';
+          r.sources.slice(0, 4).forEach(function (src, i) {
+            reply += '\n' + (i + 1) + '. ' + src.title + ' \u2014 ' + src.uri;
+          });
         }
-        if (a) {
-          return s('Here\u2019s what I found: ' + a.slice(0, 220) + '.',
-                   'Lookin it up \u2014 ' + a.slice(0, 200) + '.');
-        }
-        openTab();
-        return s('No quick answer found \u2014 I opened Google for "' + term + '" in a new tab.',
-                 'No instant answer \u2014 opened Google for "' + term + '" in a new tab.');
-      })
-      .catch(function () {
-        openTab();
-        return s('I couldn\u2019t reach the search service, so I opened Google for "' + term + '" instead.',
-                 'Search service down \u2014 opened Google for "' + term + '" instead.');
-      });
+        return reply;
+      }
+      return fallbackSearch(term);
+    });
+  }
+
+  function fallbackSearch(term) {
+    try { window.open('https://www.google.com/search?q=' + encodeURIComponent(term), '_blank', 'noopener'); } catch (e) {}
+    return s('I couldn\u2019t search just now, so I opened Google for "' + term + '" in a new tab.',
+             'Search buggin rn \u2014 opened Google for "' + term + '" in a new tab.');
   }
 
   function respond(q) {

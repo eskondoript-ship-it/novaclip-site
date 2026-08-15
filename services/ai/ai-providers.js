@@ -20,9 +20,12 @@
                    selection, so the whole site swaps together.
 
      ncAI.ask()    what the rest of NovaClip calls. Signature and return shape
-                   are identical to ncAsk(), which every AI feature already uses:
-                     { text, image, err }   // err set means the model could not
-                                           // answer — never a made-up reply.
+                     are identical to ncAsk(), which every AI feature already uses:
+                     { text, image, sources, err }   // err set means the model
+                                                    // could not answer — never a
+                                                    // made-up reply. sources is
+                                                    // the live-search hit list
+                                                    // when search:true was asked.
 
    WHICH PROVIDER ANSWERS
      gemini      Google, via ncAsk(). The site's default.
@@ -47,8 +50,8 @@
   'use strict';
 
   /* ---- the interface every provider implements -------------------------
-     ask(prompt, opts) -> Promise<{ text, image, err }>
-        opts: { model, temperature, maxTokens }
+     ask(prompt, opts) -> Promise<{ text, image, sources, err }>
+        opts: { model, temperature, maxTokens, search }
      All three adapters delegate to ncAsk() in nova.js, so they inherit the
      site's worker routing, rate-limit messaging, timeout handling and error
      strings. The only difference between them is which provider id reaches
@@ -74,7 +77,7 @@
       });
     }
     const o = opts || {};
-    return window.ncAsk(prompt, { provider: provider, model: o.model, temperature: o.temperature, maxTokens: o.maxTokens });
+    return window.ncAsk(prompt, { provider: provider, model: o.model, temperature: o.temperature, maxTokens: o.maxTokens, search: o.search });
   }
 
   class GeminiProvider extends AIProvider {

@@ -2215,10 +2215,12 @@ function ncKeyLooksReal(k) { return /^AIza[\w-]{30,}$/.test((k || '').trim()); }
    answer: if the model could not be reached, err says so and text is empty, so
    callers can tell "it said nothing" apart from "it could not be asked".
 
-   opts: { provider, model, temperature, maxTokens }. provider defaults to the
-   active selection (ncActiveProvider); model defaults per provider. A personal
+   opts: { provider, model, temperature, maxTokens, search }. provider defaults to
+   the active selection (ncActiveProvider); model defaults per provider. A personal
    key applies only to gemini — an AIza key cannot be spent at OpenRouter or
-   OpenAI, so those two always go through the worker's shared key. */
+   OpenAI, so those two always go through the worker's shared key. search:true
+   grounds the answer in a live Google Search (Gemini-only; the tools: block is
+   what asks Google to look it up) and returns the hits in sources. */
 async function ncAsk(prompt, opts) {
   opts = opts || {};
   const provider = opts.provider || ncActiveProvider();
@@ -2228,6 +2230,7 @@ async function ncAsk(prompt, opts) {
     generationConfig: { temperature: opts.temperature == null ? 0.7 : opts.temperature }
   };
   if (opts.maxTokens) body.generationConfig.maxOutputTokens = opts.maxTokens;
+  if (opts.search) body.tools = [{ google_search: {} }];
 
   const own = provider === 'gemini' ? ncAIKey() : '';
   let data = null, err = '';
@@ -2240,7 +2243,7 @@ async function ncAsk(prompt, opts) {
       else if (r.status === 429) err = 'Your own key is out of quota for now.';
     } else {
       r = await fetch(NC_AI_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: provider, model: model, payload: body }) });
+        body: JSON.stringify({ provider: provider, model: model, payload: body, search: opts.search === true }) });
     }
 
     /* Read the body once, as text, before deciding anything. Both Google and
@@ -2281,7 +2284,20 @@ async function ncAsk(prompt, opts) {
     if (p.inlineData) image = 'data:image/png;base64,' + p.inlineData.data;
   });
   if (!text && !image) err = 'The AI returned nothing that time. Try again.';
-  return { text: text, image: image, err: err };
+
+  /* Live-search hits, when search:true was asked for. Gemini puts them in
+     groundingMetadata — top-level in some versions, on the candidate in others.
+     Only real pages are listed: Gemini also names the search tool itself, and a
+     source list that starts with "Google Search" is noise. */
+  const gm = data && (data.groundingMetadata ||
+    (data.candidates && data.candidates[0] && data.candidates[0].groundingMetadata));
+  const chunks = gm && gm.groundingChunks || [];
+  const sources = [];
+  chunks.forEach(c => {
+    if (c.web && c.web.uri && c.web.title) sources.push({ uri: c.web.uri, title: c.web.title });
+  });
+
+  return { text: text, image: image, sources: sources, err: err };
 }
 
 window.ncAIKey = ncAIKey; window.ncSetAIKey = ncSetAIKey;
