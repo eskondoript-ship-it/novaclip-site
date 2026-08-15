@@ -380,104 +380,6 @@ h1 .m { color:var(--nc-pink,#FF2E97); }
 /* in RTL keep each line internally correct and right-aligned */
 html[dir='rtl'] h1 .hl1, html[dir='rtl'] h1 .hl2 { direction:rtl; text-align:right; }
 html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
-
-/* ===== HERO, rebuilt around the pipeline ================================= */
-.herogrid{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:clamp(26px,4vw,58px);
-  align-items:center;width:100%}
-.herocopy{min-width:0}
-.herolede{color:var(--nc-dim,#7E8AA6);margin-top:15px;max-width:52ch;font-size:clamp(.94rem,1.05vw,1.06rem);line-height:1.65}
-.hero h1{font-size:clamp(2.1rem,4.6vw,3.7rem);line-height:1.04;letter-spacing:-.045em}
-.hero .herobtns{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
-.hero-meta{margin-top:26px}
-
-/* the pipeline card */
-.pipe{padding:0;overflow:hidden;min-width:0}
-.pipehead{display:flex;align-items:center;gap:10px;padding:11px 14px;
-  border-bottom:1px solid var(--nc-bd,rgba(255,255,255,.09));background:var(--nc-s1,rgba(255,255,255,.035))}
-.pipehead .dots{display:flex;gap:5px}
-.pipehead .dots i{width:9px;height:9px;border-radius:50%;background:var(--nc-bd2,rgba(255,255,255,.16))}
-.pipettl{font-size:.8rem;font-weight:700;color:var(--nc-dim,#7E8AA6);flex:1}
-.stages{position:relative;height:236px}
-.stage{position:absolute;inset:0;padding:16px 18px;opacity:0;transform:translateY(10px);
-  transition:opacity .45s ease,transform .45s ease;pointer-events:none}
-.stage.on{opacity:1;transform:none;pointer-events:auto}
-.srow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.sic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:1rem;
-  background:var(--nc-s2,rgba(255,255,255,.06));border:1px solid var(--nc-bd,rgba(255,255,255,.09))}
-.snm{font-weight:700;font-size:.95rem;letter-spacing:-.01em}
-.sbody{font-size:.86rem;color:var(--nc-dim,#7E8AA6)}
-
-.typeline{display:inline-block;border-left:2px solid var(--nc-cyan,#00F0FF);padding-left:9px;
-  color:var(--nc-text,#EAF2FF);font-size:.92rem}
-.ticks{display:grid;gap:9px}
-.ticks span{display:flex;align-items:center;gap:9px;opacity:.32;transition:opacity .3s ease,color .3s ease}
-.ticks span i{width:15px;height:15px;border-radius:50%;flex:0 0 auto;position:relative;
-  border:1.5px solid var(--nc-bd2,rgba(255,255,255,.16))}
-.stage.on .ticks span{animation:tickin .4s ease forwards}
-.stage.on .ticks span:nth-child(1){animation-delay:.15s}
-.stage.on .ticks span:nth-child(2){animation-delay:.6s}
-.stage.on .ticks span:nth-child(3){animation-delay:1.05s}
-.stage.on .ticks span:nth-child(4){animation-delay:1.5s}
-@keyframes tickin{to{opacity:1;color:var(--nc-text,#EAF2FF)}}
-.stage.on .ticks span i::after{content:'';position:absolute;inset:-1.5px;border-radius:50%;
-  background:var(--nc-ok,#3DD68C);transform:scale(0);animation:tickdot .35s ease forwards}
-.stage.on .ticks span:nth-child(1) i::after{animation-delay:.25s}
-.stage.on .ticks span:nth-child(2) i::after{animation-delay:.7s}
-.stage.on .ticks span:nth-child(3) i::after{animation-delay:1.15s}
-.stage.on .ticks span:nth-child(4) i::after{animation-delay:1.6s}
-@keyframes tickdot{to{transform:scale(1)}}
-
-.track{position:relative;height:34px;border-radius:9px;background:var(--nc-s1,rgba(255,255,255,.035));
-  border:1px solid var(--nc-bd,rgba(255,255,255,.09));display:flex;gap:4px;padding:4px;margin-bottom:7px}
-.track.small{height:22px}
-.clip{border-radius:6px;background:linear-gradient(130deg,#7C5CFF,#00F0FF)}
-.clip.a{flex:3}.clip.b{flex:2;background:linear-gradient(130deg,#00F0FF,#FF2E97)}
-.clip.c{flex:1;background:linear-gradient(130deg,#FF2E97,#7C5CFF)}
-.clip.d{flex:2;opacity:.55}.clip.e{flex:5;opacity:.55;background:linear-gradient(130deg,#00F0FF,#7C5CFF)}
-.play{position:absolute;top:0;bottom:0;width:2px;background:#fff;border-radius:2px;left:8%;
-  box-shadow:0 0 10px rgba(255,255,255,.8)}
-.stage.on .play{animation:scrub 3.4s linear infinite}
-@keyframes scrub{from{left:6%}to{left:94%}}
-
-.thumb{position:relative;height:98px;border-radius:11px;overflow:hidden;
-  background:linear-gradient(125deg,#2B1B5E,#0B2E4A 55%,#4A123C);display:grid;place-items:center;
-  border:1px solid var(--nc-bd,rgba(255,255,255,.09))}
-.thumb .tt{font-weight:850;font-size:1.02rem;letter-spacing:-.02em;text-align:center;color:#fff;
-  text-shadow:0 2px 14px rgba(0,0,0,.6);line-height:1.15}
-.upl{display:block;height:100%;width:0;border-radius:20px;background:var(--nc-xp,linear-gradient(90deg,#7C5CFF,#00F0FF))}
-.stage.on .upl{animation:upl 2.6s ease-out forwards}
-@keyframes upl{to{width:100%}}
-
-.spark{width:100%;height:64px;display:block}
-.sparkline{fill:none;stroke:url(#sparkg);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
-  stroke-dasharray:260;stroke-dashoffset:260}
-.stage.on .sparkline{animation:drawline 1.5s ease forwards}
-@keyframes drawline{to{stroke-dashoffset:0}}
-.grow{display:flex;align-items:baseline;gap:9px;margin-top:4px}
-.grow b{font-size:1.5rem;font-weight:780;letter-spacing:-.03em;color:var(--nc-ok,#3DD68C)}
-
-.pipedots{display:flex;gap:7px;padding:0 16px 15px}
-.pipedots button{flex:1;height:4px;border:0;padding:0;border-radius:20px;cursor:pointer;
-  background:var(--nc-bd2,rgba(255,255,255,.16));transition:background .3s ease}
-.pipedots button.on{background:var(--nc-xp,linear-gradient(90deg,#7C5CFF,#00F0FF))}
-
-@media (max-width:900px){
-  .herogrid{grid-template-columns:1fr;gap:30px}
-  .stages{height:214px}
-  .hero h1{font-size:clamp(1.95rem,7.4vw,2.6rem)}
-}
-@media (max-width:430px){
-  .hero .herobtns{gap:9px}
-  .hero .herobtns .nc-btn{flex:1 1 100%}
-  .stages{height:204px}
-  .thumb{height:82px}
-}
-@media (prefers-reduced-motion:reduce){
-  .stage.on .play,.stage.on .upl,.stage.on .sparkline,.stage.on .ticks span,
-  .stage.on .ticks span i::after{animation:none}
-  .ticks span{opacity:1;color:var(--nc-text,#EAF2FF)}
-  .sparkline{stroke-dashoffset:0}.upl{width:100%}
-}
 </style>
 </head>
 <body>
@@ -511,88 +413,26 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 
 <header class='hero'>
   <div class='ytfloat' aria-hidden='true'>
-    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
+    <div class='ytf'><svg viewBox='0 0 24 24' aria-hidden='true'><path class='yt-body' d='M23.5 6.9a3 3 0 0 0-2.1-2.1C19.5 4.3 12 4.3 12 4.3s-7.5 0-9.4.5A3 3 0 0 0 .5 6.9 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.1z'/><path class='yt-play' d='M9.6 15.6V8.4L15.8 12z'/></svg></div>
   </div>
-
-  <div class='herogrid'>
-    <div class='herocopy'>
-      <span class='eyebrow' data-t='eyebrow'>For teen creators · 13–18</span>
-      <h1><span class='hl1' data-t='hero_line1'>Turn your idea</span><span class='hl2' data-t='hero_line2'>into your <b class='m'>next video.</b></span></h1>
-      <p class='herolede' data-t='hero_lede'>NovaClip is the AI co-pilot that takes the thing in your head and walks it
-        all the way to published — script, edit, captions, thumbnail — then turns growing your
-        channel into something you actually want to play.</p>
-      <div class='console' aria-hidden='true'><span id='type'></span><span class='cursor'>▋</span></div>
-      <div class='herobtns'>
-        <a href='app.html' class='nc-btn primary lg' data-t='startcreating'>Start Creating
-          <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14M13 6l6 6-6 6'/></svg></a>
-        <a href='#how' class='nc-btn ghost lg' data-t='seehow'>See How It Works</a>
-      </div>
-      <div class='hero-meta'>
-        <div><b class='cy' data-count='3'>0</b> <span data-t='meta_ai'>AI tutors on call</span></div>
-        <div><b class='mg' data-count='1'>0</b> <span data-t='meta_editor'>browser editor</span></div>
-        <div><b class='lm'>∞</b> <span data-t='meta_rewards'>quests &amp; rewards</span></div>
-      </div>
-    </div>
-
-    <!-- The pipeline. Five stages of the real product, each showing what that
-         step actually looks like, cycling one at a time. It demonstrates
-         NovaClip rather than describing it, which is the whole job of a hero. -->
-    <div class='pipe nc-glass nc-grain' id='pipe' aria-label='Idea to growth in five steps'>
-      <div class='pipehead'>
-        <span class='dots'><i></i><i></i><i></i></span>
-        <span class='pipettl'>NovaClip</span>
-        <span class='nc-chip accent' id='pipestage'>Idea</span>
-      </div>
-
-      <div class='stages' id='stages'>
-        <div class='stage on' data-s='idea'>
-          <div class='srow'><span class='sic'>💡</span><span class='snm' data-t='pipe_idea'>Idea</span></div>
-          <div class='sbody'><span class='typeline' id='pipeType'>a video about my first week of coding</span></div>
-        </div>
-
-        <div class='stage' data-s='ai'>
-          <div class='srow'><span class='sic'>✦</span><span class='snm' data-t='pipe_ai'>AI</span></div>
-          <div class='sbody ticks'>
-            <span><i></i>Understanding your idea</span>
-            <span><i></i>Writing the hook</span>
-            <span><i></i>Building the scenes</span>
-            <span><i></i>Creating captions</span>
-          </div>
-        </div>
-
-        <div class='stage' data-s='video'>
-          <div class='srow'><span class='sic'>🎬</span><span class='snm' data-t='pipe_video'>Video</span></div>
-          <div class='sbody'>
-            <div class='track'><span class='clip a'></span><span class='clip b'></span><span class='clip c'></span>
-              <span class='play'></span></div>
-            <div class='track small'><span class='clip d'></span><span class='clip e'></span></div>
-          </div>
-        </div>
-
-        <div class='stage' data-s='publish'>
-          <div class='srow'><span class='sic'>🚀</span><span class='snm' data-t='pipe_publish'>Publish</span></div>
-          <div class='sbody'>
-            <div class='thumb'><span class='tt'>MY FIRST WEEK<br>CODING</span></div>
-            <div class='nc-xpbar thin' style='margin-top:10px'><span class='upl'></span></div>
-          </div>
-        </div>
-
-        <div class='stage' data-s='growth'>
-          <div class='srow'><span class='sic'>📈</span><span class='snm' data-t='pipe_growth'>Growth</span></div>
-          <div class='sbody'>
-            <svg class='spark' viewBox='0 0 200 60' aria-hidden='true'>
-              <defs><linearGradient id='sparkg' x1='0' y1='0' x2='1' y2='0'>
-                <stop offset='0' stop-color='#7C5CFF'/><stop offset='1' stop-color='#00F0FF'/></linearGradient></defs>
-              <path class='sparkline' d='M4 54 L38 46 L72 48 L106 32 L140 24 L174 10 L196 6'/>
-            </svg>
-            <div class='grow'><b>+38%</b><span data-t='pipe_growth_d'>views this week</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class='pipedots' id='pipedots' role='tablist' aria-label='Pipeline step'></div>
-    </div>
+  <span class='eyebrow' data-t='eyebrow'>For teen creators · 13–18</span>
+  <h1><span class='hl1' data-t='hero_line1'>Run your <b class='n'>channel</b></span><span class='hl2' data-t='hero_line2'>like a <b class='m'>game.</b></span></h1>
+  <div class='console' aria-hidden='true'><span id='type'></span><span class='cursor'>▋</span></div>
+  <div class='herobtns'>
+    <a href='app.html'><button class='btn-primary' data-t='startchannel'>Start your channel →</button></a>
+    <a href='#play' class='btn-ghost' data-t='seerewards'>See the rewards</a>
   </div>
+  <div class='hero-meta'>
+    <div><b class='cy' data-count='3'>0</b> <span data-t='meta_ai'>AI tutors on call</span></div>
+    <div><b class='mg' data-count='1'>0</b> <span data-t='meta_editor'>browser editor</span></div>
+    <div><b class='lm'>∞</b> <span data-t='meta_rewards'>quests &amp; rewards</span></div>
+  </div>
+  <div class='scroll-hint' data-t='scrolldown'>▼ SCROLL</div>
 </header>
 
 <!-- AI / SMART COACHING with rings -->
@@ -903,54 +743,5 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script>window.addEventListener('load', function(){ if (window.ncAgeGate) ncAgeGate(); });</script>
-
-<script>
-/* The hero pipeline. One stage visible at a time on a timer, with dots that
-   let someone step through it themselves — an animation nobody can control is
-   a video, and a video is not a demo. Pauses when the tab is hidden and when
-   the pointer is over the card, so it is not burning frames unseen. */
-(function () {
-  var stages = [].slice.call(document.querySelectorAll('#stages .stage'));
-  var dotwrap = document.getElementById('pipedots');
-  var label = document.getElementById('pipestage');
-  if (!stages.length || !dotwrap) return;
-
-  var NAMES = ['Idea', 'AI', 'Video', 'Publish', 'Growth'];
-  var i = 0, timer = null, hold = false;
-  var reduced = false;
-  try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
-
-  stages.forEach(function (_, n) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.setAttribute('role', 'tab');
-    b.setAttribute('aria-label', NAMES[n]);
-    b.onclick = function () { show(n); restart(); };
-    dotwrap.appendChild(b);
-  });
-
-  function show(n) {
-    i = (n + stages.length) % stages.length;
-    stages.forEach(function (s, k) { s.classList.toggle('on', k === i); });
-    [].forEach.call(dotwrap.children, function (d, k) {
-      d.classList.toggle('on', k === i);
-      d.setAttribute('aria-selected', k === i);
-    });
-    if (label) label.textContent = NAMES[i];
-  }
-
-  function tick() { if (!hold && !document.hidden) show(i + 1); }
-  function restart() { clearInterval(timer); if (!reduced) timer = setInterval(tick, 3200); }
-
-  var card = document.getElementById('pipe');
-  if (card) {
-    card.addEventListener('pointerenter', function () { hold = true; });
-    card.addEventListener('pointerleave', function () { hold = false; });
-  }
-  document.addEventListener('visibilitychange', function () { if (!document.hidden) restart(); });
-
-  show(0); restart();
-})();
-</script>
 </body>
 </html>

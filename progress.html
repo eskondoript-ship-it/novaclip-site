@@ -93,23 +93,6 @@ h1 .grad { background: linear-gradient(90deg, var(--nc-mag,#F72585), var(--nc-vi
   </div>
 
   <div class='grid'>
-    <div class='card wide' id='missioncard'>
-      <div class='nc-head'>
-        <h3 data-t='missions'>Missions</h3>
-        <span class='sub' data-t='missions_d'>Every bar below counts something you actually did.</span>
-        <span class='sp'></span>
-        <span class='nc-chip accent' id='misscount'></span>
-      </div>
-      <div id='missionlist' style='display:grid;gap:10px'></div>
-    </div>
-
-    <div class='card wide' id='badgecard'>
-      <div class='nc-head'>
-        <h3 data-t='achievements'>Achievements</h3>
-        <span class='sub' data-t='badges_d'>Locked ones stay visible — that is the point of them.</span>
-      </div>
-      <div class='nc-badges' id='badgegrid'></div>
-    </div>
     <div class='card'>
       <h2 data-t='quests'>Rewards</h2>
       <div class='hint' data-t='prog_rewards_d'>Free NovaClip Pro time, unlocked by points.</div>
@@ -183,29 +166,5 @@ window.onSkillLogged = renderProgress;
 </script>
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
-
-<script>
-/* Both lists live in nova.js so any page can show them; this page is where
-   they belong. Re-rendered on focus because a mission can be completed in
-   another tab — the Editor, the Trend Spotter — and coming back should show
-   it done rather than needing a reload. */
-(function () {
-  function paint() {
-    if (typeof ncRenderMissions === 'function') ncRenderMissions('missionlist');
-    if (typeof ncRenderBadges === 'function') ncRenderBadges('badgegrid');
-    var c = document.getElementById('misscount');
-    if (c && typeof NC_MISSIONS !== 'undefined') {
-      var done = NC_MISSIONS.filter(function (m) { return ncMissionState(m).done; }).length;
-      c.textContent = done + ' / ' + NC_MISSIONS.length;
-    }
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint);
-  else paint();
-  /* nova.js is at the end of body, so on a fast load the helpers may not be
-     defined yet when this runs. */
-  setTimeout(paint, 400);
-  addEventListener('focus', paint);
-})();
-</script>
 </body>
 </html>
