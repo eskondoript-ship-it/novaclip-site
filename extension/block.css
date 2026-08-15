@@ -1,0 +1,31 @@
+/* Hidden, not removed: taking nodes out of these sites' React trees makes them
+   throw, and a blanked YouTube reads as "the shield is broken" rather than
+   "that video was blocked". */
+.ncfs-hidden { display: none !important; }
+
+#ncfs-cover {
+  position: fixed; inset: 0; z-index: 2147483647;
+  display: grid; place-items: center; padding: 24px;
+  background: #0A0E16;
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #EAF1FF;
+}
+#ncfs-cover .ncfs-card {
+  max-width: 42ch; text-align: center;
+  background: #121A26; border: 1px solid #22303F;
+  border-radius: 18px; padding: 34px 30px;
+}
+#ncfs-cover .ncfs-mark {
+  font-size: .72rem; letter-spacing: .18em; text-transform: uppercase;
+  color: #00F0FF; font-weight: 700; margin-bottom: 14px;
+}
+#ncfs-cover h1 { font-size: 1.6rem; margin: 0 0 12px; letter-spacing: -.02em; }
+#ncfs-cover p { margin: 0 0 10px; color: #9FB0C8; }
+#ncfs-cover b { color: #EAF1FF; }
+#ncfs-cover .ncfs-small { font-size: .86rem; color: #6F8098; }
+#ncfs-cover button {
+  margin-top: 18px; font: inherit; font-weight: 700;
+  background: #00F0FF; color: #04121A; border: 0;
+  border-radius: 30px; padding: 11px 26px; cursor: pointer;
+}
+#ncfs-cover button:focus-visible { outline: 3px solid #B6FF3C; outline-offset: 2px; }

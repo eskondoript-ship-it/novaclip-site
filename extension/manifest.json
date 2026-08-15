@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "NovaClip Family Shield",
+  "version": "1.0.0",
+  "description": "Blocks unsuitable content on YouTube, TikTok, Instagram and Twitch, using the rules set in the NovaClip Family Dashboard.",
+  "minimum_chrome_version": "102",
+  "permissions": [
+    "storage",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*",
+    "*://*.tiktok.com/*",
+    "*://*.instagram.com/*",
+    "*://*.twitch.tv/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://*.tiktok.com/*",
+        "*://*.instagram.com/*",
+        "*://*.twitch.tv/*"
+      ],
+      "js": [
+        "family-filter.js",
+        "block.js"
+      ],
+      "css": [
+        "block.css"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "options_page": "options.html",
+  "action": {
+    "default_popup": "options.html",
+    "default_title": "NovaClip Family Shield"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "blocked.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://novaclip.pt/*",
+      "https://*.novaclip.pt/*",
+      "http://localhost/*",
+      "http://127.0.0.1/*"
+    ]
+  }
+}

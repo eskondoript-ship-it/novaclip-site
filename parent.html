@@ -119,6 +119,64 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
       <div class='log' id='actlog'>—</div>
     </div>
 
+    <!-- CONTENT BLOCKING -->
+    <div class='card'>
+      <h3><span data-t='par_shield'>Content blocking</span> <small data-t='par_shield_s'>Blocks unsuitable videos, streams and posts on YouTube, TikTok, Instagram and Twitch. Choose the rules here; the browser shield enforces them.</small></h3>
+
+      <div class='notice' id='shieldState'>Checking for the browser shield…</div>
+
+      <div style='display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:14px 0'>
+        <label style='display:flex; align-items:center; gap:8px; font-weight:700'>
+          <input type='checkbox' id='fEnabled' style='width:auto'> Filtering on
+        </label>
+        <select id='fProfile' style='width:auto'></select>
+        <select id='fStrict' style='width:auto'>
+          <option value='strict'>Strict preset</option>
+          <option value='normal'>Standard preset</option>
+          <option value='relaxed'>Relaxed preset</option>
+        </select>
+        <button class='btn' id='fApplyPreset' style='width:auto'>Apply preset</button>
+      </div>
+
+      <h3 style='margin-top:6px' data-t='par_shield_plat'>Where it applies</h3>
+      <div id='fPlatforms' style='display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-bottom:16px'></div>
+
+      <h3 data-t='par_shield_cats'>What gets blocked</h3>
+      <p style='color:#8b93a7; font-size:0.86rem; margin:0 0 10px'>A ticked box blocks. There is no second switch that quietly turns one off.</p>
+      <div id='fCats' style='display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:8px; margin-bottom:16px'></div>
+
+      <h3 data-t='par_shield_lists'>Your own lists</h3>
+      <div style='display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px'>
+        <div>
+          <label style='font-size:0.85rem; color:#8b93a7'>Always allow these channels</label>
+          <textarea id='fAllow' rows='3' placeholder='One name per line'></textarea>
+        </div>
+        <div>
+          <label style='font-size:0.85rem; color:#8b93a7'>Always block these channels</label>
+          <textarea id='fBlock' rows='3' placeholder='One name per line'></textarea>
+        </div>
+      </div>
+
+      <h3 style='margin-top:14px' data-t='par_shield_try'>Try it before you trust it</h3>
+      <p style='color:#8b93a7; font-size:0.86rem; margin:0 0 8px'>Type any video title. This runs the exact rules the shield runs.</p>
+      <input type='text' id='fTest' placeholder='e.g. free robux generator 2026'>
+      <div id='fTestOut' style='margin-top:8px; min-height:26px'></div>
+
+      <div style='display:flex; gap:10px; flex-wrap:wrap; margin-top:16px'>
+        <button class='btn' id='fSave' style='width:auto'>Save and send to the shield</button>
+        <a class='btn' id='fGetExt' href='extension/' style='width:auto; text-decoration:none; text-align:center'>Get the browser shield</a>
+      </div>
+
+      <div class='notice' style='margin-top:14px'>
+        <b>What this does and does not do.</b> The shield reads the text a platform puts on screen —
+        titles, channel names, descriptions, search terms — and hides or blocks what matches. That covers
+        the three ways a child actually reaches bad content: searching for it, being recommended it, and
+        clicking it. It does <b>not</b> watch the video, so a clean title on a bad video can still get
+        through. Any product that tells you a filter is total protection is selling you something that
+        does not exist. Settings stay on the device; nothing about your child's browsing is sent anywhere.
+      </div>
+    </div>
+
     <!-- HARASSMENT SCANNER -->
     <div class='card'>
       <h3><span data-t='par_scanner'>Comment safety scanner</span> <small data-t='par_scanner_s'>Scans the newest comments on your kid's uploads for harassment or bullying. Uses the YouTube connection made in Studio.</small></h3>
@@ -338,6 +396,9 @@ function unlock() {
   document.getElementById('actlog').innerHTML = lines.length ? lines.join('<br>') : 'No AI chats yet on this device.';
   renderPlans();
   renderSavedCard();
+  /* Content blocking is inside the PIN gate for the same reason billing is:
+     a child who can change the rules is not filtered. */
+  try { fInit(); } catch (e) { console.warn('content blocking failed to start', e); }
 }
 
 // --- Plans & billing (inside PIN-gated dashboard) ---
@@ -433,9 +494,150 @@ document.getElementById('scanBtn').onclick = async () => {
     out.innerHTML = '<div class="flag">Scan failed — the YouTube connection may have expired. Reconnect in <a href="app.html">Studio</a>.</div>';
   }
 };
+
+/* ============================================================================
+   CONTENT BLOCKING
+   ============================================================================
+   The parent picks rules here; extension/ enforces them on the four sites.
+   Both run family-filter.js, so the preview below is not an approximation of
+   what the shield does — it is the same function on the same rules.
+
+   Settings are saved locally and pushed to the extension. Nothing about the
+   child's browsing leaves the device.
+   ---------------------------------------------------------------------------- */
+var FKEY = 'nc_family_settings';
+/* Set once the extension is published; until then it is loaded unpacked and
+   the dashboard says plainly that nothing is being enforced. */
+var EXT_ID = localStorage.getItem('nc_shield_id') || '';
+var fSettings = null;
+
+function fLoad() {
+  try {
+    var raw = JSON.parse(localStorage.getItem(FKEY) || 'null');
+    if (raw && raw.categories) return raw;
+  } catch (e) {}
+  var age = +(localStorage.getItem('nc_kid_age') || 12);
+  return NCFilter.defaults(age < 10 ? 'young' : age < 14 ? 'tween' : 'teen');
+}
+
+function fRender() {
+  fSettings = fSettings || fLoad();
+  document.getElementById('fEnabled').checked = fSettings.enabled !== false;
+
+  var prof = document.getElementById('fProfile');
+  if (!prof.options.length) {
+    Object.keys(NCFilter.PROFILES).forEach(function (k) {
+      var o = document.createElement('option');
+      o.value = k; o.textContent = NCFilter.PROFILES[k].label;
+      prof.appendChild(o);
+    });
+  }
+  prof.value = fSettings.profile || 'tween';
+  document.getElementById('fStrict').value = fSettings.strictness || 'normal';
+
+  var plats = [['youtube', 'YouTube'], ['tiktok', 'TikTok'], ['instagram', 'Instagram'], ['twitch', 'Twitch']];
+  document.getElementById('fPlatforms').innerHTML = plats.map(function (p) {
+    var on = !(fSettings.platforms && fSettings.platforms[p[0]] === false);
+    return "<label style='display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);" +
+      "border-radius:10px;padding:9px 12px'><input type='checkbox' data-plat='" + p[0] + "' " +
+      (on ? 'checked' : '') + " style='width:auto'> " + p[1] + "</label>";
+  }).join('');
+
+  document.getElementById('fCats').innerHTML = NCFilter.CATEGORIES.map(function (c) {
+    var on = (fSettings.categories || []).indexOf(c.id) >= 0;
+    return "<label style='display:flex;align-items:flex-start;gap:8px;border:1px solid rgba(255,255,255,.12);" +
+      "border-radius:10px;padding:9px 12px'><input type='checkbox' data-cat='" + c.id + "' " +
+      (on ? 'checked' : '') + " style='width:auto;margin-top:3px'> <span>" + c.label +
+      "<br><small style='color:#8b93a7'>" + c.terms.length + " phrases, " + c.exemptions.length +
+      " exceptions</small></span></label>";
+  }).join('');
+
+  document.getElementById('fAllow').value = (fSettings.allow || []).join('\n');
+  document.getElementById('fBlock').value = (fSettings.block || []).join('\n');
+  fTest();
+}
+
+function fCollect() {
+  var s = fSettings || fLoad();
+  s.enabled = document.getElementById('fEnabled').checked;
+  s.profile = document.getElementById('fProfile').value;
+  s.strictness = document.getElementById('fStrict').value;
+  s.platforms = {};
+  document.querySelectorAll('[data-plat]').forEach(function (el) { s.platforms[el.dataset.plat] = el.checked; });
+  s.categories = [];
+  document.querySelectorAll('[data-cat]').forEach(function (el) { if (el.checked) s.categories.push(el.dataset.cat); });
+  var lines = function (id) {
+    return document.getElementById(id).value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+  };
+  s.allow = lines('fAllow');
+  s.block = lines('fBlock');
+  fSettings = s;
+  return s;
+}
+
+/* The preview runs the real engine, so a parent can check a rule before
+   trusting it with their child's browsing. */
+function fTest() {
+  var q = document.getElementById('fTest').value.trim();
+  var out = document.getElementById('fTestOut');
+  if (!q) { out.innerHTML = ''; return; }
+  var v = NCFilter.check({ platform: 'youtube', title: q }, fCollect());
+  out.innerHTML = v.blocked
+    ? "<span style='color:#FF6B81;font-weight:700'>Blocked</span> — " + v.label +
+      (v.matched.length ? " <small style='color:#8b93a7'>matched: " + v.matched.join(', ') + "</small>" : '')
+    : "<span style='color:#B6FF3C;font-weight:700'>Allowed</span> <small style='color:#8b93a7'>" + v.reason + "</small>";
+}
+
+function fSaveShield() {
+  var s = fCollect();
+  localStorage.setItem(FKEY, JSON.stringify(s));
+  var note = document.getElementById('shieldState');
+
+  if (!EXT_ID || typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
+    note.innerHTML = 'Saved on this device. <b>The browser shield is not connected</b>, so nothing is being ' +
+      'blocked on YouTube, TikTok, Instagram or Twitch yet — install it below and these settings go across.';
+    return;
+  }
+  try {
+    chrome.runtime.sendMessage(EXT_ID, { type: 'ncfs-settings', settings: s }, function (reply) {
+      if (chrome.runtime.lastError || !reply || !reply.ok) {
+        note.innerHTML = 'Saved here, but the shield did not answer. Open the extension once, then save again.';
+      } else {
+        note.innerHTML = '<b>Shield updated.</b> Blocking is live on every ticked platform.';
+      }
+    });
+  } catch (e) {
+    note.innerHTML = 'Saved on this device. The shield could not be reached from this browser.';
+  }
+}
+
+function fInit() {
+  if (typeof NCFilter === 'undefined' || !document.getElementById('fCats')) return;
+  fRender();
+  document.getElementById('fSave').onclick = fSaveShield;
+  document.getElementById('fTest').oninput = fTest;
+  ['fEnabled', 'fProfile', 'fStrict', 'fAllow', 'fBlock'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', fTest);
+  });
+  document.getElementById('fCats').addEventListener('change', fTest);
+  document.getElementById('fPlatforms').addEventListener('change', fTest);
+  document.getElementById('fApplyPreset').onclick = function () {
+    fSettings = NCFilter.defaults(document.getElementById('fProfile').value,
+                                 document.getElementById('fStrict').value);
+    fRender();
+  };
+
+  var note = document.getElementById('shieldState');
+  note.innerHTML = EXT_ID
+    ? 'Shield paired. Press <b>Save and send to the shield</b> after any change.'
+    : '<b>The browser shield is not installed.</b> These rules are stored here, but a web page cannot ' +
+      'block anything on youtube.com — only the shield can. Install it below.';
+}
+
 </script>
 <!-- The rail, the language picker and the points badge all come from here.
      This page never had it, which is why its sidebar was an empty column. -->
+<script src='family-filter.js'></script>
 <script src='nova.js'></script>
 </body>
 </html>

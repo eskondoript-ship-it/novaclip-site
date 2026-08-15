@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NovaClip Family Shield</title>
+<style>
+  :root{--bg:#0A0E16;--panel:#121A26;--line:#22303F;--txt:#EAF1FF;--dim:#9FB0C8;--faint:#6F8098;--on:#00F0FF;--ok:#B6FF3C;--bad:#FF6B81}
+  *{box-sizing:border-box}
+  body{margin:0;min-width:360px;max-width:640px;background:var(--bg);color:var(--txt);padding:20px;
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  h1{font-size:1.15rem;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--dim);font-size:.88rem;margin:0 0 18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 0}
+  .row+.row{border-top:1px solid var(--line)}
+  .pill{font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
+  .pill.on{color:var(--ok);border-color:rgba(182,255,60,.4)}
+  .pill.off{color:var(--bad);border-color:rgba(255,107,129,.4)}
+  h2{font-size:.76rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);margin:0 0 10px;font-weight:700}
+  a{color:var(--on)}
+  table{width:100%;border-collapse:collapse;font-size:.86rem}
+  td{padding:6px 0;border-bottom:1px solid var(--line);color:var(--dim)}
+  td:last-child{text-align:right;font-variant-numeric:tabular-nums;color:var(--txt)}
+  .empty{color:var(--faint);font-size:.88rem;margin:0}
+</style>
+
+<h1>NovaClip Family Shield</h1>
+<p class="sub">Settings come from the Family Dashboard. This window shows what the shield is doing.</p>
+
+<div class="card">
+  <h2>Status</h2>
+  <div id="status"></div>
+</div>
+
+<div class="card">
+  <h2>Blocked recently</h2>
+  <div id="log"></div>
+  <p class="empty" id="logNote" hidden>Counts only — the shield records the category, never what was on the screen.</p>
+</div>
+
+<div class="card">
+  <h2>Not set up?</h2>
+  <p class="empty">Open the <a href="https://novaclip.pt/parent.html" target="_blank" rel="noopener">Family Dashboard</a>,
+  unlock it with the parent PIN, and press <b>Connect the shield</b>. Until then the shield runs the
+  default 10-to-13 settings.</p>
+</div>
+
+<script src="family-filter.js"></script>
+<script src="options.js"></script>
