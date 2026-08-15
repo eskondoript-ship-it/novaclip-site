@@ -390,6 +390,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
 
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
+<script src='jarvis.js' defer></script>
 <script>
 (function () {
   var $ = function (s) { return document.getElementById(s); };
@@ -1626,6 +1627,7 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
     if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tickle(); }
   });
   $('talkbtn').onclick = toggleTalk;
+  window.ncLife = { tickle: tickle, playToy: playToy, fun: function () { return Math.round(life.needs.fun); } };
   function doRename() {
     var v = ($('namein').value || '').trim();
     if (v) { localStorage.setItem(LS.name, v.slice(0, 20)); $('namein').value = ''; }

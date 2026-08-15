@@ -60,6 +60,70 @@ h1 .grad { background: linear-gradient(90deg, var(--nc-mag,#F72585), var(--nc-vi
 .orb { position: fixed; border-radius: 50%; filter: blur(90px); opacity: 0.25; z-index: 0; pointer-events: none; }
 .orb.a { width: 440px; height: 440px; background: var(--nc-violet2,#7209B7); top: -80px; right: 6%; }
 .orb.b { width: 380px; height: 380px; background: var(--nc-mag,#F72585); bottom: -60px; left: 20%; }
+
+/* ===== GLASS + NEON UPGRADE ===== */
+body { position: relative; }
+body::before {
+  content: ''; position: fixed; inset: -20%; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(124,92,255,0.14), transparent 42%),
+    radial-gradient(circle at 85% 72%, rgba(0,229,255,0.12), transparent 42%),
+    radial-gradient(circle at 70% 110%, rgba(247,37,133,0.10), transparent 46%);
+  animation: stDrift 24s ease-in-out infinite alternate;
+}
+@keyframes stDrift { to { transform: translate(2%, -2%) scale(1.05); } }
+.main { position: relative; z-index: 2; }
+.head { animation: stIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
+@keyframes stIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+
+.tool {
+  background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 16px 40px rgba(0,0,0,0.35);
+  position: relative; overflow: hidden;
+  transition: transform .3s cubic-bezier(.2,.9,.3,1.2), border-color .3s, box-shadow .3s;
+  animation: stRise .55s cubic-bezier(.2,.9,.3,1.1) both;
+}
+.tool:nth-child(2){ animation-delay: .07s; }
+.tool:nth-child(3){ animation-delay: .14s; }
+@keyframes stRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.tool::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(120deg, rgba(0,229,255,0.10), transparent 40%, transparent 60%, rgba(124,92,255,0.10));
+  opacity: 0; transition: opacity .3s;
+}
+.tool:hover::before { opacity: 1; }
+.tool:hover {
+  transform: translateY(-6px);
+  border-color: rgba(0,229,255,0.45);
+  box-shadow: 0 22px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,229,255,0.14);
+}
+.tool .ico {
+  width: 54px; height: 54px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; margin-bottom: 12px;
+  background: linear-gradient(135deg, rgba(124,92,255,0.28), rgba(0,229,255,0.22));
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 8px 20px rgba(124,92,255,0.25);
+}
+.panelbox {
+  background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 18px 46px rgba(0,0,0,0.45);
+  border-radius: 22px;
+}
+.compcard {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(0,229,255,0.18);
+  border-radius: 16px;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: border-color .25s, box-shadow .25s, transform .25s;
+}
+.compcard:hover { transform: translateY(-2px); border-color: rgba(0,229,255,0.45); box-shadow: 0 14px 34px rgba(0,0,0,0.4), 0 0 26px rgba(0,229,255,0.1); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
 <body>
@@ -502,5 +566,6 @@ all('#duelgo').forEach(b => b.onclick = async () => {
 </script>
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
+<script src='jarvis.js' defer></script>
 </body>
 </html>
