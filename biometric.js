@@ -1891,13 +1891,20 @@
     st.textContent = CSS1 + CSS2;
     document.head.appendChild(st);
 
-    var fab = document.createElement('button');
-    fab.id = 'ncb-fab';
-    fab.className = 'ncb-fab';
-    fab.setAttribute('aria-label', ui('fab'));
-    fab.innerHTML = '<span class="ncb-dot"></span>FV';
-    fab.onclick = togglePanel;
-    document.body.appendChild(fab);
+    /* Jarvis (jarvis.js) is the floating face & voice assistant now. When it
+       is on the page it owns the entry point — its orb — so the bottom-right
+       FV button is not duplicated. The panel and API stay fully wired, because
+       Jarvis and biometrics.html both drive ncBiometric.open/signIn. */
+    var jarvisHere = !!document.querySelector('script[src*="jarvis.js"]');
+    if (!jarvisHere) {
+      var fab = document.createElement('button');
+      fab.id = 'ncb-fab';
+      fab.className = 'ncb-fab';
+      fab.setAttribute('aria-label', ui('fab'));
+      fab.innerHTML = '<span class="ncb-dot"></span>FV';
+      fab.onclick = togglePanel;
+      document.body.appendChild(fab);
+    }
 
     var pan = document.createElement('div');
     pan.id = 'ncb-panel';

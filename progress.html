@@ -60,6 +60,72 @@ h1 .grad { background: linear-gradient(90deg, var(--nc-mag,#F72585), var(--nc-vi
 .skrow .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.18); flex: none; }
 .skrow.on .dot { background: var(--nc-lime,#B6FF3C); box-shadow: 0 0 10px rgba(182,255,60,0.6); }
 .empty { color: var(--nc-dim,#7E8AA6); font-size: 0.88rem; }
+
+/* ===== GLASS + NEON UPGRADE ===== */
+body { position: relative; }
+body::before {
+  content: ''; position: fixed; inset: -20%; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 16%, rgba(124,92,255,0.15), transparent 42%),
+    radial-gradient(circle at 86% 68%, rgba(0,229,255,0.12), transparent 42%),
+    radial-gradient(circle at 58% 112%, rgba(247,37,133,0.10), transparent 46%);
+  animation: prDrift 26s ease-in-out infinite alternate;
+}
+@keyframes prDrift { to { transform: translate(2%, -2%) scale(1.06); } }
+.wrap { position: relative; z-index: 1; }
+h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
+@keyframes prIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+
+.xpcard {
+  background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.13);
+  backdrop-filter: blur(16px);
+  border-radius: 22px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 18px 44px rgba(0,0,0,0.45), 0 0 60px -18px rgba(124,92,255,0.35);
+  position: relative; overflow: hidden;
+}
+.xpcard::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(120deg, rgba(124,92,255,0.65), transparent 35%, transparent 65%, rgba(0,229,255,0.6));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.xptop .val {
+  background: linear-gradient(90deg, #B6FF3C, #00E5FF, #7C5CFF);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  font-size: 2.4rem;
+  filter: drop-shadow(0 0 14px rgba(0,229,255,0.35));
+}
+.xpbar { height: 14px; border-radius: 9px; background: rgba(255,255,255,0.07); box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
+.xpbar i { background: linear-gradient(90deg, #B6FF3C, #00E5FF, #7C5CFF); box-shadow: 0 0 18px rgba(0,229,255,0.55); }
+
+.card {
+  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.018));
+  border: 1px solid rgba(255,255,255,0.11);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 16px 40px rgba(0,0,0,0.35);
+  transition: transform .3s cubic-bezier(.2,.9,.3,1.2), border-color .3s, box-shadow .3s;
+  animation: prRise .55s cubic-bezier(.2,.9,.3,1.1) both;
+}
+.card:nth-child(2){ animation-delay: .06s; }
+.card:nth-child(3){ animation-delay: .12s; }
+.card:nth-child(4){ animation-delay: .18s; }
+@keyframes prRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(0,229,255,0.4);
+  box-shadow: 0 24px 54px rgba(0,0,0,0.5), 0 0 34px rgba(0,229,255,0.12);
+}
+.card h2 { display: flex; align-items: center; gap: 8px; }
+.card h2::before {
+  content: ''; width: 4px; height: 16px; border-radius: 3px;
+  background: linear-gradient(#00E5FF, #F72585); box-shadow: 0 0 10px rgba(0,229,255,0.5);
+}
+.skrow { flex-wrap: wrap; padding: 10px 2px; }
+.skrow .skbar { flex: 1 0 100%; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.07); overflow: hidden; margin-top: 5px; }
+.skrow .skbar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #00E5FF, #7C5CFF); box-shadow: 0 0 8px rgba(0,229,255,0.5); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
 <body>
@@ -155,9 +221,11 @@ function renderProgress() {
     }
     sl.innerHTML = Object.keys(SKILLS).map(id => {
       const got = skillCount(id), want = need[id] || 1, done = got >= want;
+      const pct = Math.min(100, Math.round(got / want * 100));
       return '<div class="skrow' + (done ? ' on' : '') + '"><span class="dot"></span>' +
         '<span class="nm">' + SKILLS[id].icon + ' ' + SKILLS[id].label + '</span>' +
-        '<span class="ct">' + got + ' / ' + want + '</span></div>';
+        '<span class="ct">' + got + ' / ' + want + '</span>' +
+        '<span class="skbar"><i style="width:' + pct + '%"></i></span></div>';
     }).join('');
   }
 }
@@ -166,5 +234,6 @@ window.onSkillLogged = renderProgress;
 </script>
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
+<script src='jarvis.js' defer></script>
 </body>
 </html>

@@ -16,8 +16,9 @@
    deployed here by mistake — replace it with this one.
 
    Every AI feature on the site (the AI page, Coder, Trend Spotter, Publish, the
-   paper animator) calls ncAsk() in nova.js, and ncAsk() posts here. This Worker
-   is the only place NovaClip's vendor keys exist.
+   paper animator) calls ncAsk() in nova.js, and ncAsk() posts here. Jarvis's
+   voice works the same way: jarvis.js posts to /tts on this same Worker and gets
+   audio back. This Worker is the only place NovaClip's vendor keys exist.
 
    WHY A WORKER AT ALL
      A key shipped to a browser is a public key. Anyone can open the network tab,
@@ -73,11 +74,14 @@
        "model": "gemini-2.5-flash",
        "payload": { "contents": [...], "generationConfig": {...} } }
 
+     POST /tts                              // Jarvis's voice, text -> audio
+     { "text": "Reply all set.", "voice": "Orus" }   // voice is optional
+
    RESPONSE
      For gemini: Google's own JSON, unchanged, so ncAsk can read
      candidates[].content.parts. For openrouter and openai: the answer is
-     normalized into that same shape. On any failure: { "error": "<reason a
-     person can act on>" } with a real HTTP status.
+     normalized into that same shape. /tts answers with the MP3 itself. On any
+     failure: { "error": "<reason a person can act on>" } with a real HTTP status.
    ============================================================================ */
 
 const GOOGLE = 'https://generativelanguage.googleapis.com/v1beta/models/';
@@ -124,6 +128,16 @@ const MAX_BODY = 64 * 1024;      // a prompt bigger than this is not a prompt
 const RATE_MAX = 20;             // requests per IP...
 const RATE_WINDOW = 60;          // ...per this many seconds
 const UPSTREAM_TIMEOUT_MS = 45000;
+
+/* Jarvis's voice. POST /tts turns text into MP3 with Gemini's TTS model. The
+   voice list is closed so callers cannot experiment against your key, and the
+   text is capped at roughly a breath's worth of speech — Jarvis's replies are
+   already kept short, and there is no reason to allow a script to read a novel
+   through your free quota. */
+const TTS_MODEL = 'gemini-2.5-flash-tts';
+const TTS_VOICE = 'Orus';               // calm, measured male — the default Jarvis
+const TTS_VOICES = ['Orus', 'Charon', 'Zephyr', 'Puck', 'Kore', 'Fenrir', 'Aoede', 'Leda'];
+const TTS_MAX_TEXT = 2000;              // characters
 
 /* CORS is wide open on purpose: the site is static and may be served from
    novaclip.pages.dev, a custom domain, and file:// during development. The key
@@ -280,6 +294,79 @@ export default {
     let body;
     try { body = JSON.parse(raw); }
     catch (e) { return fail(400, 'That request was not valid JSON.'); }
+
+    if (url.pathname === '/tts') {
+      /* Speech. { text, voice? } in, an MP3 out, same key and rate limit as
+         everything else. jarvis.js calls this so it can answer out loud with a
+         proper voice instead of the browser's. */
+      if (!env.GEMINI_API_KEY) {
+        return fail(503, 'This NovaClip AI worker has no GEMINI_API_KEY secret set, so it cannot speak.');
+      }
+      const text = body && typeof body.text === 'string' ? body.text.trim() : '';
+      if (!text) return fail(400, 'Expected { text: "..." }.');
+      if (text.length > TTS_MAX_TEXT) return fail(413, 'That text is too long to read aloud.');
+      const voice = TTS_VOICES.includes(body.voice) ? body.voice : TTS_VOICE;
+
+      const abort = new AbortController();
+      const timer = setTimeout(() => abort.abort(), UPSTREAM_TIMEOUT_MS);
+
+      let ttsRes;
+      try {
+        ttsRes = await fetch(GOOGLE + TTS_MODEL + ':generateContent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: text }] }],
+            generationConfig: {
+              responseModalities: ['AUDIO'],
+              speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
+              audioConfig: { audioEncoding: 'MP3' }
+            }
+          }),
+          signal: abort.signal
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        return fail(504, e.name === 'AbortError'
+          ? 'The speech service took too long to answer.'
+          : 'Could not reach the speech service.');
+      }
+      clearTimeout(timer);
+
+      const ttsRaw = await ttsRes.text();
+      if (!ttsRes.ok) {
+        let reason = '';
+        try { reason = (JSON.parse(ttsRaw).error || {}).message || ''; } catch (e) {}
+        if (ttsRes.status === 429) {
+          reason = 'NovaClip\'s shared speech is out of free quota for now. Try again in a while.';
+        } else if (ttsRes.status === 401 || (ttsRes.status === 400 && /key not valid|invalid api key/i.test(reason))) {
+          reason = 'The GEMINI_API_KEY on this worker was rejected by Google. Whoever deployed it needs to replace it.';
+        }
+        return fail(ttsRes.status, reason || ('The speech service answered ' + ttsRes.status + '.'));
+      }
+
+      let ttsJson;
+      try { ttsJson = JSON.parse(ttsRaw); }
+      catch (e) { return fail(502, 'The speech service answered in a shape this worker could not read.'); }
+      const part = ttsJson.candidates && ttsJson.candidates[0] && ttsJson.candidates[0].content &&
+                   ttsJson.candidates[0].content.parts && ttsJson.candidates[0].content.parts[0];
+      const inline = part && part.inlineData;
+      if (!inline || !inline.data) return fail(502, 'The speech service answered without audio.');
+
+      let bytes;
+      try {
+        bytes = Uint8Array.from(atob(inline.data), function (c) { return c.charCodeAt(0); });
+      } catch (e) { return fail(502, 'The speech service sent audio this worker could not decode.'); }
+
+      return new Response(bytes, {
+        status: 200,
+        headers: {
+          'Content-Type': inline.mimeType || 'audio/mpeg',
+          'Cache-Control': 'no-store',
+          ...CORS
+        }
+      });
+    }
 
     const provider = (body && body.provider) || 'gemini';
     if (!ALLOWED_MODELS[provider]) {
