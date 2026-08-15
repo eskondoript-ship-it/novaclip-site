@@ -2287,6 +2287,9 @@ async function ncAsk(prompt, opts) {
 window.ncAIKey = ncAIKey; window.ncSetAIKey = ncSetAIKey;
 window.ncKeyLooksReal = ncKeyLooksReal; window.ncAsk = ncAsk;
 window.ncActiveProvider = ncActiveProvider; window.ncDefaultModel = ncDefaultModel;
+/* The worker's address, exported for the same consumers that use ncAsk —
+   jarvis.js reads it to reach the /tts endpoint for its voice. */
+window.NC_AI_WORKER_URL = NC_AI_WORKER;
 
 /* ============================================================================
    THE EDITOR'S EXTRA TOOLS
