@@ -123,6 +123,37 @@ body::before {
   transition: border-color .25s, box-shadow .25s, transform .25s;
 }
 .compcard:hover { transform: translateY(-2px); border-color: rgba(0,229,255,0.45); box-shadow: 0 14px 34px rgba(0,0,0,0.4), 0 0 26px rgba(0,229,255,0.1); }
+/* ===== HUD FRAME / FUTURISTIC STUDIO ===== */
+.main::before, .main::after {
+  content: ''; position: fixed; width: 26px; height: 26px; z-index: 5; pointer-events: none;
+  border: 2px solid rgba(0,229,255,0.45);
+  animation: hudPulse 3.2s ease-in-out infinite;
+}
+.main::before { left: 14px; top: 14px; border-right: none; border-bottom: none; }
+.main::after { right: 14px; bottom: 14px; border-left: none; border-top: none; animation-delay: 1.6s; }
+@keyframes hudPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+#toolbar .decklabel {
+  font: 700 0.68rem/1 ui-monospace, Menlo, Consolas, monospace;
+  letter-spacing: 4px; text-transform: uppercase; color: rgba(0,229,255,0.6);
+  margin: 18px 2px 0;
+}
+.tool::after {
+  content: ''; position: absolute; left: 0; right: 0; top: -40%; height: 34%; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(0,229,255,0.12), transparent);
+  transform: translateY(-60%); opacity: 0;
+}
+.tool:hover::after { opacity: 1; animation: hudSweep .7s ease-out; }
+@keyframes hudSweep { to { transform: translateY(360%); } }
+.statuschip {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 700 0.64rem/1 ui-monospace, Menlo, Consolas, monospace;
+  letter-spacing: 2.5px; text-transform: uppercase; color: #b6ff3c;
+  border: 1px solid rgba(182,255,60,0.35); background: rgba(182,255,60,0.07);
+  padding: 8px 14px; border-radius: 999px; margin-bottom: 24px;
+  box-shadow: 0 0 22px -6px rgba(182,255,60,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.statuschip i { width: 8px; height: 8px; border-radius: 50%; background: #b6ff3c; box-shadow: 0 0 10px #b6ff3c; animation: chipPulse 1.8s ease-in-out infinite; }
+@keyframes chipPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
@@ -148,6 +179,7 @@ body::before {
     <div>
       <h1><span class='grad' data-t='studio_h'>NovaClip Studio</span></h1>
       <p class='subtitle' data-t='studio_sub'>Connect your channel and scout the competition.</p>
+      <span class='statuschip'><i></i><span data-t='sysonline'>Jarvis · systems online</span></span>
     </div>
     <div>
       <button id='gbtn' class='gbtn' data-t='signin'>Sign in with Google</button>
@@ -157,8 +189,8 @@ body::before {
   </div>
 
   <div id='toolbar'>
+    <div class='decklabel' data-t='controldeck'>// Control deck</div>
     <div class='cardgrid'>
-      <div class='tool' id='compbtn'><div class='ico'></div><h3 data-t='t_comp'>Closest competitors</h3><p data-t='t_comp_d'>Channels closest to your size — full stats and links.</p></div>
       <div class='tool' id='duelbtn'><div class='ico'></div><h3 data-t='t_duel'>Duel a channel</h3><p data-t='t_duel_d'>Challenge a channel within 20k subs and win NovaCoins.</p></div>
       <a class='tool' href='analytics.html'><div class='ico'></div><h3 data-t='t_analytics'>Full analytics</h3><p data-t='t_analytics_d'>Deep charts comparing you to rivals — on its own page.</p></a>
     </div>
@@ -388,154 +420,6 @@ async function ensureToken() {
   return !!(ytToken && myStats);
 }
 
-/* ============================================================================
-   FINDING CHANNELS THAT ARE ACTUALLY YOUR SIZE
-   The old version did two things wrong and they compounded.
-
-   1. It searched "gaming channel", "vlog channel", "music channel". YouTube
-      answers those with the BIGGEST channels that match, because that is what
-      search is for. A creator with 1,200 subscribers was handed a pool of
-      million-subscriber channels and told to pick from it.
-
-   2. It ranked by the ABSOLUTE difference in subscribers. At 1,200 subs the
-      gap to 200,000 is 198,800 and the gap to 900,000 is 898,800 — so it
-      dutifully called the 200,000 channel your "closest competitor". Nothing
-      about that is close. Size on YouTube is multiplicative: 600 and 2,400 are
-      both one doubling away from 1,200, and that is the comparison that means
-      something. So the ranking is now on the RATIO — |log(theirs / yours)| —
-      and anything outside a quarter to four times your size is not offered at
-      all.
-
-   The search terms come from your own titles and description rather than a
-   generic list, so the pool is at least in your subject. And when nothing in
-   range turns up, it says so instead of printing a channel forty times your
-   size with a straight face.
-   ============================================================================ */
-const STOPWORDS = new Set(('the a an and or of for to in on with my our your i we this that is are was ' +
-  'it he she they you how what why when new best top vs video videos channel official full hd 4k ' +
-  'shorts short live stream part ep episode').split(' '));
-
-function seedTerms(myVideos) {
-  const words = {};
-  const feed = (text, weight) => {
-    String(text || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).forEach(w => {
-      if (w.length < 4 || STOPWORDS.has(w)) return;
-      words[w] = (words[w] || 0) + weight;
-    });
-  };
-  (myVideos || []).forEach(v => feed(v.snippet && v.snippet.title, 3));
-  feed(myStats.snippet.description, 1);
-  feed(myStats.snippet.title, 2);
-  const ranked = Object.keys(words).sort((a, b) => words[b] - words[a]).slice(0, 8);
-  // pair the strongest words up: two-word queries are far more specific than one
-  const out = [];
-  for (let i = 0; i < ranked.length && out.length < 5; i += 2) {
-    out.push(ranked[i + 1] ? ranked[i] + ' ' + ranked[i + 1] : ranked[i]);
-  }
-  if (!out.length) out.push(myStats.snippet.title);
-  return out;
-}
-
-async function myRecentVideos(limit) {
-  try {
-    const up = myStats.contentDetails && myStats.contentDetails.relatedPlaylists &&
-               myStats.contentDetails.relatedPlaylists.uploads;
-    if (!up) return [];
-    const d = await yt('playlistItems?part=snippet&maxResults=' + (limit || 12) + '&playlistId=' + up);
-    return d.items || [];
-  } catch (e) { return []; }
-}
-
-// how far apart two channels are in size, as a number of doublings
-function sizeGap(a, b) { return Math.abs(Math.log2(Math.max(1, a) / Math.max(1, b))); }
-
-/* "×2.3 your size" is the sentence a creator can act on. "+198,800 subs" is a
-   number they cannot do anything with. */
-function sizeWord(theirs, mine) {
-  const r = Math.max(1, theirs) / Math.max(1, mine);
-  if (r >= 0.95 && r <= 1.05) return 'the same size as you';
-  return r > 1 ? '\u00d7' + r.toFixed(r < 10 ? 1 : 0) + ' your size'
-               : '\u00d7' + (1 / r).toFixed(r > 0.1 ? 1 : 0) + ' smaller than you';
-}
-
-async function getCompetitors(n) {
-  const mySubs = parseInt(myStats.statistics.subscriberCount || 0) || 1;
-  const mine = await myRecentVideos(12);
-  const seeds = seedTerms(mine);
-
-  const ids = new Set();
-  for (const q of seeds) {
-    const sd = await yt('search?part=snippet&type=channel&maxResults=25&order=relevance&q=' + encodeURIComponent(q)).catch(() => null);
-    if (sd && sd.items) sd.items.forEach(i => { if (i.snippet.channelId !== myStats.id) ids.add(i.snippet.channelId); });
-    /* Search by VIDEO as well as by channel. A small creator's channel rarely
-       ranks for anything, but their videos do — and every video has a channel
-       behind it. This is where most of the genuinely small channels come from. */
-    const vd = await yt('search?part=snippet&type=video&maxResults=25&order=relevance&q=' + encodeURIComponent(q)).catch(() => null);
-    if (vd && vd.items) vd.items.forEach(i => { if (i.snippet.channelId !== myStats.id) ids.add(i.snippet.channelId); });
-    if (ids.size >= 120) break;
-  }
-  if (!ids.size) return [];
-
-  // channels? takes 50 ids at a time
-  const all = [];
-  const list = [...ids];
-  for (let i = 0; i < list.length; i += 50) {
-    const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + list.slice(i, i + 50).join(',')).catch(() => null);
-    if (cd && cd.items) all.push(...cd.items);
-  }
-
-  const scored = all
-    .filter(ch => ch.id !== myStats.id)
-    // a hidden subscriber count is 0 in the API, which would look like the
-    // closest possible match to a channel with none — drop those rather than
-    // rank them first
-    .filter(ch => !(ch.statistics && ch.statistics.hiddenSubscriberCount))
-    .map(ch => ({ ch, gap: sizeGap(parseInt(ch.statistics.subscriberCount || 0), mySubs) }))
-    .sort((a, b) => a.gap - b.gap);
-
-  // within two doublings either way — a quarter your size to four times it
-  const close = scored.filter(x => x.gap <= 2);
-  const picked = (close.length ? close : scored).slice(0, n || 3);
-  picked.forEach(x => { x.ch.__gap = x.gap; x.ch.__inRange = x.gap <= 2; });
-  return picked.map(x => x.ch);
-}
-
-all('#compbtn').forEach(b => b.onclick = async () => {
-  if (!await ensureToken()) return;
-  show('Reading your videos, then looking for channels your size...');
-  const comps = await getCompetitors(3);
-  const mySubs = parseInt(myStats.statistics.subscriberCount);
-  if (!comps.length) {
-    show('<b>Nothing to compare you to yet.</b><br><span style="color:#7E8AA6">YouTube search returned no channels for your topics. ' +
-         'That usually means the channel has very few videos to read subjects from — upload a couple more and try again.</span>');
-    return;
-  }
-  const anyClose = comps.some(c => c.__inRange);
-  const header = anyClose
-    ? '<b style="font-size:1.15rem">Channels your size</b><br><span style="color:#7E8AA6;font-size:0.85rem">' +
-      'Same subject as your videos, and within four times your subscriber count either way. ' +
-      'Size is compared as a ratio, not a difference — 600 and 2,400 are both one doubling from 1,200.</span>'
-    : '<b style="font-size:1.15rem">Nothing really close</b><br><span style="color:#ffb84d;font-size:0.85rem">' +
-      'No channel in your subject came back within four times your size. These are the nearest ' +
-      'anyway, and they are further from you than a fair comparison should be — treat them as a look ahead, not a rival.</span>';
-  show(header + '<br><br>' + comps.map((c, i) => {
-    const s = c.statistics;
-    const subs = parseInt(s.subscriberCount || 0), views = parseInt(s.viewCount || 0), vids = parseInt(s.videoCount || 1);
-    const avg = Math.round(views / Math.max(vids, 1));
-    const gap = subs - mySubs;
-    const created = c.snippet.publishedAt ? new Date(c.snippet.publishedAt).getFullYear() : '—';
-    return '<div class="compcard"><b>' + (i + 1) + '. ' + c.snippet.title + '</b>' + (c.snippet.country ? ' · ' + c.snippet.country : '') +
-      ' · since ' + created +
-      '<div class="row"><span><b>' + subs.toLocaleString() + '</b> subs</span>' +
-      '<span><b>' + views.toLocaleString() + '</b> views</span>' +
-      '<span><b>' + vids.toLocaleString() + '</b> videos</span>' +
-      '<span><b>~' + avg.toLocaleString() + '</b> views/video</span>' +
-      '<span>' + (gap >= 0 ? '+' : '') + gap.toLocaleString() + ' vs you</span>' +
-      '<span style="color:' + (c.__inRange ? '#b6ff3c' : '#ffb84d') + '">' + sizeWord(subs, mySubs) + '</span></div>' +
-      '<div class="desc">' + (c.snippet.description ? c.snippet.description.slice(0, 160).replace(/</g, '&lt;') + '…' : 'No description') + '</div>' +
-      '<a target="_blank" style="color:#00F0FF; font-size:0.88rem" href="https://www.youtube.com/channel/' + c.id + '">Open channel ↗</a></div>';
-  }).join(''));
-});
 
 all('#duelbtn').forEach(b => b.onclick = () => {
   all('#duelsetup').forEach(d => d.style.display = d.style.display === 'block' ? 'none' : 'block');

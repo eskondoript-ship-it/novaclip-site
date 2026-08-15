@@ -1,12 +1,14 @@
-/* JARVIS — an Iron Man-style assistant for NovaClip.
+/* JARVIS — a Siri-style voice assistant for NovaClip.
  *
  * Site-wide, no dependencies, no build step. Loaded with defer on every page
- * right after biometric.js, so it can share the microphone politely: while
- * Jarvis is listening for a voice message it pauses biometric voice commands
- * and restores them afterwards.
+ * after biometric.js, whose face sign-in it fronts: when the camera recognises
+ * your face, Jarvis greets you by name out loud, then listens for a command.
  *
- * The UI is a Dynamic Island: a floating pill at the top of the screen that
- * pulses with a friendly hello, then expands into the chat panel when tapped.
+ * The UI is a Siri-style sheet pinned to the top of the screen: a glowing orb
+ * that opens a translucent bar with a sound waveform while it listens, and a
+ * caption that shows — and speaks — the answer. It is not a chat: no log, no
+ * typing box, no panel that can block the page. Tap the orb to talk, or say
+ * "hey Jarvis".
  *
  * What it knows about you (all local, nothing sent anywhere except the AI
  * prompt you trigger yourself — and that same text, read aloud by the site's
@@ -17,13 +19,14 @@
  * A "call me <name>" or "my name is <name>" tells it your name for good.
  *
  * It can control the app directly (open pages, sign in/out, voice commands,
- * gen-Z mode, Nova, fullscreen, ...) and anything else is answered by the
- * same ncAsk() every AI feature uses. Pages can register their own controls
- * with ncJarvis.register({ match, run, desc }).
+ * gen-Z mode, Nova, fullscreen, ...) and search the web — "search <thing>"
+ * answers from DuckDuckGo, or opens Google for it. Anything else is answered
+ * by the same ncAsk() every AI feature uses. Pages can register their own
+ * controls with ncJarvis.register({ match, run, desc }).
  */
 (function () {
   if (window.ncJarvis) return;                    /* never double-mount */
-  if (location.search.indexOf('embed=1') !== -1) return;  /* iframe shells: the parent owns the island */
+  if (location.search.indexOf('embed=1') !== -1) return;  /* iframe shells: the parent owns the assistant */
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -91,19 +94,19 @@
     ttsAudio = null;
   }
 
-  function speak(text) {
+  function speak(text, onDone) {
     /* Speech needs either the browser voice or the site's worker, and the
-       toggle to actually speak at all. */
-    if (!TTS && !window.NC_AI_WORKER_URL) return;
-    if (!speakOn()) return;
+       toggle to actually speak at all. Either way, finish the flow (close the
+       sheet, start listening) so the interaction never hangs. */
+    if (!TTS && !window.NC_AI_WORKER_URL) { if (onDone) onDone(); return; }
+    if (!speakOn()) { if (onDone) onDone(); return; }
     stopTTS();
     setMode('speak');
-    var done = function () { setMode(wake.armed && !open ? 'armed' : 'idle'); };
+    var done = function () { setMode(wake.armed && !active ? 'armed' : 'idle'); if (onDone) onDone(); };
 
     /* Preferred path: the AI worker reads it aloud with a proper voice. The
        browser's own voice is only the fallback for when the worker is down,
-       out of quota, or unreachable — the reply is on screen either way, so a
-       voice failing is never worth being stuck on. */
+       out of quota, or unreachable — the answer is on screen either way. */
     if (window.NC_AI_WORKER_URL) {
       fetch(window.NC_AI_WORKER_URL + '/tts', {
         method: 'POST',
@@ -142,22 +145,20 @@
             u.voice = voices[i]; break;
           }
         }
-        u.onend = function () { setMode(wake.armed && !open ? 'armed' : 'idle'); };
-        u.onerror = function () { setMode(wake.armed && !open ? 'armed' : 'idle'); };
+        u.onend = function () { setMode(wake.armed && !active ? 'armed' : 'idle'); if (onDone) onDone(); };
+        u.onerror = function () { setMode(wake.armed && !active ? 'armed' : 'idle'); if (onDone) onDone(); };
         TTS.speak(u);
-      } catch (e) { setMode(wake.armed && !open ? 'armed' : 'idle'); }
+      } catch (e) { setMode(wake.armed && !active ? 'armed' : 'idle'); if (onDone) onDone(); }
     }
   }
 
-  /* ---- one-shot capture: the mic button and the wake word both use it ---- */
+  /* ---- one-shot capture: the orb and the wake word both use it ---- */
   var bioWasOn = false, rec = null;
   function stopListen() {
     if (rec) { try { rec.onend = null; rec.onerror = null; rec.abort(); } catch (e) {} rec = null; }
     if (bioWasOn) bioStart();
     bioWasOn = false;
-    var m = $('jr-mic');
-    if (m) m.classList.remove('live');
-    setMode(wake.armed && !open ? 'armed' : 'idle');
+    setMode(wake.armed && !active ? 'armed' : 'idle');
   }
   function captureOnce(cb, ms) {
     if (!SR) { if (cb) cb(''); return; }
@@ -169,9 +170,7 @@
       if (rec) { try { rec.onend = null; rec.onerror = null; rec.abort(); } catch (e) {} rec = null; }
       if (bioWasOn) bioStart();
       bioWasOn = false;
-      var m = $('jr-mic');
-      if (m) m.classList.remove('live');
-      if (wake.armed && !open && !wake.capturing) setTimeout(reArm, 700);
+      if (wake.armed && !active && !wake.capturing) setTimeout(reArm, 700);
     }
     bioWasOn = bioVoiceOn();
     if (bioWasOn) bioStop();
@@ -188,17 +187,18 @@
     };
     rec.onerror = function () { finish(); if (cb) cb(''); };
     rec.onend = function () { if (!done) { finish(); if (cb) cb(''); } };
-    var m = $('jr-mic');
-    if (m) m.classList.add('live');
     setMode('listen');
     try { rec.start(); } catch (e) { finish(); if (cb) cb(''); }
   }
   function startListen() {
-    if (!SR) { say('Voice input needs Chrome, Edge or Safari.', 'jar'); return; }
+    if (!SR) { say('Voice input needs Chrome, Edge or Safari.'); return; }
     setMode('listen');
     captureOnce(function (text) {
       if (text && text.trim()) handle(text.trim());
-      else say('Couldn\u2019t hear you \u2014 try again.', 'jar');
+      else {
+        say(s('Couldn\u2019t hear you \u2014 try again.', 'Couldn\u2019t hear that \u2014 say it again.'));
+        setTimeout(close, 1800);
+      }
     });
   }
 
@@ -219,7 +219,7 @@
     else { stopWake(); setMode('idle'); }
   }
   function startWake() {
-    if (!SR || wake.rec || !wake.armed || wake.capturing || open) return;
+    if (!SR || wake.rec || !wake.armed || wake.capturing || active) return;
     if (bioVoiceOn()) { setTimeout(reArm, 2500); return; }   /* yield to biometric */
     try {
       var r = new SR();
@@ -238,7 +238,7 @@
       };
       r.onend = function () {
         wake.rec = null;
-        if (wake.armed && !open && !wake.capturing) setTimeout(reArm, 500);
+        if (wake.armed && !active && !wake.capturing) setTimeout(reArm, 500);
       };
       wake.rec = r;
       r.start();
@@ -248,25 +248,28 @@
     if (wake.rec) { try { wake.rec.onend = null; wake.rec.onerror = null; wake.rec.abort(); } catch (e) {} wake.rec = null; }
   }
   function reArm() {
-    if (!wake.armed || open || wake.capturing) return;
+    if (!wake.armed || active || wake.capturing) return;
     if (bioVoiceOn()) { setTimeout(reArm, 2500); return; }
     if (wake.errAt && Date.now() - wake.errAt < 30000) { setTimeout(reArm, 30000); return; }
     if (!wake.rec) startWake();
   }
   function wakeHit() {
-    if (wake.capturing || open) return;
+    if (wake.capturing || active) return;
     wake.capturing = true;
     stopWake();
     bioWasOn = bioVoiceOn();
     if (bioWasOn) bioStop();
-    openPanel();
-    say(s('Hey ' + fixName() + '. What can I do for you?', 'yo ' + fixName() + ', what we doin?'), 'jar');
-    setMode('listen');
-    captureOnce(function (text) {
+    openSheet();
+    var g = s('Hey ' + fixName() + '. What can I do for you?', 'yo ' + fixName() + ', what we doin?');
+    say(g);
+    speak(g, function () {
       wake.capturing = false;
-      if (text && text.trim()) handle(text.trim());
-      else say(s('Didn\u2019t catch that \u2014 say it again.', 'Didn\u2019t catch that \u2014 say it again.'), 'jar');
-    }, 8000);
+      captureOnce(function (text) {
+        wake.capturing = false;
+        if (text && text.trim()) handle(text.trim());
+        else { say(s('Didn\u2019t catch that \u2014 say it again.', 'Didn\u2019t catch that \u2014 say it again.')); setTimeout(close, 1800); }
+      }, 8000);
+    });
   }
 
   /* ----------------------------------------------------------------
@@ -310,14 +313,49 @@
 
   function helpText() {
     return s(
-      'I run this app hands-free. Say "hey Jarvis" anywhere and I\u2019ll wake up and listen. Then try: ' +
+      'I run this app hands-free. Tap the orb to talk, or say "hey Jarvis". Then try: ' +
       '"my points", "open editor", "open games", "sign me in", "turn on voice commands", "gen-z on", ' +
-      '"tickle Nova", "go fullscreen", "what time is it", "where am I" or "sign out". Tell me your name ' +
-      'with "call me <name>" and I\u2019ll remember. Anything else, I ask the AI.',
-      'I run this whole app fr. Say "hey Jarvis" anywhere and I\u2019ll wake up and listen. Then try: ' +
+      '"tickle Nova", "go fullscreen", "what time is it", "search <anything>", "where am I" or "sign out". ' +
+      'Tell me your name with "call me <name>" and I\u2019ll remember. Anything else, I ask the AI.',
+      'I run this whole app fr. Tap the orb to talk, or say "hey Jarvis". Then try: ' +
       '"my points", "open editor", "open games", "sign me in", "voice commands on", "gen-z on", ' +
-      '"tickle Nova", "go fullscreen", "what time is it", "where am I" or "sign out". Hit me with ' +
-      '"call me <name>" and I\u2019ll remember. Anything else, the AI.');
+      '"tickle Nova", "go fullscreen", "what time is it", "search <anything>", "where am I" or "sign out". ' +
+      'Hit me with "call me <name>" and I\u2019ll remember. Anything else, the AI.');
+  }
+
+  /* A web search with no key and no backend: DuckDuckGo's Instant Answer API is
+     open to browsers and needs none. When there is no instant answer, or the
+     request fails, fall back to opening Google in a new tab — the tab is
+     always the honest answer for "go look it up". */
+  function webSearch(term) {
+    var openTab = function () {
+      try { window.open('https://www.google.com/search?q=' + encodeURIComponent(term), '_blank', 'noopener'); } catch (e) {}
+    };
+    return fetch('https://api.duckduckgo.com/?q=' + encodeURIComponent(term) +
+                 '&format=json&no_html=1&skip_disambig=1')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) throw new Error('ddg');
+        var a = d.AbstractText || d.Answer || '';
+        if (!a) {
+          var topics = d.RelatedTopics || [];
+          for (var i = 0; i < topics.length; i++) {
+            if (topics[i] && typeof topics[i] === 'object' && topics[i].Text) { a = topics[i].Text; break; }
+          }
+        }
+        if (a) {
+          return s('Here\u2019s what I found: ' + a.slice(0, 220) + '.',
+                   'Lookin it up \u2014 ' + a.slice(0, 200) + '.');
+        }
+        openTab();
+        return s('No quick answer found \u2014 I opened Google for "' + term + '" in a new tab.',
+                 'No instant answer \u2014 opened Google for "' + term + '" in a new tab.');
+      })
+      .catch(function () {
+        openTab();
+        return s('I couldn\u2019t reach the search service, so I opened Google for "' + term + '" instead.',
+                 'Search service down \u2014 opened Google for "' + term + '" instead.');
+      });
   }
 
   function respond(q) {
@@ -365,8 +403,8 @@
       return s('You are ' + fixName() + '.', 'U \u2019re ' + fixName() + '.');
     }
     if (/(^|[^a-z])(who are you|your name|what are you|about you)\b/.test(q)) {
-      return s('I\u2019m Jarvis \u2014 your Iron Man-style assistant for NovaClip. I live in the island at the top of every page, and I can control the app for you.',
-               'I\u2019m Jarvis \u2014 ur Iron Man-style assistant for NovaClip. I live in the island on top of every page and I control the app fr.');
+      return s('I\u2019m Jarvis \u2014 your Iron Man-style assistant for NovaClip. I live in the orb at the top of every page, and I can control the app for you.',
+               'I\u2019m Jarvis \u2014 ur Iron Man-style assistant for NovaClip. I live in the orb on top of every page and I control the app fr.');
     }
     if (/(^|[^a-z])(what time|what'?s the time|the date|what day)\b/.test(q)) {
       return new Date().toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
@@ -376,11 +414,11 @@
     }
     if (/(sign out|log out|logout|sign me out)/.test(q)) {
       try { if (window.ncBiometric && typeof ncBiometric.signOut === 'function') ncBiometric.signOut(); } catch (e) {}
-      return s('Signed you out of biometric sign-in.', 'Signed u out of bio sign-in.');
+      return s('Signed you out.', 'Signed u out.');
     }
     if (/(sign (me )?in|log (me )?in|login|unlock|face id|scan my face|open biometric)/.test(q)) {
-      try { if (window.ncBiometric && typeof ncBiometric.open === 'function') ncBiometric.open(); } catch (e) {}
-      return s('Opening the biometric sign-in panel \u2014 look at the camera or say your passphrase.', 'Opening bio sign-in \u2014 look at the cam or say ur passphrase.');
+      try { if (window.ncBiometric && typeof ncBiometric.signIn === 'function') ncBiometric.signIn(); } catch (e) {}
+      return s('Opening the camera so I can recognise your face.', 'Opening the cam so I can recognise u.');
     }
     if (/(voice commands|turn .*voice|voice .*on|voice .*off|start listening|stop listening)/.test(q)) {
       var on = /on|start/.test(q) && !/off/.test(q);
@@ -424,6 +462,15 @@
       return doOpen(RegExp.$3);
     }
 
+    /* web search — kept after the page-navigation cases so "open editor" never
+       becomes a search for "editor". */
+    if (/^(search|google|look up|look for|find on the web)\s+(?:for\s+)?(.{3,})/.test(q)) {
+      return webSearch(RegExp.$2);
+    }
+    if (/^(who is|what is|define|tell me about)\s+(.{3,})/.test(q)) {
+      return webSearch(RegExp.$2);
+    }
+
     /* page-registered controls */
     for (var i = 0; i < controls.length; i++) {
       try {
@@ -459,50 +506,24 @@
   }
 
   /* ----------------------------------------------------------------
-   * panel rendering
+   * Siri-style UI
    * ---------------------------------------------------------------- */
-  var open = false;
+  var active = false;          /* the sheet is open */
+  var listenAfterGreet = false;/* tap started a face sign-in; listen once it greets */
 
-  function say(text, who) {
-    var body = $('jr-body');
-    if (!body) return;
-    var d = document.createElement('div');
-    d.className = 'jr-msg ' + who;
-    if (who === 'jar') {
-      var nm = document.createElement('span');
-      nm.className = 'jr-name';
-      nm.textContent = 'Jarvis';
-      d.appendChild(nm);
-    }
-    d.appendChild(document.createTextNode(text));
-    body.appendChild(d);
-    body.scrollTop = body.scrollHeight;
+  function say(text) {
+    var cap = $('jr-cap');
+    if (cap) cap.textContent = text;
   }
-  function typing(on) {
-    var body = $('jr-body');
-    if (!body) return;
-    var t = $('jr-typing');
-    if (on && !t) {
-      t = document.createElement('div');
-      t.id = 'jr-typing';
-      t.className = 'jr-typing';
-      t.innerHTML = '<i></i><i></i><i></i>';
-      body.appendChild(t);
-      body.scrollTop = body.scrollHeight;
-      setMode('busy');
-    } else if (!on && t) {
-      t.remove();
-    }
-  }
+  function typing(on) { setMode(on ? 'busy' : 'idle'); }
 
   function handle(text) {
-    say(text, 'user');
     typing(true);
     var out = respond(text);
     Promise.resolve(out).then(function (reply) {
       typing(false);
-      say(reply, 'jar');
-      speak(reply);
+      say(reply);
+      speak(reply, close);
     });
   }
 
@@ -511,231 +532,215 @@
   }
   function setSpeakOn(v) {
     try { localStorage.setItem('nc_jarvis_speak', v ? '1' : '0'); } catch (e) {}
-    if (!v) { stopTTS(); setMode(wake.armed && !open ? 'armed' : 'idle'); }
+    if (!v) { stopTTS(); setMode(wake.armed && !active ? 'armed' : 'idle'); }
     var b = $('jr-speak');
     if (b) b.classList.toggle('off', !v);
   }
 
   function setMode(mode) {
-    var isl = $('jr-island');
-    if (!isl) return;
-    isl.classList.remove('listen', 'speak', 'busy', 'sleep', 'armed');
-    var em = $('jr-status');
+    var pl = $('jr-pill'), sh = $('jr-sheet');
+    if (pl) pl.classList.remove('listen', 'speak', 'busy', 'sleep', 'armed');
+    if (sh) sh.classList.remove('listen', 'speak', 'busy', 'sleep', 'armed');
     var map = {
       idle:  'systems online',
-      armed: 'wake word armed',
+      armed: 'say \u201chey Jarvis\u201d',
       listen: 'listening\u2026',
-      speak:  'transmitting',
+      speak:  'speaking\u2026',
       busy:   'thinking\u2026',
       sleep:  'standby'
     };
-    if (mode !== 'idle') isl.classList.add(mode);
+    if (mode !== 'idle') {
+      if (pl) pl.classList.add(mode);
+      if (sh) sh.classList.add(mode);
+    }
+    var em = $('jr-status');
     if (em) em.textContent = map[mode] || map.idle;
   }
 
   var ICONS = {
-    mic: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v5"/></svg>',
-    send: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>',
-    sound: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
-    close: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
-    dots: '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
-    wake: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M8 8a6 6 0 0 0 0 8"/><path d="M16 8a6 6 0 0 1 0 8"/><path d="M5 5a10 10 0 0 0 0 14"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>'
+    sound: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+    close: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    wake: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M8 8a6 6 0 0 0 0 8"/><path d="M16 8a6 6 0 0 1 0 8"/><path d="M5 5a10 10 0 0 0 0 14"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>'
   };
-
-  var HEX = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='62' viewBox='0 0 36 62'%3E%3Cpath d='M18 1 L35 9.5 V26.5 L18 35 L1 26.5 V9.5 Z' fill='none' stroke='%2300E5FF' stroke-width='1'/%3E%3C/svg%3E\")";
 
   function build() {
     if (document.getElementById('jr-css')) return;
     var st = document.createElement('style');
     st.id = 'jr-css';
     st.textContent = [
-      /* ---------- island ---------- */
-      '.jr-island{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99995;display:flex;align-items:center;gap:10px;padding:7px 18px 7px 9px;border-radius:999px;cursor:pointer;user-select:none;-webkit-user-select:none;background:linear-gradient(160deg,rgba(16,22,40,.82),rgba(8,11,22,.9));border:1px solid rgba(0,229,255,.32);box-shadow:0 0 0 1px rgba(124,92,255,.12),0 0 22px -5px rgba(0,229,255,.55),0 0 44px -16px rgba(124,92,255,.7),0 12px 30px rgba(0,0,0,.5);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);transition:box-shadow .25s,transform .25s}',
-      '.jr-island:hover{box-shadow:0 0 0 1px rgba(124,92,255,.22),0 0 30px -4px rgba(0,229,255,.75),0 0 60px -12px rgba(124,92,255,.9),0 14px 36px rgba(0,0,0,.55);transform:translateX(-50%) translateY(-1px)}',
-      '.jr-island::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(120deg,rgba(0,229,255,.18),transparent 32%,transparent 68%,rgba(124,92,255,.18));opacity:0;transition:opacity .3s}',
-      '.jr-island:hover::after{opacity:1}',
-      '.jr-island.peek{animation:jrPeekPulse 2s ease-in-out infinite}',
-      '@keyframes jrPeekPulse{0%,100%{box-shadow:0 0 0 1px rgba(124,92,255,.12),0 0 22px -5px rgba(0,229,255,.55),0 0 44px -16px rgba(124,92,255,.7),0 12px 30px rgba(0,0,0,.5)}50%{box-shadow:0 0 0 1px rgba(124,92,255,.3),0 0 34px -3px rgba(0,229,255,.85),0 0 70px -10px rgba(124,92,255,1),0 14px 36px rgba(0,0,0,.55)}}',
-      '.jr-island.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) scale(.8)}',
-      '.jr-reactor{position:relative;width:30px;height:30px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 30%,rgba(0,229,255,.28),rgba(10,14,26,.92) 70%);border:1px solid rgba(0,229,255,.5);box-shadow:0 0 14px -2px rgba(0,229,255,.8),inset 0 0 10px rgba(0,229,255,.25)}',
-      '.jr-reactor::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 38%,rgba(0,229,255,.95) 50%,transparent 62% 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px));animation:jrSpin 3.2s linear infinite}',
-      '@keyframes jrSpin{to{transform:rotate(360deg)}}',
-      '.jr-reactor .jr-eye{position:relative;width:16px;height:9px;border-radius:50% 50% 46% 46%;background:linear-gradient(135deg,#00E5FF,#7C5CFF);box-shadow:0 0 12px #00E5FF;display:block}',
-      '.jr-reactor .jr-eye::after{content:"";position:absolute;inset:2.5px 2px;border-radius:50%;background:rgba(6,10,20,.92)}',
-      '.jr-island.listen .jr-reactor{animation:jrReact 1s ease-in-out infinite}',
-      '@keyframes jrReact{50%{box-shadow:0 0 22px -2px rgba(247,37,133,.9),inset 0 0 12px rgba(247,37,133,.4);border-color:rgba(247,37,133,.7)}}',
-      '.jr-itxt{display:flex;flex-direction:column;line-height:1.12;min-width:0}',
-      '.jr-itxt b{font:800 .72rem/1.1 Segoe UI,system-ui,sans-serif;letter-spacing:2.6px;color:#DFF6FF;white-space:nowrap;text-shadow:0 0 10px rgba(0,229,255,.8)}',
-      '.jr-itxt em{font:600 .6rem/1 Segoe UI,system-ui,sans-serif;font-style:normal;letter-spacing:1.2px;text-transform:uppercase;color:#7FA8C9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;transition:max-width .3s}',
-      '.jr-island.listen .jr-itxt em{color:#FF9EC6}',
+      /* ---------- the idle pill ---------- */
+      '.jr-pill{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99995;display:flex;align-items:center;gap:9px;padding:5px 13px 5px 7px;border-radius:999px;cursor:pointer;user-select:none;-webkit-user-select:none;background:linear-gradient(160deg,rgba(16,22,40,.82),rgba(8,11,22,.92));border:1px solid rgba(0,229,255,.3);box-shadow:0 0 0 1px rgba(124,92,255,.12),0 0 22px -5px rgba(0,229,255,.55),0 0 44px -16px rgba(124,92,255,.7),0 12px 30px rgba(0,0,0,.5);backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);transition:box-shadow .25s,transform .25s}',
+      '.jr-pill:hover{box-shadow:0 0 0 1px rgba(124,92,255,.22),0 0 30px -4px rgba(0,229,255,.75),0 0 60px -12px rgba(124,92,255,.9),0 14px 36px rgba(0,0,0,.55);transform:translateX(-50%) translateY(-1px)}',
+      '.jr-pill.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-8px)}',
+      '.jr-pill .jr-togs{display:flex;gap:4px;margin-left:2px}',
+      '.jr-pill .jr-tog{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.07);color:#9FE8FF;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;padding:0}',
+      '.jr-pill .jr-tog:hover{background:rgba(0,229,255,.16)}',
+      '.jr-pill .jr-tog.off{opacity:.4}',
+      '.jr-ptxt{display:flex;flex-direction:column;line-height:1.12;min-width:0}',
+      '.jr-ptxt b{font:800 .72rem/1.1 Segoe UI,system-ui,sans-serif;letter-spacing:2.6px;color:#DFF6FF;white-space:nowrap;text-shadow:0 0 10px rgba(0,229,255,.8)}',
+      '.jr-ptxt em{font:600 .6rem/1 Segoe UI,system-ui,sans-serif;font-style:normal;letter-spacing:1.2px;text-transform:uppercase;color:#7FA8C9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}',
       '.jr-idot{width:7px;height:7px;border-radius:50%;flex:none;background:#B6FF3C;box-shadow:0 0 10px #B6FF3C;animation:jrDot 1.6s ease-in-out infinite}',
       '@keyframes jrDot{0%,100%{opacity:.55}50%{opacity:1}}',
-      '.jr-island.listen .jr-idot{background:#F72585;box-shadow:0 0 12px #F72585;animation:jrMic 1s ease-in-out infinite}',
-      '.jr-island.speak .jr-idot{background:#00E5FF;box-shadow:0 0 14px #00E5FF}',
-      '.jr-island.busy .jr-idot{background:#FFB703;box-shadow:0 0 12px #FFB703}',
-      '.jr-island.sleep .jr-idot{background:#5D6A88;box-shadow:none;animation:none}',
-      '.jr-island.sleep .jr-itxt b{color:#6E7EA0}',
-      '@keyframes jrMic{50%{box-shadow:0 0 20px rgba(247,37,133,.9)}}',
+      '.jr-pill.listen .jr-idot{background:#F72585;box-shadow:0 0 12px #F72585}',
+      '.jr-pill.speak .jr-idot{background:#00E5FF;box-shadow:0 0 14px #00E5FF}',
+      '.jr-pill.busy .jr-idot{background:#FFB703;box-shadow:0 0 12px #FFB703}',
+      '.jr-pill.sleep .jr-idot{background:#5D6A88;box-shadow:none;animation:none}',
+      '.jr-pill.sleep .jr-ptxt b{color:#6E7EA0}',
 
-      /* ---------- panel ---------- */
-      '.jr-panel{position:fixed;top:18px;left:50%;z-index:99997;width:min(400px,94vw);height:min(560px,84vh);display:flex;flex-direction:column;border-radius:24px;overflow:hidden;background:linear-gradient(165deg,rgba(14,19,36,.94),rgba(7,10,20,.98));border:1px solid rgba(0,229,255,.3);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);box-shadow:0 0 0 1px rgba(124,92,255,.16),0 0 44px -8px rgba(0,229,255,.5),0 30px 80px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06);opacity:0;pointer-events:none;transform:translateX(-50%) scale(.72) translateY(-16px);transform-origin:top center;transition:opacity .22s,transform .32s cubic-bezier(.2,.9,.3,1.12);font-family:"Segoe UI",-apple-system,sans-serif}',
-      '.jr-panel.open{opacity:1;pointer-events:auto;transform:translateX(-50%) scale(1) translateY(0)}',
-      '.jr-panel .jr-hex{position:absolute;inset:0;opacity:.05;pointer-events:none;background-image:' + HEX + ';background-size:36px 62px}',
-      '.jr-panel .jr-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 0%,rgba(124,92,255,.16),transparent 46%),radial-gradient(circle at 86% 100%,rgba(0,229,255,.12),transparent 46%)}',
-      '.jr-panel .jr-scan{position:absolute;left:0;right:0;top:-40%;height:36%;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(0,229,255,.07),transparent);animation:jrScan 5.5s linear infinite}',
-      '@keyframes jrScan{to{top:120%}}',
-      '.jr-head{position:relative;display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid rgba(0,229,255,.14);background:linear-gradient(90deg,rgba(124,92,255,.16),rgba(0,229,255,.08) 60%,transparent)}',
-      '.jr-head .jr-reactor{width:34px;height:34px}',
-      '.jr-ttl{font:800 .82rem/1 Segoe UI,system-ui,sans-serif;letter-spacing:3px;color:#DFF6FF;text-shadow:0 0 12px rgba(0,229,255,.8)}',
-      '.jr-on{display:flex;align-items:center;gap:5px;font:700 .6rem/1 Segoe UI,system-ui,sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:#B6FF3C;margin-top:4px}',
-      '.jr-on i{width:7px;height:7px;border-radius:50%;background:#B6FF3C;box-shadow:0 0 8px #B6FF3C;font-style:normal}',
-      '.jr-acts{margin-left:auto;display:flex;gap:6px}',
-      '.jr-acts button{width:32px;height:32px;border-radius:12px;border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.07);color:#9FE8FF;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}',
-      '.jr-acts button:hover{background:rgba(0,229,255,.16);box-shadow:0 0 14px -2px rgba(0,229,255,.6)}',
-      '.jr-acts button.off{opacity:.45}',
-      '.jr-body{position:relative;flex:1;min-height:0;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.22) transparent}',
-      '.jr-body::-webkit-scrollbar{width:5px}.jr-body::-webkit-scrollbar-thumb{background:rgba(0,229,255,.22);border-radius:3px}',
-      '.jr-msg{max-width:84%;padding:9px 12px;border-radius:14px;font-size:.84rem;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;position:relative;animation:jrMsg .18s ease both}',
-      '@keyframes jrMsg{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}',
-      '.jr-msg.user{align-self:flex-end;background:linear-gradient(135deg,#7C5CFF,#00E5FF);color:#fff;border-bottom-right-radius:4px;box-shadow:0 4px 16px rgba(124,92,255,.35)}',
-      '.jr-msg.jar{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.14);color:#E8EEFF;border-bottom-left-radius:4px}',
-      '.jr-msg.jar .jr-name{display:block;font:800 .58rem/1 Segoe UI,system-ui,sans-serif;letter-spacing:2.2px;text-transform:uppercase;color:#7FA8C9;margin-bottom:4px}',
-      '.jr-typing{align-self:flex-start;display:inline-flex;gap:4px;padding:10px 14px;border-radius:14px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.14)}',
-      '.jr-typing i{width:6px;height:6px;border-radius:50%;background:#7FA8C9;animation:jrDot 1s infinite}',
-      '.jr-typing i:nth-child(2){animation-delay:.15s}.jr-typing i:nth-child(3){animation-delay:.3s}',
-      '.jr-chips{display:flex;gap:6px;padding:9px 12px 3px;overflow-x:auto;flex-wrap:wrap}',
-      '.jr-chip{padding:6px 11px;border-radius:16px;border:1px solid rgba(0,229,255,.3);background:rgba(0,229,255,.08);color:#9FE8FF;font:700 .72rem/1 Segoe UI,system-ui,sans-serif;cursor:pointer;white-space:nowrap;transition:.15s}',
-      '.jr-chip:hover{background:rgba(0,229,255,.18);border-color:rgba(0,229,255,.55)}',
-      '.jr-in{position:relative;display:flex;gap:8px;padding:10px 12px 12px;border-top:1px solid rgba(0,229,255,.1)}',
-      '.jr-in input{flex:1;min-width:0;padding:10px 13px;border-radius:14px;border:1px solid rgba(0,229,255,.2);background:rgba(0,229,255,.05);color:#E8EEFF;font:.85rem/1 Segoe UI,system-ui,sans-serif;outline:none;transition:.15s}',
-      '.jr-in input:focus{border-color:rgba(0,229,255,.55);box-shadow:0 0 0 3px rgba(0,229,255,.14)}',
-      '.jr-in input::placeholder{color:#5D6A88}',
-      '.jr-in button{width:38px;height:38px;flex:none;border-radius:12px;border:1px solid rgba(0,229,255,.22);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}',
-      '.jr-send{background:linear-gradient(135deg,#7C5CFF,#00E5FF);color:#fff}',
-      '.jr-send:hover{box-shadow:0 0 18px rgba(0,229,255,.45)}',
-      '.jr-in .jr-mic{background:rgba(0,229,255,.06);color:#9FE8FF}',
-      '.jr-in .jr-mic:hover{background:rgba(0,229,255,.14)}',
-      '.jr-in .jr-mic.live{background:rgba(247,37,133,.22);border-color:#F72585;color:#FF9EC6;animation:jrMic 1s ease-in-out infinite}',
+      /* ---------- the orb ---------- */
+      '.jr-orb{border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 32% 28%,#F2FCFF,#A9EEFF 22%,#4FC3FF 45%,#7C5CFF 72%,#A25CFF 88%,#E05CFF);box-shadow:0 0 16px -2px rgba(0,229,255,.8),inset 0 0 14px rgba(255,255,255,.22);position:relative}',
+      '.jr-orb.small{width:24px;height:24px}',
+      '.jr-orb.big{width:64px;height:64px;margin:2px 0 4px}',
+      '.jr-orb .jr-eye{position:relative;width:40%;height:26%;border-radius:50% 50% 46% 46%;background:linear-gradient(135deg,#fff,#A9EEFF);box-shadow:0 0 12px rgba(255,255,255,.9)}',
+      '.jr-orb .jr-eye::after{content:"";position:absolute;inset:22% 18%;border-radius:50%;background:rgba(8,12,24,.85)}',
+      '.jr-orb.big::after{content:"";position:absolute;inset:-7px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 38%,rgba(255,255,255,.9) 50%,transparent 62% 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));animation:jrSpin 3.2s linear infinite}',
+      '@keyframes jrSpin{to{transform:rotate(360deg)}}',
 
-      '@media (max-width:640px){.jr-island{top:8px}.jr-itxt em{max-width:90px}.jr-panel{top:8px;width:calc(100vw - 12px);height:min(560px,86vh)}}',
-      '@media (prefers-reduced-motion:reduce){.jr-island,.jr-panel.open,.jr-msg,.jr-typing i,.jr-scan,.jr-reactor::before,.jr-idot,.jr-in .jr-mic.live{animation:none!important;transition:none}}'
+      /* ---------- the listening sheet ---------- */
+      '.jr-sheet{position:fixed;top:10px;left:50%;transform:translateX(-50%) translateY(-14px) scale(.94);z-index:99997;width:min(520px,94vw);display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 20px 14px;border-radius:28px;background:linear-gradient(165deg,rgba(18,24,44,.92),rgba(9,12,24,.97));border:1px solid rgba(0,229,255,.25);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);box-shadow:0 0 0 1px rgba(124,92,255,.16),0 0 44px -8px rgba(0,229,255,.5),0 30px 80px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06);opacity:0;pointer-events:none;transition:opacity .22s,transform .3s cubic-bezier(.2,.9,.3,1.12);font-family:"Segoe UI",-apple-system,sans-serif}',
+      '.jr-sheet.open{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0) scale(1)}',
+      '.jr-x{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.07);color:#9FE8FF;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;padding:0}',
+      '.jr-x:hover{background:rgba(0,229,255,.16);box-shadow:0 0 14px -2px rgba(0,229,255,.6)}',
+      '.jr-bars{display:flex;align-items:center;gap:3px;height:30px}',
+      '.jr-bar{width:3px;border-radius:3px;background:linear-gradient(180deg,#A9F3FF,#00E5FF 40%,#7C5CFF);height:5px;animation:jrBar 1.1s ease-in-out infinite}',
+      '@keyframes jrBar{0%,100%{height:5px}50%{height:30px}}',
+      '.jr-sheet.listen .jr-bar,.jr-sheet.speak .jr-bar{animation:jrBar 1.1s ease-in-out infinite}',
+      '.jr-sheet.busy .jr-bar{animation:jrBar 1.6s ease-in-out infinite}',
+      '.jr-sheet:not(.listen):not(.speak):not(.busy) .jr-bar{animation:none}',
+      '.jr-sheet.listen .jr-orb.big{animation:jrOrbPulse 1.2s ease-in-out infinite}',
+      '@keyframes jrOrbPulse{50%{transform:scale(1.09);box-shadow:0 0 44px -4px rgba(0,229,255,.95)}}',
+      '.jr-cap{font:.84rem/1.45 Segoe UI,system-ui,sans-serif;color:#E8EEFF;text-align:center;max-width:100%;min-height:1.3em;word-wrap:break-word}',
+      '.jr-hint{font:600 .58rem/1 Segoe UI,system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#5D6A88;text-align:center}',
+
+      '@media (max-width:640px){.jr-pill{top:8px}.jr-sheet{top:6px;width:calc(100vw - 12px);padding:16px 12px 12px}}',
+      '@media (prefers-reduced-motion:reduce){.jr-pill,.jr-sheet,.jr-orb.big::after,.jr-idot,.jr-bar{animation:none!important;transition:none}}'
     ].join('');
     document.head.appendChild(st);
 
-    var island = document.createElement('button');
-    island.className = 'jr-island';
-    island.id = 'jr-island';
-    island.setAttribute('aria-label', 'Open Jarvis assistant');
-    island.setAttribute('aria-expanded', 'false');
-    island.innerHTML =
-      '<span class="jr-reactor"><i class="jr-eye"></i></span>' +
-      '<span class="jr-itxt"><b>JARVIS</b><em id="jr-status">systems online</em></span>' +
-      '<span class="jr-idot"></span>';
-    island.onclick = toggle;
-    island.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
-    });
-    document.body.appendChild(island);
+    var pill = document.createElement('div');
+    pill.className = 'jr-pill';
+    pill.id = 'jr-pill';
+    pill.setAttribute('role', 'button');
+    pill.setAttribute('tabindex', '0');
+    pill.setAttribute('aria-label', 'Jarvis voice assistant');
+    pill.setAttribute('aria-expanded', 'false');
+    pill.innerHTML =
+      '<span class="jr-orb small"><i class="jr-eye"></i></span>' +
+      '<span class="jr-ptxt"><b>JARVIS</b><em id="jr-status">systems online</em></span>' +
+      '<span class="jr-idot"></span>' +
+      '<span class="jr-togs">' +
+        '<button id="jr-wake" class="jr-tog" title="Wake word">' + ICONS.wake + '</button>' +
+        '<button id="jr-speak" class="jr-tog" title="Voice replies">' + ICONS.sound + '</button>' +
+      '</span>';
+    document.body.appendChild(pill);
 
-    var pan = document.createElement('div');
-    pan.className = 'jr-panel';
-    pan.id = 'jr-panel';
-    pan.setAttribute('role', 'dialog');
-    pan.setAttribute('aria-label', 'Jarvis assistant');
-    pan.innerHTML =
-      '<div class="jr-hex"></div><div class="jr-glow"></div><div class="jr-scan"></div>' +
-      '<div class="jr-head">' +
-        '<span class="jr-reactor"><i class="jr-eye"></i></span>' +
-        '<div><div class="jr-ttl">JARVIS</div><div class="jr-on"><i></i>online &middot; synced</div></div>' +
-        '<div class="jr-acts">' +
-          '<button id="jr-speak" title="Voice replies">' + ICONS.sound + '</button>' +
-          '<button id="jr-close" title="Close">' + ICONS.close + '</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="jr-body" id="jr-body"></div>' +
-      '<div class="jr-chips" id="jr-chips">' +
-        '<button class="jr-chip" data-c="What can you control?">What can you control?</button>' +
-        '<button class="jr-chip" data-c="My points">My points</button>' +
-        '<button class="jr-chip" data-c="Open editor">Open editor</button>' +
-        '<button class="jr-chip" data-c="Open games">Open games</button>' +
-        '<button class="jr-chip" data-c="Call me Nova">Call me Nova</button>' +
-      '</div>' +
-      '<div class="jr-in">' +
-        '<input id="jr-inp" placeholder="Command Jarvis\u2026" autocomplete="off" aria-label="Ask Jarvis">' +
-        '<button class="jr-mic" id="jr-mic" title="Voice input">' + ICONS.mic + '</button>' +
-        '<button class="jr-send" id="jr-send" title="Send">' + ICONS.send + '</button>' +
-      '</div>';
-    document.body.appendChild(pan);
+    var sheet = document.createElement('div');
+    sheet.className = 'jr-sheet';
+    sheet.id = 'jr-sheet';
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-label', 'Jarvis voice assistant');
+    var bars = '';
+    for (var i = 0; i < 26; i++) {
+      bars += '<i class="jr-bar" style="animation-delay:' + (Math.random() * 1.1).toFixed(2) + 's;animation-duration:' + (0.8 + Math.random() * 0.5).toFixed(2) + 's"></i>';
+    }
+    sheet.innerHTML =
+      '<button id="jr-x" class="jr-x" aria-label="Close">' + ICONS.close + '</button>' +
+      '<div class="jr-bars" id="jr-bars">' + bars + '</div>' +
+      '<span class="jr-orb big" id="jr-bigorb"><i class="jr-eye"></i></span>' +
+      '<p class="jr-cap" id="jr-cap">Jarvis online \u2014 tap the orb and talk.</p>' +
+      '<p class="jr-hint">tap the orb to talk</p>';
+    document.body.appendChild(sheet);
 
-    $('jr-send').onclick = function () { sendInput(); };
-    $('jr-mic').onclick = function () { if (rec) stopListen(); else startListen(); };
-    $('jr-close').onclick = close;
-    $('jr-speak').onclick = function () { setSpeakOn(!speakOn()); };
-    setSpeakOn(speakOn());
-    $('jr-inp').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendInput(); });
-    document.querySelectorAll('#jr-chips .jr-chip').forEach(function (c) {
-      c.onclick = function () { handle(c.dataset.c); };
+    pill.addEventListener('click', onTap);
+    pill.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(); }
     });
+    $('jr-wake').onclick = function (e) { e.stopPropagation(); setWake(!wakeArmed()); };
+    $('jr-speak').onclick = function (e) { e.stopPropagation(); setSpeakOn(!speakOn()); };
+    $('jr-x').onclick = close;
+    sheet.addEventListener('click', function (e) { if (e.target === sheet) close(); });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') close();
-      if (e.altKey && (e.key === 'j' || e.key === 'J')) toggle();
+      if (e.altKey && (e.key === 'j' || e.key === 'J')) onTap();
     });
     document.addEventListener('click', function (e) {
-      if (!open) return;
-      if (pan.contains(e.target) || island.contains(e.target)) return;
+      if (!active) return;
+      if (sheet.contains(e.target) || pill.contains(e.target)) return;
       close();
+    });
+
+    setSpeakOn(speakOn());
+    setWake(wakeArmed());
+
+    /* Face recognition greeting. biometric.js fires nc:bio-signin whenever a
+       face (or voice) sign-in succeeds — here, Jarvis becomes the voice that
+       says hello, and starts listening if the tap started the sign-in. */
+    document.addEventListener('nc:bio-signin', function (e) {
+      var nm = e.detail && e.detail.name;
+      if (!nm) return;
+      openSheet();
+      var g = s('Hello, ' + nm + '. What can I do for you?', 'yo ' + nm + ', what we doin?');
+      say(g);
+      speak(g, function () {
+        if (listenAfterGreet) { listenAfterGreet = false; startListen(); }
+        else setTimeout(close, 1600);
+      });
+    });
+    document.addEventListener('nc:bio-signout', function () {
+      if (active) say(s('Signed out.', 'Signed out.'));
     });
 
     startPeek();
   }
 
-  function sendInput() {
-    var inp = $('jr-inp');
-    var v = (inp.value || '').trim();
-    if (!v) return;
-    inp.value = '';
-    handle(v);
+  /* ---- tap: open the sheet and listen. If you are not signed in and face
+     sign-in exists, the camera scans first and Jarvis greets you by name
+     before listening. ---- */
+  function onTap() {
+    if (active) { close(); return; }
+    var bio = window.ncBiometric;
+    var signedIn = !!(bio && typeof bio.isSignedIn === 'function' && bio.isSignedIn());
+    openSheet();
+    if (!signedIn && bio && typeof bio.signIn === 'function') {
+      listenAfterGreet = true;
+      try { bio.signIn(); } catch (e) { listenAfterGreet = false; startListen(); }
+      setTimeout(function () {
+        if (listenAfterGreet) { listenAfterGreet = false; startListen(); }
+      }, 6000);
+    } else {
+      startListen();
+    }
   }
 
-  function toggle() { open ? close() : openPanel(); }
-  function openPanel() {
+  function openSheet() {
     build();
-    var pan = $('jr-panel');
-    var isl = $('jr-island');
-    if (!pan) return;
-    open = true;
-    pan.classList.add('open');
-    if (isl) isl.classList.add('hidden');
-    if (isl) isl.setAttribute('aria-expanded', 'true');
-    if (!$('jr-body').children.length) {
-      say(s('Hey ' + fixName() + '. I\u2019m Jarvis \u2014 tap the chips or ask me to control the app.',
-            'yo ' + fixName() + ', Jarvis here \u2014 tap the chips or tell me what to do fr.'), 'jar');
-    }
-    setTimeout(function () { var i = $('jr-inp'); if (i) i.focus(); }, 90);
+    var sh = $('jr-sheet'), pl = $('jr-pill');
+    if (!sh) return;
+    active = true;
+    sh.classList.add('open');
+    if (pl) { pl.classList.add('hidden'); pl.setAttribute('aria-expanded', 'true'); }
   }
   function close() {
-    open = false;
+    active = false;
+    listenAfterGreet = false;
     stopListen();
-    var pan = $('jr-panel');
-    var isl = $('jr-island');
-    if (pan) pan.classList.remove('open');
-    if (isl) { isl.classList.remove('hidden'); isl.setAttribute('aria-expanded', 'false'); }
-    setMode('idle');
+    var sh = $('jr-sheet'), pl = $('jr-pill');
+    if (sh) sh.classList.remove('open');
+    if (pl) { pl.classList.remove('hidden'); pl.setAttribute('aria-expanded', 'false'); }
+    setMode(wake.armed && !active ? 'armed' : 'idle');
   }
 
   var peeked = false;
   function startPeek() {
     setTimeout(function () {
-      if (open || peeked) return;
+      if (active || peeked) return;
       peeked = true;
-      var isl = $('jr-island');
-      if (!isl) return;
+      var pl = $('jr-pill');
+      if (!pl) return;
       var em = $('jr-status');
-      isl.classList.add('peek');
       if (em) em.textContent = 'hi, I\u2019m Jarvis \u2014 tap me';
       setTimeout(function () {
-        isl.classList.remove('peek');
-        if (em && !open) em.textContent = 'systems online';
+        if (em && !active) em.textContent = wake.armed ? 'say \u201chey Jarvis\u201d' : 'systems online';
       }, 4200);
     }, 1500);
   }
@@ -750,9 +755,9 @@
   else mount();
 
   window.ncJarvis = {
-    open: openPanel,
+    open: openSheet,
     close: close,
-    toggle: toggle,
+    toggle: onTap,
     ask: handle,
     register: register,
     controls: controls
