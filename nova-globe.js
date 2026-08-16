@@ -135,6 +135,14 @@
         'padding:5px 10px;opacity:0;transition:opacity .45s ease;backdrop-filter:blur(8px)}',
       '#nclabel.on{opacity:1}',
 
+      '#nchover{position:absolute;left:0;top:0;z-index:3;pointer-events:none;' +
+        'background:rgba(8,11,20,.9);border:1px solid rgba(0,240,255,.4);border-radius:12px;' +
+        'padding:7px 11px;font:600 12px/1.35 Geist,Inter,system-ui,sans-serif;color:#EAF2FF;' +
+        'white-space:nowrap;opacity:0;transition:opacity .18s;backdrop-filter:blur(10px)}',
+      '#nchover.on{opacity:1}',
+      '#nchover b{display:block;font-weight:700}',
+      '#nchover span{color:#8A97B4;font-family:ui-monospace,monospace;font-size:11px}',
+      'html[data-theme="light"] #nchover{background:rgba(255,255,255,.92);color:#14203A}',
       '#ncgeo{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:2;' +
         'pointer-events:auto;font:600 12px/1 Geist,Inter,system-ui,sans-serif;color:#9FB0C8;' +
         'background:rgba(8,11,20,.7);border:1px solid rgba(255,255,255,.14);border-radius:999px;' +
@@ -226,11 +234,46 @@
            So reveal on whichever comes first: the event, or a canvas actually
            existing inside the element. Then give up honestly if neither
            happens. */
+        /* Spline paints a "Built with Spline" badge into its own shadow root.
+           Note this is a licence question rather than a technical one: the free
+           plan requires the badge to stay. Removing it is correct on a paid
+           plan and a terms violation on a free one — that is the owner's call
+           to make, not this file's.
+
+           It is re-checked for a while because the badge is added after the
+           first paint, and once more on every reveal. */
+        function debadge() {
+          var sr = viewer && viewer.shadowRoot;
+          if (!sr) return false;
+          var gone = false;
+          ['#logo', 'a[href*="spline.design"]', '#spline-watermark', '.spline-watermark']
+            .forEach(function (sel) {
+              sr.querySelectorAll(sel).forEach(function (n) { n.remove(); gone = true; });
+            });
+          /* Belt and braces: a style inside the shadow root catches any badge
+             added later under a name this list does not know. */
+          if (!sr.getElementById('ncnobadge')) {
+            var st = document.createElement('style');
+            st.id = 'ncnobadge';
+            st.textContent = '#logo,a[href*="spline.design"],#spline-watermark,.spline-watermark{' +
+              'display:none!important;opacity:0!important;pointer-events:none!important}';
+            sr.appendChild(st);
+          }
+          return gone;
+        }
+        var badgeTries = 0;
+        var badgeTimer = setInterval(function () {
+          badgeTries++;
+          debadge();
+          if (badgeTries > 30) clearInterval(badgeTimer);
+        }, 400);
+
         var shown = false;
         function reveal(why) {
           if (shown) return;
           shown = true;
           state = 'scene';
+          debadge();
           layer.classList.add('ready');
           layer.setAttribute('data-why', why);
           place();
@@ -321,6 +364,112 @@
     };
   }
 
+  /* --------------------------------------------------------------------------
+     The inverse of project(): a point on screen back to a point on the planet.
+
+     Cast a ray straight at the sphere. Anything outside the disc is a miss —
+     the cursor is on sky, not on the globe — and that check is what stops the
+     readout claiming a country when the pointer is nowhere near the planet.
+     Then undo the tilt and the spin in the opposite order project() applied
+     them, and read the latitude and longitude straight off the unit sphere.
+     -------------------------------------------------------------------------- */
+  function unproject(mx, my, c, w, h) {
+    var R = c.r * Math.min(w, h);
+    var dx = (mx - c.cx * w) / R;
+    var dy = -(my - c.cy * h) / R;
+    var d2 = dx * dx + dy * dy;
+    if (d2 > 1) return null;                        // off the disc: sky, not planet
+    var dz = Math.sqrt(1 - d2);                     // near face of the sphere
+
+    var t = c.tilt * Math.PI / 180;
+    /* project() did y2 = y·cos t − z·sin t ; z2 = y·sin t + z·cos t */
+    var y = dy * Math.cos(t) + dz * Math.sin(t);
+    var z = -dy * Math.sin(t) + dz * Math.cos(t);
+    var x = dx;
+
+    var lat = Math.asin(Math.max(-1, Math.min(1, y))) * 180 / Math.PI;
+    var lon = Math.atan2(x, z) * 180 / Math.PI - c.spin;
+    while (lon > 180) lon -= 360;
+    while (lon < -180) lon += 360;
+    return { lat: lat, lon: lon };
+  }
+
+  /* --------------------------------------------------------------------------
+     Hover readout
+     --------------------------------------------------------------------------
+     Coordinates appear instantly because they are pure geometry. The place name
+     needs a lookup, so it arrives a moment later and only once the pointer has
+     settled — moving the mouse across a globe would otherwise fire a request per
+     frame.
+
+     Worth being clear about what leaves the browser: the coordinates under the
+     CURSOR, which are not the visitor's location. The red dot's own position is
+     never sent anywhere.
+     -------------------------------------------------------------------------- */
+  var hoverEl, hoverTimer, lastKey = '';
+  var placeCache = new Map();
+
+  function hoverBox() {
+    if (hoverEl) return hoverEl;
+    hoverEl = document.createElement('div');
+    hoverEl.id = 'nchover';
+    layer.appendChild(hoverEl);
+    return hoverEl;
+  }
+
+  function fmt(lat, lon) {
+    return Math.abs(lat).toFixed(2) + (lat >= 0 ? '°N' : '°S') + '  ' +
+           Math.abs(lon).toFixed(2) + (lon >= 0 ? '°E' : '°W');
+  }
+
+  function lookup(lat, lon, done) {
+    var key = lat.toFixed(1) + ',' + lon.toFixed(1);      // ~11 km buckets
+    if (placeCache.has(key)) { done(placeCache.get(key)); return; }
+    var url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' +
+      lat.toFixed(4) + '&longitude=' + lon.toFixed(4) + '&localityLanguage=en';
+    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var city = j.city || j.locality || j.principalSubdivision || '';
+      var country = j.countryName || '';
+      /* No country means open ocean, and saying so is more useful than an
+         empty line that looks like a failure. */
+      var text = country ? (city ? city + ', ' + country : country) : 'Open ocean';
+      placeCache.set(key, text);
+      done(text);
+    }).catch(function () {
+      placeCache.set(key, '');
+      done('');
+    });
+  }
+
+  function onHover(e) {
+    if (!layer) return;
+    var r = layer.getBoundingClientRect();
+    var mx = e.clientX - r.left, my = e.clientY - r.top;
+    var p = unproject(mx, my, cal(), r.width, r.height);
+    var box = hoverBox();
+
+    if (!p) { box.classList.remove('on'); clearTimeout(hoverTimer); return; }
+
+    box.classList.add('on');
+    box.style.transform = 'translate(' + (mx + 16) + 'px,' + (my + 16) + 'px)';
+    var coords = fmt(p.lat, p.lon);
+    var key = p.lat.toFixed(1) + ',' + p.lon.toFixed(1);
+    if (key !== lastKey) {
+      lastKey = key;
+      box.innerHTML = '<b>Locating…</b><span>' + coords + '</span>';
+      clearTimeout(hoverTimer);
+      hoverTimer = setTimeout(function () {
+        lookup(p.lat, p.lon, function (text) {
+          if (lastKey !== key) return;               // pointer already moved on
+          box.innerHTML = '<b>' + (text || 'Unknown') + '</b><span>' + coords + '</span>';
+        });
+      }, 380);
+    } else {
+      var b = box.querySelector('span');
+      if (b) b.textContent = coords;
+    }
+  }
+
   function place() {
     if (!layer || !marker) return;
     if (!pos) {
@@ -401,6 +550,17 @@
       if (viewer) viewer.style.visibility = document.hidden ? 'hidden' : '';
     });
 
+    /* Listened for on the layer rather than the scene, so the readout still
+       works before the scene loads and if it never does. */
+    layer.addEventListener('pointermove', onHover);
+    layer.addEventListener('pointerleave', function () {
+      if (hoverEl) hoverEl.classList.remove('on');
+      clearTimeout(hoverTimer);
+    });
+    /* The layer is click-through, so it gets no pointer events of its own.
+       Track on the window and convert, which also keeps the hero buttons live. */
+    addEventListener('pointermove', onHover, { passive: true });
+
     if (/[?&]globe=calibrate/.test(location.search)) calibrator();
 
     /* ?globe=debug prints why the scene is or is not on screen, so "it is not
@@ -419,5 +579,5 @@
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', init);
   else init();
 
-  window.NCGlobe = { place: place, project: project, cal: cal, heavyOk: heavyOk };
+  window.NCGlobe = { place: place, project: project, unproject: unproject, cal: cal, heavyOk: heavyOk };
 })();
