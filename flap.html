@@ -123,6 +123,18 @@ canvas{display:block;width:100vw;height:100vh}
     if (run) { hud.classList.add('hide'); ov.style.display = 'none'; }
   }
 
+  /* Restarting drops you into 'ready', not straight into 'play'.
+     Going straight to 'play' meant the bird was already falling the instant
+     the overlay closed, so a player who pressed Play again and did not flap
+     within about half a second simply died again — which reads as the game
+     not resetting at all rather than as a very short life. A fresh load hovers
+     and waits for the first tap; a restart now does the same thing. */
+  function restart() {
+    reset(false);
+    ov.style.display = 'none';
+    hud.classList.remove('hide');
+  }
+
   function over() {
     S.state = 'dead';
     if (S.score > best) {
@@ -163,15 +175,29 @@ canvas{display:block;width:100vw;height:100vh}
   }
 
   /* ---- input ------------------------------------------------------------- */
-  function tap(e) { e.preventDefault(); flap(); }
+  function tap(e) {
+    e.preventDefault();
+    /* Tapping the screen after dying was the one input that did nothing:
+       flap() returns early unless the game is playing, so the most natural
+       gesture a player makes was ignored. */
+    if (S.state === 'dead') { restart(); return; }
+    flap();
+  }
   ['pointerdown'].forEach(ev => cv.addEventListener(ev, tap));
   addEventListener('keydown', e => {
     if (e.repeat) return;
     if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); flap(); }
     if (e.code === 'Space' && S.state === 'ready') e.preventDefault();
-    if ((e.code === 'Enter' || e.code === 'Space') && S.state === 'dead') { reset(true); }
+    if ((e.code === 'Enter' || e.code === 'Space') && S.state === 'dead') { restart(); }
   });
-  again.addEventListener('click', () => reset(true));
+  again.addEventListener('click', restart);
+  /* The overlay covers the canvas, so a tap anywhere on it — not only on the
+     button — has to count as "play again". */
+  ov.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('button') || e.target.closest('a')) return;
+    e.preventDefault();
+    restart();
+  });
 
   function scoreFor() {
     return { w: W, h: H, gap: S.gap * DPR, dist: S.dist * DPR, speed: S.speed * DPR, g: G * DPR,

@@ -112,8 +112,11 @@
         'border-color:rgba(255,46,77,.5)}',
       'html[data-theme="light"] #ncgeo{background:rgba(255,255,255,.8);color:#41506E;' +
         'border-color:rgba(16,24,44,.16)}',
+      /* The layer is click-through so the hero's buttons still work, but the
+         scene itself takes pointer events so it can be dragged and spun. */
       '#ncglobe spline-viewer{position:absolute;inset:0;width:100%;height:100%;' +
-        'opacity:0;transition:opacity 1.1s ease}',
+        'opacity:0;transition:opacity 1.1s ease;pointer-events:auto;cursor:grab;touch-action:none}',
+      '#ncglobe spline-viewer:active{cursor:grabbing}',
       '#ncglobe.ready spline-viewer{opacity:1}',
       '#ncglobe.ready .sky{opacity:.45}',
 
@@ -200,18 +203,59 @@
     s.onload = function () {
       if (done) return;
       done = true; clearTimeout(giveUp);
-      viewer = document.createElement('spline-viewer');
-      viewer.setAttribute('url', SCENE);
-      viewer.setAttribute('loading-anim-type', 'none');
-      /* Spline paints its own logo unless told otherwise; the hero has one. */
-      viewer.setAttribute('hint', '');
-      viewer.addEventListener('load', function () {
-        state = 'scene';
-        layer.classList.add('ready');
-        place();
+
+      /* The script tag firing onload only means the module ran. The custom
+         element is registered a tick later, so wait for the registration
+         rather than assuming it. */
+      var ready = customElements.whenDefined
+        ? customElements.whenDefined('spline-viewer')
+        : Promise.resolve();
+
+      ready.then(function () {
+        viewer = document.createElement('spline-viewer');
+        viewer.setAttribute('url', SCENE);
+        viewer.setAttribute('loading-anim-type', 'none');
+        layer.insertBefore(viewer, marker);
+
+        /* The first version revealed the scene only inside a 'load' listener.
+           If that event never fires — a different name, a version change, an
+           element that renders without emitting it — the viewer is present,
+           working, and permanently at opacity 0. Which is exactly what
+           "the globe isn't there" looked like.
+
+           So reveal on whichever comes first: the event, or a canvas actually
+           existing inside the element. Then give up honestly if neither
+           happens. */
+        var shown = false;
+        function reveal(why) {
+          if (shown) return;
+          shown = true;
+          state = 'scene';
+          layer.classList.add('ready');
+          layer.setAttribute('data-why', why);
+          place();
+        }
+        ['load', 'load-complete', 'loaded'].forEach(function (ev) {
+          viewer.addEventListener(ev, function () { reveal(ev); });
+        });
+        viewer.addEventListener('error', function () { bail('scene error'); });
+
+        var tries = 0;
+        var poll = setInterval(function () {
+          tries++;
+          var cv = viewer.shadowRoot ? viewer.shadowRoot.querySelector('canvas')
+                                     : viewer.querySelector('canvas');
+          if (cv && cv.width > 0) { clearInterval(poll); reveal('canvas'); }
+          else if (tries > 40) { clearInterval(poll); if (!shown) bail('no canvas after 20s'); }
+        }, 500);
+
+        function bail(why) {
+          clearInterval(poll);
+          if (viewer) { viewer.remove(); viewer = null; }
+          layer.setAttribute('data-failed', why);
+          if (/[?&]globe=(debug|calibrate)/.test(location.search)) console.warn('[globe] ' + why);
+        }
       });
-      viewer.addEventListener('error', function () { viewer.remove(); });
-      layer.insertBefore(viewer, marker);
     };
     s.onerror = function () { clearTimeout(giveUp); done = true; };
     document.head.appendChild(s);
@@ -358,6 +402,18 @@
     });
 
     if (/[?&]globe=calibrate/.test(location.search)) calibrator();
+
+    /* ?globe=debug prints why the scene is or is not on screen, so "it is not
+       there" becomes a specific answer instead of a guess. */
+    if (/[?&]globe=debug/.test(location.search)) {
+      setTimeout(function () {
+        console.log('[globe] heavy device ok :', heavyOk());
+        console.log('[globe] viewer element  :', !!viewer);
+        console.log('[globe] revealed        :', layer.classList.contains('ready'),
+          layer.getAttribute('data-why') || layer.getAttribute('data-failed') || '');
+        console.log('[globe] secure context  :', isSecureContext);
+      }, 6000);
+    }
   }
 
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', init);
