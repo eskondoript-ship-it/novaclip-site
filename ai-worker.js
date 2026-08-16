@@ -264,6 +264,52 @@ export default {
        set without ever revealing one, because "is the key configured" is the
        question you actually have at 11pm when the site says it cannot reach the
        AI, and there is no other way to ask it. */
+    /* /health?probe=1 spends one tiny call on the real vendor and returns
+       exactly what came back. "The key is set" and "the key works" are
+       different questions, and only the second one matters at 11pm. No secret
+       is echoed — only the upstream status and the vendor's own words. */
+    if (url.pathname === '/health' && url.searchParams.get('probe') === '1') {
+      if (!env.GEMINI_API_KEY) return json({ probe: 'gemini', ok: false, reason: 'GEMINI_API_KEY is not set.' });
+      const model = 'gemini-2.5-flash';
+      let r, body = '';
+      try {
+        r = await fetch(GOOGLE + model + ':generateContent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+          body: JSON.stringify({ contents: [{ parts: [{ text: 'ping' }] }],
+            generationConfig: { maxOutputTokens: 1 } })
+        });
+        body = await r.text();
+      } catch (e) {
+        return json({ probe: 'gemini', ok: false, reason: 'Could not reach Google: ' + String(e.message || e) });
+      }
+      let reason = '', status = '';
+      try {
+        const j = JSON.parse(body);
+        reason = (j.error && (j.error.message || j.error.status)) || '';
+        status = (j.error && j.error.status) || '';
+      } catch (e) { reason = body.slice(0, 300); }
+
+      return json({
+        probe: 'gemini', model,
+        ok: r.ok,
+        http: r.status,
+        google_status: status,
+        google_says: reason || (r.ok ? 'the call succeeded' : 'no message'),
+        /* The three that actually happen, named so the fix is obvious. */
+        likely: !r.ok && /SERVICE_DISABLED|has not been used|is disabled/i.test(reason)
+            ? 'Generative Language API is not enabled on this project. Enable it, wait a minute, retry.'
+          : !r.ok && /API_KEY_SERVICE_BLOCKED|not authorized|restricted/i.test(reason)
+            ? 'The key is restricted to a set of APIs that excludes Generative Language. Edit the key: API restrictions > add Generative Language API, or set it to unrestricted.'
+          : !r.ok && /API key not valid|API_KEY_INVALID/i.test(reason)
+            ? 'The key string itself is wrong — a Firebase browser key or a truncated paste will do this.'
+          : !r.ok && /quota|RESOURCE_EXHAUSTED/i.test(reason)
+            ? 'Out of quota for now.'
+          : r.ok ? 'Working. If the site still fails, the problem is in the page, not the key.'
+          : 'Unrecognised — read google_says.'
+      });
+    }
+
     if (url.pathname === '/health') {
       return json({
         ok: !!env.GEMINI_API_KEY,
