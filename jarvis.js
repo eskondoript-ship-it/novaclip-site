@@ -512,6 +512,7 @@
    * ---------------------------------------------------------------- */
   var active = false;          /* the sheet is open */
   var listenAfterGreet = false;/* tap started a face sign-in; listen once it greets */
+  var suppressTap = false;     /* a drag just ended; swallow the click that follows */
 
   function say(text) {
     var cap = $('jr-cap');
@@ -571,8 +572,9 @@
     st.id = 'jr-css';
     st.textContent = [
       /* ---------- the idle pill ---------- */
-      '.jr-pill{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99995;display:flex;align-items:center;gap:9px;padding:5px 13px 5px 7px;border-radius:999px;cursor:pointer;user-select:none;-webkit-user-select:none;background:linear-gradient(160deg,rgba(16,22,40,.82),rgba(8,11,22,.92));border:1px solid rgba(0,229,255,.3);box-shadow:0 0 0 1px rgba(124,92,255,.12),0 0 22px -5px rgba(0,229,255,.55),0 0 44px -16px rgba(124,92,255,.7),0 12px 30px rgba(0,0,0,.5);backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);transition:box-shadow .25s,transform .25s}',
+      '.jr-pill{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99995;display:flex;align-items:center;gap:9px;padding:5px 13px 5px 7px;border-radius:999px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;background:linear-gradient(160deg,rgba(16,22,40,.82),rgba(8,11,22,.92));border:1px solid rgba(0,229,255,.3);box-shadow:0 0 0 1px rgba(124,92,255,.12),0 0 22px -5px rgba(0,229,255,.55),0 0 44px -16px rgba(124,92,255,.7),0 12px 30px rgba(0,0,0,.5);backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);transition:box-shadow .25s,transform .25s}',
       '.jr-pill:hover{box-shadow:0 0 0 1px rgba(124,92,255,.22),0 0 30px -4px rgba(0,229,255,.75),0 0 60px -12px rgba(124,92,255,.9),0 14px 36px rgba(0,0,0,.55);transform:translateX(-50%) translateY(-1px)}',
+      '.jr-pill.dragging{cursor:grabbing}',
       '.jr-pill.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-8px)}',
       '.jr-pill .jr-togs{display:flex;gap:4px;margin-left:2px}',
       '.jr-pill .jr-tog{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.07);color:#9FE8FF;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;padding:0}',
@@ -636,6 +638,17 @@
       '</span>';
     document.body.appendChild(pill);
 
+    /* Remember where the reader parked the pill, so it stays put on the next
+       page instead of blocking something again. */
+    var savedPos = null;
+    try { savedPos = JSON.parse(localStorage.getItem('nc_jarvis_pos') || 'null'); } catch (e) {}
+    if (savedPos && typeof savedPos.x === 'number' && typeof savedPos.y === 'number') {
+      pill.style.left = savedPos.x + 'px';
+      pill.style.top = savedPos.y + 'px';
+      pill.style.transform = 'none';
+    }
+    makeDraggable(pill);
+
     var sheet = document.createElement('div');
     sheet.className = 'jr-sheet';
     sheet.id = 'jr-sheet';
@@ -695,10 +708,61 @@
     startPeek();
   }
 
+  /* Drag the idle pill so it stops covering things. A real drag (more than a
+     few pixels) parks the pill where the reader dropped it, clamps it to the
+     window, and remembers the spot — the click that browsers fire after a drag
+     is swallowed so letting go never opens the sheet. Toggles inside the pill
+     are left alone, and pointer capture keeps a fast drag from wandering off. */
+  function makeDraggable(el) {
+    var dragging = false, moved = false, sx = 0, sy = 0, ex = 0, ey = 0;
+    function onDown(e) {
+      if (e.target && e.target.closest && e.target.closest('.jr-tog')) return;
+      if (e.button !== undefined && e.button !== 0) return;
+      var r = el.getBoundingClientRect();
+      sx = e.clientX; sy = e.clientY;
+      ex = r.left; ey = r.top;
+      moved = false;
+      dragging = true;
+      el.classList.add('dragging');
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    }
+    function onMove(e) {
+      if (!dragging) return;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (!moved && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      moved = true;
+      var x = Math.min(Math.max(0, ex + dx), window.innerWidth - el.offsetWidth);
+      var y = Math.min(Math.max(0, ey + dy), window.innerHeight - el.offsetHeight);
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.transform = 'none';
+    }
+    function onUp(e) {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (moved) {
+        try {
+          localStorage.setItem('nc_jarvis_pos',
+            JSON.stringify({ x: el.getBoundingClientRect().left, y: el.getBoundingClientRect().top }));
+        } catch (err) {}
+        suppressTap = true;
+        setTimeout(function () { suppressTap = false; }, 150);
+      }
+    }
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onUp);
+  }
+
   /* ---- tap: open the sheet and listen. If you are not signed in and face
      sign-in exists, the camera scans first and Jarvis greets you by name
      before listening. ---- */
   function onTap() {
+    if (suppressTap) { suppressTap = false; return; }
     if (active) { close(); return; }
     var bio = window.ncBiometric;
     var signedIn = !!(bio && typeof bio.isSignedIn === 'function' && bio.isSignedIn());
