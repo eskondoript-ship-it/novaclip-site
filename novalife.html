@@ -881,14 +881,14 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
       "<div class='toys'>" + TOYS.map(function (t) {
         var left = (used[t.label] || 0) + t.cd - Date.now();
         var ready = left <= 0;
-        return "<button class='toy' type='button' data-t='" + t.label + "'" + (ready ? '' : ' disabled') + ">" +
+        return "<button class='toy' type='button' data-tool='" + t.label + "'" + (ready ? '' : ' disabled') + ">" +
           "<span>" + t.icon + "</span><b>" + gzt(t.label) + "</b>" +
           (ready ? "<span class='cd'>+" + t.fun + " fun</span>" : "<span class='cd'>" + fmtCD(left) + "</span>") +
           "</button>";
       }).join('') + "</div>";
     el.querySelectorAll('button').forEach(function (b) {
       if (b.disabled) return;
-      b.onclick = function () { playToy(b.dataset.t); };
+      b.onclick = function () { playToy(b.dataset.tool); };
     });
   }
 
@@ -1054,15 +1054,15 @@ input:focus{outline:none;border-color:rgba(0,229,255,.5)}
   ];
   function renderTabs() {
     $('tabs').innerHTML = TABS.map(function (t) {
-      return "<button class='tabbtn' type='button' data-t='" + t.id + "'>" + gzt(t.label) + "</button>";
+      return "<button class='tabbtn' type='button' data-tool='" + t.id + "'>" + gzt(t.label) + "</button>";
     }).join('');
     $('tabs').querySelectorAll('button').forEach(function (b) {
-      b.onclick = function () { switchTab(b.dataset.t); };
+      b.onclick = function () { switchTab(b.dataset.tool); };
     });
   }
   function switchTab(id) {
     $('tabs').querySelectorAll('button').forEach(function (b) {
-      b.className = 'tabbtn' + (b.dataset.t === id ? ' on' : '');
+      b.className = 'tabbtn' + (b.dataset.tool === id ? ' on' : '');
     });
     TABS.forEach(function (t) {
       var p = $('tab-' + t.id);
