@@ -30,21 +30,48 @@ a{color:inherit;text-decoration:none}
   padding:20px 0;gap:4px;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto}
 .sidebar .themewrap{margin-top:auto;padding:16px 20px}
 .shell{margin-left:var(--nc-rail,200px);height:100vh;display:flex;flex-direction:column}
-.tabs{display:flex;gap:8px;padding:12px clamp(14px,2vw,26px) 0;flex-shrink:0}
-.tabs button{padding:10px 20px;border-radius:12px 12px 0 0;border:1px solid var(--line);
-  border-bottom:0;background:rgba(255,255,255,.03);color:var(--dim);cursor:pointer;
-  font:600 14px/1 inherit;transition:color .15s,background .15s}
-.tabs button:hover{color:var(--txt)}
-.tabs button.on{background:var(--panel);color:var(--txt);position:relative}
-.tabs button.on::after{content:'';position:absolute;left:14px;right:14px;top:0;height:2px;
-  border-radius:2px;background:var(--grad)}
+/* A segmented control rather than folder tabs. One moving indicator instead of
+   a background swap per button: the eye follows the movement and knows where it
+   came from, which a hard swap never tells you. */
+.tabs{display:flex;gap:12px;align-items:center;flex-shrink:0;
+  padding:14px clamp(14px,2vw,26px) 12px}
+.tabnav{position:relative;display:flex;gap:3px;padding:5px;border-radius:16px;
+  background:rgba(255,255,255,.045);border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.tabnav .ind{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:12px;
+  background:var(--grad);z-index:0;box-shadow:0 6px 20px -8px rgba(0,240,255,.75);
+  transform:translateX(0)}
+@media (prefers-reduced-motion:no-preference){
+  .tabnav .ind{transition:transform .34s cubic-bezier(.2,.9,.3,1.1),
+    width .34s cubic-bezier(.2,.9,.3,1.1)}
+  .tabnav button svg{transition:transform .3s cubic-bezier(.2,.9,.3,1.3)}
+  .tabnav button.on svg{transform:scale(1.12)}
+}
+.tabnav button{position:relative;z-index:1;display:flex;align-items:center;gap:8px;
+  padding:9px 18px;border:0;border-radius:12px;background:transparent;color:var(--dim);
+  cursor:pointer;font:600 14px/1 inherit;white-space:nowrap;transition:color .22s}
+.tabnav button svg{width:16px;height:16px;fill:none;stroke:currentColor;
+  stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tabnav button:hover:not(.on){color:var(--txt)}
+.tabnav button.on{color:#04121a}
+.tabnav button:focus-visible{outline:2px solid var(--cyan,#00F0FF);outline-offset:3px}
+.tabmeta{color:var(--dim);font-size:.82rem;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.tabmeta b{color:var(--txt);font-weight:600}
+.tabspin{width:13px;height:13px;border-radius:50%;border:2px solid var(--line);
+  border-top-color:var(--cyan,#00F0FF);display:inline-block;vertical-align:-2px;
+  margin-right:7px;animation:tabspin .7s linear infinite}
+@keyframes tabspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.tabspin{animation-duration:2.4s}}
 .frames{flex:1;min-height:0;border-top:1px solid var(--line);position:relative}
 .frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:var(--ink)}
 .frames iframe.on{display:block}
 @media (max-width:760px){
   .shell{margin-left:0;height:calc(100vh - 64px)}
-  .tabs{padding:8px 10px 0}
-  .tabs button{flex:1;padding:9px 8px;font-size:13px}
+  .tabs{padding:8px 10px}
+  .tabnav{flex:1}
+  .tabnav button{flex:1;justify-content:center;padding:9px 8px;font-size:13px}
+  .tabmeta{display:none}
 }
 </style>
 </head>
@@ -57,7 +84,10 @@ a{color:inherit;text-decoration:none}
 </div>
 
 <div class='shell'>
-  <div class='tabs' id='tabs' role='tablist'></div>
+  <div class='tabs'>
+    <div class='tabnav' id='tabs' role='tablist'><span class='ind' id='tabInd'></span></div>
+    <span class='tabmeta' id='tabMeta'></span>
+  </div>
   <div class='frames' id='frames'></div>
 </div>
 
@@ -67,17 +97,26 @@ a{color:inherit;text-decoration:none}
 <script>
 /* Two pages, one address. The tab you are on is in the URL as #<name>, so a
    link or a reload lands where you left rather than always on the first tab. */
-const TABS = [{"key": "typing", "label": "Typing race", "src": "typing.html?embed=1"}, {"key": "flap", "label": "Nova Flap", "src": "flap.html?embed=1"}];
+const TABS = [{"key": "typing", "label": "Typing race", "src": "typing.html?embed=1", "icon": "<rect x=\"2\" y=\"6\" width=\"20\" height=\"13\" rx=\"2\"/><path d=\"M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6\"/>", "note": "Race the clock. Your best words-per-minute counts towards Progress."}, {"key": "flap", "label": "Nova Flap", "src": "flap.html?embed=1", "icon": "<path d=\"M16 7h.01M22 11a8.4 8.4 0 01-1.8 5.2A9.6 9.6 0 0112 20a9.6 9.6 0 01-8.2-3.8A8.4 8.4 0 012 11a8 8 0 018-8 8 8 0 018 8z\"/><path d=\"M2 11l7 3\"/>", "note": "One button. Higher score, more NovaCoins."}];
 
 const tabs = document.getElementById('tabs');
 const frames = document.getElementById('frames');
 
+const ind = document.getElementById('tabInd');
+const meta = document.getElementById('tabMeta');
+
 TABS.forEach((t, i) => {
   const b = document.createElement('button');
-  b.textContent = t.label;
   b.type = 'button';
   b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', 'false');
+  /* Roving tabindex: one stop for the whole group, then arrow keys inside it.
+     Making every tab tabbable is what turns a two-tab nav into two extra tab
+     stops on the way to the content. */
+  b.tabIndex = -1;
   b.dataset.k = t.key;
+  b.innerHTML = (t.icon ? '<svg viewBox="0 0 24 24">' + t.icon + '</svg>' : '') +
+    '<span>' + t.label + '</span>';
   tabs.appendChild(b);
 
   const f = document.createElement('iframe');
@@ -90,13 +129,41 @@ TABS.forEach((t, i) => {
   frames.appendChild(f);
 });
 
+/* The indicator is positioned from the real button box rather than from an
+   index times a guessed width — the labels are translated, so their widths are
+   not knowable in advance. */
+function moveIndicator(btn) {
+  if (!btn || !ind) return;
+  ind.style.width = btn.offsetWidth + 'px';
+  ind.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
+}
+
 function show(key) {
   const t = TABS.find(x => x.key === key) || TABS[0];
-  tabs.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.k === t.key));
+  let current = null;
+  tabs.querySelectorAll('button').forEach(b => {
+    const on = b.dataset.k === t.key;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.tabIndex = on ? 0 : -1;
+    if (on) current = b;
+  });
+  moveIndicator(current);
+
   frames.querySelectorAll('iframe').forEach(f => {
     const on = f.dataset.k === t.key;
     f.classList.toggle('on', on);
-    if (on && !f.src && f.dataset.src) f.src = f.dataset.src;
+    if (on && !f.src && f.dataset.src) {
+      /* First open of this tab: say it is coming rather than showing a blank
+         panel while a whole page boots inside the frame. */
+      if (meta) meta.innerHTML = '<span class="tabspin"></span>Loading ' + t.label + '…';
+      f.addEventListener('load', function () {
+        if (meta && f.classList.contains('on')) meta.innerHTML = t.note || '';
+      }, { once: true });
+      f.src = f.dataset.src;
+    } else if (on && meta) {
+      meta.innerHTML = t.note || '';
+    }
   });
   if (location.hash.slice(1) !== t.key) history.replaceState(null, '', '#' + t.key);
   document.title = t.label + ' — NovaClip';
@@ -106,6 +173,26 @@ tabs.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (b) show(b.dataset.k);
 });
+
+/* Arrow keys move between tabs, which is what a role="tablist" promises a
+   screen reader it will do. */
+tabs.addEventListener('keydown', e => {
+  const keys = { ArrowRight: 1, ArrowLeft: -1, Home: 'first', End: 'last' };
+  if (!(e.key in keys)) return;
+  e.preventDefault();
+  const btns = [...tabs.querySelectorAll('button')];
+  const i = btns.findIndex(b => b.classList.contains('on'));
+  let next;
+  if (keys[e.key] === 'first') next = 0;
+  else if (keys[e.key] === 'last') next = btns.length - 1;
+  else next = (i + keys[e.key] + btns.length) % btns.length;
+  show(btns[next].dataset.k);
+  btns[next].focus();
+});
+
+/* The rail resizes with the viewport, so the button the indicator sits on
+   moves. Without this it detaches on the first resize. */
+addEventListener('resize', () => moveIndicator(tabs.querySelector('button.on')));
 window.addEventListener('hashchange', () => show(location.hash.slice(1)));
 show(location.hash.slice(1) || TABS[0].key);
 </script>

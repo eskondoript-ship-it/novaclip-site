@@ -39,7 +39,12 @@ body{background:var(--ink);color:var(--txt);
 
 /* ---- app frame: bar on top, tool rail left, dock right, stage in the middle ---- */
 .shell{position:fixed;left:var(--nc-rail,200px);right:0;top:0;bottom:0;
-  display:grid;grid-template-rows:auto 1fr;min-width:0}
+  display:grid;grid-template-rows:auto 1fr;min-width:0;
+  /* nova.js sets `.content,.shell,.main{margin-left:var(--nc-rail)}` for the
+     ordinary flow layout. This shell is position:fixed and already offset by
+     `left`, so that margin applied the rail width a SECOND time and left a
+     rail-wide empty column between the sidebar and the toolbar. */
+  margin-left:0 !important}
 .bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);
   background:var(--panel);flex-wrap:wrap;
   /* nova.js pins the coin badge at top:16px right:16px with z-index 997, and it
@@ -48,7 +53,12 @@ body{background:var(--ink);color:var(--txt);
      every other page positions the same way. */
   padding-right:112px}
 .bar .name{font-weight:800;letter-spacing:-.02em;font-size:1.05rem}
-.bar .sp{flex:1}
+.bar .sp{flex:1;min-width:390px}
+/* jarvis.js pins its pill at `position:fixed;top:14px;left:50%` — the middle of
+   the viewport, over this bar. The spacer above reserves that middle so the
+   toolbar buttons sit either side of it instead of underneath it. Below the
+   wrap point the bar goes multi-row and the reservation stops mattering. */
+@media (max-width:900px){.bar .sp{min-width:0}}
 .pill{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:20px;
   background:rgba(0,240,255,.12);color:var(--cyan);font-weight:700}
 .pill.warn{background:rgba(255,180,67,.14);color:var(--amber)}
