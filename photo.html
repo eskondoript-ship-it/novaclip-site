@@ -128,6 +128,11 @@ button.danger:hover{border-color:var(--pink);color:var(--pink)}
   background-image:linear-gradient(45deg,#1a2233 25%,transparent 25%,transparent 75%,#1a2233 75%),
   linear-gradient(45deg,#1a2233 25%,#0e1420 25%,#0e1420 75%,#1a2233 75%);
   background-size:10px 10px;background-position:0 0,5px 5px}
+.layer .mask{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);flex:none;
+  background:var(--panel2);color:var(--dim);display:grid;place-items:center;padding:0}
+.layer .mask svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.layer .mask.on{color:var(--cyan);border-color:var(--cyan);background:rgba(0,240,255,.14)}
 .layer .meta{min-width:0;flex:1}
 .layer .meta b{display:block;font-size:.82rem;font-weight:600;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
@@ -227,6 +232,12 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
 
      doc     { w, h, layers[], active }
      layer   { id, name, canvas, visible, opacity, blend, adj{}, locked }
+     mask    a layer may carry one — a same-size canvas whose alpha multiplies
+             the layer's transparency at composite time. White reveals, black
+             hides, grey feathers. Painting on a mask never touches the pixels,
+             so it is as reversible as an adjustment; exports, thumbnails and
+             the histogram pick it up automatically because they all read the
+             same composite.
 
    Layers hold raw pixels. Adjustments are stored on the layer, not baked in,
    and applied when the layer is composited — so a slider can be moved back
@@ -238,6 +249,11 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
    Filters (sharpen, blur, pixelate…) ARE destructive — they write to the
    layer's pixels. That is the honest split: a slider you can take back, a
    filter you apply on purpose and can undo through history.
+
+   Masks follow the adjustment rule, not the filter rule: the brush normally
+   paints pixels, but with a layer's mask armed it paints the mask instead —
+   white reveals, erasing hides, and the mask multiplies the layer's alpha at
+   composite time. Nothing is destroyed until the mask is baked.
    ---------------------------------------------------------------------------- */
 (function () {
   'use strict';
@@ -267,12 +283,19 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     return c;
   }
 
+  function cloneCanvas(src) {
+    var c = makeCanvas(src.width, src.height);
+    c.getContext('2d').drawImage(src, 0, 0);
+    return c;
+  }
+
   function newLayer(name, w, h) {
     return {
       id: nextId++, name: name || ('Layer ' + nextId),
       canvas: makeCanvas(w || doc.w, h || doc.h),
       visible: true, opacity: 1, blend: 'source-over', locked: false,
       adj: Object.assign({}, DEFAULT_ADJ),
+      mask: null, maskOn: true, maskCache: null,
       cache: null, dirty: true
     };
   }
@@ -385,7 +408,24 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     l.cache = c; l.dirty = false;
     return c;
   }
-  function touch(l) { l.dirty = true; l.cache = null; }
+  function touch(l) { l.dirty = true; l.cache = null; l.maskCache = null; }
+
+  /* A layer's effective pixels: adjustments applied, then the mask multiplied
+     in by using the mask's alpha to knock the surface's alpha down. Masks and
+     adjustments both live outside the pixels, and both cache, so masking a
+     layer costs one extra compositing step and nothing else. */
+  function maskedSurface(l) {
+    if (!l.mask || !l.maskOn) return layerSurface(l);
+    if (!l.dirty && l.maskCache) return l.maskCache;
+    var s = layerSurface(l);
+    var c = makeCanvas(s.width, s.height);
+    var cx = c.getContext('2d');
+    cx.drawImage(s, 0, 0);
+    cx.globalCompositeOperation = 'destination-in';
+    cx.drawImage(l.mask, 0, 0);
+    l.maskCache = c;
+    return c;
+  }
 
   /* ==========================================================================
      COMPOSITE
@@ -400,7 +440,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
       if (!l.visible || l.opacity <= 0) continue;
       fctx.globalAlpha = l.opacity;
       fctx.globalCompositeOperation = l.blend;
-      fctx.drawImage(layerSurface(l), 0, 0);
+      fctx.drawImage(maskedSurface(l), 0, 0);
     }
     fctx.globalAlpha = 1;
     fctx.globalCompositeOperation = 'source-over';
@@ -484,7 +524,9 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
         c.getContext('2d').drawImage(l.canvas, 0, 0);
         return { id: l.id, name: l.name, canvas: c, visible: l.visible,
           opacity: l.opacity, blend: l.blend, locked: l.locked,
-          adj: Object.assign({}, l.adj), cache: null, dirty: true };
+          adj: Object.assign({}, l.adj),
+          mask: l.mask ? cloneCanvas(l.mask) : null, maskOn: l.maskOn,
+          cache: null, maskCache: null, dirty: true };
       })
     };
   }
@@ -503,7 +545,8 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     doc.layers = s.layers.map(function (l) {
       var c = makeCanvas(l.canvas.width, l.canvas.height);
       c.getContext('2d').drawImage(l.canvas, 0, 0);
-      return Object.assign({}, l, { canvas: c, cache: null, dirty: true });
+      var m = l.mask ? cloneCanvas(l.mask) : null;
+      return Object.assign({}, l, { canvas: c, mask: m, cache: null, maskCache: null, dirty: true });
     });
     render(); paintDock(); syncBar();
   }
@@ -552,6 +595,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
         doc.layers.push(bg); doc.active = 0;
         undoStack.length = 0; redoStack.length = 0;
         sel = null;
+        maskTarget = null;
         loaded = true;
         $('empty').style.display = 'none';
         $('wrap').style.display = '';
@@ -626,6 +670,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
      POINTER — every tool routes through here
      ========================================================================== */
   var drag = null, cropBox = null, shapePreview = null, cloneSrc = null;
+  var maskTarget = null;               // layer id whose mask the brush paints
   var brush = { size: 24, color: '#FF2E97', opacity: 1, hardness: .7 };
   var shapeOpt = { kind: 'rect', fill: '#00F0FF', stroke: '#FFFFFF', width: 3, filled: true };
   var textOpt = { value: 'Nova', size: 72, color: '#FFFFFF', font: 'Geist, Inter, sans-serif',
@@ -654,7 +699,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     if (tool === 'shape') { push(); drag = { mode: 'shape', x0: p.x, y0: p.y }; return; }
     if (tool === 'text') { push(); stampText(p); render(); return; }
     if (tool === 'fill') { push(); bucket(p); render(); return; }
-    if (tool === 'move') { push(); drag = { mode: 'move', x0: p.x, y0: p.y, snap: snapLayer(l) }; return; }
+    if (tool === 'move') { push(); drag = { mode: 'move', x0: p.x, y0: p.y, snap: snapLayer(l), mask: snapMask(l) }; return; }
     if (tool === 'clone') {
       if (e.altKey || !cloneSrc) { cloneSrc = { x: p.x, y: p.y }; toast('Clone source set'); return; }
       push();
@@ -696,6 +741,11 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
       var cx = ctxOf(l);
       cx.clearRect(0, 0, doc.w, doc.h);
       cx.drawImage(drag.snap, p.x - drag.x0, p.y - drag.y0);
+      if (l.mask && drag.mask) {
+        var mx = l.mask.getContext('2d');
+        mx.clearRect(0, 0, doc.w, doc.h);
+        mx.drawImage(drag.mask, p.x - drag.x0, p.y - drag.y0);
+      }
       touch(l); render();
       return;
     }
@@ -718,27 +768,41 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     c.getContext('2d').drawImage(l.canvas, 0, 0);
     return c;
   }
+  function snapMask(l) {
+    if (!l.mask) return null;
+    return cloneCanvas(l.mask);
+  }
 
   /* ---- brush / eraser ---- */
   function strokeTo(a, b) {
     var l = active(); if (!l) return;
-    var cx = ctxOf(l);
+    var onMask = maskTarget === l.id && l.mask;
+    var cx = onMask ? l.mask.getContext('2d', { willReadFrequently: true }) : ctxOf(l);
     cx.save();
     clipToSelection(cx);
-    cx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
-    cx.globalAlpha = brush.opacity;
+    if (onMask) {
+      /* painting the mask: a brush lifts its alpha (white reveals), the eraser
+         sinks it. Only the alpha channel matters — 'lighter' adds, so overlap
+         builds towards fully visible, and 'destination-out' subtracts it back. */
+      cx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'lighter';
+      cx.globalAlpha = brush.opacity;
+    } else {
+      cx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
+      cx.globalAlpha = brush.opacity;
+    }
     cx.lineWidth = brush.size;
     cx.lineCap = 'round'; cx.lineJoin = 'round';
 
+    var colour = onMask ? '#FFFFFF' : brush.color;
     if (brush.hardness >= .99 || tool === 'eraser') {
-      cx.strokeStyle = brush.color;
+      cx.strokeStyle = colour;
     } else {
       /* a soft brush is a radial gradient stamped along the path; a plain
          stroke with low alpha builds up banding instead of feathering */
       var g = cx.createRadialGradient(b.x, b.y, 0, b.x, b.y, Math.max(1, brush.size / 2));
-      g.addColorStop(0, brush.color);
-      g.addColorStop(Math.max(0, brush.hardness), brush.color);
-      g.addColorStop(1, hexA(brush.color, 0));
+      g.addColorStop(0, colour);
+      g.addColorStop(Math.max(0, brush.hardness), colour);
+      g.addColorStop(1, hexA(colour, 0));
       cx.strokeStyle = g;
     }
     cx.beginPath();
@@ -778,6 +842,17 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
   /* ---- bucket fill: flood by colour distance ---- */
   function bucket(p) {
     var l = active(); if (!l || l.locked) return;
+    if (maskTarget === l.id && l.mask) {
+      /* armed mask: fill reveals it across the region instead of flood-filling */
+      var mc = l.mask.getContext('2d');
+      mc.save();
+      clipToSelection(mc);
+      mc.fillStyle = '#FFFFFF';
+      mc.fillRect(0, 0, doc.w, doc.h);
+      mc.restore();
+      touch(l);
+      return;
+    }
     var cx = ctxOf(l);
     var img = cx.getImageData(0, 0, doc.w, doc.h);
     var d = img.data, W = doc.w, H = doc.h;
@@ -995,7 +1070,15 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
       cx.translate(nw / 2, nh / 2);
       cx.rotate(deg * Math.PI / 180);
       cx.drawImage(l.canvas, -doc.w / 2, -doc.h / 2);
-      l.canvas = c; touch(l);
+      l.canvas = c;
+      if (l.mask) {
+        var mc = makeCanvas(nw, nh), mx = mc.getContext('2d');
+        mx.translate(nw / 2, nh / 2);
+        mx.rotate(deg * Math.PI / 180);
+        mx.drawImage(l.mask, -doc.w / 2, -doc.h / 2);
+        l.mask = mc;
+      }
+      touch(l);
     });
     doc.w = nw; doc.h = nh;
     sel = null; fitZoom(); render(); syncBar();
@@ -1008,7 +1091,15 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
       cx.translate(axis === 'x' ? doc.w : 0, axis === 'y' ? doc.h : 0);
       cx.scale(axis === 'x' ? -1 : 1, axis === 'y' ? -1 : 1);
       cx.drawImage(l.canvas, 0, 0);
-      l.canvas = c; touch(l);
+      l.canvas = c;
+      if (l.mask) {
+        var mc = makeCanvas(doc.w, doc.h), mx = mc.getContext('2d');
+        mx.translate(axis === 'x' ? doc.w : 0, axis === 'y' ? doc.h : 0);
+        mx.scale(axis === 'x' ? -1 : 1, axis === 'y' ? -1 : 1);
+        mx.drawImage(l.mask, 0, 0);
+        l.mask = mc;
+      }
+      touch(l);
     });
     render();
   }
@@ -1020,7 +1111,13 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     doc.layers.forEach(function (l) {
       var c = makeCanvas(b.w, b.h);
       c.getContext('2d').drawImage(l.canvas, -b.x, -b.y);
-      l.canvas = c; touch(l);
+      l.canvas = c;
+      if (l.mask) {
+        var mc = makeCanvas(b.w, b.h);
+        mc.getContext('2d').drawImage(l.mask, -b.x, -b.y);
+        l.mask = mc;
+      }
+      touch(l);
     });
     doc.w = b.w; doc.h = b.h;
     cropBox = null; sel = null;
@@ -1033,7 +1130,13 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     doc.layers.forEach(function (l) {
       var c = makeCanvas(w, h);
       c.getContext('2d').drawImage(l.canvas, 0, 0, w, h);
-      l.canvas = c; touch(l);
+      l.canvas = c;
+      if (l.mask) {
+        var mc = makeCanvas(w, h);
+        mc.getContext('2d').drawImage(l.mask, 0, 0, w, h);
+        l.mask = mc;
+      }
+      touch(l);
     });
     doc.w = w; doc.h = h; sel = null;
     fitZoom(); render(); syncBar();
@@ -1054,6 +1157,8 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     var c = newLayer(l.name + ' copy');
     c.canvas.getContext('2d').drawImage(l.canvas, 0, 0);
     c.opacity = l.opacity; c.blend = l.blend; c.adj = Object.assign({}, l.adj);
+    c.maskOn = l.maskOn;
+    if (l.mask) c.mask = cloneCanvas(l.mask);
     doc.layers.splice(doc.active + 1, 0, c);
     doc.active++;
     render(); paintDock();
@@ -1081,7 +1186,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     cx.save();
     cx.globalAlpha = top.opacity;
     cx.globalCompositeOperation = top.blend;
-    cx.drawImage(layerSurface(top), 0, 0);
+    cx.drawImage(maskedSurface(top), 0, 0);
     cx.restore();
     touch(bot);
     doc.layers.splice(doc.active, 1);
@@ -1219,6 +1324,9 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
                    : '<path d="M17.9 17.9A10.7 10.7 0 0112 20C5 20 1 12 1 12a19 19 0 015.1-5.9M9.9 4.2A10.9 10.9 0 0112 4c7 0 11 8 11 8a19 19 0 01-2.2 3.2M1 1l22 22"/>') +
         '</svg></button>' +
         '<span class="thumb" data-thumb="' + i + '"></span>' +
+        (l.mask ? '<button class="mask' + (maskTarget === l.id ? ' on' : '') + '" data-mask="' + i +
+          '" type="button" title="Layer mask — click to arm it, then paint it with the brush">' +
+          '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M4.6 4.6l14.8 14.8"/></svg></button>' : '') +
         '<span class="meta"><b>' + esc(l.name) + '</b><span>' +
         Math.round(l.opacity * 100) + '% · ' + (BLEND_LABEL[l.blend] || l.blend) +
         (isNeutral(l.adj) ? '' : ' · adjusted') + '</span></span>' +
@@ -1227,7 +1335,8 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
 
     box.querySelectorAll('.layer').forEach(function (el) {
       el.onclick = function (e) {
-        if (e.target.closest('[data-eye]')) return;
+        if (e.target.closest('[data-eye]') || e.target.closest('[data-mask]')) return;
+        maskTarget = null;
         doc.active = +el.dataset.i; paintDock(); render();
       };
     });
@@ -1238,13 +1347,23 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
         l.visible = !l.visible; render();
       };
     });
-    /* thumbnails: drawn small, and only when the list is repainted */
+    box.querySelectorAll('[data-mask]').forEach(function (b) {
+      b.onclick = function (e) {
+        e.stopPropagation();
+        var l = doc.layers[+b.dataset.mask];
+        maskTarget = maskTarget === l.id ? null : l.id;
+        doc.active = +b.dataset.mask;
+        paintDock(); render();
+      };
+    });
+    /* thumbnails: drawn small, and only when the list is repainted. They show
+       the mask, because a thumbnail that lies is worse than none. */
     box.querySelectorAll('[data-thumb]').forEach(function (el) {
       var l = doc.layers[+el.dataset.thumb];
       var t = makeCanvas(34, 34);
       var s = Math.min(34 / doc.w, 34 / doc.h);
       var tc = t.getContext('2d');
-      tc.drawImage(l.canvas, (34 - doc.w * s) / 2, (34 - doc.h * s) / 2, doc.w * s, doc.h * s);
+      tc.drawImage(maskedSurface(l), (34 - doc.w * s) / 2, (34 - doc.h * s) / 2, doc.w * s, doc.h * s);
       el.style.backgroundImage = 'url(' + t.toDataURL() + ')';
     });
   }
@@ -1288,6 +1407,28 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
             (BLEND_LABEL[b] || b.replace(/-/g, ' ')) + '</option>';
         }).join('') + '</select>' +
         '<label class="f">Name</label><input type="text" id="lName" value="' + esc(l.name) + '">';
+
+      if (l.mask) {
+        html += '<label class="f">Mask' + (l.maskOn ? '' : ' <span style="opacity:.5">(off)</span>') + '</label>' +
+          '<div class="grid2">' +
+          '<button id="mOn" type="button">' + (l.maskOn ? 'Disable' : 'Enable') + '</button>' +
+          '<button id="mPaint" class="' + (maskTarget === l.id ? 'prim' : '') + '" type="button">' +
+          (maskTarget === l.id ? 'Painting mask' : 'Paint on mask') + '</button>' +
+          '<button id="mReveal" type="button">Reveal all</button>' +
+          '<button id="mHide" type="button">Hide all</button>' +
+          '<button id="mInvert" type="button">Invert</button>' +
+          '<button id="mBake" type="button">Bake</button>' +
+          '<button id="mDel" class="danger" type="button">Delete</button>' +
+          '<span></span></div>' +
+          '<p class="hint">While armed, the brush lifts the mask (revealing the layer) and the eraser sinks it — ' +
+          'hardness feathers the edge. The mask multiplies the layer\'s transparency without touching its pixels.</p>';
+      } else {
+        html += '<label class="f">Mask</label><div class="grid2">' +
+          '<button id="mAddR" type="button">Add reveal mask</button>' +
+          '<button id="mAddH" type="button">Add hide mask</button></div>' +
+          '<p class="hint">A mask is a second canvas of the same size. White in it shows the layer, black hides it, ' +
+          'grey feathers. It never touches the pixels underneath.</p>';
+      }
     }
     html += '</div></div>';
 
@@ -1318,6 +1459,10 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
       }
       if (tool === 'clone') {
         html += '<p class="hint"><kbd>Alt</kbd>-click sets the source point, then drag to paint from it. It samples the flattened image, so it can clone across layers.</p>';
+      }
+      if (l && maskTarget === l.id && l.mask) {
+        html += '<p class="hint" style="color:var(--cyan)">This layer\'s mask is armed — the brush reveals it, ' +
+          'the eraser hides it. Click the layer row to paint its pixels again.</p>';
       }
       html += '</div></div>';
     }
@@ -1425,6 +1570,75 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     on('lOpacity', 'onchange', push);
     on('lBlend', 'onchange', function () { push(); l.blend = this.value; render(); paintLayers(); });
     on('lName', 'onchange', function () { l.name = this.value.slice(0, 40) || l.name; paintLayers(); });
+
+    /* ---- layer mask ---- */
+    on('mAddR', 'onclick', function () {
+      if (!l) return;
+      push();
+      l.mask = makeCanvas(doc.w, doc.h);
+      var mx = l.mask.getContext('2d');
+      mx.fillStyle = '#FFFFFF'; mx.fillRect(0, 0, doc.w, doc.h);
+      l.maskOn = true;
+      touch(l); render(); paintDock();
+    });
+    on('mAddH', 'onclick', function () {
+      if (!l) return;
+      push();
+      l.mask = makeCanvas(doc.w, doc.h);
+      var mx = l.mask.getContext('2d');
+      mx.clearRect(0, 0, doc.w, doc.h);
+      l.maskOn = true;
+      touch(l); render(); paintDock();
+    });
+    on('mReveal', 'onclick', function () {
+      if (!l || !l.mask) return;
+      push();
+      var mx = l.mask.getContext('2d');
+      mx.fillStyle = '#FFFFFF'; mx.fillRect(0, 0, doc.w, doc.h);
+      touch(l); render(); paintDock();
+    });
+    on('mHide', 'onclick', function () {
+      if (!l || !l.mask) return;
+      push();
+      l.mask.getContext('2d').clearRect(0, 0, doc.w, doc.h);
+      touch(l); render(); paintDock();
+    });
+    on('mInvert', 'onclick', function () {
+      if (!l || !l.mask) return;
+      push();
+      var mx = l.mask.getContext('2d', { willReadFrequently: true });
+      var img = mx.getImageData(0, 0, doc.w, doc.h), d = img.data;
+      for (var i = 3; i < d.length; i += 4) d[i] = 255 - d[i];
+      mx.putImageData(img, 0, 0);
+      touch(l); render(); paintDock();
+    });
+    on('mOn', 'onclick', function () {
+      if (!l || !l.mask) return;
+      push(); l.maskOn = !l.maskOn; render(); paintDock();
+    });
+    on('mPaint', 'onclick', function () {
+      if (!l || !l.mask) return;
+      maskTarget = maskTarget === l.id ? null : l.id;
+      paintDock();
+    });
+    on('mBake', 'onclick', function () {
+      if (!l || !l.mask) return;
+      push();
+      var s = maskedSurface(l);
+      var cx = ctxOf(l);
+      cx.clearRect(0, 0, doc.w, doc.h);
+      cx.drawImage(s, 0, 0);
+      l.mask = null; l.maskOn = true;
+      if (maskTarget === l.id) maskTarget = null;
+      touch(l); render(); paintDock();
+    });
+    on('mDel', 'onclick', function () {
+      if (!l || !l.mask) return;
+      push();
+      l.mask = null; l.maskOn = true;
+      if (maskTarget === l.id) maskTarget = null;
+      touch(l); render(); paintDock();
+    });
 
     /* adjustments: live while dragging, one history entry when released */
     $('dock').querySelectorAll('[data-adj]').forEach(function (r) {
