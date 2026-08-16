@@ -71,7 +71,7 @@
    REQUEST SHAPE (what ncAsk sends)
      POST /
      { "provider": "gemini",                 // gemini | openrouter | openai
-       "model": "gemini-2.5-flash",
+        "model": "gemini-3.6-flash",
        "search": true,                       // OPTIONAL — ground the answer in a live
                                              // Google Search. Gemini-only, no key of
                                              // its own: the tool is part of the API.
@@ -97,9 +97,9 @@ const OPENAI = 'https://api.openai.com/v1/chat/completions';
    someone can point your key at the most expensive thing a vendor sells. */
 const ALLOWED_MODELS = {
   gemini: [
-    'gemini-2.5-flash',
+    'gemini-3.6-flash',
     'gemini-2.5-flash-lite',
-    'gemini-2.0-flash',
+    'gemini-3.1-flash-lite',
     'gemini-2.5-flash-image'
   ],
   openrouter: [
@@ -124,7 +124,7 @@ const SECRET = {
 };
 
 const DEFAULT_MODEL = {
-  gemini: 'gemini-2.5-flash',
+  gemini: 'gemini-3.6-flash',
   openrouter: 'openai/gpt-4o-mini',
   openai: 'gpt-4o-mini'
 };
@@ -280,7 +280,7 @@ export default {
        is echoed — only the upstream status and the vendor's own words. */
     if (url.pathname === '/health' && url.searchParams.get('probe') === '1') {
       if (!env.GEMINI_API_KEY) return json({ probe: 'gemini', ok: false, reason: 'GEMINI_API_KEY is not set.' });
-      const model = 'gemini-2.5-flash';
+      const model = 'gemini-3.6-flash';
       let r, body = '';
       try {
         r = await fetch(GOOGLE + model + ':generateContent', {

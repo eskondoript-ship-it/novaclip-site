@@ -2302,7 +2302,7 @@ function ncActiveProvider() {
 function ncDefaultModel(provider) {
   if (provider === 'openrouter') return 'openai/gpt-4o-mini';
   if (provider === 'openai') return 'gpt-4o-mini';
-  return 'gemini-2.5-flash';
+  return 'gemini-3.6-flash';
 }
 
 function ncAIKey()     { try { return localStorage.getItem('nc_ai_key') || ''; } catch (e) { return ''; } }
