@@ -175,18 +175,38 @@
      ========================================================================== */
   var localDots = null, localKey = '';
 
+  /* How wide the view is, in kilometres across the ground. Everything that has
+     to change with depth keys off this rather than off the zoom number, because
+     a distance is the thing a person can picture. */
+  var EARTH_KM = 6371;
+  function viewSpanDeg() { return Math.asin(Math.min(1, 1 / Math.max(1, zoom))) * 180 / Math.PI; }
+  function viewKm() { return viewSpanDeg() * Math.PI / 180 * EARTH_KM; }
+
+  /* The dot layer fades out as the view gets closer than the data is good for.
+     Full strength above 120km of view radius, gone below 40km. */
+  function dotAlpha() {
+    var km = viewKm();
+    if (km >= 120) return 1;
+    if (km <= 40) return 0;
+    return (km - 40) / 80;
+  }
+
   function ensureLocalDots() {
     /* Kept while zooming out, not dropped the instant the pointer leaves. The
        focus clears immediately but the zoom takes a couple of seconds to come
        back, and swapping to the 220km grid at zoom 5 empties the land out
        halfway through the animation. */
-    if (zoom < 1.6) {
+    if (zoom < 1.6 || dotAlpha() <= 0) {
       if (localDots) { localDots = null; localKey = ''; }
       return;
     }
     if (focusLat == null) return;
-    /* Bucketed so a smooth zoom rebuilds a handful of times, not every frame. */
-    var bucket = Math.max(1, Math.round(zoom * 2) / 2);
+    /* Bucketed so a smooth zoom rebuilds a handful of times, not every frame —
+       and bucketed on a LOG scale, because half-unit steps are a rebuild per
+       frame once the zoom is in the hundreds. Half an octave means about a
+       dozen rebuilds across the whole run in, whatever the depth. */
+    var oct = Math.round(Math.log(Math.max(1, zoom)) / Math.LN2 * 2) / 2;
+    var bucket = Math.max(1, Math.pow(2, oct));
     var key = focusLat.toFixed(2) + ',' + focusLon.toFixed(2) + '@' + bucket;
     if (key === localKey) return;
     localKey = key;
@@ -237,13 +257,22 @@
      obvious alternative and it is wrong: the disc then grows rightwards and
      carries its own centre off the side of the screen, taking the visitor's
      red dot — the entire point of the zoom — with it. */
-  /* How far the porthole leans in. 1.28 was all the room there was back when
-     zooming grew the disc itself and it had to stop before it reached the
-     headline. Clipped to a fixed circle, nothing is in its way, so this is now
-     a question of how close is useful rather than how close is safe: 9 puts
-     roughly a 150km-wide patch in the hole, which is a town and its
-     surroundings — the scale of the map this was asked to match. */
-  var ZOOM_MAX = 9;
+  /* How far the porthole leans in.
+
+     9 was too timid — it put 600km rings on screen against a reference that
+     was a street map, which is not "zoomed in" by any reading. 2000 puts a
+     patch about six kilometres across in the hole: a neighbourhood, which is
+     the scale that was actually asked for.
+
+     What makes that honest is that the land dots get OUT OF THE WAY on the way
+     down. They are tested against coastlines traced at about a degree, so
+     below roughly 40km across they stop carrying information and start
+     inventing it — a solid slab of cyan that looks like terrain and is really
+     just "somewhere inside Portugal". Past that the view becomes what it can
+     truthfully be: a position fix. Graticule, range rings in real distance, a
+     crosshair, the coordinates and the place name. That is meaningful at one
+     kilometre or at one hundred, because none of it claims to be a map. */
+  var ZOOM_MAX = 2000;
   var baseR = 0, baseCx = 0;
 
   /* The right-hand edge of the actual ink in the hero.
@@ -389,25 +418,55 @@
     /* Graticule spacing follows the zoom. Thirty-degree lines are right for a
        whole planet and meaningless once the view is six degrees wide, where
        the nearest line would be off the edge. */
-    var span = Math.asin(Math.min(1, VR / R)) * 180 / Math.PI;   // visible half-angle
-    var gstep = span > 40 ? 30 : span > 12 ? 10 : span > 4 ? 2 : span > 1.2 ? 0.5 : 0.1;
-    var arc = Math.min(4, gstep / 4);
-    ctx.strokeStyle = 'rgba(0,240,255,0.07)';
+    var span = viewSpanDeg();                                    // visible half-angle
+    var gstep = span > 40 ? 30 : span > 12 ? 10 : span > 4 ? 2 : span > 1.2 ? 0.5
+      : span > 0.4 ? 0.2 : span > 0.15 ? 0.05 : span > 0.06 ? 0.02 : 0.01;
+    /* ONLY THE WINDOW IN VIEW.
+       Drawing the whole sphere's grid at the fine spacing is not slow, it is
+       impossible: at a hundredth of a degree that is 16,000 lines of 144,000
+       points each, and the first attempt hung the tab hard enough to time out
+       the test. The lines that matter are the ones crossing the porthole, so
+       the loops are clamped to the patch around the focus and each line is
+       sampled across that patch rather than right around the planet. */
+    var laMin = -80, laMax = 80, loMin = -180, loMax = 180;
+    if (focusLat != null && span < 40) {
+      var pad = span * 1.4;
+      laMin = Math.max(-89, focusLat - pad);
+      laMax = Math.min(89, focusLat + pad);
+      var kk = Math.max(0.02, Math.cos(focusLat * Math.PI / 180));
+      var lpad = Math.min(180, pad / kk);
+      loMin = focusLon - lpad;
+      loMax = focusLon + lpad;
+    }
+    /* Snap to the grid so the lines are at round coordinates, not offset by
+       wherever the visitor happens to live. */
+    laMin = Math.ceil(laMin / gstep) * gstep;
+    loMin = Math.ceil(loMin / gstep) * gstep;
+    /* A fixed sample count per line: enough to be smooth, bounded whatever the
+       zoom does. */
+    var latArc = Math.max((loMax - loMin) / 90, 0.0001);
+    var lonArc = Math.max((laMax - laMin) / 90, 0.0001);
+
+    /* The grid carries the whole picture once the dots have gone, so it comes
+       up as they fade. At 0.07 over a whole planet it is a hint behind the
+       land; at that strength over an empty close-up it is nothing at all. */
+    var gAlpha = 0.07 + (1 - dotAlpha()) * 0.11;
+    ctx.strokeStyle = 'rgba(0,240,255,' + gAlpha.toFixed(3) + ')';
     ctx.lineWidth = 1;
-    for (var la = -80; la <= 80; la += gstep) {
+    for (var la = laMin, gi = 0; la <= laMax && gi < 200; la += gstep, gi++) {
       ctx.beginPath();
       var started = false;
-      for (var lo = -180; lo <= 180; lo += arc) {
+      for (var lo = loMin; lo <= loMax; lo += latArc) {
         var p = project(la, lo);
         if (!p.visible) { started = false; continue; }
         started ? ctx.lineTo(p.x, p.y) : (ctx.moveTo(p.x, p.y), started = true);
       }
       ctx.stroke();
     }
-    for (var lo2 = -180; lo2 < 180; lo2 += gstep) {
+    for (var lo2 = loMin, gj = 0; lo2 <= loMax && gj < 200; lo2 += gstep, gj++) {
       ctx.beginPath();
       var st2 = false;
-      for (var la2 = -90; la2 <= 90; la2 += arc) {
+      for (var la2 = laMin; la2 <= laMax; la2 += lonArc) {
         var q = project(la2, lo2);
         if (!q.visible) { st2 = false; continue; }
         st2 ? ctx.lineTo(q.x, q.y) : (ctx.moveTo(q.x, q.y), st2 = true);
@@ -422,7 +481,8 @@
     var pts = localDots || DOTS;
     var ct = Math.cos(tilt), stt = Math.sin(tilt), cs = Math.cos(spin), ss = Math.sin(spin);
     var dotScale = localDots ? VR * 0.010 : R * 0.006;
-    for (var i = 0; i < pts.length; i++) {
+    var fade = dotAlpha();
+    for (var i = 0; fade > 0 && i < pts.length; i++) {
       var d = pts[i];
       /* rotate about the pole, then lean */
       var x = d[0] * cs + d[2] * ss;
@@ -445,7 +505,7 @@
         var n = (d[0] * 12.9898 + d[1] * 78.233 + d[2] * 37.719) * 43758.5453;
         a *= 0.55 + 0.45 * Math.abs(n - Math.floor(n));
       }
-      ctx.fillStyle = 'rgba(64,226,255,' + a.toFixed(3) + ')';
+      ctx.fillStyle = 'rgba(64,226,255,' + (a * fade).toFixed(3) + ')';
       var s = Math.max(0.7, dotScale * (0.55 + z * 0.65));
       ctx.fillRect(sx - s / 2, sy - s / 2, s, s);
     }
@@ -468,24 +528,44 @@
   /* Circles of true ground distance around the focus, labelled. The Earth's
      mean radius in km turns the sphere's angles into something a person can
      picture. */
-  var EARTH_KM = 6371;
+  /* Distances read in metres once kilometres stop being the useful unit —
+     "0.5km" is a worse label than "500m" on a view two kilometres across. */
+  function distLabel(km) {
+    if (km >= 1) return (km < 10 ? +km.toFixed(1) : Math.round(km)) + 'km';
+    return Math.round(km * 1000) + 'm';
+  }
+
   function drawRings(CX, CY, R, VR, span) {
     if (focusLat == null) return;
     var maxKm = span * Math.PI / 180 * EARTH_KM;
     /* one-two-five, so the labels are always round numbers */
     var step = Math.pow(10, Math.floor(Math.log(maxKm / 3) / Math.LN10));
     if (maxKm / step > 15) step *= 5; else if (maxKm / step > 6) step *= 2;
+    if (!(step > 0) || !isFinite(step)) return;
 
     ctx.strokeStyle = 'rgba(255,46,77,0.20)';
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.font = '9px ui-monospace,monospace';
     ctx.lineWidth = 1;
-    for (var km = step; km <= maxKm; km += step) {
+    for (var km = step, guard = 0; km <= maxKm && guard < 24; km += step, guard++) {
       var rad = km / EARTH_KM;              // angular distance
       var px = Math.sin(rad) * R;           // orthographic: sin of the angle
       if (px > VR) break;
       ctx.beginPath(); ctx.arc(CX, CY, px, 0, 7); ctx.stroke();
-      ctx.fillText((km < 1 ? km.toFixed(1) : Math.round(km)) + 'km', CX + 4, CY - px - 3);
+      ctx.fillText(distLabel(km), CX + 4, CY - px - 3);
+    }
+
+    /* A crosshair on the focus. Once the dots have faded there is nothing else
+       marking the middle, and a ring with no centre is just a circle. */
+    if (dotAlpha() < 0.6) {
+      var arm = Math.min(VR * 0.06, 22);
+      ctx.strokeStyle = 'rgba(255,46,77,0.45)';
+      ctx.beginPath();
+      ctx.moveTo(CX - arm, CY); ctx.lineTo(CX - arm * 0.3, CY);
+      ctx.moveTo(CX + arm * 0.3, CY); ctx.lineTo(CX + arm, CY);
+      ctx.moveTo(CX, CY - arm); ctx.lineTo(CX, CY - arm * 0.3);
+      ctx.moveTo(CX, CY + arm * 0.3); ctx.lineTo(CX, CY + arm);
+      ctx.stroke();
     }
   }
 
@@ -584,19 +664,44 @@
      ========================================================================== */
   var hoverTimer, lastKey = '', cache = new Map();
 
+  /* Naming the place is a nicety on top of the coordinates, so it is never
+     allowed to be the reason the box says nothing. It had no timeout: a
+     geocoder that is blocked, rate-limited or simply slow left a fetch pending
+     and the readout stuck on "Locating…" with no way out — which is exactly
+     what it did on the live site. Now it gives up after six seconds and the
+     coordinates stand on their own.
+
+     A failure is cached like any other answer. Retrying a dead endpoint every
+     time the pointer moves a tenth of a degree is a request storm nobody
+     benefits from. */
+  var GEO_TIMEOUT = 6000;
+
   function lookup(lat, lon, done) {
     var key = lat.toFixed(1) + ',' + lon.toFixed(1);
     if (cache.has(key)) { done(cache.get(key)); return; }
+
+    var settled = false;
+    function finish(text) {
+      if (settled) return;
+      settled = true;
+      cache.set(key, text);
+      done(text);
+    }
+    /* A plain timer rather than AbortController: the point is that the UI stops
+       waiting, and whether the socket is also torn down is the browser's
+       business. This works the same on the older mobile browsers the rest of
+       this file is written for. */
+    setTimeout(function () { finish(''); }, GEO_TIMEOUT);
+
     fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' +
       lat.toFixed(4) + '&longitude=' + lon.toFixed(4) + '&localityLanguage=en')
       .then(function (r) { return r.json(); })
       .then(function (j) {
         var city = j.city || j.locality || j.principalSubdivision || '';
         var country = j.countryName || '';
-        var text = country ? (city ? city + ', ' + country : country) : 'Open ocean';
-        cache.set(key, text); done(text);
+        finish(country ? (city ? city + ', ' + country : country) : 'Open ocean');
       })
-      .catch(function () { cache.set(key, ''); done(''); });
+      .catch(function () { finish(''); });
   }
 
   /* Where the pointer last was, in layer coordinates. Kept because the globe
