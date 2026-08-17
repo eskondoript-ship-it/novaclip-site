@@ -365,6 +365,128 @@ export default {
          inside the window. Do not remove it; the licence is the reason it is
          there, not decoration.
        ======================================================================== */
+    /* ========================================================================
+       /aerial — Google's pre-rendered flyover of an address, if one exists
+       ========================================================================
+       A cinematic orbit of a place, as an MP4. The globe plays it inside the
+       porthole when there is one, over the still imagery from /map.
+
+       THREE THINGS ABOUT THIS API THAT SHAPE THE CODE
+
+         It is keyed by ADDRESS, not by coordinate. There is no lookup by
+         lat/lon, so the caller has to pass a place name — which is why the
+         globe sends the one it already reverse-geocoded for the readout.
+
+         Coverage is narrow. Landmarks and major metros have rendered videos;
+         most residential streets do not, and the honest answer for those is a
+         404. That is reported as such rather than dressed up, because the page
+         has a still image to fall back to and needs to know to use it.
+
+         A video that has never been rendered is not rendered on demand here.
+         renderVideo is asynchronous and takes minutes, so calling it inside a
+         request that a hover is waiting on would just time out. Pass render=1
+         to start one in the background for the NEXT visitor; the reply says
+         PROCESSING and the page falls back today.
+
+       The response carries the signed MP4 URI, which the page then loads
+       directly from Google. Proxying video bytes through a Worker would put
+       every megabyte of every playthrough on your bill for no benefit — the
+       URI is already time-limited and carries no key of ours.
+       ======================================================================== */
+    if (url.pathname === '/aerial') {
+      if (!env.GOOGLE_MAPS_KEY) {
+        return fail(503, 'This worker has no GOOGLE_MAPS_KEY secret set, so it cannot look up aerial video.');
+      }
+      /* Either a street address, or coordinates that get turned into one here.
+
+         The lookup itself is address-only — that is the API, not a choice — but
+         the page only ever knows where the visitor IS, as a latitude and a
+         longitude. Translating in the page would need a geocoding key in the
+         page. Translating here needs nothing new: it is the same Maps key that
+         is already on this Worker, and Google's own geocoder returns the
+         formatted street address the video lookup wants. A city name from
+         somewhere else would not match anything. */
+      let address = (url.searchParams.get('address') || '').trim();
+      const alat = parseFloat(url.searchParams.get('lat'));
+      const alon = parseFloat(url.searchParams.get('lon'));
+
+      if (!address && isFinite(alat) && isFinite(alon)) {
+        if (alat < -90 || alat > 90 || alon < -180 || alon > 180) {
+          return fail(400, 'Those coordinates are out of range.');
+        }
+        try {
+          const gr = await fetch('https://maps.googleapis.com/maps/api/geocode/json?latlng=' +
+            alat.toFixed(6) + ',' + alon.toFixed(6) +
+            '&key=' + encodeURIComponent(env.GOOGLE_MAPS_KEY));
+          const gj = await gr.json();
+          const first = gj && gj.results && gj.results[0];
+          if (first && first.formatted_address) address = first.formatted_address;
+          else return json({ state: 'NONE',
+            reason: 'No street address could be resolved for those coordinates.' }, 404);
+        } catch (e) {
+          return fail(504, 'Could not reach the geocoder.');
+        }
+      }
+
+      if (!address || address.length > 200) {
+        return fail(400, 'Expected an address of up to 200 characters, or lat and lon.');
+      }
+
+      const q = new URLSearchParams();
+      q.set('address', address);
+      q.set('key', env.GOOGLE_MAPS_KEY);
+
+      let r, j;
+      try {
+        r = await fetch('https://aerialview.googleapis.com/v1/videos:lookupVideo?' + q.toString());
+        j = await r.json();
+      } catch (e) {
+        return fail(504, 'Could not reach the aerial view service.');
+      }
+
+      /* PROCESSING means someone has already asked for this one and it is not
+         finished. Not an error — just not today. */
+      if (j && j.state === 'PROCESSING') {
+        return json({ state: 'PROCESSING', address: address });
+      }
+
+      if (j && j.error) {
+        if (j.error.code === 404) {
+          /* Optionally start a render so a later visit has something. Fire and
+             forget: the answer to THIS request is still "nothing yet". */
+          if (url.searchParams.get('render') === '1') {
+            try {
+              await fetch('https://aerialview.googleapis.com/v1/videos:renderVideo?key=' +
+                encodeURIComponent(env.GOOGLE_MAPS_KEY), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address: address })
+              });
+              return json({ state: 'PROCESSING', address: address, started: true });
+            } catch (e) { /* fall through to the plain 404 */ }
+          }
+          return json({ state: 'NONE', address: address,
+            reason: 'No aerial video covers this address.' }, 404);
+        }
+        return fail(r.status || 502, j.error.message || 'The aerial view service refused that.');
+      }
+
+      const uris = j && j.uris;
+      const mp4 = uris && (
+        (uris.MP4_MEDIUM && (uris.MP4_MEDIUM.landscapeUri || uris.MP4_MEDIUM.portraitUri)) ||
+        (uris.MP4_HIGH && (uris.MP4_HIGH.landscapeUri || uris.MP4_HIGH.portraitUri)) ||
+        (uris.MP4_LOW && (uris.MP4_LOW.landscapeUri || uris.MP4_LOW.portraitUri))
+      );
+      if (!mp4) {
+        return json({ state: 'NONE', address: address,
+          reason: 'The service answered without a playable video.' }, 404);
+      }
+
+      return json({ state: 'ACTIVE', address: address, uri: mp4,
+        /* Google's terms require the credit stay on screen; the page draws it. */
+        attribution: 'Google' });
+    }
+
     if (url.pathname === '/map') {
       if (!env.GOOGLE_MAPS_KEY) {
         /* Named clearly, because the page falls back to its drawn globe and a

@@ -235,6 +235,11 @@
     var km = viewKm();
     if (km > 200) return null;                // too far out for imagery to help
 
+    /* Close enough for ground detail to matter is also the moment worth asking
+       whether a flyover exists — not on page load, when the visitor may never
+       hover at all. */
+    askAerial();
+
     /* The z whose square is about as wide as the porthole is. */
     var want = (MAP_SIZE / 2) * METRES_PER_PX_EQUATOR *
       Math.cos(lat * Math.PI / 180) / (km * 1000);
@@ -263,6 +268,67 @@
       mapCache[key] = rec;
     }
     return rec.ready ? rec : null;
+  }
+
+  /* ==========================================================================
+     THE FLYOVER, IF THERE IS ONE
+     ==========================================================================
+     Google renders cinematic aerial videos for some addresses. When one exists
+     for the visitor's own place it plays inside the porthole, over the still
+     imagery.
+
+     It is asked for ONCE, by place name, after the readout has produced one —
+     the API has no lookup by coordinate. Most residential addresses have no
+     video and answer 404, which is why the still image underneath is not
+     optional: it is the normal case, and the flyover is the bonus.
+
+     Unlike the still, this cannot follow the zoom. It is somebody else's camera
+     move, so it is drawn to fill the window and left alone rather than pretending
+     to be locked to the ground.
+     ========================================================================== */
+  var aerial = null;          // { video, ready } once a flyover is playing
+  var aerialAsked = false;
+
+  function askAerial() {
+    if (aerialAsked || !pos || !mapBase()) return;
+    aerialAsked = true;       // one request per page, whatever the answer
+    /* Coordinates go up and the Worker turns them into a street address with
+       the Maps key it already holds. The lookup is address-only, but resolving
+       the address in the page would mean a geocoding key in the page. */
+    fetch(mapBase() + '/aerial?lat=' + pos.lat.toFixed(6) + '&lon=' + pos.lon.toFixed(6))
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || j.state !== 'ACTIVE' || !j.uri) return;
+        var v = document.createElement('video');
+        v.muted = true; v.loop = true; v.autoplay = true;
+        v.playsInline = true;
+        /* Not crossOrigin: the signed URI may not send CORS headers, and asking
+           for it would fail the load outright. The canvas gets tainted, which
+           costs nothing here because nothing reads pixels back. */
+        v.addEventListener('loadeddata', function () { aerial = { video: v, ready: true }; });
+        v.src = j.uri;
+        var play = v.play();
+        if (play && play.catch) play.catch(function () {});
+      })
+      .catch(function () {});
+  }
+
+  /* Fills the window, cropping rather than letter-boxing — a black bar inside a
+     porthole reads as a broken image. */
+  function drawAerial(CX, CY, VR, alpha) {
+    if (!aerial || !aerial.ready || alpha <= 0) return false;
+    var v = aerial.video;
+    var vw = v.videoWidth, vh = v.videoHeight;
+    if (!vw || !vh) return false;
+    var side = VR * 2;
+    var scale = Math.max(side / vw, side / vh);
+    var w = vw * scale, h = vh * scale;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    try { ctx.drawImage(v, CX - w / 2, CY - h / 2, w, h); }
+    catch (e) { ctx.restore(); return false; }
+    ctx.restore();
+    return true;
   }
 
   /* Returns true when a photograph was actually painted, because the caller has
@@ -515,7 +581,11 @@
     /* The photograph arrives as the dots leave, so the two never fight over the
        same ground. Drawn on the sphere fill and under everything else, because
        the grid, the rings and the marker are all annotations ON it. */
-    var showedMap = drawMap(CX, CY, VR, 1 - dotAlpha());
+    var close = 1 - dotAlpha();
+    var showedMap = drawMap(CX, CY, VR, close);
+    /* The flyover sits on the still, so a frame it has not covered yet still
+       shows ground rather than a hole. */
+    if (drawAerial(CX, CY, VR, close)) showedMap = true;
 
     /* Graticule spacing follows the zoom. Thirty-degree lines are right for a
        whole planet and meaningless once the view is six degrees wide, where
