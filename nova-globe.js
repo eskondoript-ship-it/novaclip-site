@@ -191,6 +191,97 @@
     return (km - 40) / 80;
   }
 
+  /* ==========================================================================
+     REAL IMAGERY, CLOSE IN
+     ==========================================================================
+     Below the range where hand-traced coastlines mean anything, the honest
+     options are to stop drawing land or to go and get a real picture of the
+     ground. This does the second: a square of Google's imagery, fetched through
+     ai-worker.js so the API key stays on the Worker and never reaches a page.
+
+     The zoom level is CALCULATED, not guessed. A Static Maps pixel covers
+     156543.03392 * cos(latitude) / 2^z metres, so the z whose 640px square
+     matches the porthole's current ground radius is a logarithm, and the image
+     is then drawn at the exact scale that makes its ground match the sphere's.
+     Get that wrong and the imagery slides against the coordinate grid.
+
+     Requests are bucketed by integer z and cached, so a run in from orbit to a
+     street costs a handful of images rather than one per frame — which matters,
+     because each one is a billed request.
+
+     If the Worker has no GOOGLE_MAPS_KEY it answers 503, the image errors, and
+     after a couple of tries this stops asking and the drawn globe carries on as
+     before. Nothing breaks; there is just no photograph.
+     ========================================================================== */
+  var METRES_PER_PX_EQUATOR = 156543.03392;   // at zoom 0
+  var MAP_SIZE = 640;                         // the square asked for
+  var mapCache = {};                          // key -> record
+  var mapFails = 0, mapOff = false;
+
+  function mapBase() {
+    /* nova.js owns the Worker's address; read it late because that file loads
+       after this one. */
+    return window.NC_AI_WORKER_URL || '';
+  }
+
+  /* Metres of ground across half of one of these images, at a given zoom. */
+  function mapHalfMetres(lat, z) {
+    return (MAP_SIZE / 2) * METRES_PER_PX_EQUATOR *
+      Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
+  }
+
+  function mapFor(lat, lon) {
+    if (mapOff || !mapBase()) return null;
+    var km = viewKm();
+    if (km > 200) return null;                // too far out for imagery to help
+
+    /* The z whose square is about as wide as the porthole is. */
+    var want = (MAP_SIZE / 2) * METRES_PER_PX_EQUATOR *
+      Math.cos(lat * Math.PI / 180) / (km * 1000);
+    /* FLOOR, not round. Rounding up picks a tighter zoom whose square is
+       narrower than the porthole, and the corners of the circle then show bare
+       sphere through the gaps. Flooring always over-covers, at the cost of at
+       most one zoom level of detail — and the drawn scale stays exact either
+       way, because it is computed from the z actually used. */
+    var z = Math.floor(Math.log(want) / Math.LN2);
+    z = Math.max(1, Math.min(20, z));
+
+    var key = lat.toFixed(3) + ',' + lon.toFixed(3) + '@' + z;
+    var rec = mapCache[key];
+    if (!rec) {
+      rec = { z: z, ready: false, failed: false, img: new Image() };
+      rec.img.crossOrigin = 'anonymous';      // so the canvas stays untainted
+      rec.img.onload = function () { rec.ready = true; };
+      rec.img.onerror = function () {
+        rec.failed = true;
+        /* Two strikes and it stops. A missing secret would otherwise mean one
+           dead request per zoom step, per visitor, forever. */
+        if (++mapFails >= 2) mapOff = true;
+      };
+      rec.img.src = mapBase() + '/map?lat=' + lat.toFixed(6) + '&lon=' + lon.toFixed(6) +
+        '&z=' + z + '&size=' + MAP_SIZE + '&type=hybrid&scale=2';
+      mapCache[key] = rec;
+    }
+    return rec.ready ? rec : null;
+  }
+
+  /* Returns true when a photograph was actually painted, because the caller has
+     to credit it if so. */
+  function drawMap(CX, CY, VR, alpha) {
+    if (alpha <= 0 || !pos || focusLat == null) return false;
+    var rec = mapFor(pos.lat, pos.lon);
+    if (!rec) return false;
+
+    var half = mapHalfMetres(pos.lat, rec.z);          // ground metres, half image
+    var px = VR * (half / (viewKm() * 1000));          // the same ground, in pixels
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    try { ctx.drawImage(rec.img, CX - px, CY - px, px * 2, px * 2); }
+    catch (e) { ctx.restore(); return false; }
+    ctx.restore();
+    return true;
+  }
+
   function ensureLocalDots() {
     /* Kept while zooming out, not dropped the instant the pointer leaves. The
        focus clears immediately but the zoom takes a couple of seconds to come
@@ -271,8 +362,14 @@
      just "somewhere inside Portugal". Past that the view becomes what it can
      truthfully be: a position fix. Graticule, range rings in real distance, a
      crosshair, the coordinates and the place name. That is meaningful at one
-     kilometre or at one hundred, because none of it claims to be a map. */
-  var ZOOM_MAX = 2000;
+     kilometre or at one hundred, because none of it claims to be a map.
+
+     8000 puts roughly a 1.6km-wide patch in the hole, which is the framing of
+     the reference: a few streets, not a region. It is only worth going this
+     close because real imagery arrives to fill it — the dots were faded out
+     long before here, and without the Worker's map key this depth shows the
+     grid, the rings and the marker and nothing else. */
+  var ZOOM_MAX = 8000;
   var baseR = 0, baseCx = 0;
 
   /* The right-hand edge of the actual ink in the hero.
@@ -415,6 +512,11 @@
     ctx.fillStyle = body;
     ctx.beginPath(); ctx.arc(CX, CY, R < VR ? R : VR, 0, 7); ctx.fill();
 
+    /* The photograph arrives as the dots leave, so the two never fight over the
+       same ground. Drawn on the sphere fill and under everything else, because
+       the grid, the rings and the marker are all annotations ON it. */
+    var showedMap = drawMap(CX, CY, VR, 1 - dotAlpha());
+
     /* Graticule spacing follows the zoom. Thirty-degree lines are right for a
        whole planet and meaningless once the view is six degrees wide, where
        the nearest line would be off the edge. */
@@ -514,6 +616,22 @@
        are what turns a field of dots into a place: something to read the scale
        against. */
     if (span < 12) drawRings(CX, CY, R, VR, span);
+
+    /* CREDIT WHERE IT IS REQUIRED.
+       Google's imagery carries its own credit in the corner and the terms say it
+       has to stay visible. A circular window crops corners, so the credit is
+       reprinted inside the window instead. This is a licence condition, not
+       decoration — if the imagery is showing, this line shows with it. */
+    if (showedMap) {
+      ctx.font = '10px Geist,Inter,system-ui,sans-serif';
+      var credit = 'Map data ©Google';
+      var cw = ctx.measureText(credit).width;
+      var cyPos = CY + VR * 0.86;
+      ctx.fillStyle = 'rgba(4,8,16,0.62)';
+      ctx.fillRect(CX - cw / 2 - 6, cyPos - 11, cw + 12, 16);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fillText(credit, CX - cw / 2, cyPos);
+    }
 
     ctx.restore();
 

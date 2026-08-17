@@ -337,6 +337,86 @@ export default {
       });
     }
 
+    /* ========================================================================
+       /map — one square of Google's map imagery, by coordinate
+       ========================================================================
+       The globe on the landing page draws its own continents, which is honest
+       to about a degree and no finer. Zoomed in on a visitor's own street that
+       is not a map, so this fetches the real thing.
+
+       It is a GET that returns an image, because it is used as an <img> src and
+       drawn to a canvas.
+
+       WHY IT IS HERE AND NOT IN THE PAGE
+         A Static Maps request needs a key, and a key in a page is a public key.
+         So the page asks this Worker for a picture and never sees the key —
+         the same reason every other vendor call in this file goes through here.
+
+       WHY THE PARAMETERS ARE PINNED DOWN
+         An endpoint that forwards arbitrary query strings to a billed API is an
+         open image proxy someone else can spend your money through. Latitude
+         and longitude must parse as numbers in range, zoom is clamped, and the
+         size and type come from a fixed list. Nothing else is passed on.
+
+       ATTRIBUTION
+         Google's imagery carries a baked-in credit in the corner, and the terms
+         require it stay visible. The page draws this inside a circular window,
+         which crops corners — so nova-globe.js also prints "Map data ©Google"
+         inside the window. Do not remove it; the licence is the reason it is
+         there, not decoration.
+       ======================================================================== */
+    if (url.pathname === '/map') {
+      if (!env.GOOGLE_MAPS_KEY) {
+        /* Named clearly, because the page falls back to its drawn globe and a
+           silent 404 would look like a bug rather than a missing secret. */
+        return fail(503, 'This worker has no GOOGLE_MAPS_KEY secret set, so it cannot serve map imagery.');
+      }
+
+      const lat = parseFloat(url.searchParams.get('lat'));
+      const lon = parseFloat(url.searchParams.get('lon'));
+      if (!isFinite(lat) || !isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        return fail(400, 'Expected lat and lon as numbers within range.');
+      }
+      let z = parseInt(url.searchParams.get('z'), 10);
+      if (!isFinite(z)) z = 14;
+      z = Math.max(1, Math.min(20, z));
+
+      const SIZES = { '320': 1, '480': 1, '640': 1 };
+      const size = SIZES[url.searchParams.get('size')] ? url.searchParams.get('size') : '640';
+      const TYPES = { roadmap: 1, satellite: 1, hybrid: 1, terrain: 1 };
+      const type = TYPES[url.searchParams.get('type')] ? url.searchParams.get('type') : 'hybrid';
+      const scale = url.searchParams.get('scale') === '2' ? '2' : '1';
+
+      const q = 'center=' + lat.toFixed(6) + ',' + lon.toFixed(6) +
+        '&zoom=' + z + '&size=' + size + 'x' + size + '&scale=' + scale +
+        '&maptype=' + type + '&key=' + encodeURIComponent(env.GOOGLE_MAPS_KEY);
+
+      let img;
+      try {
+        img = await fetch('https://maps.googleapis.com/maps/api/staticmap?' + q);
+      } catch (e) {
+        return fail(504, 'Could not reach the map service.');
+      }
+      if (!img.ok) {
+        /* Google explains a refused key in the body of a 4xx, and that message
+           is the only thing that makes this debuggable from outside. */
+        let why = '';
+        try { why = (await img.text()).slice(0, 200); } catch (e) {}
+        return fail(img.status, why || ('The map service answered ' + img.status + '.'));
+      }
+
+      return new Response(img.body, {
+        status: 200,
+        headers: {
+          'Content-Type': img.headers.get('Content-Type') || 'image/png',
+          /* A patch of ground does not change. Caching it is the difference
+             between one billed request per visitor and one per mouse move. */
+          'Cache-Control': 'public, max-age=86400',
+          ...CORS
+        }
+      });
+    }
+
     if (request.method !== 'POST') return fail(405, 'Send a POST.');
 
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
