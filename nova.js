@@ -2989,56 +2989,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   applyLang(lang());
 
-  applySeason();
   ncSyncBoot();
 });
-
-/* ===== SEASONAL EVENTS — automatic by date, no button =====
-   Fixed dates use MM-DD every year; movable feasts (Islamic calendar, Easter,
-   Diwali, Chinese New Year) use explicit dates per year (2026–2028). */
-const SEASONS = [
-  { name: 'Ramadan',        emo: '',  color: '#7bd4a8', ranges: [['2026-02-18','2026-03-19'],['2027-02-08','2027-03-09'],['2028-01-28','2028-02-26']], greet: 'Ramadan Kareem!' },
-  { name: 'Eid al-Fitr',    emo: '',  color: '#ffd166', ranges: [['2026-03-20','2026-03-23'],['2027-03-10','2027-03-13'],['2028-02-27','2028-03-01']], greet: 'Eid Mubarak!' },
-  { name: 'Eid al-Adha',    emo: '',  color: '#8fd694', ranges: [['2026-05-26','2026-05-30'],['2027-05-16','2027-05-20'],['2028-05-04','2028-05-08']], greet: 'Eid Mubarak!' },
-  { name: 'Halloween',      emo: '',  color: '#ff8c42', ranges: 'yearly:10-24:11-01', greet: 'Happy Halloween!' },
-  { name: 'Christmas',      emo: '',  color: '#ff5d5d', ranges: 'yearly:12-14:12-26', greet: 'Merry Christmas!' },
-  { name: 'New Year',       emo: '',  color: '#ffd700', ranges: 'yearly:12-27:01-02', greet: 'Happy New Year!' },
-  { name: 'Easter',         emo: '',  color: '#c3a6ff', ranges: [['2026-03-30','2026-04-06'],['2027-03-22','2027-03-29'],['2028-04-10','2028-04-17']], greet: 'Happy Easter!' },
-  { name: 'Diwali',         emo: '',  color: '#ffb347', ranges: [['2026-11-05','2026-11-10'],['2027-10-25','2027-10-30'],['2028-10-14','2028-10-19']], greet: 'Happy Diwali!' },
-  { name: 'Chinese New Year', emo: '', color: '#ff4d4d', ranges: [['2026-02-15','2026-02-19'],['2027-02-04','2027-02-08'],['2028-01-24','2028-01-28']], greet: 'Happy New Year!' }
-];
-function seasonActive(s, now) {
-  const pad = n => (n < 10 ? '0' : '') + n;
-  if (typeof s.ranges === 'string') {
-    const [, a, b] = s.ranges.split(':');
-    const md = pad(now.getMonth()+1) + '-' + pad(now.getDate());
-    if (a <= b) return md >= a && md <= b;
-    return md >= a || md <= b; // wraps year end (New Year)
-  }
-  const today = now.toISOString().slice(0,10);
-  return s.ranges.some(([a,b]) => today >= a && today <= b);
-}
-function applySeason() {
-  const now = new Date();
-  const s = SEASONS.find(x => seasonActive(x, now));
-  if (!s) return;
-  const bar = document.createElement('div');
-  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:996;text-align:center;padding:6px 10px;font-weight:700;font-size:0.85rem;color:#0a0a12;background:' + s.color + ';box-shadow:0 2px 20px ' + s.color + '55;';
-  bar.textContent = s.emo + '  ' + s.greet + '  ' + s.emo;
-  document.body.appendChild(bar);
-  document.body.style.paddingTop = '32px';
-  // gentle falling emojis
-  const emos = [...s.emo].filter(ch => ch.trim() && ch.codePointAt(0) > 255);
-  for (let i = 0; i < 12; i++) {
-    const e = document.createElement('div');
-    e.textContent = emos[i % emos.length] || '';
-    e.style.cssText = 'position:fixed;top:-30px;z-index:995;pointer-events:none;font-size:' + (14 + Math.random()*14) + 'px;left:' + (Math.random()*100) + 'vw;opacity:0.8;animation:ncfall ' + (7 + Math.random()*8) + 's linear ' + (Math.random()*10) + 's infinite;';
-    document.body.appendChild(e);
-  }
-  const st = document.createElement('style');
-  st.textContent = '@keyframes ncfall { from { transform: translateY(0) rotate(0deg); } to { transform: translateY(110vh) rotate(360deg); } }';
-  document.head.appendChild(st);
-}
 
 /* ============================================================
    NOVACLIP SAFETY & MODERATION
