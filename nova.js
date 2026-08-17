@@ -2309,6 +2309,13 @@ function ncProfile() {
       tr('ui_key_shared').replace('{link}',
         '<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" ' +
         'style="color:#00E5FF">Google AI Studio</a>') + '</p>' +
+      /* The honest answer to "is any of this still a demo?", asked rather
+         than assumed. Collapsed, because most readers never need it. */
+      '<details style="margin-top:20px;border-top:1px solid rgba(255,255,255,0.1);padding-top:14px">' +
+      '<summary style="cursor:pointer;font-size:12.5px;color:#8A97B4;list-style:none">' +
+      'Is anything still a demo? <span style="color:#00E5FF">Check now</span></summary>' +
+      '<div id="ncdiag" style="font-size:12px;line-height:1.5;margin-top:11px;color:#8A97B4">Checking…</div>' +
+      '</details>' +
       '<div style="display:flex;gap:9px;margin-top:20px">' +
       '<button id="ncpsave" style="flex:1;padding:12px;border:0;border-radius:12px;cursor:pointer;' +
       'background:linear-gradient(110deg,#7C5CFF,#00E5FF);color:#05070E;font:inherit;font-weight:650">' + tr('ui_save') + '</button>' +
@@ -2330,6 +2337,22 @@ function ncProfile() {
     drawAvs();
     document.getElementById('ncpname').value = ncName();
     document.getElementById('ncpkey').value = ncAIKey();
+
+    /* Two network calls, so it waits until the section is actually opened. */
+    const diagBox = document.getElementById('ncdiag');
+    const diagWrap = diagBox && diagBox.parentElement;
+    if (diagWrap) diagWrap.addEventListener('toggle', function once() {
+      if (!diagWrap.open) return;
+      diagWrap.removeEventListener('toggle', once);
+      ncDiag().then(rows => {
+        diagBox.innerHTML = rows.map(r =>
+          '<div style="margin-bottom:9px">' +
+          '<b style="color:' + (r.live ? '#5BE49B' : '#FFB45B') + '">' +
+          (r.live ? '● LIVE' : '● DEMO') + '</b> ' +
+          '<span style="color:#EAF2FF">' + ncEscape(r.name) + '</span><br>' +
+          ncEscape(r.detail) + '</div>').join('');
+      }).catch(e => { diagBox.textContent = 'The check itself failed: ' + (e && e.message || e); });
+    });
 
     document.getElementById('ncpfile').onchange = e => {
       const f = e.target.files && e.target.files[0];
@@ -2899,6 +2922,97 @@ window.ncActiveProvider = ncActiveProvider; window.ncDefaultModel = ncDefaultMod
 /* The worker's address, exported for the same consumers that use ncAsk —
    jarvis.js reads it to reach the /tts endpoint for its voice. */
 window.NC_AI_WORKER_URL = NC_AI_WORKER;
+
+/* ============================================================================
+   THE SELF-CHECK — "how do I know this is not still a demo?"
+   ============================================================================
+   Several things on this site have two modes, and from the outside they look
+   identical. Checkout either charges a card or plays a convincing animation.
+   The community pages either reach a Worker or fall back to this browser
+   alone. The AI either reaches a Worker holding a key or refuses. Signing in
+   with Google is a fourth, separate thing that does not switch any of the
+   other three on — which is the confusion this exists to end.
+
+   So each row here is answered by actually asking, not by assuming. Both
+   Workers already say which of the two they are at /health, because deploying
+   one at the other's address is the mistake that made every AI feature answer
+   500 — and a self-check that trusted the address would have reported that
+   catastrophe as fine.
+
+   Nothing here prints a secret. A key is "set" or "not set"; that is the whole
+   vocabulary, and it is deliberate.
+   ============================================================================ */
+function ncYouTube() {
+  try {
+    const s = JSON.parse(localStorage.getItem('nc_yt') || 'null');
+    if (s && s.exp > Date.now()) return { on: true, channel: s.channel || '' };
+    if (s) return { on: false, expired: true, channel: s.channel || '' };
+  } catch (e) {}
+  return { on: false };
+}
+
+async function ncProbe(base, want) {
+  if (!base) return { live: false, why: 'No address configured.' };
+  try {
+    const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), 8000) : 0;
+    const r = await fetch(base.replace(/\/$/, '') + '/health', ctl ? { signal: ctl.signal } : undefined);
+    clearTimeout(timer);
+    const body = await r.json().catch(() => ({}));
+    /* The wrong Worker at the right address answers 200 and looks healthy.
+       This is the check that catches it. */
+    if (body.worker && body.worker !== want)
+      return { live: false, why: 'This address is running the ' + body.worker +
+        ' Worker, not the ' + want + ' one. The two are swapped.' };
+    if (!body.worker)
+      return { live: false, why: 'Answered, but not as a NovaClip Worker — check the address.' };
+    if (!body.ok)
+      return { live: false, why: want === 'ai'
+        ? 'Deployed, but no GEMINI_API_KEY secret is set on it.'
+        : 'Deployed, but its DB KV namespace is not bound.' };
+    return { live: true, why: 'Answering as the ' + want + ' Worker, configured.' };
+  } catch (e) {
+    return { live: false, why: 'No answer from ' + base + ' — not deployed, or the address is wrong.' };
+  }
+}
+
+async function ncDiag() {
+  const yt = ncYouTube();
+  const rows = [{
+    name: 'Google sign-in',
+    live: yt.on,
+    detail: yt.on
+      ? 'Signed in' + (yt.channel ? ' as ' + yt.channel : '') + '. Real YouTube data.'
+      : (yt.expired
+        ? 'The hour-long session ran out. Sign in again in Studio.'
+        : 'Not signed in. Studio and Analytics show nothing until you do.'),
+    fix: 'app.html'
+  }];
+
+  /* Payments cannot be checked from here: the Stripe links live in
+     pricing.html. It records what it found last time it was open, and this
+     says so rather than guessing. */
+  let pay = null;
+  try { pay = localStorage.getItem('nc_pay_mode'); } catch (e) {}
+  rows.push({
+    name: 'Payments',
+    live: pay === 'stripe',
+    detail: pay === 'stripe' ? 'Stripe Payment Links are configured — checkout charges for real.'
+      : pay === 'demo' ? 'DEMO. No Stripe Payment Links are filled in, so checkout is a simulation and no card is charged.'
+      : 'Not checked yet — open the Pricing page once and come back.',
+    fix: 'pricing.html'
+  });
+
+  const [ai, srv] = await Promise.all([
+    ncProbe(NC_AI_WORKER, 'ai'),
+    ncProbe(ncServer(), 'leaderboard')
+  ]);
+  rows.push({ name: 'AI', live: ai.live, detail: ai.why +
+    (ncAIKey() ? ' Your own key is set in this browser, so AI works either way.' : '') });
+  rows.push({ name: 'Accounts and scores', live: srv.live, detail: srv.why });
+  return rows;
+}
+window.ncDiag = ncDiag; window.ncYouTube = ncYouTube;
 
 /* ============================================================================
    THE EDITOR'S EXTRA TOOLS

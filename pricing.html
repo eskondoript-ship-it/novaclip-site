@@ -462,6 +462,15 @@ const STRIPE_LINKS = {
   'Master Certificate':  { once: '' }
 };
 
+/* Recorded so the self-check in the profile panel can report it. The links
+   only exist on this page, and "am I still on the demo checkout?" is a
+   question people ask from somewhere else on the site. */
+try {
+  const anyLive = Object.keys(STRIPE_LINKS).some(n =>
+    Object.keys(STRIPE_LINKS[n]).some(k => STRIPE_LINKS[n][k]));
+  localStorage.setItem('nc_pay_mode', anyLive ? 'stripe' : 'demo');
+} catch (e) {}
+
 let CART = [];
 try { CART = JSON.parse(localStorage.getItem('nc_cart') || '[]'); } catch (e) { CART = []; }
 function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(CART)); updateCartCount(); }
