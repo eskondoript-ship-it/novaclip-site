@@ -10,6 +10,13 @@ const T = {
   sniper: { en:"Games", zh:"游戏", hi:"गेम्स", es:"Juegos", ar:"الألعاب", fr:"Jeux", bn:"গেমস", pt:"Jogos", ru:"Игры", ur:"گیمز", id:"Gim", de:"Spiele", ja:"ゲーム", tr:"Oyunlar", ko:"게임", fa:"بازی‌ها", uk:"Ігри", it:"Giochi", pl:"Gry", vi:"Trò chơi" },
   family: { en:"Family", zh:"家庭", hi:"परिवार", es:"Familia", ar:"العائلة", fr:"Famille", bn:"পরিবার", pt:"Família", ru:"Семья", ur:"خاندان", id:"Keluarga", de:"Familie", ja:"家族", tr:"Aile", ko:"가족", fa:"خانواده", uk:"Сім’я", it:"Famiglia", pl:"Rodzina", vi:"Gia đình" },
   pricing: { en:"Pricing", zh:"定价", hi:"मूल्य", es:"Precios", ar:"الأسعار", fr:"Tarifs", bn:"মূল্য", pt:"Preços", ru:"Цены", ur:"قیمتیں", id:"Harga", de:"Preise", ja:"料金", tr:"Fiyat", ko:"요금", fa:"قیمت‌گذاری", uk:"Ціни", it:"Prezzi", pl:"Cennik", vi:"Giá" },
+  nav_channel: { en:"Channel", zh:"频道", hi:"चैनल", es:"Canal", ar:"القناة", fr:"Chaîne", bn:"চ্যানেল", pt:"Canal", ru:"Канал", ur:"چینل", id:"Kanal", de:"Kanal", ja:"チャンネル", tr:"Kanal", ko:"채널", fa:"کانال", uk:"Канал", it:"Canale", pl:"Kanał", vi:"Kênh" },
+  nav_create: { en:"Create", zh:"创作", hi:"बनाएँ", es:"Crear", ar:"إنشاء", fr:"Créer", bn:"তৈরি করুন", pt:"Criar", ru:"Создать", ur:"بنائیں", id:"Buat", de:"Erstellen", ja:"作成", tr:"Oluştur", ko:"만들기", fa:"ساخت", uk:"Створити", it:"Crea", pl:"Utwórz", vi:"Tạo" },
+  nav_learn: { en:"Learn", zh:"学习", hi:"सीखें", es:"Aprender", ar:"تعلّم", fr:"Apprendre", bn:"শিখুন", pt:"Aprender", ru:"Учиться", ur:"سیکھیں", id:"Belajar", de:"Lernen", ja:"学ぶ", tr:"Öğren", ko:"배우기", fa:"یادگیری", uk:"Навчатися", it:"Impara", pl:"Ucz się", vi:"Học" },
+  nav_you: { en:"You", zh:"你", hi:"आप", es:"Tú", ar:"أنت", fr:"Toi", bn:"তুমি", pt:"Tu", ru:"Ты", ur:"آپ", id:"Kamu", de:"Du", ja:"あなた", tr:"Sen", ko:"당신", fa:"شما", uk:"Ти", it:"Tu", pl:"Ty", vi:"Bạn" },
+  life: { en:"NovaLife", zh:"NovaLife", hi:"NovaLife", es:"NovaLife", ar:"NovaLife", fr:"NovaLife", bn:"NovaLife", pt:"NovaLife", ru:"NovaLife", ur:"NovaLife", id:"NovaLife", de:"NovaLife", ja:"NovaLife", tr:"NovaLife", ko:"NovaLife", fa:"NovaLife", uk:"NovaLife", it:"NovaLife", pl:"NovaLife", vi:"NovaLife" },
+  publish: { en:"Publish", zh:"发布", hi:"प्रकाशित करें", es:"Publicar", ar:"نشر", fr:"Publier", bn:"প্রকাশ করুন", pt:"Publicar", ru:"Опубликовать", ur:"شائع کریں", id:"Terbitkan", de:"Veröffentlichen", ja:"公開", tr:"Yayınla", ko:"게시", fa:"انتشار", uk:"Опублікувати", it:"Pubblica", pl:"Opublikuj", vi:"Xuất bản" },
+  socials: { en:"Socials", zh:"社交", hi:"सोशल", es:"Redes", ar:"التواصل", fr:"Réseaux", bn:"সোশ্যাল", pt:"Redes sociais", ru:"Соцсети", ur:"سوشلز", id:"Media sosial", de:"Social Media", ja:"SNS", tr:"Sosyal medya", ko:"소셜", fa:"شبکه‌های اجتماعی", uk:"Соцмережі", it:"Social", pl:"Sociale", vi:"Mạng xã hội" },
   eyebrow: { en:"For teen creators · 13–18", zh:"面向青少年创作者 · 13–18", hi:"किशोर क्रिएटर्स के लिए · 13–18", es:"Para creadores adolescentes · 13–18", ar:"لصناع المحتوى المراهقين · 13–18", fr:"Pour les jeunes créateurs · 13–18", bn:"কিশোর নির্মাতাদের জন্য · 13–18", pt:"Para criadores adolescentes · 13–18", ru:"Для юных авторов · 13–18", ur:"نوجوان تخلیق کاروں کے لیے · 13–18", id:"Untuk kreator remaja · 13–18", de:"Für junge Creator · 13–18", ja:"10代のクリエイター向け · 13–18", tr:"Genç içerik üreticileri için · 13–18", ko:"청소년 크리에이터를 위해 · 13–18", fa:"برای سازندگان نوجوان · 13–18", uk:"Для юних авторів · 13–18", it:"Per giovani creator · 13–18", pl:"Dla młodych twórców · 13–18", vi:"Cho nhà sáng tạo trẻ · 13–18" },
   startchannel: { en:"Start your channel →", zh:"开启你的频道 →", hi:"अपना चैनल शुरू करें →", es:"Inicia tu canal →", ar:"ابدأ قناتك →", fr:"Lance ta chaîne →", bn:"আপনার চ্যানেল শুরু করুন →", pt:"Começa o teu canal →", ru:"Начни свой канал →", ur:"اپنا چینل شروع کریں →", id:"Mulai channel-mu →", de:"Starte deinen Kanal →", ja:"チャンネルを始めよう →", tr:"Kanalını başlat →", ko:"채널을 시작하세요 →", fa:"کانالت را شروع کن →", uk:"Почни свій канал →", it:"Avvia il tuo canale →", pl:"Załóż swój kanał →", vi:"Bắt đầu kênh của bạn →" },
   seerewards: { en:"See the rewards", zh:"查看奖励", hi:"रिवॉर्ड्स देखें", es:"Ver recompensas", ar:"شاهد الجوائز", fr:"Voir les récompenses", bn:"পুরস্কার দেখুন", pt:"Ver recompensas", ru:"Смотреть награды", ur:"انعامات دیکھیں", id:"Lihat hadiah", de:"Belohnungen ansehen", ja:"リワードを見る", tr:"Ödülleri gör", ko:"보상 보기", fa:"جوایز را ببین", uk:"Дивитись нагороди", it:"Vedi le ricompense", pl:"Zobacz nagrody", vi:"Xem phần thưởng" },
@@ -29,6 +36,10 @@ const T = {
   card_quest: { en:"Rewards and Achievements", zh:"奖励与成就", hi:"रिवॉर्ड और अचीवमेंट", es:"Recompensas y Logros", ar:"الجوائز والإنجازات", fr:"Récompenses et Succès", bn:"পুরস্কার ও অর্জন", pt:"Recompensas e Conquistas", ru:"Награды и достижения", ur:"انعامات اور کامیابیاں", id:"Hadiah dan Pencapaian", de:"Belohnungen und Erfolge", ja:"リワードと実績", tr:"Ödüller ve Başarılar", ko:"보상과 업적", fa:"جوایز و دستاوردها", uk:"Нагороди та досягнення", it:"Ricompense e Obiettivi", pl:"Nagrody i Osiągnięcia", vi:"Phần thưởng và Thành tựu" },
   card_quest_d: { en:"Every action earns NovaCoins. Hit the milestones, unlock free NovaClip Pro time.", zh:"每个操作都能赚积分。达到里程碑，解锁免费 NovaClip Pro。", hi:"हर एक्शन से पॉइंट मिलते हैं। माइलस्टोन पूरे करें, फ्री Pro पाएं।", es:"Cada acción suma puntos. Alcanza las metas y desbloquea NovaClip Pro gratis.", ar:"كل إجراء يكسبك نقاطًا. حقق الأهداف وافتح NovaClip Pro مجانًا.", fr:"Chaque action rapporte des points. Atteins les paliers, débloque du Pro gratuit.", bn:"প্রতিটি কাজে পয়েন্ট। মাইলস্টোন ছুঁয়ে ফ্রি Pro আনলক করুন।", pt:"Cada ação dá pontos. Atinge as metas e desbloqueia NovaClip Pro grátis.", ru:"Каждое действие даёт очки. Достигай целей — открывай бесплатный Pro.", ur:"ہر عمل پوائنٹس دیتا ہے۔ سنگ میل عبور کریں، مفت Pro کھولیں۔", id:"Setiap aksi menghasilkan poin. Capai target, buka Pro gratis.", de:"Jede Aktion bringt Punkte. Erreiche die Meilensteine, schalte gratis Pro frei.", ja:"行動すればポイント。マイルストーン達成で無料Proを解放。", tr:"Her eylem puan kazandırır. Hedeflere ulaş, ücretsiz Pro aç.", ko:"모든 행동이 포인트가 됩니다. 목표를 달성하고 무료 Pro를 열어보세요.", fa:"هر اقدامی امتیاز می‌دهد. به نقاط عطف برس و Pro رایگان باز کن.", uk:"Кожна дія дає бали. Досягай цілей — відкривай безплатний Pro.", it:"Ogni azione dà punti. Raggiungi i traguardi, sblocca Pro gratis.", pl:"Każda akcja daje punkty. Osiągaj cele, odblokuj darmowe Pro.", vi:"Mỗi hành động đều có điểm. Đạt mốc, mở khóa Pro miễn phí." },
   footer: { en:"Classic app with quizzes and streaks", zh:"带测验和连胜的经典应用", hi:"क्विज़ और स्ट्रीक वाला क्लासिक ऐप", es:"App clásica con quizzes y rachas", ar:"التطبيق الكلاسيكي مع الاختبارات", fr:"App classique avec quiz et séries", bn:"কুইজ ও স্ট্রিক সহ ক্লাসিক অ্যাপ", pt:"App clássica com quizzes e sequências", ru:"Классическое приложение с квизами", ur:"کوئز اور سٹریکس والی کلاسک ایپ", id:"Aplikasi klasik dengan kuis", de:"Klassische App mit Quiz und Serien", ja:"クイズと連続記録のクラシック版", tr:"Quiz ve serilerle klasik uygulama", ko:"퀴즈와 스트릭이 있는 클래식 앱", fa:"اپ کلاسیک با آزمون‌ها", uk:"Класичний застосунок із квізами", it:"App classica con quiz e serie", pl:"Klasyczna apka z quizami", vi:"Ứng dụng cổ điển với quiz" },
+  loading: { en:"Loading NovaClip…", zh:"正在加载 NovaClip…", hi:"NovaClip लोड हो रहा है…", es:"Cargando NovaClip…", ar:"جارٍ تحميل NovaClip…", fr:"Chargement de NovaClip…", bn:"NovaClip লোড হচ্ছে…", pt:"A carregar o NovaClip…", ru:"Загрузка NovaClip…", ur:"NovaClip لوڈ ہو رہا ہے…", id:"Memuat NovaClip…", de:"NovaClip wird geladen…", ja:"NovaClipを読み込み中…", tr:"NovaClip yükleniyor…", ko:"NovaClip 불러오는 중…", fa:"در حال بارگذاری NovaClip…", uk:"Завантаження NovaClip…", it:"Caricamento di NovaClip…", pl:"Ładowanie NovaClip…", vi:"Đang tải NovaClip…" },
+  skip: { en:"Skip to content", zh:"跳到内容", hi:"सामग्री पर जाएँ", es:"Saltar al contenido", ar:"تخطَّ إلى المحتوى", fr:"Aller au contenu", bn:"বিষয়বস্তুতে যান", pt:"Saltar para o conteúdo", ru:"Перейти к содержимому", ur:"مواد پر جائیں", id:"Lewati ke konten", de:"Zum Inhalt springen", ja:"コンテンツへスキップ", tr:"İçeriğe atla", ko:"콘텐츠로 건너뛰기", fa:"پرش به محتوا", uk:"Перейти до вмісту", it:"Salta al contenuto", pl:"Przejdź do treści", vi:"Bỏ qua tới nội dung" },
+  sec_learn: { en:"01 — Learn & build", zh:"01 — 学习与构建", hi:"01 — सीखें और बनाएँ", es:"01 — Aprende y crea", ar:"01 — تعلّم وابنِ", fr:"01 — Apprendre & créer", bn:"01 — শিখুন ও গড়ুন", pt:"01 — Aprende e cria", ru:"01 — Учись и создавай", ur:"01 — سیکھیں اور بنائیں", id:"01 — Belajar & bangun", de:"01 — Lernen & bauen", ja:"01 — 学び、作る", tr:"01 — Öğren & oluştur", ko:"01 — 배우고 만들기", fa:"۰۱ — یاد بگیر و بساز", uk:"01 — Вчись і створюй", it:"01 — Impara e crea", pl:"01 — Ucz się i twórz", vi:"01 — Học & xây dựng" },
+  builtby: { en:"© 2026 NovaClip · Built by eskon", zh:"© 2026 NovaClip · 由 eskon 打造", hi:"© 2026 NovaClip · eskon द्वारा निर्मित", es:"© 2026 NovaClip · Hecho por eskon", ar:"© 2026 NovaClip · من صنع eskon", fr:"© 2026 NovaClip · Créé par eskon", bn:"© 2026 NovaClip · eskon-এর তৈরি", pt:"© 2026 NovaClip · Feito pela eskon", ru:"© 2026 NovaClip · Создано eskon", ur:"© 2026 NovaClip · eskon نے بنایا", id:"© 2026 NovaClip · Dibuat oleh eskon", de:"© 2026 NovaClip · Erstellt von eskon", ja:"© 2026 NovaClip · eskon 制作", tr:"© 2026 NovaClip · eskon tarafından", ko:"© 2026 NovaClip · eskon 제작", fa:"© ۲۰۲۶ NovaClip · ساختهٔ eskon", uk:"© 2026 NovaClip · Створено eskon", it:"© 2026 NovaClip · Creato da eskon", pl:"© 2026 NovaClip · Stworzone przez eskon", vi:"© 2026 NovaClip · Được tạo bởi eskon" },
   signin: { en:"Sign in with Google", zh:"使用 Google 登录", hi:"Google से साइन इन करें", es:"Iniciar sesión con Google", ar:"تسجيل الدخول بجوجل", fr:"Se connecter avec Google", bn:"Google দিয়ে সাইন ইন", pt:"Entrar com Google", ru:"Войти через Google", ur:"گوگل سے سائن ان کریں", id:"Masuk dengan Google", de:"Mit Google anmelden", ja:"Googleでログイン", tr:"Google ile giriş yap", ko:"Google로 로그인", fa:"ورود با گوگل", uk:"Увійти через Google", it:"Accedi con Google", pl:"Zaloguj przez Google", vi:"Đăng nhập bằng Google" },
   signout: { en:"Sign out", zh:"退出登录", hi:"साइन आउट", es:"Cerrar sesión", ar:"تسجيل الخروج", fr:"Se déconnecter", bn:"সাইন আউট", pt:"Terminar sessão", ru:"Выйти", ur:"سائن آؤٹ", id:"Keluar", de:"Abmelden", ja:"ログアウト", tr:"Çıkış yap", ko:"로그아웃", fa:"خروج", uk:"Вийти", it:"Esci", pl:"Wyloguj", vi:"Đăng xuất" },
   t_stats: { en:"My analytics", zh:"我的数据", hi:"मेरी एनालिटिक्स", es:"Mis analíticas", ar:"تحليلاتي", fr:"Mes analytiques", bn:"আমার অ্যানালিটিক্স", pt:"As minhas análises", ru:"Моя аналитика", ur:"میرے تجزیات", id:"Analitik saya", de:"Meine Analysen", ja:"マイ分析", tr:"Analizlerim", ko:"내 분석", fa:"تحلیل‌های من", uk:"Моя аналітика", it:"Le mie analisi", pl:"Moja analityka", vi:"Phân tích của tôi" },
@@ -335,6 +346,77 @@ const PAR_T = {
   par_reset: { en:"Reset PIN", zh:"重置PIN", hi:"PIN रीसेट करें", es:"Restablecer PIN", ar:"إعادة تعيين PIN", fr:"Réinitialiser le PIN", bn:"PIN রিসেট করুন", pt:"Repor PIN", ru:"Сбросить PIN", ur:"PIN ری سیٹ کریں", id:"Atur ulang PIN", de:"PIN zurücksetzen", ja:"PINをリセット", tr:"PIN'i sıfırla", ko:"PIN 재설정", fa:"بازنشانی PIN", uk:"Скинути PIN", it:"Reimposta PIN", pl:"Zresetuj PIN", vi:"Đặt lại mã PIN" }
 };
 Object.assign(T, PAR_T);
+
+/* ===== SHARED POPUP UI =====
+   Age gate, suspension screen, screen-time lock, profile dialog, quest/achievement
+   panels and the toast strings all used to be hardcoded English. They render from
+   JS (no data-t possible), so they translate through tr() like everything else.
+   Tokens: {n} number, {unit} singular/plural unit, {t} time, {link} anchor HTML,
+   {p} points, {goal} reward name. */
+const UI_T = {
+  ui_cancel: { en:"Cancel", zh:"取消", hi:"रद्द करें", es:"Cancelar", ar:"إلغاء", fr:"Annuler", bn:"বাতিল", pt:"Cancelar", ru:"Отмена", ur:"منسوخ کریں", id:"Batal", de:"Abbrechen", ja:"キャンセル", tr:"İptal", ko:"취소", fa:"لغو", uk:"Скасувати", it:"Annulla", pl:"Anuluj", vi:"Hủy" },
+  ui_save: { en:"Save", zh:"保存", hi:"सेव करें", es:"Guardar", ar:"حفظ", fr:"Enregistrer", bn:"সংরক্ষণ", pt:"Guardar", ru:"Сохранить", ur:"محفوظ کریں", id:"Simpan", de:"Speichern", ja:"保存", tr:"Kaydet", ko:"저장", fa:"ذخیره", uk:"Зберегти", it:"Salva", pl:"Zapisz", vi:"Lưu" },
+  ui_continue: { en:"Continue", zh:"继续", hi:"जारी रखें", es:"Continuar", ar:"متابعة", fr:"Continuer", bn:"চালিয়ে যান", pt:"Continuar", ru:"Продолжить", ur:"جاری رکھیں", id:"Lanjutkan", de:"Weiter", ja:"続ける", tr:"Devam et", ko:"계속", fa:"ادامه", uk:"Продовжити", it:"Continua", pl:"Kontynuuj", vi:"Tiếp tục" },
+  ui_got_it: { en:"Got it", zh:"知道了", hi:"समझ गया", es:"Entendido", ar:"فهمت", fr:"Compris", bn:"বুঝেছি", pt:"Percebi", ru:"Понятно", ur:"سمجھ گیا", id:"Paham", de:"Alles klar", ja:"了解", tr:"Anladım", ko:"알겠어요", fa:"فهمیدم", uk:"Зрозуміло", it:"Ho capito", pl:"Jasne", vi:"Hiểu rồi" },
+  ui_age_q: { en:"How old are you?", zh:"你多大了？", hi:"आपकी उम्र कितनी है?", es:"¿Cuántos años tienes?", ar:"كم عمرك؟", fr:"Quel âge as-tu ?", bn:"আপনার বয়স কত?", pt:"Quantos anos tens?", ru:"Сколько тебе лет?", ur:"آپ کی عمر کتنی ہے؟", id:"Berapa umurmu?", de:"Wie alt bist du?", ja:"あなたは何歳ですか？", tr:"Kaç yaşındasın?", ko:"몇 살이세요?", fa:"چند ساله‌ای؟", uk:"Скільки тобі років?", it:"Quanti anni hai?", pl:"Ile masz lat?", vi:"Bạn bao nhiêu tuổi?" },
+  ui_age_aria: { en:"Your age", zh:"你的年龄", hi:"आपकी उम्र", es:"Tu edad", ar:"عمرك", fr:"Ton âge", bn:"আপনার বয়স", pt:"A tua idade", ru:"Твой возраст", ur:"آپ کی عمر", id:"Usia kamu", de:"Dein Alter", ja:"あなたの年齢", tr:"Yaşın", ko:"당신의 나이", fa:"سن تو", uk:"Твій вік", it:"La tua età", pl:"Twój wiek", vi:"Tuổi của bạn" },
+  ui_age_u_t: { en:"Thanks for being honest.", zh:"谢谢你的诚实。", hi:"सच बोलने के लिए धन्यवाद।", es:"Gracias por ser honesto.", ar:"شكرًا لصدقك.", fr:"Merci d'avoir été honnête.", bn:"সত্য বলার জন্য ধন্যবাদ।", pt:"Obrigado por seres honesto.", ru:"Спасибо за честность.", ur:"ایمانداری کے لیے شکریہ۔", id:"Terima kasih sudah jujur.", de:"Danke, dass du ehrlich bist.", ja:"正直に言ってくれてありがとう。", tr:"Dürüst olduğun için teşekkürler.", ko:"솔직하게 말해줘서 고마워요.", fa:"ممنون از صداقتت.", uk:"Дякуємо за чесність.", it:"Grazie per la tua sincerità.", pl:"Dzięki za szczerość.", vi:"Cảm ơn vì đã thành thật." },
+  ui_age_u_b: { en:"NovaClip needs verified parental consent for creators under 13, so we cannot open an account from here yet. Ask a parent or guardian to set one up for you from the Family Dashboard.", zh:"对于13岁以下的创作者，NovaClip需要经过验证的家长同意，所以我们暂时无法在这里开设账户。请让家长或监护人从家庭面板为您设置一个。", hi:"13 साल से कम उम्र के क्रिएटर्स के लिए NovaClip को पुष्ट माता-पिता की सहमति चाहिए, इसलिए हम अभी यहाँ से खाता नहीं खोल सकते। अपने माता-पिता या अभिभावक से फ़ैमिली डैशबोर्ड से सेट अप करने के लिए कहें।", es:"NovaClip necesita consentimiento parental verificado para creadores menores de 13 años, así que todavía no podemos abrir una cuenta desde aquí. Pide a un padre o tutor que te la configure desde el Panel Familiar.", ar:"يتطلب NovaClip موافقة أبوية موثقة للمبدعين دون 13 عامًا، لذا لا يمكننا فتح حساب من هنا بعد. اطلب من أحد الوالدين أو الوصي إنشاءه لك من لوحة العائلة.", fr:"NovaClip demande un consentement parental vérifié pour les créateurs de moins de 13 ans, donc nous ne pouvons pas encore ouvrir de compte d'ici. Demande à un parent ou tuteur d'en créer un pour toi depuis le Tableau Famille.", bn:"১৩ বছরের কম বয়সী নির্মাতাদের জন্য NovaClip-এর পিতা-মাতার নিশ্চিত সম্মতি দরকার, তাই আমরা এখান থেকে এখনো অ্যাকাউন্ট খুলতে পারি না। আপনার পিতা-মাতা বা অভিভাবককে ফ্যামিলি ড্যাশবোর্ড থেকে তৈরি করতে বলুন।", pt:"A NovaClip precisa de consentimento parental verificado para criadores com menos de 13 anos, por isso ainda não podemos abrir conta daqui. Pede a um pai ou encarregado de educação que a configure a partir do Painel Familiar.", ru:"NovaClip требует подтверждённого родительского согласия для авторов младше 13 лет, поэтому мы пока не можем открыть аккаунт отсюда. Попроси родителя или опекуна создать его через Семейную панель.", ur:"13 سال سے کم عمر کے تخلیق کاروں کے لیے NovaClip کو تصدیق شدہ والدین کی رضامندی درکار ہے، اس لیے ہم ابھی یہاں سے اکاؤنٹ نہیں کھول سکتے۔ اپنے والدین یا سرپرست سے فیملی ڈیش بورڈ سے سیٹ اپ کرنے کو کہیں۔", id:"NovaClip memerlukan persetujuan orang tua yang terverifikasi untuk kreator di bawah 13 tahun, jadi kami belum bisa membuka akun dari sini. Minta orang tua atau wali membuatkannya dari Dasbor Keluarga.", de:"NovaClip braucht die bestätigte Einwilligung der Eltern für Creator unter 13, daher können wir hier noch kein Konto eröffnen. Bitte deine Eltern oder deinen Vormund, eines über das Familien-Dashboard einzurichten.", ja:"13歳未満のクリエイターには保護者による認証済みの同意が必要です。そのため、ここからアカウントを開設することはまだできません。保護者にファミリーダッシュボードからの設定を頼んでください。", tr:"13 yaş altı içerik üreticileri için NovaClip, doğrulanmış veli onayı ister; bu yüzden buradan henüz hesap açamayız. Ebeveyninden ya da vasinden Aile Paneli'nden bir hesap kurmasını iste.", ko:"13세 미만 크리에이터는 검증된 부모 동의가 필요하므로 여기서는 아직 계정을 만들 수 없습니다. 부모님 또는 보호자에게 가족 대시보드에서 설정해 달라고 하세요.", fa:"NovaClip برای سازندگان زیر ۱۳ سال به رضایت تأییدشده والدین نیاز دارد، پس هنوز نمی‌توانیم از اینجا حساب بسازیم. از والد یا قیم بخواه از داشبورد خانواده یکی بسازد.", uk:"NovaClip потребує підтвердженої згоди батьків для творців до 13 років, тому ми поки що не можемо відкрити обліковий запис звідси. Попроси батьків або опікуна налаштувати його через Сімейну панель.", it:"NovaClip richiede il consenso parentale verificato per i creator sotto i 13 anni, quindi non possiamo ancora aprire un account da qui. Chiedi a un genitore o tutore di configurarlo dal Pannello Famiglia.", pl:"NovaClip wymaga potwierdzonej zgody rodzica dla twórców poniżej 13 lat, więc nie możemy jeszcze założyć konta stąd. Poproś rodzica lub opiekuna, aby założył je z Panelu Rodzinnego.", vi:"NovaClip yêu cầu sự đồng ý đã xác minh của phụ huynh cho nhà sáng tạo dưới 13 tuổi, vì vậy chúng tôi chưa thể mở tài khoản từ đây. Hãy nhờ cha mẹ hoặc người giám hộ thiết lập từ Bảng điều khiển Gia đình." },
+  ui_fam_dash: { en:"Open the Family Dashboard", zh:"打开家庭面板", hi:"फ़ैमिली डैशबोर्ड खोलें", es:"Abrir el Panel Familiar", ar:"فتح لوحة العائلة", fr:"Ouvrir le Tableau Famille", bn:"ফ্যামিলি ড্যাশবোর্ড খুলুন", pt:"Abrir o Painel Familiar", ru:"Открыть Семейную панель", ur:"فیملی ڈیش بورڈ کھولیں", id:"Buka Dasbor Keluarga", de:"Familien-Dashboard öffnen", ja:"ファミリーダッシュボードを開く", tr:"Aile Paneli'ni aç", ko:"가족 대시보드 열기", fa:"باز کردن داشبورد خانواده", uk:"Відкрити Сімейну панель", it:"Apri il Pannello Famiglia", pl:"Otwórz Panel Rodzinny", vi:"Mở Bảng điều khiển Gia đình" },
+  ui_age_o_t: { en:"You are over 18.", zh:"你已超过18岁。", hi:"आप 18 से अधिक हैं।", es:"Tienes más de 18 años.", ar:"أنت فوق 18 عامًا.", fr:"Tu as plus de 18 ans.", bn:"আপনার বয়স ১৮ বছরের বেশি।", pt:"Tens mais de 18 anos.", ru:"Тебе больше 18.", ur:"آپ 18 سال سے بڑے ہیں۔", id:"Kamu di atas 18 tahun.", de:"Du bist über 18.", ja:"あなたは18歳以上です。", tr:"18 yaşından büyüksün.", ko:"당신은 18세 이상입니다.", fa:"بالای ۱۸ سال هستی.", uk:"Тобі більше 18.", it:"Hai più di 18 anni.", pl:"Masz ponad 18 lat.", vi:"Bạn trên 18 tuổi." },
+  ui_age_o_b: { en:"NovaClip is built for creators aged 13 to 18, so this will not be your account — but it can be your child's. The Family Dashboard is the grown-up side: controls, activity and the comment scanner.", zh:"NovaClip专为13至18岁的创作者打造，所以这不会是您的账户——但它可以是您孩子的。家庭面板是成人端：控制、活动和评论扫描器。", hi:"NovaClip 13-18 साल के क्रिएटर्स के लिए बना है, इसलिए यह आपका खाता नहीं होगा — लेकिन आपके बच्चे का हो सकता है। फ़ैमिली डैशबोर्ड बड़ों वाला हिस्सा है: नियंत्रण, गतिविधि और कमेंट स्कैनर।", es:"NovaClip está hecho para creadores de 13 a 18 años, así que esta no será tu cuenta, pero sí puede ser la de tu hijo. El Panel Familiar es el lado adulto: controles, actividad y el escáner de comentarios.", ar:"NovaClip مبني للمبدعين من 13 إلى 18 عامًا، لذا لن يكون هذا حسابك — لكن يمكن أن يكون حساب طفلك. لوحة العائلة هي جانب الكبار: التحكم والنشاط وماسح التعليقات.", fr:"NovaClip est fait pour les créateurs de 13 à 18 ans, donc ce ne sera pas ton compte — mais ça peut être celui de ton enfant. Le Tableau Famille est le côté adultes : contrôles, activité et scanneur de commentaires.", bn:"NovaClip ১৩-১৮ বছরের নির্মাতাদের জন্য তৈরি, তাই এটি আপনার অ্যাকাউন্ট হবে না — তবে আপনার সন্তানের হতে পারে। ফ্যামিলি ড্যাশবোর্ড হলো বড়দের দিক: নিয়ন্ত্রণ, কার্যকলাপ আর কমেন্ট স্ক্যানার।", pt:"A NovaClip é feita para criadores de 13 a 18 anos, por isso esta não será a tua conta — mas pode ser a do teu filho. O Painel Familiar é o lado dos adultos: controlos, atividade e o scanner de comentários.", ru:"NovaClip создан для авторов от 13 до 18 лет, так что это не ваш аккаунт — но может стать аккаунтом вашего ребёнка. Семейная панель — взрослая сторона: контроль, активность и сканер комментариев.", ur:"NovaClip 13-18 سال کے تخلیق کاروں کے لیے بنایا گیا ہے، اس لیے یہ آپ کا اکاؤنٹ نہیں ہوگا — لیکن آپ کے بچے کا ہو سکتا ہے۔ فیملی ڈیش بورڈ بڑوں والا حصہ ہے: کنٹرولز، سرگرمی اور کمنٹ اسکینر۔", id:"NovaClip dibuat untuk kreator usia 13-18, jadi ini bukan akun kamu — tapi bisa jadi akun anakmu. Dasbor Keluarga adalah sisi orang dewasa: kontrol, aktivitas, dan pemindai komentar.", de:"NovaClip ist für Creator von 13 bis 18 gemacht, also wird das nicht dein Konto sein — aber es kann das deines Kindes sein. Das Familien-Dashboard ist die Erwachsenenseite: Kontrollen, Aktivität und der Kommentar-Scanner.", ja:"NovaClipは13〜18歳のクリエイター向けなので、これはあなたのアカウントにはなりません — ただしお子様のアカウントにはできます。ファミリーダッシュボードは大人側です：コントロール、アクティビティ、コメントスキャナー。", tr:"NovaClip 13-18 yaş arası içerik üreticileri için yapıldı, yani bu senin hesabın olmayacak — ama çocuğunun olabilir. Aile Paneli yetişkin tarafıdır: kontroller, etkinlik ve yorum tarayıcısı.", ko:"NovaClip은 13~18세 크리에이터를 위한 것이므로 이 계정은 당신 것이 아닙니다 — 하지만 자녀의 계정이 될 수는 있습니다. 가족 대시보드는 성인 쪽입니다: 통제, 활동, 댓글 스캐너.", fa:"NovaClip برای سازندگان ۱۳ تا ۱۸ سال ساخته شده، پس این حساب تو نیست — اما می‌تواند حساب فرزندت باشد. داشبورد خانواده سمت بزرگ‌سال‌هاست: کنترل‌ها، فعالیت و اسکنر کامنت.", uk:"NovaClip створено для творців від 13 до 18 років, тож це не твій акаунт — але може бути акаунтом твоєї дитини. Сімейна панель — доросла сторона: контроль, активність і сканер коментарів.", it:"NovaClip è pensato per creator dai 13 ai 18 anni, quindi questo non sarà il tuo account — ma può essere quello di tuo figlio. Il Pannello Famiglia è il lato adulti: controlli, attività e scanner dei commenti.", pl:"NovaClip jest stworzony dla twórców w wieku 13-18 lat, więc to nie będzie Twoje konto — ale może być kontem Twojego dziecka. Panel Rodzinny to strona dorosłych: kontrola, aktywność i skaner komentarzy.", vi:"NovaClip được tạo cho nhà sáng tạo từ 13-18 tuổi, vì vậy đây sẽ không phải tài khoản của bạn — nhưng có thể là của con bạn. Bảng điều khiển Gia đình là phía người lớn: kiểm soát, hoạt động và trình quét bình luận." },
+  ui_age_s_t: { en:"You are 16 or over.", zh:"你已年满16岁。", hi:"आप 16 या उससे अधिक हैं।", es:"Tienes 16 años o más.", ar:"عمرك 16 أو أكثر.", fr:"Tu as 16 ans ou plus.", bn:"আপনার বয়স ১৬ বা তার বেশি।", pt:"Tens 16 anos ou mais.", ru:"Тебе 16 или больше.", ur:"آپ 16 سال یا اس سے زیادہ ہیں۔", id:"Kamu berusia 16 tahun atau lebih.", de:"Du bist 16 oder älter.", ja:"あなたは16歳以上です。", tr:"16 yaşında veya üzerindesin.", ko:"당신은 16세 이상입니다.", fa:"۱۶ سال یا بیشتر داری.", uk:"Тобі 16 або більше.", it:"Hai 16 anni o più.", pl:"Masz 16 lat lub więcej.", vi:"Bạn từ 16 tuổi trở lên." },
+  ui_age_s_b: { en:"Monitoring is lighter from here: your chats are no longer logged for your parent. Parental controls can still only be fully removed by your parent, from the Family Dashboard.", zh:"从今以后监控更轻：您的聊天记录不再对家长可见。家长控制仍只能由您的家长从家庭面板完全移除。", hi:"अब से निगरानी हल्की है: आपकी चैट अब आपके माता-पिता के लिए लॉग नहीं होंगी। पैरेंटल कंट्रोल अब भी सिर्फ आपके माता-पिता ही फ़ैमिली डैशबोर्ड से पूरी तरह हटा सकते हैं।", es:"El seguimiento es más ligero a partir de aquí: tus chats ya no se registran para tus padres. Los controles parentales solo pueden eliminarse por completo desde el Panel Familiar.", ar:"المراقبة أخف من هنا: لم تعد محادثاتك تُسجّل لوالديك. لا تزال أدوات الرقابة الأبوية قابلة للإزالة كليًا فقط من لوحة العائلة.", fr:"Le suivi est plus léger à partir d'ici : tes chats ne sont plus enregistrés pour ton parent. Les contrôles parentaux ne peuvent toujours être retirés complètement que par ton parent, depuis le Tableau Famille.", bn:"এখান থেকে নজরদারি হালকা: আপনার চ্যাট আর অভিভাবকের জন্য রেকর্ড হয় না। অভিভাবক নিয়ন্ত্রণ এখনো শুধু আপনার অভিভাবকই ফ্যামিলি ড্যাশবোর্ড থেকে পুরোপুরি সরাতে পারেন।", pt:"A partir daqui a monitorização é mais leve: os teus chats deixam de ser registados para os teus pais. Os controlos parentais só podem ser totalmente removidos pelos teus pais, a partir do Painel Familiar.", ru:"Отсюда контроль становится мягче: твои чаты больше не логируются для родителей. Полностью убрать родительский контроль могут только родители, через Семейную панель.", ur:"یہاں سے نگرانی ہلکی ہے: آپ کی چٹس اب والدین کے لیے لاگ نہیں ہوں گی۔ پیرنٹل کنٹرولز کو مکمل طور پر صرف آپ کے والدین ہی فیملی ڈیش بورڈ سے ہٹا سکتے ہیں۔", id:"Pemantauan lebih ringan mulai sini: obrolanmu tidak lagi dicatat untuk orang tuamu. Kontrol orang tua tetap hanya bisa dihapus sepenuhnya oleh orang tuamu, dari Dasbor Keluarga.", de:"Ab hier ist die Überwachung leichter: Deine Chats werden nicht mehr für deine Eltern protokolliert. Elternkontrollen können weiterhin nur von deinen Eltern über das Familien-Dashboard vollständig entfernt werden.", ja:"ここから先は監視が軽くなります：あなたのチャットは保護者に記録されません。ペアレンタルコントロールの完全な解除は引き続き保護者がファミリーダッシュボードからのみ行えます。", tr:"Buradan itibaren izleme daha hafiftir: sohbetlerin artık velin için kaydedilmez. Ebeveyn denetimleri yalnızca velin tarafından, Aile Paneli'nden tamamen kaldırılabilir.", ko:"여기부터 모니터링이 가벼워집니다: 채팅이 더 이상 부모님에게 기록되지 않습니다. 자녀 보호는 여전히 부모님만 가족 대시보드에서 완전히 제거할 수 있습니다.", fa:"از اینجا به بعد نظارت سبک‌تر است: گفتگوهایت دیگر برای والدین ثبت نمی‌شوند. کنترل والدین همچنان فقط توسط والدینت و از داشبورد خانواده کاملاً قابل حذف است.", uk:"Звідси нагляд стає м'якшим: твої чати більше не логуються для батьків. Батьківський контроль можуть повністю зняти лише батьки, через Сімейну панель.", it:"Da qui in poi il monitoraggio è più leggero: le tue chat non vengono più registrate per il tuo genitore. I controlli parentali possono essere rimossi completamente solo dal tuo genitore, dal Pannello Famiglia.", pl:"Od tego momentu monitoring jest lżejszy: Twoje czaty nie są już rejestrowane dla rodzica. Kontrola rodzicielska może zostać całkowicie usunięta tylko przez Twojego rodzica, z Panelu Rodzinnego.", vi:"Giám sát nhẹ hơn từ đây: cuộc trò chuyện của bạn không còn được ghi lại cho cha mẹ. Kiểm soát phụ huynh vẫn chỉ có thể bị loại bỏ hoàn toàn bởi cha mẹ bạn, từ Bảng điều khiển Gia đình." },
+  ui_susp_t: { en:"Account suspended", zh:"账户已暂停", hi:"खाता निलंबित", es:"Cuenta suspendida", ar:"الحساب معلق", fr:"Compte suspendu", bn:"অ্যাকাউন্ট স্থগিত", pt:"Conta suspensa", ru:"Аккаунт приостановлен", ur:"اکاؤنٹ معطل", id:"Akun ditangguhkan", de:"Konto gesperrt", ja:"アカウント停止中", tr:"Hesap askıya alındı", ko:"계정이 정지됨", fa:"حساب معلق شد", uk:"Обліковий запис призупинено", it:"Account sospeso", pl:"Konto zawieszone", vi:"Tài khoản bị tạm khóa" },
+  ui_susp_b: { en:"Your access to NovaClip is paused for {n} {unit}.", zh:"您对 NovaClip 的访问已暂停 {n} {unit}。", hi:"NovaClip तक आपकी पहुँच {n} {unit} के लिए रोक दी गई है।", es:"Tu acceso a NovaClip está en pausa durante {n} {unit}.", ar:"تم إيقاف وصولك إلى NovaClip لمدة {n} {unit}.", fr:"Ton accès à NovaClip est en pause pendant {n} {unit}.", bn:"NovaClip-এ আপনার অ্যাক্সেস {n} {unit} এর জন্য স্থগিত।", pt:"O teu acesso à NovaClip está em pausa por {n} {unit}.", ru:"Твой доступ к NovaClip приостановлен на {n} {unit}.", ur:"NovaClip تک آپ کی رسائی {n} {unit} کے لیے روک دی گئی ہے۔", id:"Aksesmu ke NovaClip dijeda selama {n} {unit}.", de:"Dein Zugriff auf NovaClip ist für {n} {unit} pausiert.", ja:"NovaClipへのアクセスは{n}{unit}一時停止されています。", tr:"NovaClip erişimin {n} {unit} süreyle durduruldu.", ko:"NovaClip 액세스가 {n} {unit} 동안 일시 중지되었습니다.", fa:"دسترسی تو به NovaClip به مدت {n} {unit} متوقف شده است.", uk:"Твій доступ до NovaClip призупинено на {n} {unit}.", it:"Il tuo accesso a NovaClip è in pausa per {n} {unit}.", pl:"Twój dostęp do NovaClip jest wstrzymany na {n} {unit}.", vi:"Quyền truy cập NovaClip của bạn bị tạm dừng trong {n} {unit}." },
+  ui_day: { en:"day", zh:"天", hi:"दिन", es:"día", ar:"يوم", fr:"jour", bn:"দিন", pt:"dia", ru:"день", ur:"دن", id:"hari", de:"Tag", ja:"日間", tr:"gün", ko:"일", fa:"روز", uk:"день", it:"giorno", pl:"dzień", vi:"ngày" },
+  ui_days: { en:"days", zh:"天", hi:"दिन", es:"días", ar:"أيام", fr:"jours", bn:"দিন", pt:"dias", ru:"дня", ur:"دن", id:"hari", de:"Tage", ja:"日間", tr:"gün", ko:"일", fa:"روز", uk:"дні", it:"giorni", pl:"dni", vi:"ngày" },
+  ui_reason: { en:"Reason: ", zh:"原因：", hi:"कारण:", es:"Motivo: ", ar:"السبب: ", fr:"Raison : ", bn:"কারণ: ", pt:"Motivo: ", ru:"Причина: ", ur:"وجہ: ", id:"Alasan: ", de:"Grund: ", ja:"理由：", tr:"Neden: ", ko:"사유: ", fa:"دلیل: ", uk:"Причина: ", it:"Motivo: ", pl:"Powód: ", vi:"Lý do: " },
+  ui_susp_help: { en:"If you believe this is a mistake, ask a parent or guardian to contact support.", zh:"如果您认为这是错误，请让家长或监护人联系支持团队。", hi:"अगर आपको लगता है कि यह गलती है, तो अपने माता-पिता या अभिभावक से सहायता से संपर्क करने के लिए कहें।", es:"Si crees que es un error, pide a un padre o tutor que contacte con soporte.", ar:"إذا كنت تعتقد أن هذا خطأ، اطلب من أحد الوالدين أو الوصي التواصل مع الدعم.", fr:"Si tu penses que c'est une erreur, demande à un parent ou tuteur de contacter le support.", bn:"যদি মনে হয় এটি ভুল, তাহলে অভিভাবককে সাপোর্টে যোগাযোগ করতে বলুন।", pt:"Se achas que é um engano, pede a um pai ou encarregado de educação que contacte o apoio.", ru:"Если ты считаешь, что это ошибка, попроси родителя или опекуна связаться со службой поддержки.", ur:"اگر آپ کو لگتا ہے کہ یہ غلطی ہے، تو والدین یا سرپرست سے سپورٹ سے رابطہ کرنے کو کہیں۔", id:"Jika menurutmu ini kesalahan, minta orang tua atau wali untuk menghubungi dukungan.", de:"Wenn du glaubst, dass das ein Fehler ist, bitte deine Eltern oder deinen Vormund, den Support zu kontaktieren.", ja:"もし誤りだと思うなら、保護者にサポートへの連絡を頼んでください。", tr:"Bunun bir hata olduğunu düşünüyorsan, velinden destekle iletişime geçmesini iste.", ko:"이것이 실수라고 생각되면 부모님 또는 보호자에게 지원팀에 연락하도록 하세요.", fa:"اگر فکر می‌کنی این اشتباه است، از والد یا قیم بخواه با پشتیبانی تماس بگیرد.", uk:"Якщо ти вважаєш, що це помилка, попроси батьків або опікуна звернутися в підтримку.", it:"Se pensi che sia un errore, chiedi a un genitore o tutore di contattare il supporto.", pl:"Jeśli uważasz, że to pomyłka, poproś rodzica lub opiekuna o kontakt ze wsparciem.", vi:"Nếu bạn nghĩ đây là nhầm lẫn, hãy nhờ cha mẹ hoặc người giám hộ liên hệ bộ phận hỗ trợ." },
+  ui_break_t: { en:"Time for a break", zh:"该休息一下了", hi:"ब्रेक का समय है", es:"Hora de un descanso", ar:"حان وقت الاستراحة", fr:"C'est l'heure de la pause", bn:"বিরতির সময় হয়েছে", pt:"Hora de uma pausa", ru:"Время отдохнуть", ur:"آرام کا وقت ہے", id:"Waktunya istirahat", de:"Zeit für eine Pause", ja:"休憩の時間です", tr:"Mola zamanı", ko:"휴식 시간입니다", fa:"وقت استراحت است", uk:"Час перерви", it:"È ora di una pausa", pl:"Czas na przerwę", vi:"Đến giờ nghỉ ngơi" },
+  ui_break_b: { en:"You have been here an hour and a half. Stand up, look out of a window, drink something. NovaClip will be here.", zh:"你已经在这里待了一个半小时。站起来，看看窗外，喝点东西。NovaClip 会一直在这里。", hi:"आप डेढ़ घंटे से यहाँ हैं। खड़े हो जाएँ, खिड़की से बाहर देखें, कुछ पीएँ। NovaClip यहीं रहेगा।", es:"Llevas aquí una hora y media. Levántate, mira por la ventana, bebe algo. NovaClip seguirá aquí.", ar:"لقد قضيت هنا ساعة ونصف. قف، انظر من النافذة، واشرب شيئًا. سيبقى NovaClip هنا.", fr:"Tu es là depuis une heure et demie. Lève-toi, regarde par la fenêtre, bois quelque chose. NovaClip sera toujours là.", bn:"আপনি এখানে দেড় ঘণ্টা ধরে আছেন। উঠে দাঁড়ান, জানালা দিয়ে বাইরে দেখুন, কিছু পান করুন। NovaClip এখানেই থাকবে।", pt:"Estás aqui há hora e meia. Levanta-te, olha pela janela, bebe qualquer coisa. A NovaClip vai continuar aqui.", ru:"Ты здесь уже полтора часа. Встань, посмотри в окно, выпей чего-нибудь. NovaClip никуда не денется.", ur:"آپ یہاں ڈیڑھ گھنٹے سے ہیں۔ کھڑے ہوں، کھڑکی سے باہر دیکھیں، کچھ پیئیں۔ NovaClip یہی رہے گا۔", id:"Kamu sudah di sini satu setengah jam. Berdiri, lihat ke luar jendela, minum sesuatu. NovaClip akan tetap di sini.", de:"Du bist schon eineinhalb Stunden hier. Steh auf, schau aus dem Fenster, trink etwas. NovaClip bleibt da.", ja:"あなたはここに1時間半います。立ち上がって、窓の外を見て、何か飲みましょう。NovaClipはここにあります。", tr:"Burada bir buçuk saattirsin. Kalk, pencereden dışarı bak, bir şeyler iç. NovaClip burada kalacak.", ko:"여기에 한 시간 반 동안 머물렀습니다. 일어나서 창밖을 보고, 물을 마시세요. NovaClip은 여기에 있습니다.", fa:"یک ساعت و نیم است اینجایی. بلند شو، از پنجره بیرون را نگاه کن، چیزی بنوش. NovaClip همین‌جا می‌ماند.", uk:"Ти тут уже півтори години. Встань, подивись у вікно, випий чогось. NovaClip нікуди не подінеться.", it:"Sei qui da un'ora e mezza. Alzati, guarda fuori dalla finestra, bevi qualcosa. NovaClip resterà qui.", pl:"Jesteś tu od półtorej godziny. Wstań, popatrz przez okno, napij się czegoś. NovaClip tu zostanie.", vi:"Bạn đã ở đây một tiếng rưỡi. Đứng dậy, nhìn ra ngoài cửa sổ, uống chút gì đó. NovaClip sẽ vẫn ở đây." },
+  ui_left: { en:"{t} left", zh:"还剩 {t}", hi:"{t} बाकी", es:"quedan {t}", ar:"متبقي {t}", fr:"{t} restantes", bn:"বাকি {t}", pt:"faltam {t}", ru:"осталось {t}", ur:"{t} باقی", id:"tersisa {t}", de:"noch {t}", ja:"残り{t}", tr:"{t} kaldı", ko:"{t} 남음", fa:"{t} مانده", uk:"лишилось {t}", it:"restano {t}", pl:"zostało {t}", vi:"còn lại {t}" },
+  ui_set_name: { en:"Set your name", zh:"设置你的名字", hi:"अपना नाम सेट करें", es:"Pon tu nombre", ar:"حدد اسمك", fr:"Choisis ton nom", bn:"আপনার নাম সেট করুন", pt:"Define o teu nome", ru:"Задай имя", ur:"اپنا نام سیٹ کریں", id:"Atur namamu", de:"Setz deinen Namen", ja:"名前を設定", tr:"Adını belirle", ko:"이름 설정하기", fa:"نامت را تنظیم کن", uk:"Задай своє ім'я", it:"Imposta il tuo nome", pl:"Ustaw swoją nazwę", vi:"Đặt tên của bạn" },
+  ui_profile: { en:"Your profile", zh:"你的资料", hi:"आपकी प्रोफ़ाइल", es:"Tu perfil", ar:"ملفك الشخصي", fr:"Ton profil", bn:"আপনার প্রোফাইল", pt:"O teu perfil", ru:"Твой профиль", ur:"آپ کا پروفائل", id:"Profilmu", de:"Dein Profil", ja:"あなたのプロフィール", tr:"Profilin", ko:"내 프로필", fa:"پروفایل تو", uk:"Твій профіль", it:"Il tuo profilo", pl:"Twój profil", vi:"Hồ sơ của bạn" },
+  ui_name: { en:"Name", zh:"名字", hi:"नाम", es:"Nombre", ar:"الاسم", fr:"Nom", bn:"নাম", pt:"Nome", ru:"Имя", ur:"نام", id:"Nama", de:"Name", ja:"名前", tr:"Ad", ko:"이름", fa:"نام", uk:"Ім'я", it:"Nome", pl:"Nazwa", vi:"Tên" },
+  ui_name_ph: { en:"What should we call you?", zh:"我们该叫你什么？", hi:"हम आपको क्या बुलाएँ?", es:"¿Cómo te llamamos?", ar:"بماذا نناديك؟", fr:"Comment t'appeler ?", bn:"আপনাকে কী বলে ডাকব?", pt:"Como te chamamos?", ru:"Как тебя называть?", ur:"ہم آپ کو کیا کہیں؟", id:"Kami memanggilmu apa?", de:"Wie sollen wir dich nennen?", ja:"あなたのことを何と呼べばいいですか？", tr:"Sana ne diyelim?", ko:"어떻게 부를까요?", fa:"چی صدايت کنیم؟", uk:"Як тебе називати?", it:"Come ti chiamiamo?", pl:"Jak cię nazwać?", vi:"Chúng tôi nên gọi bạn là gì?" },
+  ui_picture: { en:"Picture", zh:"头像", hi:"तस्वीर", es:"Imagen", ar:"الصورة", fr:"Photo", bn:"ছবি", pt:"Imagem", ru:"Картинка", ur:"تصویر", id:"Gambar", de:"Bild", ja:"画像", tr:"Resim", ko:"사진", fa:"عکس", uk:"Зображення", it:"Immagine", pl:"Obraz", vi:"Ảnh" },
+  ui_or_own: { en:"or use your own", zh:"或使用你自己的", hi:"या अपनी खुद की चुनें", es:"o usa la tuya", ar:"أو استخدم صورتك", fr:"ou utilise la tienne", bn:"বা আপনার নিজের ব্যবহার করুন", pt:"ou usa a tua", ru:"или свою картинку", ur:"یا اپنی استعمال کریں", id:"atau pakai gambarmu sendiri", de:"oder verwende dein eigenes", ja:"または自分のを使う", tr:"ya da kendi resmini kullan", ko:"또는 직접 만든 것 사용", fa:"یا از عکس خودت استفاده کن", uk:"або своє зображення", it:"oppure usa la tua", pl:"albo użyj własnego", vi:"hoặc dùng ảnh của bạn" },
+  ui_local_only: { en:"Both stay in this browser. There is no server here, so nothing is uploaded and nobody else can see them.", zh:"这两项都只保存在此浏览器中。这里没有服务器，因此不会上传任何内容，其他人也看不到。", hi:"दोनों इसी ब्राउज़र में रहते हैं। यहाँ कोई सर्वर नहीं है, इसलिए कुछ भी अपलोड नहीं होता और कोई और इन्हें नहीं देख सकता।", es:"Ambos se quedan en este navegador. No hay servidor aquí, así que nada se sube y nadie más puede verlos.", ar:"كلاهما يبقى في هذا المتصفح. لا يوجد خادم هنا، لذا لا يُرفع أي شيء ولا يستطيع أي شخص آخر رؤيتهما.", fr:"Les deux restent dans ce navigateur. Il n'y a pas de serveur ici, donc rien n'est envoyé et personne d'autre ne peut les voir.", bn:"দুটোই এই ব্রাউজারেই থাকে। এখানে কোনো সার্ভার নেই, তাই কিছুই আপলোড হয় না এবং অন্য কেউ দেখতে পায় না।", pt:"Ambos ficam neste navegador. Não há servidor aqui, por isso nada é enviado e mais ninguém os pode ver.", ru:"Оба остаются в этом браузере. Сервера нет, поэтому ничего не загружается и никто другой их не увидит.", ur:"دونوں اسی براؤزر میں رہتے ہیں۔ یہاں کوئی سرور نہیں، اس لیے کچھ اپ لوڈ نہیں ہوتا اور کوئی اور انہیں نہیں دیکھ سکتا۔", id:"Keduanya tetap di browser ini. Tidak ada server di sini, jadi tidak ada yang diunggah dan tidak ada orang lain yang bisa melihatnya.", de:"Beides bleibt in diesem Browser. Es gibt hier keinen Server, also wird nichts hochgeladen und niemand sonst kann sie sehen.", ja:"どちらもこのブラウザにのみ保存されます。ここにサーバーはないので、アップロードはされず、他の誰にも見えません。", tr:"İkisi de bu tarayıcıda kalır. Burada sunucu yok, yani hiçbir şey yüklenmez ve başka kimse göremez.", ko:"둘 다 이 브라우저에만 남습니다. 여기에는 서버가 없어 아무것도 업로드되지 않고 다른 누구도 볼 수 없습니다.", fa:"هر دو فقط در همین مرورگر می‌مانند. اینجا سروری نیست، پس چیزی آپلود نمی‌شود و هیچ‌کس دیگری نمی‌تواند ببیندشان.", uk:"Обидва залишаються в цьому браузері. Тут немає сервера, тому нічого не завантажується і ніхто інший їх не побачить.", it:"Entrambi restano in questo browser. Non c'è un server qui, quindi nulla viene caricato e nessun altro può vederli.", pl:"Obie rzeczy zostają w tej przeglądarce. Nie ma tu serwera, więc nic nie jest wysyłane i nikt inny ich nie zobaczy.", vi:"Cả hai chỉ ở lại trong trình duyệt này. Không có máy chủ ở đây, nên không có gì được tải lên và không ai khác có thể nhìn thấy chúng." },
+  ui_ai_key: { en:"Your own AI key (optional)", zh:"你自己的 AI 密钥（可选）", hi:"आपकी अपनी AI कुंजी (वैकल्पिक)", es:"Tu propia clave de IA (opcional)", ar:"مفتاح الذكاء الاصطناعي الخاص بك (اختياري)", fr:"Ta propre clé IA (facultatif)", bn:"আপনার নিজের AI কী (ঐচ্ছিক)", pt:"A tua própria chave de IA (opcional)", ru:"Свой ключ ИИ (необязательно)", ur:"آپ کی اپنی AI کلید (اختیاری)", id:"Kunci AI milikmu sendiri (opsional)", de:"Dein eigener KI-Schlüssel (optional)", ja:"自分のAIキー（任意）", tr:"Kendi YZ anahtarın (isteğe bağlı)", ko:"나만의 AI 키 (선택 사항)", fa:"کلید AI خودت (اختیاری)", uk:"Власний ШІ-ключ (необов'язково)", it:"La tua chiave IA (facoltativa)", pl:"Własny klucz AI (opcjonalnie)", vi:"Khóa AI của riêng bạn (tùy chọn)" },
+  ui_key_shared: { en:"Leave this empty and the AI here uses NovaClip's shared key, which is free but gets busy. A key of your own from {link} skips the queue. It is kept in this browser and sent straight to Google — so the requests are billed to you, and anyone with your device can read it. Do not paste a key you also use for anything important.", zh:"留空则此处 AI 使用 NovaClip 的共享密钥，免费但会比较繁忙。从 {link} 获取您自己的密钥即可跳过队列。它保存在此浏览器中并直接发送给 Google——因此请求将计入您的账单，任何使用您设备的人都可以读取。请勿粘贴您用于其他重要事项的密钥。", hi:"इसे खाली छोड़ें और यहाँ की AI NovaClip का शेयर किया हुआ की इस्तेमाल करती है, जो मुफ़्त है पर व्यस्त हो जाती है। {link} से अपनी खुद की कुंजी मिलेगी तो कतार छूट जाएगी। यह इसी ब्राउज़र में रहती है और सीधे Google को जाती है — इसलिए रिक्वेस्ट आपके बिल पर आती हैं, और आपके डिवाइस वाला कोई भी इसे पढ़ सकता है। कोई ऐसी कुंजी न डालें जो आप किसी ज़रूरी चीज़ के लिए भी इस्तेमाल करते हैं।", es:"Déjalo vacío y la IA usará la clave compartida de NovaClip, que es gratis pero se satura. Una clave propia de {link} evita la espera. Se guarda en este navegador y se envía directamente a Google, así que las peticiones se cobran a tu cuenta y cualquiera con tu dispositivo puede leerla. No pegues una clave que también uses para algo importante.", ar:"اتركه فارغًا وسيستخدم الذكاء الاصطناعي هنا المفتاح المشترك لـ NovaClip، وهو مجاني لكنه يزدحم. مفتاح خاص بك من {link} يتخطى قائمة الانتظار. يُحفظ في هذا المتصفح ويُرسل مباشرة إلى جوجل — لذا تُحاسب الطلبات عليك، ويمكن لأي شخص يملك جهازك قراءته. لا تلصق مفتاحًا تستخدمه أيضًا لأي شيء مهم.", fr:"Laisse vide et l'IA utilisera la clé partagée de NovaClip, gratuite mais souvent saturée. Une clé personnelle depuis {link} passe avant tout le monde. Elle est gardée dans ce navigateur et envoyée directement à Google — donc les requêtes sont facturées à toi, et n'importe qui avec ton appareil peut la lire. Ne colle pas une clé que tu utilises aussi pour quelque chose d'important.", bn:"খালি রাখলে এখানকার AI NovaClip-এর শেয়ার করা কী ব্যবহার করে, যা ফ্রি কিন্তু ব্যস্ত হয়ে যায়। {link} থেকে নিজের একটি কী নিলে সারি এড়ানো যায়। এটি এই ব্রাউজারেই থাকে এবং সরাসরি Google-এ যায় — তাই রিকোয়েস্ট আপনার বিলে আসে, আর আপনার ডিভাইসে থাকা যে কেউ এটি পড়তে পারে। গুরুত্বপূর্ণ কোনো কাজে ব্যবহৃত কী এখানে পেস্ট করবেন না।", pt:"Deixa vazio e a IA usa a chave partilhada da NovaClip, que é grátis mas fica ocupada. Uma chave tua do {link} passa à frente da fila. É guardada neste navegador e enviada diretamente para o Google — por isso os pedidos são cobrados a ti, e qualquer pessoa com o teu dispositivo pode lê-la. Não coles uma chave que também uses para algo importante.", ru:"Оставь пустым — ИИ использует общий ключ NovaClip: бесплатно, но бывает перегружен. Свой ключ из {link} минует очередь. Он хранится в этом браузере и уходит напрямую в Google — поэтому запросы оплачиваются тобой, и любой, у кого твоё устройство, сможет его прочитать. Не вставляй ключ, который используешь ещё для чего-то важного.", ur:"خالی چھوڑ دیں تو یہاں کی AI NovaClip کی مشترکہ کلید استعمال کرتی ہے، جو مفت ہے مگر مصروف ہو جاتی ہے۔ {link} سے اپنی کلید لینے پر قطار ختم۔ یہ اسی براؤزر میں رہتی ہے اور براہ راست Google کو جاتی ہے — اس لیے درخواستیں آپ کے بل پر آتی ہیں، اور آپ کی ڈیوائس والا کوئی بھی اسے پڑھ سکتا ہے۔ ایسی کلید نہ چسپاں کریں جو آپ کسی اہم چیز کے لیے بھی استعمال کرتے ہیں۔", id:"Biarkan kosong dan AI di sini memakai kunci bersama NovaClip, yang gratis tapi sering sibuk. Kunci milikmu dari {link} melompati antrean. Kunci itu disimpan di browser ini dan dikirim langsung ke Google — jadi permintaannya ditagih ke kamu, dan siapa pun yang memegang perangkatmu bisa membacanya. Jangan tempel kunci yang juga kamu pakai untuk hal penting.", de:"Leer lassen und die KI nutzt den gemeinsamen NovaClip-Schlüssel: kostenlos, aber schnell ausgelastet. Ein eigener Schlüssel von {link} umgeht die Warteschlange. Er bleibt in diesem Browser und geht direkt an Google — die Anfragen werden also dir in Rechnung gestellt, und jeder mit deinem Gerät kann ihn lesen. Füge keinen Schlüssel ein, den du auch für etwas Wichtiges nutzt.", ja:"空のままにすると、ここではNovaClipの共有キーが使われます。無料ですが混み合います。{link}で自分のキーを取得すれば待ち時間を回避できます。キーはこのブラウザに保存され、直接Googleに送られます — そのためリクエストはあなたに請求され、あなたの端末を使う誰でも読めます。重要な用途でも使うキーは貼り付けないでください。", tr:"Boş bırakırsan buradaki YZ, NovaClip'in paylaşılan anahtarını kullanır; ücretsizdir ama yoğunlaşır. {link}'ten kendi anahtarın kuyruğu atlar. Tarayıcıda saklanır ve doğrudan Google'a gider — bu yüzden istekler sana faturalanır ve cihazındaki herkes okuyabilir. Başka önemli bir şeyde de kullandığın anahtarı yapıştırma.", ko:"비워두면 여기의 AI가 NovaClip 공유 키를 사용합니다. 무료지만 바쁠 수 있습니다. {link}에서 직접 만든 키를 쓰면 대기열을 건너뜁니다. 키는 이 브라우저에 저장되고 Google로 직접 전송됩니다 — 따라서 요청은 당신에게 청구되고, 당신의 기기를 가진 누구나 읽을 수 있습니다. 다른 중요한 곳에 쓰는 키는 붙여넣지 마세요.", fa:"خالی بگذار تا هوش مصنوعی از کلید مشترک NovaClip استفاده کند؛ رایگان است ولی شلوغ می‌شود. گرفتن کلید خودت از {link} از صف عبور می‌کند. کلید در همین مرورگر می‌ماند و مستقیم به گوگل فرستاده می‌شود — پس هزینه درخواست‌ها به حساب تو می‌رود و هرکسی که دستگاهت در دستش باشد می‌تواند آن را بخواند. کلیدی را که برای کار مهم دیگری هم استفاده می‌کنی نچسبان.", uk:"Залиш порожнім — ШІ використає спільний ключ NovaClip: безкоштовно, але буває перевантажений. Власний ключ із {link} обійде чергу. Він зберігається в цьому браузері та йде прямо в Google — тому запити оплачуються тобою, а будь-хто з твоїм пристроєм зможе його прочитати. Не вставляй ключ, який використовуєш ще для чогось важливого.", it:"Lascia vuoto e l'IA userà la chiave condivisa di NovaClip: gratuita ma spesso occupata. Una chiave tua da {link} salta la coda. Viene conservata in questo browser e inviata direttamente a Google — quindi le richieste vengono addebitate a te, e chiunque abbia il tuo dispositivo può leggerla. Non incollare una chiave che usi anche per qualcosa di importante.", pl:"Zostaw puste, a AI użyje współdzielonego klucza NovaClip — darmowy, ale bywa zajęty. Własny klucz z {link} omija kolejkę. Jest przechowywany w tej przeglądarce i wysyłany bezpośrednio do Google — więc żądania są rozliczane na Ciebie, a każdy, kto ma Twoje urządzenie, może go odczytać. Nie wklejaj klucza, którego używasz też do czegoś ważnego.", vi:"Để trống thì AI ở đây sẽ dùng khóa chung của NovaClip, miễn phí nhưng hay bận. Một khóa riêng từ {link} sẽ được ưu tiên. Khóa được giữ trong trình duyệt này và gửi thẳng đến Google — vì vậy yêu cầu sẽ tính vào tài khoản của bạn, và bất kỳ ai có thiết bị của bạn đều đọc được. Đừng dán một khóa bạn cũng dùng cho việc gì đó quan trọng." },
+  ui_key_bad: { en:"A Google AI key starts with AIza and is about 39 characters. That one is not.", zh:"Google AI 密钥以 AIza 开头，约39个字符。这个不是。", hi:"Google AI कुंजी AIza से शुरू होती है और लगभग 39 अक्षरों की होती है। यह वैसी नहीं है।", es:"Una clave de IA de Google empieza por AIza y tiene unos 39 caracteres. Esa no.", ar:"يبدأ مفتاح Google AI بـ AIza ويبلغ حوالي 39 حرفًا. هذا ليس كذلك.", fr:"Une clé Google IA commence par AIza et fait environ 39 caractères. Celle-ci ne l'est pas.", bn:"Google AI কী AIza দিয়ে শুরু হয় এবং প্রায় ৩৯ অক্ষরের হয়। এটি সেরকম নয়।", pt:"Uma chave de IA do Google começa por AIza e tem cerca de 39 caracteres. Essa não.", ru:"Ключ Google AI начинается с AIza и содержит около 39 символов. Этот — нет.", ur:"Google AI کلید AIza سے شروع ہوتی ہے اور تقریباً 39 حروف پر مشتمل ہوتی ہے۔ یہ وہ نہیں ہے۔", id:"Kunci AI Google diawali AIza dan panjangnya sekitar 39 karakter. Itu bukan.", de:"Ein Google-KI-Schlüssel beginnt mit AIza und hat etwa 39 Zeichen. Dieser ist es nicht.", ja:"Google AIキーは「AIza」で始まり、約39文字です。それは違います。", tr:"Google YZ anahtarı AIza ile başlar ve yaklaşık 39 karakterdir. O öyle değil.", ko:"Google AI 키는 AIza로 시작하며 약 39자입니다. 그건 아닙니다.", fa:"کلید AI گوگل با AIza شروع می‌شود و حدود ۳۹ کاراکتر است. این یکی نیست.", uk:"Ключ Google AI починається з AIza і має близько 39 символів. Цей — ні.", it:"Una chiave IA di Google inizia con AIza ed è di circa 39 caratteri. Questa non lo è.", pl:"Klucz AI Google zaczyna się od AIza i ma około 39 znaków. Ten nie jest.", vi:"Khóa AI của Google bắt đầu bằng AIza và dài khoảng 39 ký tự. Cái này không phải." },
+  ui_name_short: { en:"A name needs at least two characters.", zh:"名字至少需要两个字符。", hi:"नाम कम से कम दो अक्षरों का होना चाहिए।", es:"El nombre necesita al menos dos caracteres.", ar:"يحتاج الاسم إلى حرفين على الأقل.", fr:"Le nom doit faire au moins deux caractères.", bn:"নাম কমপক্ষে দুই অক্ষরের হতে হবে।", pt:"O nome precisa de pelo menos dois caracteres.", ru:"Имя должно содержать минимум два символа.", ur:"نام کم از کم دو حروف کا ہونا چاہیے۔", id:"Nama minimal harus dua karakter.", de:"Ein Name braucht mindestens zwei Zeichen.", ja:"名前は2文字以上必要です。", tr:"Bir ad en az iki karakter olmalı.", ko:"이름은 최소 두 글자 이상이어야 합니다.", fa:"نام باید حداقل دو کاراکتر باشد.", uk:"Ім'я має містити щонайменше два символи.", it:"Il nome deve avere almeno due caratteri.", pl:"Nazwa musi mieć co najmniej dwa znaki.", vi:"Tên cần ít nhất hai ký tự." },
+  ui_name_taken: { en:"Pick something else — that one will not fly here.", zh:"请换一个——这个名字在这里不受欢迎。", hi:"कुछ और चुनें — यह वाला यहाँ नहीं चलेगा।", es:"Elige otra cosa: esa aquí no cuela.", ar:"اختر شيئًا آخر — هذا الاسم غير مقبول هنا.", fr:"Choisis autre chose — celui-là ne passera pas ici.", bn:"অন্য কিছু বেছে নিন — এটা এখানে চলবে না।", pt:"Escolhe outra coisa — essa aqui não vai colar.", ru:"Выбери что-нибудь другое — это здесь не пройдёт.", ur:"کچھ اور چنیں — یہ یہاں نہیں چلے گا۔", id:"Pilih yang lain — itu tidak akan diterima di sini.", de:"Nimm etwas anderes — das wird hier nicht klappen.", ja:"別の名前にしてください — それはここでは通りません。", tr:"Başka bir şey seç — o burada kabul edilmez.", ko:"다른 걸 골라주세요 — 그건 여기서 통하지 않습니다.", fa:"چیز دیگری انتخاب کن — این‌جا پذیرفته نمی‌شود.", uk:"Обери щось інше — це тут не пройде.", it:"Scegli qualcos'altro — qui non passa.", pl:"Wybierz coś innego — to tu nie przejdzie.", vi:"Chọn cái khác đi — cái đó không hợp ở đây." },
+  ui_unlocked: { en:"UNLOCKED: ", zh:"已解锁：", hi:"अनलॉक हुआ: ", es:"DESBLOQUEADO: ", ar:"تم فتح: ", fr:"DÉBLOQUÉ : ", bn:"আনলক হয়েছে: ", pt:"DESBLOQUEADO: ", ru:"ОТКРЫТО: ", ur:"انلاک ہو گیا: ", id:"TERBUKA: ", de:"FREIGESCHALTET: ", ja:"解放！", tr:"AÇILDI: ", ko:"잠금 해제: ", fa:"باز شد: ", uk:"ВІДКРИТО: ", it:"SBLOCCATO: ", pl:"ODBLOKOWANO: ", vi:"ĐÃ MỞ KHÓA: " },
+  ui_done: { en:" — DONE", zh:"— 已完成", hi:"— पूरा हुआ", es:"— HECHO", ar:"— تم", fr:"— FAIT", bn:"— সম্পন্ন", pt:"— FEITO", ru:"— ГОТОВО", ur:"— مکمل", id:"— SELESAI", de:"— ERLEDIGT", ja:"— 達成", tr:"— TAMAM", ko:"— 완료", fa:"— انجام شد", uk:"— ГОТОВО", it:"— FATTO", pl:"— ZROBIONE", vi:"— XONG" },
+  ui_go: { en:"NovaCoins to go", zh:"还需积分", hi:"और पॉइंट चाहिए", es:"puntos por conseguir", ar:"نقاط متبقية", fr:"points restants", bn:"আরো পয়েন্ট বাকি", pt:"pontos em falta", ru:"до награды", ur:"مزید پوائنٹس درکار", id:"poin lagi", de:"Punkte bis zum Ziel", ja:"あとポイント", tr:"kalan puan", ko:"남은 포인트", fa:"امتیاز دیگر لازم است", uk:"балів до нагороди", it:"punti mancanti", pl:"punktów do zdobycia", vi:"điểm còn thiếu" },
+  ui_reach: { en:"Reach {n} NovaCoins (you have {p})", zh:"达到 {n} 积分（你有 {p}）", hi:"{n} पॉइंट तक पहुँचें (आपके पास {p} हैं)", es:"Llega a {n} puntos (tienes {p})", ar:"بلوغ {n} نقطة (لديك {p})", fr:"Atteins {n} points (tu en as {p})", bn:"{n} পয়েন্টে পৌঁছান (আপনার আছে {p})", pt:"Atinge {n} pontos (tens {p})", ru:"Набери {n} очков (у тебя {p})", ur:"{n} پوائنٹس حاصل کریں (آپ کے پاس {p} ہیں)", id:"Raih {n} poin (kamu punya {p})", de:"Erreiche {n} Punkte (du hast {p})", ja:"{n}ポイントに到達（現在{p}）", tr:"{n} puana ulaş ({p} puana sahipsin)", ko:"{n} 포인트 달성 (현재 {p})", fa:"به {n} امتیاز برس (تو {p} داری)", uk:"Набери {n} балів (у тебе {p})", it:"Raggiungi {n} punti (ne hai {p})", pl:"Osiągnij {n} punktów (masz {p})", vi:"Đạt {n} điểm (bạn có {p})" },
+  ui_reach_pts: { en:"Reach {n} NovaCoins", zh:"达到 {n} 积分", hi:"{n} पॉइंट तक पहुँचें", es:"Llega a {n} puntos", ar:"بلوغ {n} نقطة", fr:"Atteins {n} points", bn:"{n} পয়েন্টে পৌঁছান", pt:"Atinge {n} pontos", ru:"Набери {n} очков", ur:"{n} پوائنٹس حاصل کریں", id:"Raih {n} poin", de:"Erreiche {n} Punkte", ja:"{n}ポイントに到達", tr:"{n} puana ulaş", ko:"{n} 포인트 달성", fa:"به {n} امتیاز برس", uk:"Набери {n} балів", it:"Raggiungi {n} punti", pl:"Osiągnij {n} punktów", vi:"Đạt {n} điểm" },
+  ui_no_chats: { en:"No chats yet - start talking!", zh:"还没有对话——开始聊吧！", hi:"अभी कोई चैट नहीं — बातचीत शुरू करें!", es:"Aún no hay chats: ¡empieza a hablar!", ar:"لا توجد محادثات بعد — ابدأ التحدث!", fr:"Pas encore de chats — lance-toi !", bn:"এখনো কোনো চ্যাট নেই — শুরু করুন!", pt:"Ainda não há conversas — começa a falar!", ru:"Пока нет чатов — начни говорить!", ur:"ابھی کوئی چیٹ نہیں — بات شروع کریں!", id:"Belum ada obrolan — mulai mengobrol!", de:"Noch keine Chats — leg los!", ja:"まだチャットがありません — 話しかけてみよう！", tr:"Henüz sohbet yok — konuşmaya başla!", ko:"아직 채팅이 없습니다 — 대화를 시작하세요!", fa:"هنوز گفتگویی نیست — شروع به گفتگو کن!", uk:"Поки що немає чатів — почни говорити!", it:"Nessuna chat per ora — inizia a parlare!", pl:"Nie ma jeszcze czatów — zacznij rozmawiać!", vi:"Chưa có cuộc trò chuyện nào — hãy bắt đầu nói chuyện!" },
+  ui_chats: { en:"{n} chats", zh:"{n} 条对话", hi:"{n} चैट", es:"{n} chats", ar:"{n} محادثة", fr:"{n} chats", bn:"{n} চ্যাট", pt:"{n} conversas", ru:"{n} чатов", ur:"{n} چیٹس", id:"{n} obrolan", de:"{n} Chats", ja:"{n}件のチャット", tr:"{n} sohbet", ko:"채팅 {n}개", fa:"{n} گفتگو", uk:"{n} чатів", it:"{n} chat", pl:"{n} czaty", vi:"{n} cuộc trò chuyện" },
+  ui_every_reward: { en:"Every reward unlocked.", zh:"所有奖励都已解锁。", hi:"हर रिवॉर्ड अनलॉक हो गया।", es:"Todas las recompensas desbloqueadas.", ar:"تم فتح كل الجوائز.", fr:"Toutes les récompenses sont débloquées.", bn:"সব পুরস্কার আনলক হয়েছে।", pt:"Todas as recompensas desbloqueadas.", ru:"Все награды открыты.", ur:"ہر انعام انلاک ہو گیا۔", id:"Semua hadiah terbuka.", de:"Alle Belohnungen freigeschaltet.", ja:"すべてのリワードを解放しました。", tr:"Tüm ödüller açıldı.", ko:"모든 보상이 잠금 해제되었습니다.", fa:"همه جوایز باز شد.", uk:"Усі нагороди відкрито.", it:"Tutti i premi sbloccati.", pl:"Wszystkie nagrody odblokowane.", vi:"Mọi phần thưởng đã mở khóa." },
+  ui_coins_to: { en:"{n} NovaCoins to {goal}", zh:"距离{goal}还需{n}积分", hi:"{goal} के लिए {n} और पॉइंट", es:"{n} puntos para {goal}", ar:"{n} نقطة حتى {goal}", fr:"{n} points avant {goal}", bn:"{goal}-এর জন্য {n} পয়েন্ট বাকি", pt:"{n} pontos para {goal}", ru:"{n} очков до {goal}", ur:"{goal} کے لیے {n} پوائنٹس باقی", id:"{n} poin menuju {goal}", de:"{n} Punkte bis {goal}", ja:"{goal}まであと{n}ポイント", tr:"{goal} için {n} puan kaldı", ko:"{goal}까지 {n} 포인트 남음", fa:"{n} امتیاز تا {goal}", uk:"{n} балів до {goal}", it:"{n} punti per {goal}", pl:"{n} punktów do {goal}", vi:"{n} điểm nữa để {goal}" },
+  q1: { en:"1 day free NovaClip Pro", zh:"免费 NovaClip Pro 1天", hi:"1 दिन मुफ़्त NovaClip Pro", es:"1 día gratis de NovaClip Pro", ar:"NovaClip Pro مجاني ليوم واحد", fr:"1 jour de NovaClip Pro gratuit", bn:"১ দিন ফ্রি NovaClip Pro", pt:"1 dia de NovaClip Pro grátis", ru:"1 день бесплатного NovaClip Pro", ur:"1 دن مفت NovaClip Pro", id:"NovaClip Pro gratis 1 hari", de:"1 Tag kostenloses NovaClip Pro", ja:"NovaClip Pro 1日無料", tr:"1 gün ücretsiz NovaClip Pro", ko:"NovaClip Pro 1일 무료", fa:"۱ روز NovaClip Pro رایگان", uk:"1 день безкоштовного NovaClip Pro", it:"1 giorno di NovaClip Pro gratis", pl:"1 dzień darmowego NovaClip Pro", vi:"NovaClip Pro miễn phí 1 ngày" },
+  q2: { en:"1 week free NovaClip Pro", zh:"免费 NovaClip Pro 1周", hi:"1 हफ्ते मुफ़्त NovaClip Pro", es:"1 semana gratis de NovaClip Pro", ar:"NovaClip Pro مجاني لأسبوع", fr:"1 semaine de NovaClip Pro gratuite", bn:"১ সপ্তাহ ফ্রি NovaClip Pro", pt:"1 semana de NovaClip Pro grátis", ru:"1 неделя бесплатного NovaClip Pro", ur:"1 ہفتہ مفت NovaClip Pro", id:"NovaClip Pro gratis 1 minggu", de:"1 Woche kostenloses NovaClip Pro", ja:"NovaClip Pro 1週間無料", tr:"1 hafta ücretsiz NovaClip Pro", ko:"NovaClip Pro 1주 무료", fa:"۱ هفته NovaClip Pro رایگان", uk:"1 тиждень безкоштовного NovaClip Pro", it:"1 settimana di NovaClip Pro gratis", pl:"1 tydzień darmowego NovaClip Pro", vi:"NovaClip Pro miễn phí 1 tuần" },
+  q3: { en:"2 weeks free NovaClip Pro", zh:"免费 NovaClip Pro 2周", hi:"2 हफ्ते मुफ़्त NovaClip Pro", es:"2 semanas gratis de NovaClip Pro", ar:"NovaClip Pro مجاني لأسبوعين", fr:"2 semaines de NovaClip Pro gratuites", bn:"২ সপ্তাহ ফ্রি NovaClip Pro", pt:"2 semanas de NovaClip Pro grátis", ru:"2 недели бесплатного NovaClip Pro", ur:"2 ہفتے مفت NovaClip Pro", id:"NovaClip Pro gratis 2 minggu", de:"2 Wochen kostenloses NovaClip Pro", ja:"NovaClip Pro 2週間無料", tr:"2 hafta ücretsiz NovaClip Pro", ko:"NovaClip Pro 2주 무료", fa:"۲ هفته NovaClip Pro رایگان", uk:"2 тижні безкоштовного NovaClip Pro", it:"2 settimane di NovaClip Pro gratis", pl:"2 tygodnie darmowego NovaClip Pro", vi:"NovaClip Pro miễn phí 2 tuần" },
+  q4: { en:"1 month free NovaClip Pro", zh:"免费 NovaClip Pro 1个月", hi:"1 महीना मुफ़्त NovaClip Pro", es:"1 mes gratis de NovaClip Pro", ar:"NovaClip Pro مجاني لشهر", fr:"1 mois de NovaClip Pro gratuit", bn:"১ মাস ফ্রি NovaClip Pro", pt:"1 mês de NovaClip Pro grátis", ru:"1 месяц бесплатного NovaClip Pro", ur:"1 مہینہ مفت NovaClip Pro", id:"NovaClip Pro gratis 1 bulan", de:"1 Monat kostenloses NovaClip Pro", ja:"NovaClip Pro 1か月無料", tr:"1 ay ücretsiz NovaClip Pro", ko:"NovaClip Pro 1개월 무료", fa:"۱ ماه NovaClip Pro رایگان", uk:"1 місяць безкоштовного NovaClip Pro", it:"1 mese di NovaClip Pro gratis", pl:"1 miesiąc darmowego NovaClip Pro", vi:"NovaClip Pro miễn phí 1 tháng" },
+  a1: { en:"Reached 30 NovaCoins", zh:"达到30积分", hi:"30 पॉइंट पहुँचे", es:"Llegaste a 30 puntos", ar:"بلغت 30 نقطة", fr:"30 points atteints", bn:"৩০ পয়েন্ট পৌঁছেছেন", pt:"Atingiste 30 pontos", ru:"Набрал 30 очков", ur:"30 پوائنٹس حاصل کیے", id:"Mencapai 30 poin", de:"30 Punkte erreicht", ja:"30ポイント達成", tr:"30 puana ulaştın", ko:"30 포인트 달성", fa:"به ۳۰ امتیاز رسیدی", uk:"Набрав 30 балів", it:"Hai raggiunto 30 punti", pl:"Osiągnąłeś 30 punktów", vi:"Đạt 30 điểm" },
+  a2: { en:"Reached 100 NovaCoins", zh:"达到100积分", hi:"100 पॉइंट पहुँचे", es:"Llegaste a 100 puntos", ar:"بلغت 100 نقطة", fr:"100 points atteints", bn:"১০০ পয়েন্ট পৌঁছেছেন", pt:"Atingiste 100 pontos", ru:"Набрал 100 очков", ur:"100 پوائنٹس حاصل کیے", id:"Mencapai 100 poin", de:"100 Punkte erreicht", ja:"100ポイント達成", tr:"100 puana ulaştın", ko:"100 포인트 달성", fa:"به ۱۰۰ امتیاز رسیدی", uk:"Набрав 100 балів", it:"Hai raggiunto 100 punti", pl:"Osiągnąłeś 100 punktów", vi:"Đạt 100 điểm" },
+  a3: { en:"Reached 250 NovaCoins", zh:"达到250积分", hi:"250 पॉइंट पहुँचे", es:"Llegaste a 250 puntos", ar:"بلغت 250 نقطة", fr:"250 points atteints", bn:"২৫০ পয়েন্ট পৌঁছেছেন", pt:"Atingiste 250 pontos", ru:"Набрал 250 очков", ur:"250 پوائنٹس حاصل کیے", id:"Mencapai 250 poin", de:"250 Punkte erreicht", ja:"250ポイント達成", tr:"250 puana ulaştın", ko:"250 포인트 달성", fa:"به ۲۵۰ امتیاز رسیدی", uk:"Набрав 250 балів", it:"Hai raggiunto 250 punti", pl:"Osiągnąłeś 250 punktów", vi:"Đạt 250 điểm" },
+  a4: { en:"Reached 500 NovaCoins", zh:"达到500积分", hi:"500 पॉइंट पहुँचे", es:"Llegaste a 500 puntos", ar:"بلغت 500 نقطة", fr:"500 points atteints", bn:"৫০০ পয়েন্ট পৌঁছেছেন", pt:"Atingiste 500 pontos", ru:"Набрал 500 очков", ur:"500 پوائنٹس حاصل کیے", id:"Mencapai 500 poin", de:"500 Punkte erreicht", ja:"500ポイント達成", tr:"500 puana ulaştın", ko:"500 포인트 달성", fa:"به ۵۰۰ امتیاز رسیدی", uk:"Набрав 500 балів", it:"Hai raggiunto 500 punti", pl:"Osiągnąłeś 500 punktów", vi:"Đạt 500 điểm" },
+  sk_yt: { en:"Connect your YouTube channel", zh:"连接你的 YouTube 频道", hi:"अपना YouTube चैनल कनेक्ट करें", es:"Conecta tu canal de YouTube", ar:"اربط قناتك في يوتيوب", fr:"Connecte ta chaîne YouTube", bn:"আপনার YouTube চ্যানেল কানেক্ট করুন", pt:"Liga o teu canal do YouTube", ru:"Подключи свой канал YouTube", ur:"اپنا YouTube چینل منسلک کریں", id:"Hubungkan channel YouTube-mu", de:"Verbinde deinen YouTube-Kanal", ja:"YouTubeチャンネルを接続", tr:"YouTube kanalını bağla", ko:"YouTube 채널 연결하기", fa:"کانال یوتیوبت را وصل کن", uk:"Підключи свій YouTube-канал", it:"Collega il tuo canale YouTube", pl:"Podłącz swój kanał YouTube", vi:"Kết nối kênh YouTube của bạn" },
+  sk_edit: { en:"Export a video from the Editor", zh:"从编辑器导出视频", hi:"एडिटर से वीडियो एक्सपोर्ट करें", es:"Exporta un vídeo desde el Editor", ar:"صدّر فيديو من المحرر", fr:"Exporte une vidéo depuis l'Éditeur", bn:"এডিটর থেকে ভিডিও এক্সপোর্ট করুন", pt:"Exporta um vídeo do Editor", ru:"Экспортируй видео из редактора", ur:"ایڈیٹر سے ویڈیو ایکسپورٹ کریں", id:"Ekspor video dari Editor", de:"Exportiere ein Video aus dem Editor", ja:"エディタから動画を書き出す", tr:"Editörden bir video dışa aktar", ko:"편집기에서 영상 내보내기", fa:"یک ویدیو از ادیتور اکسپورت کن", uk:"Експортуй відео з редактора", it:"Esporta un video dall'Editor", pl:"Wyeksportuj film z Edytora", vi:"Xuất video từ Trình chỉnh sửa" },
+  sk_trend: { en:"Run a Trend Spotter scan", zh:"运行一次趋势扫描", hi:"ट्रेंड स्पॉटर स्कैन चलाएं", es:"Haz un análisis de Tendencias", ar:"أجرِ مسحًا لتتبع الاتجاهات", fr:"Lance un scan Trend Spotter", bn:"ট্রেন্ড স্পটার স্ক্যান চালান", pt:"Faz uma análise do Trend Spotter", ru:"Запусти скан Trend Spotter", ur:"ٹرینڈ اسپاٹر اسکین چلائیں", id:"Jalankan pindai Trend Spotter", de:"Einen Trend-Spotter-Scan starten", ja:"トレンドスポッターでスキャン", tr:"Trend Spotter taraması yap", ko:"트렌드 스포터 스캔 실행하기", fa:"اسکن ترند اسپاتر را اجرا کن", uk:"Запусти скан Trend Spotter", it:"Esegui una scansione di Trend Spotter", pl:"Uruchom skan Trend Spottera", vi:"Chạy quét Trend Spotter" },
+  sk_idea: { en:"Save a video idea to your shortlist", zh:"将视频创意保存到候选清单", hi:"वीडियो आइडिया शॉर्टलिस्ट में सेव करें", es:"Guarda una idea de vídeo en tu lista corta", ar:"احفظ فكرة فيديو في قائمتك", fr:"Sauvegarde une idée de vidéo dans ta shortlist", bn:"ভিডিও আইডিয়া শর্টলিস্টে সেভ করুন", pt:"Guarda uma ideia de vídeo na tua shortlist", ru:"Сохрани идею видео в короткий список", ur:"ویڈیو آئیڈیا اپنی شارٹ لسٹ میں محفوظ کریں", id:"Simpan ide video ke daftar pendekmu", de:"Eine Videoidee in deine Shortlist speichern", ja:"動画アイデアを候補リストに保存", tr:"Bir video fikrini kısa listen'e kaydet", ko:"영상 아이디어를 후보 목록에 저장하기", fa:"یک ایده ویدیو در فهرست کوتاهت ذخیره کن", uk:"Збережи ідею відео в короткий список", it:"Salva un'idea video nella tua shortlist", pl:"Zapisz pomysł na film na listę krótką", vi:"Lưu ý tưởng video vào danh sách ngắn" },
+  sk_analytics: { en:"Review your channel analytics", zh:"查看你的频道数据", hi:"अपना चैनल एनालिटिक्स देखें", es:"Revisa tus analíticas del canal", ar:"راجع تحليلات قناتك", fr:"Consulte les stats de ta chaîne", bn:"আপনার চ্যানেল অ্যানালিটিক্স দেখুন", pt:"Revê as análises do teu canal", ru:"Просмотри аналитику канала", ur:"اپنے چینل کے تجزیات دیکھیں", id:"Tinjau analitik channel-mu", de:"Deine Kanalanalysen prüfen", ja:"チャンネル分析を確認", tr:"Kanal analitiğini incele", ko:"채널 분석 검토하기", fa:"تحلیل کانالت را مرور کن", uk:"Переглянь аналітику каналу", it:"Rivedi le analisi del tuo canale", pl:"Przejrzyj analitykę swojego kanału", vi:"Xem lại phân tích kênh của bạn" },
+  sk_ai: { en:"Ask a NovaClip AI tutor", zh:"向 NovaClip AI 导师提问", hi:"NovaClip AI ट्यूटर से पूछें", es:"Pregunta a un tutor de IA de NovaClip", ar:"اسأل مدرّس NovaClip الذكي", fr:"Demande à un tuteur IA NovaClip", bn:"NovaClip AI টিউটরকে জিজ্ঞাসা করুন", pt:"Pergunta a um tutor de IA da NovaClip", ru:"Спроси ИИ-наставника NovaClip", ur:"NovaClip AI ٹیوٹر سے پوچھیں", id:"Tanya tutor AI NovaClip", de:"Einen NovaClip-KI-Tutor fragen", ja:"NovaClipのAIチューターに質問", tr:"NovaClip YZ eğitmenine sor", ko:"NovaClip AI 튜터에게 질문하기", fa:"از مربی هوش مصنوعی NovaClip بپرس", uk:"Запитай ШІ-наставника NovaClip", it:"Chiedi a un tutor IA di NovaClip", pl:"Zapytaj korepetytora AI NovaClip", vi:"Hỏi gia sư AI NovaClip" },
+  sk_arena: { en:"Top the Strike Arena scoreboard", zh:"登顶 Strike Arena 排行榜", hi:"स्ट्राइक एरिना स्कोरबोर्ड पर टॉप करें", es:"Lidera la tabla de Strike Arena", ar:"تصدّر لوحة أهداف Strike Arena", fr:"Domine le classement de Strike Arena", bn:"স্ট্রাইক অ্যারেনা স্কোরবোর্ডে শীর্ষে যান", pt:"Lidera a tabela da Strike Arena", ru:"Стань первым в таблице Strike Arena", ur:"سٹرائیک ایرینا بورڈ میں ٹاپ کریں", id:"Puncaki papan skor Strike Arena", de:"Spitze der Strike-Arena-Wertung", ja:"Strike Arenaのランキングで1位に", tr:"Strike Arena sıralamasında zirveye çık", ko:"스트라이크 아레나 순위 1위 하기", fa:"صدرنشین جدول Strike Arena شو", uk:"Стань першим у таблиці Strike Arena", it:"Domina la classifica di Strike Arena", pl:"Zostań liderem tabeli Strike Arena", vi:"Đứng đầu bảng xếp hạng Strike Arena" },
+  cert_basic: { en:"Basic Certificate", zh:"基础证书", hi:"बेसिक सर्टिफिकेट", es:"Certificado básico", ar:"الشهادة الأساسية", fr:"Certificat de base", bn:"বেসিক সার্টিফিকেট", pt:"Certificado básico", ru:"Базовый сертификат", ur:"بنیادی سرٹیفکیٹ", id:"Sertifikat Dasar", de:"Basis-Zertifikat", ja:"ベーシック証明書", tr:"Temel Sertifika", ko:"기본 수료증", fa:"گواهی پایه", uk:"Базовий сертифікат", it:"Certificato base", pl:"Certyfikat podstawowy", vi:"Chứng chỉ cơ bản" },
+  cert_adv: { en:"Advanced Certificate", zh:"高级证书", hi:"एडवांस्ड सर्टिफिकेट", es:"Certificado avanzado", ar:"الشهادة المتقدمة", fr:"Certificat avancé", bn:"অ্যাডভান্সড সার্টিফিকেট", pt:"Certificado avançado", ru:"Продвинутый сертификат", ur:"اعلیٰ سرٹیفکیٹ", id:"Sertifikat Lanjutan", de:"Fortgeschrittenes Zertifikat", ja:"アドバンス証明書", tr:"İleri Sertifika", ko:"고급 수료증", fa:"گواهی پیشرفته", uk:"Розширений сертифікат", it:"Certificato avanzato", pl:"Certyfikat zaawansowany", vi:"Chứng chỉ nâng cao" },
+  cert_master: { en:"Master Certificate", zh:"大师证书", hi:"मास्टर सर्टिफिकेट", es:"Certificado maestro", ar:"شهادة الخبير", fr:"Certificat maître", bn:"মাস্টার সার্টিফিকেট", pt:"Certificado mestre", ru:"Сертификат мастера", ur:"ماسٹر سرٹیفکیٹ", id:"Sertifikat Master", de:"Meister-Zertifikat", ja:"マスター証明書", tr:"Usta Sertifikası", ko:"마스터 수료증", fa:"گواهی استاد", uk:"Сертифікат майстра", it:"Certificato master", pl:"Certyfikat mistrzowski", vi:"Chứng chỉ thành thạo" }
+};
+Object.assign(T, UI_T);
 
 function lang() { return localStorage.getItem('nc_lang') || 'en'; }
 function tr(key) { return (T[key] && T[key][lang()]) || (T[key] && T[key].en) || ''; }
@@ -672,18 +754,26 @@ function ncBuildBar() {
        every page, so the pill goes there: still fixed, still always visible,
        and now in a strip that is reserved rather than borrowed. Its three
        transform states have to be restated because the centring translate they
-       were built on is gone. */
-    '.jr-pill{top:8px !important;left:auto !important;right:176px !important;' +
-      'transform:none !important}' +
-    '.jr-pill:hover{transform:translateY(-1px) !important}' +
-    '.jr-pill.hidden{transform:translateY(-8px) !important}' +
+       were built on is gone.
+
+       NOT with !important, and NOT using `right`. The pill is draggable now,
+       and a drag writes style.left/style.top straight onto the element — an
+       !important rule here would outrank those and the orb would refuse to
+       move. `html body` outranks jarvis.js's own `.jr-pill` while still losing
+       to an inline style, which is exactly the order wanted: this places it,
+       and the reader gets the final say. `right` is avoided for the same
+       reason — a dragged pill has an inline `left`, and left+right together on
+       an auto-width box stretches it across the gap. */
+    'html body .jr-pill{top:8px;left:calc(100% - 176px);transform:translateX(-100%)}' +
+    'html body .jr-pill:hover{transform:translateX(-100%) translateY(-1px)}' +
+    'html body .jr-pill.hidden{transform:translateX(-100%) translateY(-8px)}' +
     /* Not enough room beside the controls on a small screen: it goes back to
        the centre, below the bar, where the page has not started yet. */
-    '@media (max-width:1180px){.jr-pill{top:' + (NC_BAR_H + 8) + 'px !important;' +
-      'left:50% !important;right:auto !important;transform:translateX(-50%) !important}' +
-      '.jr-pill:hover{transform:translateX(-50%) translateY(-1px) !important}' +
-      '.jr-pill.hidden{transform:translateX(-50%) translateY(-8px) !important}}' +
-    '.jr-sheet{top:' + (NC_BAR_H + 6) + 'px !important}' +
+    '@media (max-width:1180px){html body .jr-pill{top:' + (NC_BAR_H + 8) + 'px;' +
+      'left:50%;transform:translateX(-50%)}' +
+      'html body .jr-pill:hover{transform:translateX(-50%) translateY(-1px)}' +
+      'html body .jr-pill.hidden{transform:translateX(-50%) translateY(-8px)}}' +
+    'html body .jr-sheet{top:' + (NC_BAR_H + 6) + 'px}' +
     /* The coins badge and the Pro badge are already at the far right of the
        strip's height, so they read as part of the bar rather than fighting it —
        they only need centring against it. */
@@ -1065,6 +1155,19 @@ function ncPhrase() {
 
 const QUESTS = [[100,'1 day free NovaClip Pro'],[450,'1 week free NovaClip Pro'],[700,'2 weeks free NovaClip Pro'],[1250,'1 month free NovaClip Pro']];
 const ACHIEVEMENTS = [[30,'Reached 30 NovaCoins'],[100,'Reached 100 NovaCoins'],[250,'Reached 250 NovaCoins'],[500,'Reached 500 NovaCoins']];
+/* The English labels above double as stable ids in nc_unlocked. Translate only
+   for display, never for storage. */
+const Q_KEY = {
+  '1 day free NovaClip Pro':'q1', '1 week free NovaClip Pro':'q2',
+  '2 weeks free NovaClip Pro':'q3', '1 month free NovaClip Pro':'q4',
+  'Reached 30 NovaCoins':'a1', 'Reached 100 NovaCoins':'a2',
+  'Reached 250 NovaCoins':'a3', 'Reached 500 NovaCoins':'a4',
+  'Connect your YouTube channel':'sk_yt', 'Export a video from the Editor':'sk_edit',
+  'Run a Trend Spotter scan':'sk_trend', 'Save a video idea to your shortlist':'sk_idea',
+  'Review your channel analytics':'sk_analytics', 'Ask a NovaClip AI tutor':'sk_ai',
+  'Top the Strike Arena scoreboard':'sk_arena'
+};
+const qName = n => tr(Q_KEY[n] || n);
 
 /* ===== SKILL LEDGER =====
    Certificates are credentials, so they have to be earned. Every skill below
@@ -1116,13 +1219,13 @@ function certProgress(tier) {
   let done = 0, total = 0;
 
   total++; if (have >= req.pts) done++;
-  else missing.push({ label:'Reach ' + req.pts + ' NovaCoins', have: have, need: req.pts, icon:'' });
+  else missing.push({ label: tr('ui_reach_pts').replace('{n}', req.pts), have: have, need: req.pts, icon:'' });
 
   for (const id in req.skills) {
     const need = req.skills[id], got = skillCount(id), meta = SKILLS[id] || { icon:'•', label:id };
     total++;
     if (got >= need) done++;
-    else missing.push({ label: meta.label, have: got, need: need, icon: meta.icon });
+    else missing.push({ label: qName(meta.label), have: got, need: need, icon: meta.icon });
   }
   return { tier: tier, missing: missing, done: done, total: total, pct: Math.round(done / total * 100) };
 }
@@ -1293,6 +1396,17 @@ ncFit.textContent =
   ".sidebar a, .sidebar .navlink { font-size: clamp(13px, .62vw + 8.6px, 15px); }" +
   ".sidebar .themewrap { padding: 14px clamp(14px, 1.1vw, 20px) 22px; }" +
 
+  /* RTL: the rail sits on the right, everything that pushed for a left rail
+     mirrors. Scoped to desktop because the phone strip spans the whole width
+     and its left:0;right:0 must stay. */
+  "html[dir=rtl] .sidebar { left:auto; right:0; border-right:0; " +
+    "border-left:1px solid var(--nc-railline,rgba(255,255,255,.07)); }" +
+  "html[dir=rtl] .sidebar::before { right:auto; left:-1px; }" +
+  "html[dir=rtl] body:has(.sidebar) { margin-left:0; margin-right:var(--nc-rail); }" +
+  "html[dir=rtl] .content, html[dir=rtl] .shell, html[dir=rtl] .main { margin-left:0; margin-right:var(--nc-rail); }" +
+  "html[dir=rtl] .main { padding-left:clamp(0px, 1.2vw, 22px); padding-right:clamp(20px, 3.4vw, 64px); }" +
+  "html[dir=rtl] .wrap { margin-left:auto; margin-right:clamp(24px, 3.6vw, 64px); }" +
+
 "}" +
 
 /* Text that is comfortable on a 1280 laptop is small on a 2560 monitor, and
@@ -1362,7 +1476,7 @@ function applyTheme(name) {
 function toast(msg) { const t = document.getElementById('nctoast'); if (!t) return; t.textContent = msg; t.style.display = 'block'; clearTimeout(t.hideTimer); t.hideTimer = setTimeout(() => { t.style.display = 'none'; }, 3000); }
 window.toast = toast;   /* editor.html calls this for a missing tool script */
 function getPts() { return parseInt(localStorage.getItem('nc_points') || '0'); }
-function checkUnlocks(pts) { const u = JSON.parse(localStorage.getItem('nc_unlocked') || '[]'); for (const [need,name] of QUESTS.concat(ACHIEVEMENTS)) { if (pts >= need && !u.includes(name)) { u.push(name); setTimeout(() => toast('UNLOCKED: ' + name), 1200); } } localStorage.setItem('nc_unlocked', JSON.stringify(u)); }
+function checkUnlocks(pts) { const u = JSON.parse(localStorage.getItem('nc_unlocked') || '[]'); for (const [need,name] of QUESTS.concat(ACHIEVEMENTS)) { if (pts >= need && !u.includes(name)) { u.push(name); setTimeout(() => toast(tr('ui_unlocked') + qName(name)), 1200); } } localStorage.setItem('nc_unlocked', JSON.stringify(u)); }
 function addPts(n) { const p = getPts() + n; localStorage.setItem('nc_points', p); ncSyncSoon(); const b = document.getElementById('ncpts'); if (b) b.textContent = '🪙 ' + p; toast((n >= 0 ? '+' : '') + n + ' 🪙'); checkUnlocks(p); refreshPanels(); }
 function saveHist(subject,q,a) { const h = JSON.parse(localStorage.getItem('nc_history') || '{}'); if (!h[subject]) h[subject] = []; h[subject].push([q,a.slice(0,200)]); if (h[subject].length > 10) h[subject].shift(); localStorage.setItem('nc_history', JSON.stringify(h)); refreshPanels(); }
 /* ============================================================
@@ -1516,9 +1630,9 @@ window.ncKey = ncKey; window.ncCode = ncCode;
 
 function refreshPanels() {
   const pts = getPts();
-  const ql = document.getElementById('questlist'); if (ql) ql.innerHTML = QUESTS.map(([need,name]) => pts >= need ? name + ' — DONE' : name + ' — ' + (need - pts) + ' NovaCoins to go').join('<br>');
-  const al = document.getElementById('achlist'); if (al) al.innerHTML = ACHIEVEMENTS.map(([need,name]) => pts >= need ? name + '' : 'Reach ' + need + ' NovaCoins (you have ' + pts + ')').join('<br>');
-  const hl = document.getElementById('histlist'); if (hl) { const h = JSON.parse(localStorage.getItem('nc_history') || '{}'); let html = ''; for (const s in h) { html += '<b>' + s + '</b> (' + h[s].length + ' chats)<br>' + h[s].slice(-3).map(x => '• ' + x[0]).join('<br>') + '<br><br>'; } hl.innerHTML = html || 'No chats yet - start talking!'; }
+  const ql = document.getElementById('questlist'); if (ql) ql.innerHTML = QUESTS.map(([need,name]) => pts >= need ? qName(name) + tr('ui_done') : qName(name) + ' — ' + (need - pts) + ' ' + tr('ui_go')).join('<br>');
+  const al = document.getElementById('achlist'); if (al) al.innerHTML = ACHIEVEMENTS.map(([need,name]) => pts >= need ? qName(name) : tr('ui_reach').replace('{n}', need).replace('{p}', pts)).join('<br>');
+  const hl = document.getElementById('histlist'); if (hl) { const h = JSON.parse(localStorage.getItem('nc_history') || '{}'); let html = ''; for (const s in h) { html += '<b>' + s + '</b> (' + h[s].length + ' chats)<br>' + h[s].slice(-3).map(x => '• ' + x[0]).join('<br>') + '<br><br>'; } hl.innerHTML = html || tr('ui_no_chats'); }
 }
 /* ===== PASTED-TWICE REPAIR =====
    When a file is pasted into itself rather than over itself, the browser does
@@ -1894,10 +2008,9 @@ function ncScreenTime() {
     veil.innerHTML =
       '<div style="max-width:340px">' +
       '<div style="font-size:44px;margin-bottom:14px">⏸</div>' +
-      '<h2 style="font-size:1.5rem;font-weight:650;letter-spacing:-.02em">Time for a break</h2>' +
+      '<h2 style="font-size:1.5rem;font-weight:650;letter-spacing:-.02em">' + tr('ui_break_t') + '</h2>' +
       '<p style="color:#8A97B4;margin-top:12px;font-size:15px;line-height:1.6">' +
-      'You have been here an hour and a half. Stand up, look out of a window, ' +
-      'drink something. NovaClip will be here.</p>' +
+      tr('ui_break_b') + '</p>' +
       '<div id="ncstcd" style="margin-top:22px;font:700 34px/1 ui-monospace,monospace;' +
       'background:linear-gradient(110deg,#7C5CFF,#00E5FF);-webkit-background-clip:text;' +
       'background-clip:text;color:transparent">15:00</div>' +
@@ -1950,7 +2063,7 @@ function ncScreenTime() {
        whole time is a nag; one that appears near the end is information. */
     if (left < 10 * 60 * 1000) {
       badge.style.display = 'block';
-      badge.textContent = mmss(left) + ' left';
+      badge.textContent = tr('ui_left').replace('{t}', mmss(left));
       badge.style.color = left < 60000 ? '#FFB443' : '#8A97B4';
     } else {
       badge.style.display = 'none';
@@ -1999,7 +2112,7 @@ function ncProfile() {
       : '<span style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;' +
         'background:linear-gradient(120deg,#7C5CFF,#00E5FF);font-size:17px">' + pic + '</span>';
     box.innerHTML = face + '<span style="font-size:13.5px;font-weight:600">' +
-      (ncName() ? ncName().replace(/[<>&]/g, '') : 'Set your name') + '</span>';
+      (ncName() ? ncName().replace(/[<>&]/g, '') : tr('ui_set_name')) + '</span>';
   }
   paint();
   sb.insertBefore(box, sb.firstChild);
@@ -2014,36 +2127,33 @@ function ncProfile() {
     o.innerHTML =
       '<div style="width:100%;max-width:400px;background:#0C1220;border:1px solid rgba(255,255,255,0.12);' +
       'border-radius:20px;padding:26px;color:#EAF2FF">' +
-      '<h2 style="font-size:1.25rem;font-weight:650;margin-bottom:16px">Your profile</h2>' +
-      '<label style="display:block;font-size:12.5px;color:#8A97B4;margin-bottom:6px">Name</label>' +
-      '<input id="ncpname" maxlength="20" placeholder="What should we call you?" ' +
+      '<h2 style="font-size:1.25rem;font-weight:650;margin-bottom:16px">' + tr('ui_profile') + '</h2>' +
+      '<label style="display:block;font-size:12.5px;color:#8A97B4;margin-bottom:6px">' + tr('ui_name') + '</label>' +
+      '<input id="ncpname" maxlength="20" placeholder="' + tr('ui_name_ph') + '" ' +
       'style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.14);' +
       'background:rgba(255,255,255,0.04);color:#EAF2FF;font:inherit;font-size:15px">' +
       '<p id="ncperr" style="color:#FF6B9D;font-size:13px;margin-top:7px;display:none"></p>' +
-      '<label style="display:block;font-size:12.5px;color:#8A97B4;margin:18px 0 8px">Picture</label>' +
+      '<label style="display:block;font-size:12.5px;color:#8A97B4;margin:18px 0 8px">' + tr('ui_picture') + '</label>' +
       '<div id="ncpavs" style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px"></div>' +
       '<label style="display:block;margin-top:12px;font-size:12.5px;color:#8A97B4">' +
-      'or use your own <input type="file" id="ncpfile" accept="image/*" style="display:block;margin-top:6px;font-size:12px"></label>' +
+      tr('ui_or_own') + ' <input type="file" id="ncpfile" accept="image/*" style="display:block;margin-top:6px;font-size:12px"></label>' +
       '<p style="color:#8A97B4;font-size:12px;margin-top:10px;line-height:1.5">' +
-      'Both stay in this browser. There is no server here, so nothing is uploaded and nobody else can see them.</p>' +
+      tr('ui_local_only') + '</p>' +
       '<label style="display:block;font-size:12.5px;color:#8A97B4;margin:20px 0 6px">' +
-      'Your own AI key <span style="opacity:.7">(optional)</span></label>' +
+      tr('ui_ai_key') + '</label>' +
       '<input id="ncpkey" type="password" placeholder="AIza…" autocomplete="off" ' +
       'style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.14);' +
       'background:rgba(255,255,255,0.04);color:#EAF2FF;font:inherit;font-size:14px">' +
       '<p id="ncpkerr" style="font-size:12.5px;margin-top:7px;display:none"></p>' +
       '<p style="color:#8A97B4;font-size:12px;margin-top:8px;line-height:1.5">' +
-      'Leave this empty and the AI here uses NovaClip’s shared key, which is free but ' +
-      'gets busy. A key of your own from ' +
-      '<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" ' +
-      'style="color:#00E5FF">Google AI Studio</a> skips the queue. It is kept in this browser ' +
-      'and sent straight to Google — so the requests are billed to you, and anyone with your ' +
-      'device can read it. Do not paste a key you also use for anything important.</p>' +
+      tr('ui_key_shared').replace('{link}',
+        '<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" ' +
+        'style="color:#00E5FF">Google AI Studio</a>') + '</p>' +
       '<div style="display:flex;gap:9px;margin-top:20px">' +
       '<button id="ncpsave" style="flex:1;padding:12px;border:0;border-radius:12px;cursor:pointer;' +
-      'background:linear-gradient(110deg,#7C5CFF,#00E5FF);color:#05070E;font:inherit;font-weight:650">Save</button>' +
+      'background:linear-gradient(110deg,#7C5CFF,#00E5FF);color:#05070E;font:inherit;font-weight:650">' + tr('ui_save') + '</button>' +
       '<button id="ncpcancel" style="padding:12px 18px;border:1px solid rgba(255,255,255,0.14);' +
-      'border-radius:12px;cursor:pointer;background:none;color:#EAF2FF;font:inherit">Cancel</button>' +
+      'border-radius:12px;cursor:pointer;background:none;color:#EAF2FF;font:inherit">' + tr('ui_cancel') + '</button>' +
       '</div></div>';
     document.body.appendChild(o);
 
@@ -2084,16 +2194,16 @@ function ncProfile() {
     document.getElementById('ncpsave').onclick = () => {
       const v = document.getElementById('ncpname').value.trim();
       const err = document.getElementById('ncperr');
-      if (v.length < 2) { err.textContent = 'A name needs at least two characters.'; err.style.display = 'block'; return; }
+      if (v.length < 2) { err.textContent = tr('ui_name_short'); err.style.display = 'block'; return; }
       const mod = window.ncModerate ? ncModerate(v) : { ok: true };
-      if (!mod.ok) { err.textContent = 'Pick something else — that one will not fly here.'; err.style.display = 'block'; return; }
+      if (!mod.ok) { err.textContent = tr('ui_name_taken'); err.style.display = 'block'; return; }
       /* An empty box means "use the shared key", which is a valid choice and
          not an error. Anything else has to look like a key, or the first AI
          request fails somewhere far away from the box you typed it into. */
       const k = document.getElementById('ncpkey').value.trim();
       const kerr = document.getElementById('ncpkerr');
       if (k && !ncKeyLooksReal(k)) {
-        kerr.textContent = 'A Google AI key starts with AIza and is about 39 characters. That one is not.';
+        kerr.textContent = tr('ui_key_bad');
         kerr.style.color = '#FF6B9D'; kerr.style.display = 'block';
         return;
       }
@@ -2157,19 +2267,19 @@ const NC_ICONS = {
 
 const NC_NAV = [
   { items: [['index.html', 'Home', 'home', 'home']] },
-  { name: 'Channel', icon: 'analytics', items: [
+  { name: 'Channel', key: 'nav_channel', icon: 'analytics', items: [
       ['app.html', 'Studio', 'studio', 'studio'], ['analytics.html', 'Analytics', 'analytics', 'analytics']] },
   /* Everything you make lives in Create: the editor, publishing and the AI
      toolkit. Games and NovaLife are for learning and play, so they sit in
      their own Learn group instead of pretending to be creation tools. */
-  { name: 'Create', icon: 'editor', items: [
+  { name: 'Create', key: 'nav_create', icon: 'editor', items: [
       ['editor.html', 'Editor', 'editor', 'editor'], ['photo.html', 'Photo', 'photo', 'editor'],
-      ['publish.html', 'Publish', '', 'publish'],
+      ['publish.html', 'Publish', 'publish', 'publish'],
       ['studio-ai.html', 'AI', 'ai', 'ai']] },
-  { name: 'Learn', icon: 'life', items: [
+  { name: 'Learn', key: 'nav_learn', icon: 'life', items: [
       ['novalife.html', 'NovaLife', 'life', 'life'], ['game.html', 'Games', 'games', 'games']] },
   { items: [['socials.html', 'Socials', 'socials', 'gift']] },
-  { name: 'You', icon: 'progress', items: [
+  { name: 'You', key: 'nav_you', icon: 'progress', items: [
       ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
       ['biometrics.html', 'Biometrics', 'biometrics', 'signin'],
       ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
@@ -2305,7 +2415,7 @@ function ncNav() {
       const h = document.createElement('button');
       h.className = 'ncgh';
       h.type = 'button';
-      h.innerHTML = '<span>' + group.name + '</span><span class="ncgl"></span>' +
+      h.innerHTML = '<span' + (group.key ? ' data-t="' + group.key + '"' : '') + '>' + group.name + '</span><span class="ncgl"></span>' +
         '<svg class="ncar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
         'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
       h.setAttribute('aria-expanded', String(!g.classList.contains('shut')));
@@ -2385,8 +2495,13 @@ function ncActiveProvider() {
 function ncDefaultModel(provider) {
   if (provider === 'openrouter') return 'openai/gpt-4o-mini';
   if (provider === 'openai') return 'gpt-4o-mini';
-  return 'gemini-2.5-flash';
+  return 'gemini-3.6-flash';
 }
+
+/* Models that answered 400 when told how much to think. Learned at runtime
+   rather than listed, and per session — a page load is cheap to re-learn on,
+   and a stale list is what this replaces. */
+const NC_NO_THINKING = new Set();
 
 function ncAIKey()     { try { return localStorage.getItem('nc_ai_key') || ''; } catch (e) { return ''; } }
 function ncSetAIKey(k) { try { k ? localStorage.setItem('nc_ai_key', k) : localStorage.removeItem('nc_ai_key'); } catch (e) {} }
@@ -2400,10 +2515,12 @@ function ncKeyLooksReal(k) { return /^AIza[\w-]{30,}$/.test((k || '').trim()); }
    answer: if the model could not be reached, err says so and text is empty, so
    callers can tell "it said nothing" apart from "it could not be asked".
 
-   opts: { provider, model, temperature, maxTokens }. provider defaults to the
-   active selection (ncActiveProvider); model defaults per provider. A personal
+   opts: { provider, model, temperature, maxTokens, search }. provider defaults to
+   the active selection (ncActiveProvider); model defaults per provider. A personal
    key applies only to gemini — an AIza key cannot be spent at OpenRouter or
-   OpenAI, so those two always go through the worker's shared key. */
+   OpenAI, so those two always go through the worker's shared key. search:true
+   grounds the answer in a live Google Search (Gemini-only; the tools: block is
+   what asks Google to look it up) and returns the hits in sources. */
 async function ncAsk(prompt, opts) {
   opts = opts || {};
   const provider = opts.provider || ncActiveProvider();
@@ -2413,20 +2530,28 @@ async function ncAsk(prompt, opts) {
     generationConfig: { temperature: opts.temperature == null ? 0.7 : opts.temperature }
   };
   if (opts.maxTokens) body.generationConfig.maxOutputTokens = opts.maxTokens;
+  if (opts.search) body.tools = [{ google_search: {} }];
 
   /* THINKING TOKENS COUNT AGAINST maxOutputTokens.
-     gemini-2.5-* reasons before it answers, and that reasoning is billed to the
-     same budget as the reply — but it is not returned, so from the page it
-     looks like the model simply stopped mid-sentence. Publish asked for 1200
+     A thinking Gemini reasons before it answers, and that reasoning is billed
+     to the same budget as the reply — but it is not returned, so from the page
+     it looks like the model simply stopped mid-sentence. Publish asked for 1200
      tokens of edit plan, the model spent most of them thinking, and what came
      back was half a JSON object. The page called that "unreadable", which sent
      us looking at the key and the worker for an hour.
 
      Every JSON-shaped feature here wants the answer, not the reasoning, so
      thinking is off by default and opt-in per call with { think: true }.
-     Only the 2.5 text models take this field — sending it to 2.0 or to the
-     image model is a 400. */
-  if (provider === 'gemini' && /^gemini-2\.5-flash(-lite)?$/.test(model)) {
+
+     Which models accept the field is NOT hard-coded. It was, against
+     gemini-2.5-flash, and then the default model became gemini-3.6-flash and
+     the rule silently stopped matching — a list of model names is a thing that
+     goes stale without failing loudly. Sending the field to a model that does
+     not take it is a 400, so instead it is sent, and a rejection that names it
+     is caught below and retried once without it. The answer is remembered for
+     the rest of the session, so it costs one wasted call per model per page. */
+  const wantThinking = provider === 'gemini' && !NC_NO_THINKING.has(model);
+  if (wantThinking) {
     body.generationConfig.thinkingConfig = { thinkingBudget: opts.think ? -1 : 0 };
   }
 
@@ -2434,21 +2559,41 @@ async function ncAsk(prompt, opts) {
   let data = null, err = '';
   try {
     let r, raw;
-    if (ncKeyLooksReal(own)) {
-      r = await fetch(NC_AI_DIRECT + model + ':generateContent?key=' + encodeURIComponent(own.trim()),
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (r.status === 400 || r.status === 403) err = 'That key was refused by Google. Check it in your profile.';
-      else if (r.status === 429) err = 'Your own key is out of quota for now.';
-    } else {
-      r = await fetch(NC_AI_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: provider, model: model, payload: body }) });
+
+    /* One request, in a form both routes take. Called twice at most: once as
+       asked, and once more without thinkingConfig if that is what was refused. */
+    async function send() {
+      if (ncKeyLooksReal(own)) {
+        const res = await fetch(NC_AI_DIRECT + model + ':generateContent?key=' + encodeURIComponent(own.trim()),
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        return { res: res, raw: await res.text().catch(function () { return ''; }) };
+      }
+      const res = await fetch(NC_AI_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: provider, model: model, payload: body, search: opts.search === true }) });
+      return { res: res, raw: await res.text().catch(function () { return ''; }) };
     }
 
-    /* Read the body once, as text, before deciding anything. Both Google and
-       ai-worker.js explain a failure in the body; the status alone is the least
-       useful part of it. "The AI service answered 500." is what this page used
-       to say when the worker was sitting there telling us its key was missing. */
-    if (!err) { try { raw = await r.text(); } catch (e) { raw = ''; } }
+    let out = await send();
+
+    /* "This model does not know what thinkingConfig is." Drop it, remember
+       that, and ask again — otherwise a model rename turns every AI feature on
+       the site off at once. */
+    if (out.res.status === 400 && wantThinking && /thinking|thought/i.test(out.raw)) {
+      NC_NO_THINKING.add(model);
+      delete body.generationConfig.thinkingConfig;
+      out = await send();
+    }
+
+    r = out.res; raw = out.raw;
+    if (ncKeyLooksReal(own)) {
+      if (r.status === 400 || r.status === 403) err = 'That key was refused by Google. Check it in your profile.';
+      else if (r.status === 429) err = 'Your own key is out of quota for now.';
+    }
+
+    /* Both Google and ai-worker.js explain a failure in the body; the status
+       alone is the least useful part of it. "The AI service answered 500." is
+       what this page used to say when the worker was sitting there telling us
+       its key was missing. */
 
     if (!err && !r.ok) {
       let reason = '';
@@ -2498,7 +2643,20 @@ async function ncAsk(prompt, opts) {
       err = 'The AI returned nothing that time. Try again.';
     }
   }
-  return { text: text, image: image, err: err, cut: cut, finish: finish };
+
+  /* Live-search hits, when search:true was asked for. Gemini puts them in
+     groundingMetadata — top-level in some versions, on the candidate in others.
+     Only real pages are listed: Gemini also names the search tool itself, and a
+     source list that starts with "Google Search" is noise. */
+  const gm = data && (data.groundingMetadata ||
+    (data.candidates && data.candidates[0] && data.candidates[0].groundingMetadata));
+  const chunks = gm && gm.groundingChunks || [];
+  const sources = [];
+  chunks.forEach(c => {
+    if (c.web && c.web.uri && c.web.title) sources.push({ uri: c.web.uri, title: c.web.title });
+  });
+
+  return { text: text, image: image, sources: sources, err: err, cut: cut, finish: finish };
 }
 
 /* ============================================================================
@@ -2812,10 +2970,10 @@ function applySeason() {
       o.id = 'ncSuspendScreen';
       o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#05060A;color:#EAF2FF;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:Segoe UI,sans-serif;';
       o.innerHTML = '<div style="max-width:520px"><div style="font-size:3rem;margin-bottom:12px"></div>' +
-        '<h1 style="font-size:1.8rem;margin-bottom:10px">Account suspended</h1>' +
-        '<p style="color:#7E8AA6;line-height:1.7;margin-bottom:14px">Your access to NovaClip is paused for <b style="color:#FF2E97">' + days + ' day' + (days>1?'s':'') + '</b>.</p>' +
-        '<div style="background:rgba(255,46,151,0.08);border-left:3px solid #FF2E97;border-radius:10px;padding:12px 16px;text-align:left;color:#b8bccb;font-size:0.9rem">Reason: ' + reason + '</div>' +
-        '<p style="color:#7E8AA6;font-size:0.85rem;margin-top:16px">If you believe this is a mistake, ask a parent or guardian to contact support.</p></div>';
+        '<h1 style="font-size:1.8rem;margin-bottom:10px">' + tr('ui_susp_t') + '</h1>' +
+        '<p style="color:#7E8AA6;line-height:1.7;margin-bottom:14px">' + tr('ui_susp_b').replace('{n}', '<b style="color:#FF2E97">' + days + '</b>').replace('{unit}', tr(days > 1 ? 'ui_days' : 'ui_day')) + '</p>' +
+        '<div style="background:rgba(255,46,151,0.08);border-left:3px solid #FF2E97;border-radius:10px;padding:12px 16px;text-align:left;color:#b8bccb;font-size:0.9rem">' + tr('ui_reason') + reason + '</div>' +
+        '<p style="color:#7E8AA6;font-size:0.85rem;margin-top:16px">' + tr('ui_susp_help') + '</p></div>';
       document.body.appendChild(o);
     }
     return true;
@@ -2848,12 +3006,12 @@ function applySeason() {
     o.id = 'ncAgeGate';
     o.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(5,6,10,0.96);color:#EAF2FF;display:flex;align-items:center;justify-content:center;padding:24px;font-family:Segoe UI,sans-serif;backdrop-filter:blur(8px);';
     o.innerHTML = '<div style="width:100%;max-width:360px;text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px 26px">' +
-      '<h2 style="margin-bottom:14px;font-size:1.5rem">How old are you?</h2>' +
+      '<h2 style="margin-bottom:14px;font-size:1.5rem">' + tr('ui_age_q') + '</h2>' +
       '<div id="ncWheelWrap" style="position:relative">' +
         '<div id="ncWheelBand"></div>' +
-        '<div id="ncWheel" tabindex="0" role="listbox" aria-label="Your age"></div>' +
+        '<div id="ncWheel" tabindex="0" role="listbox" aria-label="' + tr('ui_age_aria') + '"></div>' +
       '</div>' +
-      '<button id="ncAgeGo" disabled style="width:100%;padding:14px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;font-size:1rem;opacity:0.35;transition:opacity .2s">Continue</button>' +
+      '<button id="ncAgeGo" disabled style="width:100%;padding:14px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;font-size:1rem;opacity:0.35;transition:opacity .2s">' + tr('ui_continue') + '</button>' +
       '</div>';
     document.body.appendChild(o);
 
@@ -2909,17 +3067,15 @@ function applySeason() {
       localStorage.setItem('nc_user_age', String(a));   // written first, whatever it is
 
       if (a < 13) {
-        outcome('Thanks for being honest.',
-          'NovaClip needs verified parental consent for creators under 13, so we cannot open an account from here yet. ' +
-          'Ask a parent or guardian to set one up for you from the Family Dashboard.',
-          '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">Open the Family Dashboard</a>');
+        outcome(tr('ui_age_u_t'),
+          tr('ui_age_u_b'),
+          '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">' + tr('ui_fam_dash') + '</a>');
         return;
       }
       if (a > 18) {
-        outcome('You are over 18.',
-          'NovaClip is built for creators aged 13 to 18, so this will not be your account — but it can be your child’s. ' +
-          'The Family Dashboard is the grown-up side: controls, activity and the comment scanner.',
-          '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">Open the Family Dashboard</a>');
+        outcome(tr('ui_age_o_t'),
+          tr('ui_age_o_b'),
+          '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">' + tr('ui_fam_dash') + '</a>');
         return;
       }
 
@@ -2927,10 +3083,9 @@ function applySeason() {
         localStorage.setItem('nc_controls_relaxed', '1');
         /* Was an alert(), which is a browser dialog on a page that has its own
            voice — and it fired before the user had seen the site at all. */
-        outcome('You are 16 or over.',
-          'Monitoring is lighter from here: your chats are no longer logged for your parent. ' +
-          'Parental controls can still only be fully removed by your parent, from the Family Dashboard.',
-          '<button id="ncAgeDone" style="margin-top:18px;padding:13px 30px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;font-size:0.98rem">Got it</button>');
+        outcome(tr('ui_age_s_t'),
+          tr('ui_age_s_b'),
+          '<button id="ncAgeDone" style="margin-top:18px;padding:13px 30px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;font-size:0.98rem">' + tr('ui_got_it') + '</button>');
         const done = document.getElementById('ncAgeDone');
         if (done) done.onclick = () => o.remove();
         return;

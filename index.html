@@ -384,8 +384,8 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 </head>
 <body>
 <!-- Shown until the page is ready, so the first paint is not a half-built hero. -->
-<div id='boot' role='status' aria-live='polite'><div class='bootinner'><span class='bootdot'></span>Loading NovaClip…</div></div>
-<a class='skip' href='#main'>Skip to content</a>
+<div id='boot' role='status' aria-live='polite'><div class='bootinner'><span class='bootdot'></span><span data-t='loading'>Loading NovaClip…</span></div></div>
+<a class='skip' href='#main' data-t='skip'>Skip to content</a>
 <div class='sidebar'>
   <a href='index.html' data-t='home'>Home</a>
   <a href='app.html' data-t='studio'>Studio</a>
@@ -438,7 +438,7 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 <!-- AI / SMART COACHING with rings -->
 <section class='split' id='ai'>
   <div class='slideL'>
-    <div class='sec-label'><span class='bar'></span> 01 — Learn &amp; build</div>
+    <div class='sec-label'><span class='bar'></span> <span data-t='sec_learn'>01 — Learn &amp; build</span></div>
     <h2 class='sec-h' data-t='sec1_h1'>Smart<span class='thin' data-t='sec1_h2'>Coaching</span></h2>
     <p class='lead' data-t='card_ai_d'>Three tutors — YouTube, Space and Business — spin up answers in your language, tuned to teen creators. Ask, learn, level up.</p>
     <div style='margin-top:22px'>
@@ -522,7 +522,7 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
 </section>
 
 <footer>
-  <div>© 2026 NovaClip · Built by eskon</div>
+  <div data-t='builtby'>© 2026 NovaClip · Built by eskon</div>
   <div><a href='credits.html' data-t='credits_btn'>Credits</a> &nbsp;·&nbsp; <a href='https://novaclip.streamlit.app' target='_blank' data-t='footer'>Classic app</a></div>
 </footer>
 

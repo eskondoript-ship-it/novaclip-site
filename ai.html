@@ -360,21 +360,21 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
     ['Thumbnail', 'thumb', 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6', 'A 16:9 thumbnail from a one-line description.']
   ];
   $('launch').innerHTML = TOOLS.map(([label, id, d, tag]) =>
-    '<button data-t="' + id + '"><span class="li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+    '<button data-tool="' + id + '"><span class="li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
     'stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg></span>' +
-    '<span><b>' + label + '</b><p>' + tag + '</p></span><span class="ar">Open &rarr;</span></button>').join('');
+    '<span><b data-t="' + id + '">' + label + '</b><p>' + tag + '</p></span><span class="ar">Open &rarr;</span></button>').join('');
   $('tabs').innerHTML = TOOLS.map(([label, id, d], i) =>
-    '<button class="tab' + (i ? '' : ' on') + '" data-t="' + id + '">' +
+    '<button class="tab' + (i ? '' : ' on') + '" data-tool="' + id + '">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
-    'stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>' + label + '</button>').join('');
+    'stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>' + '<span data-t="' + id + '">' + label + '</span></button>').join('');
   const panelOf = id => $('p' + id[0].toUpperCase() + id.slice(1));
   function openTool(id) {
-    $('tabs').querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.t === id));
+    $('tabs').querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.tool === id));
     TOOLS.forEach(([, t]) => panelOf(t).classList.toggle('on', t === id));
     panelOf(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-  $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => openTool(b.dataset.t));
-  $('launch').querySelectorAll('button').forEach(b => b.onclick = () => openTool(b.dataset.t));
+  $('tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => openTool(b.dataset.tool));
+  $('launch').querySelectorAll('button').forEach(b => b.onclick = () => openTool(b.dataset.tool));
 
   function say(el, kind, title, body) {
     const s = $(el);

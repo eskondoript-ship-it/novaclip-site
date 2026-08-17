@@ -202,10 +202,10 @@ function renderProgress() {
   if (fill && note) {
     if (next) {
       fill.style.width = Math.max(2, Math.min(100, pts / next[0] * 100)) + '%';
-      note.textContent = (next[0] - pts) + ' NovaCoins to ' + next[1].replace(/^\s*/, '');
+      note.textContent = tr('ui_coins_to').replace('{n}', next[0] - pts).replace('{goal}', qName(next[1]));
     } else {
       fill.style.width = '100%';
-      note.textContent = 'Every reward unlocked.';
+      note.textContent = tr('ui_every_reward');
     }
   }
 
@@ -223,7 +223,7 @@ function renderProgress() {
       const got = skillCount(id), want = need[id] || 1, done = got >= want;
       const pct = Math.min(100, Math.round(got / want * 100));
       return '<div class="skrow' + (done ? ' on' : '') + '"><span class="dot"></span>' +
-        '<span class="nm">' + SKILLS[id].icon + ' ' + SKILLS[id].label + '</span>' +
+        '<span class="nm">' + SKILLS[id].icon + ' ' + qName(SKILLS[id].label) + '</span>' +
         '<span class="ct">' + got + ' / ' + want + '</span>' +
         '<span class="skbar"><i style="width:' + pct + '%"></i></span></div>';
     }).join('');

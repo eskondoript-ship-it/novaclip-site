@@ -82,19 +82,35 @@ test('a false start before the real object', () => {
 });
 
 /* --------------------------------------------------------------------------
-   The other half of the fix: thinking is off for the 2.5 text models, because
-   thinking tokens are charged against maxOutputTokens and that is what
-   truncated the answer in the first place.
+   The other half of the fix: thinking is turned off, because thinking tokens
+   are charged against maxOutputTokens and that is what truncated the answer.
+
+   Which models accept the field is deliberately NOT a list. It was one, keyed
+   to gemini-2.5-flash, and then the site's default model became
+   gemini-3.6-flash and the rule quietly stopped matching — so these guard the
+   learn-at-runtime behaviour that replaced it, not a set of names.
    -------------------------------------------------------------------------- */
-test('nova.js turns thinking off for gemini-2.5 text models only', () => {
-  const m = src.match(/if \(provider === 'gemini' && (\/[^/]+\/)\.test\(model\)\) \{\s*body\.generationConfig\.thinkingConfig/);
-  assert.ok(m, 'the thinkingConfig guard is not where the test expects it');
-  const re = new RegExp(m[1].slice(1, -1));
-  assert.ok(re.test('gemini-2.5-flash'), '2.5-flash must get thinkingConfig');
-  assert.ok(re.test('gemini-2.5-flash-lite'), '2.5-flash-lite must get thinkingConfig');
-  /* Sending thinkingConfig to these is a 400 from Google. */
-  assert.ok(!re.test('gemini-2.0-flash'), '2.0-flash must not get thinkingConfig');
-  assert.ok(!re.test('gemini-2.5-flash-image'), 'the image model must not get thinkingConfig');
+test('thinking is asked for by provider, not by a list of model names', () => {
+  assert.ok(/const wantThinking = provider === 'gemini' && !NC_NO_THINKING\.has\(model\)/.test(src),
+    'thinkingConfig should be gated on the provider and the learned set');
+  assert.ok(!/gemini-2\.5-flash\(-lite\)\?|\/\^gemini-[\d.]+-flash/.test(src),
+    'no model-name regex should decide who gets thinkingConfig');
+});
+
+test('a 400 naming thinking is retried once without it, and remembered', () => {
+  const m = src.match(
+    /if \(out\.res\.status === 400 && wantThinking && (\/[^/]+\/i)\.test\(out\.raw\)\) \{([\s\S]{0,220})/);
+  assert.ok(m, 'the retry-without-thinking branch is missing');
+  const body = m[2];
+  assert.ok(/NC_NO_THINKING\.add\(model\)/.test(body), 'the model must be remembered');
+  assert.ok(/delete body\.generationConfig\.thinkingConfig/.test(body), 'the field must be dropped');
+  assert.ok(/out = await send\(\)/.test(body), 'it must ask again');
+  /* The test for the message has to match what Google actually says, so keep
+     it loose enough for either spelling. */
+  const re = new RegExp(m[1].slice(1, -2), 'i');
+  assert.ok(re.test('Unknown name "thinkingConfig"'), 'should catch thinkingConfig by name');
+  assert.ok(re.test('thinking_budget is not supported'), 'should catch the snake_case spelling');
+  assert.ok(!re.test('API key not valid'), 'must not swallow unrelated 400s');
 });
 
 test('an empty object is a valid start', () => {
