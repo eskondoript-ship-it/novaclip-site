@@ -621,6 +621,104 @@ div[class*="glass"]>div[class*="border-b"][class*="items-center"]>button{flex:0 
 </head>
   <body data-nc-editor-tools>
     <div id="root" dir="ltr"></div>
+
+    <!-- Aspect ratio selector — lives outside React, reads/writes the project
+         via localStorage and forces the canvas to re-layout on change. -->
+    <style>
+      #ncAR{position:fixed;top:56px;right:14px;z-index:9999;display:flex;flex-direction:column;
+        align-items:flex-end;gap:6px;font:600 12px/1 Geist,Inter,system-ui,sans-serif;
+        pointer-events:none;opacity:0;transition:opacity .3s}
+      #ncAR.show{opacity:1;pointer-events:auto}
+      #ncAR .ncar-row{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+      #ncAR button{font:inherit;padding:5px 9px;border-radius:7px;cursor:pointer;
+        border:1px solid rgba(255,255,255,.12);background:rgba(12,14,24,.88);
+        color:rgba(255,255,255,.6);backdrop-filter:blur(12px);transition:all .15s;
+        white-space:nowrap}
+      #ncAR button:hover{border-color:rgba(0,240,255,.5);color:#fff}
+      #ncAR button.on{background:rgba(0,240,255,.18);border-color:rgba(0,240,255,.6);
+        color:#00F0FF;box-shadow:0 0 10px rgba(0,240,255,.15)}
+      #ncAR .ncar-dims{font-size:10px;color:rgba(255,255,255,.35);text-align:right;
+        letter-spacing:.03em}
+    </style>
+    <div id="ncAR">
+      <div class="ncar-row" id="ncARrow"></div>
+      <div class="ncar-dims" id="ncARdims"></div>
+    </div>
+    <script>
+    (function () {
+      var KEY = 'novaclip_project';
+      var RATIOS = [
+        ['Free',  0],   ['16:9', 16/9],  ['9:16', 9/16],
+        ['1:1',   1],   ['4:3',  4/3],   ['3:4',  3/4],
+        ['3:2',   3/2],  ['2:3',  2/3],  ['4:5',  4/5],
+        ['21:9', 21/9]
+      ];
+      var row = document.getElementById('ncARrow');
+      var dims = document.getElementById('ncARdims');
+      var wrap = document.getElementById('ncAR');
+      var active = 0; // index into RATIOS
+
+      function proj() {
+        try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; }
+      }
+
+      function render() {
+        row.innerHTML = RATIOS.map(function (r, i) {
+          return '<button data-i="' + i + '"' + (i === active ? ' class="on"' : '') + '>' + r[0] + '</button>';
+        }).join('');
+        row.querySelectorAll('button').forEach(function (b) {
+          b.onclick = function () { select(+b.dataset.i); };
+        });
+        var p = proj();
+        if (p && p.width && p.height) {
+          dims.textContent = p.width + ' x ' + p.height;
+        }
+      }
+
+      function select(i) {
+        active = i;
+        var ratio = RATIOS[i][1];
+        var p = proj();
+        if (!p) return;
+        var base = Math.max(p.width || 1920, p.height || 1080);
+        if (ratio > 0) {
+          if (ratio >= 1) { p.width = Math.round(base * ratio); p.height = base; }
+          else { p.width = base; p.height = Math.round(base / ratio); }
+        }
+        p.aspectRatio = ratio;
+        try { localStorage.setItem(KEY, JSON.stringify(p)); } catch (e) {}
+        render();
+        /* the React app reads project dimensions from localStorage; a resize
+           event forces it to re-measure the canvas and re-layout */
+        setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 60);
+      }
+
+      /* --- restore persisted ratio on load --- */
+      function restore() {
+        var p = proj();
+        if (!p) return;
+        var r = p.aspectRatio;
+        if (r === 0 || r == null) { active = 0; return; }
+        for (var i = 1; i < RATIOS.length; i++) {
+          if (Math.abs(RATIOS[i][1] - r) < 0.001) { active = i; return; }
+        }
+      }
+
+      /* --- boot once the app has mounted --- */
+      var tries = 0;
+      (function boot() {
+        var app = document.getElementById('root');
+        if (app && app.children.length > 0) {
+          restore(); render();
+          /* show the panel after a short delay so it doesn't flash on load */
+          setTimeout(function () { wrap.classList.add('show'); }, 800);
+          return;
+        }
+        if (++tries < 40) setTimeout(boot, 150);
+      })();
+    })();
+    </script>
+
     <script src="nova.js"></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>

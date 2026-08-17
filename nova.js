@@ -2512,7 +2512,7 @@ function ncNav() {
       /* profile and brand, tidied to match */
       '.sidebar #ncprof{border-radius:13px !important;transition:background .18s,border-color .18s}',
       '.sidebar #ncprof:hover{background:rgba(255,255,255,.07) !important;border-color:rgba(124,92,255,.5) !important}',
-      '.sidebar .themewrap{border-top:1px solid rgba(255,255,255,.06);margin-top:auto}',
+      '.sidebar .themewrap{border-top:1px solid rgba(255,255,255,.06);margin-top:auto;position:sticky;bottom:0;z-index:2;background:var(--nc-rail3,#080B14)}',
 
       /* phones: a horizontal strip, icons above labels so it stays readable */
       '@media (max-width:760px){',

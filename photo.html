@@ -537,6 +537,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     if (undoStack.length > MAX_UNDO) undoStack.shift();
     redoStack.length = 0;
     syncBar();
+    scheduleSave();
   }
 
   function restore(s) {
@@ -555,11 +556,13 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     if (!undoStack.length) return;
     redoStack.push(snapshot());
     restore(undoStack.pop());
+    scheduleSave();
   }
   function redo() {
     if (!redoStack.length) return;
     undoStack.push(snapshot());
     restore(redoStack.pop());
+    scheduleSave();
   }
 
   function syncBar() {
@@ -569,6 +572,98 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     $('dims').textContent = loaded ? doc.w + ' × ' + doc.h : 'no image';
     $('zoomPill').textContent = Math.round(zoom * 100) + '%';
   }
+
+  /* ==========================================================================
+     PERSISTENCE
+     ==========================================================================
+     The whole document is serialised to localStorage after every push and when
+     the tab is closed.  Each canvas becomes a data-URL (PNG), so a 4 Mpx
+     document is roughly 8-12 MB on disk — well within the 5 MB limit for most
+     browsers, but capped at 4 Mpx total to stay safe.  The undo stack is NOT
+     persisted — it would double the size and is not worth the weight.  Ctrl+Z
+     still works within a single editing session.
+     ========================================================================== */
+  var STORAGE_KEY = 'ncphoto_session', saveTimer = null;
+  var MAX_PX = 4000 * 3000;            // reject saves over 12 megapixels
+
+  function saveDoc() {
+    if (!loaded) { try { localStorage.removeItem(STORAGE_KEY); } catch (e) {} return; }
+    if (doc.w * doc.h > MAX_PX) return;  // too large — silently skip
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try {
+        var data = {
+          w: doc.w, h: doc.h, active: doc.active, nextId: nextId,
+          layers: doc.layers.map(function (l) {
+            return {
+              name: l.name, visible: l.visible, opacity: l.opacity,
+              blend: l.blend, locked: l.locked, adj: Object.assign({}, l.adj),
+              maskOn: l.maskOn,
+              canvas: l.canvas.toDataURL('image/png'),
+              mask: l.mask ? l.mask.toDataURL('image/png') : null
+            };
+          })
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) { /* quota exceeded or private browsing — skip silently */ }
+    }, 300);
+  }
+
+  function loadDoc() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      var data = JSON.parse(raw);
+      if (!data || !data.layers || !data.layers.length) return false;
+      var loaded_count = 0, total = data.layers.length;
+      doc.w = data.w; doc.h = data.h;
+      doc.active = data.active || 0;
+      nextId = data.nextId || total + 1;
+      doc.layers = [];
+      sel = null; maskTarget = null;
+
+      data.layers.forEach(function (ld, i) {
+        var l = {
+          id: nextId++, name: ld.name || 'Layer',
+          canvas: makeCanvas(doc.w, doc.h),
+          visible: ld.visible !== false, opacity: ld.opacity != null ? ld.opacity : 1,
+          blend: ld.blend || 'source-over', locked: !!ld.locked,
+          adj: Object.assign({}, DEFAULT_ADJ, ld.adj),
+          mask: null, maskOn: ld.maskOn !== false, maskCache: null,
+          cache: null, dirty: true
+        };
+        doc.layers.push(l);
+
+        var img = new Image();
+        img.onload = function () {
+          ctxOf(l).drawImage(img, 0, 0);
+          loaded_count++;
+          if (loaded_count === total) finishLoad();
+        };
+        img.src = ld.canvas;
+
+        if (ld.mask) {
+          var mi = new Image();
+          mi.onload = function () { l.mask = makeCanvas(doc.w, doc.h); l.mask.getContext('2d').drawImage(mi, 0, 0); };
+          mi.src = ld.mask;
+        }
+      });
+
+      function finishLoad() {
+        loaded = true;
+        $('empty').style.display = 'none';
+        $('wrap').style.display = '';
+        fitZoom(); render(); paintDock(); syncBar();
+        toast('Work restored from last session');
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* Called after every push and every brush stroke so the user never loses work
+     by switching tabs or closing the browser. */
+  function scheduleSave() { saveDoc(); }
+  window.addEventListener('beforeunload', function () { saveDoc(); });
 
   /* ==========================================================================
      OPENING
@@ -602,6 +697,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
         fitZoom();
       }
       render(); paintDock(); syncBar();
+      scheduleSave();
     };
     img.onerror = function () { URL.revokeObjectURL(url); alert('That file could not be decoded as an image.'); };
     img.src = url;
@@ -661,7 +757,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
   }
   function setTool(t) {
     tool = t;
-    if (t !== 'crop') cropBox = null;
+    if (t !== 'crop') { cropBox = null; cropRatio = null; }
     paintRail(); paintDock(); drawOverlay();
     view.style.cursor = t === 'pan' ? 'grab' : t === 'pick' ? 'copy' : t === 'text' ? 'text' : 'crosshair';
   }
@@ -669,7 +765,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
   /* ==========================================================================
      POINTER — every tool routes through here
      ========================================================================== */
-  var drag = null, cropBox = null, shapePreview = null, cloneSrc = null;
+  var drag = null, cropBox = null, cropRatio = null, shapePreview = null, cloneSrc = null;
   var maskTarget = null;               // layer id whose mask the brush paints
   var brush = { size: 24, color: '#FF2E97', opacity: 1, hardness: .7 };
   var shapeOpt = { kind: 'rect', fill: '#00F0FF', stroke: '#FFFFFF', width: 3, filled: true };
@@ -728,6 +824,21 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     }
     if (drag.mode === 'select' || drag.mode === 'crop') {
       var box = norm(drag.x0, drag.y0, p.x, p.y);
+      if (drag.mode === 'crop' && cropRatio) {
+        /* lock the crop box to the selected aspect ratio: the first axis
+           the user drags past 10 px decides which edge is the master */
+        if (!drag.ratioAxis) {
+          if (Math.abs(p.x - drag.x0) > 10 || Math.abs(p.y - drag.y0) > 10)
+            drag.ratioAxis = Math.abs(p.x - drag.x0) >= Math.abs(p.y - drag.y0) ? 'w' : 'h';
+        }
+        if (drag.ratioAxis === 'w') {
+          box.h = Math.min(doc.h, Math.round(box.w / cropRatio));
+          box.y = Math.min(doc.h - box.h, Math.round(drag.y0 - box.h / 2));
+        } else if (drag.ratioAxis === 'h') {
+          box.w = Math.min(doc.w, Math.round(box.h * cropRatio));
+          box.x = Math.min(doc.w - box.w, Math.round(drag.x0 - box.w / 2));
+        }
+      }
       if (drag.mode === 'crop') cropBox = box; else sel = box.w > 2 && box.h > 2 ? box : null;
       drawOverlay();
       return;
@@ -755,6 +866,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     if (!drag) return;
     if (drag.mode === 'shape' && shapePreview) { drawShape(shapePreview); shapePreview = null; render(); }
     if (drag.mode === 'pan') view.style.cursor = 'grab';
+    if (drag.mode === 'paint' || drag.mode === 'clone' || drag.mode === 'move') scheduleSave();
     drag = null;
     paintDock();
   });
@@ -1505,8 +1617,19 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     }
 
     if (tool === 'crop') {
+      var RATIOS = [
+        ['Free', null], ['1:1', 1], ['4:3', 4/3], ['3:4', 3/4],
+        ['16:9', 16/9], ['9:16', 9/16], ['3:2', 3/2], ['2:3', 2/3],
+        ['4:5', 4/5], ['5:4', 5/4]
+      ];
       html += '<div class="sect"><h3>Crop</h3><div class="in">' +
-        '<p class="hint">Drag a box on the canvas, then apply. Thirds are drawn to help place a subject.</p>' +
+        '<label class="f">Aspect ratio</label><div class="chips">' +
+        RATIOS.map(function (r) {
+          return '<button data-ratio="' + (r[1] === null ? 'free' : r[1]) + '" type="button"' +
+            (cropRatio === r[1] ? ' style="border-color:var(--cyan);color:var(--cyan)"' : '') + '>' +
+            r[0] + '</button>';
+        }).join('') + '</div>' +
+        '<p class="hint">Pick a ratio, then drag. The box locks to it while you draw.</p>' +
         '<button id="cApply" class="prim" type="button" style="width:100%;margin-top:8px">Apply crop</button>' +
         '</div></div>';
     }
@@ -1693,6 +1816,21 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
 
     on('cApply', 'onclick', applyCrop);
 
+    $('dock').querySelectorAll('[data-ratio]').forEach(function (b) {
+      b.onclick = function () {
+        cropRatio = b.dataset.ratio === 'free' ? null : parseFloat(b.dataset.ratio);
+        if (cropBox && cropRatio) {
+          /* snap the existing box to the newly selected ratio */
+          if (cropBox.w / cropBox.h > cropRatio) {
+            cropBox.w = Math.round(cropBox.h * cropRatio);
+          } else {
+            cropBox.h = Math.round(cropBox.w / cropRatio);
+          }
+        }
+        paintDock(); drawOverlay();
+      };
+    });
+
     on('selAll', 'onclick', function () { sel = { x: 0, y: 0, w: doc.w, h: doc.h }; drawOverlay(); paintDock(); });
     on('selNone', 'onclick', function () { sel = null; drawOverlay(); paintDock(); });
     on('selCut', 'onclick', function () {
@@ -1745,7 +1883,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     var mod = e.ctrlKey || e.metaKey;
     if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
     if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
-    if (e.key === 'Escape') { sel = null; cropBox = null; drawOverlay(); paintDock(); return; }
+    if (e.key === 'Escape') { sel = null; cropBox = null; cropRatio = null; drawOverlay(); paintDock(); return; }
     if (e.key === '[') { brush.size = Math.max(1, brush.size - 4); paintDock(); return; }
     if (e.key === ']') { brush.size = Math.min(300, brush.size + 4); paintDock(); return; }
     var keys = { b: 'brush', e: 'eraser', m: 'select', v: 'move', t: 'text', c: 'crop',
@@ -1777,6 +1915,7 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
   addEventListener('resize', function () { if (loaded) fitZoom(); });
 
   paintRail(); paintDock(); syncBar();
+  loadDoc();
 })();
 </script>
 </body>
