@@ -1,583 +1,638 @@
-/* NovaClip — Spline background with a marker on the visitor's real location
+/* NovaClip — the globe
    ============================================================================
-   THE REACT SNIPPET DOES NOT APPLY HERE
+   WHY THIS IS NOT SPLINE ANY MORE
 
-   The Spline docs give you this:
+   The Spline scene brought four problems that were all really one problem:
+   it was an opaque binary rendered by someone else's runtime.
 
-       import Spline from '@splinetool/react-spline/next';
-       <Spline scene="https://prod.spline.design/…/scene.splinecode" />
+     - the "Built with Spline" badge could only be fought in a shadow root,
+       and removing it on the free plan is a licence violation
+     - a .splinecode cannot be read, so the red dot needed hand calibration
+       against a camera this code could not see
+     - it never stopped spinning, because the spin was inside the scene
+     - it was a CDN module plus a multi-megabyte download before anything drew
 
-   NovaClip has no React, no bundler and no package.json — it is static HTML
-   and Workers. So this uses Spline's other supported path, the <spline-viewer>
-   web component, which is the same runtime without the build step.
-
-   ============================================================================
-   IT MUST BE ABLE TO FAIL
-
-   A 3D scene is a CDN script plus a multi-megabyte binary plus a WebGL
-   context. Any of those can be blocked, slow or unsupported, and a hero that
-   renders blank when they are is worse than one that never had a globe. So:
-
-     - a CSS starfield paints first and stays until the scene actually loads
-     - a timeout gives up on the CDN rather than waiting forever
-     - reduced motion, save-data, small screens and low-memory devices skip it
-       entirely and keep the starfield
-     - the scene pauses when the tab is hidden or the hero scrolls away
-
-   The site is usable, and looks deliberate, in every one of those cases.
+   Drawing it here answers all four at once. The projection is the same maths
+   that places the marker, so the dot is exact with nothing to calibrate. The
+   rotation is a variable, so it can stop. There is no badge because there is
+   no third party. And it is about 20KB of canvas with no network at all.
 
    ============================================================================
-   THE RED DOT
+   HOW IT IS DRAWN
 
-   navigator.geolocation gives a real latitude and longitude, with the user's
-   permission and only over HTTPS. Turning that into a screen position on a 3D
-   globe needs to know where the globe is drawn and how it is oriented, and a
-   .splinecode is an opaque binary — this file cannot read the camera out of
-   it.
+   An orthographic projection — the view of a sphere from infinitely far away,
+   which is what a globe looks like. Land is a grid of dots sampled every two
+   degrees and tested against coarse continent outlines; dots on the far side
+   are dropped, which is what makes it read as a ball rather than a circle.
 
-   So the projection is real spherical maths against a calibratable model of
-   the globe: centre, radius, tilt and spin. Load any page with ?globe=calibrate
-   to get a grid and live controls, nudge the four numbers until the dot sits on
-   the right country, and they are saved. Two minutes, once.
-
-   The maths that matters is not the calibration: it is that a point on the far
-   side of the sphere is hidden rather than drawn through the planet, which is
-   what makes a marker read as being ON a globe rather than in front of one.
+   The outlines are deliberately coarse. At this dot spacing a coastline is
+   about four dots wide, so tracing every fjord would cost bytes nobody can
+   see. They are accurate enough that Portugal is where Portugal is, which is
+   the part that matters when a red dot lands on it.
    ---------------------------------------------------------------------------- */
 (function () {
   'use strict';
 
-  var SCENE = 'https://prod.spline.design/lJ7V7W5IWszRBeee/scene.splinecode';
-  var VIEWER = 'https://unpkg.com/@splinetool/viewer@1.9.28/build/spline-viewer.js';
-  var LOAD_TIMEOUT = 9000;
-
-  /* Where the globe sits, as a fraction of the layer, plus its orientation.
-     Defaults are a guess — see the calibration note above. */
-  /* Centred to the right, not the middle. The hero's copy is left-aligned, and
-     an uncalibrated marker at dead centre lands on top of the headline — which
-     is exactly where it landed the first time this ran. */
-  var DEFAULTS = { cx: 0.72, cy: 0.52, r: 0.30, spin: 0, tilt: 0 };
-  var KEY = 'nc_globe_cal';
-
-  function cal() {
-    try {
-      var s = JSON.parse(localStorage.getItem(KEY) || 'null');
-      if (s && typeof s.cx === 'number') return Object.assign({}, DEFAULTS, s);
-    } catch (e) {}
-    return Object.assign({}, DEFAULTS);
-  }
-
   /* ==========================================================================
-     Should this device run a 3D scene at all?
+     LAND
+     ==========================================================================
+     Coarse outlines in [lon, lat]. Point-in-polygon per dot.
      ========================================================================== */
-  function heavyOk() {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
-    var c = navigator.connection;
-    if (c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ''))) return false;
-    if (innerWidth < 760) return false;                 // phones: the cost is not worth it
-    if (navigator.deviceMemory && navigator.deviceMemory < 4) return false;
-    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) return false;
-    try {
-      var cv = document.createElement('canvas');
-      if (!(cv.getContext('webgl2') || cv.getContext('webgl'))) return false;
-    } catch (e) { return false; }
-    return true;
-  }
+  var LAND = [
+    /* Africa */
+    [[-17,21],[-16,14],[-13,9],[-8,4],[3,6],[9,4],[9,-1],[12,-6],[12,-17],[15,-23],
+     [18,-34],[26,-34],[32,-29],[33,-26],[35,-21],[40,-15],[41,-10],[40,-3],[43,2],
+     [51,11],[44,12],[43,15],[39,15],[37,20],[34,28],[32,31],[25,32],[15,32],[10,34],
+     [3,36],[-2,35],[-6,36],[-10,30],[-13,26]],
+    /* Europe, mainland.
+       Iberia reaches -9.5, not -9: Cabo da Roca is the westernmost point of the
+       mainland continent, and at -9 the coastline runs east of Lisbon — which
+       put this visitor's own red dot in the Atlantic. */
+    [[-9.5,43],[-9.5,37],[-6,36],[-2,36],[0,39],[3,42],[7,44],[10,44],[13,45],[16,43],
+     [19,40],[24,40],[26,41],[29,41],[28,45],[30,46],[38,47],[40,44],[48,46],[52,52],
+     [60,58],[68,66],[62,70],[45,68],[33,70],[30,62],[24,60],[22,59],[19,60],[13,55],
+     [8,55],[4,52],[0,51],[-2,48],[-5,48],[-2,44]],
+    /* Scandinavia */
+    [[5,58],[8,63],[13,68],[20,70],[26,71],[30,70],[25,66],[22,62],[19,60],[13,55],[8,57]],
+    /* Italy. The mainland outline above cuts the corner from the Alps to the
+       Balkans, which puts Rome in the Tyrrhenian Sea. */
+    [[7,45],[13,46],[14,42],[16,41],[18,40.5],[16,37.5],[14,40],[12,41],[10,43],[8,44]],
+    /* Sicily and Sardinia */
+    [[12.5,38],[15.5,38.3],[15.3,37],[12.5,37.5]],
+    [[8,41],[9.8,41.2],[9.6,39],[8.4,39]],
+    /* Britain and Ireland */
+    [[-6,50],[-5,54],[-3,56],[-3,58],[0,58],[1,53],[1,51],[-4,50]],
+    [[-10,52],[-10,55],[-6,55],[-6,52]],
+    /* Asia */
+    [[26,41],[35,37],[45,40],[50,37],[57,38],[62,42],[70,42],[76,40],[80,44],[88,48],
+     [95,50],[105,50],[115,45],[122,42],[128,43],[132,48],[140,52],[143,59],[150,60],
+     [160,62],[170,66],[180,67],[180,72],[160,73],[140,74],[120,74],[100,76],[80,74],
+     [70,72],[60,70],[52,70],[45,66],[40,58],[38,50],[36,45],[30,45]],
+    /* India */
+    [[68,24],[72,20],[73,16],[77,8],[80,10],[81,16],[85,20],[88,22],[92,22],[92,26],
+     [88,27],[80,28],[74,32],[70,28]],
+    /* South-East Asia */
+    [[92,22],[96,17],[98,10],[100,6],[104,2],[106,10],[109,11],[108,16],[106,20],
+     [102,22],[97,25]],
+    /* China and central Asia.
+       The Siberian outline above only comes down to about 45°N, and India stops
+       at 32°N, which left everything between them — Tibet, Xinjiang, and most
+       of China including Beijing — as ocean. */
+    [[74,32],[80,30],[85,28],[92,28],[97,28],[100,22],[105,22],[112,20],[117,23],
+     [121,28],[122,33],[121,38],[118,40],[114,41],[110,40],[105,42],[100,42],
+     [92,44],[85,45],[78,42],[72,40],[68,38],[66,34],[70,32]],
+    /* Korea */
+    [[126,34],[129,35],[130,38],[128,41],[125,40],[125,37]],
+    /* Japan. Honshu has to be wide enough to hold Tokyo — the earlier outline
+       was a one-dot line that the Kanto plain fell off the side of. */
+    [[129,32],[133,33],[136,34],[140,35],[142,38],[142,41],[145,43],[145,46],[141,45],
+     [139,41],[136,37],[132,35],[130,34]],
+    /* Indonesia and Philippines, as blobs */
+    [[95,5],[105,-2],[115,-4],[120,-2],[118,2],[108,3],[98,6]],
+    [[110,-3],[125,-4],[135,-3],[140,-4],[132,-8],[120,-9],[112,-8]],
+    /* Java — where Jakarta is, and it is not in either blob above */
+    [[104.5,-5.5],[114.5,-7],[115,-8.8],[110,-8.5],[105,-6.5]],
+    [[120,6],[124,10],[126,15],[122,18],[119,13],[118,8]],
+    /* Australia */
+    [[113,-22],[114,-27],[117,-35],[124,-34],[130,-32],[137,-35],[141,-38],[147,-39],
+     [150,-37],[153.5,-30],[153,-25],[146,-19],[142,-12],[136,-12],[131,-12],[126,-14],
+     [122,-18]],
+    /* New Zealand */
+    [[172,-41],[173,-35],[175,-37],[177,-38],[176,-41],[172,-44],[168,-46],[167,-45],
+     [170,-43]],
+    /* North America */
+    [[-168,66],[-160,70],[-150,70],[-140,70],[-128,70],[-115,69],[-105,68],[-95,68],
+     [-85,67],[-80,63],[-78,58],[-80,52],[-78,45],[-70,45],[-66,45],[-60,47],[-64,44],
+     [-70,42],[-74,40],[-76,35],[-81,31],[-80,25],[-84,30],[-90,29],[-95,29],[-97,25],
+     /* Mexico proper. Stopping at 21°N left Mexico City offshore, in the gap
+        between this outline and the Central America one below. */
+     [-95,18],[-92,17],[-96,16],[-102,18],[-106,21],[-110,24],[-114,28],
+     [-117,33],[-122,37],[-124,42],[-124,48],
+     [-130,54],[-136,58],[-145,60],[-152,58],[-158,56],[-165,60],[-166,64]],
+    /* Central America */
+    [[-92,16],[-88,16],[-84,11],[-80,9],[-77,8],[-83,9],[-87,13],[-92,14]],
+    /* Greenland */
+    [[-45,60],[-52,64],[-55,68],[-58,72],[-55,76],[-45,80],[-30,82],[-20,78],[-22,72],
+     [-30,68],[-38,63]],
+    /* South America */
+    [[-81,-4],[-79,2],[-76,8],[-72,11],[-64,10],[-60,8],[-52,5],[-50,0],[-44,-2],
+     [-38,-5],[-35,-8],[-38,-13],[-39,-18],[-44,-23],[-48,-25],[-53,-34],[-58,-38],
+     [-62,-40],[-64,-45],[-68,-50],[-69,-53],[-74,-52],[-73,-45],[-73,-37],[-71,-30],
+     [-70,-23],[-70,-18],[-77,-14],[-79.5,-8]],
+    /* Antarctica, as a cap */
+    [[-180,-70],[-150,-72],[-120,-73],[-90,-72],[-60,-70],[-30,-70],[0,-70],[30,-68],
+     [60,-67],[90,-66],[120,-66],[150,-70],[180,-70],[180,-90],[-180,-90]],
+    /* Madagascar */
+    [[43,-12],[50,-15],[50,-22],[46,-25],[44,-20],[43,-16]]
+  ];
 
-  /* ==========================================================================
-     The layer
-     ========================================================================== */
-  var layer, viewer, marker, label, state = 'starfield';
-
-  function style() {
-    if (document.getElementById('ncglobe-css')) return;
-    var st = document.createElement('style');
-    st.id = 'ncglobe-css';
-    st.textContent = [
-      '#ncglobe{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;' +
-        'border-radius:inherit}',
-      /* The hero's own children have to sit above it. Everything in the hero is
-         static-positioned, so one rule lifts them all. */
-      '.hero>*{position:relative;z-index:1}',
-      '#ncglobe .sky{position:absolute;inset:0;' +
-        'background:radial-gradient(1200px 700px at 62% 38%,rgba(0,240,255,.13),transparent 62%),' +
-        'radial-gradient(900px 600px at 30% 72%,rgba(114,9,183,.15),transparent 66%);' +
-        'transition:opacity .9s ease}',
-      '#ncglobe .stars{position:absolute;inset:0;opacity:.55}',
-      /* A white starfield on a light background is grey noise. Light theme gets
-         a far fainter field and a softer wash. */
-      'html[data-theme="light"] #ncglobe .stars{opacity:.13;filter:invert(1)}',
-      'html[data-theme="light"] #ncglobe .sky{opacity:.6}',
-      'html[data-theme="light"] #nclabel{background:rgba(255,255,255,.86);color:#14203A;' +
-        'border-color:rgba(255,46,77,.5)}',
-      'html[data-theme="light"] #ncgeo{background:rgba(255,255,255,.8);color:#41506E;' +
-        'border-color:rgba(16,24,44,.16)}',
-      /* The layer is click-through so the hero's buttons still work, but the
-         scene itself takes pointer events so it can be dragged and spun. */
-      '#ncglobe spline-viewer{position:absolute;inset:0;width:100%;height:100%;' +
-        'opacity:0;transition:opacity 1.1s ease;pointer-events:auto;cursor:grab;touch-action:none}',
-      '#ncglobe spline-viewer:active{cursor:grabbing}',
-      '#ncglobe.ready spline-viewer{opacity:1}',
-      '#ncglobe.ready .sky{opacity:.45}',
-
-      '#ncdot{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;' +
-        'background:#FF2E4D;box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 18px 4px rgba(255,46,77,.75);' +
-        'opacity:0;transition:opacity .45s ease;will-change:transform}',
-      '#ncdot.on{opacity:1}',
-      '#ncdot::after{content:"";position:absolute;inset:-6px;border-radius:50%;' +
-        'border:2px solid rgba(255,46,77,.55)}',
-      '@media (prefers-reduced-motion: no-preference){' +
-        '#ncdot::after{animation:ncping 2.1s cubic-bezier(0,0,.2,1) infinite}' +
-        '@keyframes ncping{0%{transform:scale(.6);opacity:.9}70%,100%{transform:scale(2.6);opacity:0}}}',
-      '#nclabel{position:absolute;transform:translate(14px,-50%);white-space:nowrap;' +
-        'font:600 12px/1 Geist,Inter,system-ui,sans-serif;color:#EAF2FF;' +
-        'background:rgba(8,11,20,.78);border:1px solid rgba(255,46,77,.45);border-radius:999px;' +
-        'padding:5px 10px;opacity:0;transition:opacity .45s ease;backdrop-filter:blur(8px)}',
-      '#nclabel.on{opacity:1}',
-
-      '#nchover{position:absolute;left:0;top:0;z-index:3;pointer-events:none;' +
-        'background:rgba(8,11,20,.9);border:1px solid rgba(0,240,255,.4);border-radius:12px;' +
-        'padding:7px 11px;font:600 12px/1.35 Geist,Inter,system-ui,sans-serif;color:#EAF2FF;' +
-        'white-space:nowrap;opacity:0;transition:opacity .18s;backdrop-filter:blur(10px)}',
-      '#nchover.on{opacity:1}',
-      '#nchover b{display:block;font-weight:700}',
-      '#nchover span{color:#8A97B4;font-family:ui-monospace,monospace;font-size:11px}',
-      'html[data-theme="light"] #nchover{background:rgba(255,255,255,.92);color:#14203A}',
-      '#ncgeo{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:2;' +
-        'pointer-events:auto;font:600 12px/1 Geist,Inter,system-ui,sans-serif;color:#9FB0C8;' +
-        'background:rgba(8,11,20,.7);border:1px solid rgba(255,255,255,.14);border-radius:999px;' +
-        'padding:8px 15px;cursor:pointer;backdrop-filter:blur(8px)}',
-      '#ncgeo:hover{color:#EAF2FF;border-color:rgba(0,240,255,.5)}',
-      '#nccal{position:fixed;right:14px;bottom:14px;z-index:99999;pointer-events:auto;' +
-        'background:rgba(8,11,20,.94);border:1px solid rgba(0,240,255,.35);border-radius:14px;' +
-        'padding:12px 14px;font:12px/1.5 ui-monospace,monospace;color:#EAF2FF;width:230px}',
-      '#nccal label{display:block;margin:7px 0 2px;color:#8A97B4;font-size:11px}',
-      '#nccal input{width:100%}'
-    ].join('\n');
-    document.head.appendChild(st);
-  }
-
-  function starfield(w, h) {
-    /* Drawn once to a canvas rather than as hundreds of DOM nodes. */
-    var c = document.createElement('canvas');
-    c.className = 'stars';
-    c.width = Math.min(1600, w || 1200); c.height = Math.min(900, h || 700);
-    var x = c.getContext('2d');
-    for (var i = 0; i < 260; i++) {
-      var r = Math.random() * 1.3 + .2;
-      x.globalAlpha = Math.random() * .7 + .15;
-      x.fillStyle = i % 9 === 0 ? '#7CE7FF' : '#FFFFFF';
-      x.beginPath();
-      x.arc(Math.random() * c.width, Math.random() * c.height, r, 0, 7);
-      x.fill();
+  function onLand(lon, lat) {
+    for (var p = 0; p < LAND.length; p++) {
+      var poly = LAND[p], inside = false;
+      for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+        if ((yi > lat) !== (yj > lat) &&
+            lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      if (inside) return true;
     }
-    return c;
+    return false;
   }
 
-  function build(host) {
-    style();
-    layer = document.createElement('div');
-    layer.id = 'ncglobe';
-    layer.setAttribute('aria-hidden', 'true');
-
-    var sky = document.createElement('div');
-    sky.className = 'sky';
-    layer.appendChild(sky);
-    layer.appendChild(starfield(host.clientWidth, host.clientHeight));
-
-    marker = document.createElement('div'); marker.id = 'ncdot';
-    label = document.createElement('div'); label.id = 'nclabel';
-    layer.appendChild(marker); layer.appendChild(label);
-
-    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
-    host.insertBefore(layer, host.firstChild);
-    return layer;
-  }
+  /* Precomputed once: every dot that is on land, as a unit vector plus its
+     coordinates. Rebuilding this per frame would be ten thousand
+     point-in-polygon tests sixty times a second. */
+  var DOTS = [];
+  (function buildDots() {
+    var step = 2;
+    for (var lat = -88; lat <= 88; lat += step) {
+      /* Fewer dots near the poles, or they crowd into a bright cap. */
+      var lonStep = step / Math.max(0.18, Math.cos(lat * Math.PI / 180));
+      for (var lon = -180; lon < 180; lon += lonStep) {
+        if (!onLand(lon, lat)) continue;
+        var la = lat * Math.PI / 180, lo = lon * Math.PI / 180;
+        DOTS.push([Math.cos(la) * Math.sin(lo), Math.sin(la), Math.cos(la) * Math.cos(lo)]);
+      }
+    }
+  })();
 
   /* ==========================================================================
-     Loading the scene
+     STATE
      ========================================================================== */
-  function loadScene() {
-    if (!heavyOk()) return;                       // starfield stays; that is a fine outcome
-
-    var s = document.createElement('script');
-    s.type = 'module';
-    s.src = VIEWER;
-    var done = false;
-    var giveUp = setTimeout(function () {
-      if (!done) { done = true; s.remove(); }     // CDN blocked or slow: keep the starfield
-    }, LOAD_TIMEOUT);
-
-    s.onload = function () {
-      if (done) return;
-      done = true; clearTimeout(giveUp);
-
-      /* The script tag firing onload only means the module ran. The custom
-         element is registered a tick later, so wait for the registration
-         rather than assuming it. */
-      var ready = customElements.whenDefined
-        ? customElements.whenDefined('spline-viewer')
-        : Promise.resolve();
-
-      ready.then(function () {
-        viewer = document.createElement('spline-viewer');
-        viewer.setAttribute('url', SCENE);
-        viewer.setAttribute('loading-anim-type', 'none');
-        layer.insertBefore(viewer, marker);
-
-        /* The first version revealed the scene only inside a 'load' listener.
-           If that event never fires — a different name, a version change, an
-           element that renders without emitting it — the viewer is present,
-           working, and permanently at opacity 0. Which is exactly what
-           "the globe isn't there" looked like.
-
-           So reveal on whichever comes first: the event, or a canvas actually
-           existing inside the element. Then give up honestly if neither
-           happens. */
-        /* Spline paints a "Built with Spline" badge into its own shadow root.
-           Note this is a licence question rather than a technical one: the free
-           plan requires the badge to stay. Removing it is correct on a paid
-           plan and a terms violation on a free one — that is the owner's call
-           to make, not this file's.
-
-           It is re-checked for a while because the badge is added after the
-           first paint, and once more on every reveal. */
-        function debadge() {
-          var sr = viewer && viewer.shadowRoot;
-          if (!sr) return false;
-          var gone = false;
-          ['#logo', 'a[href*="spline.design"]', '#spline-watermark', '.spline-watermark']
-            .forEach(function (sel) {
-              sr.querySelectorAll(sel).forEach(function (n) { n.remove(); gone = true; });
-            });
-          /* Belt and braces: a style inside the shadow root catches any badge
-             added later under a name this list does not know. */
-          if (!sr.getElementById('ncnobadge')) {
-            var st = document.createElement('style');
-            st.id = 'ncnobadge';
-            st.textContent = '#logo,a[href*="spline.design"],#spline-watermark,.spline-watermark{' +
-              'display:none!important;opacity:0!important;pointer-events:none!important}';
-            sr.appendChild(st);
-          }
-          return gone;
-        }
-        var badgeTries = 0;
-        var badgeTimer = setInterval(function () {
-          badgeTries++;
-          debadge();
-          if (badgeTries > 30) clearInterval(badgeTimer);
-        }, 400);
-
-        var shown = false;
-        function reveal(why) {
-          if (shown) return;
-          shown = true;
-          state = 'scene';
-          debadge();
-          layer.classList.add('ready');
-          layer.setAttribute('data-why', why);
-          place();
-        }
-        ['load', 'load-complete', 'loaded'].forEach(function (ev) {
-          viewer.addEventListener(ev, function () { reveal(ev); });
-        });
-        viewer.addEventListener('error', function () { bail('scene error'); });
-
-        var tries = 0;
-        var poll = setInterval(function () {
-          tries++;
-          var cv = viewer.shadowRoot ? viewer.shadowRoot.querySelector('canvas')
-                                     : viewer.querySelector('canvas');
-          if (cv && cv.width > 0) { clearInterval(poll); reveal('canvas'); }
-          else if (tries > 40) { clearInterval(poll); if (!shown) bail('no canvas after 20s'); }
-        }, 500);
-
-        function bail(why) {
-          clearInterval(poll);
-          if (viewer) { viewer.remove(); viewer = null; }
-          layer.setAttribute('data-failed', why);
-          if (/[?&]globe=(debug|calibrate)/.test(location.search)) console.warn('[globe] ' + why);
-        }
-      });
-    };
-    s.onerror = function () { clearTimeout(giveUp); done = true; };
-    document.head.appendChild(s);
-  }
+  var layer, cv, ctx, marker, label, hoverEl, geoBtn;
+  var W = 0, H = 0, DPR = 1;
+  var spin = 0, spinSpeed = 0.06;        // radians per second
+  var tilt = -0.28;
+  var paused = false, hovering = false;
+  var zoom = 1, zoomTarget = 1;
+  var focusLat = null, focusLon = null;  // where a zoom is heading
+  var pos = null;                        // the visitor's real location
+  var pointer = null;
+  var raf = 0, last = 0;
 
   /* ==========================================================================
-     Location
+     WHERE THE GLOBE SITS
      ==========================================================================
-     Asked for on a click, never on load. A permission prompt that appears
-     unprompted is the one every browser now suppresses and every user denies.
-     ========================================================================== */
-  var pos = null;
+     Measured against the headline rather than fixed as a fraction of the
+     width. A globe centred at 0.66W put its left edge at 535px while the word
+     "channel" ran to 755px — and that word is teal, on a near-black sphere, so
+     in the light theme the headline simply lost a word. Nothing about the
+     canvas can be blamed for that; the geometry has to know where the words
+     end.
 
-  function askButton(host) {
-    var b = document.createElement('button');
-    b.id = 'ncgeo';
-    b.type = 'button';
-    b.textContent = 'Show me on the globe';
-    b.addEventListener('click', function () {
-      b.textContent = 'Asking your browser…';
-      navigator.geolocation.getCurrentPosition(function (p) {
-        pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };
-        try { localStorage.setItem('nc_geo', JSON.stringify(pos)); } catch (e) {}
-        b.remove();
-        place();
-      }, function (err) {
-        /* Say which of the three it was. "Location unavailable" tells a person
-           nothing about whether to try again. */
-        b.textContent = err.code === 1 ? 'Location permission denied'
-          : err.code === 3 ? 'Location timed out — tap to retry'
-          : 'Location unavailable';
-        if (err.code !== 1) setTimeout(function () { b.textContent = 'Show me on the globe'; }, 3200);
-      }, { enableHighAccuracy: false, timeout: 9000, maximumAge: 600000 });
+     The centre is what stays fixed, and the sphere is sized so that even at
+     full zoom it still clears the words. Pinning the left edge instead was the
+     obvious alternative and it is wrong: the disc then grows rightwards and
+     carries its own centre off the side of the screen, taking the visitor's
+     red dot — the entire point of the zoom — with it. */
+  var ZOOM_MAX = 1.28;
+  var baseR = 0, baseCx = 0;
+
+  /* The right-hand edge of the actual ink in the hero.
+
+     Text nodes, not elements. A Range over an element returns a rect per line
+     box, and a line box is as wide as the column whatever the words do — the
+     h1 here reports 946px of "text" for a line whose glyphs stop at 755. Only
+     a Range over a text node measures glyphs. */
+  function textRight(host) {
+    var max = 0, rng = document.createRange();
+    var walk = document.createTreeWalker(host, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        /* Our own overlays live inside the hero too, and they sit on the globe
+           by design — measuring them would push the globe away from itself. */
+        var p = n.parentElement;
+        return p && !p.closest('#ncglobe') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
     });
-    host.appendChild(b);
-    return b;
+    for (var n = walk.nextNode(); n; n = walk.nextNode()) {
+      rng.selectNodeContents(n);
+      var rects = rng.getClientRects();
+      for (var j = 0; j < rects.length; j++) {
+        if (rects[j].width < 2) continue;
+        if (rects[j].right > max) max = rects[j].right;
+      }
+    }
+    return max ? max - host.getBoundingClientRect().left : 0;
   }
 
+  function layout() {
+    var minSide = Math.min(W, H);
+    /* Narrow screens have no room to the side of anything: the hero stacks and
+       the globe goes behind it as wallpaper, which the reduced canvas opacity
+       in the stylesheet is there to make safe. */
+    if (W < 760) {
+      baseR = minSide * 0.42;
+      baseCx = W * 0.5;
+      return;
+    }
+    var clear = Math.round(textRight(layer.parentElement)) + 28;
+    if (!clear || clear > W * 0.75) clear = W * 0.55;   // nothing sane measured
+    /* Let it bleed off the right edge — a sphere cropped by the viewport reads
+       as bigger than the screen, which is the look this replaced. The whole
+       span has to hold the disc at ZOOM_MAX, not at rest, or hovering is what
+       covers the headline. */
+    var span = (W + W * 0.18) - clear;
+    baseR = Math.max(minSide * 0.20, Math.min(minSide * 0.40, span / (2 * ZOOM_MAX)));
+    baseCx = clear + baseR * ZOOM_MAX;
+  }
+
+  function radius() { return baseR * zoom; }
+  function cx() { return baseCx; }
+  function cy() { return H * 0.52; }
+
   /* ==========================================================================
-     Projection: latitude and longitude onto the sphere as drawn
-     ==========================================================================
-     Standard sphere: x east, y up, z towards the camera. Spin turns the globe
-     about its axis, tilt leans the pole towards or away. A point whose z is
-     negative is round the back and must not be drawn — without that check the
-     marker shows through the planet and the whole thing reads as a sticker.
+     PROJECTION — the single source of truth for the dots and the marker
      ========================================================================== */
-  function project(lat, lon, c, w, h) {
-    var la = lat * Math.PI / 180;
-    var lo = (lon + c.spin) * Math.PI / 180;
+  function project(lat, lon) {
+    var la = lat * Math.PI / 180, lo = lon * Math.PI / 180 + spin;
     var x = Math.cos(la) * Math.sin(lo);
     var y = Math.sin(la);
     var z = Math.cos(la) * Math.cos(lo);
-
-    var t = c.tilt * Math.PI / 180;                 // lean about the x axis
-    var y2 = y * Math.cos(t) - z * Math.sin(t);
-    var z2 = y * Math.sin(t) + z * Math.cos(t);
-
-    var R = c.r * Math.min(w, h);
-    return {
-      x: c.cx * w + x * R,
-      y: c.cy * h - y2 * R,
-      visible: z2 > 0.02                            // a hair past the limb, so it fades at the edge
-    };
+    var y2 = y * Math.cos(tilt) - z * Math.sin(tilt);
+    var z2 = y * Math.sin(tilt) + z * Math.cos(tilt);
+    var R = radius();
+    return { x: cx() + x * R, y: cy() - y2 * R, z: z2, visible: z2 > 0 };
   }
 
-  /* --------------------------------------------------------------------------
-     The inverse of project(): a point on screen back to a point on the planet.
-
-     Cast a ray straight at the sphere. Anything outside the disc is a miss —
-     the cursor is on sky, not on the globe — and that check is what stops the
-     readout claiming a country when the pointer is nowhere near the planet.
-     Then undo the tilt and the spin in the opposite order project() applied
-     them, and read the latitude and longitude straight off the unit sphere.
-     -------------------------------------------------------------------------- */
-  function unproject(mx, my, c, w, h) {
-    var R = c.r * Math.min(w, h);
-    var dx = (mx - c.cx * w) / R;
-    var dy = -(my - c.cy * h) / R;
+  function unproject(mx, my) {
+    var R = radius();
+    var dx = (mx - cx()) / R, dy = -(my - cy()) / R;
     var d2 = dx * dx + dy * dy;
-    if (d2 > 1) return null;                        // off the disc: sky, not planet
-    var dz = Math.sqrt(1 - d2);                     // near face of the sphere
-
-    var t = c.tilt * Math.PI / 180;
-    /* project() did y2 = y·cos t − z·sin t ; z2 = y·sin t + z·cos t */
-    var y = dy * Math.cos(t) + dz * Math.sin(t);
-    var z = -dy * Math.sin(t) + dz * Math.cos(t);
-    var x = dx;
-
+    if (d2 > 1) return null;
+    var dz = Math.sqrt(1 - d2);
+    var y = dy * Math.cos(tilt) + dz * Math.sin(tilt);
+    var z = -dy * Math.sin(tilt) + dz * Math.cos(tilt);
     var lat = Math.asin(Math.max(-1, Math.min(1, y))) * 180 / Math.PI;
-    var lon = Math.atan2(x, z) * 180 / Math.PI - c.spin;
+    var lon = (Math.atan2(dx, z) - spin) * 180 / Math.PI;
     while (lon > 180) lon -= 360;
     while (lon < -180) lon += 360;
     return { lat: lat, lon: lon };
   }
 
-  /* --------------------------------------------------------------------------
-     Hover readout
-     --------------------------------------------------------------------------
-     Coordinates appear instantly because they are pure geometry. The place name
-     needs a lookup, so it arrives a moment later and only once the pointer has
-     settled — moving the mouse across a globe would otherwise fire a request per
-     frame.
+  /* ==========================================================================
+     DRAW
+     ========================================================================== */
+  function draw() {
+    var R = radius(), CX = cx(), CY = cy();
+    ctx.clearRect(0, 0, W, H);
 
-     Worth being clear about what leaves the browser: the coordinates under the
-     CURSOR, which are not the visitor's location. The red dot's own position is
-     never sent anywhere.
-     -------------------------------------------------------------------------- */
-  var hoverEl, hoverTimer, lastKey = '';
-  var placeCache = new Map();
+    /* atmosphere */
+    var glow = ctx.createRadialGradient(CX, CY, R * 0.86, CX, CY, R * 1.35);
+    glow.addColorStop(0, 'rgba(0,240,255,0.20)');
+    glow.addColorStop(0.45, 'rgba(0,150,255,0.08)');
+    glow.addColorStop(1, 'rgba(0,120,255,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(CX, CY, R * 1.35, 0, 7); ctx.fill();
 
-  function hoverBox() {
-    if (hoverEl) return hoverEl;
-    hoverEl = document.createElement('div');
-    hoverEl.id = 'nchover';
-    layer.appendChild(hoverEl);
-    return hoverEl;
-  }
+    /* the ocean sphere, lit from the upper left */
+    var body = ctx.createRadialGradient(CX - R * 0.35, CY - R * 0.4, R * 0.1, CX, CY, R);
+    body.addColorStop(0, '#123A5E');
+    body.addColorStop(0.55, '#0B2038');
+    body.addColorStop(1, '#050D18');
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.fill();
 
-  function fmt(lat, lon) {
-    return Math.abs(lat).toFixed(2) + (lat >= 0 ? '°N' : '°S') + '  ' +
-           Math.abs(lon).toFixed(2) + (lon >= 0 ? '°E' : '°W');
-  }
-
-  function lookup(lat, lon, done) {
-    var key = lat.toFixed(1) + ',' + lon.toFixed(1);      // ~11 km buckets
-    if (placeCache.has(key)) { done(placeCache.get(key)); return; }
-    var url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' +
-      lat.toFixed(4) + '&longitude=' + lon.toFixed(4) + '&localityLanguage=en';
-    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
-      var city = j.city || j.locality || j.principalSubdivision || '';
-      var country = j.countryName || '';
-      /* No country means open ocean, and saying so is more useful than an
-         empty line that looks like a failure. */
-      var text = country ? (city ? city + ', ' + country : country) : 'Open ocean';
-      placeCache.set(key, text);
-      done(text);
-    }).catch(function () {
-      placeCache.set(key, '');
-      done('');
-    });
-  }
-
-  function onHover(e) {
-    if (!layer) return;
-    var r = layer.getBoundingClientRect();
-    var mx = e.clientX - r.left, my = e.clientY - r.top;
-    var p = unproject(mx, my, cal(), r.width, r.height);
-    var box = hoverBox();
-
-    if (!p) { box.classList.remove('on'); clearTimeout(hoverTimer); return; }
-
-    box.classList.add('on');
-    box.style.transform = 'translate(' + (mx + 16) + 'px,' + (my + 16) + 'px)';
-    var coords = fmt(p.lat, p.lon);
-    var key = p.lat.toFixed(1) + ',' + p.lon.toFixed(1);
-    if (key !== lastKey) {
-      lastKey = key;
-      box.innerHTML = '<b>Locating…</b><span>' + coords + '</span>';
-      clearTimeout(hoverTimer);
-      hoverTimer = setTimeout(function () {
-        lookup(p.lat, p.lon, function (text) {
-          if (lastKey !== key) return;               // pointer already moved on
-          box.innerHTML = '<b>' + (text || 'Unknown') + '</b><span>' + coords + '</span>';
-        });
-      }, 380);
-    } else {
-      var b = box.querySelector('span');
-      if (b) b.textContent = coords;
+    /* graticule */
+    ctx.strokeStyle = 'rgba(0,240,255,0.07)';
+    ctx.lineWidth = 1;
+    for (var la = -60; la <= 60; la += 30) {
+      ctx.beginPath();
+      var started = false;
+      for (var lo = -180; lo <= 180; lo += 4) {
+        var p = project(la, lo);
+        if (!p.visible) { started = false; continue; }
+        started ? ctx.lineTo(p.x, p.y) : (ctx.moveTo(p.x, p.y), started = true);
+      }
+      ctx.stroke();
     }
+    for (var lo2 = -180; lo2 < 180; lo2 += 30) {
+      ctx.beginPath();
+      var st2 = false;
+      for (var la2 = -90; la2 <= 90; la2 += 4) {
+        var q = project(la2, lo2);
+        if (!q.visible) { st2 = false; continue; }
+        st2 ? ctx.lineTo(q.x, q.y) : (ctx.moveTo(q.x, q.y), st2 = true);
+      }
+      ctx.stroke();
+    }
+
+    /* land dots — z gives both the brightness and the size, which is what
+       makes the near face read as nearer */
+    var ct = Math.cos(tilt), stt = Math.sin(tilt), cs = Math.cos(spin), ss = Math.sin(spin);
+    for (var i = 0; i < DOTS.length; i++) {
+      var d = DOTS[i];
+      /* rotate about the pole, then lean */
+      var x = d[0] * cs + d[2] * ss;
+      var z0 = -d[0] * ss + d[2] * cs;
+      var y = d[1];
+      var z = y * stt + z0 * ct;
+      if (z <= 0.02) continue;
+      var y2 = y * ct - z0 * stt;
+      var sx = CX + x * R, sy = CY - y2 * R;
+      var a = 0.25 + z * 0.75;
+      ctx.fillStyle = 'rgba(64,226,255,' + a.toFixed(3) + ')';
+      var s = Math.max(0.7, R * 0.006 * (0.55 + z * 0.65));
+      ctx.fillRect(sx - s / 2, sy - s / 2, s, s);
+    }
+
+    /* limb */
+    ctx.strokeStyle = 'rgba(0,240,255,0.30)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.stroke();
+
+    placeMarker();
   }
 
-  function place() {
-    if (!layer || !marker) return;
-    if (!pos) {
-      try { pos = JSON.parse(localStorage.getItem('nc_geo') || 'null'); } catch (e) {}
-    }
-    if (!pos) return;
-
-    var w = layer.clientWidth, h = layer.clientHeight;
-    var p = project(pos.lat, pos.lon, cal(), w, h);
+  function placeMarker() {
+    if (!pos || !marker) return;
+    var p = project(pos.lat, pos.lon);
     marker.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px)';
-    label.style.transform = 'translate(' + (p.x + 14) + 'px,' + p.y + 'px) translateY(-50%)';
-    label.textContent = 'You are here · ' +
-      Math.abs(pos.lat).toFixed(1) + (pos.lat >= 0 ? '°N ' : '°S ') +
-      Math.abs(pos.lon).toFixed(1) + (pos.lon >= 0 ? '°E' : '°W');
+    label.style.transform = 'translate(' + (p.x + 15) + 'px,' + p.y + 'px) translateY(-50%)';
     marker.classList.toggle('on', p.visible);
     label.classList.toggle('on', p.visible);
   }
 
   /* ==========================================================================
-     Calibration — ?globe=calibrate
+     LOOP
      ========================================================================== */
-  function calibrator() {
-    var c = cal();
-    var box = document.createElement('div');
-    box.id = 'nccal';
-    box.innerHTML = '<b>Globe calibration</b>' +
-      ['cx', 'cy', 'r', 'spin', 'tilt'].map(function (k) {
-        var min = k === 'spin' ? -180 : k === 'tilt' ? -90 : 0;
-        var max = k === 'spin' ? 180 : k === 'tilt' ? 90 : 1;
-        var step = (k === 'spin' || k === 'tilt') ? 1 : 0.005;
-        return '<label>' + k + ' <span data-v="' + k + '">' + c[k] + '</span></label>' +
-          '<input type="range" data-k="' + k + '" min="' + min + '" max="' + max +
-          '" step="' + step + '" value="' + c[k] + '">';
-      }).join('') +
-      '<div style="margin-top:9px;color:#8A97B4">Drag until the dot sits on your country, then reload. Saved automatically.</div>';
-    document.body.appendChild(box);
+  function frame(t) {
+    raf = requestAnimationFrame(frame);
+    var dt = Math.min(0.05, (t - last) / 1000 || 0);
+    last = t;
 
-    box.addEventListener('input', function (e) {
-      var k = e.target.dataset.k; if (!k) return;
-      var next = cal(); next[k] = +e.target.value;
-      try { localStorage.setItem(KEY, JSON.stringify(next)); } catch (er) {}
-      box.querySelector('[data-v="' + k + '"]').textContent = e.target.value;
-      place();
-    });
+    /* The globe stops while the pointer is on it. It span forever before,
+       which made reading a label or aiming at a country a moving target. */
+    if (!paused && !hovering) spin += spinSpeed * dt;
 
-    /* A test point so calibration works before granting location. */
-    if (!pos) { pos = { lat: 38.72, lon: -9.14 }; place(); }
+    /* Ease towards whatever zoom was asked for, and towards the focus point
+       so the location rotates into view rather than jumping there. */
+    var before = { spin: spin, tilt: tilt, zoom: zoom };
+    if (Math.abs(zoom - zoomTarget) > 0.001) zoom += (zoomTarget - zoom) * Math.min(1, dt * 3.4);
+    else zoom = zoomTarget;
+    if (focusLon != null) {
+      var want = -focusLon * Math.PI / 180;
+      var diff = want - spin;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      /* An exponential ease never actually arrives, and a globe that keeps
+         creeping by a fifth of a degree a second has not stopped — it is just
+         stopping slowly, which is the thing that was wrong with it before.
+         Close enough is snapped to exact. */
+      if (Math.abs(diff) < 0.0015) spin = want;
+      else spin += diff * Math.min(1, dt * 4.5);
+      /* The full latitude, not a fraction of it: leaning only 85% of the way
+         leaves the dot above the centre of the disc and the readout naming
+         somewhere six degrees south of home. The clamp is still there so a
+         visitor in Tromsø gets a steep view rather than a pole-on disc. */
+      var wantTilt = Math.max(-1.15, Math.min(1.15, focusLat * Math.PI / 180));
+      var dTilt = wantTilt - tilt;
+      if (Math.abs(dTilt) < 0.0015) tilt = wantTilt;
+      else tilt += dTilt * Math.min(1, dt * 4.5);
+      /* Still turning under a stationary pointer, so re-read what is now
+         beneath it. The lookup itself is debounced and cached, so this costs
+         one unproject per frame and no extra network. */
+      if (spin !== before.spin || tilt !== before.tilt || zoom !== before.zoom) readPointer();
+    } else {
+      tilt += (-0.28 - tilt) * Math.min(1, dt * 2);
+    }
+    draw();
   }
 
   /* ==========================================================================
-     Start
+     LOCATION
      ========================================================================== */
+  function savePos(p) {
+    pos = p;
+    try { localStorage.setItem('nc_geo', JSON.stringify(p)); } catch (e) {}
+    if (geoBtn) geoBtn.remove();
+    placeMarker();
+  }
+
+  function askLocation(auto) {
+    if (!navigator.geolocation || !isSecureContext) return;
+    navigator.geolocation.getCurrentPosition(function (g) {
+      savePos({ lat: g.coords.latitude, lon: g.coords.longitude });
+    }, function (err) {
+      if (!geoBtn) return;
+      geoBtn.textContent = err.code === 1 ? 'Location permission denied'
+        : err.code === 3 ? 'Timed out — tap to retry' : 'Location unavailable';
+      if (err.code !== 1) setTimeout(function () { geoBtn.textContent = 'Show me on the globe'; }, 3000);
+    }, { enableHighAccuracy: false, timeout: 9000, maximumAge: 600000 });
+  }
+
+  /* ==========================================================================
+     HOVER: name the place, and pull the visitor's own location into view
+     ========================================================================== */
+  var hoverTimer, lastKey = '', cache = new Map();
+
+  function lookup(lat, lon, done) {
+    var key = lat.toFixed(1) + ',' + lon.toFixed(1);
+    if (cache.has(key)) { done(cache.get(key)); return; }
+    fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' +
+      lat.toFixed(4) + '&longitude=' + lon.toFixed(4) + '&localityLanguage=en')
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var city = j.city || j.locality || j.principalSubdivision || '';
+        var country = j.countryName || '';
+        var text = country ? (city ? city + ', ' + country : country) : 'Open ocean';
+        cache.set(key, text); done(text);
+      })
+      .catch(function () { cache.set(key, ''); done(''); });
+  }
+
+  /* Where the pointer last was, in layer coordinates. Kept because the globe
+     keeps turning after the pointer stops — it is rotating the visitor's own
+     location into view — and a readout written once on mousemove would name
+     whatever happened to be under the cursor at the moment it arrived, while
+     the ground beneath it slid somewhere else entirely. */
+  var ptrX = 0, ptrY = 0, ptrIn = false;
+
+  function onMove(e) {
+    if (!layer) return;
+    var r = layer.getBoundingClientRect();
+    ptrX = e.clientX - r.left; ptrY = e.clientY - r.top;
+    ptrIn = true;
+    readPointer();
+  }
+
+  function readPointer() {
+    if (!layer || !ptrIn) return;
+    var mx = ptrX, my = ptrY;
+    var hit = unproject(mx, my);
+
+    var wasHovering = hovering;
+    hovering = !!hit;
+
+    /* Pointer on the globe: hold still, and lean in on the visitor's own
+       location so the red dot is actually readable. */
+    if (hovering && !wasHovering) {
+      /* ZOOM_MAX, not a number picked here: the layout sized the sphere so
+         that exactly this much zoom still clears the headline. */
+      if (pos) { focusLat = pos.lat; focusLon = pos.lon; zoomTarget = ZOOM_MAX; }
+      else zoomTarget = 1 + (ZOOM_MAX - 1) * 0.4;
+    } else if (!hovering && wasHovering) {
+      focusLat = focusLon = null;
+      zoomTarget = 1;
+    }
+
+    if (!hit) { if (hoverEl) hoverEl.classList.remove('on'); clearTimeout(hoverTimer); return; }
+
+    hoverEl.classList.add('on');
+    hoverEl.style.transform = 'translate(' + (mx + 16) + 'px,' + (my + 16) + 'px)';
+    var coords = Math.abs(hit.lat).toFixed(2) + (hit.lat >= 0 ? '°N' : '°S') + '  ' +
+                 Math.abs(hit.lon).toFixed(2) + (hit.lon >= 0 ? '°E' : '°W');
+    var key = hit.lat.toFixed(1) + ',' + hit.lon.toFixed(1);
+    if (key !== lastKey) {
+      lastKey = key;
+      hoverEl.innerHTML = '<b>Locating…</b><span>' + coords + '</span>';
+      clearTimeout(hoverTimer);
+      hoverTimer = setTimeout(function () {
+        lookup(hit.lat, hit.lon, function (text) {
+          if (lastKey !== key) return;
+          hoverEl.innerHTML = '<b>' + (text || 'Unknown') + '</b><span>' + coords + '</span>';
+        });
+      }, 360);
+    } else {
+      var sp = hoverEl.querySelector('span');
+      if (sp) sp.textContent = coords;
+    }
+  }
+
+  /* ==========================================================================
+     SETUP
+     ========================================================================== */
+  function style() {
+    var st = document.createElement('style');
+    st.id = 'ncglobe-css';
+    st.textContent = [
+      '#ncglobe{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}',
+      '.hero>*{position:relative;z-index:1}',
+      '#ncglobe canvas{position:absolute;inset:0;width:100%;height:100%}',
+      /* Below 760px the hero stacks and there is no column to sit beside, so
+         the globe goes behind the words. Dark navy under a teal headline is
+         unreadable at full strength — this is what makes that safe. */
+      '@media (max-width:760px){#ncglobe canvas{opacity:.34}#nchover{display:none}}',
+      '#ncglobe .sky{position:absolute;inset:0;background:' +
+        'radial-gradient(1100px 700px at 70% 45%,rgba(0,120,255,.10),transparent 65%),' +
+        'radial-gradient(800px 600px at 25% 70%,rgba(114,9,183,.12),transparent 68%)}',
+      '#ncdot{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;' +
+        'background:#FF2E4D;box-shadow:0 0 0 2px rgba(255,255,255,.92),0 0 20px 5px rgba(255,46,77,.8);' +
+        'opacity:0;transition:opacity .35s;z-index:2}',
+      '#ncdot.on{opacity:1}',
+      '#ncdot::after{content:"";position:absolute;inset:-6px;border-radius:50%;' +
+        'border:2px solid rgba(255,46,77,.6)}',
+      '@media (prefers-reduced-motion:no-preference){' +
+        '#ncdot::after{animation:ncping 2.1s cubic-bezier(0,0,.2,1) infinite}' +
+        '@keyframes ncping{0%{transform:scale(.6);opacity:.9}70%,100%{transform:scale(2.6);opacity:0}}}',
+      '#nclabel{position:absolute;white-space:nowrap;z-index:2;' +
+        'font:600 12px/1 Geist,Inter,system-ui,sans-serif;color:#EAF2FF;' +
+        'background:rgba(8,11,20,.82);border:1px solid rgba(255,46,77,.5);border-radius:999px;' +
+        'padding:5px 10px;opacity:0;transition:opacity .35s;backdrop-filter:blur(8px)}',
+      '#nclabel.on{opacity:1}',
+      '#nchover{position:absolute;left:0;top:0;z-index:3;pointer-events:none;' +
+        'background:rgba(8,11,20,.9);border:1px solid rgba(0,240,255,.42);border-radius:12px;' +
+        'padding:7px 11px;font:600 12px/1.35 Geist,Inter,system-ui,sans-serif;color:#EAF2FF;' +
+        'white-space:nowrap;opacity:0;transition:opacity .18s;backdrop-filter:blur(10px)}',
+      '#nchover.on{opacity:1}',
+      '#nchover b{display:block}',
+      '#nchover span{color:#8A97B4;font-family:ui-monospace,monospace;font-size:11px}',
+      '#ncgeo{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:4;' +
+        'pointer-events:auto;font:600 12px/1 Geist,Inter,system-ui,sans-serif;color:#9FB0C8;' +
+        'background:rgba(8,11,20,.72);border:1px solid rgba(255,255,255,.15);border-radius:999px;' +
+        'padding:8px 15px;cursor:pointer;backdrop-filter:blur(8px)}',
+      '#ncgeo:hover{color:#EAF2FF;border-color:rgba(0,240,255,.55)}',
+      'html[data-theme="light"] #nchover,html[data-theme="light"] #nclabel{' +
+        'background:rgba(255,255,255,.9);color:#14203A}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
+  function resize() {
+    var r = layer.getBoundingClientRect();
+    DPR = Math.min(devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    cv.width = W * DPR; cv.height = H * DPR;
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    layout();
+  }
+
   function init() {
     var host = document.querySelector('.hero') || document.querySelector('header');
     if (!host) return;
+    style();
 
-    build(host);
-    if (navigator.geolocation && isSecureContext) {
-      var saved = null;
-      try { saved = JSON.parse(localStorage.getItem('nc_geo') || 'null'); } catch (e) {}
-      if (saved) { pos = saved; place(); } else askButton(host);
+    layer = document.createElement('div');
+    layer.id = 'ncglobe';
+    layer.setAttribute('aria-hidden', 'true');
+    var sky = document.createElement('div'); sky.className = 'sky';
+    cv = document.createElement('canvas');
+    ctx = cv.getContext('2d');
+    marker = document.createElement('div'); marker.id = 'ncdot';
+    label = document.createElement('div'); label.id = 'nclabel';
+    hoverEl = document.createElement('div'); hoverEl.id = 'nchover';
+    layer.appendChild(sky); layer.appendChild(cv);
+    layer.appendChild(marker); layer.appendChild(label); layer.appendChild(hoverEl);
+
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    host.insertBefore(layer, host.firstChild);
+    resize();
+
+    try { pos = JSON.parse(localStorage.getItem('nc_geo') || 'null'); } catch (e) {}
+    if (!pos) {
+      geoBtn = document.createElement('button');
+      geoBtn.id = 'ncgeo'; geoBtn.type = 'button';
+      geoBtn.textContent = 'Show me on the globe';
+      geoBtn.addEventListener('click', function () {
+        geoBtn.textContent = 'Asking your browser…';
+        askLocation();
+      });
+      host.appendChild(geoBtn);
+    } else {
+      label.textContent = 'You are here';
     }
 
-    loadScene();
+    addEventListener('pointermove', onMove, { passive: true });
+    /* Pointer gone from the window entirely: there is nothing under it to
+       report, and without this the globe would stay frozen mid-zoom. */
+    document.addEventListener('pointerleave', function () {
+      ptrIn = false; hovering = false;
+      focusLat = focusLon = null; zoomTarget = 1;
+      if (hoverEl) hoverEl.classList.remove('on');
+    });
+    addEventListener('resize', function () { resize(); });
+    /* The headline is measured in glyphs, and the webfont arrives after first
+       paint — so the width it was measured at is not the width it keeps. */
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { resize(); });
 
-    var t;
-    addEventListener('resize', function () { clearTimeout(t); t = setTimeout(place, 160); });
+    /* Reduced motion keeps the globe, drops the spin. */
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) spinSpeed = 0;
 
-    /* Stop rendering when it cannot be seen. A WebGL scene running behind a
-       scrolled-past hero is heat and battery for nothing. */
+    /* Nothing renders while it cannot be seen. */
+    document.addEventListener('visibilitychange', function () {
+      paused = document.hidden;
+    });
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (es) {
-        var vis = es[0].isIntersecting;
-        if (viewer) viewer.style.visibility = vis ? '' : 'hidden';
-      }, { threshold: 0.01 }).observe(host);
+        paused = !es[0].isIntersecting;
+      }, { threshold: 0.02 }).observe(host);
     }
-    document.addEventListener('visibilitychange', function () {
-      if (viewer) viewer.style.visibility = document.hidden ? 'hidden' : '';
-    });
 
-    /* Listened for on the layer rather than the scene, so the readout still
-       works before the scene loads and if it never does. */
-    layer.addEventListener('pointermove', onHover);
-    layer.addEventListener('pointerleave', function () {
-      if (hoverEl) hoverEl.classList.remove('on');
-      clearTimeout(hoverTimer);
-    });
-    /* The layer is click-through, so it gets no pointer events of its own.
-       Track on the window and convert, which also keeps the hero buttons live. */
-    addEventListener('pointermove', onHover, { passive: true });
-
-    if (/[?&]globe=calibrate/.test(location.search)) calibrator();
-
-    /* ?globe=debug prints why the scene is or is not on screen, so "it is not
-       there" becomes a specific answer instead of a guess. */
-    if (/[?&]globe=debug/.test(location.search)) {
-      setTimeout(function () {
-        console.log('[globe] heavy device ok :', heavyOk());
-        console.log('[globe] viewer element  :', !!viewer);
-        console.log('[globe] revealed        :', layer.classList.contains('ready'),
-          layer.getAttribute('data-why') || layer.getAttribute('data-failed') || '');
-        console.log('[globe] secure context  :', isSecureContext);
-      }, 6000);
-    }
+    raf = requestAnimationFrame(frame);
   }
 
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', init);
   else init();
 
-  window.NCGlobe = { place: place, project: project, unproject: unproject, cal: cal, heavyOk: heavyOk };
+  window.NCGlobe = {
+    project: project, unproject: unproject, dots: function () { return DOTS.length; },
+    onLand: onLand, setPos: savePos, state: function () {
+      return { spin: spin, tilt: tilt, zoom: zoom, hovering: hovering, pos: pos };
+    },
+    /* Where the disc actually is. The layout is measured from the headline
+       rather than fixed, so nothing outside can assume a fraction of the
+       width — including the tests that drive it. */
+    geo: function () { return { cx: cx(), cy: cy(), r: radius(), w: W, h: H }; }
+  };
 })();

@@ -376,9 +376,10 @@
 
       if (r.err) return say('no', 'Could not reach the AI', r.err + ' The sliders below still work.');
 
-      let j = null;
-      try { j = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [''])[0]); } catch (e) {}
-      if (!j) return say('no', 'The AI answered in a shape I could not read', 'Try saying it in fewer words.');
+      const j = window.ncJSON ? window.ncJSON(r.text) : null;
+      if (!j) return say('no',
+        r.cut ? 'The AI ran out of room mid-answer' : 'The AI answered in a shape I could not read',
+        'Try saying it in fewer words.');
 
       if (j.ok === false) {
         return say('no', 'That is past what this can do',

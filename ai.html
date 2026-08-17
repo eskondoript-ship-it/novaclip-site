@@ -390,6 +390,11 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   /* JSON out of a model that was asked for JSON but sometimes wraps it in
      prose or a code fence anyway. */
   function readJson(text) {
+    /* nova.js does this properly — it walks the braces instead of matching to
+       the last one, which is the difference between reading a truncated answer
+       and failing on it. The old body stays as the fallback for a cached
+       nova.js that predates ncJSON. */
+    if (window.ncJSON) return window.ncJSON(text);
     if (!text) return null;
     const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
     const raw = fenced ? fenced[1] : (text.match(/[{[][\s\S]*[}\]]/) || [''])[0];

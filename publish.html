@@ -393,9 +393,11 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     $('planBtn').disabled = false;
     if (r.err) return say('planSay', 'no', 'Could not reach the AI', r.err);
 
-    let j = null;
-    try { j = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [''])[0]); } catch (e) {}
-    if (!j) return say('planSay', 'no', 'The answer came back unreadable', 'Try again.');
+    const j = window.ncJSON ? window.ncJSON(r.text) : null;
+    if (!j) return say('planSay', 'no',
+      r.cut ? 'The answer was cut off' : 'The answer came back unreadable',
+      r.cut ? 'It ran past its length limit before finishing the plan. Try again — a shorter description usually gets a complete one.'
+            : 'Try again.');
     if (j.ok === false) return say('planSay', 'no', 'It says no', j.why || 'Not possible with these tools.');
 
     /* A step naming a tool that is not here is dropped rather than shown. The
@@ -463,9 +465,9 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
       { maxTokens: 900, temperature: 0.75 });
     $('metaBtn').disabled = false;
     if (r.err) return say('metaSay', 'no', 'Could not reach the AI', r.err);
-    let j = null;
-    try { j = JSON.parse((r.text.match(/\{[\s\S]*\}/) || [''])[0]); } catch (e) {}
-    if (!j) return say('metaSay', 'no', 'Unreadable answer', 'Try again.');
+    const j = window.ncJSON ? window.ncJSON(r.text) : null;
+    if (!j) return say('metaSay', 'no',
+      r.cut ? 'The answer was cut off' : 'Unreadable answer', 'Try again.');
     if (j.title) $('title').value = String(j.title).slice(0, 100);
     if (j.description) $('desc').value = String(j.description).slice(0, 5000);
     if (Array.isArray(j.tags)) { tags = j.tags.map(t => String(t).replace(/[#,]/g, '').trim()).filter(Boolean).slice(0, 15); }

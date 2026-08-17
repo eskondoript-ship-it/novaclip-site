@@ -342,8 +342,28 @@ function langInstruction() { return ' Reply ONLY in this language: ' + (LANGS[la
 function applyLangText() {
   document.documentElement.lang = lang();
   document.documentElement.dir = RTL.includes(lang()) ? 'rtl' : 'ltr';
-  document.querySelectorAll('[data-t]').forEach(el => { const v = tr(el.dataset.t); if (!v) return; if (/[<>]/.test(v)) el.innerHTML = v; else el.textContent = v; });
-  document.querySelectorAll('[data-tph]').forEach(el => { const v = tr(el.dataset.tph); if (v) el.placeholder = v; });
+  /* WRITE ONLY WHAT CHANGED.
+     ncWatchLang() re-runs this pass whenever the DOM grows, and this pass
+     writes innerHTML for any string carrying markup — the headline is one.
+     That write is itself a DOM change, so it woke the observer, which ran the
+     pass, which wrote again: a loop turning over about eight times a second on
+     every page, forever. It was visible too — rebuilding the headline restarts
+     the CSS entrance animation on the two coloured words, so they never
+     finished fading in and the landing page read "Run your / like a".
+
+     Comparing innerHTML against the source string does not work: the browser
+     normalises it on the way back out (class='n' returns as class="n"), so it
+     never matches and the loop survives. Stamping what was last applied does. */
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const v = tr(el.dataset.t);
+    if (!v || el.__ncT === v) return;
+    if (/[<>]/.test(v)) el.innerHTML = v; else el.textContent = v;
+    el.__ncT = v;
+  });
+  document.querySelectorAll('[data-tph]').forEach(el => {
+    const v = tr(el.dataset.tph);
+    if (v && el.placeholder !== v) el.placeholder = v;
+  });
   ncPhrase();
 }
 function applyLang(code) {
@@ -544,6 +564,159 @@ const NC_THEME_ICONS = {
     '<path d="M8 21h8M12 17v4"/></svg>',
   dark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 13a8.5 8.5 0 01-10-10 8.5 8.5 0 1010 10z"/></svg>'
 };
+
+/* ============================================================================
+   THE STICKY HEADER
+   ============================================================================
+   Language, Theme and Vibe used to live at the bottom of the sidebar. That is
+   the one place on the page you cannot see once you scroll — and on the pages
+   with no rail at all (editor, games, pricing, the family dashboard) they fell
+   back to a collapsed corner button, so the same three controls were in two
+   different places depending on which page you were on.
+
+   This puts them in one fixed strip across the top that survives scrolling and
+   is identical everywhere.
+
+   It is built as a HOST rather than as three more controls: the inner div
+   carries class "themewrap", which is exactly what ncBuildThemeSwitch() and
+   ncBuildGenZToggle() already look for, and the bar is inserted as the first
+   element of the body so querySelector finds it before the sidebar's. Neither
+   builder needed changing. The language <select> is hard-coded into each
+   page's sidebar markup, so that one is moved rather than rebuilt — moved, not
+   copied, because two elements with id="langpick" is one element as far as
+   getElementById is concerned, and the wrong one would win.
+   ============================================================================ */
+const NC_BAR_H = 52;
+
+function ncBuildBar() {
+  if (NC_EMBED) return null;                       // pages embedded in a tab host
+  let bar = document.getElementById('ncbar');
+  if (bar) return bar.querySelector('.themewrap');
+
+  const css = document.createElement('style');
+  css.id = 'ncbar-css';
+  css.textContent =
+    '#ncbar{position:fixed;top:0;left:0;right:0;height:' + NC_BAR_H + 'px;z-index:990;' +
+      'display:flex;align-items:center;gap:14px;padding:0 14px;box-sizing:border-box;' +
+      'background:var(--nc-bar-bg,rgba(10,13,24,.72));' +
+      'border-bottom:1px solid var(--nc-line2,rgba(255,255,255,.08));' +
+      'backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4)}' +
+    'html[data-theme="light"] #ncbar{--nc-bar-bg:rgba(255,255,255,.78)}' +
+    /* Sits beside the rail, not under it — but only where there IS a rail.
+       The editor, trends and the family page have no .sidebar, and offsetting
+       the bar by a rail that is not there leaves a dead strip down the left,
+       which is the same mistake the body margin made before it was scoped. */
+    '@media (min-width:761px){body:has(.sidebar) #ncbar{left:var(--nc-rail)}}' +
+    /* flex:1 matters. As a bare flex item this scroller sized itself to 168px
+       on editor.html while holding 607px of controls, so everything past the
+       theme switch was clipped out of a page that had no sidebar to fall back
+       on. Told to fill the bar, it stops guessing. */
+    '#ncbar .themewrap{display:flex;align-items:center;gap:16px;min-width:0;flex:1 1 auto;' +
+      'padding:0 !important;margin:0;flex-wrap:nowrap;overflow-x:auto;' +
+      'scrollbar-width:none}' +
+    '#ncbar .themewrap::-webkit-scrollbar{display:none}' +
+    /* The controls were built for a narrow column: stacked, each with a block
+       label above it and a bottom margin. Laid on their side here. */
+    '#ncbar .themewrap > *{margin:0 !important;flex:none;display:flex;' +
+      'align-items:center;gap:8px}' +
+    '#ncbar .themewrap label{margin:0 !important;font-size:.72rem;opacity:.55;' +
+      'white-space:nowrap;letter-spacing:.02em}' +
+    '#ncbar #nc-themerow .nc-themerow{margin-top:0;width:104px}' +
+    '#ncbar #nc-themerow .nc-themebtn{padding:5px 4px}' +
+    '#ncbar #genzToggle{width:148px}' +
+    '#ncbar #genzToggle > div{padding:5px 4px}' +
+    /* width:auto beats the pages that style their sidebar select as
+       width:100% — in a flex row that resolved to 615px on publish.html and
+       pushed everything else out of the bar. */
+    '#ncbar select{width:auto !important;max-width:170px;' +
+      'padding:5px 26px 5px 9px;border-radius:9px;font-size:.78rem;' +
+      'background:var(--nc-card,rgba(255,255,255,.05));color:var(--nc-text,inherit);' +
+      'border:1px solid var(--nc-line2,rgba(255,255,255,.15))}' +
+    /* Reserve the strip's height. These are the same containers the rail
+       offset uses, so a page that offsets a wrapper keeps offsetting the
+       wrapper and one that offsets the body keeps offsetting the body —
+       adding a second rule with a different idea of the layout is what put
+       the hero 432px from the edge the last time. */
+    '@media (min-width:761px){' +
+      'body:has(#ncbar) .content,body:has(#ncbar) .shell,body:has(#ncbar) .main' +
+        '{padding-top:' + NC_BAR_H + 'px}' +
+      'body:has(#ncbar):not(:has(.content)):not(:has(.shell)):not(:has(.main))' +
+        '{padding-top:' + NC_BAR_H + 'px}' +
+    '}' +
+    /* On a phone the rail is a bottom strip and the bar is the full width. */
+    '@media (max-width:760px){#ncbar{padding:0 10px;gap:10px}' +
+      '#ncbar .themewrap{gap:10px}' +
+      /* The labels go: the sun/screen/moon row and a Normal|Gen Z switch say
+         what they are, and on a 390px screen the three controls only fit
+         without a sideways swipe if the words come out. */
+      /* !important because both labels are built with an inline
+         style="display:block" — an inline style outranks any stylesheet rule
+         that does not say otherwise, so without this only the Language label
+         (the one nova.js builds without inline styles) actually went away. */
+      '#ncbar .themewrap label{display:none !important}' +
+      '#ncbar #nc-themerow .nc-themerow{width:84px}' +
+      '#ncbar #genzToggle{width:112px}' +
+      '#ncbar select{max-width:116px;font-size:.74rem}' +
+      'body{padding-top:' + NC_BAR_H + 'px}}' +
+    /* The sidebar copy would be a second set of the same three controls. */
+    '.sidebar .themewrap{display:none !important}' +
+    /* JARVIS MOVES INTO THE BAR.
+       The pill is fixed at top:14px in the centre of the viewport with a
+       z-index of 99995, so it does not care what is under it — and centred at
+       the top of the page is exactly where every page puts something. It was
+       over the Language control here, and it has already been over the
+       editor's Export button and its Simple/Complex toggle. Pushing it down
+       just moved the collision onto the editor's transport controls.
+
+       The bar has a permanent gap between the controls and the coins badge, on
+       every page, so the pill goes there: still fixed, still always visible,
+       and now in a strip that is reserved rather than borrowed. Its three
+       transform states have to be restated because the centring translate they
+       were built on is gone. */
+    '.jr-pill{top:8px !important;left:auto !important;right:176px !important;' +
+      'transform:none !important}' +
+    '.jr-pill:hover{transform:translateY(-1px) !important}' +
+    '.jr-pill.hidden{transform:translateY(-8px) !important}' +
+    /* Not enough room beside the controls on a small screen: it goes back to
+       the centre, below the bar, where the page has not started yet. */
+    '@media (max-width:1180px){.jr-pill{top:' + (NC_BAR_H + 8) + 'px !important;' +
+      'left:50% !important;right:auto !important;transform:translateX(-50%) !important}' +
+      '.jr-pill:hover{transform:translateX(-50%) translateY(-1px) !important}' +
+      '.jr-pill.hidden{transform:translateX(-50%) translateY(-8px) !important}}' +
+    '.jr-sheet{top:' + (NC_BAR_H + 6) + 'px !important}' +
+    /* The coins badge and the Pro badge are already at the far right of the
+       strip's height, so they read as part of the bar rather than fighting it —
+       they only need centring against it. */
+    '#ncpts{top:' + Math.round((NC_BAR_H - 32) / 2) + 'px}';
+  document.head.appendChild(css);
+
+  bar = document.createElement('div');
+  bar.id = 'ncbar';
+  const inner = document.createElement('div');
+  inner.className = 'themewrap';              // what the two builders look for
+  bar.appendChild(inner);
+  document.body.insertBefore(bar, document.body.firstChild);
+
+  /* Bring the page's own language picker across, label and all. */
+  const old = document.querySelector('.sidebar .themewrap');
+  if (old) while (old.firstChild) inner.appendChild(old.firstChild);
+
+  /* ADOPT ANYTHING ALREADY BUILT.
+     The Gen Z toggle boots from its own DOMContentLoaded listener, and on a
+     page where nova.js is parsed after the document is ready that listener
+     never waits — it runs at parse time, before this bar exists, and mounts
+     into the corner box instead. The editor was doing exactly that. Rather
+     than depend on an ordering that is not ours to guarantee, take back
+     whatever landed elsewhere. */
+  ['#genzwrap', '#nc-themerow'].forEach(function (sel) {
+    const el = document.querySelector(sel);
+    if (el && !bar.contains(el)) inner.appendChild(el);
+  });
+  const stray = document.getElementById('ncLangPick');
+  if (stray && !bar.contains(stray)) inner.appendChild(stray.parentElement || stray);
+
+  return inner;
+}
 
 function ncBuildThemeSwitch() {
   if (NC_EMBED) return;
@@ -824,6 +997,18 @@ function ncEnsureLangPick() {
   for (const c in LANGS) { const o = document.createElement('option'); o.value = c; o.textContent = LANGS[c]; pick.appendChild(o); }
   pick.value = lang();
   pick.onchange = () => applyLang(pick.value);
+  /* The header first — it is on every page now, so the corner box is only the
+     fallback for the pages the bar deliberately skips (embedded tab hosts). */
+  const bar = document.querySelector('#ncbar .themewrap');
+  if (bar) {
+    const w = document.createElement('div');
+    const l = document.createElement('label');
+    l.setAttribute('data-t', 'language');
+    l.textContent = tr('language') || 'Language';
+    w.appendChild(l); w.appendChild(pick);
+    bar.appendChild(w);
+    return;
+  }
   ncCornerBox().appendChild(pick);
 }
 
@@ -2229,6 +2414,22 @@ async function ncAsk(prompt, opts) {
   };
   if (opts.maxTokens) body.generationConfig.maxOutputTokens = opts.maxTokens;
 
+  /* THINKING TOKENS COUNT AGAINST maxOutputTokens.
+     gemini-2.5-* reasons before it answers, and that reasoning is billed to the
+     same budget as the reply — but it is not returned, so from the page it
+     looks like the model simply stopped mid-sentence. Publish asked for 1200
+     tokens of edit plan, the model spent most of them thinking, and what came
+     back was half a JSON object. The page called that "unreadable", which sent
+     us looking at the key and the worker for an hour.
+
+     Every JSON-shaped feature here wants the answer, not the reasoning, so
+     thinking is off by default and opt-in per call with { think: true }.
+     Only the 2.5 text models take this field — sending it to 2.0 or to the
+     image model is a 400. */
+  if (provider === 'gemini' && /^gemini-2\.5-flash(-lite)?$/.test(model)) {
+    body.generationConfig.thinkingConfig = { thinkingBudget: opts.think ? -1 : 0 };
+  }
+
   const own = provider === 'gemini' ? ncAIKey() : '';
   let data = null, err = '';
   try {
@@ -2274,15 +2475,96 @@ async function ncAsk(prompt, opts) {
   if (err) return { text: '', image: '', err: err };
 
   let text = '', image = '';
-  const parts = data && data.candidates && data.candidates[0] &&
-                data.candidates[0].content && data.candidates[0].content.parts;
+  const cand = data && data.candidates && data.candidates[0];
+  const parts = cand && cand.content && cand.content.parts;
   (parts || []).forEach(p => {
     if (p.text) text += p.text;
     if (p.inlineData) image = 'data:image/png;base64,' + p.inlineData.data;
   });
-  if (!text && !image) err = 'The AI returned nothing that time. Try again.';
-  return { text: text, image: image, err: err };
+
+  /* Why it stopped, not just that it stopped. A truncated answer and a refused
+     one both arrive as "no usable text", and telling a user to try again is
+     only good advice for one of them. */
+  const finish = (cand && cand.finishReason) || '';
+  const blocked = (data && data.promptFeedback && data.promptFeedback.blockReason) || '';
+  const cut = finish === 'MAX_TOKENS';
+
+  if (!text && !image) {
+    if (blocked || finish === 'SAFETY') {
+      err = 'The AI declined to answer that one. Rephrase it and try again.';
+    } else if (cut) {
+      err = 'The AI ran out of room before it wrote anything. Ask for something shorter.';
+    } else {
+      err = 'The AI returned nothing that time. Try again.';
+    }
+  }
+  return { text: text, image: image, err: err, cut: cut, finish: finish };
 }
+
+/* ============================================================================
+   READING JSON OUT OF AN ANSWER
+   ============================================================================
+   Four pages ask the model for JSON and then have to find it in a reply that
+   may be fenced, prefaced with "Sure!", or cut off mid-object. The obvious
+   /\{[\s\S]*\}/ is wrong in the last case: it runs from the first brace to the
+   LAST one in the string, and in a truncated answer that last brace closes an
+   inner object, so the match is unbalanced and never parses.
+
+   This walks the text instead, ignoring braces inside strings, and returns the
+   first balanced value. Returns null when there is no complete one — which is
+   a real answer to "did it send me JSON", unlike a throw.
+
+   The subtlety is which opening brace to trust. Scanning for "the first brace
+   that balances" is not enough: in a truncated plan the outer object never
+   closes but the step objects inside it do, so that rule hands back one step
+   and the page shows a confident, wrong, one-line plan. Silently wrong is worse
+   than the error this replaced.
+
+   So a brace only counts as a start if what follows it could begin real JSON —
+   a quoted key, or an empty object. That skips prose ("use { curly braces }")
+   while committing to the genuine outer object, and when that one does not
+   close we stop rather than descend into its wreckage, because everything after
+   it is a fragment of it.
+   ============================================================================ */
+function ncJSON(text) {
+  if (!text) return null;
+  const fence = String(text).match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const s = fence ? fence[1] : String(text);
+
+  for (let i = 0; i < s.length; i++) {
+    const open = s[i];
+    if (open !== '{' && open !== '[') continue;
+    const rest = s.slice(i + 1).replace(/^\s+/, '');
+    const plausible = open === '{'
+      ? /^["}]/.test(rest)
+      : /^[["\d\-{\]]|^(true|false|null)/.test(rest);
+    if (!plausible) continue;
+
+    const close = open === '{' ? '}' : ']';
+    let depth = 0, inStr = false, esc = false, balanced = false;
+    for (let j = i; j < s.length; j++) {
+      const c = s[j];
+      if (esc) { esc = false; continue; }
+      if (inStr) {
+        if (c === '\\') esc = true;
+        else if (c === '"') inStr = false;
+        continue;
+      }
+      if (c === '"') { inStr = true; continue; }
+      if (c === open) depth++;
+      else if (c === close && --depth === 0) {
+        balanced = true;
+        try { return JSON.parse(s.slice(i, j + 1)); } catch (e) { break; }
+      }
+    }
+    /* Balanced but unparseable is a bad candidate — keep looking. Never
+       balanced means the answer stops inside this value, and nothing further
+       along is a sibling of it. */
+    if (!balanced) return null;
+  }
+  return null;
+}
+window.ncJSON = ncJSON;
 
 window.ncAIKey = ncAIKey; window.ncSetAIKey = ncSetAIKey;
 window.ncKeyLooksReal = ncKeyLooksReal; window.ncAsk = ncAsk;
@@ -2358,6 +2640,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const t = document.createElement('div'); t.id = 'nctoast'; document.body.appendChild(t);
   const lpick = document.getElementById('langpick');
   if (lpick) { for (const c in LANGS) { const o = document.createElement('option'); o.value = c; o.textContent = LANGS[c]; lpick.appendChild(o); } lpick.value = lang(); lpick.onchange = () => applyLang(lpick.value); }
+  /* Before the two builders below, and before ncEnsureLangPick's fallback:
+     each of them mounts into the first .themewrap it finds, and the bar has to
+     exist by then or they mount into the sidebar and the bar comes up empty. */
+  ncBuildBar();
   ncEnsureLangPick();
   ncBuildThemeSwitch();
   ncReveal();
