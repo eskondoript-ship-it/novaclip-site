@@ -38,6 +38,49 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 .flag .actions a { margin-right: 14px; font-size: 0.82rem; }
 .ok { color: var(--nc-lime,#B6FF3C); }
 .notice { border-left: 3px solid var(--nc-cyan,#00F0FF); padding: 10px 14px; background: rgba(0,240,255,0.05); font-size: 0.85rem; color: var(--nc-dim,#b8bccb); border-radius: 0 10px 10px 0; margin-top: 10px; line-height: 1.6; }
+
+/* ---- screen time ---- */
+.sttop { display: flex; flex-wrap: wrap; gap: 30px; margin: 4px 0 20px; }
+.stbig b { display: block; font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em;
+  color: var(--nc-text,#EAF2FF); }
+.stbig span { color: var(--nc-dim,#7E8AA6); font-size: .88rem; }
+/* A column per day, so a week is one shape rather than seven numbers to
+   compare in your head. */
+.stbars { display: flex; align-items: flex-end; gap: 6px; height: 130px; margin-bottom: 6px; }
+.stcol { flex: 1; display: flex; flex-direction: column; justify-content: flex-end;
+  align-items: center; gap: 6px; height: 100%; }
+.stcol .bar { width: 100%; max-width: 42px; border-radius: 7px 7px 3px 3px; min-height: 3px;
+  background: linear-gradient(180deg, var(--nc-cyan,#00F0FF), var(--nc-violet,#7C5CFF));
+  transition: height .5s cubic-bezier(.2,.9,.3,1); position: relative; }
+/* Over the day's limit gets its own colour: a parent should be able to see
+   which days ran long without reading any numbers. */
+.stcol.over .bar { background: linear-gradient(180deg, var(--nc-pink,#FF2E97), #B32168); }
+.stcol .d { font-size: .72rem; color: var(--nc-dim,#7E8AA6); white-space: nowrap; }
+.stcol .v { font-size: .7rem; color: var(--nc-dim,#7E8AA6); font-variant-numeric: tabular-nums; }
+.stcol.today .d { color: var(--nc-text,#EAF2FF); font-weight: 700; }
+.sthint { font-size: .86rem; color: var(--nc-dim,#b8bccb); line-height: 1.6; margin: 10px 0 0; }
+.strule { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.08); }
+.strule b { display: block; font-size: .95rem; }
+.strule span { color: var(--nc-dim,#7E8AA6); font-size: .86rem; }
+
+/* ---- what it could pay ---- */
+.payrow { display: flex; flex-wrap: wrap; gap: 26px; margin-bottom: 4px; }
+.payfig b { display: block; font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em;
+  color: var(--nc-lime,#B6FF3C); }
+.payfig span { color: var(--nc-dim,#7E8AA6); font-size: .88rem; }
+.paybar { height: 9px; border-radius: 999px; background: rgba(255,255,255,.08);
+  overflow: hidden; margin: 6px 0 8px; }
+.paybar i { display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--nc-violet,#7C5CFF), var(--nc-cyan,#00F0FF)); }
+.paymath { font-family: ui-monospace, Consolas, monospace; font-size: .82rem;
+  color: var(--nc-dim,#b8bccb); background: rgba(0,0,0,.28); border-radius: 12px;
+  padding: 12px 14px; margin-top: 14px; line-height: 1.8; overflow-x: auto; }
+.paygate { margin-top: 14px; }
+.paygate li { margin: 0 0 9px 18px; font-size: .88rem; line-height: 1.6;
+  color: var(--nc-dim,#b8bccb); }
+.paygate li b { color: var(--nc-text,#EAF2FF); }
 #dash { display: none; }
 .backlnk { display: inline-block; margin-bottom: 18px; color: var(--nc-dim,#7E8AA6); }
 </style>
@@ -118,6 +161,47 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
       <div class='stat'><b id='s_unlocks'>0</b><span data-t='par_unlocks'>rewards unlocked</span></div>
       <h3 style='margin-top:14px' data-t='par_recent_ai'>Recent AI activity</h3>
       <div class='log' id='actlog'>—</div>
+    </div>
+
+    <!-- SCREEN TIME.
+         The clock that enforces the limit only ever knew about the stretch in
+         front of it. This is the same clock's day book: what was actually used,
+         and the breaks it forced, over a fortnight. -->
+    <div class='card'>
+      <h3><span>Screen time and breaks</span>
+        <small>Time spent actually using NovaClip on this device — idle tabs and
+        background windows are not counted — and the breaks the app made them
+        take.</small></h3>
+
+      <div class='sttop'>
+        <div class='stbig'><b id='stToday'>—</b><span>today</span></div>
+        <div class='stbig'><b id='stWeek'>—</b><span>last 7 days</span></div>
+        <div class='stbig'><b id='stAvg7'>—</b><span>daily average</span></div>
+        <div class='stbig'><b id='stBreaks'>—</b><span>breaks taken</span></div>
+      </div>
+
+      <div class='stbars' id='stBars'></div>
+
+      <p class='sthint' id='stHint'></p>
+
+      <div class='strule'>
+        <div>
+          <b>The limit right now</b>
+          <span id='stRule'>—</span>
+        </div>
+        <button class='btn' id='stReset' style='width:auto'>Reset today's clock</button>
+      </div>
+      <div class='notice'>Screen time is measured on this device only. A phone
+        or a second computer keeps its own count — there is no account behind
+        this, which is also why NovaClip cannot build a profile of your child.</div>
+    </div>
+
+    <!-- WHAT IT COULD PAY -->
+    <div class='card'>
+      <h3><span>What the channel could pay</span>
+        <small>An estimate, with the arithmetic shown. Read the three limits
+        under it before treating any of this as income.</small></h3>
+      <div id='payBox'>—</div>
     </div>
 
     <!-- CONTENT BLOCKING -->
@@ -405,9 +489,160 @@ function unlock() {
   document.getElementById('actlog').innerHTML = lines.length ? lines.join('<br>') : 'No AI chats yet on this device.';
   renderPlans();
   renderSavedCard();
+  renderScreenTime();
+  renderPay();
   /* Content blocking is inside the PIN gate for the same reason billing is:
      a child who can change the rules is not filtered. */
   try { fInit(); } catch (e) { console.warn('content blocking failed to start', e); }
+}
+
+/* ============================================================================
+   SCREEN TIME AND BREAKS
+   ============================================================================ */
+function stFmt(ms) {
+  const m = Math.round((ms || 0) / 60000);
+  if (m < 60) return m + 'm';
+  const h = Math.floor(m / 60);
+  return h + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '');
+}
+
+function renderScreenTime() {
+  const days = (typeof ncScreenLog === 'function') ? ncScreenLog(14) : [];
+  const bars = document.getElementById('stBars');
+  if (!days.length) {
+    if (bars) bars.innerHTML = '';
+    document.getElementById('stHint').textContent =
+      'No screen-time history yet. It starts filling in as soon as NovaClip is used on this device.';
+    return;
+  }
+
+  const today = days[days.length - 1];
+  const week = days.slice(-7);
+  const weekMs = week.reduce((a, d) => a + d.ms, 0);
+  const breaks = days.reduce((a, d) => a + d.breaks, 0);
+  /* Days actually used, not seven — averaging a holiday week over seven days
+     tells a parent their child used it for twenty minutes a day when really
+     they used it for two hours on one day and never again. */
+  const usedDays = week.filter(d => d.ms > 60000).length;
+
+  document.getElementById('stToday').textContent = stFmt(today.ms);
+  document.getElementById('stWeek').textContent = stFmt(weekMs);
+  document.getElementById('stAvg7').textContent = usedDays ? stFmt(weekMs / usedDays) : '—';
+  document.getElementById('stBreaks').textContent = breaks;
+
+  const budget = (typeof NC_ST_BUDGET === 'number') ? NC_ST_BUDGET : 90 * 60000;
+  /* Scale to the busiest day or to the limit, whichever is larger, so the limit
+     is always somewhere on the chart to compare against. */
+  const peak = Math.max(budget, ...days.map(d => d.ms));
+  bars.innerHTML = days.map((d, i) => {
+    const pct = peak ? Math.round(d.ms / peak * 100) : 0;
+    const isToday = i === days.length - 1;
+    return '<div class="stcol' + (d.ms > budget ? ' over' : '') + (isToday ? ' today' : '') +
+      '" title="' + d.day + ' — ' + stFmt(d.ms) + (d.breaks ? ', ' + d.breaks + ' break' + (d.breaks > 1 ? 's' : '') : '') + '">' +
+      '<span class="v">' + (d.ms > 60000 ? stFmt(d.ms) : '') + '</span>' +
+      '<div class="bar" style="height:' + Math.max(pct, d.ms ? 3 : 1) + '%"></div>' +
+      '<span class="d">' + (isToday ? 'Today' : d.date.toLocaleDateString(undefined, { weekday: 'narrow' })) + '</span>' +
+      '</div>';
+  }).join('');
+
+  const overDays = days.filter(d => d.ms > budget).length;
+  const breakMins = Math.round(breaks * ((typeof NC_ST_BREAK === 'number' ? NC_ST_BREAK : 15 * 60000) / 60000));
+  document.getElementById('stHint').innerHTML =
+    breaks
+      ? 'NovaClip has stopped them <b>' + breaks + ' time' + (breaks > 1 ? 's' : '') +
+        '</b> in the last fortnight and made them wait — about <b>' + breakMins +
+        ' minutes</b> of enforced break in total.' +
+        (overDays ? ' <b>' + overDays + '</b> day' + (overDays > 1 ? 's' : '') + ' went past the daily limit.' : '')
+      : 'No break has been triggered yet — they have not reached the limit in one sitting.';
+
+  document.getElementById('stRule').textContent =
+    stFmt(budget) + ' of use, then a forced ' +
+    Math.round((typeof NC_ST_BREAK === 'number' ? NC_ST_BREAK : 15 * 60000) / 60000) +
+    '-minute break the app cannot be clicked out of.';
+
+  document.getElementById('stReset').onclick = function () {
+    if (typeof ncScreenTimeReset === 'function') ncScreenTimeReset();
+    this.textContent = 'Clock reset';
+    setTimeout(() => { this.textContent = "Reset today's clock"; }, 2200);
+  };
+}
+
+/* ============================================================================
+   WHAT THE CHANNEL COULD PAY
+   ============================================================================ */
+/* Both ends of a range get the same precision, decided by the larger one.
+   "€36.55–€292" reads as two different kinds of number rather than one span. */
+function money(n, ref) {
+  const scale = Math.max(n, ref == null ? n : ref);
+  return '€' + (scale >= 100 ? Math.round(n).toLocaleString() : n.toFixed(2));
+}
+function moneyRange(lo, hi) { return money(lo, hi) + '–' + money(hi, hi); }
+
+function renderPay() {
+  const box = document.getElementById('payBox');
+  if (!box) return;
+  if (typeof ncPayEstimate !== 'function') { box.textContent = '—'; return; }
+
+  let snap = null;
+  try { const c = JSON.parse(localStorage.getItem('nc_ytsnap') || 'null'); snap = c && c.data; } catch (e) {}
+  const age = (typeof ncAge === 'function') ? ncAge() : 0;
+  const p = ncPayEstimate(snap, age);
+
+  /* The age rule first, because it is the one that surprises people, and it is
+     true whether or not a channel is connected. */
+  const ageLine = p.ownAccount
+    ? '<li><b>They are ' + p.ageNow + ', so the account can be theirs.</b> AdSense needs 18, and they are past it — the payments can go to an account in their own name.</li>'
+    : p.yearsTo18
+      ? '<li><b>Nobody under 18 can be paid directly.</b> They are ' + p.ageNow + ', so for the next ' +
+        p.yearsTo18 + ' year' + (p.yearsTo18 > 1 ? 's' : '') + ' any money has to go through an AdSense account that you own, in your name. It does not become theirs automatically at 18 — the account is whoever set it up.</li>'
+      : '<li><b>Nobody under 18 can be paid directly.</b> Until then any money has to go through an AdSense account owned by a parent or guardian, in their name.</li>';
+
+  if (!p.connected) {
+    box.innerHTML =
+      '<p style="color:var(--nc-dim,#b8bccb);line-height:1.7">No YouTube channel is connected on this device, so ' +
+      'there are no numbers to work from. Connect one in Studio and this fills in.</p>' +
+      '<ul class="paygate">' + ageLine +
+      '<li><b>Nothing is earned before the Partner Programme.</b> That needs <b>1,000 subscribers</b> ' +
+      'and <b>4,000 valid public watch hours</b> in twelve months, or 10 million Shorts views in ninety days.</li>' +
+      '<li><b>What it pays is a range, not a figure.</b> €' + p.rpm.low.toFixed(2) + ' to €' +
+      p.rpm.high.toFixed(2) + ' per 1,000 views is the usual band, and a channel made for other ' +
+      'teenagers sits near the bottom of it — advertisers pay least for that audience.</li></ul>';
+    return;
+  }
+
+  const gate = p.subsMet
+    ? '<b>' + p.subs.toLocaleString() + '</b> subscribers — past the 1,000 needed.'
+    : '<b>' + p.subs.toLocaleString() + '</b> of 1,000 subscribers. ' + p.needSubs.toLocaleString() + ' to go.';
+
+  box.innerHTML =
+    '<div class="payrow">' +
+      '<div class="payfig"><b>' + moneyRange(p.monthLow, p.monthHigh) + '</b><span>a month, if monetised today</span></div>' +
+      '<div class="payfig"><b>' + moneyRange(p.yearLow, p.yearHigh) + '</b><span>a year at the same rate</span></div>' +
+      '<div class="payfig"><b>' + p.viewsPerMonth.toLocaleString() + '</b><span>views a month (lifetime average)</span></div>' +
+    '</div>' +
+
+    '<div style="margin-top:16px"><span style="font-size:.88rem;color:var(--nc-dim,#b8bccb)">' + gate + '</span>' +
+      '<div class="paybar"><i style="width:' + p.subsPct + '%"></i></div></div>' +
+
+    '<div class="paymath">' +
+      p.totalViews.toLocaleString() + ' views ÷ ' + Math.round(p.months) + ' months on YouTube = ' +
+      p.viewsPerMonth.toLocaleString() + ' views/month<br>' +
+      p.viewsPerMonth.toLocaleString() + ' ÷ 1,000 × €' + p.rpm.low.toFixed(2) + ' = ' + money(p.monthLow, p.monthHigh) + ' a month (low)<br>' +
+      p.viewsPerMonth.toLocaleString() + ' ÷ 1,000 × €' + p.rpm.high.toFixed(2) + ' = ' + money(p.monthHigh, p.monthHigh) + ' a month (high)' +
+    '</div>' +
+
+    '<ul class="paygate">' + ageLine +
+      '<li><b>It is earning nothing today.</b> ' +
+      (p.subsMet
+        ? 'The subscriber threshold is met, but the Partner Programme also wants <b>4,000 valid public watch hours</b> in twelve months — that half is not in this data, so check it in YouTube Studio.'
+        : 'The Partner Programme needs 1,000 subscribers <i>and</i> 4,000 valid public watch hours in twelve months. Neither the figures above nor the videos change that.') +
+      '</li>' +
+      '<li><b>The average flatters or hides.</b> Views per month above is spread over the channel\'s whole life, ' +
+      'so a channel that is growing is worth more than this says, and one that has stalled is worth less. ' +
+      'The monthly chart on <a href="analytics.html">Analytics</a> shows which it is.</li>' +
+      '<li><b>The range is wide because RPM is.</b> It moves with the niche, the audience\'s country, ' +
+      'the time of year and how much of the watch time is Shorts. Anyone quoting one number is guessing.</li>' +
+    '</ul>';
 }
 
 // --- Plans & billing (inside PIN-gated dashboard) ---

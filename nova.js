@@ -2000,6 +2000,132 @@ function ncMiniAI() {
 const NC_ST_BUDGET = 90 * 60 * 1000;   // 1 h 30 m of use
 const NC_ST_BREAK  = 15 * 60 * 1000;   // then locked for 15 minutes
 const NC_ST_IDLE   = 60 * 1000;        // no interaction for this long = not using it
+const NC_ST_KEEP   = 30;               // days of history to keep
+
+/* ----------------------------------------------------------------------------
+   THE DAY BOOK
+
+   The clock above only ever knew about the stretch in front of it: minutes
+   since the last break, wiped the moment a break began. That is all it needs to
+   enforce a limit, and it is nothing at all for a parent, who is not asking
+   "how long right now" but "how much this week, and is it going up".
+
+   So each tick also banks its milliseconds against today's date, and a break
+   increments today's count when it starts. Thirty days, then the oldest day
+   falls off — long enough to see a trend, short enough that this stays a small
+   string in localStorage.
+
+   Local dates on purpose: a parent reading "Tuesday" means the Tuesday the
+   household had, not a UTC day that ends at 1am in Lisbon.
+   ---------------------------------------------------------------------------- */
+function ncStDay(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+    '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function ncStRead() {
+  try { return JSON.parse(localStorage.getItem('nc_st_log') || '{}') || {}; }
+  catch (e) { return {}; }
+}
+
+function ncStLog(ms, breaks) {
+  const log = ncStRead();
+  const k = ncStDay();
+  const day = log[k] || { ms: 0, breaks: 0 };
+  day.ms += ms || 0;
+  day.breaks += breaks || 0;
+  log[k] = day;
+
+  const keys = Object.keys(log).sort();
+  while (keys.length > NC_ST_KEEP) delete log[keys.shift()];
+
+  try { localStorage.setItem('nc_st_log', JSON.stringify(log)); } catch (e) {}
+}
+
+/* The last n days, oldest first, with the gaps filled in — a day nobody opened
+   the site has no entry, and a chart with Wednesday missing is a lie about
+   Wednesday rather than a gap in it. */
+function ncScreenLog(days) {
+  const log = ncStRead();
+  const out = [];
+  for (let i = (days || 7) - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const k = ncStDay(d);
+    const e = log[k] || { ms: 0, breaks: 0 };
+    out.push({ day: k, date: d, ms: e.ms || 0, breaks: e.breaks || 0 });
+  }
+  return out;
+}
+window.ncScreenLog = ncScreenLog;
+
+/* ============================================================================
+   WHAT THIS COULD PAY
+   ============================================================================
+   A parent looking at a teenager's channel is asking a fair question — is any
+   of this ever going to be worth money — and the honest answer has three parts,
+   so this returns all three rather than one confident number.
+
+     1. It is not earning anything yet, and cannot, until YouTube's Partner
+        Programme thresholds are met. Below those the answer is £0 no matter how
+        good the videos are.
+     2. Nobody under 18 can hold an AdSense account. The money does not go to
+        the teenager on their eighteenth birthday — until then it can only be
+        paid into an account a parent or guardian owns, in their name.
+     3. What it would pay, once both of those are cleared, is a RANGE and not a
+        figure. RPM depends on the niche, the audience's country, the season and
+        how much of the watch time is Shorts. Anyone quoting one number is
+        guessing; this quotes the band and shows the arithmetic.
+
+   RPM here is the creator's share per 1,000 views — already net of YouTube's
+   45% — so the output is take-home, not billings. The band is deliberately wide
+   and starts low: a channel aimed at other teenagers sits near the bottom of it,
+   because advertisers pay least for exactly that audience. That is a
+   disappointing thing to tell a parent and it is the true thing.
+   ============================================================================ */
+const NC_YPP = { subs: 1000, watchHours: 4000, shortsViews: 10000000 };
+const NC_RPM = { low: 0.50, high: 4.00 };     // per 1,000 views, creator's share
+const NC_ADSENSE_AGE = 18;
+
+function ncPayEstimate(snap, age) {
+  const s = snap || {};
+  const out = {
+    connected: !!s.connected,
+    subs: s.subscribers || 0,
+    totalViews: s.totalViews || 0,
+    needSubs: Math.max(0, NC_YPP.subs - (s.subscribers || 0)),
+    rpm: NC_RPM,
+    ageNow: age || 0,
+    yearsTo18: age ? Math.max(0, NC_ADSENSE_AGE - age) : null,
+    ownAccount: !!age && age >= NC_ADSENSE_AGE
+  };
+  if (!out.connected) return out;
+
+  /* Views per month, averaged over the channel's whole life. A lifetime average
+     understates a channel that is growing and flatters one that has stalled,
+     which is why it is labelled as what it is wherever it is shown. */
+  const created = Date.parse(s.created || '');
+  const months = isFinite(created)
+    ? Math.max(1, (Date.now() - created) / (30.44 * 86400000))
+    : 1;
+  out.months = months;
+  out.viewsPerMonth = Math.round((s.totalViews || 0) / months);
+
+  out.monthLow  = out.viewsPerMonth / 1000 * NC_RPM.low;
+  out.monthHigh = out.viewsPerMonth / 1000 * NC_RPM.high;
+  out.yearLow   = out.monthLow * 12;
+  out.yearHigh  = out.monthHigh * 12;
+
+  /* Eligibility is subscribers AND watch hours. Watch hours are not in this
+     snapshot — the Analytics API has them and the dashboard does not call it —
+     so the subscriber gate is reported as what it is, half the test. */
+  out.subsMet = out.subs >= NC_YPP.subs;
+  out.subsPct = Math.min(100, Math.round(out.subs / NC_YPP.subs * 100));
+  return out;
+}
+window.ncPayEstimate = ncPayEstimate;
+window.NC_YPP = NC_YPP;
 
 function ncScreenTime() {
   const get = (k, d) => { const v = +localStorage.getItem(k); return isFinite(v) && v ? v : d; };
@@ -2072,11 +2198,13 @@ function ncScreenTime() {
 
     const used = get('nc_st_used', 0) + delta;
     set('nc_st_used', used);
+    ncStLog(delta, 0);              // banked per day, so a parent can see a week
 
     const left = NC_ST_BUDGET - used;
     if (left <= 0) {
       set('nc_st_lock', now + NC_ST_BREAK);
       set('nc_st_used', 0);
+      ncStLog(0, 1);                // a break starts here
       return;
     }
     /* The badge only appears in the last ten minutes. A countdown visible the
