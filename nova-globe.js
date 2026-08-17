@@ -236,12 +236,18 @@
      actually tested: if the tiles do not come, the drawn globe carries on and
      the readout says so.
      ========================================================================== */
-  var TILES = window.NC_TILES || {
+  var TILE_DEFAULT = {
     /* Satellite imagery, which is what "actual terrain" meant. */
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     credit: 'Imagery © Esri, Maxar, Earthstar Geographics',
     maxZoom: 19
   };
+
+  /* Read every time rather than captured once at parse. This file is deferred,
+     so a page that sets window.NC_TILES in a later script would otherwise be
+     ignored depending on which tag happened to run first — a difference nobody
+     should have to reason about to change a map provider. */
+  function tileCfg() { return window.NC_TILES || TILE_DEFAULT; }
 
   var METRES_PER_PX_EQUATOR = 156543.03392;   // at zoom 0
   var MAP_SIZE = 640;                         // the square asked for
@@ -455,7 +461,7 @@
       rec.img.onerror = function () {
         if (++tileFails >= 6) { tilesOff = true; mapNote('No map imagery: the tile service did not answer.'); }
       };
-      rec.img.src = TILES.url.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+      rec.img.src = tileCfg().url.replace('{z}', z).replace('{x}', x).replace('{y}', y);
       tileStats.requested++;
       tileCache[key] = rec;
     }
@@ -465,6 +471,7 @@
   /* Returns true when tiles actually covered the window, so the caller knows
      whether to draw the credit — and whether the Google path is still needed. */
   function drawTiles(CX, CY, VR, alpha) {
+    var TILES = tileCfg();
     if (tilesOff || !TILES || !TILES.url || alpha <= 0) return false;
     if (!pos || focusLat == null) return false;
 
@@ -766,6 +773,7 @@
        path is only reached if a provider was cleared out deliberately — it is
        the upgrade, not the default. */
     var credit = '';
+    var TILES = tileCfg();
     if (TILES && TILES.url) {
       /* Tiles are configured, so tiles are the source — full stop. Falling
          through to Google when a tile is merely still loading would ask a
