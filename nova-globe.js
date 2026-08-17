@@ -157,6 +157,58 @@
   })();
 
   /* ==========================================================================
+     THE CLOSE-UP GRID
+     ==========================================================================
+     DOTS is the whole planet sampled every two degrees, which is about 220km
+     between dots — right for a globe and useless once the view is a few degrees
+     across, where it would put four dots on the screen.
+
+     So past a certain zoom the patch in view gets its own grid, as fine as the
+     view is small. It is rebuilt only when the zoom moves a step or the focus
+     changes, not per frame: point-in-polygon across ten thousand candidates
+     sixty times a second is not a thing to do in a background animation.
+
+     Worth being plain about the limit: the coastlines these are tested against
+     were traced at about one degree. Zoom past that and the extra dots are
+     honest about where land is to within ~100km and invent nothing finer —
+     there are no streets in this data, and none of it pretends there are.
+     ========================================================================== */
+  var localDots = null, localKey = '';
+
+  function ensureLocalDots() {
+    /* Kept while zooming out, not dropped the instant the pointer leaves. The
+       focus clears immediately but the zoom takes a couple of seconds to come
+       back, and swapping to the 220km grid at zoom 5 empties the land out
+       halfway through the animation. */
+    if (zoom < 1.6) {
+      if (localDots) { localDots = null; localKey = ''; }
+      return;
+    }
+    if (focusLat == null) return;
+    /* Bucketed so a smooth zoom rebuilds a handful of times, not every frame. */
+    var bucket = Math.max(1, Math.round(zoom * 2) / 2);
+    var key = focusLat.toFixed(2) + ',' + focusLon.toFixed(2) + '@' + bucket;
+    if (key === localKey) return;
+    localKey = key;
+
+    var span = Math.asin(Math.min(1, 1 / bucket)) * 180 / Math.PI * 1.15;
+    var step = Math.max(0.004, span / 55);
+    var latMin = Math.max(-89, focusLat - span), latMax = Math.min(89, focusLat + span);
+    var out = [];
+    for (var la = latMin; la <= latMax; la += step) {
+      var k = Math.max(0.02, Math.cos(la * Math.PI / 180));
+      var lonSpan = Math.min(180, span / k);
+      for (var lo = focusLon - lonSpan; lo <= focusLon + lonSpan; lo += step / k) {
+        if (!onLand(lo, la)) continue;
+        var rla = la * Math.PI / 180, rlo = lo * Math.PI / 180;
+        out.push([Math.cos(rla) * Math.sin(rlo), Math.sin(rla), Math.cos(rla) * Math.cos(rlo)]);
+        if (out.length > 9000) { la = latMax + 1; break; }   // a hard ceiling on the work
+      }
+    }
+    localDots = out.length ? out : null;
+  }
+
+  /* ==========================================================================
      STATE
      ========================================================================== */
   var layer, cv, ctx, marker, label, hoverEl, geoBtn;
@@ -185,7 +237,13 @@
      obvious alternative and it is wrong: the disc then grows rightwards and
      carries its own centre off the side of the screen, taking the visitor's
      red dot — the entire point of the zoom — with it. */
-  var ZOOM_MAX = 1.28;
+  /* How far the porthole leans in. 1.28 was all the room there was back when
+     zooming grew the disc itself and it had to stop before it reached the
+     headline. Clipped to a fixed circle, nothing is in its way, so this is now
+     a question of how close is useful rather than how close is safe: 9 puts
+     roughly a 150km-wide patch in the hole, which is a town and its
+     surroundings — the scale of the map this was asked to match. */
+  var ZOOM_MAX = 9;
   var baseR = 0, baseCx = 0;
 
   /* The right-hand edge of the actual ink in the hero.
@@ -229,15 +287,36 @@
     var clear = Math.round(textRight(layer.parentElement)) + 28;
     if (!clear || clear > W * 0.75) clear = W * 0.55;   // nothing sane measured
     /* Let it bleed off the right edge — a sphere cropped by the viewport reads
-       as bigger than the screen, which is the look this replaced. The whole
-       span has to hold the disc at ZOOM_MAX, not at rest, or hovering is what
-       covers the headline. */
+       as bigger than the screen, which is the look this replaced.
+
+       No ZOOM_MAX in here any more. It used to divide the radius and multiply
+       the centre, because zooming grew the disc and the layout had to leave
+       room for it at full lean. The porthole is a fixed circle, so the only
+       question left is how big the circle is — and reserving nine times its
+       width put its centre a thousand pixels off the side of the canvas. */
     var span = (W + W * 0.18) - clear;
-    baseR = Math.max(minSide * 0.20, Math.min(minSide * 0.40, span / (2 * ZOOM_MAX)));
-    baseCx = clear + baseR * ZOOM_MAX;
+    baseR = Math.max(minSide * 0.20, Math.min(minSide * 0.40, span / 2));
+    baseCx = clear + baseR;
   }
 
-  function radius() { return baseR * zoom; }
+  /* TWO RADII, AND THE DIFFERENCE IS THE WHOLE ZOOM.
+
+       viewR    the circle you see. Fixed. It never changes with zoom, which is
+                what "zoom in but do not make it fullscreen" means — the globe
+                stays the same size on the page and keeps clear of the
+                headline, exactly as it does at rest.
+
+       sphereR  the projected radius of the sphere the maths works on. This is
+                what grows. At zoom 9 the sphere is nine times the width of the
+                circle showing it, so what fills the circle is a small cap of
+                the planet instead of the whole disc.
+
+     Everything is then clipped to viewR. The result is a porthole: same hole,
+     much closer view through it. Growing the disc itself was the obvious
+     alternative and it is the one the request ruled out — a sphere at zoom 9
+     with nothing clipping it is a navy rectangle over the entire hero. */
+  function radius() { return baseR * zoom; }   // the sphere: what project() uses
+  function viewR() { return baseR; }           // the porthole: what you see
   function cx() { return baseCx; }
   function cy() { return H * 0.52; }
 
@@ -257,7 +336,14 @@
 
   function unproject(mx, my) {
     var R = radius();
-    var dx = (mx - cx()) / R, dy = -(my - cy()) / R;
+    /* Outside the porthole is off the globe, whatever the sphere behind it is
+       doing. Without this the pointer would still "be on the globe" out in the
+       corners of the hero once zoomed, because the sphere by then is wider
+       than the screen. */
+    var vx = mx - cx(), vy = my - cy(), vr = viewR();
+    if (vx * vx + vy * vy > vr * vr) return null;
+
+    var dx = vx / R, dy = -vy / R;
     var d2 = dx * dx + dy * dy;
     if (d2 > 1) return null;
     var dz = Math.sqrt(1 - d2);
@@ -274,42 +360,54 @@
      DRAW
      ========================================================================== */
   function draw() {
-    var R = radius(), CX = cx(), CY = cy();
+    var R = radius(), VR = viewR(), CX = cx(), CY = cy();
     ctx.clearRect(0, 0, W, H);
 
-    /* atmosphere */
-    var glow = ctx.createRadialGradient(CX, CY, R * 0.86, CX, CY, R * 1.35);
+    /* atmosphere — around the porthole, not around the sphere. At zoom the
+       sphere's own edge is far outside the screen and has no glow to give. */
+    var glow = ctx.createRadialGradient(CX, CY, VR * 0.86, CX, CY, VR * 1.35);
     glow.addColorStop(0, 'rgba(0,240,255,0.20)');
     glow.addColorStop(0.45, 'rgba(0,150,255,0.08)');
     glow.addColorStop(1, 'rgba(0,120,255,0)');
     ctx.fillStyle = glow;
-    ctx.beginPath(); ctx.arc(CX, CY, R * 1.35, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(CX, CY, VR * 1.35, 0, 7); ctx.fill();
 
-    /* the ocean sphere, lit from the upper left */
-    var body = ctx.createRadialGradient(CX - R * 0.35, CY - R * 0.4, R * 0.1, CX, CY, R);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(CX, CY, VR, 0, 7); ctx.clip();
+
+    /* the ocean sphere, lit from the upper left. Zoomed in, the lighting
+       gradient is pinned to the porthole so the patch keeps some shading
+       instead of being one flat colour from the middle of a huge sphere. */
+    var gR = Math.min(R, VR * 1.6);
+    var body = ctx.createRadialGradient(CX - gR * 0.35, CY - gR * 0.4, gR * 0.1, CX, CY, gR);
     body.addColorStop(0, '#123A5E');
     body.addColorStop(0.55, '#0B2038');
     body.addColorStop(1, '#050D18');
     ctx.fillStyle = body;
-    ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(CX, CY, R < VR ? R : VR, 0, 7); ctx.fill();
 
-    /* graticule */
+    /* Graticule spacing follows the zoom. Thirty-degree lines are right for a
+       whole planet and meaningless once the view is six degrees wide, where
+       the nearest line would be off the edge. */
+    var span = Math.asin(Math.min(1, VR / R)) * 180 / Math.PI;   // visible half-angle
+    var gstep = span > 40 ? 30 : span > 12 ? 10 : span > 4 ? 2 : span > 1.2 ? 0.5 : 0.1;
+    var arc = Math.min(4, gstep / 4);
     ctx.strokeStyle = 'rgba(0,240,255,0.07)';
     ctx.lineWidth = 1;
-    for (var la = -60; la <= 60; la += 30) {
+    for (var la = -80; la <= 80; la += gstep) {
       ctx.beginPath();
       var started = false;
-      for (var lo = -180; lo <= 180; lo += 4) {
+      for (var lo = -180; lo <= 180; lo += arc) {
         var p = project(la, lo);
         if (!p.visible) { started = false; continue; }
         started ? ctx.lineTo(p.x, p.y) : (ctx.moveTo(p.x, p.y), started = true);
       }
       ctx.stroke();
     }
-    for (var lo2 = -180; lo2 < 180; lo2 += 30) {
+    for (var lo2 = -180; lo2 < 180; lo2 += gstep) {
       ctx.beginPath();
       var st2 = false;
-      for (var la2 = -90; la2 <= 90; la2 += 4) {
+      for (var la2 = -90; la2 <= 90; la2 += arc) {
         var q = project(la2, lo2);
         if (!q.visible) { st2 = false; continue; }
         st2 ? ctx.lineTo(q.x, q.y) : (ctx.moveTo(q.x, q.y), st2 = true);
@@ -318,10 +416,14 @@
     }
 
     /* land dots — z gives both the brightness and the size, which is what
-       makes the near face read as nearer */
+       makes the near face read as nearer. Close in, the two-degree world grid
+       is 220km between dots and would show four of them, so a finer grid is
+       built for the patch actually on screen. */
+    var pts = localDots || DOTS;
     var ct = Math.cos(tilt), stt = Math.sin(tilt), cs = Math.cos(spin), ss = Math.sin(spin);
-    for (var i = 0; i < DOTS.length; i++) {
-      var d = DOTS[i];
+    var dotScale = localDots ? VR * 0.010 : R * 0.006;
+    for (var i = 0; i < pts.length; i++) {
+      var d = pts[i];
       /* rotate about the pole, then lean */
       var x = d[0] * cs + d[2] * ss;
       var z0 = -d[0] * ss + d[2] * cs;
@@ -330,27 +432,82 @@
       if (z <= 0.02) continue;
       var y2 = y * ct - z0 * stt;
       var sx = CX + x * R, sy = CY - y2 * R;
+      /* cheap reject: most of a fine local grid still lands outside the hole */
+      if (sx < CX - VR || sx > CX + VR || sy < CY - VR || sy > CY + VR) continue;
       var a = 0.25 + z * 0.75;
+      /* Close in, every dot is the same brightness and the land arrives as one
+         flat slab of cyan with a ruled edge. A fixed per-point wobble — derived
+         from the coordinates, so it does not shimmer between frames — breaks
+         that up into something that reads as ground. It is texture, not data:
+         the outlines underneath are traced at about a degree and this does not
+         pretend to know anything finer. */
+      if (localDots) {
+        var n = (d[0] * 12.9898 + d[1] * 78.233 + d[2] * 37.719) * 43758.5453;
+        a *= 0.55 + 0.45 * Math.abs(n - Math.floor(n));
+      }
       ctx.fillStyle = 'rgba(64,226,255,' + a.toFixed(3) + ')';
-      var s = Math.max(0.7, R * 0.006 * (0.55 + z * 0.65));
+      var s = Math.max(0.7, dotScale * (0.55 + z * 0.65));
       ctx.fillRect(sx - s / 2, sy - s / 2, s, s);
     }
 
-    /* limb */
+    /* Range rings, once close enough for a distance to mean something. They
+       are what turns a field of dots into a place: something to read the scale
+       against. */
+    if (span < 12) drawRings(CX, CY, R, VR, span);
+
+    ctx.restore();
+
+    /* limb — the porthole's own rim */
     ctx.strokeStyle = 'rgba(0,240,255,0.30)';
     ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(CX, CY, VR, 0, 7); ctx.stroke();
 
     placeMarker();
+  }
+
+  /* Circles of true ground distance around the focus, labelled. The Earth's
+     mean radius in km turns the sphere's angles into something a person can
+     picture. */
+  var EARTH_KM = 6371;
+  function drawRings(CX, CY, R, VR, span) {
+    if (focusLat == null) return;
+    var maxKm = span * Math.PI / 180 * EARTH_KM;
+    /* one-two-five, so the labels are always round numbers */
+    var step = Math.pow(10, Math.floor(Math.log(maxKm / 3) / Math.LN10));
+    if (maxKm / step > 15) step *= 5; else if (maxKm / step > 6) step *= 2;
+
+    ctx.strokeStyle = 'rgba(255,46,77,0.20)';
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = '9px ui-monospace,monospace';
+    ctx.lineWidth = 1;
+    for (var km = step; km <= maxKm; km += step) {
+      var rad = km / EARTH_KM;              // angular distance
+      var px = Math.sin(rad) * R;           // orthographic: sin of the angle
+      if (px > VR) break;
+      ctx.beginPath(); ctx.arc(CX, CY, px, 0, 7); ctx.stroke();
+      ctx.fillText((km < 1 ? km.toFixed(1) : Math.round(km)) + 'km', CX + 4, CY - px - 3);
+    }
   }
 
   function placeMarker() {
     if (!pos || !marker) return;
     var p = project(pos.lat, pos.lon);
     marker.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px)';
-    label.style.transform = 'translate(' + (p.x + 15) + 'px,' + p.y + 'px) translateY(-50%)';
-    marker.classList.toggle('on', p.visible);
-    label.classList.toggle('on', p.visible);
+
+    /* The label sits to the right of the dot, except when the dot is near the
+       right edge — zoomed in it is at the centre of a porthole that bleeds off
+       the side of the screen, and "You are here" was being written off the edge
+       of the page. Then it goes to the left instead. */
+    var flip = p.x + 15 + label.offsetWidth > W - 8;
+    label.style.transform = 'translate(' + (flip ? p.x - 15 - label.offsetWidth : p.x + 15) +
+      'px,' + p.y + 'px) translateY(-50%)';
+
+    /* Outside the porthole the dot is not on the visible face, even though the
+       sphere still has a point there. */
+    var dx = p.x - cx(), dy = p.y - cy(), vr = viewR();
+    var inHole = dx * dx + dy * dy <= vr * vr;
+    marker.classList.toggle('on', p.visible && inHole);
+    label.classList.toggle('on', p.visible && inHole);
   }
 
   /* ==========================================================================
@@ -396,6 +553,7 @@
     } else {
       tilt += (-0.28 - tilt) * Math.min(1, dt * 2);
     }
+    ensureLocalDots();
     draw();
   }
 
@@ -479,7 +637,13 @@
     if (!hit) { if (hoverEl) hoverEl.classList.remove('on'); clearTimeout(hoverTimer); return; }
 
     hoverEl.classList.add('on');
-    hoverEl.style.transform = 'translate(' + (mx + 16) + 'px,' + (my + 16) + 'px)';
+    /* Same edge problem as the marker's label: the porthole runs off the right
+       of the hero, so a box pinned 16px to the right of the pointer is written
+       off the page. It goes above-left instead when there is no room. */
+    var hw = hoverEl.offsetWidth, hh = hoverEl.offsetHeight;
+    var hx = mx + 16 + hw > W - 8 ? mx - 16 - hw : mx + 16;
+    var hy = my + 16 + hh > H - 8 ? my - 16 - hh : my + 16;
+    hoverEl.style.transform = 'translate(' + hx + 'px,' + hy + 'px)';
     var coords = Math.abs(hit.lat).toFixed(2) + (hit.lat >= 0 ? '°N' : '°S') + '  ' +
                  Math.abs(hit.lon).toFixed(2) + (hit.lon >= 0 ? '°E' : '°W');
     var key = hit.lat.toFixed(1) + ',' + hit.lon.toFixed(1);
@@ -633,6 +797,7 @@
     /* Where the disc actually is. The layout is measured from the headline
        rather than fixed, so nothing outside can assume a fraction of the
        width — including the tests that drive it. */
-    geo: function () { return { cx: cx(), cy: cy(), r: radius(), w: W, h: H }; }
+    geo: function () { return { cx: cx(), cy: cy(), r: radius(), viewR: viewR(), w: W, h: H }; },
+    localDots: function () { return localDots ? localDots.length : 0; }
   };
 })();
