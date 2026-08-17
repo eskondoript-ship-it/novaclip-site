@@ -6,13 +6,19 @@ is.
 
 ## Install (unpacked, until it is on the Web Store)
 
+There is a page that walks a parent through this without a console:
+**`shield.html`** on the site. The steps are the same either way.
+
 1. `chrome://extensions` → turn on **Developer mode**
 2. **Load unpacked** → choose this folder
 3. Copy the extension ID it shows
-4. Open the Family Dashboard, unlock with the parent PIN, and run this in the
-   browser console on that page:
-   `localStorage.setItem('nc_shield_id','PASTE_THE_ID')`
-5. Press **Save and send to the shield**
+4. Open `shield.html`, paste the ID, press **Pair the shield**
+5. Open the Family Dashboard, unlock with the parent PIN, and press
+   **Save and send to the shield**
+
+`externally_connectable` below is what decides which sites are allowed to send
+settings here, so a site serving the dashboard from a new domain has to be added
+to it or step 5 silently does nothing.
 
 Until step 5, the shield runs the default 10-to-13 settings.
 

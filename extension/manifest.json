@@ -41,20 +41,11 @@
     "default_popup": "options.html",
     "default_title": "NovaClip Family Shield"
   },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "blocked.html"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
-    }
-  ],
   "externally_connectable": {
     "matches": [
       "https://novaclip.pt/*",
       "https://*.novaclip.pt/*",
+      "https://eskondoript-ship-it.github.io/*",
       "http://localhost/*",
       "http://127.0.0.1/*"
     ]

@@ -41,6 +41,31 @@ h1 .grad { background: linear-gradient(90deg, var(--nc-mag,#F72585), var(--nc-vi
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px; }
 .chartcard { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px; }
+
+/* ---- the year chart at the top ---- */
+#yearwrap { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px; padding: 20px 22px 16px; margin: 6px 0 26px; }
+.yearhead { display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.yearhead h2 { font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; margin: 0; }
+.yearsub { font-size: .82rem; color: var(--nc-dim,#7E8AA6); margin: 3px 0 0; }
+/* Chart beside its notes, the way the reference reads: the lines carry the
+   shape, the column on the right says what the shape was. */
+.yearbody { display: grid; grid-template-columns: minmax(0,1fr) 230px; gap: 20px; align-items: stretch; }
+.yearchart { position: relative; min-width: 0; min-height: 300px; }
+.yearnotes { display: flex; flex-direction: column; gap: 10px; }
+.ynote { border-left: 3px solid var(--c,#00E5FF); padding: 2px 0 2px 11px; }
+.ynote b { display: block; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--c,#00E5FF); margin-bottom: 3px; }
+.ynote span { display: block; font-size: .78rem; line-height: 1.55; color: var(--nc-dim,#9fb0cc); }
+.ynote i { font-style: normal; color: var(--nc-text,#EAF2FF); font-weight: 600; }
+/* Below ~900px the notes column would squeeze the chart to nothing, so it
+   goes underneath and the notes run as a row of three. */
+@media (max-width: 900px) {
+  .yearbody { grid-template-columns: 1fr; }
+  .yearnotes { flex-direction: row; flex-wrap: wrap; }
+  .ynote { flex: 1 1 180px; }
+}
 .chartcard h4 { font-size: 0.95rem; margin-bottom: 12px; }
 .chartcard.wide { grid-column: 1 / -1; }
 .toggle { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; font-weight: 700; cursor: pointer; }
@@ -235,6 +260,30 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
   <h1><span class='grad' data-t='analytics_h'>Analytics</span></h1>
   <p class='subtitle' data-t='analytics_sub'>Deep charts comparing your channel to your closest rivals.</p>
 
+  <!-- THE YEAR, FIRST.
+       Everything below this is the last 28 days from one angle or another,
+       which answers "how did that video do" but never "is the channel
+       growing". Twelve months of the three numbers that say so, on one set of
+       axes, before anything else on the page.
+
+       The notes on the right are read off the same series that were drawn —
+       peak month, direction, best stretch — so they cannot drift away from the
+       lines the way a hand-written caption does. -->
+  <section id='yearwrap'>
+    <div class='yearhead'>
+      <div>
+        <h2>Monthly trend</h2>
+        <p class='yearsub'>Views, watch time and new subscribers, month by month.</p>
+      </div>
+      <span class='stsince' id='yearRange'>last 12 months</span>
+    </div>
+    <div class='yearbody'>
+      <div class='yearchart'><canvas id='c_year' height='300'></canvas></div>
+      <div class='yearnotes' id='yearNotes'></div>
+    </div>
+    <p class='perfnote' id='yearNote'></p>
+  </section>
+
   <div id='connectrow'>
     <button id='gbtn' class='gbtn' data-t='signin'>Sign in with Google</button>
     <p class='hint' data-t='analytics_hint'>Connect your channel to load your analytics.</p>
@@ -380,6 +429,7 @@ async function boot() {
     studioFill(null);
     row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">Connect in Studio</a>' +
       '<p class="hint">Analytics uses the channel you connect in Studio. Connect once there, then come back — you will stay signed in for about an hour.</p>';
+    renderYearChart();   // says what it will show, rather than sitting blank
     return;
   }
   ytToken = tok;
@@ -435,6 +485,7 @@ async function enterDash() {
   } catch (e) { console.warn('upload history unavailable', e); }
   renderReview();
   renderRatings();
+  renderYearChart();
   renderPerformance();
   document.querySelectorAll('.pfp').forEach(b => b.onclick = () => {
     document.querySelectorAll('.pfp').forEach(x => x.classList.remove('on'));
@@ -514,6 +565,223 @@ function perfChart(id, type, labels, datasets, opts) {
     }, opts || {})
   });
 }
+
+/* ============================================================================
+   THE MONTHLY TREND
+   ============================================================================
+   Twelve months of views, watch time and subscribers gained, from the same
+   Analytics API the panels below use — dimensions:'month' rather than 'day',
+   and its own date range instead of the 7/28/90-day buttons.
+
+   Two y-axes, not three. Views and watch minutes are both volume and sit
+   happily on one scale; subscribers gained is two or three orders of magnitude
+   smaller and would draw as a flat line along the bottom, so it gets the right
+   axis. Normalising all three to a shared 0-100 was the other option and it is
+   worse: it makes every line the same height and quietly stops the numbers
+   meaning anything.
+   ============================================================================ */
+let yearChart = null;
+
+/* The panels below hard-code dark-theme greys and white gridlines, which on the
+   light theme means white lines on a white card — invisible. This chart is the
+   first thing on the page, so it reads the theme instead. */
+function yearInk() {
+  const t = document.documentElement.getAttribute('data-theme');
+  const light = t === 'light';
+  return {
+    tick: light ? '#5A6478' : '#7E8AA6',
+    legend: light ? '#3D4557' : '#9fb0cc',
+    grid: light ? 'rgba(16,24,44,0.10)' : 'rgba(255,255,255,0.05)'
+  };
+}
+
+const YEAR_SERIES = [
+  { key: 'views', label: 'Views', color: '#00E5FF', axis: 'y',
+    tell: 'How many times something of yours started playing.' },
+  { key: 'mins', label: 'Watch time (mins)', color: '#7C5CFF', axis: 'y',
+    tell: 'Minutes actually watched — the number YouTube pays attention to.' },
+  { key: 'subs', label: 'Subscribers gained', color: '#FF2E97', axis: 'y1',
+    tell: 'People who chose to keep seeing you, on the right-hand scale.' }
+];
+
+function yearSay(msg, warn) {
+  const n = document.getElementById('yearNote');
+  if (!n) return;
+  n.className = 'perfnote' + (warn ? ' warn' : '');
+  n.textContent = msg || '';
+}
+
+/* Whole months, ending with last month: the current one is partial and a
+   half-finished bar at the end of a trend line reads as a collapse. */
+function yearRange() {
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth(), 0);          // last day of last month
+  const start = new Date(end.getFullYear(), end.getMonth() - 11, 1);   // 12 months back, day 1
+  return { start: ymd(start), end: ymd(end) };
+}
+
+function monthLabel(ym) {
+  const p = String(ym).split('-');
+  const d = new Date(+p[0], (+p[1] || 1) - 1, 1);
+  return d.toLocaleDateString(undefined, { month: 'short' });
+}
+
+/* What the line did, in a sentence, from the series itself. */
+function yearNote(s, rows) {
+  const vals = rows.map(r => r[s.key]);
+  const total = vals.reduce((a, b) => a + b, 0);
+  if (!total) return 'Nothing recorded in these twelve months.';
+
+  let peak = 0;
+  vals.forEach((v, i) => { if (v > vals[peak]) peak = i; });
+
+  /* Second half against first: "growing" should mean the recent stretch beat
+     the earlier one, not that the last single month happened to be up. */
+  const half = Math.floor(vals.length / 2);
+  const early = vals.slice(0, half).reduce((a, b) => a + b, 0);
+  const late = vals.slice(half).reduce((a, b) => a + b, 0);
+  const dir = !early ? 'all of it in the second half of the year'
+    : late > early * 1.15 ? 'up ' + Math.round((late / early - 1) * 100) + '% on the first half of the year'
+    : late < early * 0.85 ? 'down ' + Math.round((1 - late / early) * 100) + '% on the first half of the year'
+    : 'roughly level across the year';
+
+  return '<i>' + nfmt(total) + '</i> in total, ' + dir +
+    '. Best month was <i>' + rows[peak].label + '</i> at ' + nfmt(vals[peak]) + '.';
+}
+
+async function renderYearChart() {
+  const wrap = document.getElementById('yearwrap');
+  if (!wrap) return;
+  const notes = document.getElementById('yearNotes');
+
+  /* Chart.js comes off a CDN, and a CDN is a thing that can be blocked, be
+     offline, or simply be slow. Returning here would leave a titled card with
+     an empty hole in it and no explanation — so say what happened instead. */
+  if (typeof Chart === 'undefined') {
+    yearSay('The chart library did not load — an ad blocker or a dropped connection will do that. ' +
+      'The numbers below are unaffected.', true);
+    return;
+  }
+
+  if (!ytToken) {
+    /* No invented year. A chart of made-up months would look exactly like a
+       real one, which is the reason not to draw it. */
+    yearSay('Connect your channel and this fills in with your last twelve months.');
+    if (notes) {
+      notes.innerHTML = YEAR_SERIES.map(s =>
+        '<div class="ynote" style="--c:' + s.color + '"><b>' + s.label + '</b><span>' + s.tell + '</span></div>'
+      ).join('');
+    }
+    return;
+  }
+
+  const r = yearRange();
+  document.getElementById('yearRange').textContent =
+    monthLabel(r.start.slice(0, 7)) + ' ' + r.start.slice(0, 4) + ' – ' +
+    monthLabel(r.end.slice(0, 7)) + ' ' + r.end.slice(0, 4);
+  yearSay('Loading twelve months…');
+
+  let j;
+  try {
+    j = await yta({
+      startDate: r.start, endDate: r.end,
+      metrics: 'views,estimatedMinutesWatched,subscribersGained',
+      dimensions: 'month', sort: 'month'
+    });
+  } catch (e) {
+    yearSay('Could not load the year: ' + (e.message || 'the Analytics request failed') + '.', true);
+    return;
+  }
+
+  const rows = (j.rows || []).map(row => ({
+    label: monthLabel(row[0]), ym: row[0],
+    views: +row[1] || 0, mins: +row[2] || 0, subs: +row[3] || 0
+  }));
+
+  if (!rows.length) {
+    yearSay('YouTube has no monthly data for this channel yet. It appears once the channel has some watch history.', true);
+    return;
+  }
+
+  if (yearChart) { try { yearChart.destroy(); } catch (e) {} yearChart = null; }
+
+  const ink = yearInk();
+  yearChart = new Chart(document.getElementById('c_year').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: rows.map(x => x.label),
+      datasets: YEAR_SERIES.map(s => ({
+        label: s.label,
+        data: rows.map(x => x[s.key]),
+        borderColor: s.color,
+        backgroundColor: s.color + '22',
+        yAxisID: s.axis,
+        /* The curve from the reference. Kept below 0.4 so it stays a smooth
+           line rather than overshooting into bumps the data never had. */
+        tension: 0.35,
+        borderWidth: 2.4,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: s.color,
+        fill: false
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, labels: { color: ink.legend, boxWidth: 10, usePointStyle: true, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: c => c.dataset.label + ': ' + Math.round(c.parsed.y).toLocaleString()
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: ink.tick, font: { size: 10 } }, grid: { color: ink.grid } },
+        y: {
+          position: 'left', beginAtZero: true,
+          ticks: { color: ink.tick, font: { size: 10 }, callback: v => nfmt(v) },
+          grid: { color: ink.grid }
+        },
+        y1: {
+          position: 'right', beginAtZero: true,
+          ticks: { color: '#FF2E97', font: { size: 10 }, callback: v => nfmt(v) },
+          /* One set of gridlines. Two overlapping grids on a dark panel is
+             visual noise that makes neither axis easier to read. */
+          grid: { drawOnChartArea: false }
+        }
+      }
+    }
+  });
+
+  if (notes) {
+    notes.innerHTML = YEAR_SERIES.map(s =>
+      '<div class="ynote" style="--c:' + s.color + '"><b>' + s.label + '</b><span>' +
+      yearNote(s, rows) + '</span></div>'
+    ).join('');
+  }
+  yearSay(rows.length < 12
+    ? 'Only ' + rows.length + ' month' + (rows.length > 1 ? 's' : '') + ' of history so far — the line fills out as the channel gets older.'
+    : '');
+}
+
+/* The theme switch is in the header now, so it can be pressed while this chart
+   is on screen. Recolour in place rather than re-running the request — the
+   twelve months did not change, only the paint. */
+(function watchYearTheme() {
+  new MutationObserver(function () {
+    if (!yearChart) return;
+    const ink = yearInk();
+    const o = yearChart.options;
+    o.plugins.legend.labels.color = ink.legend;
+    o.scales.x.ticks.color = ink.tick;
+    o.scales.x.grid.color = ink.grid;
+    o.scales.y.ticks.color = ink.tick;
+    o.scales.y.grid.color = ink.grid;
+    yearChart.update('none');
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+})();
 
 function perfSay(msg, warn) {
   const n = document.getElementById('perfNote');

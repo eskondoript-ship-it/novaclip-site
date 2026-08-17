@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>NovaClip — Install the Family Shield</title>
+<meta name='description' content='How to install the NovaClip Family Shield browser extension and pair it with the Family Dashboard.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: var(--nc-bg,#05060A); color: var(--nc-text,#EAF2FF); min-height: 100vh; }
+a { color: var(--nc-cyan,#00F0FF); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 56px 24px 100px; }
+.backlnk { display: inline-block; margin-bottom: 22px; font-size: .9rem; color: var(--nc-dim,#8b93a7); }
+h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
+.g { background: linear-gradient(110deg,var(--nc-violet,#7C5CFF),var(--nc-cyan,#00F0FF) 48%,var(--nc-pink,#FF2E97));
+     -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sub { color: var(--nc-dim,#8b93a7); margin: 12px 0 30px; line-height: 1.65; max-width: 62ch; }
+.card { background: var(--nc-card,rgba(255,255,255,.04)); border: 1px solid var(--nc-line2,rgba(255,255,255,.09));
+        border-radius: 18px; padding: 24px; margin-bottom: 18px; }
+.card h3 { font-size: 1.05rem; margin-bottom: 6px; }
+.card p { color: var(--nc-dim,#8b93a7); font-size: .9rem; line-height: 1.6; }
+ol { margin: 14px 0 0 20px; }
+ol li { margin-bottom: 13px; line-height: 1.6; font-size: .94rem; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: .86em;
+       background: rgba(0,0,0,.35); border: 1px solid var(--nc-line2,rgba(255,255,255,.1));
+       padding: 2px 7px; border-radius: 7px; }
+.btn { display: inline-block; padding: 12px 22px; border-radius: 30px; border: 0; cursor: pointer;
+       font: inherit; font-weight: 700; font-size: .93rem; color: #04121a;
+       background: linear-gradient(110deg,var(--nc-violet,#7C5CFF),var(--nc-cyan,#00F0FF) 48%,var(--nc-pink,#FF2E97)); }
+.btn.alt { background: rgba(255,255,255,.06); color: var(--nc-text,#EAF2FF);
+           border: 1px solid var(--nc-line2,rgba(255,255,255,.15)); }
+.btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+input[type=text] { width: 100%; padding: 12px 14px; border-radius: 12px; font: inherit; font-size: .93rem;
+                   background: rgba(0,0,0,.32); color: var(--nc-text,#EAF2FF);
+                   border: 1px solid var(--nc-line2,rgba(255,255,255,.15)); }
+.notice { border-left: 3px solid var(--nc-amber,#FFB443); background: rgba(255,180,67,.07);
+          padding: 13px 15px; border-radius: 0 12px 12px 0; font-size: .88rem; line-height: 1.6;
+          color: var(--nc-dim,#8b93a7); margin-top: 16px; }
+.notice b { color: var(--nc-text,#EAF2FF); }
+.ok { color: #6EE7A8; font-size: .88rem; margin-top: 10px; min-height: 20px; }
+.bad { color: #FF6B8A; }
+</style>
+</head>
+<body>
+<!-- The rail every other page has. nova.js fills it. -->
+<div class='sidebar'>
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div class='wrap'>
+  <a class='backlnk' href='parent.html'>← Back to the Family Dashboard</a>
+  <h1><span class='g'>Install the Family Shield</span></h1>
+  <p class='sub'>The dashboard decides the rules. This extension is the part that enforces them — a web
+  page cannot block anything on youtube.com, only something running inside the browser can. It takes
+  about two minutes and it is free.</p>
+
+  <div class='card'>
+    <h3>1. Get the files</h3>
+    <p>The shield is not on the Chrome Web Store yet, so it installs unpacked — the same way any
+    extension is tested before it is listed.</p>
+    <div class='btns'>
+      <a class='btn' href='https://github.com/eskondoript-ship-it/novaclip-site/archive/refs/heads/main.zip'>Download the ZIP</a>
+      <a class='btn alt' href='https://github.com/eskondoript-ship-it/novaclip-site/tree/main/extension'>Browse the folder</a>
+    </div>
+    <p style='margin-top:14px'>Unzip it. The folder you want is the one called <code>extension</code>
+    inside — not the whole download.</p>
+  </div>
+
+  <div class='card'>
+    <h3>2. Load it into Chrome</h3>
+    <ol>
+      <li>Open <code>chrome://extensions</code> — paste that into the address bar, it will not open
+        from a link.</li>
+      <li>Turn on <b>Developer mode</b>, top right.</li>
+      <li>Click <b>Load unpacked</b> and choose the <code>extension</code> folder.</li>
+      <li>The shield appears in the list with an ID under its name — a long string of letters.
+        Copy it.</li>
+    </ol>
+    <div class='notice'>Edge and Brave work the same way; the address is
+      <code>edge://extensions</code> or <code>brave://extensions</code>. Firefox and Safari use a
+      different extension format and are not supported yet.</div>
+  </div>
+
+  <div class='card'>
+    <h3>3. Pair it with this dashboard</h3>
+    <p>Paste the ID here. This is what lets the dashboard send your rules to the shield — without it
+    the shield runs the default 10-to-13 settings and ignores anything you choose.</p>
+    <div style='margin-top:14px'>
+      <input type='text' id='extid' placeholder='e.g. bfnaelmomeimhlpmgjnjophhpkkoljpa' spellcheck='false'>
+    </div>
+    <div class='btns'>
+      <button class='btn' id='pair'>Pair the shield</button>
+      <button class='btn alt' id='unpair'>Forget it</button>
+    </div>
+    <div class='ok' id='out'></div>
+    <div class='notice'>This used to ask you to run a line of JavaScript in the browser console. It
+      does the same thing, without asking a parent to open a developer tool.</div>
+  </div>
+
+  <div class='card'>
+    <h3>4. Set your rules</h3>
+    <p>Back on the Family Dashboard, unlock with your PIN, choose the age profile and the categories,
+    then press <b>Save and send to the shield</b>. Do that after every change — the shield only hears
+    about rules you send it.</p>
+    <div class='btns'>
+      <a class='btn' href='parent.html'>Open the Family Dashboard</a>
+    </div>
+  </div>
+
+  <div class='card'>
+    <h3>What it does, and what it does not</h3>
+    <p>The shield reads the text a platform puts on screen — titles, channel names, descriptions,
+    search terms — on YouTube, TikTok, Instagram and Twitch, and hides or blocks what matches your
+    rules. That covers the three ways a child actually reaches bad content: searching for it, being
+    recommended it, and clicking it.</p>
+    <p style='margin-top:10px'>It does not watch the video, so a clean title on a bad video can still
+    get through. It is a filter, not a guarantee, and it is not a substitute for knowing what your
+    kid watches.</p>
+  </div>
+</div>
+
+<script>
+/* The ID is stored under the same key parent.html reads, so pairing here is
+   pairing there. Chrome extension IDs are 32 characters, a-p — checking the
+   shape before saving turns "the shield is not responding" into "that is not
+   an extension ID", which is a much shorter conversation. */
+(function () {
+  var input = document.getElementById('extid');
+  var out = document.getElementById('out');
+  var KEY = 'nc_shield_id';
+
+  function show(msg, bad) {
+    out.textContent = msg;
+    out.className = 'ok' + (bad ? ' bad' : '');
+  }
+
+  try {
+    var cur = localStorage.getItem(KEY) || '';
+    if (cur) { input.value = cur; show('Paired with ' + cur + '.'); }
+  } catch (e) {}
+
+  document.getElementById('pair').onclick = function () {
+    var v = (input.value || '').trim().toLowerCase();
+    if (!/^[a-p]{32}$/.test(v)) {
+      show('That does not look like an extension ID — they are 32 letters, a to p, with no spaces.', true);
+      return;
+    }
+    try { localStorage.setItem(KEY, v); } catch (e) {
+      show('This browser is not letting the page save anything, so pairing cannot be remembered.', true);
+      return;
+    }
+    show('Paired. Open the Family Dashboard and press Save and send to the shield.');
+  };
+
+  document.getElementById('unpair').onclick = function () {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    input.value = '';
+    show('Forgotten. The shield keeps whatever rules it already had until you pair again.');
+  };
+})();
+</script>
+<!-- The rail, the language picker and the header all come from here. -->
+<script src='nova.js'></script>
+</body>
+</html>

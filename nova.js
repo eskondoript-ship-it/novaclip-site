@@ -419,6 +419,18 @@ const UI_T = {
 Object.assign(T, UI_T);
 
 function lang() { return localStorage.getItem('nc_lang') || 'en'; }
+/* Text going into innerHTML. Five characters, because the four usual ones let
+   an attribute break out through a single quote — and several places here build
+   markup with single-quoted attributes. Anywhere the text is the whole node,
+   textContent is better than this; this is for the places that are assembling a
+   string of HTML around it. */
+function ncEscape(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+window.ncEscape = ncEscape;
+
 function tr(key) { return (T[key] && T[key][lang()]) || (T[key] && T[key].en) || ''; }
 function langInstruction() { return ' Reply ONLY in this language: ' + (LANGS[lang()] || 'English') + '. '; }
 function applyLangText() {
@@ -1179,12 +1191,16 @@ const SKILLS = {
   trend_scan: { icon:'', label:'Run a Trend Spotter scan' },
   idea_save:  { icon:'', label:'Save a video idea to your shortlist' },
   analytics:  { icon:'', label:'Review your channel analytics' },
-  ai_ask:     { icon:'', label:'Ask a NovaClip AI tutor' },
-  arena_mvp:  { icon:'', label:'Top the Strike Arena scoreboard' }
+  ai_ask:     { icon:'', label:'Ask a NovaClip AI tutor' }
+  /* arena_mvp — "Top the Strike Arena scoreboard" — is gone with the Arena
+     itself. Nothing could log it any more, so the Progress page showed a row
+     stuck at 0/3 and the Master Certificate could not be finished by anyone. A
+     requirement with nothing behind it is worse than no requirement. */
 };
 
-/* Each tier needs points AND hands-on reps. Points alone can be farmed in the
-   arena, so the skill counts are what stop a certificate being bought outright. */
+/* Each tier needs points AND hands-on reps. Points on their own can be
+   collected by playing, so the skill counts are what stop a certificate being
+   awarded for time spent rather than work done. */
 const CERT_REQS = {
   'Basic Certificate': {
     pts: 150,
@@ -1196,7 +1212,7 @@ const CERT_REQS = {
   },
   'Master Certificate': {
     pts: 1500,
-    skills: { yt_connect:1, edit_export:25, trend_scan:20, idea_save:15, analytics:15, ai_ask:30, arena_mvp:3 }
+    skills: { yt_connect:1, edit_export:25, trend_scan:20, idea_save:15, analytics:15, ai_ask:30 }
   }
 };
 
@@ -1632,7 +1648,11 @@ function refreshPanels() {
   const pts = getPts();
   const ql = document.getElementById('questlist'); if (ql) ql.innerHTML = QUESTS.map(([need,name]) => pts >= need ? qName(name) + tr('ui_done') : qName(name) + ' — ' + (need - pts) + ' ' + tr('ui_go')).join('<br>');
   const al = document.getElementById('achlist'); if (al) al.innerHTML = ACHIEVEMENTS.map(([need,name]) => pts >= need ? qName(name) : tr('ui_reach').replace('{n}', need).replace('{p}', pts)).join('<br>');
-  const hl = document.getElementById('histlist'); if (hl) { const h = JSON.parse(localStorage.getItem('nc_history') || '{}'); let html = ''; for (const s in h) { html += '<b>' + s + '</b> (' + h[s].length + ' chats)<br>' + h[s].slice(-3).map(x => '• ' + x[0]).join('<br>') + '<br><br>'; } hl.innerHTML = html || tr('ui_no_chats'); }
+  /* The questions go through ncEscape first. They are typed by the reader, but
+     "their own browser" is not the whole story: parent.html shows this same
+     nc_history to a parent, so an answer written to look like markup would run
+     on a page somebody else is reading. */
+  const hl = document.getElementById('histlist'); if (hl) { const h = JSON.parse(localStorage.getItem('nc_history') || '{}'); let html = ''; for (const s in h) { html += '<b>' + ncEscape(s) + '</b> (' + h[s].length + ' chats)<br>' + h[s].slice(-3).map(x => '• ' + ncEscape(x[0])).join('<br>') + '<br><br>'; } hl.innerHTML = html || tr('ui_no_chats'); }
 }
 /* ===== PASTED-TWICE REPAIR =====
    When a file is pasted into itself rather than over itself, the browser does
@@ -2564,8 +2584,17 @@ async function ncAsk(prompt, opts) {
        asked, and once more without thinkingConfig if that is what was refused. */
     async function send() {
       if (ncKeyLooksReal(own)) {
-        const res = await fetch(NC_AI_DIRECT + model + ':generateContent?key=' + encodeURIComponent(own.trim()),
-          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        /* The key goes in a header, not in ?key=. A URL is the most-copied
+           string in a browser: it lands in history, in devtools, in any
+           extension that watches requests, and in the Referer of anything the
+           page loads next. A header is none of those places. Google accepts
+           x-goog-api-key for exactly this reason, and ai-worker.js has always
+           used it — this was the one call that did not. */
+        const res = await fetch(NC_AI_DIRECT + model + ':generateContent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': own.trim() },
+          body: JSON.stringify(body)
+        });
         return { res: res, raw: await res.text().catch(function () { return ''; }) };
       }
       const res = await fetch(NC_AI_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2790,8 +2819,15 @@ window.addEventListener('DOMContentLoaded', () => {
   ncProfile();
   if (!NC_EMBED) ncNav();
   ncEditorTools();
-  ncScreenTime();
-  ncMiniAI();
+  /* Not inside an iframe. Games, Socials and AI are hosts that put existing
+     pages behind tabs, so nova.js runs once in the host and again in each
+     frame — which meant two chat widgets stacked on top of each other, and a
+     screen-time clock counting every minute twice. The rail already stands
+     down under ?embed=1; these are the two that did not. */
+  if (!NC_EMBED) {
+    ncScreenTime();
+    ncMiniAI();
+  }
   // warm the channel cache in the background so message one already has it
   if (ncYTToken()) setTimeout(function () { ncChannelSnapshot(); }, 1200);
   const badge = document.createElement('div'); badge.id = 'ncpts'; badge.textContent = '🪙 ' + getPts(); document.body.appendChild(badge);

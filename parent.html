@@ -165,7 +165,10 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 
       <div style='display:flex; gap:10px; flex-wrap:wrap; margin-top:16px'>
         <button class='btn' id='fSave' style='width:auto'>Save and send to the shield</button>
-        <a class='btn' id='fGetExt' href='extension/' style='width:auto; text-decoration:none; text-align:center'>Get the browser shield</a>
+        <!-- shield.html, not extension/. That path serves a directory listing on
+             GitHub Pages: a parent following this button landed on a file index
+             with nothing installable on it. -->
+        <a class='btn' id='fGetExt' href='shield.html' style='width:auto; text-decoration:none; text-align:center'>Get the browser shield</a>
       </div>
 
       <div class='notice' style='margin-top:14px'>
@@ -390,7 +393,12 @@ function unlock() {
   document.getElementById('s_pts').textContent = localStorage.getItem('nc_points') || '0';
   const hist = JSON.parse(localStorage.getItem('nc_history') || '{}');
   let chats = 0, lines = [];
-  for (const s in hist) { chats += hist[s].length; hist[s].slice(-4).forEach(x => lines.push('<b>' + s.replace(/</g,'&lt;') + ':</b> ' + x[0].replace(/</g,'&lt;'))); }
+  /* Replacing "<" alone stops a tag, which is most of it — but this is the
+     page a parent reads about someone else's activity, so it uses the same
+     full escape as everywhere else rather than a near-miss of one. */
+  const esc = window.ncEscape || (t => String(t == null ? '' : t).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+  for (const s in hist) { chats += hist[s].length; hist[s].slice(-4).forEach(x => lines.push('<b>' + esc(s) + ':</b> ' + esc(x[0]))); }
   document.getElementById('s_chats').textContent = chats;
   document.getElementById('s_scans').textContent = (JSON.parse(localStorage.getItem('nc_recent_scans') || '[]')).length;
   document.getElementById('s_unlocks').textContent = (JSON.parse(localStorage.getItem('nc_unlocked') || '[]')).length;
@@ -632,7 +640,8 @@ function fInit() {
   note.innerHTML = EXT_ID
     ? 'Shield paired. Press <b>Save and send to the shield</b> after any change.'
     : '<b>The browser shield is not installed.</b> These rules are stored here, but a web page cannot ' +
-      'block anything on youtube.com — only the shield can. Install it below.';
+      'block anything on youtube.com — only the shield can. ' +
+      '<a href="shield.html">Install it in about two minutes</a>.';
 }
 
 </script>
