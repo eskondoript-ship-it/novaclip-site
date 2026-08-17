@@ -575,7 +575,7 @@
   /* ==========================================================================
      STATE
      ========================================================================== */
-  var layer, cv, ctx, marker, label, hoverEl, geoBtn;
+  var layer, cv, ctx, marker, label, hoverEl, geoBtn, hostEl;
   var W = 0, H = 0, DPR = 1;
   var spin = 0, spinSpeed = 0.06;        // radians per second
   var tilt = -0.28;
@@ -988,14 +988,42 @@
 
     /* The globe stops while the pointer is on it. It span forever before,
        which made reading a label or aiming at a country a moving target. */
-    if (!paused && !hovering) spin += spinSpeed * dt;
+    /* The idle drift is a whole-globe speed, and it stays one. Left running
+       while zoomed it is 0.06 rad/s across a sphere two and a half million
+       pixels wide — a street strobing past at 165,000 pixels a second. So it
+       is divided by the zoom, which holds it at the same speed on screen, and
+       switched off entirely past 2×: by then the reader is reading a place
+       rather than watching a planet, and a view they chose should stay put. */
+    if (!paused && !hovering && !dragging && zoom < 2) spin += spinSpeed * dt / zoom;
 
     /* Ease towards whatever zoom was asked for, and towards the focus point
        so the location rotates into view rather than jumping there. */
     var before = { spin: spin, tilt: tilt, zoom: zoom };
+
+    /* The throw. Flick and let go and the planet carries on turning, losing
+       most of its speed each second, the way a real one on a spindle would
+       not — but the way every map anyone has dragged does. */
+    /* The stop threshold is in pixels of travel, not radians. A fixed radian
+       cutoff looked right on the whole globe and killed the throw dead at
+       street zoom, where the sphere is millions of pixels across and a real
+       flick is a ten-thousandth of a radian. Below eight pixels a second is
+       stopped at any zoom, which is the only definition that means anything
+       to the person watching. */
+    var stop = 8 / Math.max(1, radius());
+    if (manual && !dragging && (Math.abs(vSpin) > stop || Math.abs(vTilt) > stop)) {
+      spin += vSpin * dt;
+      tilt = clampTilt(tilt + vTilt * dt);
+      var decay = Math.pow(0.045, dt);
+      vSpin *= decay; vTilt *= decay;
+    }
+
     if (Math.abs(zoom - zoomTarget) > 0.001) zoom += (zoomTarget - zoom) * Math.min(1, dt * 3.4);
     else zoom = zoomTarget;
-    if (focusLon != null) {
+    if (dragging || manual) {
+      /* A hand is on it, or was a moment ago. Nothing else may move it:
+         two easings pulling the same two numbers is the fight the reader
+         always loses. */
+    } else if (focusLon != null) {
       var want = -focusLon * Math.PI / 180;
       var diff = want - spin;
       while (diff > Math.PI) diff -= Math.PI * 2;
@@ -1014,13 +1042,13 @@
       var dTilt = wantTilt - tilt;
       if (Math.abs(dTilt) < 0.0015) tilt = wantTilt;
       else tilt += dTilt * Math.min(1, dt * 4.5);
-      /* Still turning under a stationary pointer, so re-read what is now
-         beneath it. The lookup itself is debounced and cached, so this costs
-         one unproject per frame and no extra network. */
-      if (spin !== before.spin || tilt !== before.tilt || zoom !== before.zoom) readPointer();
     } else {
       tilt += (-0.28 - tilt) * Math.min(1, dt * 2);
     }
+    /* Still turning under a stationary pointer, so re-read what is now
+       beneath it. The lookup itself is debounced and cached, so this costs
+       one unproject per frame and no extra network. */
+    if (spin !== before.spin || tilt !== before.tilt || zoom !== before.zoom) readPointer();
     ensureLocalDots();
     draw();
   }
@@ -1099,6 +1127,131 @@
      the ground beneath it slid somewhere else entirely. */
   var ptrX = 0, ptrY = 0, ptrIn = false;
 
+  /* ==========================================================================
+     DRAGGING IT
+     ==========================================================================
+     Grab the globe and turn it: left and right around the pole, up and down
+     over them.
+
+     The mapping is one line each, and it is exact rather than tuned. In an
+     orthographic projection a point at angle θ from the centre lands R·sin(θ)
+     from the centre, so for small moves a drag of d pixels IS a rotation of
+     d/R radians. That single fact makes the drag feel right at every zoom for
+     free: R grows with the zoom, so the same finger movement that swings a
+     continent when you are looking at the whole planet nudges a few hundred
+     metres when you are looking at a street. No separate sensitivity setting,
+     because there is nothing left to set.
+
+     Tilt is clamped just short of a right angle. Going over the top is not
+     wrong mathematically — the sphere is fine with it — but the horizon flips
+     and the readout starts naming places behind you, and no one who dragged
+     upwards meant to end up looking at the world upside down.
+     ========================================================================== */
+  var dragging = false, dragMoved = false;
+  var lastPX = 0, lastPY = 0;
+  var vSpin = 0, vTilt = 0;          // momentum, radians per second
+  /* Sticky, and deliberately so. The globe leans in on the visitor's own
+     street the first time a pointer touches it, which is the flourish the
+     hero was built around — but it re-armed on every re-entry, so the moment
+     you dragged out to look at the Pacific and moved the mouse away and back,
+     it slammed to 8000× on Sobreda again. You could pan a street and never
+     turn a planet. Once someone starts driving, the globe stops grabbing the
+     wheel back, for the rest of the visit. */
+  var manual = false;
+  var TILT_LIMIT = 1.45;             // ~83°, short of the pole
+
+  function clampTilt(v) { return Math.max(-TILT_LIMIT, Math.min(TILT_LIMIT, v)); }
+
+  function onDown(e) {
+    if (!layer || e.button > 0) return;
+    /* Touch is deliberately left out. The layer is pointer-events:none and
+       sits behind the hero, so the only way to catch a finger would be to
+       swallow the page's own scroll over the whole top of the screen — and on
+       a phone the globe is 34% wallpaper behind the words, not a control. */
+    if (e.pointerType === 'touch') return;
+    /* A button that happens to sit over the disc is a button first. */
+    if (e.target && e.target.closest &&
+        e.target.closest('a,button,input,select,textarea,label,[role="button"]')) return;
+    var r = layer.getBoundingClientRect();
+    var mx = e.clientX - r.left, my = e.clientY - r.top;
+    if (!unproject(mx, my)) return;              // not on the globe
+    /* Stops the drag from selecting the headline it passes over. */
+    if (e.cancelable) e.preventDefault();
+    dragging = true; dragMoved = false;
+    lastPX = mx; lastPY = my;
+    vSpin = vTilt = 0;
+    /* Taking hold cancels the lean towards the visitor's own location. Two
+       things easing the same numbers at once is a fight the reader loses. */
+    manual = true;
+    focusLat = focusLon = null;
+    setCursor('grabbing');
+  }
+
+  /* The layer is pointer-events:none, so a cursor set on it is never used.
+     It goes on the hero instead; links and buttons in there carry their own
+     cursor from the UA stylesheet, which beats an inherited one. */
+  function setCursor(v) {
+    if (hostEl) hostEl.style.cursor = v || '';
+  }
+
+  function onDrag(e) {
+    if (!dragging || !layer) return false;
+    var r = layer.getBoundingClientRect();
+    var mx = e.clientX - r.left, my = e.clientY - r.top;
+    var dx = mx - lastPX, dy = my - lastPY;
+    lastPX = mx; lastPY = my;
+    if (!dragMoved && (Math.abs(dx) + Math.abs(dy)) > 2) dragMoved = true;
+
+    var R = radius();
+    if (R > 0) {
+      var ds = dx / R, dt = dy / R;
+      spin += ds;
+      tilt = clampTilt(tilt + dt);
+      /* Kept for the throw after release. Per-frame deltas are noisy, so this
+         is smoothed rather than taken raw. */
+      vSpin = vSpin * 0.6 + ds * 0.4 * 60;
+      vTilt = vTilt * 0.6 + dt * 0.4 * 60;
+    }
+    return true;
+  }
+
+  function onUp() {
+    if (!dragging) return;
+    dragging = false;
+    setCursor(hovering ? 'grab' : '');
+  }
+
+  /* THE WHEEL, AND WHY ROTATION NEEDED IT.
+
+     Dragging alone turned out to be half a control. Putting the pointer on
+     the globe leans it all the way in on the visitor's own street, and at
+     that magnification the sphere is millions of pixels wide — so a drag
+     pans a few hundred metres of Sobreda, which is lovely, and can never
+     reach Japan, which is not what "rotate the earth in every way" asks for.
+     The wheel is what puts the whole planet back within reach of a drag.
+
+     Zoom is multiplied, not added: a notch should mean "a bit closer" at
+     every scale, and a fixed step that crosses a street would take four
+     thousand notches to cross the zoom range. */
+  function onWheel(e) {
+    if (!layer) return;
+    var r = layer.getBoundingClientRect();
+    var vx = e.clientX - r.left - cx(), vy = e.clientY - r.top - cy(), vr = viewR();
+    if (vx * vx + vy * vy > vr * vr) return;   // off the porthole: the page scrolls
+    /* Only now, once we know the wheel was meant for the globe. Swallowing
+       every scroll over the hero would trap the reader at the top of the
+       page. */
+    if (e.cancelable) e.preventDefault();
+    manual = true;
+    focusLat = focusLon = null;
+    /* Roughly a halving per notch. The range is 8000×, or thirteen doublings,
+       so a gentler step turns "back out to the whole planet" into forty
+       scrolls — which is not a control, it is a chore. */
+    var k = e.deltaMode === 1 ? 0.2 : 0.006;      // lines vs pixels
+    zoomTarget = Math.max(1, Math.min(ZOOM_MAX, zoomTarget * Math.exp(-e.deltaY * k)));
+  }
+
+
   function onMove(e) {
     if (!layer) return;
     var r = layer.getBoundingClientRect();
@@ -1113,11 +1266,17 @@
     var hit = unproject(mx, my);
 
     var wasHovering = hovering;
-    hovering = !!hit;
+    /* Mid-drag the pointer regularly leaves the disc — you are pulling a
+       continent past the edge, which is the whole point. Dropping out of the
+       hover state there would zoom back out from under the hand. */
+    if (!dragging) hovering = !!hit;
+
+    if (!dragging) setCursor(hovering ? 'grab' : '');
 
     /* Pointer on the globe: hold still, and lean in on the visitor's own
        location so the red dot is actually readable. */
-    if (hovering && !wasHovering) {
+    if (dragging || manual) { /* the reader is steering; no automatic lean */ }
+    else if (hovering && !wasHovering) {
       /* ZOOM_MAX, not a number picked here: the layout sized the sphere so
          that exactly this much zoom still clears the headline. */
       if (pos) { focusLat = pos.lat; focusLon = pos.lon; zoomTarget = ZOOM_MAX; }
@@ -1219,6 +1378,7 @@
   function init() {
     var host = document.querySelector('.hero') || document.querySelector('header');
     if (!host) return;
+    hostEl = host;
     style();
 
     layer = document.createElement('div');
@@ -1251,12 +1411,29 @@
       label.textContent = 'You are here';
     }
 
-    addEventListener('pointermove', onMove, { passive: true });
+    /* All three go on the window, not on the layer: #ncglobe is
+       pointer-events:none so that the hero's own buttons keep working, which
+       means it never sees an event of its own. pointerdown is the one
+       listener that cannot be passive — it has to be able to cancel the text
+       selection a drag across the headline would otherwise start. */
+    addEventListener('pointerdown', onDown);
+    /* Turn first, then re-read: the label should name what is under the
+       cursor after the drag moved it, not before. */
+    addEventListener('pointermove', function (e) { onDrag(e); onMove(e); }, { passive: true });
+    addEventListener('wheel', onWheel, { passive: false });
+    addEventListener('pointerup', onUp, { passive: true });
+    addEventListener('pointercancel', onUp, { passive: true });
+    /* Released over another window, or over a devtools panel: the pointerup
+       never arrives, and without this the globe stays stuck to the cursor. */
+    addEventListener('blur', onUp);
     /* Pointer gone from the window entirely: there is nothing under it to
        report, and without this the globe would stay frozen mid-zoom. */
     document.addEventListener('pointerleave', function () {
+      if (dragging) return;                      // still holding it, just outside
       ptrIn = false; hovering = false;
-      focusLat = focusLon = null; zoomTarget = 1;
+      setCursor('');
+      /* A reader who drove it somewhere keeps where they drove it. */
+      if (!manual) { focusLat = focusLon = null; zoomTarget = 1; }
       if (hoverEl) hoverEl.classList.remove('on');
     });
     addEventListener('resize', function () { resize(); });
@@ -1286,7 +1463,8 @@
   window.NCGlobe = {
     project: project, unproject: unproject, dots: function () { return DOTS.length; },
     onLand: onLand, setPos: savePos, state: function () {
-      return { spin: spin, tilt: tilt, zoom: zoom, hovering: hovering, pos: pos };
+      return { spin: spin, tilt: tilt, zoom: zoom, hovering: hovering, pos: pos,
+               dragging: dragging, manual: manual, vSpin: vSpin, vTilt: vTilt };
     },
     /* Where the disc actually is. The layout is measured from the headline
        rather than fixed, so nothing outside can assume a fraction of the
