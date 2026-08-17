@@ -774,20 +774,23 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
      change provider, change the credit to match.
      ========================================================================== -->
 <script>
-  /* Esri World Imagery — no key, no account. */
-  window.NC_TILES = {
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    credit: 'Imagery © Esri, Maxar, Earthstar Geographics',
-    maxZoom: 19
-  };
-
-   MapTiler satellite — free tier, needs a key.
+  /* ACTIVE: MapTiler satellite.
+     Exactly one of these blocks may be uncommented. They assign the same
+     variable, so two live blocks means the LAST one silently wins. */
   window.NC_TILES = {
     url: 'https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=G52z0qt8Eb752UhEu0KP',
     credit: '© MapTiler © OpenStreetMap contributors',
     maxZoom: 20
   };
-  
+
+  /* Esri World Imagery — no key, no account.
+  window.NC_TILES = {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    credit: 'Imagery © Esri, Maxar, Earthstar Geographics',
+    maxZoom: 19
+  };
+  */
+
 
   /* Mapbox satellite — free tier, needs a key.
   window.NC_TILES = {
