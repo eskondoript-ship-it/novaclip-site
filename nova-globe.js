@@ -255,19 +255,79 @@
     var rec = mapCache[key];
     if (!rec) {
       rec = { z: z, ready: false, failed: false, img: new Image() };
-      rec.img.crossOrigin = 'anonymous';      // so the canvas stays untainted
-      rec.img.onload = function () { rec.ready = true; };
-      rec.img.onerror = function () {
-        rec.failed = true;
-        /* Two strikes and it stops. A missing secret would otherwise mean one
-           dead request per zoom step, per visitor, forever. */
-        if (++mapFails >= 2) mapOff = true;
-      };
-      rec.img.src = mapBase() + '/map?lat=' + lat.toFixed(6) + '&lon=' + lon.toFixed(6) +
-        '&z=' + z + '&size=' + MAP_SIZE + '&type=hybrid&scale=2';
       mapCache[key] = rec;
+
+      /* FETCHED, NOT SET AS AN <img> SRC.
+         An <img> that fails tells you exactly one thing: it failed. It cannot
+         tell you whether the Worker has no map key, or is running last month's
+         code with no /map route on it at all, or is not the Worker you think
+         it is — and those need completely different fixes. Silently falling
+         back to the drawn globe for any of them, which is what this did, left
+         no way to tell them apart from the outside.
+
+         fetch gives the status and the Worker's own words, and mapNote turns
+         them into a sentence in the readout. */
+      var url = mapBase() + '/map?lat=' + lat.toFixed(6) + '&lon=' + lon.toFixed(6) +
+        '&z=' + z + '&size=' + MAP_SIZE + '&type=hybrid&scale=2';
+
+      fetch(url).then(function (r) {
+        if (r.ok) return r.blob();
+        return r.text().then(function (body) {
+          var why = '';
+          try { why = (JSON.parse(body) || {}).error || ''; } catch (e) {}
+          var e = new Error(why || ('the worker answered ' + r.status));
+          e.status = r.status;
+          throw e;
+        });
+      }).then(function (blob) {
+        rec.img.onload = function () { rec.ready = true; };
+        rec.img.src = URL.createObjectURL(blob);
+        mapNote('');
+      }).catch(function (e) {
+        rec.failed = true;
+        mapNote(mapReason(e));
+        if (++mapFails >= 2) mapOff = true;
+      });
     }
     return rec.ready ? rec : null;
+  }
+
+  /* Turn what went wrong into the thing to actually go and do. */
+  function mapReason(e) {
+    var s = e && e.status, msg = (e && e.message) || '';
+    if (s === 503 || /GOOGLE_MAPS_KEY/i.test(msg)) {
+      return 'No map imagery: the worker has no GOOGLE_MAPS_KEY secret yet.';
+    }
+    if (s === 404 || s === 405) {
+      return 'No map imagery: this worker has no /map route — it is running an older ai-worker.js.';
+    }
+    if (s === 400) return 'No map imagery: ' + msg;
+    if (s) return 'No map imagery: the worker answered ' + s + '. ' + msg;
+    /* No status at all means the request never completed — wrong address, DNS,
+       offline, or a blocked request. */
+    return 'No map imagery: could not reach the worker at ' + mapBase() + '.';
+  }
+
+  /* One line, said once, in the readout under the pointer and in the console.
+     A landing page should not lecture a visitor about a missing secret, so it
+     is deliberately quiet — but whoever owns the site needs to be able to see
+     it without reading this file. */
+  var mapNoteText = '';
+  function mapNote(t) {
+    if (t === mapNoteText) return;
+    mapNoteText = t;
+    if (t) {
+      try { console.warn('[NovaClip globe] ' + t); } catch (e) {}
+    }
+  }
+  function mapStatus() { return mapNoteText; }
+
+  /* Shown in the readout only when the imagery was expected and did not come.
+     It is the site owner's problem, not the visitor's, so it is one dim line
+     rather than an error box. */
+  function mapNoteHtml() {
+    if (!mapNoteText) return '';
+    return '<span style="color:#FFB443">' + mapNoteText.replace(/^No map imagery: /, '') + '</span>';
   }
 
   /* ==========================================================================
@@ -942,12 +1002,13 @@
     var key = hit.lat.toFixed(1) + ',' + hit.lon.toFixed(1);
     if (key !== lastKey) {
       lastKey = key;
-      hoverEl.innerHTML = '<b>Locating…</b><span>' + coords + '</span>';
+      hoverEl.innerHTML = '<b>Locating…</b><span>' + coords + '</span>' + mapNoteHtml();
       clearTimeout(hoverTimer);
       hoverTimer = setTimeout(function () {
         lookup(hit.lat, hit.lon, function (text) {
           if (lastKey !== key) return;
-          hoverEl.innerHTML = '<b>' + (text || 'Unknown') + '</b><span>' + coords + '</span>';
+          hoverEl.innerHTML = '<b>' + (text || 'Unknown') + '</b><span>' + coords + '</span>' +
+            mapNoteHtml();
         });
       }, 360);
     } else {
