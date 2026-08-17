@@ -213,6 +213,36 @@
      after a couple of tries this stops asking and the drawn globe carries on as
      before. Nothing breaks; there is just no photograph.
      ========================================================================== */
+  /* ==========================================================================
+     GROUND IMAGERY WITHOUT A BILLING ACCOUNT
+     ==========================================================================
+     The Google path below works, but Static Maps needs a key, and a key needs a
+     card on file even inside the free allowance. That is a real cost of owning
+     this feature and not one worth paying for a background on a landing page.
+
+     Standard XYZ tiles need neither. They are the same scheme every web map
+     uses — 256px squares addressed by zoom/x/y — and several providers serve
+     them openly as long as you credit them and do not hammer them. So this is
+     the default, the page fetches them itself, and the Worker is not involved
+     at all.
+
+     SWAPPING THE PROVIDER is one line: set window.NC_TILES before nova-globe.js
+     runs, with a url template and the credit that provider requires. The credit
+     is not optional — it is the condition every one of these services is free
+     under, and it is drawn inside the porthole for the same reason Google's is.
+
+     I could not reach either service from where this was written, so the URL
+     shape is from their published scheme and the failure path is what was
+     actually tested: if the tiles do not come, the drawn globe carries on and
+     the readout says so.
+     ========================================================================== */
+  var TILES = window.NC_TILES || {
+    /* Satellite imagery, which is what "actual terrain" meant. */
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    credit: 'Imagery © Esri, Maxar, Earthstar Geographics',
+    maxZoom: 19
+  };
+
   var METRES_PER_PX_EQUATOR = 156543.03392;   // at zoom 0
   var MAP_SIZE = 640;                         // the square asked for
   var mapCache = {};                          // key -> record
@@ -389,6 +419,96 @@
     catch (e) { ctx.restore(); return false; }
     ctx.restore();
     return true;
+  }
+
+  /* ==========================================================================
+     THE TILE LAYER
+     ==========================================================================
+     Web Mercator, the projection every slippy map uses. A tile at zoom z is one
+     of 2^z by 2^z squares covering the world, and the fractional tile
+     coordinate of a point is all the arithmetic needed to place it.
+
+     Note the globe is orthographic and tiles are Mercator — two different
+     projections. Over a patch a couple of kilometres wide the difference is far
+     below a pixel, so laying the tiles flat over the sphere's centre is exact
+     enough. It would not be at continental scale, which is another reason the
+     imagery only appears once the view is close.
+     ========================================================================== */
+  var tileCache = {}, tileFails = 0, tilesOff = false;
+  var tileStats = { requested: 0, drawn: 0 };
+
+  function lonToTileX(lon, z) { return (lon + 180) / 360 * Math.pow(2, z); }
+  function latToTileY(lat, z) {
+    var r = lat * Math.PI / 180;
+    return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * Math.pow(2, z);
+  }
+
+  function tileImg(z, x, y) {
+    var n = Math.pow(2, z);
+    if (y < 0 || y >= n) return null;              // off the top or bottom of the world
+    x = ((x % n) + n) % n;                          // longitude wraps, latitude does not
+    var key = z + '/' + x + '/' + y;
+    var rec = tileCache[key];
+    if (!rec) {
+      rec = { ready: false, img: new Image() };
+      rec.img.onload = function () { rec.ready = true; };
+      rec.img.onerror = function () {
+        if (++tileFails >= 6) { tilesOff = true; mapNote('No map imagery: the tile service did not answer.'); }
+      };
+      rec.img.src = TILES.url.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+      tileStats.requested++;
+      tileCache[key] = rec;
+    }
+    return rec.ready ? rec.img : null;
+  }
+
+  /* Returns true when tiles actually covered the window, so the caller knows
+     whether to draw the credit — and whether the Google path is still needed. */
+  function drawTiles(CX, CY, VR, alpha) {
+    if (tilesOff || !TILES || !TILES.url || alpha <= 0) return false;
+    if (!pos || focusLat == null) return false;
+
+    var km = viewKm();
+    if (km > 200) return false;
+
+    /* Metres of ground per screen pixel, and the zoom whose tiles match it.
+       Floored so the tiles are never coarser than the screen. */
+    var mppScreen = (km * 1000) / VR;
+    var z = Math.floor(Math.log(METRES_PER_PX_EQUATOR * Math.cos(pos.lat * Math.PI / 180) / mppScreen) / Math.LN2);
+    z = Math.max(1, Math.min(TILES.maxZoom || 19, z));
+
+    var mppTile = METRES_PER_PX_EQUATOR * Math.cos(pos.lat * Math.PI / 180) / Math.pow(2, z);
+    var scale = mppTile / mppScreen;               // one tile pixel, in screen pixels
+    var side = 256 * scale;
+
+    var fx = lonToTileX(pos.lon, z), fy = latToTileY(pos.lat, z);
+    /* How many tiles reach the edge of the porthole from the centre. */
+    var reach = Math.ceil(VR / side) + 1;
+    var x0 = Math.floor(fx), y0 = Math.floor(fy);
+
+    var drew = 0;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    for (var dy = -reach; dy <= reach; dy++) {
+      for (var dx = -reach; dx <= reach; dx++) {
+        var tx = x0 + dx, ty = y0 + dy;
+        var sx = CX + (tx - fx) * side;
+        var sy = CY + (ty - fy) * side;
+        /* Decide whether the tile is on screen BEFORE asking for it. Testing
+           afterwards still fetches every corner of the square grid that the
+           round window never shows — 147 requests for one view, against a
+           service that is free on the understanding you do not hammer it. */
+        if (sx > CX + VR || sy > CY + VR || sx + side < CX - VR || sy + side < CY - VR) continue;
+        var img = tileImg(z, tx, ty);
+        if (!img) continue;
+        /* +1 on the size closes the hairline seams that rounding leaves
+           between neighbouring tiles. */
+        try { ctx.drawImage(img, sx, sy, side + 1, side + 1); drew++; } catch (e) {}
+      }
+    }
+    ctx.restore();
+    tileStats.drawn = drew;
+    return drew > 0;
   }
 
   /* Returns true when a photograph was actually painted, because the caller has
@@ -642,10 +762,23 @@
        same ground. Drawn on the sphere fill and under everything else, because
        the grid, the rings and the marker are all annotations ON it. */
     var close = 1 - dotAlpha();
-    var showedMap = drawMap(CX, CY, VR, close);
+    /* Free tiles first, because they cost nothing and need no key. The Google
+       path is only reached if a provider was cleared out deliberately — it is
+       the upgrade, not the default. */
+    var credit = '';
+    if (TILES && TILES.url) {
+      /* Tiles are configured, so tiles are the source — full stop. Falling
+         through to Google when a tile is merely still loading would ask a
+         Worker that may have no map key for imagery nobody asked it for, and
+         then report that missing key as if it were the problem. */
+      if (drawTiles(CX, CY, VR, close)) { credit = TILES.credit || ''; mapNote(''); }
+    } else if (drawMap(CX, CY, VR, close)) {
+      credit = 'Map data ©Google';
+    }
     /* The flyover sits on the still, so a frame it has not covered yet still
        shows ground rather than a hole. */
-    if (drawAerial(CX, CY, VR, close)) showedMap = true;
+    if (drawAerial(CX, CY, VR, close)) credit = 'Aerial imagery ©Google';
+    var showedMap = !!credit;
 
     /* Graticule spacing follows the zoom. Thirty-degree lines are right for a
        whole planet and meaningless once the view is six degrees wide, where
@@ -754,7 +887,6 @@
        decoration — if the imagery is showing, this line shows with it. */
     if (showedMap) {
       ctx.font = '10px Geist,Inter,system-ui,sans-serif';
-      var credit = 'Map data ©Google';
       var cw = ctx.measureText(credit).width;
       var cyPos = CY + VR * 0.86;
       ctx.fillStyle = 'rgba(4,8,16,0.62)';
@@ -1152,6 +1284,7 @@
        rather than fixed, so nothing outside can assume a fraction of the
        width — including the tests that drive it. */
     geo: function () { return { cx: cx(), cy: cy(), r: radius(), viewR: viewR(), w: W, h: H }; },
+    tiles: function () { return { requested: tileStats.requested, drawn: tileStats.drawn, off: tilesOff }; },
     localDots: function () { return localDots ? localDots.length : 0; }
   };
 })();
