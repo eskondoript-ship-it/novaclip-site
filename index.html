@@ -743,6 +743,60 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>
+<!-- ==========================================================================
+     WHERE THE MAP IMAGERY COMES FROM
+     ==========================================================================
+     The globe shows real satellite photography when you hover it. This is the
+     only place that choice is made — nova-globe.js reads window.NC_TILES every
+     time it draws, so changing a provider is changing these three lines and
+     nothing else.
+
+     RIGHT NOW it uses Esri's World Imagery, which needs NO KEY AND NO ACCOUNT.
+     If that is fine, there is nothing to do here.
+
+     TO USE A KEYED PROVIDER INSTEAD: get a free key, paste it over
+     PUT_YOUR_KEY_HERE in one of the blocks below, and delete the /* */ around
+     that block and put them around the Esri one. Free tiers, no card asked for:
+
+       MapTiler     https://cloud.maptiler.com/account/keys/
+       Stadia Maps  https://client.stadiamaps.com/signup/
+       Mapbox       https://account.mapbox.com/auth/signup/
+
+     A tile key is PUBLIC — the browser fetches the tiles, so the key is in the
+     page and there is no way around that. It is not like the Gemini key, which
+     lives on the Worker precisely because it never has to be. What protects a
+     tile key is a domain restriction, set in the provider's own dashboard:
+     limit it to eskondoript-ship-it.github.io and it is useless anywhere else.
+     Do that before you paste it here.
+
+     The credit line is not decoration. It is the condition every one of these
+     services is free under, and the globe draws it inside the view. If you
+     change provider, change the credit to match.
+     ========================================================================== -->
+<script>
+  /* Esri World Imagery — no key, no account. */
+  window.NC_TILES = {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    credit: 'Imagery © Esri, Maxar, Earthstar Geographics',
+    maxZoom: 19
+  };
+
+  /* MapTiler satellite — free tier, needs a key.
+  window.NC_TILES = {
+    url: 'https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=PUT_YOUR_KEY_HERE',
+    credit: '© MapTiler © OpenStreetMap contributors',
+    maxZoom: 20
+  };
+  */
+
+  /* Mapbox satellite — free tier, needs a key.
+  window.NC_TILES = {
+    url: 'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=PUT_YOUR_KEY_HERE',
+    credit: '© Mapbox © Maxar',
+    maxZoom: 20
+  };
+  */
+</script>
 <script src='nova-globe.js' defer></script>
 <script>window.addEventListener('load', function(){ if (window.ncAgeGate) ncAgeGate(); });</script>
 </body>
