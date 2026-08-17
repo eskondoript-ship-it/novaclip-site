@@ -553,6 +553,18 @@ window.ncSetTheme = ncSetTheme;
 window.ncTheme = () => ncThemeResolved();
 window.ncThemePref = ncThemePref;
 
+/* APPLY IT ON LOAD, ON EVERY PAGE.
+   ncApplyTheme was only ever called from ncSetTheme — from a click. Every page
+   that looked themed was being themed by the inline snippet in its own <head>,
+   and editor.html does not have that snippet, so on the editor data-theme was
+   never set at all: the light button did nothing, forever, and no CSS keyed to
+   the attribute could possibly have worked.
+
+   Called here rather than on DOMContentLoaded because documentElement exists
+   the moment this script parses, and the attribute wants to be on before
+   anything paints. */
+ncApplyTheme();
+
 /* Following the device means following it for as long as the page is open. */
 try {
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {

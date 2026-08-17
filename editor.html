@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="en">
   <head>
+<script>/* Theme before first paint, matching every other page. nova.js loads at the
+   end of <body>, so without this the editor paints dark once and then switches,
+   which on a full-screen dark app is a white flash in the other direction. Kept
+   in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NovaClip — Editor</title>
@@ -592,7 +600,7 @@ window.__ncMissing=function(f,n){var m=n+" needs "+f+", which is not on this ser
    both ends so it stays usable on a small screen and stops growing on a
    very wide one. */
 function __ncFit(pct,lo,hi){const w=window.innerWidth||1280;return Math.round(Math.min(hi,Math.max(lo,w*pct)))}
-function Rs(e,t,n,r="x"){const F=typeof e=="function"?e:()=>e;const[i,s]=R.useState(F),o=R.useRef(0),a=R.useRef(0),T=R.useRef(!1);R.useEffect(()=>{const h=()=>{if(!T.current)s(F())};window.addEventListener("resize",h);window.addEventListener("orientationchange",h);return()=>{window.removeEventListener("resize",h);window.removeEventListener("orientationchange",h)}},[]);const u=R.useCallback(c=>{c.preventDefault(),T.current=!0,o.current=r==="x"?c.clientX:c.clientY,a.current=i;const v=p=>{const N=(r==="x"?p.clientX:p.clientY)-o.current;s(Math.min(n,Math.max(t,a.current+N)))},k=()=>{window.removeEventListener("pointermove",v),window.removeEventListener("pointerup",k),document.body.style.cursor=""};window.addEventListener("pointermove",v),window.addEventListener("pointerup",k),document.body.style.cursor=r==="x"?"col-resize":"row-resize"},[r,i,t,n]);return{size:i,setSize:s,onPointerDown:u}}function Vh(){Op(),$p();const e=Rs(()=>__ncFit(.22,190,520),170,620,"x"),t=Rs(()=>__ncFit(.23,210,560),190,640,"x"),n=Rs(300,160,560,"y"),r=S(s=>s.markSaved),i=R.useRef(null);return R.useEffect(()=>(i.current=window.setInterval(()=>{const s=S.getState();try{const o={tracks:s.tracks,clips:s.clips,markers:s.markers,settings:s.settings,assets:s.assets.map(({url:a,...u})=>u)};localStorage.setItem("novaclip_project",JSON.stringify(o)),r()}catch{}},8e3),()=>{i.current&&clearInterval(i.current)}),[r]),l.jsxs("div",{className:"flex h-screen w-screen flex-col bg-ink-950 text-ink-100",children:[l.jsx(Om,{}),l.jsxs("div",{className:"flex min-h-0 flex-1",children:[l.jsx("div",{style:{width:e.size},className:"min-w-0 shrink-0",children:l.jsx(hh,{})}),l.jsx("div",{onPointerDown:e.onPointerDown,className:"w-1 shrink-0 cursor-col-resize bg-ink-700/40 transition-colors hover:bg-brand-500/60"}),l.jsxs("div",{className:"flex min-w-0 flex-1 flex-col",children:[l.jsxs("div",{className:"flex min-h-0 flex-1",children:[l.jsx("div",{className:"flex min-w-0 flex-1 flex-col",children:l.jsx(vh,{})}),l.jsx("div",{onPointerDown:t.onPointerDown,className:"w-1 shrink-0 cursor-col-resize bg-ink-700/40 transition-colors hover:bg-brand-500/60"}),l.jsx("div",{style:{width:t.size},className:"min-w-0 shrink-0",children:l.jsx(Eh,{})})]}),l.jsx("div",{onPointerDown:n.onPointerDown,className:"h-1 w-full cursor-row-resize bg-ink-700/40 transition-colors hover:bg-brand-500/60"}),l.jsx("div",{style:{height:n.size},className:"min-h-0 shrink-0",children:l.jsx(Ph,{})})]})]}),l.jsx(Hh,{})]})}xd(document.getElementById("root")).render(l.jsx(R.StrictMode,{children:l.jsx(Vh,{})}));
+function Rs(e,t,n,r="x"){const F=typeof e=="function"?e:()=>e;const[i,s]=R.useState(F),o=R.useRef(0),a=R.useRef(0),T=R.useRef(!1);R.useEffect(()=>{const h=()=>{if(!T.current)s(F())};window.addEventListener("resize",h);window.addEventListener("orientationchange",h);return()=>{window.removeEventListener("resize",h);window.removeEventListener("orientationchange",h)}},[]);const u=R.useCallback(c=>{c.preventDefault(),T.current=!0,o.current=r==="x"?c.clientX:c.clientY,a.current=i;const v=p=>{const N=(r==="x"?p.clientX:p.clientY)-o.current;s(Math.min(n,Math.max(t,a.current+N)))},k=()=>{window.removeEventListener("pointermove",v),window.removeEventListener("pointerup",k),document.body.style.cursor=""};window.addEventListener("pointermove",v),window.addEventListener("pointerup",k),document.body.style.cursor=r==="x"?"col-resize":"row-resize"},[r,i,t,n]);return{size:i,setSize:s,onPointerDown:u}}function Vh(){Op(),$p();const e=Rs(()=>__ncFit(.22,190,520),170,620,"x"),t=Rs(()=>__ncFit(.23,210,560),190,640,"x"),n=Rs(300,160,560,"y"),r=S(s=>s.markSaved),i=R.useRef(null);return R.useEffect(()=>(window.__ncStore=S,i.current=window.setInterval(()=>{const s=S.getState();try{const o={tracks:s.tracks,clips:s.clips,markers:s.markers,settings:s.settings,assets:s.assets.map(({url:a,...u})=>u)};localStorage.setItem("novaclip_project",JSON.stringify(o)),r()}catch{}},8e3),()=>{i.current&&clearInterval(i.current)}),[r]),l.jsxs("div",{className:"flex h-screen w-screen flex-col bg-ink-950 text-ink-100",children:[l.jsx(Om,{}),l.jsxs("div",{className:"flex min-h-0 flex-1",children:[l.jsx("div",{style:{width:e.size},className:"min-w-0 shrink-0",children:l.jsx(hh,{})}),l.jsx("div",{onPointerDown:e.onPointerDown,className:"w-1 shrink-0 cursor-col-resize bg-ink-700/40 transition-colors hover:bg-brand-500/60"}),l.jsxs("div",{className:"flex min-w-0 flex-1 flex-col",children:[l.jsxs("div",{className:"flex min-h-0 flex-1",children:[l.jsx("div",{className:"flex min-w-0 flex-1 flex-col",children:l.jsx(vh,{})}),l.jsx("div",{onPointerDown:t.onPointerDown,className:"w-1 shrink-0 cursor-col-resize bg-ink-700/40 transition-colors hover:bg-brand-500/60"}),l.jsx("div",{style:{width:t.size},className:"min-w-0 shrink-0",children:l.jsx(Eh,{})})]}),l.jsx("div",{onPointerDown:n.onPointerDown,className:"h-1 w-full cursor-row-resize bg-ink-700/40 transition-colors hover:bg-brand-500/60"}),l.jsx("div",{style:{height:n.size},className:"min-h-0 shrink-0",children:l.jsx(Ph,{})})]})]}),l.jsx(Hh,{})]})}xd(document.getElementById("root")).render(l.jsx(R.StrictMode,{children:l.jsx(Vh,{})}));
 
 </script>
     <style>
@@ -618,6 +626,108 @@ div[class*="glass"]>div[class*="border-b"][class*="items-center"]{
 div[class*="glass"]>div[class*="border-b"][class*="items-center"]::-webkit-scrollbar{display:none}
 div[class*="glass"]>div[class*="border-b"][class*="items-center"]>button{flex:0 0 auto}
 </style>
+<style id="nc-editor-light">
+/* ==========================================================================
+   LIGHT MODE FOR THE EDITOR
+   ==========================================================================
+   The theme switch sets data-theme="light" on <html> and every other page
+   follows, because their palettes are CSS variables. This one does not: it is a
+   compiled Tailwind bundle and its greys are baked in as literal rgb() — you
+   can see them in the shipped CSS as .bg-ink-950{background-color:rgb(7 8 12)}.
+   No variable exists to redefine, so clicking light did nothing here.
+
+   So the palette is remapped class by class, under the light attribute. The
+   scale is inverted by ROLE rather than by value: ink-950 is the deepest
+   background in the dark theme, so in light it becomes the lightest, and
+   text-ink-100 goes from near-white to near-black. Reversing the numbers
+   instead of the roles would have produced white text on white panels.
+
+   These selectors carry html[data-theme="light"], so they outrank the compiled
+   single-class rules on specificity and need no !important.
+   ========================================================================== */
+/* Substring matching, so the alpha variants come too. The bundle uses
+   bg-ink-700/60, bg-ink-800/80 and eight more like them, and those are separate
+   class names — remapping only the solid ones left dark chips scattered across a
+   light page, including the one behind the wordmark, which is how a dark-on-dark
+   label survived the first pass. Each shade string is distinct, so there is no
+   overlap between them. */
+html[data-theme="light"] [class*="bg-ink-950"]{background-color:#FFFFFF}
+html[data-theme="light"] [class*="bg-ink-900"]{background-color:#F6F8FC}
+html[data-theme="light"] [class*="bg-ink-850"]{background-color:#F0F3F9}
+html[data-theme="light"] [class*="bg-ink-800"]{background-color:#E9EEF6}
+html[data-theme="light"] [class*="bg-ink-750"]{background-color:#E2E8F3}
+html[data-theme="light"] [class*="bg-ink-700"]{background-color:#DAE2EF}
+html[data-theme="light"] [class*="bg-ink-600"]{background-color:#C7D1E2}
+html[data-theme="light"] [class*="bg-ink-500"]{background-color:#B2BDD1}
+
+/* The two frosted surfaces are hex-with-alpha, not utilities. */
+html[data-theme="light"] .glass{background:#F4F7FCcc;border-color:rgba(16,24,44,.09)}
+html[data-theme="light"] .glass-strong{background:#FBFCFEe6;border-color:rgba(16,24,44,.11)}
+
+html[data-theme="light"] .text-ink-100{color:#101828}
+html[data-theme="light"] .text-ink-200{color:#28303F}
+html[data-theme="light"] .text-ink-300{color:#48536A}
+html[data-theme="light"] .text-ink-400{color:#606B82}
+html[data-theme="light"] .text-ink-500{color:#7C8699}
+
+html[data-theme="light"] .border-ink-600{border-color:rgba(16,24,44,.16)}
+html[data-theme="light"] .border-ink-500{border-color:rgba(16,24,44,.24)}
+
+/* The hairlines are white-on-dark everywhere in this bundle; on a light panel a
+   5%-white border is simply not there. */
+html[data-theme="light"] .border-white\/5{border-color:rgba(16,24,44,.10)}
+html[data-theme="light"] .border-white\/10{border-color:rgba(16,24,44,.16)}
+html[data-theme="light"] .hover\:border-white\/5:hover{border-color:rgba(16,24,44,.14)}
+html[data-theme="light"] .bg-white\/30{background-color:rgba(16,24,44,.10)}
+html[data-theme="light"] .bg-white\/\[0\.02\]{background-color:rgba(16,24,44,.03)}
+html[data-theme="light"] .hover\:bg-white\/20:hover{background-color:rgba(16,24,44,.08)}
+
+/* The wordmark and the accent text were the two that stayed unreadable: pure
+   white on a white panel, and a 300-weight brand blue picked for contrast
+   against near-black. Both get a darker counterpart.
+
+   text-white is NOT blanket-darkened — it is also the label on filled brand
+   buttons, where white is correct. Only the instances sitting on a panel
+   background are targeted, via the parents that provide one. */
+html[data-theme="light"] .bg-ink-950 .text-white,
+html[data-theme="light"] .bg-ink-900 .text-white,
+html[data-theme="light"] .bg-ink-850 .text-white,
+html[data-theme="light"] .bg-ink-800 .text-white{color:#101828}
+/* The opacity variants — bg-ink-800/80 and friends — are separate class names,
+   so the plain list above missed the wordmark's own container. Matching on a
+   substring catches every shade and every alpha at once. */
+html[data-theme="light"] [class*="bg-ink-8"] .text-white,
+html[data-theme="light"] [class*="bg-ink-9"] .text-white,
+html[data-theme="light"] .glass .text-white,
+html[data-theme="light"] .glass-strong .text-white{color:#101828}
+/* ...and back to white where white is the point: the label on a filled brand
+   button. Same specificity as the rule above but later, so it wins. */
+html[data-theme="light"] [class*="bg-brand"] .text-white,
+html[data-theme="light"] [class*="from-brand"] .text-white,
+/* ...including when the coloured background and the white label are the SAME
+   element, which is how the Export button is built: one <button> carrying both
+   the gradient and text-white. The parent-scoped rules above darkened it. */
+html[data-theme="light"] .text-white[class*="bg-brand"],
+html[data-theme="light"] .text-white[class*="from-brand"],
+html[data-theme="light"] .text-white[class*="bg-gradient"]{color:#FFFFFF}
+
+html[data-theme="light"] .text-brand-300{color:#1B6FA8}
+html[data-theme="light"] .text-brand-400{color:#1A5F94}
+
+html[data-theme="light"] .from-ink-700{--tw-gradient-from:#DAE2EF var(--tw-gradient-from-position);
+  --tw-gradient-to:rgb(218 226 239 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}
+html[data-theme="light"] .to-ink-900{--tw-gradient-to:#F6F8FC var(--tw-gradient-to-position)}
+
+/* The shell's own chrome on this page, and the panels bolted on outside React. */
+html[data-theme="light"] body{background:#FFFFFF;color:#101828}
+html[data-theme="light"] #ncAR button{background:rgba(255,255,255,.92);
+  border-color:rgba(16,24,44,.14);color:#48536A}
+html[data-theme="light"] #ncAR button:hover{border-color:rgba(0,150,180,.55);color:#101828}
+html[data-theme="light"] #ncAR button.on{background:rgba(0,190,220,.16);
+  border-color:rgba(0,170,200,.65);color:#04617A}
+html[data-theme="light"] #ncAR .ncar-dims{color:rgba(255,255,255,.8);background:rgba(16,24,44,.62)}
+</style>
 </head>
   <body data-nc-editor-tools>
     <div id="root" dir="ltr"></div>
@@ -637,85 +747,313 @@ div[class*="glass"]>div[class*="border-b"][class*="items-center"]>button{flex:0 
       #ncAR button:hover{border-color:rgba(0,240,255,.5);color:#fff}
       #ncAR button.on{background:rgba(0,240,255,.18);border-color:rgba(0,240,255,.6);
         color:#00F0FF;box-shadow:0 0 10px rgba(0,240,255,.15)}
-      #ncAR .ncar-dims{font-size:10px;color:rgba(255,255,255,.35);text-align:right;
-        letter-spacing:.03em}
+      /* Over the preview canvas, which is the project's background colour and
+         can be anything — so this reads off its own chip instead of off the
+         video. */
+      #ncAR .ncar-dims{font-size:10px;color:rgba(255,255,255,.75);text-align:right;
+        letter-spacing:.03em;background:rgba(8,11,20,.72);padding:2px 7px;
+        border-radius:6px;backdrop-filter:blur(8px)}
     </style>
     <div id="ncAR">
       <div class="ncar-row" id="ncARrow"></div>
       <div class="ncar-dims" id="ncARdims"></div>
     </div>
     <script>
+    /* ======================================================================
+       ASPECT RATIO
+       ======================================================================
+       This panel used to write width/height into localStorage and fire a
+       resize event, on the stated belief that "the React app reads project
+       dimensions from localStorage". It does not. Nothing in the bundle ever
+       reads that key — the autosave only writes it — so every button did
+       nothing at all.
+
+       The dimensions live in the store, as settings.width / settings.height,
+       and the store has an updateSettings action for exactly this. That is
+       what the buttons call now.
+
+       The arithmetic was also inverted: for a ratio of 16/9 it produced
+       3413x1920 by multiplying the long side instead of dividing it. The rule
+       is that the LONG side keeps the project's current long side, so 16:9 off
+       a 1920x1080 project is 1920x1080 and 9:16 is 1080x1920.
+       ====================================================================== */
     (function () {
-      var KEY = 'novaclip_project';
       var RATIOS = [
         ['Free',  0],   ['16:9', 16/9],  ['9:16', 9/16],
         ['1:1',   1],   ['4:3',  4/3],   ['3:4',  3/4],
-        ['3:2',   3/2],  ['2:3',  2/3],  ['4:5',  4/5],
+        ['3:2',  3/2],  ['2:3',  2/3],   ['4:5',  4/5],
         ['21:9', 21/9]
       ];
       var row = document.getElementById('ncARrow');
       var dims = document.getElementById('ncARdims');
       var wrap = document.getElementById('ncAR');
-      var active = 0; // index into RATIOS
 
-      function proj() {
-        try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; }
+      function store() { return window.__ncStore; }
+      function settings() {
+        var st = store();
+        return st ? st.getState().settings : null;
+      }
+
+      /* Which button is lit is derived from the real dimensions rather than
+         remembered separately — one source of truth, so it cannot disagree
+         with the project it is describing. */
+      function activeIndex() {
+        var s = settings();
+        if (!s || !s.width || !s.height) return 0;
+        var r = s.width / s.height;
+        for (var i = 1; i < RATIOS.length; i++) {
+          if (Math.abs(RATIOS[i][1] - r) < 0.01) return i;
+        }
+        return 0;
       }
 
       function render() {
+        var active = activeIndex();
         row.innerHTML = RATIOS.map(function (r, i) {
-          return '<button data-i="' + i + '"' + (i === active ? ' class="on"' : '') + '>' + r[0] + '</button>';
+          return '<button type="button" data-i="' + i + '"' +
+            (i === active ? ' class="on"' : '') + '>' + r[0] + '</button>';
         }).join('');
         row.querySelectorAll('button').forEach(function (b) {
           b.onclick = function () { select(+b.dataset.i); };
         });
-        var p = proj();
-        if (p && p.width && p.height) {
-          dims.textContent = p.width + ' x ' + p.height;
-        }
+        var s = settings();
+        dims.textContent = s && s.width ? s.width + ' x ' + s.height : '';
       }
 
       function select(i) {
-        active = i;
+        var st = store();
+        if (!st) return;
         var ratio = RATIOS[i][1];
-        var p = proj();
-        if (!p) return;
-        var base = Math.max(p.width || 1920, p.height || 1080);
         if (ratio > 0) {
-          if (ratio >= 1) { p.width = Math.round(base * ratio); p.height = base; }
-          else { p.width = base; p.height = Math.round(base / ratio); }
+          var s = st.getState().settings;
+          var long = Math.max(s.width || 1920, s.height || 1080);
+          var w, h;
+          if (ratio >= 1) { w = long; h = Math.round(long / ratio); }
+          else { h = long; w = Math.round(long * ratio); }
+          /* Odd dimensions are refused by most encoders, and the export path
+             ends up in one. */
+          w -= w % 2; h -= h % 2;
+          st.getState().updateSettings({ width: w, height: h });
         }
-        p.aspectRatio = ratio;
-        try { localStorage.setItem(KEY, JSON.stringify(p)); } catch (e) {}
         render();
-        /* the React app reads project dimensions from localStorage; a resize
-           event forces it to re-measure the canvas and re-layout */
-        setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 60);
-      }
-
-      /* --- restore persisted ratio on load --- */
-      function restore() {
-        var p = proj();
-        if (!p) return;
-        var r = p.aspectRatio;
-        if (r === 0 || r == null) { active = 0; return; }
-        for (var i = 1; i < RATIOS.length; i++) {
-          if (Math.abs(RATIOS[i][1] - r) < 0.001) { active = i; return; }
-        }
       }
 
       /* --- boot once the app has mounted --- */
       var tries = 0;
       (function boot() {
         var app = document.getElementById('root');
-        if (app && app.children.length > 0) {
-          restore(); render();
-          /* show the panel after a short delay so it doesn't flash on load */
-          setTimeout(function () { wrap.classList.add('show'); }, 800);
+        if (!store() || !app || !app.children.length) {
+          if (++tries < 60) setTimeout(boot, 150);
           return;
         }
-        if (++tries < 40) setTimeout(boot, 150);
+
+        /* Anchored inside the preview panel rather than at a fixed offset from
+           the top right of the window, where it sat on top of the Export
+           button. The preview panel is already position:relative. */
+        var label = [].slice.call(document.querySelectorAll('span'))
+          .filter(function (e) { return /^preview$/i.test((e.textContent || '').trim()); })[0];
+        var host = null;
+        for (var n = label; n; n = n.parentElement) {
+          if (getComputedStyle(n).position === 'relative') { host = n; break; }
+        }
+        if (host) {
+          host.appendChild(wrap);
+          wrap.style.position = 'absolute';
+          wrap.style.top = '58px';
+          wrap.style.left = '12px';
+          wrap.style.right = 'auto';
+          wrap.style.alignItems = 'flex-start';
+        }
+
+        render();
+        /* Keep the lit button honest if the dimensions change from anywhere
+           else — the export dialog, a restored session. */
+        if (store().subscribe) store().subscribe(function () { render(); });
+        setTimeout(function () { wrap.classList.add('show'); }, 600);
       })();
+    })();
+    </script>
+
+
+    <!-- ======================================================================
+         KEEP THE PROJECT
+         ======================================================================
+         The bundle autosaves to localStorage every eight seconds and NOTHING
+         EVER READS IT BACK. That is the whole reason the editor comes up empty
+         after you leave it: the save works, the restore was never written.
+
+         Two more things had to change for "leave them there" to be true.
+
+         The autosave strips each asset's url before storing it
+         (assets.map(({url, ...u}) => u)) — correct, because a blob: URL is dead
+         the moment the document that made it goes away. But that means the
+         clips came back pointing at media that no longer existed. So the media
+         itself goes into IndexedDB, which can hold Blobs, and fresh object URLs
+         are minted on the way back in.
+
+         And an eight-second timer loses up to eight seconds of work on the way
+         out. Saving on pagehide costs nothing and is the moment that actually
+         matters.
+         ====================================================================== -->
+    <script>
+    (function () {
+      var KEY = 'novaclip_project';
+      var DB = 'ncEditorMedia', STORE = 'files';
+
+      function db() {
+        return new Promise(function (res, rej) {
+          var r = indexedDB.open(DB, 1);
+          r.onupgradeneeded = function () {
+            if (!r.result.objectStoreNames.contains(STORE)) r.result.createObjectStore(STORE);
+          };
+          r.onsuccess = function () { res(r.result); };
+          r.onerror = function () { rej(r.error); };
+        });
+      }
+      function tx(mode) {
+        return db().then(function (d) { return d.transaction(STORE, mode).objectStore(STORE); });
+      }
+      function idbPut(id, blob) {
+        return tx('readwrite').then(function (st) {
+          return new Promise(function (res) { var q = st.put(blob, id); q.onsuccess = q.onerror = function () { res(); }; });
+        });
+      }
+      function idbGet(id) {
+        return tx('readonly').then(function (st) {
+          return new Promise(function (res) { var q = st.get(id); q.onsuccess = function () { res(q.result || null); }; q.onerror = function () { res(null); }; });
+        });
+      }
+      function idbKeys() {
+        return tx('readonly').then(function (st) {
+          return new Promise(function (res) { var q = st.getAllKeys(); q.onsuccess = function () { res(q.result || []); }; q.onerror = function () { res([]); }; });
+        });
+      }
+      function idbDel(id) {
+        return tx('readwrite').then(function (st) {
+          return new Promise(function (res) { var q = st.delete(id); q.onsuccess = q.onerror = function () { res(); }; });
+        });
+      }
+
+      function store() { return window.__ncStore; }
+      function assetId(a) { return String(a.id != null ? a.id : (a.name || '') + ':' + (a.size || 0)); }
+
+      /* ---- saving ------------------------------------------------------- */
+      var savingMedia = false;
+
+      /* Blob: URLs can be read back with fetch, which is how the actual bytes
+         are recovered from an asset that only carries a URL. Done once per
+         asset — the id is stable, so re-saving skips what is already stored. */
+      function saveMedia(assets) {
+        if (savingMedia) return Promise.resolve();
+        savingMedia = true;
+        return idbKeys().then(function (have) {
+          var known = {};
+          have.forEach(function (k) { known[String(k)] = true; });
+          var jobs = assets.filter(function (a) {
+            return a && a.url && /^blob:/.test(a.url) && !known[assetId(a)];
+          }).map(function (a) {
+            return fetch(a.url).then(function (r) { return r.blob(); })
+              .then(function (b) { return idbPut(assetId(a), b); })
+              .catch(function () {});
+          });
+          /* Anything in the store that the project no longer mentions is gone
+             for good — otherwise every clip ever imported stays on disk. */
+          var live = {};
+          assets.forEach(function (a) { live[assetId(a)] = true; });
+          have.forEach(function (k) { if (!live[String(k)]) jobs.push(idbDel(k)); });
+          return Promise.all(jobs);
+        }).then(function () { savingMedia = false; }, function () { savingMedia = false; });
+      }
+
+      function snapshot() {
+        var s = store() && store().getState();
+        if (!s) return null;
+        return {
+          tracks: s.tracks, clips: s.clips, markers: s.markers, settings: s.settings,
+          assets: (s.assets || []).map(function (a) {
+            var c = {}; for (var k in a) if (k !== 'url' && k !== 'file') c[k] = a[k];
+            c.__ncid = assetId(a);
+            return c;
+          }),
+          at: Date.now()
+        };
+      }
+
+      function save() {
+        var snap = snapshot();
+        if (!snap) return;
+        var hasWork = (snap.clips && snap.clips.length) || (snap.assets && snap.assets.length);
+        try {
+          if (hasWork) localStorage.setItem(KEY, JSON.stringify(snap));
+          else localStorage.removeItem(KEY);
+        } catch (e) { /* quota or private mode — the media copy still stands */ }
+        var s = store().getState();
+        if (hasWork) saveMedia(s.assets || []);
+      }
+
+      /* pagehide covers navigation, tab close and the mobile case where a
+         backgrounded tab is killed without ever firing unload. */
+      addEventListener('pagehide', save);
+      document.addEventListener('visibilitychange', function () { if (document.hidden) save(); });
+
+      /* ---- restoring ---------------------------------------------------- */
+      function restore() {
+        var raw;
+        try { raw = localStorage.getItem(KEY); } catch (e) { return; }
+        if (!raw) return;
+        var snap;
+        try { snap = JSON.parse(raw); } catch (e) { return; }
+        if (!snap || !((snap.clips && snap.clips.length) || (snap.assets && snap.assets.length))) return;
+
+        var st = store();
+        if (!st) return;
+        var cur = st.getState();
+        /* Never overwrite work in progress. If the editor already has clips —
+           a file was dropped before this ran — the session on disk is the
+           older one and loses. */
+        if (cur.clips && cur.clips.length) return;
+
+        var assets = snap.assets || [];
+        Promise.all(assets.map(function (a) {
+          return idbGet(a.__ncid).then(function (blob) {
+            if (!blob) return null;
+            var c = {}; for (var k in a) if (k !== '__ncid') c[k] = a[k];
+            c.url = URL.createObjectURL(blob);
+            return c;
+          });
+        })).then(function (list) {
+          var live = list.filter(Boolean);
+          var ok = {};
+          live.forEach(function (a) { ok[String(a.id)] = true; });
+          /* A clip whose media did not come back would render as a black hole
+             on the timeline, so it is dropped rather than shown broken. */
+          var clips = (snap.clips || []).filter(function (c) {
+            return c.assetId == null || ok[String(c.assetId)];
+          });
+          if (!live.length && !clips.length) return;
+
+          st.setState({
+            assets: live,
+            clips: clips,
+            tracks: snap.tracks && snap.tracks.length ? snap.tracks : cur.tracks,
+            markers: snap.markers || cur.markers,
+            settings: Object.assign({}, cur.settings, snap.settings || {})
+          });
+
+          var dropped = (snap.clips || []).length - clips.length;
+          if (window.toast) {
+            toast(dropped
+              ? 'Project restored — ' + dropped + ' clip' + (dropped > 1 ? 's' : '') + ' lost their media'
+              : 'Project restored from last time');
+          }
+        }).catch(function () {});
+      }
+
+      /* The store only exists once React has mounted and run its effects. */
+      (function wait(n) {
+        if (store()) { restore(); return; }
+        if ((n || 0) < 60) setTimeout(function () { wait((n || 0) + 1); }, 150);
+      })(0);
     })();
     </script>
 
