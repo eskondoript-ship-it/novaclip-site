@@ -124,6 +124,141 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 .paygate li b { color: var(--nc-text,#EAF2FF); }
 #dash { display: none; }
 .backlnk { display: inline-block; margin-bottom: 18px; color: var(--nc-dim,#7E8AA6); }
+
+/* ============================================================================
+   THE DASHBOARD SHELL
+   ============================================================================
+   Structure and palette taken from the parental-dashboard design: a status
+   header, a strip of tabs, and one panel at a time instead of a single column
+   eight cards long. Nothing about what the page *knows* changed with it — the
+   screen-time clock, the filter engine, the comment scanner and the billing
+   are the same code reading the same real data, just no longer stacked into a
+   two-metre scroll where the thing a parent came for is below three things
+   they did not.
+
+   The design ships one palette, a warm light one: cream, sage, terracotta.
+   NovaClip has a light AND a dark theme and a switch in the rail, so pinning
+   the page to cream would have broken half the site's own setting. The colours
+   are declared as tokens instead, with the design's values on light and a
+   matching dark set, and every rule below uses the token. Sage stays sage in
+   both; it just knows what it is sitting on.
+   ============================================================================ */
+:root{
+  --pd-bg:#F9F6F2; --pd-card:#FFFFFF; --pd-ink:#2D312E; --pd-body:#4A4A3E;
+  --pd-mute:#7D7D6F; --pd-line:#E5E0D5; --pd-line-soft:#EFEAE1;
+  --pd-sage:#8DA399; --pd-sage-dark:#536E62; --pd-sage-soft:#EEF3F0;
+  --pd-clay:#D4A373; --pd-clay-dark:#B57E4E; --pd-clay-soft:#FAF2EB;
+  --pd-warn:#C86D51; --pd-chip:#F2EFE9;
+}
+html[data-theme="dark"]{
+  /* Not the light values dimmed — re-picked. A cream card at 6% opacity is
+     grey; these keep the same warmth and the same contrast steps against a
+     dark ground so the design reads as itself rather than as a night filter. */
+  --pd-bg:#0B0F0D; --pd-card:rgba(255,255,255,.045); --pd-ink:#ECF2EE;
+  --pd-body:#C3CEC7; --pd-mute:#8B978F; --pd-line:rgba(255,255,255,.10);
+  --pd-line-soft:rgba(255,255,255,.06);
+  --pd-sage:#8DA399; --pd-sage-dark:#A9C0B5; --pd-sage-soft:rgba(141,163,153,.14);
+  --pd-clay:#D4A373; --pd-clay-dark:#E0B78E; --pd-clay-soft:rgba(212,163,115,.13);
+  --pd-warn:#E08668; --pd-chip:rgba(255,255,255,.06);
+}
+
+/* ---- the header ---- */
+/* No negative margin. It bled 24px each side to make a full-width band, but
+   .wrap is a centred 1000px column — at 1200 there are only 17px of gutter, so
+   the band stuck 7px past the viewport and put a horizontal scrollbar on the
+   whole page. It lines up with the cards instead, which is where the eye
+   expects the edge anyway. */
+.pdhead{ position:sticky; top:0; z-index:30; margin:0 0 22px;
+  background:color-mix(in srgb, var(--pd-bg) 92%, transparent);
+  backdrop-filter:blur(14px); border-bottom:1px solid var(--pd-line); }
+.pdtop{ display:flex; align-items:center; justify-content:space-between; gap:14px;
+  flex-wrap:wrap; padding:13px 0; }
+.pdid{ display:flex; align-items:flex-start; gap:11px; min-width:0; }
+.pdmark{ width:40px; height:40px; border-radius:13px; flex:0 0 auto; display:grid;
+  place-items:center; background:var(--pd-sage); color:#fff; }
+.pdmark svg{ width:22px; height:22px; }
+.pdtitle{ font-size:1.06rem; font-weight:700; letter-spacing:-.01em; color:var(--pd-ink);
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+/* .pdsub, not .sub. It was written as `.pdtitle .sub` for an element that is
+   a SIBLING of .pdtitle rather than a child, so the rule never matched and the
+   page's own `.sub` took it instead — 1.15rem with a 34px bottom margin, which
+   is a lead paragraph, not a caption. It pushed the shield icon out of line
+   with the title and ate a third of a phone screen. */
+.pdid .pdsub{ display:block; font-size:.78rem; font-weight:400; color:var(--pd-mute);
+  margin:3px 0 0; line-height:1.45; }
+.pdpill{ display:inline-flex; align-items:center; gap:6px; padding:3px 10px;
+  border-radius:999px; font-size:.7rem; font-weight:650; letter-spacing:.01em;
+  background:var(--pd-sage-soft); color:var(--pd-sage-dark);
+  border:1px solid color-mix(in srgb, var(--pd-sage) 40%, transparent); }
+.pdpill i{ width:6px; height:6px; border-radius:50%; background:var(--pd-sage); }
+@media (prefers-reduced-motion:no-preference){ .pdpill i{ animation:pdpulse 2.4s ease-in-out infinite } }
+@keyframes pdpulse{ 0%,100%{opacity:1} 50%{opacity:.35} }
+.pdpill.off{ background:var(--pd-clay-soft); color:var(--pd-clay-dark);
+  border-color:color-mix(in srgb, var(--pd-clay) 45%, transparent); }
+.pdpill.off i{ background:var(--pd-clay); animation:none; }
+
+/* ---- the tab strip ---- */
+.pdtabs{ display:flex; gap:3px; overflow-x:auto; padding-bottom:1px;
+  scrollbar-width:none; }
+.pdtabs::-webkit-scrollbar{ display:none; }
+.pdtab{ flex:0 0 auto; display:flex; align-items:center; gap:7px; padding:10px 13px;
+  border:0; border-bottom:2px solid transparent; border-radius:9px 9px 0 0;
+  background:none; cursor:pointer; white-space:nowrap;
+  font:600 .82rem/1 inherit; color:var(--pd-mute); transition:background .18s,color .18s; }
+.pdtab svg{ width:15px; height:15px; flex:0 0 auto; }
+.pdtab:hover{ color:var(--pd-ink); background:var(--pd-chip); }
+.pdtab[aria-selected="true"]{ color:var(--pd-sage-dark); background:var(--pd-sage-soft);
+  border-bottom-color:var(--pd-sage); font-weight:700; }
+.pdtab .badge{ min-width:17px; padding:1px 5px; border-radius:999px;
+  font-size:.62rem; font-weight:800; background:var(--pd-clay); color:#fff; }
+
+/* ---- panels ----
+   hidden, not display:none on the card: the filter engine measures a textarea
+   on load and a display:none element measures zero. */
+.pdpanel[hidden]{ display:none; }
+.pdpanel{ animation:up .4s both; }
+
+/* ---- the cards, restyled to the design ---- */
+#dash .card{ background:var(--pd-card); border:1px solid var(--pd-line);
+  border-radius:16px; padding:24px 26px; margin-bottom:16px;
+  box-shadow:0 1px 2px rgba(45,49,46,.04); }
+html[data-theme="dark"] #dash .card{ box-shadow:none; }
+#dash .card h3{ color:var(--pd-ink); font-size:1.12rem; font-weight:700;
+  letter-spacing:-.01em; }
+#dash .card h3 small{ color:var(--pd-mute); }
+#dash .log,#dash .sthint,#dash .notice{ color:var(--pd-body); }
+#dash .notice{ border-left-color:var(--pd-sage); background:var(--pd-sage-soft); }
+#dash .stat b,#dash .stbig b{ color:var(--pd-ink); }
+#dash .stat span,#dash .stbig span,#dash .strule span{ color:var(--pd-mute); }
+#dash .stcol .bar{ background:linear-gradient(180deg,var(--pd-sage),var(--pd-sage-dark)); }
+#dash .stcol.over .bar{ background:linear-gradient(180deg,var(--pd-clay),var(--pd-clay-dark)); }
+#dash .stcol .d,#dash .stcol .v{ color:var(--pd-mute); }
+#dash .stcol.today .d{ color:var(--pd-ink); }
+#dash .payfig b{ color:var(--pd-sage-dark); }
+#dash .paybar i{ background:linear-gradient(90deg,var(--pd-sage),var(--pd-clay)); }
+#dash .btn{ background:var(--pd-sage); color:#fff; border-radius:11px; padding:11px 20px;
+  font-size:.9rem; font-weight:650; }
+#dash .btn:hover{ background:var(--pd-sage-dark); box-shadow:none; transform:none; }
+#dash .btn.pink{ background:var(--pd-clay); color:#fff; }
+#dash .btn.pink:hover{ background:var(--pd-clay-dark); }
+#dash input[type=password],#dash input[type=text],#dash input[type=email],
+#dash textarea,#dash select{ background:var(--pd-bg); border-color:var(--pd-line);
+  color:var(--pd-body); border-radius:11px; }
+#dash .offer{ border-color:var(--pd-line); background:var(--pd-bg); }
+#dash .offer h4{ color:var(--pd-ink); }
+#dash .offer .hook{ color:var(--pd-body); }
+#dash .offer .hook b{ color:var(--pd-sage-dark); }
+#dash .offer .cost{ color:var(--pd-ink); }
+#dash .offer .go{ background:var(--pd-sage); color:#fff; }
+#dash .offer .go.quiet{ background:none; border-color:var(--pd-line); color:var(--pd-ink); }
+#dash .offer.best{ border-color:var(--pd-sage); background:var(--pd-sage-soft); }
+#dash .offer .tag{ background:var(--pd-sage); color:#fff; }
+#dash .offernone{ color:var(--pd-sage-dark); }
+
+/* A phone gets the tabs full-bleed so the row can be swiped edge to edge. */
+@media (max-width:760px){
+  #dash .card{ padding:19px 17px; }
+}
 </style>
 <style>
 /* nova.js sizes the rail and offsets the body; these are the shell's own looks
@@ -193,6 +328,36 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
   </div>
 
   <div id='dash'>
+    <!-- ========================================================================
+         HEADER AND TABS
+         Six tabs, one per thing this page actually knows. The design ships
+         eight — Routines, Live Location and Chores are the three left out,
+         because behind them it has invented children at invented addresses,
+         and there is no clock, no GPS and no chore ledger in NovaClip to put
+         there instead. An empty tab is a promise; a tab of plausible fiction
+         about your child's whereabouts is worse than one.
+         ======================================================================== -->
+    <header class='pdhead'>
+      <div class='pdtop'>
+        <div class='pdid'>
+          <div class='pdmark' aria-hidden='true'>
+            <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'
+                 stroke-linecap='round' stroke-linejoin='round'>
+              <path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/>
+            </svg>
+          </div>
+          <div>
+            <div class='pdtitle'>Family Dashboard
+              <span class='pdpill' id='pdShieldPill'><i></i><span>Checking…</span></span>
+            </div>
+            <span class='pdsub' id='pdSub'>Digital wellbeing and protection for this device.</span>
+          </div>
+        </div>
+      </div>
+      <nav class='pdtabs' id='pdTabs' role='tablist' aria-label='Dashboard sections'></nav>
+    </header>
+
+    <section class='pdpanel' id='pd-overview' role='tabpanel' aria-labelledby='tab-overview'>
     <!-- ACTIVITY -->
     <div class='card'>
       <h3><span data-t='par_activity'>Activity overview</span> <small data-t='par_activity_s'>Live from this device's NovaClip usage.</small></h3>
@@ -204,6 +369,8 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
       <div class='log' id='actlog'>—</div>
     </div>
 
+    </section>
+    <section class='pdpanel' id='pd-screentime' role='tabpanel' aria-labelledby='tab-screentime' hidden>
     <!-- SCREEN TIME.
          The clock that enforces the limit only ever knew about the stretch in
          front of it. This is the same clock's day book: what was actually used,
@@ -237,6 +404,8 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
         this, which is also why NovaClip cannot build a profile of your child.</div>
     </div>
 
+    </section>
+    <section class='pdpanel' id='pd-earnings' role='tabpanel' aria-labelledby='tab-earnings' hidden>
     <!-- WHAT IT COULD PAY -->
     <div class='card'>
       <h3><span>What the channel could pay</span>
@@ -245,6 +414,8 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
       <div id='payBox'>—</div>
     </div>
 
+    </section>
+    <section class='pdpanel' id='pd-webfilter' role='tabpanel' aria-labelledby='tab-webfilter' hidden>
     <!-- CONTENT BLOCKING -->
     <div class='card'>
       <h3><span data-t='par_shield'>Content blocking</span> <small data-t='par_shield_s'>Blocks unsuitable videos, streams and posts on YouTube, TikTok, Instagram and Twitch. Choose the rules here; the browser shield enforces them.</small></h3>
@@ -306,6 +477,8 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
       </div>
     </div>
 
+    </section>
+    <section class='pdpanel' id='pd-alerts' role='tabpanel' aria-labelledby='tab-alerts' hidden>
     <!-- HARASSMENT SCANNER -->
     <div class='card'>
       <h3><span data-t='par_scanner'>Comment safety scanner</span> <small data-t='par_scanner_s'>Scans the newest comments on your kid's uploads for harassment or bullying. Uses the YouTube connection made in Studio.</small></h3>
@@ -315,6 +488,8 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
       <div class='notice'>How reporting works: flagged comments appear here instantly for the parent. "Report to YouTube" opens YouTube's official reporting flow for that exact comment (YouTube doesn't allow apps to file reports directly — a human must confirm). "Email me this" opens a pre-written alert to your email so there's a record.</div>
     </div>
 
+    </section>
+    <section class='pdpanel' id='pd-plans' role='tabpanel' aria-labelledby='tab-plans' hidden>
     <!-- ADS -->
     <div class='card'>
       <h3><span data-t='par_ads'>Ads & offers</span> <small data-t='par_ads_s'>This is the only place ads exist in NovaClip.</small></h3>
@@ -351,6 +526,7 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
       </div>
       <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06);'>Pitch build — do not enter a real card. This demonstrates the billing flow only. In production, card data would go straight to a certified payment processor (Stripe/Adyen) and never touch NovaClip's servers — we'd store only a token, never the real number.</div>
     </div>
+    </section>
   </div>
 </div>
 
@@ -520,6 +696,11 @@ document.getElementById('resetbtn').onclick = async () => {
 };
 function unlock() {
   gate.style.display = 'none'; dash.style.display = 'block';
+  /* The big gradient headline is the locked page's identity — it is all there
+     is above the PIN box. Once the dashboard opens, its own sticky header says
+     "Family Dashboard" too, and the two sat 200px apart saying the same thing
+     while pushing the tabs below the fold. The headline stands down. */
+  document.querySelectorAll('.wrap > h1, .wrap > .sub').forEach(el => el.style.display = 'none');
   document.getElementById('s_pts').textContent = localStorage.getItem('nc_points') || '0';
   const hist = JSON.parse(localStorage.getItem('nc_history') || '{}');
   let chats = 0, lines = [];
@@ -535,13 +716,154 @@ function unlock() {
   document.getElementById('actlog').innerHTML = lines.length ? lines.join('<br>') : 'No AI chats yet on this device.';
   renderPlans();
   renderSavedCard();
+  /* Tabs first: the panels have to exist and the right one has to be visible
+     before anything below measures itself into them. */
+  pdBuildTabs();
   renderScreenTime();
   renderPay();
   renderOffers();
+  pdShieldState();
+  /* Flagged comments from the last scan are the one thing on this page a
+     parent needs to be pulled towards, so it is the one thing that gets a
+     count on its tab. */
+  pdScanBadge();
   /* Content blocking is inside the PIN gate for the same reason billing is:
      a child who can change the rules is not filtered. */
   try { fInit(); } catch (e) { console.warn('content blocking failed to start', e); }
 }
+
+/* ============================================================================
+   THE TABS
+   ============================================================================
+   Six sections, one visible at a time. The panels and every id inside them are
+   the markup that was already here — the filter engine, the screen-time chart
+   and the scanner all still find their elements by the same names, because
+   nothing was renamed to fit a layout.
+
+   Two details that are the whole reason this is not four lines:
+
+   Panels are toggled with the `hidden` attribute rather than display:none on
+   the card, and the tab is switched BEFORE anything measures. A textarea or a
+   canvas inside a display:none subtree measures zero, so a chart drawn while
+   its tab was closed drew into nothing and stayed blank when you opened it.
+   Anything that needs a size is redrawn on show, below.
+
+   The chosen tab goes in the URL hash, so a parent who bookmarks the screen
+   time, or reloads after saving filter rules, lands back where they were
+   instead of on the overview.
+   ============================================================================ */
+const PD_TABS = [
+  { id: 'overview',   label: 'Overview',      icon: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z' },
+  { id: 'screentime', label: 'Screen time',   icon: 'M12 6v6l4 2M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20z' },
+  { id: 'webfilter',  label: 'Content blocking', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
+  { id: 'alerts',     label: 'Safety alerts', icon: 'M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z' },
+  { id: 'earnings',   label: 'Earnings',      icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+  { id: 'plans',      label: 'Plans & billing', icon: 'M2 7h20v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7zm0 4h20M2 7l2-4h16l2 4' }
+];
+
+function pdIcon(d) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
+}
+
+/* Redraw hooks: anything that needs a real width to lay out. Called after the
+   panel is visible, never before. */
+const PD_ON_SHOW = {
+  screentime: () => { try { renderScreenTime(); } catch (e) {} },
+  earnings:   () => { try { renderPay(); } catch (e) {} },
+  plans:      () => { try { renderOffers(); renderPlans(); } catch (e) {} }
+};
+
+function pdShow(id, push) {
+  if (!PD_TABS.some(t => t.id === id)) id = PD_TABS[0].id;
+  PD_TABS.forEach(t => {
+    const panel = document.getElementById('pd-' + t.id);
+    const tab = document.getElementById('tab-' + t.id);
+    const on = t.id === id;
+    if (panel) panel.hidden = !on;
+    if (tab) { tab.setAttribute('aria-selected', on ? 'true' : 'false'); tab.tabIndex = on ? 0 : -1; }
+  });
+  if (PD_ON_SHOW[id]) PD_ON_SHOW[id]();
+  if (push && location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
+}
+
+function pdBuildTabs() {
+  const nav = document.getElementById('pdTabs');
+  if (!nav || nav.children.length) return;
+  nav.innerHTML = PD_TABS.map(t =>
+    '<button class="pdtab" type="button" role="tab" id="tab-' + t.id + '" ' +
+    'aria-controls="pd-' + t.id + '" aria-selected="false" tabIndex="-1">' +
+    pdIcon(t.icon) + '<span>' + t.label + '</span>' +
+    '<span class="badge" id="badge-' + t.id + '" hidden></span></button>').join('');
+  PD_TABS.forEach(t => {
+    const b = document.getElementById('tab-' + t.id);
+    if (b) b.onclick = () => pdShow(t.id, true);
+  });
+  /* Left and right move between tabs, which is what a tablist is expected to
+     do and what a keyboard user will try first. */
+  nav.addEventListener('keydown', e => {
+    const i = PD_TABS.findIndex(t => t.id === (document.activeElement.id || '').replace('tab-', ''));
+    if (i < 0) return;
+    let n = -1;
+    if (e.key === 'ArrowRight') n = (i + 1) % PD_TABS.length;
+    if (e.key === 'ArrowLeft') n = (i - 1 + PD_TABS.length) % PD_TABS.length;
+    if (e.key === 'Home') n = 0;
+    if (e.key === 'End') n = PD_TABS.length - 1;
+    if (n < 0) return;
+    e.preventDefault();
+    pdShow(PD_TABS[n].id, true);
+    document.getElementById('tab-' + PD_TABS[n].id).focus();
+  });
+  pdShow(location.hash.slice(1) || PD_TABS[0].id, false);
+}
+
+/* A count on the tab, so a parent sees there is something waiting without
+   having to open it. Only ever set from something real. */
+function pdBadge(id, n) {
+  const b = document.getElementById('badge-' + id);
+  if (!b) return;
+  b.hidden = !n;
+  b.textContent = n > 99 ? '99+' : String(n);
+}
+
+/* The scanner does not keep its results, so the badge is fed by a count it
+   records as it finishes. Count and timestamp only — never the comments. */
+function pdScanSave(n, checked) {
+  try {
+    localStorage.setItem('nc_scan_last', JSON.stringify({ n: n, checked: checked, at: Date.now() }));
+  } catch (e) {}
+  pdScanBadge();
+}
+function pdScanBadge() {
+  let n = 0;
+  try {
+    const r = JSON.parse(localStorage.getItem('nc_scan_last') || 'null');
+    /* A fortnight-old count is not news, and a badge that never clears is one
+       nobody looks at twice. */
+    if (r && Date.now() - r.at < 14 * 86400000) n = r.n || 0;
+  } catch (e) {}
+  pdBadge('alerts', n);
+}
+
+/* The header pill: is the shield actually on, or is this a dashboard telling
+   a parent they are protected when nothing is enforcing anything. */
+function pdShieldState() {
+  const pill = document.getElementById('pdShieldPill');
+  if (!pill) return;
+  let on = false, installed = false;
+  try {
+    /* FKEY, the constant the filter engine itself writes. Reading a key name
+       typed from memory is how a pill ends up permanently saying "off" on a
+       dashboard where filtering is on. */
+    const f = JSON.parse(localStorage.getItem(FKEY) || 'null');
+    on = !!(f && f.enabled);
+    installed = !!localStorage.getItem('nc_shield_id');
+  } catch (e) {}
+  const label = !installed ? 'Shield not installed' : on ? 'Active shielding' : 'Filtering off';
+  pill.className = 'pdpill' + (on && installed ? '' : ' off');
+  pill.innerHTML = '<i></i><span>' + label + '</span>';
+}
+window.addEventListener('hashchange', () => pdShow(location.hash.slice(1), false));
 
 /* ============================================================================
    UPGRADE OFFERS
@@ -905,6 +1227,11 @@ document.getElementById('scanBtn').onclick = async () => {
         }
       });
     }
+    /* The count and when, and deliberately nothing else. A badge needs a
+       number; keeping the harassment itself in local storage would mean the
+       child's abuse sitting on the family computer indefinitely, readable by
+       anyone who opens the console, for no gain the parent asked for. */
+    pdScanSave(flags.length, checked);
     if (!flags.length) { out.innerHTML = '<span class="ok">Scanned ' + checked + ' recent comments — nothing harmful found.</span>'; return; }
     const email = document.getElementById('parentEmail').value || '';
     out.innerHTML = '<b style="color:#FF2E97">' + flags.length + ' flagged comment(s) of ' + checked + ' scanned:</b>' + flags.map(f => {
