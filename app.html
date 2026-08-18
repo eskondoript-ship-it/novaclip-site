@@ -309,7 +309,41 @@ function explainAuth(e) {
     return 'No connection to Google. Check the network and try again.';
   if (code === 'auth/invalid-api-key' || code === 'auth/api-key-not-valid')
     return '<b>The Firebase key in this page is not valid.</b> Copy the current config from Firebase console -> Project settings -> Your apps, and replace <code>firebaseConfig</code> in app.html.';
-  return 'Sign-in failed: ' + ((e && e.message) || 'unknown error') + (code ? ' <code>' + code + '</code>' : '');
+  if (code === 'auth/admin-restricted-operation')
+    return '<b>The Google account\'s administrator blocked this.</b> School and work accounts are often locked to approved apps. Use a personal Google account, or ask the administrator to allow NovaClip.';
+  /* The one that looks like a bug and is not. While the OAuth consent screen
+     is in Testing, only the accounts listed as test users can get through it —
+     everybody else is refused after the account picker, which arrives here as
+     an internal error or as a cancelled popup with nothing explaining why. It
+     is the single most common reason sign-in "works for me and nobody else". */
+  if (code === 'auth/internal-error' || code === 'auth/user-cancelled')
+    return '<b>Google refused the permission, not the password.</b><br>' +
+      'Nearly always the consent screen is still in <b>Testing</b>, which only lets accounts on ' +
+      'the test-user list through. Google Cloud console -> <b>APIs &amp; Services -> OAuth consent ' +
+      'screen</b> for project <code>novaclip-eaf8c</code>: either add this Google account under ' +
+      '<b>Test users</b>, or <b>Publish</b> the app so anyone can use it.' + authSetup();
+  return 'Sign-in failed: ' + ((e && e.message) || 'unknown error') +
+    (code ? ' <code>' + code + '</code>' : '') + authSetup();
+}
+
+/* Printed under any failure that has no single obvious cause. Four consoles,
+   in the order they break — worth having on the page rather than in a document
+   nobody has open at the moment it fails. */
+function authSetup() {
+  return '<details style="margin-top:10px"><summary style="cursor:pointer">' +
+    'What real sign-in needs switched on</summary>' +
+    '<ol style="margin:8px 0 0 18px;line-height:1.75;font-size:.92rem">' +
+    '<li>Firebase -> Authentication -> <b>Sign-in method</b> -> Google -> Enable.</li>' +
+    '<li>Firebase -> Authentication -> <b>Settings -> Authorized domains</b> -> add <code>' +
+      (location.hostname || 'this site') + '</code>.</li>' +
+    '<li>Google Cloud -> APIs &amp; Services -> <b>Enable</b> both <b>YouTube Data API v3</b> ' +
+      'and <b>YouTube Analytics API</b>. The second one is the one people forget, and without it ' +
+      'sign-in succeeds and the analytics page stays empty.</li>' +
+    '<li>Google Cloud -> <b>OAuth consent screen</b>: the three YouTube scopes this asks for are ' +
+      'sensitive, so while the app is in Testing only listed test users can sign in. Publishing it ' +
+      'sends it for Google\'s verification review — until that passes, users see an ' +
+      '"unverified app" warning and there is a cap on how many can accept it.</li>' +
+    '</ol></details>';
 }
 
 function signedInUI(name) {
