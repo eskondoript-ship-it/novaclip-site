@@ -43,14 +43,26 @@ h1 .g { background: linear-gradient(90deg,var(--nc-cyan,#00F0FF),var(--nc-pink,#
 .note { margin-top: 30px; color: var(--nc-dim,#7E8AA6); font-size: 0.85rem; max-width: 620px; margin-left: auto; margin-right: auto; line-height: 1.7; }
 .backlnk { display: inline-block; margin-bottom: 18px; color: var(--nc-dim,#7E8AA6); }
 
-.billtoggle { display: flex; justify-content: center; gap: 6px; margin: 0 auto 22px; background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12); border-radius: 30px; padding: 5px; width: fit-content; }
+/* fit-content with three buttons, two of which carry a badge, measures 422px
+   and never wraps — so a 320px phone got a horizontal scrollbar on the whole
+   page and Chrome zoomed the layout out to 436 to fit it, shrinking every
+   other page element to match. Allowed to wrap, and capped at the width of
+   what contains it. */
+.billtoggle { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0 auto 22px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 30px; padding: 5px;
+  width: fit-content; max-width: 100%; box-sizing: border-box; }
 .bt { padding: 9px 22px; border-radius: 24px; border: none; cursor: pointer; font-weight: 800; font-size: .86rem;
   background: transparent; color: var(--nc-dim,#7E8AA6); transition: .22s; font-family: inherit; display: flex; align-items: center; gap: 8px; }
 .bt:hover { color: #fff; }
 .bt.active { background: linear-gradient(90deg,var(--nc-cyan,#00F0FF),var(--nc-blue,#4CC9F0)); color: #04121a; }
 .btsave { font-size: .66rem; background: var(--nc-lime,#B6FF3C); color: #0a2000; padding: 2px 8px; border-radius: 20px; font-weight: 900; }
 .bt.active .btsave { background: #0a2a33; color: var(--nc-lime,#B6FF3C); }
+/* On the narrowest phones three wrapped rows of pill is most of the screen
+   before the prices start, so the badges go and the padding tightens: the
+   three choices still fit on one line at 320px. */
+html[data-device="phone-s"] .bt { padding: 9px 13px; font-size: .8rem; gap: 4px; }
+html[data-device="phone-s"] .btsave { display: none; }
 
 #checkout { position: fixed; inset: 0; z-index: 999; display: none; align-items: center; justify-content: center;
   background: rgba(5,6,10,0.86); backdrop-filter: blur(8px); padding: 20px; overflow-y: auto; }

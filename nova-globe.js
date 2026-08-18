@@ -657,9 +657,16 @@
     var minSide = Math.min(W, H);
     /* Narrow screens have no room to the side of anything: the hero stacks and
        the globe goes behind it as wallpaper, which the reduced canvas opacity
-       in the stylesheet is there to make safe. */
+       in the stylesheet is there to make safe.
+
+       The share is not the same share on every phone. At 42% of the short side
+       a 320px screen gets a 134px disc — a coin behind a paragraph, too small
+       to read as a planet — while a 430px one gets 180px and looks right. So
+       the smallest phones give it proportionally more, and a tablet, which has
+       room to spare, gives it less so it does not swamp the words. */
     if (W < 760) {
-      baseR = minSide * 0.42;
+      var share = W < 380 ? 0.52 : W < 600 ? 0.46 : 0.38;
+      baseR = minSide * share;
       baseCx = W * 0.5;
       return;
     }

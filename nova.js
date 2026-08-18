@@ -1454,6 +1454,52 @@ ncFit.textContent =
    rather than seventeen times over. Pages that already had it right are
    unaffected; the rest now match them.
    --------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+   DEVICE CLASSES
+
+   Twenty-five pages had invented their own breakpoints: 520, 560, 600, 620,
+   700, 760, 820, 860, 900, 1024, 1280. Nothing lined up, so a layout that was
+   fixed at 760 broke again at 820 on the next page, and "does it work on a
+   phone" had no answer because there was no agreed idea of what a phone is.
+
+   These six are the answer, named rather than numbered, and stamped on <html>
+   as data-device so a rule can say which device it means:
+
+     phone-s   < 380     iPhone SE at 375, older Androids at 360, 320 at worst
+     phone     380-760   every current phone; a Pro Max is 430
+     tablet    761-1023  tablet upright, or a phone turned sideways
+     laptop-s  1024-1279 small laptop, tablet sideways
+     laptop    1280-1679 the common laptop
+     desktop   1680+     a monitor
+
+   The 760 is not a round number and is not meant to be: it is where the rail
+   already stops being a rail and becomes the strip along the bottom. Naming a
+   boundary somewhere else would have given the site two answers to "is this a
+   phone" — a class that said tablet and a layout that said phone — which is
+   the exact failure this block exists to end. The names follow the layout.
+
+   data-pointer says coarse or fine, which is the question that actually
+   matters for hit targets — a touchscreen laptop is a fine screen with fat
+   fingers, and width cannot tell you that.
+
+   The width breakpoints stay in CSS as media queries too, because JavaScript
+   that has not run yet cannot lay out a page. The attribute is the addition,
+   not the mechanism.
+   --------------------------------------------------------------------------- */
+"html[data-pointer=\"coarse\"] a," +
+"html[data-pointer=\"coarse\"] button," +
+"html[data-pointer=\"coarse\"] [role=\"button\"]," +
+"html[data-pointer=\"coarse\"] select {" +
+  /* A finger is about 9mm across. Anything shorter than this is a target you
+     miss, and the audit found dozens on every page. min-height, not height,
+     so nothing that is already comfortable is stretched. */
+  "min-height: 40px;" +
+"}" +
+/* Except where a taller row would break the line it sits in. */
+"html[data-pointer=\"coarse\"] p a," +
+"html[data-pointer=\"coarse\"] li a," +
+"html[data-pointer=\"coarse\"] a[style*=\"inline\"] { min-height: 0; }" +
+
 "@media (max-width: 760px) {" +
   ".sidebar {" +
     "display: flex; flex-direction: row; align-items: center;" +
@@ -1480,6 +1526,43 @@ ncFit.textContent =
    buttons off a short laptop. The root size is left alone. */
 "";
 document.head.appendChild(ncFit);
+
+/* ----------------------------------------------------------------------------
+   ...and the attribute that names the class, so a rule can say "phone-s"
+   instead of "max-width: 379px" and mean the same thing everywhere.
+
+   Runs at parse time, before first paint, so nothing flashes at the wrong
+   size — the same reason the theme is applied here rather than on DOMContentLoaded.
+   ---------------------------------------------------------------------------- */
+const NC_DEVICES = [
+  [380,  'phone-s'],   [761,  'phone'],  [1024, 'tablet'],
+  [1280, 'laptop-s'],  [1680, 'laptop'], [Infinity, 'desktop']
+];
+function ncDevice(w) {
+  const width = w || innerWidth || document.documentElement.clientWidth || 1280;
+  for (let i = 0; i < NC_DEVICES.length; i++)
+    if (width < NC_DEVICES[i][0]) return NC_DEVICES[i][1];
+  return 'desktop';
+}
+function ncStampDevice() {
+  const d = document.documentElement;
+  const dev = ncDevice();
+  if (d.dataset.device !== dev) d.dataset.device = dev;
+  /* Asked of the browser, not guessed from the width. A touchscreen laptop is
+     a wide screen that still needs finger-sized buttons, and a phone plugged
+     into a mouse is the reverse. */
+  let coarse = false;
+  try { coarse = matchMedia('(pointer: coarse)').matches; } catch (e) {}
+  const ptr = coarse ? 'coarse' : 'fine';
+  if (d.dataset.pointer !== ptr) d.dataset.pointer = ptr;
+}
+ncStampDevice();
+/* Rotation and window drags both land here. Cheap enough to run raw: it
+   compares before it writes, so a drag across one class costs one DOM write,
+   not one per frame. */
+addEventListener('resize', ncStampDevice);
+addEventListener('orientationchange', ncStampDevice);
+window.ncDevice = ncDevice;
 
 /* The remains of an old background switcher. Two things it used to do are
    now actively harmful and have been removed:
@@ -2484,7 +2567,15 @@ function ncNav() {
     st.textContent = [
       /* the bar: a soft vertical wash and a hairline edge rather than a flat
          panel, so it reads as a surface the content sits in front of */
-      '.sidebar{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;',
+      /* overflow-x is NOT set here, and that is the whole point of the note.
+         It used to say hidden — correct for a vertical rail, catastrophic for
+         the phone strip. This stylesheet is appended after the layout one, so
+         at equal specificity it won on source order and quietly replaced the
+         strip's own overflow-x:auto. Measured on a 390px phone: the strip is
+         1308px of nav in a 389px window, fifteen links of which five are
+         reachable, and no swipe will move it. Every page on the site, on
+         every phone. The axis is set per-shape below instead. */
+      '.sidebar{overflow-y:auto;scrollbar-width:thin;',
       'scrollbar-color:rgba(255,255,255,.14) transparent;',
       'background:linear-gradient(175deg,var(--nc-rail1,#0E1220) 0%,var(--nc-rail2,#0A0D18) 55%,var(--nc-rail3,#080B14) 100%) !important;',
       'border-right:1px solid var(--nc-railline,rgba(255,255,255,.07)) !important;',
@@ -2493,6 +2584,41 @@ function ncNav() {
       '.sidebar::-webkit-scrollbar{width:5px}',
       '.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}',
       '.sidebar::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.26)}',
+      /* Tall rail: nothing may stick out sideways. Bottom strip: sideways is
+         the only direction there is, and the momentum flick is how you reach
+         the far end of it. */
+      '@media (min-width:761px){.sidebar{overflow-x:hidden}}',
+      '@media (max-width:760px){.sidebar{overflow-x:auto;overflow-y:hidden;' +
+        '-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;' +
+        /* A visible scrollbar inside a 64px strip eats a fifth of it. */
+        'scrollbar-width:none}' +
+        '.sidebar::-webkit-scrollbar{display:none}' +
+        /* Rows in a row, not a column stacked inside a 64px-tall box. */
+        '#ncnav{flex-direction:row;align-items:center;gap:2px;padding:0 4px;' +
+        'flex:0 0 auto}' +
+        '#ncnav .ncg{flex-direction:row;align-items:center;flex:0 0 auto}' +
+        '#ncnav .ncgi{flex-direction:row;align-items:center;flex:0 0 auto}' +
+        /* The group headings are collapse toggles for a vertical rail. In a
+           strip they are captions in the middle of a line of buttons. */
+        '#ncnav .ncgh{display:none}' +
+        '#ncnav .ncg.shut .ncgi{display:flex}' +
+        /* width:100% on a button in a row flexbox means "as wide as the row",
+           and the row is 1300px — so the name broke onto three lines inside a
+           64px strip and pushed the avatar off centre. In a strip it is the
+           avatar plus one line that does not wrap. */
+        /* The strip is navigation. What was in front of the navigation was a
+           profile button reading "Set your name" and a NovaClip wordmark —
+           250 of a 390px screen, so the only link you could see without
+           swiping was Home, on a bar whose entire job is the other fourteen.
+           The wordmark goes (you know which site you are on; it is at the top
+           of every page anyway) and the profile becomes its avatar, which is
+           what a bottom bar does everywhere else. */
+        /* !important because the brand carries an inline display:flex, and an
+           inline style beats a stylesheet no matter how specific. */
+        '.sidebar #ncbrand{display:none !important}' +
+        '.sidebar #ncprof{order:9;width:auto !important;flex:0 0 auto;' +
+        'margin:0 0 0 4px !important;padding:6px !important;white-space:nowrap}' +
+        '.sidebar #ncprof span:last-child{display:none}}',
       '#ncnav{display:flex;flex-direction:column;gap:2px;padding:2px 10px 6px}',
 
       /* group header */
