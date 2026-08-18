@@ -517,7 +517,30 @@ async function enterDash() {
 const YTA = 'https://youtubeanalytics.googleapis.com/v2/reports';
 let perfDays = 28, perfCharts = {};
 
-function ymd(d) { return d.toISOString().slice(0, 10); }
+/* Local calendar parts, NOT toISOString().
+
+   Every Date built here comes from local components — new Date(y, m, 1) is
+   local midnight. toISOString() converts that to UTC first, so anywhere east
+   of Greenwich the 1st of the month became 23:00 on the last day of the month
+   before, and the string came out a day early. In Lisbon in summer the year
+   chart asked YouTube for a range starting 2025-07-31, and the Analytics API
+   refused it outright:
+
+     Date range (2025-07-31) in field parameters.start-date does not align to
+     chosen date dimension.
+
+   — because with the `month` dimension the start has to BE the first of a
+   month. It was correct in UTC and across the Americas and broken for every
+   user in Europe, Africa and Asia, which is the kind of bug that looks like
+   "the API is down" from wherever you happen to be sitting.
+
+   nova.js already formats its screen-time day keys this way; this is the same
+   rule, and the reason for it. */
+function ymd(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
 function perfRange(days) {
   const end = new Date(Date.now() - 86400000);          // yesterday: today is always partial
   const start = new Date(end.getTime() - (days - 1) * 86400000);
