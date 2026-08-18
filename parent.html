@@ -65,6 +65,47 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 .strule b { display: block; font-size: .95rem; }
 .strule span { color: var(--nc-dim,#7E8AA6); font-size: .86rem; }
 
+/* ---- upgrade offers ----
+   House offers, not an ad network. Nothing here loads a third-party script,
+   sets a third-party cookie or knows the family exists — which is the only
+   reason it is defensible to put an offer on a page about a child's
+   activity at all. */
+/* padding-top, not margin-top: the BEST VALUE tag hangs 9px above its card,
+   and with only a margin it printed over the paragraph above. */
+.offers { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+  gap: 12px; margin-top: 10px; padding-top: 14px; }
+/* --nc-line2 rather than a white alpha: on the light theme a white border on
+   a white card is no border at all, and these were three floating paragraphs. */
+.offer { position: relative; border: 1px solid var(--nc-line2,rgba(255,255,255,0.12));
+  border-radius: 14px; padding: 16px 17px 15px;
+  background: var(--nc-card,rgba(255,255,255,0.03));
+  display: flex; flex-direction: column; }
+.offer.best { border-color: rgba(0,240,255,0.42); background: rgba(0,240,255,0.05); }
+.offer .tag { position: absolute; top: -9px; left: 15px; font-size: .62rem; font-weight: 800;
+  letter-spacing: 1.4px; padding: 3px 9px; border-radius: 20px; color: #04121a;
+  background: linear-gradient(90deg,var(--nc-lime,#B6FF3C),var(--nc-cyan,#00F0FF)); }
+.offer h4 { margin: 0 0 4px; font-size: 1rem; font-weight: 700; color: var(--nc-text,#EAF2FF); }
+/* The hook is the parent's own number, not a slogan — the whole argument for
+   this plan is something already on this page. */
+.offer .hook { font-size: .88rem; line-height: 1.6; color: var(--nc-dim,#b8bccb); margin: 0 0 10px; }
+.offer .hook b { color: var(--nc-cyan,#00F0FF); font-weight: 700; }
+/* block, so the price gets its own line and the button sits under it. Inline,
+   the three cards each broke in a different place depending on how long the
+   plan name was. */
+.offer .cost { display: block; font-size: 1.35rem; font-weight: 700; letter-spacing: -.02em;
+  color: var(--nc-text,#EAF2FF); }
+.offer .cost small { font-size: .78rem; font-weight: 500; color: var(--nc-dim,#7E8AA6); }
+.offer .go { display: inline-block; margin-top: 11px; padding: 9px 16px; border-radius: 11px;
+  text-decoration: none; font-size: .86rem; font-weight: 700; color: #04121a;
+  background: linear-gradient(90deg,var(--nc-cyan,#00F0FF),var(--nc-blue,#4CC9F0)); }
+.offer .go.quiet { background: none; border: 1px solid var(--nc-line2,rgba(255,255,255,0.18));
+  color: var(--nc-text,#EAF2FF); }
+/* The price is pushed to the bottom so the buttons line up across cards
+   whatever length the hook above them ran to. */
+.offer .cost { margin-top: auto; }
+.offer .go { align-self: flex-start; }
+.offernone { margin-top: 14px; font-size: .9rem; line-height: 1.7; color: var(--nc-lime,#B6FF3C); }
+
 /* ---- what it could pay ---- */
 .payrow { display: flex; flex-wrap: wrap; gap: 26px; margin-bottom: 4px; }
 .payfig b { display: block; font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em;
@@ -278,6 +319,11 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
     <div class='card'>
       <h3><span data-t='par_ads'>Ads & offers</span> <small data-t='par_ads_s'>This is the only place ads exist in NovaClip.</small></h3>
       <p style='color:#b8bccb; font-size:0.95rem; line-height:1.7' data-t='par_ads_p'>NovaClip never shows advertising inside the kid's tools, games, or editor. Sponsored offers and plan upgrades appear only on this parent dashboard.</p>
+      <!-- Filled by renderOffers(). Left empty for a family that already pays
+           for everything: there is nothing honest left to sell them, and a
+           dashboard that keeps selling to a paying customer is one they stop
+           reading. -->
+      <div id='offers'></div>
     </div>
 
     <!-- BILLING / PLANS (PIN-protected because it lives inside the dashboard) -->
@@ -491,9 +537,142 @@ function unlock() {
   renderSavedCard();
   renderScreenTime();
   renderPay();
+  renderOffers();
   /* Content blocking is inside the PIN gate for the same reason billing is:
      a child who can change the rules is not filtered. */
   try { fInit(); } catch (e) { console.warn('content blocking failed to start', e); }
+}
+
+/* ============================================================================
+   UPGRADE OFFERS
+   ============================================================================
+   The only advertising anywhere in NovaClip, and it is NovaClip advertising
+   NovaClip. No ad network, no third-party script, no third-party cookie,
+   nothing that knows this family exists. That is not a detail — this is a page
+   about a specific child's usage, and handing that context to an ad exchange
+   would be indefensible whatever the revenue. The offers are served from this
+   file, to this browser, and stop at the edge of it.
+
+   Two further rules the code keeps rather than the copy claiming them:
+
+     Nothing is shown to a family that already pays for it. A dashboard that
+     keeps selling to a paying customer is one they stop reading, and then the
+     harassment alert goes unread with it.
+
+     The argument for each plan is a number already on this page. "Your kid
+     was stopped 4 times this fortnight" is true, checkable, and about them;
+     "Unlock the full NovaClip experience" is a slogan. If the number is not
+     there yet, the offer falls back to what the plan does, and never to an
+     invented figure.
+   ============================================================================ */
+
+/* Same figures as the pricing page, in the currency the parent last chose
+   there. Kept as a small table rather than fetched, because an offer that
+   renders a blank price while a request is in flight is worse than an offer
+   that renders a month-old one — and these change about never. */
+const OFFER_PRICES = {
+  eur: { sym: '€', dash: 6.99, tools: 4.99, bundle: 9.99, save: 1.99 },
+  usd: { sym: '$',      dash: 7.99, tools: 5.99, bundle: 10.99, save: 2.99 },
+  gbp: { sym: '£', dash: 5.99, tools: 4.49, bundle: 8.99, save: 1.49 },
+  chf: { sym: 'CHF ',   dash: 6.90, tools: 4.90, bundle: 9.90, save: 1.90 },
+  cny: { sym: '¥', dash: 49.9, tools: 39.9, bundle: 79.9, save: 9.9 },
+  inr: { sym: '₹', dash: 599,  tools: 449,  bundle: 899,  save: 150 },
+  bdt: { sym: '৳', dash: 799,  tools: 599,  bundle: 1199, save: 200 }
+};
+/* The dashboard's own esc() is a const inside the render function, so it does
+   not reach here. Plan names come from nc_pro, which arrives over the sync
+   Worker — not something to drop into innerHTML unescaped. */
+function offerEsc(t) {
+  return window.ncEscape ? ncEscape(t)
+    : String(t == null ? '' : t).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function offerCur() {
+  let c = 'eur';
+  try { c = (localStorage.getItem('nc_currency') || 'eur').toLowerCase(); } catch (e) {}
+  return OFFER_PRICES[c] || OFFER_PRICES.eur;
+}
+function offerPrice(cur, amount) {
+  const n = amount % 1 === 0 ? amount : amount.toFixed(2);
+  return '<span class="cost">' + cur.sym + n + '<small> /month</small></span>';
+}
+
+function renderOffers() {
+  const box = document.getElementById('offers');
+  if (!box) return;
+  const pro = (typeof ncPro === 'function') ? ncPro() : null;
+  const hasFamily = !!(pro && pro.family), hasTools = !!(pro && pro.tools);
+
+  if (hasFamily && hasTools) {
+    box.innerHTML = '<p class="offernone">You are on ' +
+      offerEsc((pro.plans || []).join(' and ') || 'the full plan') +
+      '. There is nothing else to sell you, so this space stays empty.</p>';
+    return;
+  }
+
+  const cur = offerCur();
+  const cards = [];
+
+  /* ---- the hooks, each from something already measured on this page ---- */
+  const days = (typeof ncScreenLog === 'function') ? ncScreenLog(14) : [];
+  const breaks = days.reduce((a, d) => a + d.breaks, 0);
+  const weekMs = days.slice(-7).reduce((a, d) => a + d.ms, 0);
+  let chats = 0;
+  try {
+    const h = JSON.parse(localStorage.getItem('nc_history') || '{}');
+    for (const s in h) chats += h[s].length;
+  } catch (e) {}
+
+  if (!hasFamily) {
+    /* Strongest true thing first. Break count beats hours used, because a
+       break is the control working and hours are just a number. */
+    const hook = breaks
+      ? 'NovaClip has already stopped them <b>' + breaks + ' time' + (breaks > 1 ? 's' : '') +
+        '</b> in the last fortnight. The Dashboard adds the content blocker and the ' +
+        'harassment scanner on top of that.'
+      : weekMs > 60000
+        ? 'They used NovaClip for <b>' + stFmt(weekMs) + '</b> this week. The Dashboard is what ' +
+          'turns that into limits, content blocking on YouTube and TikTok, and an alert when ' +
+          'someone harasses them in the comments.'
+        : 'Parental controls, content blocking across YouTube, TikTok, Instagram and Twitch, ' +
+          'and an alert the moment harassment shows up in their comments.';
+    cards.push({ name: 'Family Dashboard', hook: hook, cost: cur.dash, best: false });
+  }
+
+  if (!hasTools) {
+    const hook = chats
+      ? 'They have asked the AI tutors <b>' + chats + ' question' + (chats > 1 ? 's' : '') +
+        '</b> on this device. The Tools upgrade puts those answers in the priority queue and ' +
+        'lifts the export length in the editor.'
+      : 'Priority AI answers, longer editor exports, the full effects set and the game skins.';
+    cards.push({ name: "Kids' Tools Upgrade", hook: hook, cost: cur.tools, best: false });
+  }
+
+  /* The bundle is only an offer if it is actually cheaper than what is left to
+     buy — which, for a family that already has one half, it is not. */
+  if (!hasFamily && !hasTools) {
+    cards.push({
+      name: 'Family Bundle', best: true,
+      hook: 'Both of the above together, ' + cur.sym + (cur.save % 1 ? cur.save.toFixed(2) : cur.save) +
+        ' a month less than buying them separately.',
+      cost: cur.bundle
+    });
+  }
+
+  box.innerHTML = '<div class="offers">' + cards.map(c =>
+    '<div class="offer' + (c.best ? ' best' : '') + '">' +
+    (c.best ? '<span class="tag">BEST VALUE</span>' : '') +
+    '<h4>' + offerEsc(c.name) + '</h4>' +
+    /* c.hook is written above in this file and carries deliberate <b>; the
+       only values interpolated into it are numbers this page computed. */
+    '<p class="hook">' + c.hook + '</p>' +
+    offerPrice(cur, c.cost) +
+    '<a class="go' + (c.best ? '' : ' quiet') + '" href="pricing.html">See the plan</a>' +
+    '</div>').join('') + '</div>' +
+    '<p style="font-size:.8rem;color:var(--nc-dim,#7E8AA6);margin-top:12px;line-height:1.6">' +
+    'These are NovaClip’s own plans. No advertising network is involved, nothing on this ' +
+    'page is shared with one, and the figures above come from this device only.</p>';
 }
 
 /* ============================================================================
