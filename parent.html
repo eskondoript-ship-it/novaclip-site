@@ -168,9 +168,19 @@ html[data-theme="dark"]{
    the band stuck 7px past the viewport and put a horizontal scrollbar on the
    whole page. It lines up with the cards instead, which is where the eye
    expects the edge anyway. */
-.pdhead{ position:sticky; top:0; z-index:30; margin:0 0 22px;
-  background:color-mix(in srgb, var(--pd-bg) 92%, transparent);
-  backdrop-filter:blur(14px); border-bottom:1px solid var(--pd-line); }
+/* top is the site bar's height, not zero. #ncbar is position:fixed across the
+   top of every page, so a sticky header pinned at 0 parks UNDERNEATH it — the
+   title row and the shield pill were hidden behind the bar on every scroll,
+   and the strip of header that cleared it had the page's own headings sliding
+   visibly through. --nc-bar-h is published by nova.js; the fallback is there
+   for the moment before it runs.
+
+   97%, not 92%: at 92 the text passing under it still read through the blur,
+   which on a page of card headings looks like a rendering fault. */
+.pdhead{ position:sticky; top:var(--nc-bar-h,52px); z-index:30; margin:0 0 22px;
+  background:color-mix(in srgb, var(--pd-bg) 97%, transparent);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--pd-line); }
 .pdtop{ display:flex; align-items:center; justify-content:space-between; gap:14px;
   flex-wrap:wrap; padding:13px 0; }
 .pdid{ display:flex; align-items:flex-start; gap:11px; min-width:0; }
@@ -241,6 +251,18 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
 #dash .btn:hover{ background:var(--pd-sage-dark); box-shadow:none; transform:none; }
 #dash .btn.pink{ background:var(--pd-clay); color:#fff; }
 #dash .btn.pink:hover{ background:var(--pd-clay-dark); }
+/* A bare <label> is inline and a <textarea> is inline-block, so the two sat
+   side by side on one line with the label dropped to the textarea's baseline —
+   "Always allow these channels" printed to the LEFT of the box it names, at the
+   bottom, on both lists. */
+#dash label{ display:block; margin-bottom:6px; }
+/* Except the ones that are deliberately a checkbox and its words on one line. */
+#dash label:has(input[type=checkbox]){ display:flex; }
+/* The page's width:100% rule lists the three input types and not textarea, so
+   both channel lists rendered at the browser default of 20 columns — a 177px
+   box floating in a 450px slot, next to full-width fields. */
+#dash textarea{ width:100%; padding:12px 13px; font:inherit; font-size:.95rem;
+  resize:vertical; min-height:78px; }
 #dash input[type=password],#dash input[type=text],#dash input[type=email],
 #dash textarea,#dash select{ background:var(--pd-bg); border-color:var(--pd-line);
   color:var(--pd-body); border-radius:11px; }

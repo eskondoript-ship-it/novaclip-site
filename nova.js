@@ -702,6 +702,15 @@ function ncBuildBar() {
   const css = document.createElement('style');
   css.id = 'ncbar-css';
   css.textContent =
+    /* The bar's height, published so a page can position against it.
+
+       It was a JS constant only, so anything that wanted to sit below the bar
+       had to know the number by heart. The family dashboard's sticky header
+       did not: it stuck at top:0, which is UNDER a fixed bar, so its title row
+       was permanently hidden behind the bar and only the tab strip showed —
+       with page content ghosting through the sliver that peeked out. Anything
+       sticky on any page needs this, so it goes where CSS can reach it. */
+    ':root{--nc-bar-h:' + NC_BAR_H + 'px}' +
     '#ncbar{position:fixed;top:0;left:0;right:0;height:' + NC_BAR_H + 'px;z-index:990;' +
       'display:flex;align-items:center;gap:14px;padding:0 14px;box-sizing:border-box;' +
       'background:var(--nc-bar-bg,rgba(10,13,24,.72));' +

@@ -218,7 +218,12 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
        font-weight: 700; cursor: pointer; }
 .pfp.on { border-color: var(--nc-cyan,#00F0FF); color: var(--nc-cyan,#00F0FF); background: rgba(0,240,255,0.12); }
 .perfnote { font-size: 0.82rem; line-height: 1.65; color: var(--nc-dim,#9fb0cc); margin: 4px 0 12px; }
-.perfnote.warn { color: #ffd24a; }
+/* Amber on near-black reads as a warning; amber on white reads as nothing at
+   all — 1.34, and this is the line that explains why every chart is missing,
+   so it is the worst one on the page to lose. --nc-amber is the palette's
+   theme-aware version and goes dark brown on light. */
+.perfnote.warn { color: var(--nc-amber,#ffd24a); }
+html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
 .perfnote code { background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px; }
 .moneybox { margin: 6px 0 14px; padding: 13px 15px; border-radius: 12px;
             border: 1px solid rgba(182,255,60,0.25); background: rgba(182,255,60,0.06);

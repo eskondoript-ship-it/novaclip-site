@@ -512,18 +512,18 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
     <h2 data-t='final_h'>Your channel's <span class='g'>next level</span><br>starts in a tab.</h2>
     <p data-t='final_p'>Free to start. No downloads. Just you, the tools, and the grind.</p>
     <a href='app.html'><button class='btn-primary' data-t='final_btn'>Open the Studio →</button></a>
-    <!-- The models in the arena were made by other people. Their licences ask for a
-         credit with a link, so the credit lives here where anyone can find it. -->
-    <div class='creditsrow'>
-      <a href='credits.html'><button class='btn-credits' data-t='credits_btn'>Credits</button></a>
-      <div class='creditsnote' data-t='credits_note'>The 3D models, animations and sounds in NovaClip — and who made them.</div>
-    </div>
+    <!-- The Credits button and its note used to live here, pointing at
+         credits.html. That page was deleted in f2c3a8c: everything it listed
+         was a .glb weapon or map model, and those were removed from the repo
+         as unreferenced. What was left was a template of empty attribution
+         fields for assets that no longer ship. The links outlived it and were
+         404ing from the home page — the button and the footer link both. -->
   </div>
 </section>
 
 <footer>
   <div data-t='builtby'>© 2026 NovaClip · Built by eskon</div>
-  <div><a href='credits.html' data-t='credits_btn'>Credits</a> &nbsp;·&nbsp; <a href='https://novaclip.streamlit.app' target='_blank' data-t='footer'>Classic app</a></div>
+  <div><a href='https://novaclip.streamlit.app' target='_blank' rel='noopener' data-t='footer'>Classic app</a></div>
 </footer>
 
 </div>
