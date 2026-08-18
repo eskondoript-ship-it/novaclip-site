@@ -303,8 +303,20 @@ function explainAuth(e) {
       'Firebase console -> <b>Authentication -> Sign-in method -> Google -> Enable</b>, then save.';
   if (code === 'auth/popup-blocked')
     return 'Your browser blocked the Google window. Allow pop-ups for <code>' + host + '</code>, or press the button again — it will use a full-page redirect instead.';
+  /* Two very different things arrive as the same code, and telling someone to
+     just press the button again is only right for one of them. The other is
+     "Access blocked: this app has not completed the Google verification
+     process, Error 403: access_denied" — a hard stop shown inside the popup
+     while the consent screen is in Testing and the account is not on the
+     test-user list. Pressing the button again gets the identical screen, for
+     ever, so the message has to name the other possibility. */
   if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request')
-    return 'The Google window closed before sign-in finished. Press the button again when you are ready.';
+    return 'The Google window closed before sign-in finished. Press the button again when you are ready.' +
+      '<br><br>If the window showed <b>"Access blocked"</b> or <b>Error 403: access_denied</b>, ' +
+      'pressing it again will do the same thing — that Google account is not on the app\'s ' +
+      'test-user list. Google Cloud console -> <b>Google Auth Platform -> Audience -> Test users -> ' +
+      'Add users</b> for project <code>novaclip-eaf8c</code>, add the address the window named, ' +
+      'and try once more.' + authSetup();
   if (code === 'auth/network-request-failed')
     return 'No connection to Google. Check the network and try again.';
   if (code === 'auth/invalid-api-key' || code === 'auth/api-key-not-valid')
