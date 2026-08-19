@@ -726,7 +726,14 @@ html[data-theme="light"] #ncAR button{background:rgba(255,255,255,.92);
 html[data-theme="light"] #ncAR button:hover{border-color:rgba(0,150,180,.55);color:#101828}
 html[data-theme="light"] #ncAR button.on{background:rgba(0,190,220,.16);
   border-color:rgba(0,170,200,.65);color:#04617A}
-html[data-theme="light"] #ncAR .ncar-dims{color:rgba(255,255,255,.8);background:rgba(16,24,44,.62)}
+/* The caption used to be a white-on-dark chip because it floated over the
+   video, where the background could be anything. It sits inside the popover
+   now, so it takes the popover's own colours. */
+html[data-theme="light"] #ncAR .ncar-dims{color:#5A6478;background:none}
+/* And the popover follows the theme, or a light page grows a black slab with
+   pale buttons sitting on it. */
+html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
+  border-color:rgba(16,24,44,.14);box-shadow:0 14px 34px -14px rgba(16,24,44,.35)}
 </style>
 </head>
   <body data-nc-editor-tools>
@@ -739,7 +746,19 @@ html[data-theme="light"] #ncAR .ncar-dims{color:rgba(255,255,255,.8);background:
         align-items:flex-end;gap:6px;font:600 12px/1 Geist,Inter,system-ui,sans-serif;
         pointer-events:none;opacity:0;transition:opacity .3s}
       #ncAR.show{opacity:1;pointer-events:auto}
-      #ncAR .ncar-row{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+      /* The row used to sit open across the top of the preview: ten buttons and
+         a dimensions caption, permanently, over the picture the panel exists
+         to show. It is one button now that says which ratio is on, and the ten
+         only appear when it is pressed. */
+      #ncAR .ncar-btn{display:flex;align-items:center;gap:6px}
+      #ncAR .ncar-btn b{font-weight:700;letter-spacing:.02em}
+      #ncAR .ncar-btn svg{width:11px;height:11px;opacity:.65;transition:transform .18s}
+      #ncAR.open .ncar-btn svg{transform:rotate(180deg)}
+      #ncAR .ncar-row{display:none;gap:4px;flex-wrap:wrap;justify-content:flex-start;
+        margin-top:5px;padding:6px;border-radius:10px;max-width:270px;
+        background:rgba(10,13,22,.94);border:1px solid rgba(255,255,255,.12);
+        backdrop-filter:blur(14px);box-shadow:0 14px 34px -12px rgba(0,0,0,.8)}
+      #ncAR.open .ncar-row{display:flex}
       #ncAR button{font:inherit;padding:5px 9px;border-radius:7px;cursor:pointer;
         border:1px solid rgba(255,255,255,.12);background:rgba(12,14,24,.88);
         color:rgba(255,255,255,.6);backdrop-filter:blur(12px);transition:all .15s;
@@ -750,11 +769,17 @@ html[data-theme="light"] #ncAR .ncar-dims{color:rgba(255,255,255,.8);background:
       /* Over the preview canvas, which is the project's background colour and
          can be anything — so this reads off its own chip instead of off the
          video. */
-      #ncAR .ncar-dims{font-size:10px;color:rgba(255,255,255,.75);text-align:right;
-        letter-spacing:.03em;background:rgba(8,11,20,.72);padding:2px 7px;
-        border-radius:6px;backdrop-filter:blur(8px)}
+      #ncAR .ncar-dims{display:none;font-size:10px;color:rgba(255,255,255,.75);
+        text-align:left;letter-spacing:.03em;padding:1px 3px 0}
+      #ncAR.open .ncar-dims{display:block}
     </style>
     <div id="ncAR">
+      <button type="button" class="ncar-btn" id="ncARbtn" aria-expanded="false"
+              aria-controls="ncARrow" title="Frame size">
+        <b id="ncARnow">16:9</b>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
       <div class="ncar-row" id="ncARrow"></div>
       <div class="ncar-dims" id="ncARdims"></div>
     </div>
@@ -787,6 +812,23 @@ html[data-theme="light"] #ncAR .ncar-dims{color:rgba(255,255,255,.8);background:
       var row = document.getElementById('ncARrow');
       var dims = document.getElementById('ncARdims');
       var wrap = document.getElementById('ncAR');
+      var btn = document.getElementById('ncARbtn');
+      var now = document.getElementById('ncARnow');
+
+      function setOpen(v) {
+        wrap.classList.toggle('open', !!v);
+        btn.setAttribute('aria-expanded', v ? 'true' : 'false');
+      }
+      btn.onclick = function (e) { e.stopPropagation(); setOpen(!wrap.classList.contains('open')); };
+      /* Anywhere else, or Escape. A popover over a video preview that needs a
+         second press on the same small button to dismiss is one people leave
+         open, which is how it ended up feeling permanent in the first place. */
+      addEventListener('pointerdown', function (e) {
+        if (wrap.classList.contains('open') && !wrap.contains(e.target)) setOpen(false);
+      }, true);
+      addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && wrap.classList.contains('open')) setOpen(false);
+      });
 
       function store() { return window.__ncStore; }
       function settings() {
@@ -818,6 +860,11 @@ html[data-theme="light"] #ncAR .ncar-dims{color:rgba(255,255,255,.8);background:
         });
         var s = settings();
         dims.textContent = s && s.width ? s.width + ' x ' + s.height : '';
+        /* The trigger says what is on, so collapsing it costs no information —
+           which is the only reason collapsing it is allowed. */
+        now.textContent = RATIOS[active][0] === 'Free'
+          ? (s && s.width ? s.width + '×' + s.height : 'Free')
+          : RATIOS[active][0];
       }
 
       function select(i) {
@@ -836,6 +883,7 @@ html[data-theme="light"] #ncAR .ncar-dims{color:rgba(255,255,255,.8);background:
           st.getState().updateSettings({ width: w, height: h });
         }
         render();
+        setOpen(false);        // chosen: get out of the way of the picture
       }
 
       /* --- boot once the app has mounted --- */

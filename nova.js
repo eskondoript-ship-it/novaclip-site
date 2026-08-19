@@ -3224,7 +3224,11 @@ function ncEditorTools() {
        motionlabs.js the paper cut-out effect (Animation Studio)
      Loaded separately so one missing file does not take the other down. */
   [['ncanimjs', 'animator.js', 'Animate a drawing and Remove something'],
-   ['ncmljs', 'motionlabs.js', 'Paper animation']].forEach(function (f) {
+   ['ncmljs', 'motionlabs.js', 'Paper animation'],
+   /* Dragging a clip around the preview instead of typing two decimals into
+      the Transform panel. Same reason as the other two: the bundle is 397 kB,
+      so a script tag inside it is a re-paste of the whole file. */
+   ['ncmovejs', 'editor-move.js', 'Drag on the preview']].forEach(function (f) {
     const s = document.createElement('script');
     s.id = f[0];
     s.src = f[1];
