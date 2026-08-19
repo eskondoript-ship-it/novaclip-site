@@ -97,20 +97,38 @@ test('thinking is asked for by provider, not by a list of model names', () => {
     'no model-name regex should decide who gets thinkingConfig');
 });
 
-test('a 400 naming thinking is retried once without it, and remembered', () => {
+test('any 400 is retried once without thinkingConfig, and remembered', () => {
+  /* This used to require the refusal to NAME the field:
+
+       ... && /thinking|thought/i.test(out.raw)
+
+     which assumed Google says which argument it disliked. It usually does not
+     — publish.html's "Plan the edit" came back with the bare "Request contains
+     an invalid argument.", the branch never ran, and the whole self-healing
+     path was dead in exactly the case it was written for.
+
+     The condition is now the presence of the field itself, which is also what
+     stops it looping: the branch deletes it before asking again. */
   const m = src.match(
-    /if \(out\.res\.status === 400 && wantThinking && (\/[^/]+\/i)\.test\(out\.raw\)\) \{([\s\S]{0,220})/);
-  assert.ok(m, 'the retry-without-thinking branch is missing');
-  const body = m[2];
+    /if \(out\.res\.status === 400 && wantThinking && body\.generationConfig\.thinkingConfig\) \{([\s\S]{0,220})/);
+  assert.ok(m, 'the retry-without-thinking branch is missing or no longer gated on the field');
+  const body = m[1];
   assert.ok(/NC_NO_THINKING\.add\(model\)/.test(body), 'the model must be remembered');
   assert.ok(/delete body\.generationConfig\.thinkingConfig/.test(body), 'the field must be dropped');
   assert.ok(/out = await send\(\)/.test(body), 'it must ask again');
-  /* The test for the message has to match what Google actually says, so keep
-     it loose enough for either spelling. */
-  const re = new RegExp(m[1].slice(1, -2), 'i');
-  assert.ok(re.test('Unknown name "thinkingConfig"'), 'should catch thinkingConfig by name');
-  assert.ok(re.test('thinking_budget is not supported'), 'should catch the snake_case spelling');
-  assert.ok(!re.test('API key not valid'), 'must not swallow unrelated 400s');
+});
+
+test('a retried request still reports the second failure, not a swallowed one', () => {
+  /* The old narrow rule existed so an unrelated 400 — a bad key, say — was not
+     retried pointlessly. Widening it costs one wasted call on those, which is
+     accepted; what must NOT happen is the real reason going missing. The error
+     is read from `out` after the retry block, so whatever the second attempt
+     said is what the reader gets. */
+  const after = src.slice(src.indexOf('delete body.generationConfig.thinkingConfig'));
+  const assign = after.indexOf('r = out.res; raw = out.raw;');
+  assert.ok(assign > 0, 'the response must be re-read after the retry');
+  assert.ok(assign < after.indexOf('if (!err && !r.ok)'),
+    'the error must be built from the retried response, not the first one');
 });
 
 test('an empty object is a valid start', () => {

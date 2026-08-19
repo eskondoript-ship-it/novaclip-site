@@ -2839,6 +2839,35 @@ function ncKeyLooksReal(k) { return /^AIza[\w-]{30,}$/.test((k || '').trim()); }
    OpenAI, so those two always go through the worker's shared key. search:true
    grounds the answer in a live Google Search (Gemini-only; the tools: block is
    what asks Google to look it up) and returns the hits in sources. */
+/* Vendor error text is written for whoever wrote the request, not for whoever
+   is sitting in front of the page. "Request contains an invalid argument" is a
+   true sentence that helps a thirteen-year-old with none of it, and it is the
+   one they see most, so the handful that actually recur get put into words
+   about what to do next. Anything unrecognised is passed through untouched —
+   a wrong-but-specific message still beats a vague friendly one. */
+function ncSayWhy(reason, status) {
+  const r = String(reason || '');
+  if (!r) return '';
+  if (/invalid argument/i.test(r))
+    return 'The AI refused the request as malformed. This is a NovaClip bug rather than ' +
+           'anything you did — try once more, and if it keeps happening the model this site ' +
+           'asks for has probably changed under it.';
+  if (/quota|rate limit|resource has been exhausted/i.test(r))
+    return 'NovaClip\'s shared AI is out of free requests for now. Add your own key in your ' +
+           'profile to keep going, or come back in a few minutes.';
+  if (/api key not valid|invalid api key|api_key_invalid/i.test(r))
+    return 'The key this site uses was rejected by Google. If it is your own key, check it in ' +
+           'your profile; if not, whoever deployed the worker needs to replace it.';
+  if (/safety|blocked|harm/i.test(r))
+    return 'The AI would not answer that one. Rephrasing usually works.';
+  if (/not found|does not exist/i.test(r))
+    return 'The AI model this page asks for is no longer available. It needs updating in ' +
+           'nova.js and on the worker.';
+  if (status === 503 || /overloaded|unavailable/i.test(r))
+    return 'The AI is overloaded right now. Wait a moment and try again.';
+  return r;
+}
+
 async function ncAsk(prompt, opts) {
   opts = opts || {};
   const provider = opts.provider || ncActiveProvider();
@@ -2904,8 +2933,25 @@ async function ncAsk(prompt, opts) {
 
     /* "This model does not know what thinkingConfig is." Drop it, remember
        that, and ask again — otherwise a model rename turns every AI feature on
-       the site off at once. */
-    if (out.res.status === 400 && wantThinking && /thinking|thought/i.test(out.raw)) {
+       the site off at once.
+
+       This used to fire only when the refusal mentioned "thinking" or
+       "thought", which assumed Google names the field it rejected. It very
+       often does not: the reply is the bare
+
+         Request contains an invalid argument.
+
+       with nothing pointing at a cause. So the retry never ran, publish.html
+       showed that sentence to a fourteen-year-old, and the self-healing this
+       whole block exists for did nothing.
+
+       Any 400 is now enough to try once more without the field. The cost is
+       one extra call, only on a request that already failed, only while
+       thinkingConfig was in it — and the answer is remembered for the session,
+       so a model that rejects it costs one wasted call per page rather than
+       one per feature. If the second attempt fails too, its error is the one
+       reported, so a genuine problem is not hidden behind the retry. */
+    if (out.res.status === 400 && wantThinking && body.generationConfig.thinkingConfig) {
       NC_NO_THINKING.add(model);
       delete body.generationConfig.thinkingConfig;
       out = await send();
@@ -2928,7 +2974,7 @@ async function ncAsk(prompt, opts) {
         const j = JSON.parse(raw || '{}');
         reason = j.error && (typeof j.error === 'string' ? j.error : j.error.message) || '';
       } catch (e) {}
-      err = reason || ('The AI service answered ' + r.status + '.');
+      err = ncSayWhy(reason, r.status) || ('The AI service answered ' + r.status + '.');
       /* A 5xx with nothing to say is the one case where the status really is all
          we know, so name the likely cause rather than leaving a bare number. */
       if (!reason && r.status >= 500) {
@@ -3049,7 +3095,7 @@ function ncJSON(text) {
   }
   return null;
 }
-window.ncJSON = ncJSON;
+window.ncJSON = ncJSON; window.ncSayWhy = ncSayWhy;
 
 window.ncAIKey = ncAIKey; window.ncSetAIKey = ncSetAIKey;
 window.ncKeyLooksReal = ncKeyLooksReal; window.ncAsk = ncAsk;
