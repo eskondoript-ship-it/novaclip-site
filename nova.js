@@ -3230,7 +3230,13 @@ function ncEditorTools() {
       so a script tag inside it is a re-paste of the whole file. */
    ['ncmovejs', 'editor-move.js', 'Drag on the preview'],
    /* Motion transfer: a character image driven by the movement in a video. */
-   ['ncmtjs', 'motion-transfer.js', 'Copy a move']].forEach(function (f) {
+   ['ncmtjs', 'motion-transfer.js', 'Copy a move'],
+   /* Changing a voice, and recording one to change. All arithmetic, no
+      server — see the file header for why this is not the "Voice Cloning"
+      the bundle still lists as unavailable. */
+   ['ncvcjs', 'voice-changer.js', 'Voice changer'],
+   /* Camera, screen-as-ring-light, straight onto the timeline. */
+   ['ncssjs', 'selfie-studio.js', 'Record yourself']].forEach(function (f) {
     const s = document.createElement('script');
     s.id = f[0];
     s.src = f[1];

@@ -51,9 +51,18 @@
   var FPS = 24;             // sampling rate of the reference video
   var MAX_SECONDS = 20;     // bounds the work and the memory
   var SMOOTH = 0.45;        // 0 none, 1 frozen — pose output jitters and it shows
-  var MODEL =
-    'https://storage.googleapis.com/mediapipe-models/pose_landmarker/' +
-    'pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+  /* full, not lite. Lite is built to run live on a phone camera and trades
+     accuracy for speed; this pass is offline and already shows a progress bar,
+     so there is nothing to buy with that trade. On the clip that prompted this
+     it is the difference between missing most of the video and finding nearly
+     all of it. Lite is kept as a fallback for when the bigger file will not
+     download. */
+  var MODEL_BASE =
+    'https://storage.googleapis.com/mediapipe-models/pose_landmarker/';
+  var MODELS = [
+    MODEL_BASE + 'pose_landmarker_full/float16/1/pose_landmarker_full.task',
+    MODEL_BASE + 'pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
+  ];
   var VISION_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
 
   /* The nine the rig has, and where each comes from in MediaPipe's 33. Its
@@ -73,25 +82,69 @@
     ['hip', 'footL'], ['hip', 'footR']
   ];
 
+  /* ---- a clock that keeps running in a background tab --------------------
+     Switching to another tab used to stop the read dead. requestAnimationFrame
+     does not fire at all in a hidden tab — that is the point of it, there is
+     nothing to animate — so the loop that stepped from one frame to the next
+     simply stopped, and picked up again when you came back. For a twenty
+     second clip that is a minute of watching a progress bar that has quietly
+     paused.
+
+     setTimeout is not the answer either: a hidden page has its timers clamped
+     to one a second, and after five minutes to one a MINUTE. Timers inside a
+     Worker are not clamped, so the tick comes from one. It carries no data and
+     does no work; it exists only to say "again", which is enough, because the
+     work itself — seeking, detecting, drawing to a canvas — all runs perfectly
+     well while hidden. Only the invitation to do it was missing.
+
+     Falls back to setTimeout where Workers are unavailable, which is slow in
+     the background but never stuck. */
+  var ticker = null;
+  function makeTicker() {
+    if (ticker !== null) return ticker;
+    ticker = false;
+    try {
+      /* Every timer carries its own id back. Without that, one shared queue
+         flushed on any tick means the recording's three-second stop fires on
+         the animation's next thirty-millisecond frame — the clip would end
+         almost as soon as it started. */
+      var src = 'onmessage=function(e){var d=e.data;' +
+                'setTimeout(function(){postMessage(d.id)},d.ms|0)}';
+      var w = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+      var waiting = {}, next = 1;
+      w.onmessage = function (e) {
+        var fn = waiting[e.data];
+        delete waiting[e.data];
+        if (fn) fn();
+      };
+      ticker = function (fn, ms) {
+        var id = next++;
+        waiting[id] = fn;
+        w.postMessage({ id: id, ms: ms || 0 });
+        return id;
+      };
+    } catch (e) { ticker = false; }
+    return ticker;
+  }
+
+  /* Next turn of the loop. Prefers the animation clock while the tab is
+     visible — it is smoother and it paces to the display — and hands over to
+     the worker the moment the tab is hidden. */
+  function tick(fn, ms) {
+    var hidden = typeof document !== 'undefined' && document.hidden;
+    var t = makeTicker();
+    if (hidden && t) return t(fn, ms || 0);
+    if (!hidden && typeof requestAnimationFrame === 'function' && !ms) return requestAnimationFrame(fn);
+    if (t) return t(fn, ms || 0);
+    return setTimeout(fn, ms || 0);
+  }
+
   /* ---- the pose provider -------------------------------------------------
      Swappable so the maths below can be tested without a network, and so a
      different model can be dropped in later without touching the rest. A
      provider takes a video element and a time, and returns 33 landmarks as
      {x,y} in 0..1, or null when it cannot see a person. */
   var provider = null;
-
-  function defaultProvider() {
-    var landmarker = null;
-    return function (videoEl) {
-      if (!landmarker) return Promise.reject(new Error('pose model not ready'));
-      var res = landmarker.detectForVideo(videoEl, performance.now());
-      var lm = res && res.landmarks && res.landmarks[0];
-      return Promise.resolve(lm || null);
-    };
-    /* loadModel() below fills `landmarker` in. Kept in this closure so the
-       model handle cannot leak into the rest of the file and be used from
-       somewhere that has not checked it loaded. */
-  }
 
   var _vision = null;
   function loadModel(onProgress) {
@@ -100,11 +153,44 @@
       onProgress && onProgress('Loading the pose model…');
       import(VISION_CDN + '/vision_bundle.mjs').then(function (v) {
         return v.FilesetResolver.forVisionTasks(VISION_CDN + '/wasm').then(function (files) {
-          return v.PoseLandmarker.createFromOptions(files, {
-            baseOptions: { modelAssetPath: MODEL, delegate: 'GPU' },
-            runningMode: 'VIDEO',
-            numPoses: 1
-          });
+          /* IMAGE, not VIDEO, and this is the single biggest reason the first
+             build found a body in only a third of the frames.
+
+             VIDEO mode is built for a camera feed: it detects once, then
+             TRACKS, cropping each following frame to where the body was in the
+             last one. That is a large speed win when frames arrive in order a
+             few milliseconds apart. This pass does not do that — it seeks,
+             a whole frame at a time, and between two seeks a dancer can leave
+             the crop entirely. The tracker then finds nothing, and reports
+             nothing, over and over.
+
+             IMAGE mode runs the full detector on every frame with no memory of
+             the last one, which is exactly right for frames that arrive out of
+             the blue. It costs more per frame; the pass is offline and has a
+             progress bar, so that is the cheap side of the trade.
+
+             The confidences are low on purpose too. The defaults (0.5) are
+             tuned for a webcam pointed at someone sitting still in good light;
+             a phone clip of someone moving fast is blurrier than that, and
+             half a detection beats none when the gaps get interpolated
+             anyway. */
+          function build(i) {
+            return v.PoseLandmarker.createFromOptions(files, {
+              baseOptions: { modelAssetPath: MODELS[i], delegate: 'GPU' },
+              runningMode: 'IMAGE',
+              numPoses: 1,
+              minPoseDetectionConfidence: 0.25,
+              minPosePresenceConfidence: 0.25,
+              minTrackingConfidence: 0.25
+            }).catch(function (e) {
+              if (i + 1 < MODELS.length) {
+                onProgress && onProgress('Falling back to the smaller pose model…');
+                return build(i + 1);
+              }
+              throw e;
+            });
+          }
+          return build(0);
         });
       }).then(res, function (e) {
         _vision = null;
@@ -153,8 +239,9 @@
           i++;
           onProgress(i / total);
           /* Back to the event loop between frames. A tight loop here is what
-             makes a page freeze for ten seconds and then finish. */
-          (window.requestAnimationFrame || setTimeout)(step);
+             makes a page freeze for ten seconds and then finish. tick() is
+             what keeps this going after you switch tabs. */
+          tick(step);
         }).catch(reject);
       }
       step();
@@ -305,8 +392,10 @@
     setProvider: function (fn) { provider = fn; },
     useDefaultProvider: function (onProgress) {
       return loadModel(onProgress).then(function (landmarker) {
+        /* detect(), not detectForVideo(): IMAGE mode, one frame at a time,
+           no tracker carried between them. See loadModel. */
         provider = function (videoEl) {
-          var res = landmarker.detectForVideo(videoEl, performance.now());
+          var res = landmarker.detect(videoEl);
           var lm = res && res.landmarks && res.landmarks[0];
           return Promise.resolve(lm || null);
         };
@@ -533,21 +622,38 @@
     $('ncMtSave').disabled = false;
   }
 
-  function loop(ts) {
+  /* Timed off the wall clock rather than off whatever argument the scheduler
+     happened to pass, because the two schedulers behind tick() do not agree on
+     what that argument means — rAF passes a timestamp, a worker message passes
+     nothing. Reading the clock here is one source of truth for both.
+
+     This matters most while RECORDING. MediaRecorder captures the canvas as it
+     is painted, so if painting stops the recording keeps rolling over a frozen
+     picture: switch tabs half way through and you used to get half an
+     animation and half a still. Now it keeps drawing while hidden, and the
+     clip comes out whole. */
+  function loop() {
     if (!playing) return;
-    if (!t0) t0 = ts;
-    var t = (ts - t0) / 1000;
-    if (t > baked.duration) { t0 = ts; t = 0; }
+    var now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (!t0) t0 = now;
+    var t = (now - t0) / 1000;
+    if (t > baked.duration) { t0 = now; t = 0; }
     var cv = $('ncMtStage');
-    drawPose(cv.getContext('2d'), M.sample(baked, t));
-    raf = requestAnimationFrame(loop);
+    if (cv) drawPose(cv.getContext('2d'), M.sample(baked, t));
+    /* 33ms when hidden: the worker has no display to pace against, and this is
+       the recording's frame rate rather than a busy wait. */
+    raf = tick(loop, document.hidden ? 33 : 0);
   }
 
+  /* `playing` is what actually stops the loop — the handle from tick() cannot
+     be cancelled generically, because it is a rAF id one moment and a worker
+     message the next. The flag is checked at the top of every turn, so the
+     loop stops itself either way and there is nothing to cancel. */
   function play(on) {
     playing = on; t0 = 0;
     $('ncMtPlay').textContent = on ? 'Stop' : 'Play';
-    if (on) raf = requestAnimationFrame(loop);
-    else { cancelAnimationFrame(raf); repaint(); }
+    if (on) raf = tick(loop);
+    else repaint();
   }
 
   function wire() {
@@ -631,8 +737,19 @@
         bar.style.display = 'none';
         $('ncMtRun').disabled = false;
         var got = track.frames.filter(Boolean).length;
-        say('ok', '<b>Got it.</b> ' + got + ' of ' + track.frames.length +
-          ' frames had a body in them. Press <b>Play</b>.');
+        var pct = Math.round(got / track.frames.length * 100);
+        /* A hit rate is only useful next to what it means. Under about half
+           and the movement is guesswork between sightings, which is worth
+           saying plainly rather than letting it look like the character is
+           badly animated. */
+        say(pct < 50 ? 'no' : 'ok',
+          '<b>' + (pct < 50 ? 'Read it, but not well.' : 'Got it.') + '</b> Found a body in ' +
+          got + ' of ' + track.frames.length + ' frames (' + pct + '%).' +
+          (pct < 50
+            ? ' The gaps get filled in by guessing between the frames that worked, so it ' +
+              'will look loose. It reads best when the whole body is in shot, lit from the ' +
+              'front, against a background that is not the same colour as the clothes.'
+            : ' Press <b>Play</b>.'));
         play(true);
       }).catch(function (err) {
         bar.style.display = 'none';
@@ -692,7 +809,11 @@
       $('ncMtSave').textContent = 'Recording…';
       play(true);
       rec.start();
-      setTimeout(function () { try { rec.stop(); } catch (e) {} play(false); },
+      /* Through tick() as well: a page timer in a hidden tab is clamped to one
+         a second, so the recording would run long — or, after five minutes
+         backgrounded, up to a minute long — and the clip would end with a
+         chunk of loop repeated. */
+      tick(function () { try { rec.stop(); } catch (e) {} play(false); },
         Math.min(baked.duration, M.limits.maxSeconds) * 1000 + 250);
     };
   }
