@@ -3228,7 +3228,9 @@ function ncEditorTools() {
    /* Dragging a clip around the preview instead of typing two decimals into
       the Transform panel. Same reason as the other two: the bundle is 397 kB,
       so a script tag inside it is a re-paste of the whole file. */
-   ['ncmovejs', 'editor-move.js', 'Drag on the preview']].forEach(function (f) {
+   ['ncmovejs', 'editor-move.js', 'Drag on the preview'],
+   /* Motion transfer: a character image driven by the movement in a video. */
+   ['ncmtjs', 'motion-transfer.js', 'Copy a move']].forEach(function (f) {
     const s = document.createElement('script');
     s.id = f[0];
     s.src = f[1];
