@@ -945,8 +945,52 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
          ====================================================================== -->
     <script>
     (function () {
-      var KEY = 'novaclip_project';
+      /* ====================================================================
+         MANY PROJECTS, NOT ONE
+         ====================================================================
+         This began as a single autosave under one key, which meant a second
+         idea overwrote the first. Projects are now a list: each has an id, a
+         name you can change, and its own snapshot; the index carries enough
+         to draw a chooser without loading any of them.
+
+         KEY stays exactly what it was so a project saved by the old build is
+         not lost — it is picked up on first run and becomes the first entry
+         in the list.
+
+         THE PART THAT NEEDED CARE. Media lives in one IndexedDB store shared
+         by every project, keyed by asset id, so importing the same clip into
+         two projects stores it once. The old sweep deleted every key the
+         CURRENT project did not mention — correct when there was only one
+         project, and a data-loss bug the moment there are two: opening B and
+         saving would delete A's video. The sweep now asks every project what
+         it references before deleting anything.
+         ==================================================================== */
+      var KEY = 'novaclip_project';          // the pre-projects single save
+      var LIST = 'novaclip_projects';        // [{id,name,at,clips,thumb}]
+      var CUR = 'novaclip_project_current';  // which one is open
+      var PRE = 'novaclip_project:';         // per-project snapshot prefix
       var DB = 'ncEditorMedia', STORE = 'files';
+
+      function uid() {
+        return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+      }
+      function readList() {
+        try { var v = JSON.parse(localStorage.getItem(LIST) || '[]'); return Array.isArray(v) ? v : []; }
+        catch (e) { return []; }
+      }
+      function writeList(v) {
+        try { localStorage.setItem(LIST, JSON.stringify(v)); } catch (e) {}
+      }
+      function currentId() {
+        try { return localStorage.getItem(CUR) || ''; } catch (e) { return ''; }
+      }
+      function setCurrent(id) {
+        try { id ? localStorage.setItem(CUR, id) : localStorage.removeItem(CUR); } catch (e) {}
+      }
+      function snapKey(id) { return PRE + id; }
+      function readSnap(id) {
+        try { return JSON.parse(localStorage.getItem(snapKey(id)) || 'null'); } catch (e) { return null; }
+      }
 
       function db() {
         return new Promise(function (res, rej) {
@@ -1004,10 +1048,21 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
               .then(function (b) { return idbPut(assetId(a), b); })
               .catch(function () {});
           });
-          /* Anything in the store that the project no longer mentions is gone
-             for good — otherwise every clip ever imported stays on disk. */
+          /* Anything NO PROJECT mentions is gone for good — otherwise every
+             clip ever imported stays on disk forever.
+
+             "No project", not "not this one". The media store is shared, and
+             sweeping against only the open project meant opening B and saving
+             deleted A's video: the file vanished, A's clips came back as gaps,
+             and nothing said why. Every saved snapshot gets a vote. */
           var live = {};
           assets.forEach(function (a) { live[assetId(a)] = true; });
+          readList().forEach(function (p) {
+            var sn = readSnap(p.id);
+            (sn && sn.assets || []).forEach(function (a) {
+              if (a && a.__ncid) live[String(a.__ncid)] = true;
+            });
+          });
           have.forEach(function (k) { if (!live[String(k)]) jobs.push(idbDel(k)); });
           return Promise.all(jobs);
         }).then(function () { savingMedia = false; }, function () { savingMedia = false; });
@@ -1027,16 +1082,99 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
         };
       }
 
+      /* A still off the preview, small and lossy on purpose: it only has to be
+         recognisable at 160px in a list, and a hundred full-size frames in
+         localStorage would blow the quota that the projects themselves need. */
+      function thumb() {
+        try {
+          var best = null, area = 0;
+          var all = document.querySelectorAll('canvas');
+          for (var i = 0; i < all.length; i++) {
+            var r = all[i].getBoundingClientRect();
+            if (r.width < 80 || r.height < 80) continue;
+            if (r.width * r.height > area) { area = r.width * r.height; best = all[i]; }
+          }
+          if (!best) return '';
+          var c = document.createElement('canvas');
+          var w = 160, h = Math.max(1, Math.round(w * best.height / best.width));
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(best, 0, 0, w, h);
+          return c.toDataURL('image/jpeg', 0.5);
+        } catch (e) { return ''; }   // a tainted canvas throws; a list without
+                                     // pictures is still a working list
+      }
+
+      function touchIndex(id, patch) {
+        var list = readList();
+        var row = list.filter(function (p) { return p.id === id; })[0];
+        if (!row) { row = { id: id, name: 'Untitled Project', at: 0, clips: 0, thumb: '' }; list.unshift(row); }
+        for (var k in patch) row[k] = patch[k];
+        /* Most recent first, because that is the one being looked for. */
+        list.sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
+        writeList(list);
+        return row;
+      }
+
       function save() {
         var snap = snapshot();
         if (!snap) return;
         var hasWork = (snap.clips && snap.clips.length) || (snap.assets && snap.assets.length);
+        var id = currentId();
+        if (!id) {
+          if (!hasWork) return;          // an empty editor is not a project
+          id = uid(); setCurrent(id);
+          touchIndex(id, { name: freshName(), at: Date.now(), clips: 0, thumb: '' });
+        }
         try {
-          if (hasWork) localStorage.setItem(KEY, JSON.stringify(snap));
-          else localStorage.removeItem(KEY);
-        } catch (e) { /* quota or private mode — the media copy still stands */ }
+          if (hasWork) {
+            localStorage.setItem(snapKey(id), JSON.stringify(snap));
+            var patch = { at: snap.at, clips: (snap.clips || []).length, thumb: thumb() };
+            var auto = autoName(snap);
+            if (auto) patch.name = auto;
+            touchIndex(id, patch);
+          }
+          /* Deliberately NOT deleting an emptied project here. Clearing the
+             timeline is something people do on the way to rebuilding it, and
+             a save that fires on pagehide would take the project with it. It
+             goes only when it is deleted on purpose. */
+        } catch (e) {
+          /* Quota. The snapshot matters more than the picture, so drop every
+             thumbnail and try once more before giving up. */
+          try {
+            var l = readList();
+            l.forEach(function (p) { p.thumb = ''; });
+            writeList(l);
+            localStorage.setItem(snapKey(id), JSON.stringify(snap));
+          } catch (e2) {}
+        }
         var s = store().getState();
         if (hasWork) saveMedia(s.assets || []);
+        paintBtn();
+        syncTitle();
+      }
+      /* A list of five things all called "Untitled Project" is not a list. A
+         project keeps whatever name it is given, but until it is given one it
+         takes the name of the first thing put into it — which is nearly always
+         what the person would have typed anyway. */
+      function autoName(snap) {
+        var row = readList().filter(function (p) { return p.id === currentId(); })[0];
+        if (!row || !/^Untitled Project( \d+)?$/.test(row.name || '')) return null;
+        var first = (snap.assets || [])[0];
+        var from = first && first.name;
+        if (!from) {
+          var t = (snap.clips || []).filter(function (c) { return c.kind === 'text' && c.text && c.text.content; })[0];
+          from = t && t.text.content;
+        }
+        if (!from) return null;
+        return String(from).replace(/\.[a-z0-9]{2,5}$/i, '').trim().slice(0, 60) || null;
+      }
+
+      function freshName() {
+        var names = {};
+        readList().forEach(function (p) { names[p.name] = true; });
+        if (!names['Untitled Project']) return 'Untitled Project';
+        for (var i = 2; i < 500; i++) if (!names['Untitled Project ' + i]) return 'Untitled Project ' + i;
+        return 'Untitled Project';
       }
 
       /* pagehide covers navigation, tab close and the mobile case where a
@@ -1045,12 +1183,31 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
       document.addEventListener('visibilitychange', function () { if (document.hidden) save(); });
 
       /* ---- restoring ---------------------------------------------------- */
-      function restore() {
+
+      /* A project saved before there were projects. It is moved into the list
+         rather than read in place, so there is exactly one shape to maintain
+         from here on, and the old key is left alone in case an older build of
+         the page is still being served from a cache somewhere. */
+      function migrate() {
         var raw;
         try { raw = localStorage.getItem(KEY); } catch (e) { return; }
         if (!raw) return;
+        if (readList().length) return;          // already migrated
         var snap;
         try { snap = JSON.parse(raw); } catch (e) { return; }
+        if (!snap || !((snap.clips && snap.clips.length) || (snap.assets && snap.assets.length))) return;
+        var id = uid();
+        try { localStorage.setItem(snapKey(id), raw); } catch (e) { return; }
+        touchIndex(id, { name: 'My first project', at: snap.at || Date.now(),
+                         clips: (snap.clips || []).length, thumb: '' });
+        setCurrent(id);
+      }
+
+      function restore(explicitId) {
+        var id = explicitId || currentId();
+        if (!id) { var first = readList()[0]; id = first && first.id; }
+        if (!id) return;
+        var snap = readSnap(id);
         if (!snap || !((snap.clips && snap.clips.length) || (snap.assets && snap.assets.length))) return;
 
         var st = store();
@@ -1058,8 +1215,10 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
         var cur = st.getState();
         /* Never overwrite work in progress. If the editor already has clips —
            a file was dropped before this ran — the session on disk is the
-           older one and loses. */
-        if (cur.clips && cur.clips.length) return;
+           older one and loses. Opening a project on purpose is different: the
+           caller has already saved and cleared, and says so. */
+        if (!explicitId && cur.clips && cur.clips.length) return;
+        setCurrent(id);
 
         var assets = snap.assets || [];
         Promise.all(assets.map(function (a) {
@@ -1097,9 +1256,306 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
         }).catch(function () {});
       }
 
+      /* ====================================================================
+         THE CHOOSER
+         ====================================================================
+         Outside React, like the aspect control, for the same reason: the
+         bundle is compiled and a button inside it is a 397 kB re-paste.
+         ==================================================================== */
+      var panel = null;
+
+      /* The bundle's own title: a span inside a button, up in the toolbar. Its
+         classes are generated and change on every rebuild, so it cannot be
+         found by selector — and it cannot be found by its text either, which
+         is the mistake that put the Projects button in the bottom-left corner:
+         the match was /project|untitled/, and the moment a project is renamed
+         to "Skate edit" that stops matching, so the search wandered off and
+         found something else entirely near the foot of the page.
+
+         So: matched once, by where it is and what it says before anything has
+         renamed it, and then remembered. The node survives renames because
+         React updates its text rather than replacing it. */
+      /* The toolbar title is an <input>, not a label — which is why hunting
+         for the text in the DOM found nothing but our own button's caption and
+         anchored the button beside itself in the bottom-left corner. An
+         input's text is its value; textContent is empty.
+
+         That it is an input is good news: it is already the editor's rename
+         box, so there is no second one to build and no two names to reconcile.
+         Typing in it renames the project in the list. */
+      var _title = null;
+      function titleEl() {
+        if (_title && _title.isConnected) return _title;
+        _title = null;
+        var row = readList().filter(function (p) { return p.id === currentId(); })[0];
+        var want = (row && row.name) || '';
+        var all = document.querySelectorAll('input[type="text"], input:not([type])');
+        for (var i = 0; i < all.length; i++) {
+          var e = all[i];
+          if (e.closest('#ncpj')) continue;
+          var r = e.getBoundingClientRect();
+          if (!r.width || r.top > 130) continue;          // toolbar only
+          var v = (e.value || '').trim();
+          if (v === want || /^untitled project/i.test(v)) { _title = e; break; }
+        }
+        if (_title && !_title.__ncBound) {
+          _title.__ncBound = true;
+          /* Renaming in the toolbar is renaming the project. Debounced because
+             this fires per keystroke and each one rewrites the index. */
+          var t = null;
+          _title.addEventListener('input', function () {
+            clearTimeout(t);
+            t = setTimeout(function () {
+              var id = currentId(); if (!id) return;
+              var v = (_title.value || '').trim().slice(0, 60) || 'Untitled Project';
+              touchIndex(id, { name: v });
+              paintBtn();
+            }, 400);
+          });
+        }
+        return _title;
+      }
+
+      /* React owns that input, so assigning .value is silently reverted on the
+         next render. The native setter plus an input event is what makes React
+         accept a value it did not type itself. */
+      function setTitleValue(el, v) {
+        try {
+          var d = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+          d && d.set ? d.set.call(el, v) : (el.value = v);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        } catch (e) { el.value = v; }
+      }
+
+      function esc(t) {
+        return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function ago(t) {
+        if (!t) return 'never opened';
+        var d = Date.now() - t, m = Math.round(d / 60000);
+        if (m < 1) return 'just now';
+        if (m < 60) return m + ' min ago';
+        var h = Math.round(m / 60);
+        if (h < 24) return h + 'h ago';
+        return Math.round(h / 24) + 'd ago';
+      }
+
+      /* Everything that swaps projects goes through here: save what is open,
+         empty the editor, then load. Skipping the save is how a project loses
+         the last thing done to it. */
+      function openProject(id) {
+        save();
+        var st = store(); if (!st) return;
+        st.setState({ clips: [], assets: [], markers: [], selectedClipId: null,
+                      playhead: 0, past: [], future: [] });
+        setCurrent(id);
+        setTimeout(function () { restore(id); draw(); syncTitle(); }, 30);
+      }
+
+      function newProject() {
+        save();
+        var st = store(); if (!st) return;
+        var id = uid();
+        touchIndex(id, { name: freshName(), at: Date.now(), clips: 0, thumb: '' });
+        setCurrent(id);
+        st.setState({ clips: [], assets: [], markers: [], selectedClipId: null,
+                      playhead: 0, past: [], future: [] });
+        draw();
+        syncTitle();
+        if (window.toast) toast('New project started');
+      }
+
+      function renameProject(id) {
+        var row = readList().filter(function (p) { return p.id === id; })[0];
+        var name = prompt('Name this project', (row && row.name) || 'Untitled Project');
+        if (name == null) return;
+        name = name.trim().slice(0, 60) || 'Untitled Project';
+        touchIndex(id, { name: name });
+        draw();
+        syncTitle();
+      }
+
+      /* Keep the header reading the same thing as the chooser. Without this a
+         project called "Skate edit" in the list still says "Untitled Project"
+         across the top, and the two disagree about what is open. */
+      function syncTitle() {
+        var el = titleEl();
+        if (!el) return;
+        var row = readList().filter(function (p) { return p.id === currentId(); })[0];
+        if (row && row.name && (el.value || '').trim() !== row.name) setTitleValue(el, row.name);
+      }
+
+      function deleteProject(id) {
+        var row = readList().filter(function (p) { return p.id === id; })[0];
+        if (!confirm('Delete "' + ((row && row.name) || 'this project') +
+                     '"? The clips and the media it used are removed. This cannot be undone.')) return;
+        writeList(readList().filter(function (p) { return p.id !== id; }));
+        try { localStorage.removeItem(snapKey(id)); } catch (e) {}
+        if (currentId() === id) {
+          setCurrent('');
+          var st = store();
+          if (st) st.setState({ clips: [], assets: [], markers: [], selectedClipId: null,
+                                playhead: 0, past: [], future: [] });
+        }
+        /* Media the deleted project owned alone is now unreferenced; this is
+           the sweep that collects it. */
+        var st2 = store();
+        if (st2) saveMedia(st2.getState().assets || []);
+        draw();
+      }
+
+      function draw() {
+        if (!panel) return;
+        var list = readList(), cur = currentId();
+        var body = panel.querySelector('#ncpj-list');
+        body.innerHTML = list.length ? list.map(function (p) {
+          return '<div class="ncpj-row' + (p.id === cur ? ' on' : '') + '" data-id="' + esc(p.id) + '">' +
+            (p.thumb ? '<img src="' + esc(p.thumb) + '" alt="">' : '<span class="ncpj-noimg"></span>') +
+            '<span class="ncpj-meta"><b>' + esc(p.name) + '</b>' +
+            '<i>' + (p.clips || 0) + ' clip' + (p.clips === 1 ? '' : 's') + ' · ' + ago(p.at) +
+            (p.id === cur ? ' · open' : '') + '</i></span>' +
+            '<span class="ncpj-acts">' +
+              '<button type="button" data-act="rename" title="Rename">Rename</button>' +
+              '<button type="button" data-act="del" title="Delete">Delete</button>' +
+            '</span></div>';
+        }).join('') : '<p class="ncpj-empty">No projects yet. Whatever you make is saved here ' +
+                      'automatically — drop a clip on the timeline and it appears.</p>';
+
+        body.querySelectorAll('.ncpj-row').forEach(function (r) {
+          r.onclick = function (e) {
+            var act = e.target.getAttribute && e.target.getAttribute('data-act');
+            var id = r.dataset.id;
+            if (act === 'rename') { e.stopPropagation(); renameProject(id); return; }
+            if (act === 'del') { e.stopPropagation(); deleteProject(id); return; }
+            if (id !== currentId()) openProject(id);
+            close();
+          };
+        });
+        syncTitle();
+        paintBtn();
+      }
+
+      /* The label lives on the button, not in the panel, so it cannot be left
+         to draw() — that only runs while the chooser is open. A project named
+         from its first clip would otherwise still read "Untitled Project" in
+         the header until you opened the list. */
+      function paintBtn() {
+        var el = document.getElementById('ncpj-now');
+        if (!el) return;
+        var row = readList().filter(function (p) { return p.id === currentId(); })[0];
+        el.textContent = (row && row.name) || 'Untitled Project';
+      }
+
+      function open_() { panel.classList.add('show'); draw(); }
+      function close() { panel.classList.remove('show'); }
+
+      function buildUI() {
+        if (panel) return;
+        var st = document.createElement('style');
+        st.textContent =
+          '#ncpj-btn{position:fixed;top:14px;left:50%;transform:translateX(-190px);z-index:9999;' +
+            'display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9px;cursor:pointer;' +
+            'font:600 12px/1 Geist,Inter,system-ui,sans-serif;' +
+            'border:1px solid rgba(255,255,255,.14);background:rgba(12,14,24,.9);color:#EAF2FF;' +
+            'backdrop-filter:blur(12px)}' +
+          '#ncpj-btn:hover{border-color:rgba(0,240,255,.55)}' +
+          'html[data-theme="light"] #ncpj-btn{background:rgba(255,255,255,.95);color:#101828;' +
+            'border-color:rgba(16,24,44,.16)}' +
+          '#ncpj{position:fixed;inset:0;z-index:10000;display:none;place-items:center;' +
+            'background:rgba(4,6,12,.72);backdrop-filter:blur(8px);padding:24px;' +
+            'font:400 13px/1.5 Geist,Inter,system-ui,sans-serif}' +
+          '#ncpj.show{display:grid}' +
+          '#ncpj .ncpj-box{width:100%;max-width:520px;max-height:80vh;overflow:auto;' +
+            'background:#0C1220;border:1px solid rgba(255,255,255,.13);border-radius:18px;padding:20px;' +
+            'color:#EAF2FF}' +
+          'html[data-theme="light"] #ncpj .ncpj-box{background:#fff;color:#101828;' +
+            'border-color:rgba(16,24,44,.14)}' +
+          '#ncpj h3{font-size:1.05rem;font-weight:700;margin:0 0 3px}' +
+          '#ncpj .ncpj-sub{opacity:.6;font-size:12px;margin-bottom:14px}' +
+          '#ncpj .ncpj-row{display:flex;align-items:center;gap:11px;padding:9px;border-radius:12px;' +
+            'cursor:pointer;border:1px solid transparent}' +
+          '#ncpj .ncpj-row:hover{background:rgba(127,127,127,.12)}' +
+          '#ncpj .ncpj-row.on{border-color:rgba(0,240,255,.5);background:rgba(0,240,255,.08)}' +
+          '#ncpj .ncpj-row img,#ncpj .ncpj-noimg{width:64px;height:38px;border-radius:7px;flex:0 0 auto;' +
+            'object-fit:cover;background:rgba(127,127,127,.22)}' +
+          '#ncpj .ncpj-meta{flex:1;min-width:0}' +
+          '#ncpj .ncpj-meta b{display:block;font-weight:650;white-space:nowrap;overflow:hidden;' +
+            'text-overflow:ellipsis}' +
+          '#ncpj .ncpj-meta i{font-style:normal;opacity:.55;font-size:11.5px}' +
+          '#ncpj .ncpj-acts{display:flex;gap:6px;flex:0 0 auto;opacity:0;transition:opacity .15s}' +
+          '#ncpj .ncpj-row:hover .ncpj-acts{opacity:1}' +
+          '#ncpj .ncpj-acts button{font:inherit;font-size:11px;padding:5px 9px;border-radius:7px;' +
+            'cursor:pointer;border:1px solid rgba(127,127,127,.3);background:none;color:inherit}' +
+          '#ncpj .ncpj-acts button:hover{border-color:rgba(255,80,110,.6);color:#FF6B81}' +
+          '#ncpj .ncpj-acts button[data-act="rename"]:hover{border-color:rgba(0,240,255,.6);color:#00E5FF}' +
+          '#ncpj .ncpj-empty{opacity:.6;padding:14px 4px;line-height:1.7}' +
+          '#ncpj .ncpj-foot{display:flex;gap:9px;margin-top:14px}' +
+          '#ncpj .ncpj-foot button{flex:1;font:inherit;font-weight:650;padding:11px;border-radius:11px;' +
+            'cursor:pointer;border:0;background:linear-gradient(110deg,#7C5CFF,#00E5FF);color:#05070E}' +
+          '#ncpj .ncpj-foot button.q{background:none;border:1px solid rgba(127,127,127,.32);color:inherit;flex:0 0 auto}';
+        document.head.appendChild(st);
+
+        var b = document.createElement('button');
+        b.id = 'ncpj-btn'; b.type = 'button';
+        b.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" ' +
+          'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>' +
+          '<span id="ncpj-now">Untitled Project</span>';
+        b.onclick = open_;
+        /* Beside the editor's own project title, in the header's flow, rather
+           than at a fixed offset guessed from the middle of the window. The
+           aspect control was written the second way first and sat on top of
+           the Export button; a coordinate that happens to look right in one
+           window is not a position. */
+        document.body.appendChild(b);     // somewhere, immediately
+
+        /* Then move it into the header once the header exists. React mounts
+           the store before it has finished painting the toolbar, so the first
+           look often finds nothing — which is how this ended up floating at a
+           guessed coordinate over the title it was supposed to sit beside. */
+        (function anchor(n) {
+          var t = titleEl();
+          /* Beside the input, or beside whatever wraps it. */
+          var host = t && (t.parentElement && t.parentElement.children.length <= 3
+            ? t.parentElement : t);
+          if (host && host.parentElement) {
+            host.parentElement.insertBefore(b, host.nextSibling);
+            b.style.position = 'static';
+            b.style.transform = 'none';
+            b.style.marginLeft = '8px';
+            return;
+          }
+          if ((n || 0) < 40) setTimeout(function () { anchor((n || 0) + 1); }, 150);
+        })(0);
+
+        panel = document.createElement('div');
+        panel.id = 'ncpj';
+        panel.innerHTML =
+          '<div class="ncpj-box">' +
+            '<h3>Projects</h3>' +
+            '<p class="ncpj-sub">Everything is kept in this browser, on this device. ' +
+              'Pick one up where you left it, or start another.</p>' +
+            '<div id="ncpj-list"></div>' +
+            '<div class="ncpj-foot">' +
+              '<button type="button" id="ncpj-new">New project</button>' +
+              '<button type="button" class="q" id="ncpj-close">Close</button>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(panel);
+        panel.querySelector('#ncpj-new').onclick = function () { newProject(); close(); };
+        panel.querySelector('#ncpj-close').onclick = close;
+        panel.onclick = function (e) { if (e.target === panel) close(); };
+        addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && panel.classList.contains('show')) close();
+        });
+        draw();
+      }
+
       /* The store only exists once React has mounted and run its effects. */
       (function wait(n) {
-        if (store()) { restore(); return; }
+        if (store()) { migrate(); restore(); buildUI(); setTimeout(syncTitle, 200); return; }
         if ((n || 0) < 60) setTimeout(function () { wait((n || 0) + 1); }, 150);
       })(0);
     })();
