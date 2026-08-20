@@ -1068,6 +1068,14 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
         }).then(function () { savingMedia = false; }, function () { savingMedia = false; });
       }
 
+      /* The store's own limits on the timeline zoom, repeated here because a
+         number read back off disk has not been through setZoom. */
+      function zoomOf(v, fallback) {
+        v = Number(v);
+        if (!isFinite(v) || v <= 0) return fallback;
+        return Math.max(8, Math.min(400, v));
+      }
+
       function snapshot() {
         var s = store() && store().getState();
         if (!s) return null;
@@ -1078,6 +1086,25 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
             c.__ncid = assetId(a);
             return c;
           }),
+          /* Everything above is the film. This is where you were standing when
+             you walked out: how far the timeline was zoomed in, which of the
+             two layouts was open, where the playhead sat, whose panel was
+             showing, and the export settings picked for THIS project rather
+             than for the editor in general.
+
+             Clips are saved wholesale, so every cut, fade, speed change,
+             filter, chroma key, caption and keyframe already comes back — they
+             live on the clip. These five do not live on anything, and without
+             them re-opening a project lands you zoomed right out at frame zero
+             with nothing selected, which is coming back to a different room
+             even though all the furniture is there. */
+          view: {
+            pixelsPerSecond: s.pixelsPerSecond,
+            mode: s.mode,
+            playhead: s.playhead,
+            selectedClipId: s.selectedClipId,
+            exportSettings: s.exportSettings
+          },
           at: Date.now()
         };
       }
@@ -1239,12 +1266,33 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
           });
           if (!live.length && !clips.length) return;
 
+          var view = snap.view || {};
+          /* A selection pointing at a clip that did not come back would open
+             the properties panel on nothing. */
+          var sel = null;
+          for (var i = 0; i < clips.length; i++)
+            if (clips[i].id === view.selectedClipId) { sel = clips[i].id; break; }
+          /* And the playhead is held inside what actually survived, so a
+             project never opens on black with no sign that it has anything in
+             it. */
+          var end = clips.reduce(function (m, c) { return Math.max(m, c.start + c.duration); }, 0);
+          var at = Number(view.playhead);
+          if (!isFinite(at) || at < 0) at = 0;
+
           st.setState({
             assets: live,
             clips: clips,
             tracks: snap.tracks && snap.tracks.length ? snap.tracks : cur.tracks,
             markers: snap.markers || cur.markers,
-            settings: Object.assign({}, cur.settings, snap.settings || {})
+            settings: Object.assign({}, cur.settings, snap.settings || {}),
+            pixelsPerSecond: zoomOf(view.pixelsPerSecond, cur.pixelsPerSecond),
+            mode: view.mode === 'simple' || view.mode === 'complex' ? view.mode : cur.mode,
+            playhead: Math.min(at, end),
+            selectedClipId: sel,
+            /* Restoring is arriving, not resuming: nobody wants a project to
+               start playing at them because it was playing when they left. */
+            isPlaying: false,
+            exportSettings: Object.assign({}, cur.exportSettings, view.exportSettings || {})
           });
 
           var dropped = (snap.clips || []).length - clips.length;

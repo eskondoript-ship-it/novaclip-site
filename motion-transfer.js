@@ -665,8 +665,20 @@
         var url = URL.createObjectURL(blob);
         var st = window.__ncStore && window.__ncStore.getState();
         if (st && st.addAssets) {
-          var file = new File([blob], 'copied-move.webm', { type: type });
-          try { st.addAssets([file]); } catch (e) { }
+          /* addAssets takes asset RECORDS, not Files — handing it a File puts
+             something with no id, no kind and no url into the media library,
+             where it shows as a blank row and is skipped by the project save
+             (which finds media by its blob: url). The editor's own importer
+             builds this shape, so this builds the same one. */
+          try {
+            st.addAssets([{
+              id: 'asset-mt-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7),
+              name: 'Copied move ' + new Date().toLocaleTimeString(),
+              kind: 'video', url: url,
+              duration: Math.min(baked.duration, M.limits.maxSeconds),
+              width: W, height: H, thumbnail: '', createdAt: Date.now()
+            }]);
+          } catch (e) {}
           say('ok', '<b>Added to the media library.</b> Drag it onto the timeline.');
         } else {
           var a = document.createElement('a');
