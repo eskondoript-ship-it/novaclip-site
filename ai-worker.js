@@ -145,7 +145,7 @@ const TTS_VOICES = ['Orus', 'Charon', 'Zephyr', 'Puck', 'Kore', 'Fenrir', 'Aoede
 const TTS_MAX_TEXT = 2000;              // characters
 
 /* CORS is wide open on purpose: the site is static and may be served from
-   novaclip.pages.dev, a custom domain, and file:// during development. The key
+   novaclip.org, a Pages preview host, and file:// during development. The key
    is never in the response, so an origin check would buy nothing here — the
    rate limit is what protects the key. */
 const CORS = {
@@ -225,7 +225,7 @@ async function upstreamFetch(provider, model, payload, key, signal, search) {
         'Authorization': 'Bearer ' + key,
         /* Lets the site identify itself in OpenRouter's dashboard, which also
            makes the key easier to manage there. Not required to work. */
-        'HTTP-Referer': 'https://novaclip.pages.dev',
+        'HTTP-Referer': 'https://novaclip.org',
         'X-Title': 'NovaClip'
       },
       body: JSON.stringify(openAiPayload(model, payload)),

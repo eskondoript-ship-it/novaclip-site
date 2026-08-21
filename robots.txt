@@ -1,0 +1,17 @@
+# NovaClip — novaclip.org
+# The domain here and the CNAME file must stay in step.
+
+User-agent: *
+Allow: /
+
+# Tools rather than pages. Each is a working surface that means nothing
+# without the state a person builds up inside it, so there is nothing on them
+# for a search result to show and no reason to spend crawl budget on them.
+Disallow: /editor.html
+Disallow: /app.html
+Disallow: /publish.html
+Disallow: /parent.html
+Disallow: /progress.html
+Disallow: /biometrics.html
+
+Sitemap: https://novaclip.org/sitemap.xml
