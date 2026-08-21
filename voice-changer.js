@@ -405,7 +405,24 @@
     '#ncvc .ncvc-say.no{background:#3a1420;border:1px solid #7d2540;color:#ffc7d4}',
     '#ncvc .ncvc-say.info{background:#0e2438;border:1px solid #1d4a6e;color:#bcdcf5}',
     '#ncvc audio{width:100%;margin-top:10px}',
-    '@media (max-width:520px){#ncvc .box{padding:15px}#ncvc .voices{grid-template-columns:1fr 1fr}}'
+    '@media (max-width:520px){#ncvc .box{padding:15px}#ncvc .voices{grid-template-columns:1fr 1fr}}',
+    /* Light mode. nova.js puts data-theme on <html>, and a panel that stays
+       dark when the rest of the site turns white is the exact complaint that
+       came in about the editor once already. */
+    'html[data-theme="light"] #ncvc{background:rgba(238,243,249,.88)}',
+    'html[data-theme="light"] #ncvc .box{background:#fff;border-color:#dbe4ee;color:#16233a}',
+    'html[data-theme="light"] #ncvc h2{color:#0b1220}',
+    'html[data-theme="light"] #ncvc .lede,html[data-theme="light"] #ncvc label{color:#54697f}',
+    'html[data-theme="light"] #ncvc .step{border-color:#e3eaf3}',
+    'html[data-theme="light"] #ncvc .step h3{color:#1c2b40}',
+    'html[data-theme="light"] #ncvc button{background:#eef3f9;border-color:#cfdbe8;color:#17263b}',
+    'html[data-theme="light"] #ncvc button.go{color:#fff}',
+    'html[data-theme="light"] #ncvc .v span{color:#5c6f85}',
+    'html[data-theme="light"] #ncvc .v.sel{background:#dff3fb}',
+    'html[data-theme="light"] #ncvc select{background:#fff;color:#17263b;border-color:#cfdbe8}',
+    'html[data-theme="light"] #ncvc .ncvc-say.ok{background:#e6f7ef;border-color:#7fcaa8;color:#0d5138}',
+    'html[data-theme="light"] #ncvc .ncvc-say.no{background:#fdeaf0;border-color:#e39ab0;color:#7d1533}',
+    'html[data-theme="light"] #ncvc .ncvc-say.info{background:#e8f1fb;border-color:#9dc2e4;color:#12385d}'
   ].join('');
 
   function build() {

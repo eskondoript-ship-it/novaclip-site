@@ -407,7 +407,20 @@
     '#ncss .ncss-say{margin-top:11px;padding:9px 11px;border-radius:9px;font-size:12.5px}',
     '#ncss .ncss-say.ok{background:#0d2f24;border:1px solid #1c6b4f;color:#b6f2d8}',
     '#ncss .ncss-say.no{background:#3a1420;border:1px solid #7d2540;color:#ffc7d4}',
-    '#ncss .ncss-say.info{background:#0e2438;border:1px solid #1d4a6e;color:#bcdcf5}'
+    '#ncss .ncss-say.info{background:#0e2438;border:1px solid #1d4a6e;color:#bcdcf5}',
+    /* Light mode — nova.js puts data-theme on <html>. The stage stays black
+       whatever the theme: it is a hole with a camera behind it, and a white
+       surround around the picture would fight the ring light rather than
+       help it. */
+    'html[data-theme="light"] #ncss{background:#eef3f9}',
+    'html[data-theme="light"] #ncss .box{background:rgba(255,255,255,.93);border-color:#dbe4ee;color:#16233a}',
+    'html[data-theme="light"] #ncss h2{color:#0b1220}',
+    'html[data-theme="light"] #ncss .lede,html[data-theme="light"] #ncss label{color:#54697f}',
+    'html[data-theme="light"] #ncss button{background:#eef3f9;border-color:#cfdbe8;color:#17263b}',
+    'html[data-theme="light"] #ncss button.go{color:#fff}',
+    'html[data-theme="light"] #ncss .ncss-say.ok{background:#e6f7ef;border-color:#7fcaa8;color:#0d5138}',
+    'html[data-theme="light"] #ncss .ncss-say.no{background:#fdeaf0;border-color:#e39ab0;color:#7d1533}',
+    'html[data-theme="light"] #ncss .ncss-say.info{background:#e8f1fb;border-color:#9dc2e4;color:#12385d}'
   ].join('');
 
   function build() {
