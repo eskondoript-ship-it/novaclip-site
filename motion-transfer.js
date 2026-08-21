@@ -403,6 +403,12 @@
       });
     },
     hasProvider: function () { return !!provider; },
+    /* Exported because the panel below is a SEPARATE closure and cannot see
+       anything in this one. Reaching for tick() from down there compiled fine
+       and threw "tick is not defined" the moment Play was pressed — which the
+       browser tests never reached, because the pose model's CDN is blocked in
+       the sandbox and the run stopped before it got that far. */
+    tick: tick,
     limits: { fps: FPS, maxSeconds: MAX_SECONDS }
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = G.NCMotion;
@@ -642,7 +648,7 @@
     if (cv) drawPose(cv.getContext('2d'), M.sample(baked, t));
     /* 33ms when hidden: the worker has no display to pace against, and this is
        the recording's frame rate rather than a busy wait. */
-    raf = tick(loop, document.hidden ? 33 : 0);
+    raf = M.tick(loop, document.hidden ? 33 : 0);
   }
 
   /* `playing` is what actually stops the loop — the handle from tick() cannot
@@ -652,7 +658,7 @@
   function play(on) {
     playing = on; t0 = 0;
     $('ncMtPlay').textContent = on ? 'Stop' : 'Play';
-    if (on) raf = tick(loop);
+    if (on) raf = M.tick(loop);
     else repaint();
   }
 
@@ -813,7 +819,7 @@
          a second, so the recording would run long — or, after five minutes
          backgrounded, up to a minute long — and the clip would end with a
          chunk of loop repeated. */
-      tick(function () { try { rec.stop(); } catch (e) {} play(false); },
+      M.tick(function () { try { rec.stop(); } catch (e) {} play(false); },
         Math.min(baked.duration, M.limits.maxSeconds) * 1000 + 250);
     };
   }

@@ -169,3 +169,20 @@ test('bone lengths come out of the character, not a constant', () => {
   assert.ok(b['hip>footL'] > a['hip>footL'] * 2, 'a longer leg should measure longer');
   assert.equal(a['neck>head'], b['neck>head'], 'untouched bones should be unchanged');
 });
+
+test('the module exports the clock the panel calls', () => {
+  /* The panel at the bottom of motion-transfer.js is a SEPARATE closure and
+     cannot see anything in the module's. It reaches for the tick() scheduler
+     through this export, and when it was reached for directly instead, the
+     file still parsed and still loaded — then threw "tick is not defined" the
+     moment Play was pressed. Nothing caught it, because the browser checks all
+     stop at "Loading the pose model…": MediaPipe's CDN is blocked here, so no
+     automated run had ever got as far as pressing Play.
+
+     This is the cheap half of that lesson. The other half is a panel test with
+     setProvider() standing in for the model, which is what actually exercises
+     the code the CDN hides. */
+  assert.equal(typeof M.tick, 'function', 'NCMotion.tick must stay exported');
+  assert.equal(typeof M.setProvider, 'function', 'setProvider is how the model is stubbed');
+  assert.equal(typeof M.limits, 'object');
+});
