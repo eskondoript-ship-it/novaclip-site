@@ -3702,6 +3702,22 @@ function aiTool(t) {
    --------------------------------------------------------------------------- */
 function toolUrl(id) { return location.pathname + '?t=' + id; }
 
+/* The canonical host is the one in nt-config.js, NOT the one this page happens
+   to have been served from.
+
+   location.origin was the obvious choice and it defeats the point of a
+   canonical tag. The whole job of that tag is to say "wherever you reached
+   this, the real address is here" — so building it from wherever you reached
+   it makes it agree with every duplicate instead of collapsing them. Served
+   over www, or over http, or from a GitHub Pages preview, each host would
+   name ITSELF as canonical and Google would index all of them separately.
+   The blog pages already got this right because their tags are static; the
+   homepage and all 574 tool URLs were rewriting theirs on load. */
+function siteOrigin() {
+  var o = (window.NT && window.NT.origin) || '';
+  return o ? o.replace(/\/+$/, '') : location.origin;
+}
+
 function setMeta(t) {
   document.title = t ? t.name + ' — free online tool' : 'NovaTools — 2,119 free online tools';
   const d = document.querySelector('meta[name="description"]');
@@ -3709,7 +3725,11 @@ function setMeta(t) {
     '2,119 free browser tools: image resizers for every social platform, converters, counters and calculators. No signup, nothing uploaded.');
   let link = document.querySelector('link[rel="canonical"]');
   if (!link) { link = document.createElement('link'); link.rel = 'canonical'; document.head.appendChild(link); }
-  link.href = location.origin + (t ? toolUrl(t.id) : location.pathname);
+  /* "/index.html" and "/" are the same page, and the sitemap lists "/". Left
+     alone they are two URLs with identical content, which is the same problem
+     one step smaller. */
+  const path = location.pathname.replace(/\/index\.html$/, '/');
+  link.href = siteOrigin() + (t ? path + '?t=' + t.id : path);
 }
 
 function open(id, fromUrl) {
