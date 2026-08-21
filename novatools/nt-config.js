@@ -31,9 +31,9 @@ window.NT = {
   origin: 'https://mynovatools.com',
   name: 'NovaTools',
   tagline: 'Free browser tools that never upload your files',
-  owner: '',                        // the person or company operating the site
-  jurisdiction: '',                 // e.g. 'England and Wales' — used in the legal pages
-  email: '',                        // the address on the contact and legal pages
+  owner: 'Esmaeil Kondori',         // the person or company operating the site
+  jurisdiction: 'Portugal',         // e.g. 'England and Wales' — used in the legal pages
+  email: 'novacliptools@gmail.com', // the address on the contact and legal pages
   founded: '2026',
 
   /* --- Google AdSense ----------------------------------------------------

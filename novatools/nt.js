@@ -88,6 +88,34 @@
   }
 
   /* ---------------------------------------------------------------------------
+     WHO RUNS THIS SITE
+     The legal pages carry <span data-nt='owner'> and <span data-nt='jurisdiction'>
+     with a sentence inside each saying "the one named in nt-config.js". That
+     sentence is the FALLBACK, meant to be replaced the moment the config knows
+     the answer — and nothing ever replaced it, so the live Terms page told
+     readers its governing law was "the jurisdiction named in nt-config.js".
+     Developer scaffolding, printed to the public, in the one place on a site
+     that has to be exact.
+
+     Filling them is this function. Where the config is still blank the
+     fallback prose stays, which reads awkwardly but is never wrong.
+     --------------------------------------------------------------------------- */
+  function details() {
+    var map = { owner: C.owner, jurisdiction: C.jurisdiction, name: C.name, email: C.email };
+    $$('[data-nt]').forEach(function (n) {
+      var k = n.getAttribute('data-nt');
+      var v = map[k];
+      if (!v) return;
+      if (k === 'email') {
+        n.textContent = '';
+        n.appendChild(el('a', { href: 'mailto:' + v }, v));
+      } else {
+        n.textContent = v;
+      }
+    });
+  }
+
+  /* ---------------------------------------------------------------------------
      THEME
      The page head runs a two-line inline script that sets data-theme before
      first paint; this only handles the toggle so the two never fight.
@@ -496,7 +524,7 @@
 
   /* ------------------------------------------------------------------------- */
   function boot() {
-    seo(); nav(); foot(); theme(); article(); media();
+    seo(); details(); nav(); foot(); theme(); article(); media();
     newsletter(); contactForm(); ads();
     /* Measurement waits for idle: it is the least important thing on the page
        and the easiest to make someone wait for by accident. */
