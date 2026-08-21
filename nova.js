@@ -2803,9 +2803,9 @@ const NC_AI_DIRECT = 'https://generativelanguage.googleapis.com/v1beta/models/';
 function ncActiveProvider() {
   try {
     const q = new URLSearchParams(location.search).get('ncai');
-    if (q && /^(gemini|openrouter|openai)$/.test(q)) return q;
+    if (q && /^(gemini|openrouter|openai|local)$/.test(q)) return q;
     const ls = localStorage.getItem('nc_ai_provider');
-    if (ls && /^(gemini|openrouter|openai)$/.test(ls)) return ls;
+    if (ls && /^(gemini|openrouter|openai|local)$/.test(ls)) return ls;
   } catch (e) { /* storage may be off in a privacy mode — fall through */ }
   return 'gemini';
 }
@@ -2813,7 +2813,73 @@ function ncActiveProvider() {
 function ncDefaultModel(provider) {
   if (provider === 'openrouter') return 'openai/gpt-4o-mini';
   if (provider === 'openai') return 'gpt-4o-mini';
+  if (provider === 'local') return ncLocalModel();
   return 'gemini-3.6-flash';
+}
+
+/* ---------------------------------------------------------------------------
+   THE MODEL ON YOUR OWN MACHINE
+   ---------------------------------------------------------------------------
+   Ollama serves an HTTP API on localhost:11434. With it running, every AI
+   feature on this site can be answered by a model on the visitor's own
+   computer: no key, no quota, no request leaving the machine, and it works
+   with the wifi off.
+
+   TWO THINGS ABOUT BROWSERS THAT WILL OTHERWISE WASTE AN HOUR.
+
+   Mixed content: a page on https normally may not fetch http. localhost is
+   the exception — the spec calls it "potentially trustworthy", so Chrome and
+   Edge allow https://novaclip.org to reach http://localhost:11434. Other
+   browsers have been stricter at times; if it is refused there, the site has
+   to be opened over http for this provider to work.
+
+   CORS: Ollama answers only origins it has been told about, and by default
+   that does not include this site. It is set on the OLLAMA_ORIGINS
+   environment variable before Ollama starts. Without it the request is
+   blocked by the browser and the failure looks identical to Ollama not
+   running, which is why ncLocalCheck below reports them apart.
+   --------------------------------------------------------------------------- */
+const NC_LOCAL_DEFAULT = 'http://localhost:11434';
+
+function ncLocalUrl() {
+  try { return (localStorage.getItem('nc_local_url') || NC_LOCAL_DEFAULT).replace(/\/+$/, ''); }
+  catch (e) { return NC_LOCAL_DEFAULT; }
+}
+function ncSetLocalUrl(u) {
+  try { u ? localStorage.setItem('nc_local_url', u) : localStorage.removeItem('nc_local_url'); } catch (e) {}
+}
+/* A 3B model rather than the 7B: it is about 2GB, which fits alongside a
+   browser on a 16GB machine without closing anything, and a tool that runs
+   beats a better one that swaps. */
+function ncLocalModel() {
+  try { return localStorage.getItem('nc_local_model') || 'qwen2.5:3b'; } catch (e) { return 'qwen2.5:3b'; }
+}
+function ncSetLocalModel(m) {
+  try { m ? localStorage.setItem('nc_local_model', m) : localStorage.removeItem('nc_local_model'); } catch (e) {}
+}
+
+/* Is it there, and what has it got? Returns { ok, models, err } and never
+   throws. The three failures it separates are the three that actually happen:
+   nothing listening, listening but refusing this origin, and running with the
+   wrong model pulled. */
+async function ncLocalCheck() {
+  const url = ncLocalUrl();
+  try {
+    const res = await fetch(url + '/api/tags', { method: 'GET' });
+    if (!res.ok) return { ok: false, models: [], err: 'Ollama answered ' + res.status + '.' };
+    const j = await res.json();
+    const models = (j.models || []).map(m => m.name);
+    return {
+      ok: true, models: models, err: models.length ? '' :
+        'Ollama is running but has no models. Run: ollama pull ' + ncLocalModel()
+    };
+  } catch (e) {
+    /* fetch rejects the same way for "nothing is listening" and "CORS said
+       no", so both possibilities are named rather than guessed between. */
+    return { ok: false, models: [], err:
+      'No answer from ' + url + '. Either Ollama is not running, or it has not been ' +
+      'told to accept this site — set OLLAMA_ORIGINS=' + location.origin + ' and restart it.' };
+  }
 }
 
 /* Models that answered 400 when told how much to think. Learned at runtime
@@ -2860,6 +2926,11 @@ function ncSayWhy(reason, status) {
            'your profile; if not, whoever deployed the worker needs to replace it.';
   if (/safety|blocked|harm/i.test(r))
     return 'The AI would not answer that one. Rephrasing usually works.';
+  /* Ollama says: model "qwen2.5:3b" not found, try pulling it first — which is
+     exactly right and exactly actionable, so it is passed through with the
+     command rather than replaced by something vaguer. */
+  if (/try pulling it|not found, try pulling/i.test(r))
+    return 'That model is not on this machine yet. In a terminal: ollama pull ' + ncLocalModel();
   if (/not found|does not exist/i.test(r))
     return 'The AI model this page asks for is no longer available. It needs updating in ' +
            'nova.js and on the worker.';
@@ -2910,6 +2981,41 @@ async function ncAsk(prompt, opts) {
     /* One request, in a form both routes take. Called twice at most: once as
        asked, and once more without thinkingConfig if that is what was refused. */
     async function send() {
+      /* Ollama speaks its own request and reply shape. Rather than teach every
+         caller of ncAsk a second one, the reply is translated here into the
+         shape the rest of this function already reads — so a page that asks
+         for an edit plan cannot tell which machine answered. */
+      if (provider === 'local') {
+        const res = await fetch(ncLocalUrl() + '/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: model,
+            stream: false,
+            messages: [{ role: 'user', content: prompt }],
+            options: {
+              temperature: body.generationConfig.temperature,
+              /* Ollama's own name for the cap, and unlike Gemini it does not
+                 spend any of it thinking. */
+              num_predict: opts.maxTokens || -1
+            }
+          })
+        });
+        const txt = await res.text().catch(function () { return ''; });
+        if (!res.ok) return { res: res, raw: txt };
+        let j = null;
+        try { j = JSON.parse(txt); } catch (e) { return { res: res, raw: txt }; }
+        const said = (j.message && j.message.content) || j.response || '';
+        return {
+          res: res,
+          raw: JSON.stringify({
+            candidates: [{
+              content: { parts: [{ text: said }] },
+              finishReason: j.done_reason === 'length' ? 'MAX_TOKENS' : 'STOP'
+            }]
+          })
+        };
+      }
       if (ncKeyLooksReal(own)) {
         /* The key goes in a header, not in ?key=. A URL is the most-copied
            string in a browser: it lands in history, in devtools, in any
@@ -2988,7 +3094,13 @@ async function ncAsk(prompt, opts) {
       catch (e) { err = 'The AI service sent something that was not an answer.'; }
     }
   } catch (e) {
-    err = 'Could not reach the AI. Check your connection.';
+    /* For a model on this machine the connection is not the suspect, and
+       "check your connection" sends someone to their router over a service
+       that is simply not started. */
+    err = provider === 'local'
+      ? 'No answer from ' + ncLocalUrl() + '. Start Ollama, or check it is allowed ' +
+        'to answer this site (OLLAMA_ORIGINS=' + location.origin + ').'
+      : 'Could not reach the AI. Check your connection.';
   }
   if (err) return { text: '', image: '', err: err };
 
@@ -3099,6 +3211,20 @@ window.ncJSON = ncJSON; window.ncSayWhy = ncSayWhy;
 
 window.ncAIKey = ncAIKey; window.ncSetAIKey = ncSetAIKey;
 window.ncKeyLooksReal = ncKeyLooksReal; window.ncAsk = ncAsk;
+/* The local-model controls, so a page (or the console) can point the site at
+   a model on this machine and check whether it is actually there. */
+window.ncLocalCheck = ncLocalCheck; window.ncLocalUrl = ncLocalUrl;
+window.ncSetLocalUrl = ncSetLocalUrl;
+window.ncLocalModel = ncLocalModel; window.ncSetLocalModel = ncSetLocalModel;
+/* One call to move every AI feature on the site onto your own machine, and
+   the same call with no argument to put it back. */
+window.ncUseLocal = function (on) {
+  try {
+    if (on === false) localStorage.removeItem('nc_ai_provider');
+    else localStorage.setItem('nc_ai_provider', 'local');
+  } catch (e) {}
+  return ncActiveProvider();
+};
 window.ncActiveProvider = ncActiveProvider; window.ncDefaultModel = ncDefaultModel;
 /* The worker's address, exported for the same consumers that use ncAsk —
    jarvis.js reads it to reach the /tts endpoint for its voice. */
