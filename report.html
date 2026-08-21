@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Report something — NovaClip</title>
+<meta name='description' content='Tell us what went wrong: a mistake in the age question, a bug, or something that felt unsafe.'>
+<link rel='canonical' href='https://novaclip.org/report.html'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+
+<!-- Deliberately NOT in the sitemap and not in the nav. It is somewhere people
+     are SENT — from the age block, from an error — rather than somewhere they
+     browse to, and a report form in a search result attracts noise. -->
+<meta name='robots' content='noindex, follow'>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',-apple-system,sans-serif; }
+body { background:var(--nc-bg,#060608); color:var(--nc-text,#f4f4f6);
+       min-height:100vh; display:flex; align-items:flex-start; justify-content:center;
+       padding:40px 20px 80px; }
+.wrap { width:100%; max-width:560px; }
+a.back { display:inline-block; margin-bottom:22px; color:var(--nc-dim,#8c96ad);
+         text-decoration:none; font-size:0.92rem; }
+a.back:hover { color:var(--nc-text,#f4f4f6); }
+h1 { font-size:1.9rem; margin-bottom:8px; }
+.lede { color:var(--nc-dim,#8c96ad); line-height:1.65; margin-bottom:26px; }
+.card { background:var(--nc-bg2,rgba(255,255,255,0.04));
+        border:1px solid var(--nc-line,rgba(255,255,255,0.1));
+        border-radius:18px; padding:24px; }
+label { display:block; font-size:0.86rem; color:var(--nc-dim,#8c96ad);
+        margin:16px 0 6px; font-weight:600; }
+label:first-of-type { margin-top:0; }
+select, textarea, input[type=email] {
+  width:100%; background:var(--nc-bg3,rgba(255,255,255,0.05));
+  color:var(--nc-text,#f4f4f6); border:1px solid var(--nc-line,rgba(255,255,255,0.15));
+  border-radius:12px; padding:12px; font-size:16px; }
+textarea { min-height:130px; resize:vertical; line-height:1.55; }
+button { width:100%; margin-top:22px; padding:15px; border:none; border-radius:30px;
+         font-weight:800; font-size:1rem; cursor:pointer;
+         background:linear-gradient(90deg,#00F0FF,#4CC9F0); color:#04121a; }
+button:disabled { opacity:0.4; cursor:default; }
+.note { margin-top:18px; font-size:0.85rem; color:var(--nc-dim,#8c96ad); line-height:1.65; }
+.note code { background:var(--nc-bg3,rgba(255,255,255,0.07)); padding:2px 7px;
+             border-radius:6px; font-family:ui-monospace,Menlo,Consolas,monospace; }
+.said { margin-top:16px; padding:12px 14px; border-radius:12px; font-size:0.9rem;
+        line-height:1.6; display:none; }
+.said.on { display:block; }
+.said.ok { background:rgba(28,107,79,0.25); border:1px solid #1c6b4f; color:#b6f2d8; }
+html[data-theme="light"] body { background:#f5f7fb; color:#0b0e16; }
+html[data-theme="light"] .card { background:#fff; border-color:#dbe4ee; }
+html[data-theme="light"] select,
+html[data-theme="light"] textarea,
+html[data-theme="light"] input[type=email] { background:#fff; color:#17263b; border-color:#cfdbe8; }
+html[data-theme="light"] .lede, html[data-theme="light"] label,
+html[data-theme="light"] .note, html[data-theme="light"] a.back { color:#54697f; }
+</style>
+</head>
+<body>
+<div class='wrap'>
+  <a class='back' href='index.html'>&larr; Back to NovaClip</a>
+  <h1>Report something</h1>
+  <p class='lede'>A mistake in the age question, something broken, or something that
+  did not feel right. A person reads these.</p>
+
+  <div class='card'>
+    <label for='kind'>What is it about?</label>
+    <select id='kind'>
+      <option value='age'>I put the wrong age in</option>
+      <option value='bug'>Something is broken</option>
+      <option value='unsafe'>Something felt unsafe</option>
+      <option value='account'>My account or my progress</option>
+      <option value='other'>Something else</option>
+    </select>
+
+    <label for='detail'>What happened?</label>
+    <textarea id='detail' placeholder='As much or as little as you like. If something broke, what were you doing just before?'></textarea>
+
+    <label for='from'>Your email, if you want a reply</label>
+    <input type='email' id='from' placeholder='you@example.com' autocomplete='email'>
+
+    <button id='send'>Send the report</button>
+
+    <div class='said ok' id='said'></div>
+
+    <p class='note'>This opens your email app with the report written out, so you can
+    see exactly what is being sent before you send it. Nothing leaves this page on
+    its own. If the button does nothing, email
+    <code>novacliptools@gmail.com</code> directly.</p>
+  </div>
+</div>
+
+<script>
+/* ONE ADDRESS, ONE PLACE.
+   Everything on this page that mentions where reports go reads it from here,
+   so changing it is one edit rather than a hunt through prose. */
+var NC_REPORT_TO = 'novacliptools@gmail.com';
+
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* Where they came from, so a report about a broken page says which page.
+     Read from ?from= rather than document.referrer, which is empty on a lot
+     of navigations and blocked on others. */
+  var from = '';
+  try { from = new URLSearchParams(location.search).get('from') || ''; } catch (e) {}
+  /* Only our own page names — never echo an arbitrary string into an email
+     body that a person is about to send. */
+  if (!/^[a-z0-9-]{1,40}\.html$/i.test(from)) from = '';
+
+  var KIND = {
+    age: 'Wrong age entered',
+    bug: 'Something is broken',
+    unsafe: 'Something felt unsafe',
+    account: 'Account or progress',
+    other: 'Other'
+  };
+
+  $('send').onclick = function () {
+    var kind = $('kind').value;
+    var detail = ($('detail').value || '').trim();
+    var reply = ($('from').value || '').trim();
+
+    if (!detail) {
+      $('detail').focus();
+      return;
+    }
+
+    /* Context worth having and cheap to include: what page it came from, what
+       the browser is, and the age currently stored — which is the whole point
+       of the "wrong age" case. No name, no location, nothing they have not
+       already typed. */
+    var stored = '';
+    try { stored = localStorage.getItem('nc_user_age') || ''; } catch (e) {}
+
+    var body =
+      detail + '\n\n' +
+      '--- so we can find it ---\n' +
+      (from ? 'Page: ' + from + '\n' : '') +
+      (stored ? 'Age currently saved in this browser: ' + stored + '\n' : '') +
+      (reply ? 'Reply to: ' + reply + '\n' : 'No reply address given.\n') +
+      'Browser: ' + navigator.userAgent + '\n' +
+      'Sent: ' + new Date().toISOString() + '\n';
+
+    var href = 'mailto:' + NC_REPORT_TO +
+      '?subject=' + encodeURIComponent('NovaClip report — ' + (KIND[kind] || 'Other')) +
+      '&body=' + encodeURIComponent(body);
+
+    /* Says what it did, not that it succeeded. Whether the mail is actually
+       sent happens in an app this page cannot see, and claiming otherwise
+       would be a lie on a page about reporting problems. */
+    $('said').textContent = 'Your email app should have opened with the report in it. ' +
+      'Press send there to finish. Nothing has been sent yet.';
+    $('said').classList.add('on');
+
+    /* The composed mail, left where it can be read back. A mailto: hands off
+       to another application the moment it is assigned, so this is the only
+       way to check from the outside that the right address, subject and
+       context actually went into it. */
+    window.__ncLastReport = href;
+
+    location.href = href;
+  };
+
+  /* Arriving from the age block lands on the right reason already chosen. */
+  try {
+    var k = new URLSearchParams(location.search).get('about');
+    if (k && KIND[k]) $('kind').value = k;
+  } catch (e) {}
+})();
+</script>
+<script src='nova.js'></script>
+</body>
+</html>

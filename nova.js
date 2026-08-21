@@ -360,7 +360,7 @@ const UI_T = {
   ui_got_it: { en:"Got it", zh:"知道了", hi:"समझ गया", es:"Entendido", ar:"فهمت", fr:"Compris", bn:"বুঝেছি", pt:"Percebi", ru:"Понятно", ur:"سمجھ گیا", id:"Paham", de:"Alles klar", ja:"了解", tr:"Anladım", ko:"알겠어요", fa:"فهمیدم", uk:"Зрозуміло", it:"Ho capito", pl:"Jasne", vi:"Hiểu rồi" },
   ui_age_q: { en:"How old are you?", zh:"你多大了？", hi:"आपकी उम्र कितनी है?", es:"¿Cuántos años tienes?", ar:"كم عمرك؟", fr:"Quel âge as-tu ?", bn:"আপনার বয়স কত?", pt:"Quantos anos tens?", ru:"Сколько тебе лет?", ur:"آپ کی عمر کتنی ہے؟", id:"Berapa umurmu?", de:"Wie alt bist du?", ja:"あなたは何歳ですか？", tr:"Kaç yaşındasın?", ko:"몇 살이세요?", fa:"چند ساله‌ای؟", uk:"Скільки тобі років?", it:"Quanti anni hai?", pl:"Ile masz lat?", vi:"Bạn bao nhiêu tuổi?" },
   ui_age_aria: { en:"Your age", zh:"你的年龄", hi:"आपकी उम्र", es:"Tu edad", ar:"عمرك", fr:"Ton âge", bn:"আপনার বয়স", pt:"A tua idade", ru:"Твой возраст", ur:"آپ کی عمر", id:"Usia kamu", de:"Dein Alter", ja:"あなたの年齢", tr:"Yaşın", ko:"당신의 나이", fa:"سن تو", uk:"Твій вік", it:"La tua età", pl:"Twój wiek", vi:"Tuổi của bạn" },
-  ui_age_redo: { en:"I picked the wrong number", pt:"Escolhi o número errado", es:"Elegí el número equivocado", fr:"J'ai choisi le mauvais nombre", de:"Ich habe die falsche Zahl gewählt", it:"Ho scelto il numero sbagliato" },
+  ui_age_report: { en:"I put the wrong number in — report it", pt:"Pus o número errado — comunicar", es:"Puse el número equivocado — informar", fr:"J'ai mis le mauvais nombre — signaler", de:"Ich habe die falsche Zahl eingegeben — melden", it:"Ho inserito il numero sbagliato — segnala" },
   ui_age_u_t: { en:"Thanks for being honest.", zh:"谢谢你的诚实。", hi:"सच बोलने के लिए धन्यवाद।", es:"Gracias por ser honesto.", ar:"شكرًا لصدقك.", fr:"Merci d'avoir été honnête.", bn:"সত্য বলার জন্য ধন্যবাদ।", pt:"Obrigado por seres honesto.", ru:"Спасибо за честность.", ur:"ایمانداری کے لیے شکریہ۔", id:"Terima kasih sudah jujur.", de:"Danke, dass du ehrlich bist.", ja:"正直に言ってくれてありがとう。", tr:"Dürüst olduğun için teşekkürler.", ko:"솔직하게 말해줘서 고마워요.", fa:"ممنون از صداقتت.", uk:"Дякуємо за чесність.", it:"Grazie per la tua sincerità.", pl:"Dzięki za szczerość.", vi:"Cảm ơn vì đã thành thật." },
   ui_age_u_b: { en:"NovaClip needs verified parental consent for creators under 13, so we cannot open an account from here yet. Ask a parent or guardian to set one up for you from the Family Dashboard.", zh:"对于13岁以下的创作者，NovaClip需要经过验证的家长同意，所以我们暂时无法在这里开设账户。请让家长或监护人从家庭面板为您设置一个。", hi:"13 साल से कम उम्र के क्रिएटर्स के लिए NovaClip को पुष्ट माता-पिता की सहमति चाहिए, इसलिए हम अभी यहाँ से खाता नहीं खोल सकते। अपने माता-पिता या अभिभावक से फ़ैमिली डैशबोर्ड से सेट अप करने के लिए कहें।", es:"NovaClip necesita consentimiento parental verificado para creadores menores de 13 años, así que todavía no podemos abrir una cuenta desde aquí. Pide a un padre o tutor que te la configure desde el Panel Familiar.", ar:"يتطلب NovaClip موافقة أبوية موثقة للمبدعين دون 13 عامًا، لذا لا يمكننا فتح حساب من هنا بعد. اطلب من أحد الوالدين أو الوصي إنشاءه لك من لوحة العائلة.", fr:"NovaClip demande un consentement parental vérifié pour les créateurs de moins de 13 ans, donc nous ne pouvons pas encore ouvrir de compte d'ici. Demande à un parent ou tuteur d'en créer un pour toi depuis le Tableau Famille.", bn:"১৩ বছরের কম বয়সী নির্মাতাদের জন্য NovaClip-এর পিতা-মাতার নিশ্চিত সম্মতি দরকার, তাই আমরা এখান থেকে এখনো অ্যাকাউন্ট খুলতে পারি না। আপনার পিতা-মাতা বা অভিভাবককে ফ্যামিলি ড্যাশবোর্ড থেকে তৈরি করতে বলুন।", pt:"A NovaClip precisa de consentimento parental verificado para criadores com menos de 13 anos, por isso ainda não podemos abrir conta daqui. Pede a um pai ou encarregado de educação que a configure a partir do Painel Familiar.", ru:"NovaClip требует подтверждённого родительского согласия для авторов младше 13 лет, поэтому мы пока не можем открыть аккаунт отсюда. Попроси родителя или опекуна создать его через Семейную панель.", ur:"13 سال سے کم عمر کے تخلیق کاروں کے لیے NovaClip کو تصدیق شدہ والدین کی رضامندی درکار ہے، اس لیے ہم ابھی یہاں سے اکاؤنٹ نہیں کھول سکتے۔ اپنے والدین یا سرپرست سے فیملی ڈیش بورڈ سے سیٹ اپ کرنے کو کہیں۔", id:"NovaClip memerlukan persetujuan orang tua yang terverifikasi untuk kreator di bawah 13 tahun, jadi kami belum bisa membuka akun dari sini. Minta orang tua atau wali membuatkannya dari Dasbor Keluarga.", de:"NovaClip braucht die bestätigte Einwilligung der Eltern für Creator unter 13, daher können wir hier noch kein Konto eröffnen. Bitte deine Eltern oder deinen Vormund, eines über das Familien-Dashboard einzurichten.", ja:"13歳未満のクリエイターには保護者による認証済みの同意が必要です。そのため、ここからアカウントを開設することはまだできません。保護者にファミリーダッシュボードからの設定を頼んでください。", tr:"13 yaş altı içerik üreticileri için NovaClip, doğrulanmış veli onayı ister; bu yüzden buradan henüz hesap açamayız. Ebeveyninden ya da vasinden Aile Paneli'nden bir hesap kurmasını iste.", ko:"13세 미만 크리에이터는 검증된 부모 동의가 필요하므로 여기서는 아직 계정을 만들 수 없습니다. 부모님 또는 보호자에게 가족 대시보드에서 설정해 달라고 하세요.", fa:"NovaClip برای سازندگان زیر ۱۳ سال به رضایت تأییدشده والدین نیاز دارد، پس هنوز نمی‌توانیم از اینجا حساب بسازیم. از والد یا قیم بخواه از داشبورد خانواده یکی بسازد.", uk:"NovaClip потребує підтвердженої згоди батьків для творців до 13 років, тому ми поки що не можемо відкрити обліковий запис звідси. Попроси батьків або опікуна налаштувати його через Сімейну панель.", it:"NovaClip richiede il consenso parentale verificato per i creator sotto i 13 anni, quindi non possiamo ancora aprire un account da qui. Chiedi a un genitore o tutore di configurarlo dal Pannello Famiglia.", pl:"NovaClip wymaga potwierdzonej zgody rodzica dla twórców poniżej 13 lat, więc nie możemy jeszcze założyć konta stąd. Poproś rodzica lub opiekuna, aby założył je z Panelu Rodzinnego.", vi:"NovaClip yêu cầu sự đồng ý đã xác minh của phụ huynh cho nhà sáng tạo dưới 13 tuổi, vì vậy chúng tôi chưa thể mở tài khoản từ đây. Hãy nhờ cha mẹ hoặc người giám hộ thiết lập từ Bảng điều khiển Gia đình." },
   ui_fam_dash: { en:"Open the Family Dashboard", zh:"打开家庭面板", hi:"फ़ैमिली डैशबोर्ड खोलें", es:"Abrir el Panel Familiar", ar:"فتح لوحة العائلة", fr:"Ouvrir le Tableau Famille", bn:"ফ্যামিলি ড্যাশবোর্ড খুলুন", pt:"Abrir o Painel Familiar", ru:"Открыть Семейную панель", ur:"فیملی ڈیش بورڈ کھولیں", id:"Buka Dasbor Keluarga", de:"Familien-Dashboard öffnen", ja:"ファミリーダッシュボードを開く", tr:"Aile Paneli'ni aç", ko:"가족 대시보드 열기", fa:"باز کردن داشبورد خانواده", uk:"Відкрити Сімейну панель", it:"Apri il Pannello Famiglia", pl:"Otwórz Panel Rodzinny", vi:"Mở Bảng điều khiển Gia đình" },
@@ -2012,6 +2012,33 @@ function ncWatchAIChat() {
   };
 }
 
+/* THE CHAT WIDGET IS NOT WORTH A SLOW PAGE.
+
+   ncMiniAI() pulls about a megabyte of somebody else's JavaScript, plus its
+   stylesheet, from a CDN — and it was called the instant nova.js ran, on every
+   page. Measured on pricing.html those two requests were the slowest things on
+   the page by a distance: 568ms for the stylesheet and 405ms for the bundle,
+   against 13ms for nova.js itself. A page full of prices sat there competing
+   with a chat bubble nobody had asked for yet.
+
+   Nothing about it needs to be there at first paint. It loads on whichever
+   comes first: the browser going idle, the first sign of a person doing
+   anything, or six seconds. So it is ready by the time a hand moves towards
+   it, and it is never in the way of the page arriving. */
+function ncChatWhenIdle() {
+  let started = false;
+  const go = function () {
+    if (started) return;
+    started = true;
+    ncMiniAI();
+  };
+  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (e) {
+    addEventListener(e, go, { once: true, passive: true });
+  });
+  if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 6000 });
+  else setTimeout(go, 3000);
+}
+
 function ncMiniAI() {
   if (document.getElementById('ncChatCss')) return;
   ncWatchAIChat();
@@ -3400,7 +3427,7 @@ window.addEventListener('DOMContentLoaded', () => {
      down under ?embed=1; these are the two that did not. */
   if (!NC_EMBED) {
     ncScreenTime();
-    ncMiniAI();
+    ncChatWhenIdle();
   }
   // warm the channel cache in the background so message one already has it
   if (ncYTToken()) setTimeout(function () { ncChannelSnapshot(); }, 1200);
@@ -3554,7 +3581,7 @@ window.addEventListener('DOMContentLoaded', () => {
   /* Pages the blocked screen SENDS people to. Gating these would trap a child
      in a loop between the block and the page it tells them to open, which is
      worse than not blocking at all — they would simply clear their storage. */
-  const NC_AGE_EXEMPT = /(^|\/)(parent|shield)\.html$/i;
+  const NC_AGE_EXEMPT = /(^|\/)(parent|shield|report)\.html$/i;
 
   window.ncAge = function () { return parseInt(localStorage.getItem('nc_user_age') || '0'); };
   window.ncControlsRelaxed = function () { const a = ncAge(); return a >= 16 && a <= 18; };
@@ -3585,19 +3612,20 @@ window.addEventListener('DOMContentLoaded', () => {
       '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;' +
       'font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">' +
       tr('ui_fam_dash') + '</a>' +
-      '<p style="margin-top:20px"><button id="ncAgeRedo" style="background:none;border:none;' +
-      'color:#7E8AA6;font-size:0.82rem;text-decoration:underline;cursor:pointer">' +
-      tr('ui_age_redo') + '</button></p>' +
+      '<p style="margin-top:20px"><a href="report.html?about=age" style="' +
+      'color:#7E8AA6;font-size:0.82rem;text-decoration:underline">' +
+      tr('ui_age_report') + '</a></p>' +
       '</div>';
     document.body.appendChild(o);
-    /* One way back, for the child who spun the wheel wrong — it clears the
-       answer and asks again rather than letting anyone edit it to a number
-       that passes. */
-    const redo = document.getElementById('ncAgeRedo');
-    if (redo) redo.onclick = function () {
-      try { localStorage.removeItem('nc_user_age'); } catch (e) {}
-      location.reload();
-    };
+    /* The way out is a REPORT, not a retry.
+
+       This used to be a button that cleared the stored answer and asked
+       again — which is a "wrong number?" escape hatch printed on the screen
+       that blocks you, and there is only one thing anybody would do with it.
+       It undid the gate for whoever pressed it.
+
+       Now it goes to a person. Nobody self-serves their way back in, and a
+       genuine mistake still gets fixed — by someone reading it. */
     /* The page underneath keeps running scripts; this stops it being read or
        used while the block is up. */
     document.documentElement.style.overflow = 'hidden';
