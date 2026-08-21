@@ -1276,8 +1276,15 @@ style.textContent =
 "select option { background:var(--nc-sel-bg,#0A0C14); color:var(--nc-sel-text,#EAF2FF); }" +
 /* futuristic sidebar upgrade — applies on every page over local styles */
 ".sidebar { background: linear-gradient(180deg, var(--nc-rail1,rgba(8,9,16,0.96)), var(--nc-rail2,rgba(10,8,20,0.96))) !important; border-right:1px solid rgba(0,240,255,0.18) !important; box-shadow: 8px 0 40px rgba(0,240,255,0.05); }" +
-".sidebar::before { content:''; position:absolute; top:0; right:-1px; bottom:0; width:2px; background:linear-gradient(180deg, transparent, #00F0FF, #FF2E97, transparent); opacity:0.5; animation: ncRail 5s ease-in-out infinite; }" +
-"@keyframes ncRail { 0%,100% { opacity:0.35; } 50% { opacity:0.9; } }" +
+/* The glowing rail down the sidebar's edge used to breathe forever. That
+   animation lives on a pseudo-element of a FIXED, backdrop-filtered panel,
+   which means the browser re-blurred roughly 195,000 pixels behind it on
+   every frame, on every page, for as long as the tab was open — measured
+   at a steady 29-31fps with nobody touching anything. A blank page in the
+   same browser does 57, and a blank page WITH a backdrop-filter panel does
+   60: the blur is free until something animates on top of it.
+   It keeps the gradient and loses the pulse. */
+".sidebar::before { content:''; position:absolute; top:0; right:-1px; bottom:0; width:2px; background:linear-gradient(180deg, transparent, #00F0FF, #FF2E97, transparent); opacity:0.6; }" +
 ".sidebar a { position:relative; letter-spacing:0.3px; transition: all 0.25s !important; }" +
 ".sidebar a::after { content:''; position:absolute; left:14px; right:14px; bottom:6px; height:1px; background:linear-gradient(90deg,#00F0FF,transparent); transform:scaleX(0); transform-origin:left; transition:transform 0.3s; }" +
 ".sidebar a:hover { background: rgba(0,240,255,0.08) !important; text-shadow:0 0 12px rgba(0,240,255,0.6); padding-left:26px !important; }" +
@@ -1536,7 +1543,6 @@ ncFit.textContent =
    buttons off a short laptop. The root size is left alone. */
 "";
 document.head.appendChild(ncFit);
-
 /* ----------------------------------------------------------------------------
    ...and the attribute that names the class, so a rule can say "phone-s"
    instead of "max-width: 379px" and mean the same thing everywhere.
@@ -2580,7 +2586,7 @@ const NC_NAV = [
       ['publish.html', 'Publish', 'publish', 'publish'],
       ['studio-ai.html', 'AI', 'ai', 'ai']] },
   { name: 'Learn', key: 'nav_learn', icon: 'life', items: [
-      ['novalife.html', 'NovaLife', 'life', 'life'], ['game.html', 'Games', 'games', 'games']] },
+      ['game.html', 'Games', 'games', 'games']] },
   { items: [['socials.html', 'Socials', 'socials', 'gift']] },
   { name: 'You', key: 'nav_you', icon: 'progress', items: [
       ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],

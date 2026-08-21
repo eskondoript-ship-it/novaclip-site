@@ -538,28 +538,6 @@
       pl: ['kodowanie', 'programowanie'],
       vi: ['lập trình', 'mã']
     } },
-    { url: 'novalife.html', say: {
-      en: ['nova life', 'virtual life', 'my life', 'life'],
-      zh: ['生活', '虚拟生活'],
-      hi: ['नोवा लाइफ', 'जीवन'],
-      es: ['vida', 'nova life'],
-      ar: ['الحياة', 'نوفا لايف'],
-      fr: ['vie', 'nova life'],
-      bn: ['জীবন', 'নোভা লাইফ'],
-      pt: ['vida', 'nova life'],
-      ru: ['жизнь', 'нова лайф'],
-      ur: ['زندگی', 'نووا لائف'],
-      id: ['kehidupan', 'nova life'],
-      de: ['leben', 'nova life'],
-      ja: ['ライフ', '生活'],
-      tr: ['yaşam', 'hayat'],
-      ko: ['라이프', '생활'],
-      fa: ['زندگی', 'نوا لایف'],
-      uk: ['життя', 'нова лайф'],
-      it: ['vita', 'nova life'],
-      pl: ['życie', 'nova life'],
-      vi: ['cuộc sống', 'nova life']
-    } },
     { url: 'publish.html', say: {
       en: ['publish', 'upload', 'post video', 'schedule a post'],
       zh: ['发布', '上传'],

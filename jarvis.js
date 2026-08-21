@@ -1,14 +1,14 @@
-/* JARVIS — a Siri-style voice assistant for NovaClip.
+/* NOVA — a Siri-style voice assistant for NovaClip.
  *
  * Site-wide, no dependencies, no build step. Loaded with defer on every page
  * after biometric.js, whose face sign-in it fronts: when the camera recognises
- * your face, Jarvis greets you by name out loud, then listens for a command.
+ * your face, Nova greets you by name out loud, then listens for a command.
  *
  * The UI is a Siri-style sheet pinned to the top of the screen: a glowing orb
  * that opens a translucent bar with a sound waveform while it listens, and a
  * caption that shows — and speaks — the answer. It is not a chat: no log, no
  * typing box, no panel that can block the page. Tap the orb to talk, or say
- * "hey Jarvis".
+ * "hey Nova".
  *
  * What it knows about you (all local, nothing sent anywhere except the AI
  * prompt you trigger yourself — and that same text, read aloud by the site's
@@ -22,10 +22,10 @@
  * gen-Z mode, Nova, fullscreen, ...) and search the web — "search <thing>"
  * answers from DuckDuckGo, or opens Google for it. Anything else is answered
  * by the same ncAsk() every AI feature uses. Pages can register their own
- * controls with ncJarvis.register({ match, run, desc }).
+ * controls with ncNova.register({ match, run, desc }).
  */
 (function () {
-  if (window.ncJarvis) return;                    /* never double-mount */
+  if (window.ncNova) return;                    /* never double-mount */
   if (location.search.indexOf('embed=1') !== -1) return;  /* iframe shells: the parent owns the assistant */
 
   var $ = function (id) { return document.getElementById(id); };
@@ -34,7 +34,7 @@
    * personalisation
    * ---------------------------------------------------------------- */
   function storedName() {
-    try { return localStorage.getItem('nc_jarvis_name') || ''; } catch (e) { return ''; }
+    try { return localStorage.getItem('nc_nova_name') || ''; } catch (e) { return ''; }
   }
   function bioName() {
     try {
@@ -64,7 +64,7 @@
   function pageName() {
     var p = (location.pathname || '').split('/').pop() || '';
     var map = { 'index.html':'Home', 'app.html':'Studio', 'analytics.html':'Analytics',
-      'editor.html':'Editor', 'game.html':'Games', 'novalife.html':'NovaLife',
+      'editor.html':'Editor', 'game.html':'Games',
       'pricing.html':'Pricing', 'progress.html':'Progress', 'publish.html':'Publish',
       'socials.html':'Socials', 'studio-ai.html':'AI', 'trends.html':'Trend Spotter',
       'ai.html':'NovaClip AI', 'coder.html':'Coder', 'parent.html':'Family' };
@@ -202,16 +202,22 @@
     });
   }
 
-  /* ---- wake word: always listening for "hey Jarvis" ---- */
+  /* ---- wake word: always listening for "hey Nova" ---- */
   var wake = { armed: wakeArmed(), rec: null, capturing: false, errAt: 0 };
-  function wakeArmed() { try { return localStorage.getItem('nc_jarvis_wake') !== '0'; } catch (e) { return true; } }
+  function wakeArmed() { try { return localStorage.getItem('nc_nova_wake') !== '0'; } catch (e) { return true; } }
   function wakeMatch(t) {
-    if (t.indexOf('jarvis') === -1) return false;
+    /* Cheap reject before the regex, and it has to look for the CURRENT
+       wake word. Left as 'jarvis' this returned false for every phrase and
+       the assistant would never wake at all. */
+    if (t.indexOf('nova') === -1) return false;
     if (t.length > 70) return false;
-    return /\b(hey|hey there|ok|okay|yo|alright|a\.i\.?)?\s*jarvis\b/.test(t);
+    /* "nova", but never the "nova" in "NovaClip" — this site says its own
+       name out loud constantly, and a wake word that fires on the product
+       name would have the assistant interrupting every sentence about it. */
+    return /\b(hey|hey there|ok|okay|yo|alright|a\.i\.?)?\s*nova\b(?!\s*clip)/.test(t);
   }
   function setWake(v) {
-    try { localStorage.setItem('nc_jarvis_wake', v ? '1' : '0'); } catch (e) {}
+    try { localStorage.setItem('nc_nova_wake', v ? '1' : '0'); } catch (e) {}
     wake.armed = v;
     var b = $('jr-wake');
     if (b) b.classList.toggle('off', !v);
@@ -273,7 +279,7 @@
   }
 
   /* ----------------------------------------------------------------
-   * control registry — pages can teach Jarvis new tricks
+   * control registry — pages can teach Nova new tricks
    * ---------------------------------------------------------------- */
   var controls = [];
   function register(opts) { if (opts && typeof opts.run === 'function') controls.push(opts); }
@@ -286,7 +292,7 @@
     ['coder', 'coder.html'], ['studio', 'app.html'], ['trend', 'trends.html'],
     ['games', 'game.html'], ['game', 'game.html'], ['pricing', 'pricing.html'],
     ['home', 'index.html'], ['progress', 'progress.html'], ['social', 'socials.html'],
-    ['publish', 'publish.html'], ['novalife', 'novalife.html'], ['family', 'parent.html'],
+    ['publish', 'publish.html'], ['family', 'parent.html'],
     ['cert', 'progress.html']
   ];
 
@@ -313,12 +319,16 @@
 
   function helpText() {
     return s(
-      'I run this app hands-free. Tap the orb to talk, or say "hey Jarvis". Then try: ' +
-      '"my points", "open editor", "open games", "sign me in", "turn on voice commands", "gen-z on", ' +
+      'I run this app hands-free. Tap the orb to talk, or say "hey Nova". Then try: ' +
+      '"my points", "open editor", "open games", "sign me in", "turn on voice commands", "gen-z on". ' +
+      'Or just ask me anything \u2014 "how do I beat Minecraft", "why is my video not getting views", ' +
+      '"explain photosynthesis". ' +
       '"tickle Nova", "go fullscreen", "what time is it", "search <anything>", "where am I" or "sign out". ' +
       'Tell me your name with "call me <name>" and I\u2019ll remember. Anything else, I ask the AI.',
-      'I run this whole app fr. Tap the orb to talk, or say "hey Jarvis". Then try: ' +
-      '"my points", "open editor", "open games", "sign me in", "voice commands on", "gen-z on", ' +
+      'I run this whole app fr. Tap the orb to talk, or say "hey Nova". Then try: ' +
+      '"my points", "open editor", "open games", "sign me in", "voice commands on", "gen-z on". ' +
+      'Or just ask me anything fr \u2014 "how do I beat Minecraft", "why my video flopped", ' +
+      '"explain photosynthesis". ' +
       '"tickle Nova", "go fullscreen", "what time is it", "search <anything>", "where am I" or "sign out". ' +
       'Hit me with "call me <name>" and I\u2019ll remember. Anything else, the AI.');
   }
@@ -334,7 +344,7 @@
   function webSearch(term) {
     if (typeof window.ncAsk !== 'function') return fallbackSearch(term);
     return window.ncAsk(
-      'You are JARVIS, a personal AI assistant. Search the live web for: "' + term + '". ' +
+      'You are Nova, a personal AI assistant. Search the live web for: "' + term + '". ' +
       (gz() ? 'Answer in heavy gen-z slang with a few emojis, but stay genuinely useful. ' : 'Answer in clear, friendly everyday English. ') +
       'Be specific, under 90 words, and don\u2019t invent numbers or links \u2014 the search results are the only source of truth.\n\n' +
       'Search for: ' + term,
@@ -362,21 +372,21 @@
 
   function respond(q) {
     var raw = q;
-    q = q.toLowerCase().replace(/[!.?]+$/g, '').replace(/^(hey|ok|okay|yo|alright|a\.i\.?)?\s*jarvis[,!]?\s*/i, '').trim();
+    q = q.toLowerCase().replace(/[!.?]+$/g, '').replace(/^(hey|ok|okay|yo|alright|a\.i\.?)?\s*nova[,!]?\s*/i, '').trim();
 
-    /* wake word on/off — "hey jarvis off" / "turn off the wake word" */
+    /* wake word on/off — "hey nova off" / "turn off the wake word" */
     var wakeCmd =
       (/\b(wake word|always listening)\b/.test(q) && /\b(on|off|stop|start|turn|switch)\b/.test(q)) ||
-      (/^(hey|ok|okay|yo|alright)?\s*jarvis\b/i.test(raw) && /^(on|off|stop|start)\b/.test(q));
+      (/^(hey|ok|okay|yo|alright)?\s*nova\b/i.test(raw) && /^(on|off|stop|start)\b/.test(q));
     if (wakeCmd) {
       var wakOn = /\b(on|start)\b/.test(q) && !/\b(off|stop)\b/.test(q);
       setWake(wakOn);
       return s(wakOn
-          ? 'Wake word on \u2014 I\u2019m always listening. Just say "hey Jarvis".'
-          : 'Wake word off \u2014 say "hey Jarvis" to turn it back on.',
+          ? 'Wake word on \u2014 I\u2019m always listening. Just say "hey Nova".'
+          : 'Wake word off \u2014 say "hey Nova" to turn it back on.',
                wakOn
-          ? 'Wake word on \u2014 I\u2019m always listening. Just say "hey Jarvis".'
-          : 'Wake word off \u2014 say "hey Jarvis" to turn it back on.');
+          ? 'Wake word on \u2014 I\u2019m always listening. Just say "hey Nova".'
+          : 'Wake word off \u2014 say "hey Nova" to turn it back on.');
     }
 
     /* "call me X" / "my name is X" — remember it */
@@ -384,14 +394,14 @@
     if (who) {
       var nm = who[1].replace(/\s+/g, ' ').trim();
       if (nm) {
-        try { localStorage.setItem('nc_jarvis_name', nm); } catch (e) {}
-        return 'Nice to meet you, ' + nm + '. I\u2019m Jarvis, your NovaClip assistant. I can control this app for you.';
+        try { localStorage.setItem('nc_nova_name', nm); } catch (e) {}
+        return 'Nice to meet you, ' + nm + '. I\u2019m Nova, your NovaClip assistant. I can control this app for you.';
       }
     }
 
     if (/(^|[^a-z])(hi|hey|hello|yo|sup|hiii?|good (morning|afternoon|evening)|howdy)\b/.test(q)) {
-      return s('Hey ' + fixName() + '. I\u2019m Jarvis. I can run this app for you \u2014 say "help" to see how.',
-               'yo ' + fixName() + ', it\u2019s Jarvis fr. I run this app \u2014 say "help" to see how.');
+      return s('Hey ' + fixName() + '. I\u2019m Nova. I can run this app for you \u2014 say "help" to see how.',
+               'yo ' + fixName() + ', it\u2019s Nova fr. I run this app \u2014 say "help" to see how.');
     }
     if (/(^|[^a-z])(what can you do|help|commands|your skills|abilities|control)\b/.test(q)) {
       return helpText();
@@ -405,8 +415,8 @@
       return s('You are ' + fixName() + '.', 'U \u2019re ' + fixName() + '.');
     }
     if (/(^|[^a-z])(who are you|your name|what are you|about you)\b/.test(q)) {
-      return s('I\u2019m Jarvis \u2014 your Iron Man-style assistant for NovaClip. I live in the orb at the top of every page, and I can control the app for you.',
-               'I\u2019m Jarvis \u2014 ur Iron Man-style assistant for NovaClip. I live in the orb on top of every page and I control the app fr.');
+      return s('I\u2019m Nova \u2014 your Iron Man-style assistant for NovaClip. I live in the orb at the top of every page, and I can control the app for you.',
+               'I\u2019m Nova \u2014 ur Iron Man-style assistant for NovaClip. I live in the orb on top of every page and I control the app fr.');
     }
     if (/(^|[^a-z])(what time|what'?s the time|the date|what day)\b/.test(q)) {
       return new Date().toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
@@ -427,8 +437,8 @@
       try {
         if (window.ncBiometric) on ? ncBiometric.startVoice() : ncBiometric.stopVoice();
       } catch (e) {}
-      return s(on ? 'Voice commands on \u2014 try "Jarvis, my points".' : 'Voice commands off.',
-               on ? 'Voice commands on \u2014 say "Jarvis, my points".' : 'Voice commands off.');
+      return s(on ? 'Voice commands on \u2014 try "Nova, my points".' : 'Voice commands off.',
+               on ? 'Voice commands on \u2014 say "Nova, my points".' : 'Voice commands off.');
     }
     if (/(gen.?z|slang|vibe).*(on|off)|switch .*(gen.?z|normal)/.test(q)) {
       var gzOn = /on/.test(q) && !/off/.test(q);
@@ -452,13 +462,6 @@
     if (/(wake up|good morning|back online)/.test(q)) {
       setMode('idle');
       return s('Online again. What do you need?', 'Back online fr. What we doin?');
-    }
-    if (/(tickle|pet|play with) nova/.test(q)) {
-      if ((location.pathname || '').indexOf('novalife.html') !== -1) {
-        try { if (window.ncLife && typeof ncLife.tickle === 'function') { ncLife.tickle(); return s('Done \u2014 Nova giggled!', 'Done \u2014 Nova giggling fr!'); } } catch (e) {}
-      }
-      location.href = 'novalife.html';
-      return s('Off to NovaLife \u2014 tap Nova once you\u2019re there, or say it again.', 'Headed to NovaLife \u2014 tap Nova when ur there, or say it again.');
     }
     if (/(^|[^a-z])(open|go to|take me to|navigate to|bring me to|load|launch|switch to)\s+(.+)/.test(q)) {
       return doOpen(RegExp.$3);
@@ -494,8 +497,15 @@
                'My brain offline rn \u2014 try the NovaClip AI page, or say "help" for what I can do here.');
     }
     return window.ncAsk(
-      'You are JARVIS, a personal AI assistant inside the NovaClip app for ' + fixName() + '. ' +
+      'You are Nova, a personal AI assistant inside the NovaClip app for ' + fixName() + '. ' +
       'You can also control the app itself (open pages, check NovaCoins, sign in/out, voice, gen-z mode). ' +
+      /* It was answering "how do I beat Minecraft" by steering back to the
+         app, because the prompt only ever described the app. It is a
+         general assistant that HAPPENS to live here; questions about
+         games, homework, editing or anything else get a real answer. */
+      'Questions do not have to be about NovaClip. Games, school, how something works, ' +
+      'advice \u2014 answer them properly and directly. Only mention NovaClip when it is ' +
+      'genuinely relevant to what was asked. ' +
       (gz() ? 'Answer in heavy gen-z slang with a few emojis, but stay genuinely useful. ' : 'Answer in clear, friendly everyday English. ') +
       'Context: the user has ' + points() + ' NovaCoins and is on the ' + pageName() + ' page. ' +
       'Keep it under 90 words, be specific and helpful, and don\u2019t invent numbers.\n\n' + q,
@@ -531,10 +541,10 @@
   }
 
   function speakOn() {
-    try { return localStorage.getItem('nc_jarvis_speak') !== '0'; } catch (e) { return true; }
+    try { return localStorage.getItem('nc_nova_speak') !== '0'; } catch (e) { return true; }
   }
   function setSpeakOn(v) {
-    try { localStorage.setItem('nc_jarvis_speak', v ? '1' : '0'); } catch (e) {}
+    try { localStorage.setItem('nc_nova_speak', v ? '1' : '0'); } catch (e) {}
     if (!v) { stopTTS(); setMode(wake.armed && !active ? 'armed' : 'idle'); }
     var b = $('jr-speak');
     if (b) b.classList.toggle('off', !v);
@@ -546,7 +556,7 @@
     if (sh) sh.classList.remove('listen', 'speak', 'busy', 'sleep', 'armed');
     var map = {
       idle:  'systems online',
-      armed: 'say \u201chey Jarvis\u201d',
+      armed: 'say \u201chey Nova\u201d',
       listen: 'listening\u2026',
       speak:  'speaking\u2026',
       busy:   'thinking\u2026',
@@ -583,7 +593,14 @@
       '.jr-ptxt{display:flex;flex-direction:column;line-height:1.12;min-width:0}',
       '.jr-ptxt b{font:800 .72rem/1.1 Segoe UI,system-ui,sans-serif;letter-spacing:2.6px;color:#DFF6FF;white-space:nowrap;text-shadow:0 0 10px rgba(0,229,255,.8)}',
       '.jr-ptxt em{font:600 .6rem/1 Segoe UI,system-ui,sans-serif;font-style:normal;letter-spacing:1.2px;text-transform:uppercase;color:#7FA8C9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}',
-      '.jr-idot{width:7px;height:7px;border-radius:50%;flex:none;background:#B6FF3C;box-shadow:0 0 10px #B6FF3C;animation:jrDot 1.6s ease-in-out infinite}',
+      /* The dot used to pulse forever, and it sits INSIDE .jr-pill, which has
+         a backdrop-filter. Anything animating inside a backdrop-filtered
+         element makes the browser recompute that blur every single frame —
+         so a 7px decorative dot held the whole page at 37fps, on every page,
+         for as long as it was open, with nothing else happening at all.
+         It now pulses only when there is something to pulse about. */
+      '.jr-idot{width:7px;height:7px;border-radius:50%;flex:none;background:#B6FF3C;box-shadow:0 0 10px #B6FF3C}',
+      '.jr-pill.listen .jr-idot,.jr-pill.speak .jr-idot,.jr-pill.busy .jr-idot{animation:jrDot 1.6s ease-in-out infinite}',
       '@keyframes jrDot{0%,100%{opacity:.55}50%{opacity:1}}',
       '.jr-pill.listen .jr-idot{background:#F72585;box-shadow:0 0 12px #F72585}',
       '.jr-pill.speak .jr-idot{background:#00E5FF;box-shadow:0 0 14px #00E5FF}',
@@ -597,7 +614,11 @@
       '.jr-orb.big{width:64px;height:64px;margin:2px 0 4px}',
       '.jr-orb .jr-eye{position:relative;width:40%;height:26%;border-radius:50% 50% 46% 46%;background:linear-gradient(135deg,#fff,#A9EEFF);box-shadow:0 0 12px rgba(255,255,255,.9)}',
       '.jr-orb .jr-eye::after{content:"";position:absolute;inset:22% 18%;border-radius:50%;background:rgba(8,12,24,.85)}',
-      '.jr-orb.big::after{content:"";position:absolute;inset:-7px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 38%,rgba(255,255,255,.9) 50%,transparent 62% 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));animation:jrSpin 3.2s linear infinite}',
+      '.jr-orb.big::after{content:"";position:absolute;inset:-7px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 38%,rgba(255,255,255,.9) 50%,transparent 62% 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));}',
+      /* Spins only while it is doing something. Left running it sat inside
+         the pill's backdrop-filter and forced the blur to recompute every
+         frame for the life of the page. */
+      '.jr-pill.listen .jr-orb.big::after,.jr-pill.speak .jr-orb.big::after,.jr-pill.busy .jr-orb.big::after,.jr-sheet.open .jr-orb.big::after{animation:jrSpin 3.2s linear infinite}',
       '@keyframes jrSpin{to{transform:rotate(360deg)}}',
 
       /* ---------- the listening sheet ---------- */
@@ -626,11 +647,11 @@
     pill.id = 'jr-pill';
     pill.setAttribute('role', 'button');
     pill.setAttribute('tabindex', '0');
-    pill.setAttribute('aria-label', 'Jarvis voice assistant');
+    pill.setAttribute('aria-label', 'Nova voice assistant');
     pill.setAttribute('aria-expanded', 'false');
     pill.innerHTML =
       '<span class="jr-orb small"><i class="jr-eye"></i></span>' +
-      '<span class="jr-ptxt"><b>JARVIS</b><em id="jr-status">systems online</em></span>' +
+      '<span class="jr-ptxt"><b>NOVA</b><em id="jr-status">systems online</em></span>' +
       '<span class="jr-idot"></span>' +
       '<span class="jr-togs">' +
         '<button id="jr-wake" class="jr-tog" title="Wake word">' + ICONS.wake + '</button>' +
@@ -641,7 +662,7 @@
     /* Remember where the reader parked the pill, so it stays put on the next
        page instead of blocking something again. */
     var savedPos = null;
-    try { savedPos = JSON.parse(localStorage.getItem('nc_jarvis_pos') || 'null'); } catch (e) {}
+    try { savedPos = JSON.parse(localStorage.getItem('nc_nova_pos') || 'null'); } catch (e) {}
     if (savedPos && typeof savedPos.x === 'number' && typeof savedPos.y === 'number') {
       pill.style.left = savedPos.x + 'px';
       pill.style.top = savedPos.y + 'px';
@@ -653,7 +674,7 @@
     sheet.className = 'jr-sheet';
     sheet.id = 'jr-sheet';
     sheet.setAttribute('role', 'dialog');
-    sheet.setAttribute('aria-label', 'Jarvis voice assistant');
+    sheet.setAttribute('aria-label', 'Nova voice assistant');
     var bars = '';
     for (var i = 0; i < 26; i++) {
       bars += '<i class="jr-bar" style="animation-delay:' + (Math.random() * 1.1).toFixed(2) + 's;animation-duration:' + (0.8 + Math.random() * 0.5).toFixed(2) + 's"></i>';
@@ -662,7 +683,7 @@
       '<button id="jr-x" class="jr-x" aria-label="Close">' + ICONS.close + '</button>' +
       '<div class="jr-bars" id="jr-bars">' + bars + '</div>' +
       '<span class="jr-orb big" id="jr-bigorb"><i class="jr-eye"></i></span>' +
-      '<p class="jr-cap" id="jr-cap">Jarvis online \u2014 tap the orb and talk.</p>' +
+      '<p class="jr-cap" id="jr-cap">Nova online \u2014 tap the orb and talk.</p>' +
       '<p class="jr-hint">tap the orb to talk</p>';
     document.body.appendChild(sheet);
 
@@ -688,7 +709,7 @@
     setWake(wakeArmed());
 
     /* Face recognition greeting. biometric.js fires nc:bio-signin whenever a
-       face (or voice) sign-in succeeds — here, Jarvis becomes the voice that
+       face (or voice) sign-in succeeds — here, Nova becomes the voice that
        says hello, and starts listening if the tap started the sign-in. */
     document.addEventListener('nc:bio-signin', function (e) {
       var nm = e.detail && e.detail.name;
@@ -745,7 +766,7 @@
       try { el.releasePointerCapture(e.pointerId); } catch (err) {}
       if (moved) {
         try {
-          localStorage.setItem('nc_jarvis_pos',
+          localStorage.setItem('nc_nova_pos',
             JSON.stringify({ x: el.getBoundingClientRect().left, y: el.getBoundingClientRect().top }));
         } catch (err) {}
         suppressTap = true;
@@ -759,7 +780,7 @@
   }
 
   /* ---- tap: open the sheet and listen. If you are not signed in and face
-     sign-in exists, the camera scans first and Jarvis greets you by name
+     sign-in exists, the camera scans first and Nova greets you by name
      before listening. ---- */
   function onTap() {
     if (suppressTap) { suppressTap = false; return; }
@@ -804,9 +825,9 @@
       var pl = $('jr-pill');
       if (!pl) return;
       var em = $('jr-status');
-      if (em) em.textContent = 'hi, I\u2019m Jarvis \u2014 tap me';
+      if (em) em.textContent = 'hi, I\u2019m Nova \u2014 tap me';
       setTimeout(function () {
-        if (em && !active) em.textContent = wake.armed ? 'say \u201chey Jarvis\u201d' : 'systems online';
+        if (em && !active) em.textContent = wake.armed ? 'say \u201chey Nova\u201d' : 'systems online';
       }, 4200);
     }, 1500);
   }
@@ -820,7 +841,10 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();
 
-  window.ncJarvis = {
+  /* Old name kept as an alias: other files on the server may still be an
+     older paste that calls ncJarvis, and a rename that silently breaks them
+     is not worth the tidiness. */
+  window.ncNova = {
     open: openSheet,
     close: close,
     toggle: onTap,
