@@ -360,6 +360,7 @@ const UI_T = {
   ui_got_it: { en:"Got it", zh:"知道了", hi:"समझ गया", es:"Entendido", ar:"فهمت", fr:"Compris", bn:"বুঝেছি", pt:"Percebi", ru:"Понятно", ur:"سمجھ گیا", id:"Paham", de:"Alles klar", ja:"了解", tr:"Anladım", ko:"알겠어요", fa:"فهمیدم", uk:"Зрозуміло", it:"Ho capito", pl:"Jasne", vi:"Hiểu rồi" },
   ui_age_q: { en:"How old are you?", zh:"你多大了？", hi:"आपकी उम्र कितनी है?", es:"¿Cuántos años tienes?", ar:"كم عمرك؟", fr:"Quel âge as-tu ?", bn:"আপনার বয়স কত?", pt:"Quantos anos tens?", ru:"Сколько тебе лет?", ur:"آپ کی عمر کتنی ہے؟", id:"Berapa umurmu?", de:"Wie alt bist du?", ja:"あなたは何歳ですか？", tr:"Kaç yaşındasın?", ko:"몇 살이세요?", fa:"چند ساله‌ای؟", uk:"Скільки тобі років?", it:"Quanti anni hai?", pl:"Ile masz lat?", vi:"Bạn bao nhiêu tuổi?" },
   ui_age_aria: { en:"Your age", zh:"你的年龄", hi:"आपकी उम्र", es:"Tu edad", ar:"عمرك", fr:"Ton âge", bn:"আপনার বয়স", pt:"A tua idade", ru:"Твой возраст", ur:"آپ کی عمر", id:"Usia kamu", de:"Dein Alter", ja:"あなたの年齢", tr:"Yaşın", ko:"당신의 나이", fa:"سن تو", uk:"Твій вік", it:"La tua età", pl:"Twój wiek", vi:"Tuổi của bạn" },
+  ui_age_redo: { en:"I picked the wrong number", pt:"Escolhi o número errado", es:"Elegí el número equivocado", fr:"J'ai choisi le mauvais nombre", de:"Ich habe die falsche Zahl gewählt", it:"Ho scelto il numero sbagliato" },
   ui_age_u_t: { en:"Thanks for being honest.", zh:"谢谢你的诚实。", hi:"सच बोलने के लिए धन्यवाद।", es:"Gracias por ser honesto.", ar:"شكرًا لصدقك.", fr:"Merci d'avoir été honnête.", bn:"সত্য বলার জন্য ধন্যবাদ।", pt:"Obrigado por seres honesto.", ru:"Спасибо за честность.", ur:"ایمانداری کے لیے شکریہ۔", id:"Terima kasih sudah jujur.", de:"Danke, dass du ehrlich bist.", ja:"正直に言ってくれてありがとう。", tr:"Dürüst olduğun için teşekkürler.", ko:"솔직하게 말해줘서 고마워요.", fa:"ممنون از صداقتت.", uk:"Дякуємо за чесність.", it:"Grazie per la tua sincerità.", pl:"Dzięki za szczerość.", vi:"Cảm ơn vì đã thành thật." },
   ui_age_u_b: { en:"NovaClip needs verified parental consent for creators under 13, so we cannot open an account from here yet. Ask a parent or guardian to set one up for you from the Family Dashboard.", zh:"对于13岁以下的创作者，NovaClip需要经过验证的家长同意，所以我们暂时无法在这里开设账户。请让家长或监护人从家庭面板为您设置一个。", hi:"13 साल से कम उम्र के क्रिएटर्स के लिए NovaClip को पुष्ट माता-पिता की सहमति चाहिए, इसलिए हम अभी यहाँ से खाता नहीं खोल सकते। अपने माता-पिता या अभिभावक से फ़ैमिली डैशबोर्ड से सेट अप करने के लिए कहें।", es:"NovaClip necesita consentimiento parental verificado para creadores menores de 13 años, así que todavía no podemos abrir una cuenta desde aquí. Pide a un padre o tutor que te la configure desde el Panel Familiar.", ar:"يتطلب NovaClip موافقة أبوية موثقة للمبدعين دون 13 عامًا، لذا لا يمكننا فتح حساب من هنا بعد. اطلب من أحد الوالدين أو الوصي إنشاءه لك من لوحة العائلة.", fr:"NovaClip demande un consentement parental vérifié pour les créateurs de moins de 13 ans, donc nous ne pouvons pas encore ouvrir de compte d'ici. Demande à un parent ou tuteur d'en créer un pour toi depuis le Tableau Famille.", bn:"১৩ বছরের কম বয়সী নির্মাতাদের জন্য NovaClip-এর পিতা-মাতার নিশ্চিত সম্মতি দরকার, তাই আমরা এখান থেকে এখনো অ্যাকাউন্ট খুলতে পারি না। আপনার পিতা-মাতা বা অভিভাবককে ফ্যামিলি ড্যাশবোর্ড থেকে তৈরি করতে বলুন।", pt:"A NovaClip precisa de consentimento parental verificado para criadores com menos de 13 anos, por isso ainda não podemos abrir conta daqui. Pede a um pai ou encarregado de educação que a configure a partir do Painel Familiar.", ru:"NovaClip требует подтверждённого родительского согласия для авторов младше 13 лет, поэтому мы пока не можем открыть аккаунт отсюда. Попроси родителя или опекуна создать его через Семейную панель.", ur:"13 سال سے کم عمر کے تخلیق کاروں کے لیے NovaClip کو تصدیق شدہ والدین کی رضامندی درکار ہے، اس لیے ہم ابھی یہاں سے اکاؤنٹ نہیں کھول سکتے۔ اپنے والدین یا سرپرست سے فیملی ڈیش بورڈ سے سیٹ اپ کرنے کو کہیں۔", id:"NovaClip memerlukan persetujuan orang tua yang terverifikasi untuk kreator di bawah 13 tahun, jadi kami belum bisa membuka akun dari sini. Minta orang tua atau wali membuatkannya dari Dasbor Keluarga.", de:"NovaClip braucht die bestätigte Einwilligung der Eltern für Creator unter 13, daher können wir hier noch kein Konto eröffnen. Bitte deine Eltern oder deinen Vormund, eines über das Familien-Dashboard einzurichten.", ja:"13歳未満のクリエイターには保護者による認証済みの同意が必要です。そのため、ここからアカウントを開設することはまだできません。保護者にファミリーダッシュボードからの設定を頼んでください。", tr:"13 yaş altı içerik üreticileri için NovaClip, doğrulanmış veli onayı ister; bu yüzden buradan henüz hesap açamayız. Ebeveyninden ya da vasinden Aile Paneli'nden bir hesap kurmasını iste.", ko:"13세 미만 크리에이터는 검증된 부모 동의가 필요하므로 여기서는 아직 계정을 만들 수 없습니다. 부모님 또는 보호자에게 가족 대시보드에서 설정해 달라고 하세요.", fa:"NovaClip برای سازندگان زیر ۱۳ سال به رضایت تأییدشده والدین نیاز دارد، پس هنوز نمی‌توانیم از اینجا حساب بسازیم. از والد یا قیم بخواه از داشبورد خانواده یکی بسازد.", uk:"NovaClip потребує підтвердженої згоди батьків для творців до 13 років, тому ми поки що не можемо відкрити обліковий запис звідси. Попроси батьків або опікуна налаштувати його через Сімейну панель.", it:"NovaClip richiede il consenso parentale verificato per i creator sotto i 13 anni, quindi non possiamo ancora aprire un account da qui. Chiedi a un genitore o tutore di configurarlo dal Pannello Famiglia.", pl:"NovaClip wymaga potwierdzonej zgody rodzica dla twórców poniżej 13 lat, więc nie możemy jeszcze założyć konta stąd. Poproś rodzica lub opiekuna, aby założył je z Panelu Rodzinnego.", vi:"NovaClip yêu cầu sự đồng ý đã xác minh của phụ huynh cho nhà sáng tạo dưới 13 tuổi, vì vậy chúng tôi chưa thể mở tài khoản từ đây. Hãy nhờ cha mẹ hoặc người giám hộ thiết lập từ Bảng điều khiển Gia đình." },
   ui_fam_dash: { en:"Open the Family Dashboard", zh:"打开家庭面板", hi:"फ़ैमिली डैशबोर्ड खोलें", es:"Abrir el Panel Familiar", ar:"فتح لوحة العائلة", fr:"Ouvrir le Tableau Famille", bn:"ফ্যামিলি ড্যাশবোর্ড খুলুন", pt:"Abrir o Painel Familiar", ru:"Открыть Семейную панель", ur:"فیملی ڈیش بورڈ کھولیں", id:"Buka Dasbor Keluarga", de:"Familien-Dashboard öffnen", ja:"ファミリーダッシュボードを開く", tr:"Aile Paneli'ni aç", ko:"가족 대시보드 열기", fa:"باز کردن داشبورد خانواده", uk:"Відкрити Сімейну панель", it:"Apri il Pannello Famiglia", pl:"Otwórz Panel Rodzinny", vi:"Mở Bảng điều khiển Gia đình" },
@@ -1300,7 +1301,7 @@ style.textContent =
   "-webkit-mask-image:linear-gradient(180deg,transparent,#000 26%,#000 74%,transparent); " +
   "mask-image:linear-gradient(180deg,transparent,#000 26%,#000 74%,transparent); }" +
 "#ncWheel::-webkit-scrollbar { display:none; }" +
-"#ncWheel .ncw { height:44px; line-height:44px; scroll-snap-align:center; text-align:center; " +
+"#ncWheel .ncw { height:44px; line-height:44px; scroll-snap-align:center; text-align:center; cursor:pointer; " +
   "font-size:1.5rem; font-weight:600; color:#5b6478; transition:color .18s, transform .18s; }" +
 "#ncWheel .ncw.on { color:#EAF2FF; transform:scale(1.22); }" +
 "#ncWheel .ncw.near { color:#8c96ad; }" +
@@ -3541,8 +3542,67 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   // ---- age gate (13-18) ----
+
+  /* The two ends of who this site is for, in one place. 13 is not an
+     arbitrary choice: it is the number every page of this site already says,
+     and it is the line COPPA draws — under it, a service aimed at children
+     needs verifiable parental consent, which this site has no way to obtain
+     and does not pretend to. */
+  const NC_MIN_AGE = 13;
+  const NC_MAX_AGE = 18;
+
+  /* Pages the blocked screen SENDS people to. Gating these would trap a child
+     in a loop between the block and the page it tells them to open, which is
+     worse than not blocking at all — they would simply clear their storage. */
+  const NC_AGE_EXEMPT = /(^|\/)(parent|shield)\.html$/i;
+
   window.ncAge = function () { return parseInt(localStorage.getItem('nc_user_age') || '0'); };
   window.ncControlsRelaxed = function () { const a = ncAge(); return a >= 16 && a <= 18; };
+  window.ncAgeAllowed = function () { const a = ncAge(); return a >= NC_MIN_AGE; };
+
+  /* The screen an under-age visitor gets, every time, on every page.
+
+     IT IS SEPARATE FROM THE QUESTION ON PURPOSE. The gate used to ask once,
+     store the answer, and then short-circuit on `if (ncAge()) return` — which
+     meant a child who answered honestly was blocked exactly once. One reload
+     and the stored 8 counted as "already answered", and they walked in. The
+     honest answer was the thing that let them past.
+
+     Nothing here is dismissable and nothing writes a flag that would let the
+     next load skip it. The only way out is a different answer, which means
+     going back through the question. */
+  function ncAgeBlocked() {
+    if (document.getElementById('ncAgeGate')) return;
+    const o = document.createElement('div');
+    o.id = 'ncAgeGate';
+    o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(5,6,10,0.98);color:#EAF2FF;' +
+      'display:flex;align-items:center;justify-content:center;padding:24px;' +
+      'font-family:Segoe UI,system-ui,sans-serif;backdrop-filter:blur(8px);';
+    o.innerHTML = '<div style="width:100%;max-width:420px;text-align:center;background:rgba(255,255,255,0.04);' +
+      'border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px 26px">' +
+      '<h2 style="margin-bottom:10px;font-size:1.4rem">' + tr('ui_age_u_t') + '</h2>' +
+      '<p style="color:#7E8AA6;font-size:0.94rem;line-height:1.7">' + tr('ui_age_u_b') + '</p>' +
+      '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;' +
+      'font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">' +
+      tr('ui_fam_dash') + '</a>' +
+      '<p style="margin-top:20px"><button id="ncAgeRedo" style="background:none;border:none;' +
+      'color:#7E8AA6;font-size:0.82rem;text-decoration:underline;cursor:pointer">' +
+      tr('ui_age_redo') + '</button></p>' +
+      '</div>';
+    document.body.appendChild(o);
+    /* One way back, for the child who spun the wheel wrong — it clears the
+       answer and asks again rather than letting anyone edit it to a number
+       that passes. */
+    const redo = document.getElementById('ncAgeRedo');
+    if (redo) redo.onclick = function () {
+      try { localStorage.removeItem('nc_user_age'); } catch (e) {}
+      location.reload();
+    };
+    /* The page underneath keeps running scripts; this stops it being read or
+       used while the block is up. */
+    document.documentElement.style.overflow = 'hidden';
+  }
+  window.ncAgeBlocked = ncAgeBlocked;
 
   /* ---- the age gate ----
      The old one asked the question and then answered it for you: "NovaClip is
@@ -3561,7 +3621,17 @@ window.addEventListener('DOMContentLoaded', () => {
        a correction; a wheel does not, and it cannot be edited after you see
        what your answer led to. */
   window.ncAgeGate = function () {
-    if (ncAge()) return;
+    const had = ncAge();
+    /* Under age: blocked, every page, every load. This is the line that used
+       to read `if (ncAge()) return`, which treated ANY stored answer as
+       permission — so answering 8 honestly bought a single block and then
+       free entry on the next reload. */
+    if (had && had < NC_MIN_AGE) return ncAgeBlocked();
+    if (had) return;
+    /* Inside an embedded page the host has already asked; asking again would
+       stack two overlays. The block above still applies, so ?embed=1 cannot
+       be used to walk past it. */
+    if (window.NC_EMBED) return;
 
     const o = document.createElement('div');
     o.id = 'ncAgeGate';
@@ -3598,6 +3668,53 @@ window.addEventListener('DOMContentLoaded', () => {
        through — which is the same problem in a new shape. */
     function arm() { touched = true; go.disabled = false; go.style.opacity = '1'; }
 
+    /* ONE AGE PER NOTCH.
+
+       A mouse wheel notch scrolls about 100px and a row is 44, so one notch
+       crossed more than two ages and the snap landed on whichever it was
+       nearest. Half the range was simply unreachable: you went 12, 14, 16 and
+       could never stop on 13 — the exact age this gate cares most about.
+
+       So the wheel event is taken over. Small deltas (a trackpad sends a
+       stream of 3-10px) accumulate until they add up to an intent; a mouse
+       notch clears the threshold on its own. Either way the result is one age,
+       and never two. */
+    /* Instant, not smooth, and that is the whole reason this works.
+
+       With behavior:'smooth' the animation is still running when the next
+       notch arrives, so Math.round(scrollTop / H) reads a position halfway
+       between two rows and computes the row it is already heading to. Every
+       other notch then did nothing: the step sizes came out 0,1,0,1,0,1.
+
+       A 44px hop needs no animation — CSS scroll-snap already smooths the
+       feel on touch — and setting scrollTop directly means the next read is
+       always the truth. */
+    function step(d) {
+      const max = HIGH - LOW;
+      const i = Math.max(0, Math.min(max, Math.round(wheel.scrollTop / H) + d));
+      wheel.scrollTop = i * H;
+    }
+
+    let acc = 0;
+    wheel.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      arm();
+      acc += e.deltaY;
+      if (Math.abs(acc) < 40) return;
+      step(acc > 0 ? 1 : -1);
+      acc = 0;
+    }, { passive: false });
+
+    /* And you can just tap the number you want. Scrolling ten rows to reach
+       your own age is a chore on a phone, and the numbers were sitting there
+       looking like buttons the whole time. */
+    wheel.addEventListener('click', (e) => {
+      const el = e.target.closest && e.target.closest('.ncw');
+      if (!el) return;
+      arm();
+      wheel.scrollTop = (parseInt(el.dataset.a, 10) - LOW) * H;
+    });
+
     let raf = 0;
     wheel.addEventListener('scroll', () => {
       arm();
@@ -3608,7 +3725,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
       e.preventDefault();
       arm();
-      wheel.scrollTop += (e.key === 'ArrowDown' ? 1 : -1) * H;
+      step(e.key === 'ArrowDown' ? 1 : -1);
     });
     wheel.scrollTop = 0;      // opens at the bottom of the range, hinting nothing
     paint();
@@ -3624,16 +3741,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
     go.onclick = () => {
       if (!touched) return;
-      const a = picked;
+      /* Recomputed here rather than trusted from the last paint: a smooth
+         scroll may still be in flight when Continue is pressed. */
+      const a = LOW + Math.round(wheel.scrollTop / H);
       localStorage.setItem('nc_user_age', String(a));   // written first, whatever it is
 
-      if (a < 13) {
-        outcome(tr('ui_age_u_t'),
-          tr('ui_age_u_b'),
-          '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">' + tr('ui_fam_dash') + '</a>');
+      if (a < NC_MIN_AGE) {
+        /* The same screen the next page load will show, rather than a
+           one-off that a refresh clears. */
+        o.remove();
+        ncAgeBlocked();
         return;
       }
-      if (a > 18) {
+      if (a > NC_MAX_AGE) {
         outcome(tr('ui_age_o_t'),
           tr('ui_age_o_b'),
           '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">' + tr('ui_fam_dash') + '</a>');
@@ -3655,9 +3775,31 @@ window.addEventListener('DOMContentLoaded', () => {
     };
   };
 
-  // run on every page
-  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); });
-  if (document.readyState !== 'loading') ncCheckSuspension();
+  /* THE GATE RUNS ON EVERY PAGE, WHICH IT DID NOT.
+
+     ncAgeGate() was called from one script tag, in index.html, and nowhere
+     else. Every other page — the editor, the games, the AI tools, all
+     twenty-three of them — never ran it at all. Anyone who typed
+     novaclip.org/editor.html, or followed a link straight to it, or had it
+     bookmarked, skipped the question entirely. Blocking under-13s on the
+     front door means nothing while every other door is open.
+
+     nova.js is on every page, so the gate belongs here rather than in a tag
+     each page has to remember to carry.
+
+     What this is NOT: a wall. It is a browser, and a child who clears
+     localStorage answers the question again. Nothing done in a page can stop
+     that, and pretending otherwise would be the dishonest part. It stops the
+     accidental arrival and the casual one, which is what an age gate is for;
+     the Family Dashboard and the Family Shield are what a parent uses when
+     more than that is needed. */
+  function ncAgeBoot() {
+    if (NC_AGE_EXEMPT.test(location.pathname)) return;
+    if (window.ncAgeGate) ncAgeGate();
+  }
+
+  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); ncAgeBoot(); });
+  if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); }
 })();
 
 /* ============================================================

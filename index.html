@@ -801,6 +801,8 @@ document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
   */
 </script>
 <script src='nova-globe.js' defer></script>
-<script>window.addEventListener('load', function(){ if (window.ncAgeGate) ncAgeGate(); });</script>
+<!-- The age gate used to be called from here, and ONLY from here, which is
+     why every other page had no gate at all. nova.js runs it on every page
+     now, so this tag would only fire it a second time. -->
 </body>
 </html>
