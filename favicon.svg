@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="32" height="32" role="img" aria-label="NovaClip">
+  <defs>
+    <linearGradient id="novaclip-f" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0%" stop-color="#2AD7D7"/>
+      <stop offset="100%" stop-color="#00BCC5"/>
+    </linearGradient>
+  </defs>
+  <path d="M32 2 Q35.5 26 62 32 Q35.5 38 32 62 Q28.5 38 2 32 Q28.5 26 32 2 Z" fill="url(#novaclip-f)"/>
+  <circle cx="32" cy="32" r="7" fill="#EAFEFF"/>
+</svg>
