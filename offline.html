@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<!-- PWA. The manifest and the icons sit at the site root so they resolve at
+     https://novaclip.org/manifest.json and /icons/..., which is what an install
+     prompt and PWABuilder look for. The service worker is registered at the end
+     of nova.js, which all 24 pages already load. -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<title>NovaClip — no connection</title>
+<meta name='theme-color' content='#050505'>
+<link rel='icon' href='/logo.svg' type='image/svg+xml'>
+<!-- Shown by sw.js when a page is asked for that has never been visited and
+     the network is not there. Deliberately self-contained: no stylesheet, no
+     script, no font — the one page that has to render when nothing else can
+     be fetched cannot depend on anything being fetched. -->
+<style>
+  html,body{height:100%}
+  body{margin:0;background:#050505;color:#EAF2FF;display:grid;place-items:center;
+       padding:24px;text-align:center;
+       font:16px/1.6 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+  .wrap{max-width:30rem}
+  img{width:88px;height:88px;margin:0 auto 20px;display:block}
+  h1{font-size:1.75rem;margin:0 0 12px;letter-spacing:-0.01em}
+  p{margin:0 0 10px;color:#7E8AA6}
+  button{margin-top:22px;min-height:44px;padding:12px 26px;border:0;border-radius:999px;
+         background:#00F0FF;color:#04121A;font-weight:700;font-size:1rem;cursor:pointer}
+  button:hover{background:#5CF7FF}
+</style>
+</head>
+<body>
+  <div class='wrap'>
+    <img src='/logo.svg' alt='' width='88' height='88'>
+    <h1>You are offline</h1>
+    <p>NovaClip could not reach the network, so this page has not been loaded.</p>
+    <p>Pages you have already opened still work. Anything you were working on is
+       saved on this device and will be there when you are back.</p>
+    <button type='button' onclick='location.reload()'>Try again</button>
+  </div>
+</body>
+</html>

@@ -3980,3 +3980,34 @@ window.addEventListener('DOMContentLoaded', () => {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
+
+/* ============================================================================
+   INSTALLING NOVACLIP — the service worker registration
+   ============================================================================
+   Here rather than in a <script> tag because all 24 pages already load
+   nova.js, so this is the one place that covers the whole site. Adding the
+   snippet to every page by hand would be 24 chances to get one wrong.
+
+   Registered after `load` deliberately: registration competes for the network
+   with whatever the page is still fetching, and on the editor that is a large
+   bundle. Nothing here changes what the page does — a worker that fails to
+   register leaves the site exactly as it was.
+
+   The guards matter. file:// has no service worker support and throws;
+   http:// on anything except localhost is refused by the browser, so a
+   preview server over plain HTTP would log an error on every page for no
+   reason. novaclip.org is HTTPS, which is where this actually runs.
+   ============================================================================ */
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  var secure = location.protocol === 'https:' ||
+               location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if (!secure) return;
+
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function (e) {
+      /* Not fatal and not worth a dialog: the site works without it. */
+      if (window.console && console.warn) console.warn('NovaClip: service worker not registered —', e && e.message);
+    });
+  });
+})();

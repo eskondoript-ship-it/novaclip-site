@@ -11,6 +11,13 @@ var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('da
 r.style.colorScheme=t;}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
+<!-- PWA. The manifest and the icons sit at the site root so they resolve at
+     https://novaclip.org/manifest.json and /icons/..., which is what an install
+     prompt and PWABuilder look for. The service worker is registered at the end
+     of nova.js, which all 24 pages already load. -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
 <title>NovaClip — Run your channel like a game</title>
 
 <!-- Search engines and link previews. A page with no description gets whatever
