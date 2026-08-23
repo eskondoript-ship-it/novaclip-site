@@ -750,9 +750,16 @@ ncThemeStyle.textContent =
 /* ---- the three-way switch ---- */
 ".nc-themerow{display:flex;gap:0;background:var(--nc-card);border:1px solid var(--nc-line2);" +
   "border-radius:10px;overflow:hidden;margin-top:6px;}" +
-".nc-themebtn{flex:1;padding:7px 4px;border:0;background:none;cursor:pointer;color:var(--nc-dim);" +
+/* 44px, because a sweep of all 27 pages found these at 30 and 34 — the one
+   control that appears on every single page, and the one that was too small
+   to hit. The bar is 52px tall, so 44 fits inside it with room to spare. */
+".nc-themebtn{flex:1;min-height:44px;padding:7px 4px;border:0;background:none;cursor:pointer;color:var(--nc-dim);" +
   "font:inherit;font-size:.72rem;font-weight:700;display:grid;place-items:center;gap:2px;" +
   "transition:background .18s,color .18s;}" +
+/* The language picker is declared in each page's own sidebar markup and
+   styled by that page, so 27 stylesheets each decided its height and all
+   of them landed on 28px. One rule here reaches every one of them. */
+".themewrap select,#ncbar select,select#langpick{min-height:44px;}" +
 ".nc-themebtn:hover{color:var(--nc-text);background:var(--nc-card2);}" +
 ".nc-themebtn:focus-visible{outline:2px solid var(--nc-cyan);outline-offset:-2px;}" +
 ".nc-themebtn.on{background:linear-gradient(135deg,var(--nc-violet),var(--nc-cyan));color:#04121a;}" +
@@ -838,7 +845,7 @@ function ncBuildBar() {
     '#ncbar .themewrap label{margin:0 !important;font-size:.72rem;opacity:.55;' +
       'white-space:nowrap;letter-spacing:.02em}' +
     '#ncbar #nc-themerow .nc-themerow{margin-top:0;width:104px}' +
-    '#ncbar #nc-themerow .nc-themebtn{padding:5px 4px}' +
+    '#ncbar #nc-themerow .nc-themebtn{padding:5px 4px;min-height:44px}' +
     '#ncbar #genzToggle{width:148px}' +
     '#ncbar #genzToggle > div{padding:5px 4px}' +
     /* width:auto beats the pages that style their sidebar select as
@@ -1009,12 +1016,12 @@ function ncBuildThemeSwitch() {
          the twelve chips arrived as 14px slivers nobody could tell apart. */
       '.nc-skinrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-width:230px}' +
       '#ncbar .nc-skinrow{flex-wrap:nowrap;margin-top:0;max-width:none}' +
-      '.nc-skinbtn{flex:0 0 34px;width:34px;min-width:34px;height:34px;min-height:34px;' +
+      '.nc-skinbtn{flex:0 0 44px;width:44px;min-width:44px;height:44px;min-height:44px;' +
         'padding:0;border-radius:9px;' +
         'display:flex;align-items:center;justify-content:center;gap:2px;cursor:pointer;' +
         'border:1px solid var(--nc-line2,rgba(255,255,255,.18));overflow:hidden}' +
       '.nc-skinbtn.on{outline:2px solid var(--nc-cyan,#00F0FF);outline-offset:1px}' +
-      '.nc-skinbtn .ncsk{flex:0 0 5px;width:5px;height:14px;border-radius:2px;display:block}' +
+      '.nc-skinbtn .ncsk{flex:0 0 6px;width:6px;height:18px;border-radius:2px;display:block}' +
       '#ncbar #nc-themerow{display:flex;align-items:center;gap:10px;margin-bottom:0}' +
       '#ncbar #nc-themerow > label{margin-bottom:0}';
     document.head.appendChild(css);
@@ -2848,7 +2855,7 @@ function ncNav() {
       '#ncnav{display:flex;flex-direction:column;gap:2px;padding:2px 10px 6px}',
 
       /* group header */
-      '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;',
+      '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;min-height:44px;',
       'padding:clamp(7px,1.15vh,14px) 9px clamp(3px,.55vh,7px);background:none;border:0;cursor:pointer;text-align:left;',
       'font:700 10px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.15em;text-transform:uppercase;',
       'color:var(--nc-navhead,#5D6A88);transition:color .18s}',
@@ -2863,7 +2870,10 @@ function ncNav() {
 
       /* the row. position:relative for the active rail; the gradient sits in a
          ::before at opacity 0 so hovering fades it rather than snapping. */
-      '.sidebar #ncnav a.ncl{position:relative;display:flex;align-items:center;gap:11px;margin:0;',
+      /* 44px. A sweep of all 27 pages measured these at 31 and the group
+         headers at 28 — the primary navigation of the whole site, and the
+         hardest thing on it to hit on a phone. */
+      '.sidebar #ncnav a.ncl{position:relative;display:flex;align-items:center;gap:11px;margin:0;min-height:44px;',
       /* Sixteen links at a fixed 50px each, plus six group headers and the
          brand and profile blocks, is 1112px of nav. That fits a 1280x800
          laptop only because the groups collapse below 820px tall — between

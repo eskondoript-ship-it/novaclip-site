@@ -587,7 +587,9 @@
       '.jr-pill.dragging{cursor:grabbing}',
       '.jr-pill.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-8px)}',
       '.jr-pill .jr-togs{display:flex;gap:4px;margin-left:2px}',
-      '.jr-pill .jr-tog{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.07);color:#9FE8FF;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;padding:0}',
+      /* 24px was below anything a thumb can reliably hit, and these two sit on
+   every page inside the assistant pill. */
+      '.jr-pill .jr-tog{width:36px;height:36px;border-radius:50%;border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.07);color:#9FE8FF;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;padding:0}',
       '.jr-pill .jr-tog:hover{background:rgba(0,229,255,.16)}',
       '.jr-pill .jr-tog.off{opacity:.4}',
       '.jr-ptxt{display:flex;flex-direction:column;line-height:1.12;min-width:0}',
@@ -624,7 +626,7 @@
       /* ---------- the listening sheet ---------- */
       '.jr-sheet{position:fixed;top:10px;left:50%;transform:translateX(-50%) translateY(-14px) scale(.94);z-index:99997;width:min(520px,94vw);display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 20px 14px;border-radius:28px;background:linear-gradient(165deg,rgba(18,24,44,.92),rgba(9,12,24,.97));border:1px solid rgba(0,229,255,.25);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);box-shadow:0 0 0 1px rgba(124,92,255,.16),0 0 44px -8px rgba(0,229,255,.5),0 30px 80px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06);opacity:0;pointer-events:none;transition:opacity .22s,transform .3s cubic-bezier(.2,.9,.3,1.12);font-family:"Segoe UI",-apple-system,sans-serif}',
       '.jr-sheet.open{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0) scale(1)}',
-      '.jr-x{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.07);color:#9FE8FF;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;padding:0}',
+      '.jr-x{min-height:36px;min-width:36px;position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;border:1px solid rgba(0,229,255,.22);background:rgba(0,229,255,.07);color:#9FE8FF;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;padding:0}',
       '.jr-x:hover{background:rgba(0,229,255,.16);box-shadow:0 0 14px -2px rgba(0,229,255,.6)}',
       '.jr-bars{display:flex;align-items:center;gap:3px;height:30px}',
       '.jr-bar{width:3px;border-radius:3px;background:linear-gradient(180deg,#A9F3FF,#00E5FF 40%,#7C5CFF);height:5px;animation:jrBar 1.1s ease-in-out infinite}',
