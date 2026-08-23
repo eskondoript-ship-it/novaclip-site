@@ -28,6 +28,33 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
+
+  /* CONSENT FIRST, MEASUREMENT SECOND.
+     Denied before anything else runs, so no analytics cookie is written and no
+     measurement is sent until somebody says yes. In the EU that is the order
+     the law asks for, and this audience is 13-18, which raises the bar rather
+     than lowering it.
+
+     Google's own snippet does not do this — the default is granted, and the
+     tag starts measuring on load. Reversing the default is the whole point:
+     "ask afterwards" is not asking.
+
+     nova.js draws the banner and calls gtag('consent','update',...) when the
+     answer comes in; a stored yes from a previous visit is applied here so the
+     question is asked once rather than on every page. */
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    wait_for_update: 500
+  });
+  try {
+    if (localStorage.getItem('nc_consent') === 'yes') {
+      gtag('consent', 'update', { analytics_storage: 'granted' });
+    }
+  } catch (e) {}
+
   gtag('js', new Date());
   gtag('config', 'G-QN1QE08F2K');
 </script>
@@ -40,7 +67,7 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050505">
-<title>NovaClip — Analytics</title>
+<title>Studio — NovaClip</title>
 <script src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
@@ -273,11 +300,21 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
 .sttile b{font-size:1.85rem;font-weight:750;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.15}
 .sttile i{font-style:normal;font-size:.78rem;color:var(--nc-dim,#7E8AA6)}
 #connectrow{margin:0 0 18px}
+#connectrow .gbtn{min-height:44px}
+#uname{display:none;margin:10px 0 0;font-weight:700}
+#authmsg{display:none;margin:10px 0 0;padding:12px 14px;border-radius:12px;line-height:1.65;
+  font-size:.92rem;background:var(--nc-bg2,rgba(255,255,255,.04));
+  border:1px solid var(--nc-line,rgba(255,255,255,.12));max-width:70ch}
+#authmsg.working{opacity:.75}
+#authmsg code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
 
 /* Fair Fight */
 #fairfight { margin: 26px 0; }
 .ffpick { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:14px 0 8px; }
 .ffpick label { font-size:.85rem; color:var(--nc-dim,#8c96ad); }
+.ffpick input { flex:1 1 240px; min-width:0; min-height:44px; padding:10px 12px; border-radius:12px;
+  background:var(--nc-bg3,rgba(255,255,255,.05)); color:var(--nc-text,#EAF2FF);
+  border:1px solid var(--nc-line,rgba(255,255,255,.14)); font-size:15px; }
 .ffpick select { flex:1 1 240px; min-width:0; min-height:44px; padding:10px 12px; border-radius:12px;
   background:var(--nc-bg3,rgba(255,255,255,.05)); color:var(--nc-text,#EAF2FF);
   border:1px solid var(--nc-line,rgba(255,255,255,.14)); font-size:15px; }
@@ -300,7 +337,7 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
 <body>
 <div class='sidebar'>
   <a href='index.html' data-t='home'>Home</a>
-  <a href='app.html' data-t='studio'>Studio</a>
+  <a href='analytics.html' data-t='studio'>Studio</a>
   <a href='analytics.html' data-t='analytics'>Analytics</a>
   <a href='trends.html' data-t='trends'>Trend Spotter</a>
   <a href='editor.html' data-t='editor'>Editor</a>
@@ -340,9 +377,20 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
     <p class='perfnote' id='yearNote'></p>
   </section>
 
+  <!-- CONNECTING HAPPENS HERE NOW.
+       It used to happen on app.html, and this row only ever pointed at it. That
+       page is gone — Studio and Analytics are one — so the Google sign-in moved
+       onto this page with it. Without that move every "connect" on this page
+       linked to this page, which is a loop with no way out of it.
+
+       The row keeps stable children rather than being rewritten wholesale,
+       because the sign-in module binds its handler to #gbtn once: replacing the
+       row's innerHTML would throw that button away and leave a dead one. -->
   <div id='connectrow'>
     <button id='gbtn' class='gbtn' data-t='signin'>Sign in with Google</button>
-    <p class='hint' data-t='analytics_hint'>Connect your channel to load your analytics.</p>
+    <p id='uname'></p>
+    <div id='authmsg'></div>
+    <p class='hint' id='connecthint' data-t='analytics_hint'>Connect your channel to load your analytics.</p>
   </div>
 
   <!-- Channel dashboard: the shape YouTube Studio opens on — the four numbers
@@ -390,6 +438,15 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
       <label for='ffopp'>Against</label>
       <select id='ffopp'><option value=''>Pick a channel your size…</option></select>
       <button id='ffgo' class='gbtn' type='button'>Compare</button>
+    </div>
+    <!-- From the old Studio page's "Duel a channel", which is the same idea in
+         a cruder form: it compared raw subscriber and view totals, so a bigger
+         channel won by being bigger. The one thing it could do that this could
+         not was name any channel, so that is what came across. -->
+    <div class='ffpick'>
+      <label for='ffname'>Or by name</label>
+      <input id='ffname' type='search' placeholder='Type a channel name…' autocomplete='off'>
+      <button id='ffsearch' class='gbtn' type='button'>Find &amp; compare</button>
     </div>
 
     <p class='hint' id='ffnote'>Sign in above and this fills with channels close
@@ -525,19 +582,36 @@ function studioFill(o) {
   if (o.name) { n.classList.remove('nc-skel'); n.textContent = o.name; }
 }
 
+/* The row's parts are shown and hidden, never replaced — see the note on the
+   markup. `label` null hides the button; `hint` null leaves the hint alone,
+   which is how the first state keeps the translated string from the HTML.
+   nova.js rewrites every [data-t] element after this script has run, so
+   anything set here would be overwritten a moment later in twenty languages'
+   worth of pages — the untranslated states are the ones that get set from JS. */
+function connectRow(label, hint) {
+  const b = document.getElementById('gbtn');
+  const h = document.getElementById('connecthint');
+  if (b) {
+    b.style.display = label === null ? 'none' : 'inline-block';
+    if (label) b.textContent = label;
+  }
+  if (h && hint !== null) {
+    h.innerHTML = hint;
+    h.removeAttribute('data-t');   // this text is ours now; stop it being replaced
+  }
+}
+
 async function boot() {
   const tok = loadToken();
-  const row = document.getElementById('connectrow');
   if (!tok) {
     /* A banner above a live dashboard, rather than a gate instead of one. */
     studioFill(null);
-    row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">Connect in Studio</a>' +
-      '<p class="hint">Analytics uses the channel you connect in Studio. Connect once there, then come back — you will stay signed in for about an hour.</p>';
+    connectRow('Sign in with Google', null);   // keeps the translated hint in the HTML
     renderYearChart();   // says what it will show, rather than sitting blank
     return;
   }
   ytToken = tok;
-  row.innerHTML = '<p class="hint">Loading your channel…</p>';
+  connectRow(null, 'Loading your channel…');
   try {
     const d = await yt('channels?part=statistics,snippet,contentDetails&mine=true');
     if (d.items && d.items.length) {
@@ -558,12 +632,10 @@ async function boot() {
          and it is wrong as often as it is right — a disabled API, a revoked scope
          and a used-up quota all land here, and all three need a different fix. */
       const why = d.error && d.error.message ? d.error.message : 'The connection expired.';
-      row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">Reconnect in Studio</a>' +
-        '<p class="hint">YouTube would not return your channel: ' + String(why).replace(/</g, '&lt;') + '</p>';
+      connectRow('Reconnect', 'YouTube would not return your channel: ' + String(why).replace(/</g, '&lt;'));
     }
   } catch (e) {
-    row.innerHTML = '<a href="app.html" class="gbtn" style="display:inline-block;text-decoration:none;">Reconnect in Studio</a>' +
-      '<p class="hint">Could not reach YouTube. Reconnect in Studio and try again.</p>';
+    connectRow('Reconnect', 'Could not reach YouTube. Try connecting again.');
   }
 }
 
@@ -937,7 +1009,7 @@ async function renderPerformance() {
     const scope = e.code === 403 || /scope|permission|insufficient/i.test(e.message || '');
     perfSay(scope
       ? '<b>This section needs one more permission.</b> Your connection was made before NovaClip asked for analytics access. ' +
-        'Go to <a href="app.html" style="color:#00F0FF">Studio</a>, disconnect and connect again — the Google screen will ask for ' +
+        'Press <a href="#" onclick="ncReconnect();return false;" style="color:#00F0FF">reconnect</a> — the Google screen will ask for ' +
         '“View YouTube Analytics reports”. Everything above still works without it.'
       : 'YouTube would not return your analytics: ' + String(e.message).replace(/</g, '&lt;'), true);
     document.getElementById('perfKpis').innerHTML = '';
@@ -1033,8 +1105,8 @@ async function renderPerformance() {
   } catch (e) {
     money.className = 'moneybox off';
     money.innerHTML = /scope|permission|insufficient|forbidden/i.test(e.message || '') || e.code === 403
-      ? 'Earnings are hidden because the money permission was not granted. That is a fine choice — reconnect in ' +
-        '<a href="app.html" style="color:#00F0FF">Studio</a> and tick the revenue box if you want it here.'
+      ? 'Earnings are hidden because the money permission was not granted. That is a fine choice — ' +
+        '<a href="#" onclick="ncReconnect();return false;" style="color:#00F0FF">reconnect</a> and tick the revenue box if you want it here.'
       : 'Earnings unavailable: ' + String(e.message).replace(/</g, '&lt;');
   }
 }
@@ -1250,7 +1322,45 @@ async function ffFill() {
     'These are real channels near your own size. Pick one and press Compare.';
 }
 
+/* Find a channel by name and compare against it. The 20,000-subscriber cap the
+   Duel enforced is gone on purpose: the whole point of normalising by size is
+   that a fair comparison no longer needs the two channels to be the same size.
+   What it says instead is how far apart they are, so the reader knows. */
+async function ffSearch(name) {
+  const note = document.getElementById('ffnote');
+  if (!myStats) { note.textContent = 'Sign in above first — the comparison needs your channel too.'; return; }
+  note.textContent = 'Looking for "' + name + '"…';
+  let ch;
+  try {
+    const sd = await yt('search?part=snippet&type=channel&maxResults=1&q=' + encodeURIComponent(name));
+    if (!sd.items || !sd.items.length) { note.textContent = 'No channel called "' + name + '" came back from YouTube.'; return; }
+    const cd = await yt('channels?part=statistics,snippet,contentDetails&id=' + sd.items[0].snippet.channelId);
+    ch = cd.items && cd.items[0];
+    if (!ch) { note.textContent = 'YouTube found that channel but would not return its details.'; return; }
+  } catch (e) {
+    note.textContent = 'YouTube did not answer. Nothing is shown rather than a guess.';
+    return;
+  }
+  /* Added to the pool so the existing compare path can use it unchanged. */
+  if (!ffPool.some(c => c.id === ch.id)) ffPool.push(ch);
+  await ffCompare(ch.id);
+
+  const mine = +((myStats.statistics || {}).subscriberCount) || 0;
+  const theirs = +((ch.statistics || {}).subscriberCount) || 0;
+  const gap = Math.abs(mine - theirs);
+  if (gap > 20000) {
+    note.textContent += ' They are ' + gap.toLocaleString() + ' subscribers apart, which is why the ' +
+      'ratios matter more than the totals here.';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+  const find = document.getElementById('ffsearch');
+  const nameBox = document.getElementById('ffname');
+  if (find) find.addEventListener('click', () => { const v = nameBox.value.trim(); if (v) ffSearch(v); });
+  if (nameBox) nameBox.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); const v = nameBox.value.trim(); if (v) ffSearch(v); }
+  });
   const go = document.getElementById('ffgo');
   if (go) go.addEventListener('click', function () {
     const v = document.getElementById('ffopp').value;
@@ -1594,6 +1704,265 @@ document.querySelectorAll('.per').forEach(b => {
 document.getElementById('compToggle').onchange = drawAll;
 boot();
 </script>
+
+<!-- ==========================================================================
+     GOOGLE SIGN-IN — MOVED HERE FROM app.html
+     ==========================================================================
+     This is the block that used to live on the old Studio page. Studio and
+     Analytics are one page now, so it moved with everything else; the duel it
+     used to sit above did not, because Fair Fight replaced it.
+
+     On the Firebase config below: this is not the kind of key CLAUDE.md is
+     about. A Firebase web config is meant to be readable by the browser —
+     Google documents it as public, and access is controlled by the authorized
+     domain list and the security rules, not by hiding this object. It was
+     already shipping in app.html on the live site; moving it changes nothing
+     about what is exposed. The keys that must never land in this repo are the
+     Gemini one (ai-worker.js, from a secret) and anything the leaderboard
+     Worker holds.
+     ========================================================================== -->
+<script>
+/* Firebase arrives as a module from gstatic.com, and a module script is
+   deferred — so for the first moment of the page, and forever if that request
+   is blocked (school filter, ad blocker, a country that cannot reach Google),
+   the sign-in button is a button with nothing behind it. Clicking it does
+   nothing at all, which reads as "the site is broken". This plain script runs
+   first and puts a holding answer on the button; the module replaces it. */
+(function () {
+  function say(html) {
+    var b = document.getElementById('authmsg');
+    if (b) { b.innerHTML = html; b.style.display = 'block'; }
+  }
+  function bind() {
+    var b = document.getElementById('gbtn');
+    if (b && !b.onclick) b.onclick = function () {
+      say(window.ncAuthReady ? 'One moment…' : 'Still loading Google sign-in. If this does not clear in a ' +
+          'few seconds, something on this network is blocking <code>www.gstatic.com</code>.');
+    };
+  }
+  document.addEventListener('DOMContentLoaded', bind);
+  bind();
+  setTimeout(function () {
+    if (window.ncAuthReady) return;
+    say('<b>Google\'s sign-in library did not load.</b><br>The page needs <code>www.gstatic.com</code>, ' +
+        'and something blocked it — usually an ad blocker, a school or work network filter, or being ' +
+        'offline. Try another network or turn the blocker off for this site, then reload.');
+  }, 8000);
+})();
+</script>
+<script type='module'>
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyCKJVKqArOofTZT4fiz18cs_-thLB1O2J4',
+  authDomain: 'novaclip-eaf8c.firebaseapp.com',
+  projectId: 'novaclip-eaf8c',
+  storageBucket: 'novaclip-eaf8c.firebasestorage.app',
+  messagingSenderId: '299962701489',
+  appId: '1:299962701489:web:766f4ea8632830c625b490'
+};
+
+const auth = getAuth(initializeApp(firebaseConfig));
+let tok = null;
+
+function saveToken(t, channel) {
+  tok = t;
+  let prev = {};
+  try { prev = JSON.parse(localStorage.getItem('nc_yt') || '{}') || {}; } catch (e) {}
+  /* Keep the channel title — certificates are issued in the connected channel's name. */
+  localStorage.setItem('nc_yt', JSON.stringify({
+    t: t, exp: Date.now() + 50 * 60 * 1000, channel: channel || prev.channel || ''
+  }));
+}
+function rememberChannel(title) {
+  if (!title) return;
+  let rec = {};
+  try { rec = JSON.parse(localStorage.getItem('nc_yt') || '{}') || {}; } catch (e) {}
+  if (rec.channel !== title) { rec.channel = title; localStorage.setItem('nc_yt', JSON.stringify(rec)); }
+  if (typeof logSkill === 'function' && !localStorage.getItem('nc_yt_logged')) {
+    localStorage.setItem('nc_yt_logged', '1');
+    logSkill('yt_connect');
+  }
+}
+function api(url) {
+  return fetch('https://www.googleapis.com/youtube/v3/' + url,
+    { headers: { Authorization: 'Bearer ' + tok } }).then(r => r.json());
+}
+function note(html, working) {
+  const b = document.getElementById('authmsg');
+  if (!b) { if (!working && html) alert(html.replace(/<[^>]+>/g, '')); return; }
+  b.innerHTML = html;
+  b.className = working ? 'working' : '';
+  b.style.display = html ? 'block' : 'none';
+}
+
+/* Google hands back an error code and a sentence written for developers. A
+   fourteen-year-old reading "auth/unauthorized-domain" learns nothing, so each
+   one is translated into the thing that actually has to be clicked. */
+function explainAuth(e) {
+  const code = (e && e.code) || '';
+  const host = location.hostname || 'this site';
+  if (code === 'auth/unauthorized-domain')
+    return '<b>Google will not sign anyone in from this address yet.</b><br>' +
+      'Open the Firebase console for <code>novaclip-eaf8c</code>, go to <b>Authentication -> Settings -> ' +
+      'Authorized domains</b>, press <b>Add domain</b> and type <code>' + host + '</code>. Sign-in starts ' +
+      'working within a minute — no code change needed.';
+  if (code === 'auth/operation-not-allowed')
+    return '<b>Google sign-in is switched off for this project.</b><br>' +
+      'Firebase console -> <b>Authentication -> Sign-in method -> Google -> Enable</b>, then save.';
+  if (code === 'auth/popup-blocked')
+    return 'Your browser blocked the Google window. Allow pop-ups for <code>' + host + '</code>, or press ' +
+      'the button again — it will use a full-page redirect instead.';
+  /* Two very different things arrive as the same code, and telling someone to
+     just press the button again is only right for one of them. The other is
+     "Access blocked … Error 403: access_denied" — a hard stop shown inside the
+     popup while the consent screen is in Testing and the account is not on the
+     test-user list. Pressing again gets the identical screen, for ever. */
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request')
+    return 'The Google window closed before sign-in finished. Press the button again when you are ready.' +
+      '<br><br>If the window showed <b>"Access blocked"</b> or <b>Error 403: access_denied</b>, pressing it ' +
+      'again will do the same thing — that Google account is not on the app\'s test-user list. Google Cloud ' +
+      'console -> <b>Google Auth Platform -> Audience -> Test users -> Add users</b> for project ' +
+      '<code>novaclip-eaf8c</code>, add the address the window named, and try once more.' + authSetup();
+  if (code === 'auth/network-request-failed')
+    return 'No connection to Google. Check the network and try again.';
+  if (code === 'auth/invalid-api-key' || code === 'auth/api-key-not-valid')
+    return '<b>The Firebase key in this page is not valid.</b> Copy the current config from Firebase ' +
+      'console -> Project settings -> Your apps, and replace <code>firebaseConfig</code> in analytics.html.';
+  if (code === 'auth/admin-restricted-operation')
+    return '<b>The Google account\'s administrator blocked this.</b> School and work accounts are often ' +
+      'locked to approved apps. Use a personal Google account, or ask the administrator to allow NovaClip.';
+  /* The one that looks like a bug and is not. While the consent screen is in
+     Testing, only listed test users get through — everybody else is refused
+     after the account picker, which arrives here as an internal error. It is
+     the single most common reason sign-in "works for me and nobody else". */
+  if (code === 'auth/internal-error' || code === 'auth/user-cancelled')
+    return '<b>Google refused the permission, not the password.</b><br>' +
+      'Nearly always the consent screen is still in <b>Testing</b>, which only lets accounts on the ' +
+      'test-user list through. Google Cloud console -> <b>APIs &amp; Services -> OAuth consent screen</b> ' +
+      'for project <code>novaclip-eaf8c</code>: either add this Google account under <b>Test users</b>, ' +
+      'or <b>Publish</b> the app so anyone can use it.' + authSetup();
+  return 'Sign-in failed: ' + ((e && e.message) || 'unknown error') +
+    (code ? ' <code>' + code + '</code>' : '') + authSetup();
+}
+
+/* Printed under any failure with no single obvious cause. Four consoles, in
+   the order they break — worth having on the page rather than in a document
+   nobody has open at the moment it fails. */
+function authSetup() {
+  return '<details style="margin-top:10px"><summary style="cursor:pointer">' +
+    'What real sign-in needs switched on</summary>' +
+    '<ol style="margin:8px 0 0 18px;line-height:1.75;font-size:.92rem">' +
+    '<li>Firebase -> Authentication -> <b>Sign-in method</b> -> Google -> Enable.</li>' +
+    '<li>Firebase -> Authentication -> <b>Settings -> Authorized domains</b> -> add <code>' +
+      (location.hostname || 'this site') + '</code>.</li>' +
+    '<li>Google Cloud -> APIs &amp; Services -> <b>Enable</b> both <b>YouTube Data API v3</b> and ' +
+      '<b>YouTube Analytics API</b>. The second is the one people forget, and without it sign-in ' +
+      'succeeds and this page stays empty.</li>' +
+    '<li>Google Cloud -> <b>OAuth consent screen</b>: the three YouTube scopes this asks for are ' +
+      'sensitive, so while the app is in Testing only listed test users can sign in.</li>' +
+    '</ol></details>';
+}
+
+function signedInUI(name) {
+  const b = document.getElementById('gbtn');
+  if (b) b.style.display = 'none';
+  note('');
+  const p = document.getElementById('uname');
+  if (p) {
+    p.style.display = 'block';
+    p.innerHTML = String(name || '').replace(/</g, '&lt;') +
+      ' &nbsp; <a href="#" class="signoutlink" style="color:#7E8AA6;font-size:0.85rem;">Sign out</a>';
+    const so = p.querySelector('.signoutlink');
+    if (so) so.onclick = (e) => {
+      e.preventDefault();
+      localStorage.removeItem('nc_yt');
+      auth.signOut().then(() => location.reload());
+    };
+  }
+}
+
+function ytProvider() {
+  const provider = new GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/youtube.readonly');
+  /* The Data API returns totals — subscribers, views, likes. Everything that
+     makes this page worth opening (watch time, average view duration,
+     click-through rate, where viewers come from, what they earn) lives in the
+     YouTube ANALYTICS API, a different service with its own scope. Monetary is
+     asked for separately because it is the one a family may not want to grant;
+     the revenue panel handles being refused and says so. */
+  provider.addScope('https://www.googleapis.com/auth/yt-analytics.readonly');
+  provider.addScope('https://www.googleapis.com/auth/yt-analytics-monetary.readonly');
+  return provider;
+}
+
+/* Turn a sign-in result into a working session, or say why not. Split out
+   because the popup and the redirect both land here. */
+async function afterSignIn(result) {
+  const cred = GoogleAuthProvider.credentialFromResult(result);
+  if (!cred || !cred.accessToken) {
+    note('Signed in to Google, but it did not hand over permission to read your YouTube channel. ' +
+         'Press the button again and tick the YouTube box on the consent screen.');
+    return;
+  }
+  saveToken(cred.accessToken);
+  const data = await api('channels?part=statistics,snippet,contentDetails&mine=true');
+  if (data.error) {
+    note('Google signed you in, but YouTube refused the request: ' + data.error.message +
+         '<br>If it mentions the API being disabled, enable <b>YouTube Data API v3</b> for project ' +
+         '<code>novaclip-eaf8c</code> in the Google Cloud console.');
+    return;
+  }
+  if (data.items && data.items.length) {
+    rememberChannel(data.items[0].snippet.title);
+    signedInUI(data.items[0].snippet.title);
+    /* The token is in localStorage now, so the page's own loader can pick it up
+       and draw the dashboard — no reload, and no second copy of that logic. */
+    if (typeof boot === 'function') boot();
+  } else {
+    note('That Google account has no YouTube channel on it. Sign out and use the account your channel lives on.');
+  }
+}
+
+async function connect() {
+  note('Opening Google…', true);
+  try {
+    await afterSignIn(await signInWithPopup(auth, ytProvider()));
+  } catch (e) {
+    /* Pop-ups are blocked by default on plenty of phones and school-managed
+       browsers. Rather than dead-ending, hand the whole page to Google and pick
+       the result back up on the way in — that path cannot be blocked. */
+    if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) {
+      note('Pop-up blocked — sending you to Google instead…', true);
+      try { await signInWithRedirect(auth, ytProvider()); return; } catch (e2) { note(explainAuth(e2)); return; }
+    }
+    note(explainAuth(e));
+    console.warn('sign-in failed', e);
+  }
+}
+
+const btn = document.getElementById('gbtn');
+if (btn) btn.onclick = connect;
+window.ncAuthReady = true;   // tells the holding script above to stand down
+
+/* Asking for a scope the current token does not have means starting over: drop
+   the token so the Google screen shows the consent list again rather than
+   waving the existing grant through. Called from the two panels that can be
+   refused a permission on their own. */
+window.ncReconnect = function () {
+  try { localStorage.removeItem('nc_yt'); } catch (e) {}
+  const row = document.getElementById('connectrow');
+  if (row) { row.style.display = 'block'; row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  connect();
+};
+
+onAuthStateChanged(auth, (user) => { if (user) signedInUI(user.displayName); });
+// coming back from the redirect fallback
+getRedirectResult(auth).then(r => { if (r) afterSignIn(r); }).catch(e => note(explainAuth(e)));
+</script>
+
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>

@@ -48,11 +48,53 @@
   ],
   "screenshots": [
     {
-      "src": "/social-card.png",
-      "sizes": "1200x630",
+      "src": "/screenshots/wide-home.png",
+      "sizes": "1366x768",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "NovaClip \u2014 run your channel like a game"
+      "label": "Run your channel like a game"
+    },
+    {
+      "src": "/screenshots/wide-editor.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Cut, caption and export a clip in the browser"
+    },
+    {
+      "src": "/screenshots/wide-trends.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Trend Spotter: what is rising before it peaks"
+    },
+    {
+      "src": "/screenshots/wide-games.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Games and quests that build real skills"
+    },
+    {
+      "src": "/screenshots/wide-progress.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Levels, streaks and certificates you actually earned"
+    },
+    {
+      "src": "/screenshots/narrow-home.png",
+      "sizes": "412x915",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "NovaClip on a phone"
+    },
+    {
+      "src": "/screenshots/narrow-progress.png",
+      "sizes": "412x915",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Your progress on a phone"
     }
   ]
 }

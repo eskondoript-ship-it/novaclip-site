@@ -28,6 +28,33 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
+
+  /* CONSENT FIRST, MEASUREMENT SECOND.
+     Denied before anything else runs, so no analytics cookie is written and no
+     measurement is sent until somebody says yes. In the EU that is the order
+     the law asks for, and this audience is 13-18, which raises the bar rather
+     than lowering it.
+
+     Google's own snippet does not do this — the default is granted, and the
+     tag starts measuring on load. Reversing the default is the whole point:
+     "ask afterwards" is not asking.
+
+     nova.js draws the banner and calls gtag('consent','update',...) when the
+     answer comes in; a stored yes from a previous visit is applied here so the
+     question is asked once rather than on every page. */
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    wait_for_update: 500
+  });
+  try {
+    if (localStorage.getItem('nc_consent') === 'yes') {
+      gtag('consent', 'update', { analytics_storage: 'granted' });
+    }
+  } catch (e) {}
+
   gtag('js', new Date());
   gtag('config', 'G-QN1QE08F2K');
 </script>
@@ -1256,7 +1283,7 @@ async function yt(url, tok) { const r = await fetch('https://www.googleapis.com/
 document.getElementById('scanBtn').onclick = async () => {
   const out = document.getElementById('scanout');
   const tok = tokenOK();
-  if (!tok) { out.innerHTML = '<div class="flag">No active YouTube connection. Ask your kid to open <a href="app.html">Studio</a> and connect YouTube first (the connection stays active about an hour).</div>'; return; }
+  if (!tok) { out.innerHTML = '<div class="flag">No active YouTube connection. Ask your kid to open <a href="analytics.html">Studio</a> and connect YouTube first (the connection stays active about an hour).</div>'; return; }
   out.innerHTML = 'Scanning…';
   try {
     const ch = await yt('channels?part=contentDetails,snippet&mine=true', tok);
@@ -1292,7 +1319,7 @@ document.getElementById('scanBtn').onclick = async () => {
         '<a href="' + mailto + '">Email me this</a></div></div>';
     }).join('');
   } catch (e) {
-    out.innerHTML = '<div class="flag">Scan failed — the YouTube connection may have expired. Reconnect in <a href="app.html">Studio</a>.</div>';
+    out.innerHTML = '<div class="flag">Scan failed — the YouTube connection may have expired. Reconnect in <a href="analytics.html">Studio</a>.</div>';
   }
 };
 

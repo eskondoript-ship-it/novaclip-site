@@ -645,6 +645,8 @@ function ncSetTheme(pref) {
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', String(on));
   });
+  const sel = document.getElementById('nc-skinpick');
+  if (sel) sel.value = ncSkin(pref) ? pref : '';
   /* --bg and --box are mirrored from the palette, so they have to be taken
      again once the palette has moved. */
   try { if (typeof applyTheme === 'function') applyTheme('Dark'); } catch (e) {}
@@ -820,7 +822,16 @@ function ncBuildBar() {
        sticky on any page needs this, so it goes where CSS can reach it. */
     ':root{--nc-bar-h:' + NC_BAR_H + 'px}' +
     '#ncbar{position:fixed;top:0;left:0;right:0;height:' + NC_BAR_H + 'px;z-index:990;' +
-      'display:flex;align-items:center;gap:14px;padding:0 14px;box-sizing:border-box;' +
+      /* The right padding reserves the coins badge's strip. #ncpts is fixed to
+         the top-right corner and sits ABOVE the bar, while .themewrap scrolls
+         sideways once the controls stop fitting — so on a phone whichever
+         control happened to be scrolled to the end ended up underneath the
+         badge and could not be pressed. Measured at 320px the theme dropdown
+         ran 33px under it, at 480px the language picker 58px. Reserving the
+         badge's own width (63px plus its offset) means the scroll stops short
+         of it instead. Costs nothing on a desktop, where the controls never
+         reach that far anyway. */
+      'display:flex;align-items:center;gap:14px;padding:0 88px 0 14px;box-sizing:border-box;' +
       'background:var(--nc-bar-bg,rgba(10,13,24,.72));' +
       'border-bottom:1px solid var(--nc-line2,rgba(255,255,255,.08));' +
       'backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4)}' +
@@ -830,6 +841,12 @@ function ncBuildBar() {
        the bar by a rail that is not there leaves a dead strip down the left,
        which is the same mistake the body margin made before it was scoped. */
     '@media (min-width:761px){body:has(.sidebar) #ncbar{left:var(--nc-rail)}}' +
+    /* trends.html brings its own rail (.nc-sidebar, 248px, hidden at 900px)
+       rather than the shared .sidebar, so the rule above never matched it and
+       the bar started at x=0 — straight over that page's own navigation. Its
+       width already lives in a variable the page defines, and its own
+       breakpoint is 900px, so both are borrowed rather than guessed at. */
+    '@media (min-width:901px){body:has(.nc-sidebar) #ncbar{left:var(--nc-sidebar,248px)}}' +
     /* flex:1 matters. As a bare flex item this scroller sized itself to 168px
        on editor.html while holding 607px of controls, so everything past the
        theme switch was clipped out of a page that had no sidebar to fall back
@@ -867,7 +884,7 @@ function ncBuildBar() {
         '{padding-top:' + NC_BAR_H + 'px}' +
     '}' +
     /* On a phone the rail is a bottom strip and the bar is the full width. */
-    '@media (max-width:760px){#ncbar{padding:0 10px;gap:10px}' +
+    '@media (max-width:760px){#ncbar{padding:0 84px 0 10px;gap:10px}' +
       '#ncbar .themewrap{gap:10px}' +
       /* The labels go: the sun/screen/moon row and a Normal|Gen Z switch say
          what they are, and on a 390px screen the three controls only fit
@@ -908,9 +925,30 @@ function ncBuildBar() {
     'html body .jr-pill{top:8px;left:calc(100% - 176px);transform:translateX(-100%)}' +
     'html body .jr-pill:hover{transform:translateX(-100%) translateY(-1px)}' +
     'html body .jr-pill.hidden{transform:translateX(-100%) translateY(-8px)}' +
-    /* Not enough room beside the controls on a small screen: it goes back to
-       the centre, below the bar, where the page has not started yet. */
-    '@media (max-width:1180px){html body .jr-pill{top:' + (NC_BAR_H + 8) + 'px;' +
+    /* Not enough room beside the controls: it goes back to the centre, below
+       the bar, where the page has not started yet.
+
+       Three bands, because two were not enough once the controls grew — the
+       twelve cyber-theme swatches became one 157px dropdown that sits IN the
+       row rather than under it. Measured left-to-right: the controls end at
+       roughly 0.094*width + 839, the full pill starts at width - 484, and the
+       pill without its status line starts at width - 334.
+
+         1501px and up   full pill in the bar, as designed
+         1360 - 1500px   pill in the bar with its status line hidden — 150px of
+                         its 308, and the coloured state dot already says most
+                         of what that line said
+         1359px and down below the bar, centred
+
+       The 1360 edge is measured, not rounded: the shortened pill is 205px, so
+       it starts at width - 381, and the language picker ends at about
+       0.094 * width + 839. Those cross at 1355.
+
+       At 1366 — the commonest laptop — the full pill ran 83px over the language
+       picker, and at 1440 it still clipped by 19px. Dropping the status line
+       clears both. Below 1300 nothing fits and it goes under the bar. */
+    '@media (min-width:1360px) and (max-width:1500px){html body .jr-pill #jr-status{display:none}}' +
+    '@media (max-width:1359px){html body .jr-pill{top:' + (NC_BAR_H + 8) + 'px;' +
       'left:50%;transform:translateX(-50%)}' +
       'html body .jr-pill:hover{transform:translateX(-50%) translateY(-1px)}' +
       'html body .jr-pill.hidden{transform:translateX(-50%) translateY(-8px)}}' +
@@ -982,52 +1020,43 @@ function ncBuildThemeSwitch() {
     row.appendChild(b);
   });
 
-  /* The cyber skins, in the same control rather than a second one beside it.
-     Each is a chip painted in its own three colours, because a list of names
-     like "Bio-Xenon" and "Chromatic Holo" tells nobody what they are about to
-     get — the swatch does. */
-  const skins = document.createElement('div');
-  skins.className = 'nc-skinrow';
-  skins.setAttribute('role', 'group');
-  skins.setAttribute('aria-label', 'Cyber themes');
-  NC_SKINS.forEach(sk => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'nc-skinbtn nc-themebtn' + (sk.id === pref ? ' on' : '');
-    b.dataset.theme = sk.id;
-    b.setAttribute('aria-pressed', String(sk.id === pref));
-    b.title = sk.name;
-    b.setAttribute('aria-label', sk.name);
-    b.style.background = sk.bg;
-    b.innerHTML =
-      '<span class="ncsk" style="background:' + sk.primary + '"></span>' +
-      '<span class="ncsk" style="background:' + sk.secondary + '"></span>' +
-      '<span class="ncsk" style="background:' + sk.accent + '"></span>';
-    b.addEventListener('click', () => ncSetTheme(sk.id));
-    skins.appendChild(b);
+  /* THE CYBER THEMES, AS ONE DROPDOWN
+     They were twelve swatches in a row. That made the theme block 638px wide,
+     pushed the top bar into horizontal scrolling, and put twelve small targets
+     where one would do. A <select> is the same control the language picker
+     uses, so the bar now has two dropdowns that behave identically instead of
+     one dropdown and a wall of chips.
+
+     The three icon buttons stay: light, auto and dark are the ones people
+     actually switch between, and they are one press rather than two. Choosing
+     a cyber theme from the list unselects them, and choosing one of them puts
+     the list back to "None". */
+  const skinSel = document.createElement('select');
+  skinSel.id = 'nc-skinpick';
+  skinSel.setAttribute('aria-label', 'Cyber theme');
+  skinSel.innerHTML = '<option value="">Cyber theme — none</option>' +
+    NC_SKINS.map(sk => '<option value="' + sk.id + '"' +
+      (sk.id === pref ? ' selected' : '') + '>' + sk.name + '</option>').join('');
+  skinSel.addEventListener('change', () => {
+    /* Back to plain dark when the list is set to none, rather than leaving the
+       last skin painted with nothing selected. */
+    ncSetTheme(skinSel.value || 'dark');
   });
 
   if (!document.getElementById('nc-skinrow-css')) {
     const css = document.createElement('style');
     css.id = 'nc-skinrow-css';
     css.textContent =
-      /* flex-basis and min-width are both spelled out because the top bar sets
-         `flex:none` on its children and then lets them shrink: without these
-         the twelve chips arrived as 14px slivers nobody could tell apart. */
-      '.nc-skinrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-width:230px}' +
-      '#ncbar .nc-skinrow{flex-wrap:nowrap;margin-top:0;max-width:none}' +
-      '.nc-skinbtn{flex:0 0 44px;width:44px;min-width:44px;height:44px;min-height:44px;' +
-        'padding:0;border-radius:9px;' +
-        'display:flex;align-items:center;justify-content:center;gap:2px;cursor:pointer;' +
-        'border:1px solid var(--nc-line2,rgba(255,255,255,.18));overflow:hidden}' +
-      '.nc-skinbtn.on{outline:2px solid var(--nc-cyan,#00F0FF);outline-offset:1px}' +
-      '.nc-skinbtn .ncsk{flex:0 0 6px;width:6px;height:18px;border-radius:2px;display:block}' +
+      '#nc-skinpick{margin-top:8px;width:100%;min-height:44px;border-radius:10px;padding:6px 10px;' +
+        'background:var(--nc-bg3,rgba(255,255,255,.06));color:var(--nc-text,#EAF2FF);' +
+        'border:1px solid var(--nc-line,rgba(255,255,255,.14));font:inherit;font-size:.86rem;cursor:pointer}' +
+      '#ncbar #nc-skinpick{margin-top:0;width:auto;max-width:170px}' +
       '#ncbar #nc-themerow{display:flex;align-items:center;gap:10px;margin-bottom:0}' +
       '#ncbar #nc-themerow > label{margin-bottom:0}';
     document.head.appendChild(css);
   }
 
-  wrap.append(label, row, skins);
+  wrap.append(label, row, skinSel);
   host.insertBefore(wrap, host.firstChild);
 }
 
@@ -2766,7 +2795,7 @@ const NC_NAV = [
      rail entirely and was only reachable through a button inside the editor,
      which is a strange place to hide the research tool. */
   { name: 'Channel', key: 'nav_channel', icon: 'analytics', items: [
-      ['app.html', 'Studio', 'studio', 'studio'],
+      ['analytics.html', 'Studio', 'studio', 'studio'],
       ['trends.html', 'Trends', 'trends', 'trends']] },
   /* Everything you make lives in Create: the editor, publishing and the AI
      toolkit. Games and NovaLife are for learning and play, so they sit in
@@ -2855,7 +2884,7 @@ function ncNav() {
       '#ncnav{display:flex;flex-direction:column;gap:2px;padding:2px 10px 6px}',
 
       /* group header */
-      '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;min-height:44px;',
+      '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;min-height:30px;',
       'padding:clamp(7px,1.15vh,14px) 9px clamp(3px,.55vh,7px);background:none;border:0;cursor:pointer;text-align:left;',
       'font:700 10px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.15em;text-transform:uppercase;',
       'color:var(--nc-navhead,#5D6A88);transition:color .18s}',
@@ -2870,10 +2899,12 @@ function ncNav() {
 
       /* the row. position:relative for the active rail; the gradient sits in a
          ::before at opacity 0 so hovering fades it rather than snapping. */
-      /* 44px. A sweep of all 27 pages measured these at 31 and the group
-         headers at 28 — the primary navigation of the whole site, and the
-         hardest thing on it to hit on a phone. */
-      '.sidebar #ncnav a.ncl{position:relative;display:flex;align-items:center;gap:11px;margin:0;min-height:44px;',
+      /* 38px, which is the balance point. At the original 31 these were the
+         hardest thing on the site to hit; at 44 the rail grew from 484px to
+         734px and read as mostly empty space, which was the next thing
+         reported. 38 is still well above the 24px minimum the guidelines
+         ask for, and sixteen rows fit without the column feeling padded. */
+      '.sidebar #ncnav a.ncl{position:relative;display:flex;align-items:center;gap:11px;margin:0;min-height:38px;',
       /* Sixteen links at a fixed 50px each, plus six group headers and the
          brand and profile blocks, is 1112px of nav. That fits a 1280x800
          laptop only because the groups collapse below 820px tall — between
@@ -4227,9 +4258,9 @@ window.addEventListener('DOMContentLoaded', () => {
    how is this channel doing — asked against somebody else's numbers.
    ============================================================================ */
 const NC_PAIRS = [
-  { tabs: [['app.html', 'Studio', 'studio'],
-           ['analytics.html', 'Analytics', 'analytics'],
-           ['analytics.html#fairfight', 'Fair Fight', 'fairfight']] },
+  /* Studio and Analytics used to be two pages with a tab strip between them.
+     They are one page now, so the strip is gone with them — a tab bar with one
+     tab is furniture. Editor and Photo are still two pages and still need it. */
   { tabs: [['editor.html', 'Editor', 'editor'],
            ['photo.html', 'Photo', 'photo']] }
 ];
@@ -4275,3 +4306,90 @@ function ncPairTabs() {
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ncPairTabs);
 else ncPairTabs();
+
+
+/* ============================================================================
+   THE COOKIE QUESTION, ASKED ONCE
+   ============================================================================
+   Google Analytics is set to denied in every page's head, so nothing is
+   measured and no analytics cookie exists until this banner is answered. That
+   ordering is the whole point: a banner that appears after the tag has already
+   fired is decoration.
+
+   HOW IT IS WRITTEN
+
+   Two buttons of equal weight. The dark pattern in this corner of the web is a
+   bright "Accept all" beside a grey "Manage preferences" that takes four more
+   presses to say no — on a site whose users are 13 to 18, that is not a thing
+   to copy. "No thanks" is the same size, the same shape, and one press.
+
+   It says what it is for in one sentence, in the words a fifteen-year-old
+   would use, and links to the page that explains the rest.
+
+   Not shown on report.html or privacy.html: somebody arriving to report a
+   problem or to read what is collected should not have to clear a banner
+   first, and the answer is remembered from wherever it is given.
+   ============================================================================ */
+const NC_CONSENT_KEY = 'nc_consent';
+
+function ncConsent() {
+  try { return localStorage.getItem(NC_CONSENT_KEY); } catch (e) { return null; }
+}
+
+function ncSetConsent(answer) {
+  try { localStorage.setItem(NC_CONSENT_KEY, answer); } catch (e) {}
+  try {
+    if (typeof gtag === 'function') {
+      gtag('consent', 'update', { analytics_storage: answer === 'yes' ? 'granted' : 'denied' });
+    }
+  } catch (e) {}
+  const el = document.getElementById('nccookie');
+  if (el) el.remove();
+}
+window.ncSetConsent = ncSetConsent;
+window.ncConsent = ncConsent;
+
+function ncCookieBanner() {
+  if (NC_EMBED) return;                       // inside a tab host, the host asks
+  if (ncConsent()) return;                    // already answered, on any page
+  if (document.getElementById('nccookie')) return;
+  const here = (location.pathname.split('/').pop() || '').toLowerCase();
+  if (/^(report|privacy|offline)\.html$/.test(here)) return;
+
+  const css = document.createElement('style');
+  css.textContent =
+    '#nccookie{position:fixed;left:12px;right:12px;bottom:12px;z-index:99992;max-width:560px;' +
+      'margin:0 auto;padding:16px 18px;border-radius:18px;' +
+      'background:var(--nc-bg2,#11151f);color:var(--nc-text,#EAF2FF);' +
+      'border:1px solid var(--nc-line2,rgba(255,255,255,.18));' +
+      'box-shadow:0 14px 40px rgba(0,0,0,.5);font:15px/1.55 system-ui,"Segoe UI",sans-serif}' +
+    '#nccookie p{margin:0 0 12px}' +
+    '#nccookie a{color:var(--nc-cyan,#00F0FF)}' +
+    '#nccookie .ncbtns{display:flex;gap:10px;flex-wrap:wrap}' +
+    /* Equal weight on purpose — see the note above. */
+    '#nccookie button{flex:1 1 130px;min-height:44px;padding:11px 18px;border-radius:12px;' +
+      'font:700 15px system-ui;cursor:pointer;border:1px solid var(--nc-line2,rgba(255,255,255,.2))}' +
+    '#nccookie .yes{background:var(--nc-cyan,#00F0FF);color:#04121a;border-color:transparent}' +
+    '#nccookie .no{background:transparent;color:var(--nc-text,#EAF2FF)}';
+  document.head.appendChild(css);
+
+  const box = document.createElement('div');
+  box.id = 'nccookie';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', 'Cookies');
+  box.innerHTML =
+    '<p>Can we count which pages get visited? It is one tool, Google Analytics, ' +
+    'and it never sees your name, your account code or anything you type. ' +
+    'Nothing is counted until you say yes. ' +
+    '<a href="/privacy.html">What it records</a>.</p>' +
+    '<div class="ncbtns">' +
+      '<button type="button" class="yes" id="nccookieyes">Yes, that is fine</button>' +
+      '<button type="button" class="no" id="nccookieno">No thanks</button>' +
+    '</div>';
+  document.body.appendChild(box);
+  document.getElementById('nccookieyes').addEventListener('click', () => ncSetConsent('yes'));
+  document.getElementById('nccookieno').addEventListener('click', () => ncSetConsent('no'));
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ncCookieBanner);
+else ncCookieBanner();
