@@ -2571,18 +2571,30 @@ const NC_ICONS = {
   pricing:   'M12 2v20M17 6H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',
   publish:   'M12 19V5M5 12l7-7 7 7M4 21h16',
   community: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
+  trends:    'M3 17l6-6 4 4 7-7M14 8h7v7',
   life: 'M12 21s-6.6-4.7-9.1-8.8C1 8.9 3.1 4.5 7.2 4.5c2.4 0 3.9 1.1 4.8 2.6.9-1.5 2.4-2.6 4.8-2.6 4.1 0 6.2 4.4 4.3 7.7C18.6 16.3 12 21 12 21z'
 };
 
 const NC_NAV = [
   { items: [['index.html', 'Home', 'home', 'home']] },
+  /* PAIRS, NOT FOUR SEPARATE LINKS
+     Studio and Analytics were two entries looking at the same channel, and
+     Editor and Photo were two entries editing the same footage. Each pair is
+     one link now, and the two halves are reached by a tab strip at the top of
+     whichever one you are on — see ncPairTabs(). Fewer things in the rail, and
+     nothing lost: every page is still one press away.
+
+     The Trend Spotter is back as its own entry. It had disappeared from the
+     rail entirely and was only reachable through a button inside the editor,
+     which is a strange place to hide the research tool. */
   { name: 'Channel', key: 'nav_channel', icon: 'analytics', items: [
-      ['app.html', 'Studio', 'studio', 'studio'], ['analytics.html', 'Analytics', 'analytics', 'analytics']] },
+      ['app.html', 'Studio', 'studio', 'studio'],
+      ['trends.html', 'Trends', 'trends', 'trends']] },
   /* Everything you make lives in Create: the editor, publishing and the AI
      toolkit. Games and NovaLife are for learning and play, so they sit in
      their own Learn group instead of pretending to be creation tools. */
   { name: 'Create', key: 'nav_create', icon: 'editor', items: [
-      ['editor.html', 'Editor', 'editor', 'editor'], ['photo.html', 'Photo', 'photo', 'editor'],
+      ['editor.html', 'Editor', 'editor', 'editor'],
       ['publish.html', 'Publish', 'publish', 'publish'],
       ['studio-ai.html', 'AI', 'ai', 'ai']] },
   { name: 'Learn', key: 'nav_learn', icon: 'life', items: [
@@ -4016,3 +4028,69 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 })();
+
+
+/* ============================================================================
+   PAIRED PAGES — one rail entry, two tabs
+   ============================================================================
+   Studio and Analytics look at the same channel; Editor and Photo work on the
+   same footage. Four rail entries for two jobs made the rail longer without
+   making anything easier to find, so each pair is one entry now and this puts
+   the other half back within one press.
+
+   Rendered here rather than in each page for the usual reason: four pages, one
+   strip, and editor.html is a compiled bundle that should not be reopened to
+   add a link.
+
+   Fair Fight sits with Studio and Analytics because it is the same question —
+   how is this channel doing — asked against somebody else's numbers.
+   ============================================================================ */
+const NC_PAIRS = [
+  { tabs: [['app.html', 'Studio', 'studio'],
+           ['analytics.html', 'Analytics', 'analytics'],
+           ['analytics.html#fairfight', 'Fair Fight', 'fairfight']] },
+  { tabs: [['editor.html', 'Editor', 'editor'],
+           ['photo.html', 'Photo', 'photo']] }
+];
+
+function ncPairTabs() {
+  const here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  const pair = NC_PAIRS.find(p => p.tabs.some(t => t[0].split('#')[0] === here));
+  if (!pair || document.getElementById('ncpairtabs')) return;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'ncpairtabs';
+  wrap.setAttribute('role', 'tablist');
+
+  wrap.innerHTML = pair.tabs.map(([href, label, key]) => {
+    /* Fair Fight is a section of the analytics page rather than a page, so it
+       counts as current only when that anchor is actually open. */
+    const anchor = href.includes('#') ? href.split('#')[1] : '';
+    const on = href.split('#')[0] === here &&
+               (anchor ? location.hash === '#' + anchor : !location.hash.startsWith('#fair'));
+    return '<a href="' + href + '" data-t="pair_' + key + '"' +
+           ' class="ncpt' + (on ? ' on' : '') + '"' + (on ? ' aria-current="page"' : '') + '>' +
+           label + '</a>';
+  }).join('');
+
+  const css = document.createElement('style');
+  css.textContent =
+    '#ncpairtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px;padding:5px;' +
+      'background:var(--nc-bg2,rgba(255,255,255,.04));border:1px solid var(--nc-line,rgba(255,255,255,.1));' +
+      'border-radius:14px;width:max-content;max-width:100%}' +
+    '#ncpairtabs .ncpt{padding:9px 16px;border-radius:10px;text-decoration:none;font:700 .86rem/1 system-ui;' +
+      'color:var(--nc-dim,#8c96ad);white-space:nowrap;min-height:38px;display:flex;align-items:center}' +
+    '#ncpairtabs .ncpt:hover{color:var(--nc-text,#EAF2FF)}' +
+    '#ncpairtabs .ncpt.on{background:var(--nc-cyan,#00F0FF);color:#04121a}' +
+    /* editor.html has no content column to sit inside, so there it floats. */
+    '#ncpairtabs.float{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:99991;' +
+      'background:var(--nc-bg,#0a0d16);box-shadow:0 6px 22px rgba(0,0,0,.45)}';
+  document.head.appendChild(css);
+
+  const host = document.querySelector('.main') || document.querySelector('.shell');
+  if (host) host.insertBefore(wrap, host.firstChild);
+  else { wrap.classList.add('float'); document.body.appendChild(wrap); }
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ncPairTabs);
+else ncPairTabs();
