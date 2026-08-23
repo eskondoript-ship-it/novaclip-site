@@ -1225,6 +1225,10 @@ async function ffCompare(oppId) {
     (tied ? ' (' + tied + ' too close to call)' : '') +
     ' — on ratios, with size divided out. It is not a verdict on either channel.';
   wrap.style.display = 'block';
+
+  /* Logged here rather than when the tab is opened: the quest is comparing two
+     channels, not looking at the section. */
+  try { if (typeof logSkill === 'function') logSkill('fair_fight'); } catch (e) {}
 }
 
 /* Filled from the competitor list this page already builds: real channels

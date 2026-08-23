@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var b=localStorage.getItem('nc_skin_bg');
+var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;
+if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QN1QE08F2K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-QN1QE08F2K');
+</script>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050505">
+<title>Target — NovaClip</title>
+<meta name='description' content='Thirty seconds, one target at a time. Speed is easy; hitting the small ones is not.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+
+<!-- WHY ACCURACY IS PART OF THE SCORE
+     A hit-count game is won by flailing: click everywhere fast enough and you
+     will land on targets by accident. Counting misses stops that, and the
+     score is hits weighted by how small the target was — because hitting a
+     small one is the thing that is actually hard. -->
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',-apple-system,sans-serif; }
+body { background:var(--nc-bg,#05070E); color:var(--nc-text,#EAF2FF); min-height:100vh;
+       display:flex; flex-direction:column; align-items:center; padding:22px 16px 60px; }
+.wrap { width:100%; max-width:760px; }
+h1 { font-size:1.5rem; margin-bottom:4px; }
+.sub { color:var(--nc-dim,#7E8AA6); font-size:.92rem; margin-bottom:16px; line-height:1.6; }
+.hud { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.hud div { flex:1 1 90px; padding:10px 12px; border-radius:12px; text-align:center;
+           background:var(--nc-bg2,rgba(255,255,255,.04));
+           border:1px solid var(--nc-line,rgba(255,255,255,.1)); font-variant-numeric:tabular-nums; }
+.hud i { display:block; font-style:normal; font-size:.7rem; color:var(--nc-dim,#7E8AA6); margin-bottom:3px; }
+.hud b { font-size:1.15rem; }
+#field { position:relative; height:clamp(280px,52vh,420px); border-radius:20px; overflow:hidden;
+         background:var(--nc-bg2,rgba(255,255,255,.04));
+         border:1px solid var(--nc-line,rgba(255,255,255,.12)); touch-action:manipulation; cursor:crosshair; }
+#target { position:absolute; border-radius:50%; background:var(--nc-cyan,#00F0FF);
+          box-shadow:0 0 0 4px rgba(0,240,255,.18); display:none; }
+#field.over { cursor:default; }
+.overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+           justify-content:center; text-align:center; padding:22px; gap:10px; }
+.overlay h2 { font-size:1.3rem; }
+.overlay p { color:var(--nc-dim,#7E8AA6); font-size:.92rem; line-height:1.6; max-width:34ch; }
+button.go { min-height:44px; padding:12px 26px; border:0; border-radius:999px;
+       background:var(--nc-cyan,#00F0FF); color:#04121a; font-weight:800; font-size:1rem; cursor:pointer; }
+.best { margin-top:12px; color:var(--nc-dim,#7E8AA6); font-size:.86rem; }
+</style>
+</head>
+<body>
+<div class='wrap'>
+  <h1>Target</h1>
+  <p class='sub'>Thirty seconds. One target at a time, and they get smaller.
+     Misses count against you, so flailing does not work.</p>
+
+  <div class='hud'>
+    <div><i>Time</i><b id='hTime'>30.0</b></div>
+    <div><i>Hits</i><b id='hHits'>0</b></div>
+    <div><i>Misses</i><b id='hMiss'>0</b></div>
+    <div><i>Accuracy</i><b id='hAcc'>—</b></div>
+    <div><i>Score</i><b id='hScore'>0</b></div>
+  </div>
+
+  <div id='field'>
+    <div id='target'></div>
+    <div class='overlay' id='overlay'>
+      <h2 id='ovTitle'>Ready?</h2>
+      <p id='ovText'>Hit the circle as soon as it appears. It shrinks as you go.</p>
+      <button class='go' id='start'>Start</button>
+    </div>
+  </div>
+
+  <div class='best' id='best'></div>
+</div>
+
+<script src='nova.js'></script>
+<script>
+/* ============================================================================
+   TARGET
+   ============================================================================
+   Thirty seconds, one target at a time.
+
+   SCORING, AND WHY IT IS NOT A HIT COUNT
+
+   A hit count rewards flailing: click fast enough over a big area and targets
+   are hit by accident. So a miss is recorded whenever the field is pressed and
+   the target is not, and the score weights each hit by how small the target
+   was — small ones are the hard ones, and they are worth more.
+
+   The target shrinks with every hit down to a floor of 18 pixels, which is
+   about the smallest thing a finger can reliably hit on a phone. Below that it
+   stops being a test of aim and starts being a test of screen size.
+
+   Placement keeps the whole circle inside the field, so a target can never be
+   half off the edge where it cannot be pressed.
+   ============================================================================ */
+const RUN_MS = 30000;
+const START_SIZE = 74, MIN_SIZE = 18, SHRINK = 3;
+
+const field = document.getElementById('field');
+const target = document.getElementById('target');
+const overlay = document.getElementById('overlay');
+const els = { t: document.getElementById('hTime'), h: document.getElementById('hHits'),
+              m: document.getElementById('hMiss'), a: document.getElementById('hAcc'),
+              s: document.getElementById('hScore') };
+
+const BEST_KEY = 'nc_aim_best';
+let running = false, hits = 0, misses = 0, score = 0, size = START_SIZE, endAt = 0, raf = 0;
+
+function place() {
+  const r = field.getBoundingClientRect();
+  const max = Math.min(size, Math.min(r.width, r.height) - 8);
+  size = max;
+  target.style.width = target.style.height = size + 'px';
+  /* Inset by the diameter so the circle is never clipped by an edge. */
+  target.style.left = Math.random() * Math.max(1, r.width - size) + 'px';
+  target.style.top = Math.random() * Math.max(1, r.height - size) + 'px';
+  target.style.display = 'block';
+}
+
+function hud() {
+  const shots = hits + misses;
+  els.h.textContent = hits;
+  els.m.textContent = misses;
+  els.a.textContent = shots ? Math.round((hits / shots) * 100) + '%' : '—';
+  els.s.textContent = score;
+}
+
+function tick() {
+  if (!running) return;
+  const left = Math.max(0, endAt - performance.now());
+  els.t.textContent = (left / 1000).toFixed(1);
+  if (left <= 0) return stop();
+  raf = requestAnimationFrame(tick);
+}
+
+function start() {
+  running = true; hits = 0; misses = 0; score = 0; size = START_SIZE;
+  overlay.style.display = 'none';
+  field.classList.remove('over');
+  hud();
+  place();
+  endAt = performance.now() + RUN_MS;
+  raf = requestAnimationFrame(tick);
+}
+
+function stop() {
+  running = false;
+  cancelAnimationFrame(raf);
+  target.style.display = 'none';
+  field.classList.add('over');
+  els.t.textContent = '0.0';
+
+  const shots = hits + misses;
+  const acc = shots ? Math.round((hits / shots) * 100) : 0;
+  document.getElementById('ovTitle').textContent = score + ' points';
+  document.getElementById('ovText').textContent =
+    hits + ' hit' + (hits === 1 ? '' : 's') + ', ' + misses + ' missed, ' + acc + '% accurate. ' +
+    'Small targets are worth more than big ones, which is why the score is not just the hit count.';
+  document.getElementById('start').textContent = 'Go again';
+  overlay.style.display = 'flex';
+
+  let prior = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
+  if (score > prior) {
+    localStorage.setItem(BEST_KEY, String(score));
+    document.getElementById('best').textContent = 'New best: ' + score + ' points.';
+  } else {
+    document.getElementById('best').textContent = 'Your best so far: ' + prior + ' points.';
+  }
+
+  /* Finishing a round is what earns points, not the score itself — otherwise
+     the reward is for the lucky run rather than for playing. */
+  try { if (typeof addPts === 'function') addPts(5); } catch (e) {}
+  try { if (typeof logSkill === 'function') logSkill('aim'); } catch (e) {}
+}
+
+target.addEventListener('pointerdown', (e) => {
+  if (!running) return;
+  e.stopPropagation();               // so the field does not also count a miss
+  hits++;
+  /* Smaller target, more points: 74px is worth 1, 18px is worth 5. */
+  score += Math.max(1, Math.round((START_SIZE / size) * 1.2));
+  size = Math.max(MIN_SIZE, size - SHRINK);
+  hud();
+  place();
+});
+
+field.addEventListener('pointerdown', () => {
+  if (!running) return;
+  misses++;
+  hud();
+});
+
+document.getElementById('start').addEventListener('click', start);
+
+const savedBest = localStorage.getItem(BEST_KEY);
+if (savedBest) document.getElementById('best').textContent = 'Your best so far: ' + savedBest + ' points.';
+</script>
+</body>
+</html>

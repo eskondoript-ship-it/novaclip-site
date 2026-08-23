@@ -1344,7 +1344,10 @@ const Q_KEY = {
   'Connect your YouTube channel':'sk_yt', 'Export a video from the Editor':'sk_edit',
   'Run a Trend Spotter scan':'sk_trend', 'Save a video idea to your shortlist':'sk_idea',
   'Review your channel analytics':'sk_analytics', 'Ask a NovaClip AI tutor':'sk_ai',
-  'Top the Strike Arena scoreboard':'sk_arena'
+  'Top the Strike Arena scoreboard':'sk_arena',
+  'Finish a set of five in Reaction':'sk_reaction',
+  'Finish a round of Target':'sk_aim',
+  'Compare your channel in Fair Fight':'sk_fair'
 };
 const qName = n => tr(Q_KEY[n] || n);
 
@@ -1358,7 +1361,16 @@ const SKILLS = {
   trend_scan: { icon:'', label:'Run a Trend Spotter scan' },
   idea_save:  { icon:'', label:'Save a video idea to your shortlist' },
   analytics:  { icon:'', label:'Review your channel analytics' },
-  ai_ask:     { icon:'', label:'Ask a NovaClip AI tutor' }
+  ai_ask:     { icon:'', label:'Ask a NovaClip AI tutor' },
+
+  /* THE NEW QUESTS.
+     logSkill() ignores any id that is not in this table — quietly, by design,
+     so a typo cannot invent a skill. That also means a game calling
+     logSkill('reaction') does nothing at all until the id is listed here,
+     which is exactly what happened while these two were being written. */
+  reaction:   { icon:'', label:'Finish a set of five in Reaction' },
+  aim:        { icon:'', label:'Finish a round of Target' },
+  fair_fight: { icon:'', label:'Compare your channel in Fair Fight' }
   /* arena_mvp — "Top the Strike Arena scoreboard" — is gone with the Arena
      itself. Nothing could log it any more, so the Progress page showed a row
      stuck at 0/3 and the Master Certificate could not be finished by anyone. A
@@ -1794,6 +1806,8 @@ window.ncServer = ncServer;
    token on someone else's server is a token you no longer control. The channel
    name is copied into nc_name instead, which is all the rest of the site needs. */
 const NC_SYNC_KEYS = ['nc_points', 'nc_skills', 'nc_certs','nc_pro','nc_subscription', 'nc_cert_enrolled',
+  /* New game bests, so they follow the code like the flap score does. */
+  'nc_reaction_best', 'nc_aim_best',
                       'nc_ideas', 'nc_history', 'nc_unlocked', 'nc_lb', 'nc_name',
                       'nc_flap_best', 'nc_lang',
                       'nc_life_state', 'nc_life_time', 'nc_life_name', 'nc_life_ledger',
@@ -1846,14 +1860,26 @@ function ncCollect() {
 function ncMerge(remote) {
   if (!remote || typeof remote !== 'object') return 0;
   let changed = 0;
-  const numeric = { nc_points: 1, nc_flap_best: 1 };
+  /* 1 means "keep the bigger number when two devices disagree". Reaction is
+     the exception on this whole site: a lower time is the better one, so it is
+     merged with -1 rather than being silently overwritten by a slower go from
+     another device. */
+  const numeric = { nc_points: 1, nc_flap_best: 1, nc_aim_best: 1, nc_reaction_best: -1 };
   for (const k in remote) {
     if (NC_SYNC_KEYS.indexOf(k) < 0) continue;
     const mine = localStorage.getItem(k), theirs = remote[k];
     if (mine === theirs) continue;
     if (numeric[k]) {
       const a = parseInt(mine, 10) || 0, b = parseInt(theirs, 10) || 0;
-      if (b > a) { localStorage.setItem(k, String(b)); changed++; }
+      /* Direction matters. Everything here is "keep the bigger number" except
+         a reaction time, where the better score is the smaller one — merging
+         that the usual way would quietly replace a good time with a worse one
+         from another device. Zero means "no score yet" on both sides, so it
+         never wins a comparison it should lose. */
+      const better = numeric[k] < 0
+        ? (b > 0 && (a === 0 || b < a))
+        : (b > a);
+      if (better) { localStorage.setItem(k, String(b)); changed++; }
     } else if (mine === null || String(theirs).length > String(mine).length) {
       localStorage.setItem(k, theirs); changed++;
     }

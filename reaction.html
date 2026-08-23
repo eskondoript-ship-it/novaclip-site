@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var b=localStorage.getItem('nc_skin_bg');
+var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;
+if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QN1QE08F2K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-QN1QE08F2K');
+</script>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050505">
+<title>Reaction — NovaClip</title>
+<meta name='description' content='How fast do you actually react? Five goes, the middle one counts.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+
+<!-- WHY THE MIDDLE SCORE AND NOT THE BEST ONE
+     A best-of-five reaction time is mostly luck: guess early enough, often
+     enough, and one attempt lands at 90ms whatever your reflexes are. The
+     median of five is the number that actually describes you, and it is the
+     one that goes to Progress. The best is still shown, because it is fun,
+     but it is labelled as what it is. -->
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',-apple-system,sans-serif; }
+body { background:var(--nc-bg,#05070E); color:var(--nc-text,#EAF2FF); min-height:100vh;
+       display:flex; flex-direction:column; align-items:center; padding:22px 16px 60px; }
+.wrap { width:100%; max-width:640px; }
+h1 { font-size:1.5rem; margin-bottom:4px; }
+.sub { color:var(--nc-dim,#7E8AA6); font-size:.92rem; margin-bottom:18px; line-height:1.6; }
+#pad { height:clamp(230px,46vh,340px); border-radius:22px; display:flex; align-items:center;
+       justify-content:center; text-align:center; cursor:pointer; user-select:none;
+       border:1px solid var(--nc-line,rgba(255,255,255,.12)); transition:background .12s;
+       background:var(--nc-bg2,rgba(255,255,255,.04)); padding:20px; }
+#pad.wait { background:#3A1220; border-color:#7d2540; }
+#pad.go   { background:var(--nc-lime,#B6FF3C); color:#06210A; border-color:transparent; }
+#pad.early{ background:#4A1414; border-color:#8d2a2a; }
+#pad b { font-size:1.7rem; display:block; margin-bottom:6px; }
+#pad span { opacity:.85; font-size:.95rem; }
+.runs { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0 10px; }
+.run { flex:1 1 78px; min-width:70px; text-align:center; padding:10px 6px; border-radius:12px;
+       background:var(--nc-bg2,rgba(255,255,255,.04)); border:1px solid var(--nc-line,rgba(255,255,255,.1));
+       font-variant-numeric:tabular-nums; }
+.run i { display:block; font-style:normal; font-size:.7rem; color:var(--nc-dim,#7E8AA6); margin-bottom:3px; }
+.run b { font-size:1rem; }
+.result { margin-top:14px; padding:16px; border-radius:16px; background:var(--nc-bg2,rgba(255,255,255,.04));
+          border:1px solid var(--nc-line,rgba(255,255,255,.12)); display:none; }
+.result.on { display:block; }
+.result h2 { font-size:1.15rem; margin-bottom:6px; }
+.result p { color:var(--nc-dim,#7E8AA6); line-height:1.6; font-size:.92rem; }
+.result .big { font-size:2rem; color:var(--nc-lime,#B6FF3C); font-variant-numeric:tabular-nums; }
+button.again { margin-top:14px; min-height:44px; padding:12px 24px; border:0; border-radius:999px;
+       background:var(--nc-cyan,#00F0FF); color:#04121a; font-weight:800; font-size:1rem; cursor:pointer; }
+.best { margin-top:12px; color:var(--nc-dim,#7E8AA6); font-size:.86rem; }
+</style>
+</head>
+<body>
+<div class='wrap'>
+  <h1>Reaction</h1>
+  <p class='sub'>Wait for green, then press. Five goes — the middle one is your
+     score, because a single lucky go is not a reflex.</p>
+
+  <div id='pad' role='button' tabindex='0' aria-live='polite'>
+    <b id='padTitle'>Press to start</b>
+    <span id='padNote'>Then wait for green. Pressing early does not count.</span>
+  </div>
+
+  <div class='runs' id='runs'></div>
+
+  <div class='result' id='result'>
+    <h2>Your reaction</h2>
+    <div class='big' id='median'>—</div>
+    <p id='verdict'></p>
+  </div>
+
+  <div class='best' id='best'></div>
+  <button class='again' id='again' style='display:none'>Go again</button>
+</div>
+
+<script src='nova.js'></script>
+<script>
+/* ============================================================================
+   REACTION
+   ============================================================================
+   Five goes. The wait before green is random between 1.2 and 3.8 seconds, so
+   the rhythm cannot be learned — a fixed delay turns this into a metronome
+   test after three attempts.
+
+   Pressing before green is not scored as a fast time, it voids that go. The
+   whole measurement is worthless otherwise: hammering the pad would produce a
+   30ms "reaction" and a number nobody could believe.
+
+   performance.now() rather than Date.now() because it is monotonic and has
+   sub-millisecond resolution; Date.now() can step backwards when the system
+   clock syncs, which would produce negative reaction times.
+   ============================================================================ */
+const GOES = 5;
+const pad = document.getElementById('pad');
+const padTitle = document.getElementById('padTitle');
+const padNote = document.getElementById('padNote');
+const runsEl = document.getElementById('runs');
+const resultEl = document.getElementById('result');
+const againBtn = document.getElementById('again');
+
+let times = [];        // the completed goes, in milliseconds
+/* idle    nothing recorded — the next press starts a fresh set
+   between a go is recorded and the next one is waiting to be armed
+   waiting green is coming
+   go      green is up
+   done    five goes finished
+
+   'between' exists because of a bug this found: pressing to arm the next go
+   went through the same branch as starting a new set, which cleared the times
+   array. Every go was recorded and then thrown away, so the set never reached
+   five and the result never appeared. */
+let state = 'idle';
+let greenAt = 0;
+let timer = null;
+
+const BEST_KEY = 'nc_reaction_best';
+
+function drawRuns() {
+  runsEl.innerHTML = Array.from({ length: GOES }, (_, i) =>
+    '<div class="run"><i>Go ' + (i + 1) + '</i><b>' +
+    (times[i] == null ? '—' : Math.round(times[i]) + 'ms') + '</b></div>').join('');
+}
+
+function median(list) {
+  const s = [...list].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+function arm() {
+  state = 'waiting';
+  pad.className = 'wait';
+  padTitle.textContent = 'Wait…';
+  padNote.textContent = 'Green can come at any moment.';
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    state = 'go';
+    pad.className = 'go';
+    padTitle.textContent = 'PRESS';
+    padNote.textContent = '';
+    greenAt = performance.now();
+  }, 1200 + Math.random() * 2600);
+}
+
+function press() {
+  if (state === 'idle') {
+    resultEl.classList.remove('on'); againBtn.style.display = 'none';
+    times = []; drawRuns(); arm(); return;
+  }
+  /* Mid-set: arm the next go and keep everything recorded so far. */
+  if (state === 'between') { arm(); return; }
+
+  if (state === 'waiting') {
+    /* Too early. The go is voided rather than scored — see the note above.
+       Back to 'between' rather than 'idle' when a set is under way, or the
+       voided go would also wipe the goes already completed. */
+    clearTimeout(timer);
+    state = times.length ? 'between' : 'idle';
+    pad.className = 'early';
+    padTitle.textContent = 'Too early';
+    padNote.textContent = 'That one does not count. Press to try the go again.';
+    return;
+  }
+
+  if (state === 'go') {
+    times.push(performance.now() - greenAt);
+    drawRuns();
+    if (times.length >= GOES) return finish();
+    state = 'between';
+    pad.className = '';
+    padTitle.textContent = Math.round(times[times.length - 1]) + 'ms';
+    padNote.textContent = 'Press for go ' + (times.length + 1) + ' of ' + GOES + '.';
+    return;
+  }
+
+  if (state === 'done') { state = 'idle'; press(); }
+}
+
+function finish() {
+  state = 'done';
+  const mid = Math.round(median(times));
+  const best = Math.round(Math.min(...times));
+
+  pad.className = '';
+  padTitle.textContent = 'Done';
+  padNote.textContent = 'Five goes finished.';
+  document.getElementById('median').textContent = mid + 'ms';
+
+  /* Plain description, no rank and no comparison to other people — there is no
+     table of other people's times here, and inventing one would be inventing
+     the only thing this screen could get wrong. */
+  let say;
+  if (mid < 200) say = 'That is quick. Anything under about 200ms is at the fast end of what a person can do.';
+  else if (mid < 260) say = 'That is a normal, healthy reaction time.';
+  else if (mid < 350) say = 'A little steady. Tiredness and a slow screen both add to this.';
+  else say = 'Slower than usual for most people — worth trying again when you are less tired, on a screen that is not lagging.';
+  document.getElementById('verdict').textContent =
+    'Best single go: ' + best + 'ms. ' + say;
+  resultEl.classList.add('on');
+  againBtn.style.display = 'inline-block';
+
+  let prior = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
+  if (!prior || mid < prior) {
+    localStorage.setItem(BEST_KEY, String(mid));
+    prior = mid;
+    document.getElementById('best').textContent = 'New best: ' + mid + 'ms.';
+  } else {
+    document.getElementById('best').textContent = 'Your best so far: ' + prior + 'ms.';
+  }
+
+  /* Into the real ledger the rest of the site uses, rather than a score kept
+     only by this page. Points are for finishing a full set, not for being
+     fast, so there is nothing to gain by gaming the timer. */
+  try { if (typeof addPts === 'function') addPts(5); } catch (e) {}
+  try { if (typeof logSkill === 'function') logSkill('reaction'); } catch (e) {}
+}
+
+pad.addEventListener('pointerdown', (e) => { e.preventDefault(); press(); });
+pad.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); press(); }
+});
+againBtn.addEventListener('click', () => {
+  times = []; drawRuns();
+  resultEl.classList.remove('on'); againBtn.style.display = 'none';
+  state = 'idle'; pad.className = '';
+  padTitle.textContent = 'Press to start';
+  padNote.textContent = 'Then wait for green.';
+});
+
+drawRuns();
+const savedBest = localStorage.getItem(BEST_KEY);
+if (savedBest) document.getElementById('best').textContent = 'Your best so far: ' + savedBest + 'ms.';
+</script>
+</body>
+</html>
