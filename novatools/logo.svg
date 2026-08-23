@@ -17,26 +17,18 @@
   <!-- the light it throws -->
   <circle cx="32" cy="32" r="31" fill="url(#novatools-halo)"/>
 
-  <!-- the shockwave, still expanding -->
-  <circle cx="32" cy="32" r="25.5" fill="none" stroke="#2867E4" stroke-opacity="0.32"
-          stroke-width="1.3" stroke-dasharray="7 5.5" stroke-linecap="round"/>
-
-  <!-- what it threw off -->
+  <!-- the stars still travelling -->
   <g>
-    <circle cx="56.9" cy="42.3" r="1.9" fill="#2867E4" opacity="0.55"/>
-    <circle cx="41.4" cy="54.6" r="1.3" fill="#2867E4" opacity="0.35"/>
-    <circle cx="21.7" cy="56.9" r="1.9" fill="#2867E4" opacity="0.55"/>
-    <circle cx="9.4" cy="41.4" r="1.3" fill="#2867E4" opacity="0.35"/>
-    <circle cx="7.1" cy="21.7" r="1.9" fill="#2867E4" opacity="0.55"/>
-    <circle cx="22.6" cy="9.4" r="1.3" fill="#2867E4" opacity="0.35"/>
-    <circle cx="42.3" cy="7.1" r="1.9" fill="#2867E4" opacity="0.55"/>
-    <circle cx="54.6" cy="22.6" r="1.3" fill="#2867E4" opacity="0.35"/>
+    <path d="M57.1 40.6 Q57.1 43.2 59.7 43.2 Q57.1 43.2 57.1 45.8 Q57.1 43.2 54.5 43.2 Q57.1 43.2 57.1 40.6 Z" fill="#2867E4" opacity="0.75"/>
+    <path d="M23.5 57.8 Q23.5 59.7 25.4 59.7 Q23.5 59.7 23.5 61.6 Q23.5 59.7 21.6 59.7 Q23.5 59.7 23.5 57.8 Z" fill="#2867E4" opacity="0.75"/>
+    <path d="M6.1 35.2 Q6.1 37.5 8.4 37.5 Q6.1 37.5 6.1 39.8 Q6.1 37.5 3.8 37.5 Q6.1 37.5 6.1 35.2 Z" fill="#2867E4" opacity="0.75"/>
+    <path d="M23.7 2.7 Q23.7 4.7 25.7 4.7 Q23.7 4.7 23.7 6.7 Q23.7 4.7 21.7 4.7 Q23.7 4.7 23.7 2.7 Z" fill="#2867E4" opacity="0.75"/>
+    <path d="M49.4 11.1 Q49.4 12.7 51.0 12.7 Q49.4 12.7 49.4 14.3 Q49.4 12.7 47.8 12.7 Q49.4 12.7 49.4 11.1 Z" fill="#2867E4" opacity="0.75"/>
   </g>
 
-  <!-- the burst itself: the part that has to work alone at 16 pixels -->
+  <!-- the crown of rays and the core: the part that works alone at 16 pixels -->
   <g>
-    <path d="M32 12 Q33.8 27.5 52 32 Q33.8 36.5 32 52 Q30.2 36.5 12 32 Q30.2 27.5 32 12 Z" fill="#2867E4" opacity="0.55" transform="rotate(45 32 32)"/>
-    <path d="M32 2 Q35.5 26 62 32 Q35.5 38 32 62 Q28.5 38 2 32 Q28.5 26 32 2 Z" fill="url(#novatools-body)"/>
-    <circle cx="32" cy="32" r="6.5" fill="#EAF0FF"/>
+    <path d="M40.90 28.67 L62.50 32.00 L40.90 35.33 Z M41.32 33.85 L50.11 40.48 L39.39 37.97 Z M40.77 35.65 L54.27 52.84 L36.22 40.51 Z M37.21 39.94 L38.64 50.86 L32.92 41.46 Z M35.71 40.74 L33.33 62.47 L29.06 41.03 Z M30.38 41.36 L23.96 50.31 L26.21 39.53 Z M28.52 40.84 L11.59 54.67 L23.57 36.39 Z M24.15 37.35 L13.25 38.97 L22.56 33.08 Z M23.10 35.33 L1.50 32.00 L23.10 28.67 Z M22.68 30.15 L13.89 23.52 L24.61 26.03 Z M23.23 28.35 L9.73 11.16 L27.78 23.49 Z M26.79 24.06 L25.36 13.14 L31.08 22.54 Z M28.29 23.26 L30.67 1.53 L34.94 22.97 Z M33.62 22.64 L40.04 13.69 L37.79 24.47 Z M35.48 23.16 L52.41 9.33 L40.43 27.61 Z M39.85 26.65 L50.75 25.03 L41.44 30.92 Z" fill="url(#novatools-body)"/>
+    <circle cx="32" cy="32" r="9.5" fill="#EAF0FF"/>
   </g>
 </svg>

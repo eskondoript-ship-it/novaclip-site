@@ -63,27 +63,68 @@ const BRANDS = {
 
 /* ---- the geometry, once -------------------------------------------------- */
 
-/* The four-point burst. Concave flanks (the quadratic control points pulled in
-   towards the centre) are what make it read as light rather than as a plus
-   sign. */
-const BURST = 'M32 2 Q35.5 26 62 32 Q35.5 38 32 62 Q28.5 38 2 32 Q28.5 26 32 2 Z';
+/* WHY THIS IS NOT A FOUR-POINT STAR ANY MORE
 
-/* The same shape at 45°, half size: the diagonal flare of the explosion. */
-const DIAGONALS = 'M32 12 Q33.8 27.5 52 32 Q33.8 36.5 32 52 Q30.2 36.5 12 32 Q30.2 27.5 32 12 Z';
+   The first mark was a single four-point star with concave flanks. That is a
+   good shape and it belongs to somebody else: it is what Gemini's logo looks
+   like, and a creator tool whose icon reads as another company's AI is a
+   branding problem no amount of colour fixes.
 
-/* Debris: eight fragments thrown outward, at the eight compass points, small
-   enough to disappear cleanly at favicon size. */
-function debris(colour) {
-  const bits = [];
-  for (let i = 0; i < 8; i++) {
-    const a = (i * 45 + 22.5) * Math.PI / 180;
-    const r = i % 2 === 0 ? 27 : 24.5;
-    const x = 32 + Math.cos(a) * r;
-    const y = 32 + Math.sin(a) * r;
-    const size = i % 2 === 0 ? 1.9 : 1.3;
-    bits.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${size}" fill="${colour}" opacity="${i % 2 === 0 ? 0.55 : 0.35}"/>`);
-  }
-  return bits.join('\n    ');
+   A nova is not a sparkle, it is a detonation. So this is built the way an
+   explosion actually looks: a hot core, a crown of rays thrown out at uneven
+   lengths, and fragments still travelling beyond them. Sixteen rays rather
+   than four, alternating long and short, each nudged off perfect symmetry —
+   evenly spaced spokes read as a sun or a wheel, uneven ones read as force.
+
+   The nudge comes from a fixed table rather than Math.random, so every render
+   of every brand is identical and re-running this never quietly changes the
+   logo. */
+
+const RAYS = 16;
+
+/* Degrees of nudge, cycled. Small enough to stay tidy, big enough to stop the
+   crown looking machined. */
+const JITTER = [0, 2.6, -1.9, 3.1, -2.5, 1.2, -3.0, 2.1];
+
+function ray(i) {
+  const long = i % 2 === 0;
+  const deg = i * (360 / RAYS) + JITTER[i % JITTER.length];
+  const a = deg * Math.PI / 180;
+  const r0 = 9.5;                       // leaves the core, not the centre
+  const r1 = long ? 30.5 : 20;          // how far this one was thrown
+  const halfWidth = long ? 3.4 : 2.3;   // at the base; the tip is a point
+  const spread = halfWidth / r0;        // radians
+
+  const P = (ang, r) =>
+    `${(32 + Math.cos(ang) * r).toFixed(2)} ${(32 + Math.sin(ang) * r).toFixed(2)}`;
+
+  return `M${P(a - spread, r0)} L${P(a, r1)} L${P(a + spread, r0)} Z`;
+}
+
+function crown() {
+  return Array.from({ length: RAYS }, (_, i) => ray(i)).join(' ');
+}
+
+/* The stars still travelling: small four-pointed sparks well outside the
+   crown. Four points is fine at this size — a two-pixel spark is a spark, and
+   it was the big silhouette that was doing the impersonating. */
+const SPARKS = [
+  { deg: 24, r: 27.5, s: 2.6 }, { deg: 107, r: 29, s: 1.9 },
+  { deg: 168, r: 26.5, s: 2.3 }, { deg: 253, r: 28.5, s: 2.0 },
+  { deg: 312, r: 26, s: 1.6 }
+];
+
+function sparks(colour) {
+  return SPARKS.map(({ deg, r, s }) => {
+    const a = deg * Math.PI / 180;
+    const x = 32 + Math.cos(a) * r, y = 32 + Math.sin(a) * r;
+    const f = (n) => n.toFixed(1);
+    const d = `M${f(x)} ${f(y - s)} Q${f(x)} ${f(y)} ${f(x + s)} ${f(y)} ` +
+              `Q${f(x)} ${f(y)} ${f(x)} ${f(y + s)} ` +
+              `Q${f(x)} ${f(y)} ${f(x - s)} ${f(y)} ` +
+              `Q${f(x)} ${f(y)} ${f(x)} ${f(y - s)} Z`;
+    return `<path d="${d}" fill="${colour}" opacity="0.75"/>`;
+  }).join('\n    ');
 }
 
 /* The favicon is a different drawing, not the same one scaled.
@@ -100,8 +141,8 @@ function favicon(b) {
       <stop offset="100%" stop-color="${b.edge}"/>
     </linearGradient>
   </defs>
-  <path d="${BURST}" fill="url(#${id})"/>
-  <circle cx="32" cy="32" r="7" fill="${b.hot}"/>
+  <path d="${crown()}" fill="url(#${id})"/>
+  <circle cx="32" cy="32" r="8.5" fill="${b.hot}"/>
 </svg>
 `;
 }
@@ -123,27 +164,22 @@ function svg(b, size = 64) {
     </linearGradient>
     ${b.cue === 'play' ? `<mask id="${id}-cut">
       <rect width="64" height="64" fill="#fff"/>
-      <path d="M28.5 26.5 L40 32 L28.5 37.5 Z" fill="#000"/>
+      <path d="M28.7 26.6 L40 32 L28.7 37.4 Z" fill="#000"/>
     </mask>` : ''}
   </defs>
 
   <!-- the light it throws -->
   <circle cx="32" cy="32" r="31" fill="url(#${id}-halo)"/>
 
-  <!-- the shockwave, still expanding -->
-  <circle cx="32" cy="32" r="25.5" fill="none" stroke="${b.edge}" stroke-opacity="0.32"
-          stroke-width="1.3" stroke-dasharray="7 5.5" stroke-linecap="round"/>
-
-  <!-- what it threw off -->
+  <!-- the stars still travelling -->
   <g>
-    ${debris(b.edge)}
+    ${sparks(b.edge)}
   </g>
 
-  <!-- the burst itself: the part that has to work alone at 16 pixels -->
+  <!-- the crown of rays and the core: the part that works alone at 16 pixels -->
   <g${b.cue === 'play' ? ` mask="url(#${id}-cut)"` : ''}>
-    <path d="${DIAGONALS}" fill="${b.edge}" opacity="0.55" transform="rotate(45 32 32)"/>
-    <path d="${BURST}" fill="url(#${id}-body)"/>
-    <circle cx="32" cy="32" r="6.5" fill="${b.hot}"/>
+    <path d="${crown()}" fill="url(#${id}-body)"/>
+    <circle cx="32" cy="32" r="9.5" fill="${b.hot}"/>
   </g>
 </svg>
 `;
