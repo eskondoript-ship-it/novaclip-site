@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint, same as every other page. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050505">
+<title>Privacy — NovaClip</title>
+<meta name='description' content='What NovaClip stores, what leaves your device and what does not. No accounts with your name on them, no advertising, no analytics.'>
+<link rel='canonical' href='https://novaclip.org/privacy.html'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+
+<!-- WHY THIS PAGE READS THE WAY IT DOES
+     Most of the people using NovaClip are between 13 and 18. A policy written
+     for lawyers is a policy they will not read, and a policy nobody reads
+     protects nobody. So it is written to be understood, and every claim in it
+     was checked against the code rather than copied off a template: there is
+     no advertising, no analytics, no account with a name on it, and the face
+     and voice features genuinely never leave the device.
+
+     If a feature ever changes, this page changes in the same commit. A privacy
+     policy that has drifted from what the software does is worse than none,
+     because it is a promise being broken quietly. -->
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',-apple-system,sans-serif; }
+body { background:var(--nc-bg,#060608); color:var(--nc-text,#f4f4f6);
+       min-height:100vh; display:flex; justify-content:center;
+       padding:40px 20px 90px; line-height:1.65; }
+.wrap { width:100%; max-width:720px; }
+a.back { display:inline-block; margin-bottom:22px; color:var(--nc-dim,#8c96ad);
+         text-decoration:none; font-size:0.92rem; }
+a.back:hover { color:var(--nc-text,#f4f4f6); }
+h1 { font-size:2.1rem; margin-bottom:10px; letter-spacing:-0.01em; }
+.lede { color:var(--nc-dim,#8c96ad); margin-bottom:10px; }
+.updated { color:var(--nc-dim,#8c96ad); font-size:0.85rem; margin-bottom:28px; }
+h2 { font-size:1.25rem; margin:32px 0 10px; }
+h3 { font-size:1rem; margin:20px 0 6px; }
+p { margin-bottom:12px; }
+ul { margin:0 0 14px 20px; }
+li { margin-bottom:8px; }
+.card { background:var(--nc-bg2,rgba(255,255,255,0.04));
+        border:1px solid var(--nc-line,rgba(255,255,255,0.1));
+        border-radius:18px; padding:22px 24px; margin-bottom:22px; }
+.card.plain { background:transparent; }
+.big { font-size:1.05rem; }
+strong { color:var(--nc-text,#f4f4f6); }
+code { background:var(--nc-bg3,rgba(255,255,255,0.07)); padding:2px 7px;
+       border-radius:6px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.9em; }
+a { color:#4CC9F0; }
+table { width:100%; border-collapse:collapse; margin:6px 0 14px; font-size:0.94rem; }
+th, td { text-align:left; padding:9px 10px; vertical-align:top;
+         border-bottom:1px solid var(--nc-line,rgba(255,255,255,0.1)); }
+th { color:var(--nc-dim,#8c96ad); font-weight:600; font-size:0.85rem; }
+.wrapscroll { overflow-x:auto; }
+</style>
+</head>
+<body>
+<div class='wrap'>
+
+  <a class='back' href='/'>← Back to NovaClip</a>
+
+  <h1>Privacy</h1>
+  <p class='lede big'>Most people using NovaClip are between 13 and 18. This page
+     is written to be read by them, not by a lawyer.</p>
+  <p class='updated'>Last updated 22 August 2026 · NovaClip · novaclip.org</p>
+
+  <div class='card'>
+    <h2 style='margin-top:0'>The short version</h2>
+    <ul class='big'>
+      <li>There is <strong>no advertising and no analytics</strong> on NovaClip. Nothing follows you around.</li>
+      <li>An account is <strong>a code</strong>. We never ask for your name, your email or a password.</li>
+      <li>Your <strong>face and your voice never leave your device</strong>, and neither does anything the camera sees.</li>
+      <li>Almost everything you make is stored <strong>in your own browser</strong>, not on a server.</li>
+      <li>We <strong>do not sell anything to anybody</strong>, because we do not hold anything worth selling.</li>
+    </ul>
+  </div>
+
+  <h2>What is kept on your device</h2>
+  <p>Most of NovaClip works without a server at all. These live in your browser's
+     local storage, on the computer or phone you are using:</p>
+  <ul>
+    <li>Your display name, avatar and language, if you set them</li>
+    <li>Your progress: levels, streaks, coins, certificates and skill history</li>
+    <li>Video editor projects and their settings</li>
+    <li>Your face and voice profiles, if you turn on face or voice sign-in</li>
+    <li>Parent settings: the screen-time limits, and a <strong>hashed</strong> parent PIN</li>
+    <li>The last four digits of a saved card, its expiry and the name on it —
+        <strong>never the full number</strong>, which is not stored anywhere</li>
+    <li>An AI key, only if you choose to bring your own</li>
+  </ul>
+  <p>Clearing your browser data deletes all of it. There is no copy on our side
+     to restore it from, which is the trade for not holding your information.</p>
+
+  <h2>Accounts, and why they have no name on them</h2>
+  <p>Signing in to save progress across devices gives you <strong>a code</strong> — a
+     short string like a link to a shared document. Whoever has the code has the
+     account.</p>
+  <p>We chose this deliberately. Collecting email addresses and passwords from
+     under-18s means holding data that can be breached, and it means a password
+     a young person has probably reused elsewhere. So we hold neither. What our
+     server stores against your code is the progress you saved and the time you
+     saved it — nothing that identifies you.</p>
+  <p>The cost is real and worth saying: <strong>lose the code and the account cannot
+     be recovered</strong>, because there is nothing to prove it was yours.</p>
+
+  <h2>Camera, microphone, face and voice</h2>
+  <p>NovaClip can use your camera and microphone for the video editor, the selfie
+     studio, the voice changer, motion transfer, and face or voice sign-in. Your
+     browser asks permission every time and you can refuse; the rest of the site
+     still works.</p>
+  <p><strong>None of it is uploaded.</strong> The video, the audio, the face
+     measurements and the voiceprint are processed in the page and stay in your
+     browser's storage. "Sign in with your face" means "unlock on this browser"
+     — like the fingerprint prompt on a password manager — not an identity held
+     on a server.</p>
+  <p>One honest exception: <strong>voice commands</strong>. Those use your browser's
+     own speech recognition, and some browsers — Chrome in particular — send the
+     audio to the browser maker's servers to turn it into text. That is your
+     browser doing it rather than NovaClip, it only happens while voice commands
+     are switched on, and you can leave them off.</p>
+
+  <h2>What is sent somewhere else, and when</h2>
+  <p>Nothing on this list happens in the background. Each one happens only when
+     you use the feature it belongs to.</p>
+  <div class='wrapscroll'>
+  <table>
+    <tr><th>When you…</th><th>What is sent</th><th>Who receives it</th></tr>
+    <tr><td>Ask the AI anything</td><td>The text you typed</td><td>Our Cloudflare Worker, which passes it to Google's Gemini API</td></tr>
+    <tr><td>Check a message with the safety tools</td><td>The text you pasted</td><td>The same worker; card numbers and codes are stripped out before it is sent</td></tr>
+    <tr><td>Save progress with a code</td><td>Your progress and your code</td><td>Our Cloudflare Worker (Cloudflare KV storage)</td></tr>
+    <tr><td>Research trends or connect a channel</td><td>The search, or the channel you authorised</td><td>YouTube's own API</td></tr>
+    <tr><td>Use the globe or map views</td><td>The place being looked at</td><td>Google Maps and ArcGIS map tiles</td></tr>
+    <tr><td>Use meme templates</td><td>The caption text</td><td>memegen.link, which draws the image</td></tr>
+    <tr><td>Load any page</td><td>Nothing extra</td><td>Some libraries load from jsDelivr and unpkg, which see your IP address as any website you visit does</td></tr>
+    <tr><td>Send a report</td><td>Only what you write in the form</td><td>Us, by email</td></tr>
+  </table>
+  </div>
+  <p>Those companies have their own privacy policies and we cannot make promises
+     on their behalf. What we can say is that we do not send them anything about
+     you beyond what the feature needs to work.</p>
+
+  <h2>Age</h2>
+  <p>NovaClip is for people aged 13 and over. The site asks your age once and
+     will not let you in below 13. If you tell us you are under 13 we do not
+     keep what you typed — you are simply not let in.</p>
+  <p>If you are a parent and believe a child under 13 has used NovaClip anyway,
+     email us at the address below and we will remove anything connected to
+     their code.</p>
+
+  <h2>Your choices</h2>
+  <ul>
+    <li><strong>Delete everything:</strong> clear this site's data in your browser
+        settings. Everything on this device goes.</li>
+    <li><strong>Delete a saved account:</strong> email us your code and ask. We
+        will delete what is stored against it.</li>
+    <li><strong>Refuse the camera or microphone:</strong> say no to the browser's
+        prompt, or turn the feature off. Nothing else breaks.</li>
+    <li><strong>Ask what we hold:</strong> email us with your code. Under the GDPR
+        and the UK GDPR you have the right to see it, correct it, or have it
+        deleted, and we will answer within 30 days.</li>
+  </ul>
+
+  <h2>Security</h2>
+  <p>NovaClip is served over HTTPS everywhere. API keys live on the server and
+     are never sent to your browser. Requests to save progress are rate-limited.
+     No system is perfect, and we would rather say that plainly than claim
+     otherwise.</p>
+
+  <h2>Changes</h2>
+  <p>If what NovaClip does changes, this page changes with it and the date at the
+     top moves. A policy that has drifted from the software is a promise being
+     broken quietly, which is worse than having no policy at all.</p>
+
+  <h2>Contact</h2>
+  <p>Questions, deletion requests, or anything that felt wrong:
+     <a href='mailto:novacliptools@gmail.com'>novacliptools@gmail.com</a>,
+     or use the <a href='/report.html'>report form</a>.</p>
+  <p class='updated' style='margin-top:26px'>NovaClip is an independent project.
+     It is not affiliated with Google, YouTube, Microsoft or any of the services
+     it connects to.</p>
+
+</div>
+<script src='nova.js'></script>
+</body>
+</html>

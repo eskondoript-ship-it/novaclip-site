@@ -3587,7 +3587,12 @@ window.addEventListener('DOMContentLoaded', () => {
   /* Pages the blocked screen SENDS people to. Gating these would trap a child
      in a loop between the block and the page it tells them to open, which is
      worse than not blocking at all — they would simply clear their storage. */
-  const NC_AGE_EXEMPT = /(^|\/)(parent|shield|report)\.html$/i;
+  /* privacy.html joins this list because a privacy policy that cannot be
+     read without first answering how old you are is not much of a privacy
+     policy. A parent checking what their child's site collects, and a
+     store reviewer checking the same thing, both arrive here before they
+     have any reason to tell us anything about themselves. */
+  const NC_AGE_EXEMPT = /(^|\/)(parent|shield|report|privacy)\.html$/i;
 
   window.ncAge = function () { return parseInt(localStorage.getItem('nc_user_age') || '0'); };
   window.ncControlsRelaxed = function () { const a = ncAge(); return a >= 16 && a <= 18; };
