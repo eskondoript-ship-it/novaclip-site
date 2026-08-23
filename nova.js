@@ -507,16 +507,115 @@ function ncWatchLang() {
    the first paint has already happened, and the switch would be a visible
    flash of the wrong theme on every navigation.
    --------------------------------------------------------------------------- */
+
+/* ============================================================================
+   SKINS — light, dark and the cyber themes, in one picker
+   ============================================================================
+   Asked for the cyber themes from the prototype, with light and dark living
+   inside the same control rather than in a separate one beside it. So there is
+   now a single list: Light, Match my device, Dark, and twelve cyber skins.
+
+   HOW A SKIN IS DIFFERENT FROM LIGHT/DARK
+
+   Light and dark are the two the whole stylesheet is built around, and they
+   stay exactly as they were — nothing is injected for them. A cyber skin sits
+   on top of the dark base and repaints the palette variables, so every page
+   follows without a single page knowing skins exist.
+
+   Each theme in the prototype gave four colours: a primary, a secondary, an
+   accent and a background. The site needs more than four — panel backgrounds,
+   hairlines, muted text — so the rest are derived from those, which is also
+   why a new skin is six values rather than a stylesheet.
+
+   The choice still lives in nc_theme, so somebody who picked dark last week
+   still has dark: the old values and the new ids share one key and one code
+   path.
+   ============================================================================ */
+const NC_SKINS = [
+  { id:'void',      name:'Void Cyber',         primary:'#00F0FF', secondary:'#FF2E97', accent:'#B6FF3C', bg:'#05060A' },
+  { id:'cyberpunk', name:'Neo Cyberpunk',      primary:'#00F0FF', secondary:'#FF007F', accent:'#FFE600', bg:'#0D0221' },
+  { id:'synthwave', name:'80s Synthwave',      primary:'#00E5FF', secondary:'#FF007F', accent:'#FF9E00', bg:'#09031C' },
+  { id:'matrix',    name:'Matrix Terminal',    primary:'#00FF66', secondary:'#00DD44', accent:'#55FF99', bg:'#020B05' },
+  { id:'crimson',   name:'Bloodmoon Protocol', primary:'#FF1744', secondary:'#FF5252', accent:'#FF9100', bg:'#0D0205' },
+  { id:'glitch',    name:'Chromatic Holo',     primary:'#00FFD5', secondary:'#C026D3', accent:'#39FF14', bg:'#06090E' },
+  { id:'midnight',  name:'Midnight Electric',  primary:'#38BDF8', secondary:'#818CF8', accent:'#34D399', bg:'#020813' },
+  { id:'sunset',    name:'Neon Sunset',        primary:'#FF7700', secondary:'#FF0055', accent:'#FFCC00', bg:'#0F051D' },
+  { id:'solar',     name:'Solar Flare',        primary:'#FF9E00', secondary:'#FF3C00', accent:'#FFE600', bg:'#140500' },
+  { id:'vaporwave', name:'Vaporwave Dream',    primary:'#05D9E8', secondary:'#FF2A6D', accent:'#D100D1', bg:'#10061E' },
+  { id:'biopunk',   name:'Bio-Xenon',          primary:'#00FF88', secondary:'#D4FF00', accent:'#00F0FF', bg:'#041209' },
+  { id:'stealth',   name:'Ghost Titanium',     primary:'#38BDF8', secondary:'#94A3B8', accent:'#22D3EE', bg:'#08090B' }
+];
+
+const NC_SKIN_KEY = 'nc_skin_bg';        // read by the pre-paint snippet in each head
+
+function ncSkin(id) { return NC_SKINS.find(s => s.id === id) || null; }
+
+/* Lift a hex colour towards white by a fraction. Panels, hairlines and hover
+   states all come from the background this way, so a skin does not have to
+   list nine colours to look finished. */
+function ncLift(hex, amount) {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+  const mix = (c) => Math.round(c + (255 - c) * amount);
+  const r = mix((n >> 16) & 255), g = mix((n >> 8) & 255), b = mix(n & 255);
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+/* Paint a skin by rewriting the palette variables. Removing the sheet is what
+   returns the site to plain light or dark. */
+function ncPaintSkin(id) {
+  const skin = ncSkin(id);
+  let tag = document.getElementById('nc-skin-css');
+  if (!skin) {
+    if (tag) tag.remove();
+    try { localStorage.removeItem(NC_SKIN_KEY); } catch (e) {}
+    document.documentElement.removeAttribute('data-skin');
+    return null;
+  }
+  if (!tag) {
+    tag = document.createElement('style');
+    tag.id = 'nc-skin-css';
+    document.head.appendChild(tag);
+  }
+  tag.textContent =
+    ':root, html[data-theme="dark"], html[data-theme="light"]{' +
+      '--nc-bg:' + skin.bg + ';' +
+      '--nc-bg2:' + ncLift(skin.bg, 0.10) + ';' +
+      '--nc-bg3:' + ncLift(skin.bg, 0.05) + ';' +
+      '--nc-bar-bg:' + ncLift(skin.bg, 0.04) + ';' +
+      '--nc-text:#F2F7FF;--nc-dim:#8D9AB5;--nc-dim2:#9AA6BE;' +
+      '--nc-line:rgba(255,255,255,.10);--nc-line2:rgba(255,255,255,.18);' +
+      '--nc-cyan:' + skin.primary + ';--nc-cyan2:' + skin.primary + ';' +
+      '--nc-blue:' + skin.primary + ';' +
+      '--nc-pink:' + skin.secondary + ';--nc-mag:' + skin.secondary + ';' +
+      '--nc-violet:' + skin.secondary + ';--nc-violet2:' + skin.secondary + ';' +
+      '--nc-lime:' + skin.accent + ';--nc-amber:' + skin.accent + ';' +
+    '}';
+  document.documentElement.setAttribute('data-skin', skin.id);
+  /* Stored so the snippet in each page's <head> can paint the background
+     before the first frame. Without it a cyber skin flashes the default dark
+     on every navigation. */
+  try { localStorage.setItem(NC_SKIN_KEY, skin.bg); } catch (e) {}
+  return skin;
+}
+
 const NC_THEME_KEY = 'nc_theme';
 
 function ncThemePref() {
-  try { const v = localStorage.getItem(NC_THEME_KEY); if (v === 'light' || v === 'dark' || v === 'system') return v; } catch (e) {}
+  try {
+    const v = localStorage.getItem(NC_THEME_KEY);
+    if (v === 'light' || v === 'dark' || v === 'system') return v;
+    if (ncSkin(v)) return v;              // one of the cyber skins
+  } catch (e) {}
   return 'system';
 }
 
 function ncThemeResolved(pref) {
   const p = pref || ncThemePref();
   if (p === 'light' || p === 'dark') return p;
+  /* Every cyber skin is a dark skin: it repaints the palette but the base the
+     stylesheet reasons about is still dark. */
+  if (ncSkin(p)) return 'dark';
   try { return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch (e) { return 'dark'; }
 }
 
@@ -529,6 +628,7 @@ function ncApplyTheme(pref) {
   /* Tells the browser which way to paint form controls, scrollbars and the
      canvas behind the page, which CSS variables cannot reach. */
   r.style.colorScheme = t;
+  ncPaintSkin(p);            // no-op, and removes any sheet, for light/dark/system
   return t;
 }
 
@@ -875,7 +975,52 @@ function ncBuildThemeSwitch() {
     row.appendChild(b);
   });
 
-  wrap.append(label, row);
+  /* The cyber skins, in the same control rather than a second one beside it.
+     Each is a chip painted in its own three colours, because a list of names
+     like "Bio-Xenon" and "Chromatic Holo" tells nobody what they are about to
+     get — the swatch does. */
+  const skins = document.createElement('div');
+  skins.className = 'nc-skinrow';
+  skins.setAttribute('role', 'group');
+  skins.setAttribute('aria-label', 'Cyber themes');
+  NC_SKINS.forEach(sk => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'nc-skinbtn nc-themebtn' + (sk.id === pref ? ' on' : '');
+    b.dataset.theme = sk.id;
+    b.setAttribute('aria-pressed', String(sk.id === pref));
+    b.title = sk.name;
+    b.setAttribute('aria-label', sk.name);
+    b.style.background = sk.bg;
+    b.innerHTML =
+      '<span class="ncsk" style="background:' + sk.primary + '"></span>' +
+      '<span class="ncsk" style="background:' + sk.secondary + '"></span>' +
+      '<span class="ncsk" style="background:' + sk.accent + '"></span>';
+    b.addEventListener('click', () => ncSetTheme(sk.id));
+    skins.appendChild(b);
+  });
+
+  if (!document.getElementById('nc-skinrow-css')) {
+    const css = document.createElement('style');
+    css.id = 'nc-skinrow-css';
+    css.textContent =
+      /* flex-basis and min-width are both spelled out because the top bar sets
+         `flex:none` on its children and then lets them shrink: without these
+         the twelve chips arrived as 14px slivers nobody could tell apart. */
+      '.nc-skinrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-width:230px}' +
+      '#ncbar .nc-skinrow{flex-wrap:nowrap;margin-top:0;max-width:none}' +
+      '.nc-skinbtn{flex:0 0 34px;width:34px;min-width:34px;height:34px;min-height:34px;' +
+        'padding:0;border-radius:9px;' +
+        'display:flex;align-items:center;justify-content:center;gap:2px;cursor:pointer;' +
+        'border:1px solid var(--nc-line2,rgba(255,255,255,.18));overflow:hidden}' +
+      '.nc-skinbtn.on{outline:2px solid var(--nc-cyan,#00F0FF);outline-offset:1px}' +
+      '.nc-skinbtn .ncsk{flex:0 0 5px;width:5px;height:14px;border-radius:2px;display:block}' +
+      '#ncbar #nc-themerow{display:flex;align-items:center;gap:10px;margin-bottom:0}' +
+      '#ncbar #nc-themerow > label{margin-bottom:0}';
+    document.head.appendChild(css);
+  }
+
+  wrap.append(label, row, skins);
   host.insertBefore(wrap, host.firstChild);
 }
 

@@ -6,9 +6,14 @@
    flash on every navigation for anyone using light mode. Six lines here cost
    nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
 (function(){try{var p=localStorage.getItem('nc_theme')||'system';
-var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var b=localStorage.getItem('nc_skin_bg');
+var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
 var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
-r.style.colorScheme=t;}catch(e){}})();</script>
+r.style.colorScheme=t;
+/* A cyber skin repaints the palette from nova.js, which runs at the end of
+   <body>. Painting its background here, before the first frame, is what stops
+   every navigation flashing the default dark first. */
+if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <!-- Google Analytics 4 (gtag.js) — measurement ID G-QN1QE08F2K.
      In the head on every page, which is where Google's own snippet goes: it
