@@ -690,6 +690,13 @@ ncThemeStyle.textContent =
   "--nc-rail1:#0E1220; --nc-rail2:#0A0D18; --nc-rail3:#080B14;" +
   "--nc-railline:rgba(255,255,255,.07); --nc-railglow:rgba(124,92,255,.10);" +
   "--nc-navhead:#5D6A88; --nc-navhover:#A8B8D8; --nc-navlink:#98A6C4; --nc-navon:#FFFFFF;" +
+  /* Trend Spotter's rail vocabulary, now shared. Kept as variables so light
+     mode can restate them rather than inheriting a dark wash on white. */
+  "--nc-navhoverbg:rgba(255,255,255,.04);" +
+  "--nc-navonbg:linear-gradient(90deg,rgba(167,139,250,.16),rgba(56,189,248,.08));" +
+  "--nc-navonline:rgba(167,139,250,.28); --nc-navicohover:#38BDF8; --nc-navicoon:#A78BFA;" +
+  "--nc-coinbg:linear-gradient(135deg,rgba(167,139,250,.12),rgba(244,114,182,.08));" +
+  "--nc-cardbg:rgba(255,255,255,.03);" +
   "--nc-sel-bg:#0A0C14; --nc-sel-text:#EAF2FF; --nc-sel-line:rgba(0,240,255,.35);" +
 "}" +
 
@@ -708,6 +715,12 @@ ncThemeStyle.textContent =
   "--nc-rail1:#FFFFFF; --nc-rail2:#F7F9FD; --nc-rail3:#EFF3FA;" +
   "--nc-railline:rgba(16,24,44,.13); --nc-railglow:rgba(91,63,214,.10);" +
   "--nc-navhead:#6B7690; --nc-navhover:#1B2437; --nc-navlink:#2B3448; --nc-navon:#0B0E16;" +
+  /* Same shapes, stronger tints: at .16 on white the active row was invisible. */
+  "--nc-navhoverbg:rgba(16,24,44,.05);" +
+  "--nc-navonbg:linear-gradient(90deg,rgba(124,92,255,.16),rgba(56,189,248,.10));" +
+  "--nc-navonline:rgba(124,92,255,.34); --nc-navicohover:#0A85C4; --nc-navicoon:#6D4AE0;" +
+  "--nc-coinbg:linear-gradient(135deg,rgba(124,92,255,.13),rgba(247,37,133,.08));" +
+  "--nc-cardbg:rgba(16,24,44,.035);" +
   "--nc-sel-bg:#FFFFFF; --nc-sel-text:#0B0E16; --nc-sel-line:rgba(16,24,44,.22);" +
 
   /* The families the pages declare for themselves, re-pointed at the palette
@@ -1468,7 +1481,12 @@ style.textContent =
 "select { background:var(--nc-sel-bg,#0A0C14) !important; color:var(--nc-sel-text,#EAF2FF) !important; border:1px solid var(--nc-sel-line,rgba(0,240,255,0.35)) !important; }" +
 "select option { background:var(--nc-sel-bg,#0A0C14); color:var(--nc-sel-text,#EAF2FF); }" +
 /* futuristic sidebar upgrade — applies on every page over local styles */
-".sidebar { background: linear-gradient(180deg, var(--nc-rail1,rgba(8,9,16,0.96)), var(--nc-rail2,rgba(10,8,20,0.96))) !important; border-right:1px solid rgba(0,240,255,0.18) !important; box-shadow: 8px 0 40px rgba(0,240,255,0.05); }" +
+/* The rail, matched to Trend Spotter: a soft hairline edge and a blur
+   instead of the cyan border and cyan bloom it had. The gradient still
+   comes from --nc-rail1/2 so light mode keeps working — those already
+   flip, and hard-coding that page's dark hexes would have put a near-black
+   column down the side of every light-mode page. */
+".sidebar { background: linear-gradient(180deg, var(--nc-rail1,rgba(8,9,16,0.96)), var(--nc-rail2,rgba(10,8,20,0.96))) !important; border-right:1px solid var(--nc-railline,rgba(255,255,255,.07)) !important; box-shadow:none; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }" +
 /* The glowing rail down the sidebar's edge used to breathe forever. That
    animation lives on a pseudo-element of a FIXED, backdrop-filtered panel,
    which means the browser re-blurred roughly 195,000 pixels behind it on
@@ -1597,7 +1615,11 @@ ncFit.textContent =
    a bottom strip with its own rules, and overriding those would put the nav
    back down the left of a phone.
    --------------------------------------------------------------------------- */
-":root { --nc-rail: clamp(164px, 13vw, 232px); }" +
+/* 248 at the top end is Trend Spotter's --nc-sidebar, so the rail is now
+   literally the same width as the page it is being matched to. The old
+   232 truncated "Trend Spotter" and the profile name once the foot cards
+   put an avatar in front of the text. */
+":root { --nc-rail: clamp(176px, 14vw, 248px); }" +
 "@media (min-width: 761px) {" +
   /* Only pages that actually HAVE a rail get pushed over by it. editor.html,
      game.html, trends.html, parent.html and pricing.html have no .sidebar —
@@ -1619,7 +1641,8 @@ ncFit.textContent =
      from the top on every page. The rail is the site's top edge now — the
      padding above it was wasted space, so it is pulled up to sit near it. */
   ".sidebar { padding-top: 8px; }" +
-  "#ncprof { margin-top: 2px; }" +
+  /* the profile sits at the foot of the rail now, not above the logo */
+
   /* The reading column was centred in whatever space the rail left over, which
      on a 1920 screen is 760px of text floating in 1688px of room — a 400px
      dead strip against the sidebar on ai, community, publish, progress and
@@ -2593,23 +2616,69 @@ function ncProfile() {
   const sb = document.querySelector('.sidebar');
   if (!sb || document.getElementById('ncprof')) return;
 
+  /* ---------------------------------------------------------------------
+     THE FOOT OF THE RAIL
+     ---------------------------------------------------------------------
+     Two cards pinned to the bottom, copied from the Trend Spotter page: what
+     you have earned, and who you are. The profile used to sit at the very
+     top, above the logo, which is the one spot on the page nobody looks for
+     it — and it pushed the navigation down by its own height on every screen.
+
+     margin-top:auto on the wrapper is what pins it. The rail's .themewrap had
+     that too; two elements both claiming the free space would have split it
+     and left a gap between them, so that one gives it up below.
+     --------------------------------------------------------------------- */
+  const foot = document.createElement('div');
+  foot.id = 'ncfoot';
+
+  const coins = document.createElement('a');
+  coins.id = 'nccoins';
+  coins.href = 'progress.html';   // the page that explains where they came from
+
   const box = document.createElement('button');
   box.id = 'ncprof';
-  box.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;margin:2px 0 6px;' +
-    'padding:9px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);' +
-    'background:rgba(255,255,255,0.03);color:inherit;font:inherit;cursor:pointer;text-align:left';
+  box.type = 'button';
+
+  function paintCoins() {
+    coins.innerHTML =
+      '<span class="ncfi">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 010 3.6h-3a1.8 1.8 0 000 3.6h4"/>' +
+        '</svg></span>' +
+      /* "NovaCoins" is the product's own name for them and is not translated
+         anywhere else on the site, so it is not run through tr() here either. */
+      '<span class="ncfb"><b>' + getPts().toLocaleString() + '</b><i>NovaCoins</i></span>';
+  }
+
   function paint() {
     const pic = ncAvatar();
     const face = pic.startsWith('data:')
-      ? '<img src="' + pic + '" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover">'
-      : '<span style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;' +
-        'background:linear-gradient(120deg,#7C5CFF,#00E5FF);font-size:17px">' + pic + '</span>';
-    box.innerHTML = face + '<span style="font-size:13.5px;font-weight:600">' +
-      (ncName() ? ncName().replace(/[<>&]/g, '') : tr('ui_set_name')) + '</span>';
+      ? '<img src="' + pic + '" alt="" class="ncav">'
+      : '<span class="ncav ncave">' + pic + '</span>';
+    /* The second line is the connected channel when there is one — that is
+       the thing worth knowing at a glance, and it is what certificates get
+       issued in the name of. Otherwise it names the product, as on Trend
+       Spotter, rather than sitting empty. */
+    let channel = '';
+    try {
+      const y = JSON.parse(localStorage.getItem('nc_yt') || 'null');
+      if (y && y.channel) channel = String(y.channel);
+    } catch (e) {}
+    box.innerHTML = face + '<span class="ncfb"><b>' +
+      (ncName() ? ncName().replace(/[<>&]/g, '') : tr('ui_set_name')) + '</b><i>' +
+      (channel ? channel.replace(/[<>&]/g, '') : 'Creator') + '</i></span>';
   }
+
+  paintCoins();
   paint();
-  sb.insertBefore(box, sb.firstChild);
+  foot.append(coins, box);
+  sb.appendChild(foot);
   box.onclick = openProfile;
+  /* Points change while the page is open — a game finishing, a quest paying
+     out. The badge in the top bar already listens for this. */
+  addEventListener('storage', paintCoins);
+  addEventListener('nc-points', paintCoins);
 
   function openProfile() {
     if (document.getElementById('ncprofui')) return;
@@ -2878,19 +2947,42 @@ function ncNav() {
         /* !important because the brand carries an inline display:flex, and an
            inline style beats a stylesheet no matter how specific. */
         '.sidebar #ncbrand{display:none !important}' +
-        '.sidebar #ncprof{order:9;width:auto !important;flex:0 0 auto;' +
-        'margin:0 0 0 4px !important;padding:6px !important;white-space:nowrap}' +
-        '.sidebar #ncprof span:last-child{display:none}}',
-      '#ncnav{display:flex;flex-direction:column;gap:2px;padding:2px 10px 6px}',
+        /* The two cards live in #ncfoot now, so the strip shrinks that instead
+           of the profile directly: the coins card is already in the top bar's
+           badge on a phone, and the profile keeps only its avatar. */
+        /* The tag names are in these selectors on purpose. The two cards are
+           styled further down this same stylesheet at the same specificity,
+           and a later rule wins a tie — so without `a#` and `button#` the
+           coins card stayed visible in the strip and ate a third of it. */
+        '.sidebar #ncfoot{order:9;flex-direction:row;margin:0;padding:0;gap:4px;align-items:center}' +
+        '.sidebar #ncfoot a#nccoins{display:none}' +
+        '.sidebar #ncfoot button#ncprof{width:auto;flex:0 0 auto;' +
+        'margin:0 0 0 4px;padding:5px;border-radius:12px;white-space:nowrap}' +
+        '.sidebar #ncfoot #ncprof .ncfb{display:none}' +
+        '.sidebar #ncfoot #ncprof .ncav{width:32px;height:32px;border-radius:10px}}',
+      /* The nav takes the leftover height and scrolls inside itself, which is
+         what pins the foot. Without this the column simply grew past the
+         window and the coins card fell off the bottom of an 768px screen —
+         sixteen links, four headers, the brand and two cards is about 800px
+         of rail. min-height:0 is the part that is easy to miss: a flex item
+         will not shrink below its content without it, so overflow-y would
+         never have engaged. */
+      '#ncnav{display:flex;flex-direction:column;gap:2px;padding:2px 10px 6px;',
+      'flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin}',
 
-      /* group header */
+      /* Group header, styled as Trend Spotter's .nc-nav-label: a quiet
+         uppercase caption rather than a ruled divider. The gradient line that
+         used to run to the right edge is gone with it — that page has none,
+         and it was the loudest thing in a column of otherwise soft rows.
+         The chevron stays, smaller and fainter: these groups collapse, and a
+         header that collapses with nothing to say so is a trap. */
       '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;min-height:30px;',
-      'padding:clamp(7px,1.15vh,14px) 9px clamp(3px,.55vh,7px);background:none;border:0;cursor:pointer;text-align:left;',
-      'font:700 10px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.15em;text-transform:uppercase;',
+      'padding:clamp(7px,1.15vh,14px) 10px clamp(3px,.55vh,7px);background:none;border:0;cursor:pointer;text-align:left;',
+      'font:800 10.5px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;',
       'color:var(--nc-navhead,#5D6A88);transition:color .18s}',
       '#ncnav .ncgh:hover{color:var(--nc-navhover,#A8B8D8)}',
-      '#ncnav .ncgh .ncgl{flex:1;height:1px;background:linear-gradient(90deg,var(--nc-line2,rgba(255,255,255,.10)),transparent)}',
-      '#ncnav .ncgh .ncar{width:13px;height:13px;flex:0 0 auto;transition:transform .22s cubic-bezier(.4,1.4,.5,1);opacity:.6}',
+      '#ncnav .ncgh .ncgl{flex:1}',
+      '#ncnav .ncgh .ncar{width:12px;height:12px;flex:0 0 auto;transition:transform .22s cubic-bezier(.4,1.4,.5,1);opacity:.45}',
       '#ncnav .ncg.shut .ncar{transform:rotate(-90deg)}',
       /* The layout lives here, not in an inline style. An inline display:flex
          beats any stylesheet rule, so collapsing would silently do nothing. */
@@ -2913,34 +3005,72 @@ function ncNav() {
          have to scroll to reach is a nav with a hidden half. The row height
          is a share of the window now: tighter on a short screen, roomier on
          a tall one. */
-      'padding:clamp(5px,.8vh,10px) 12px;border-radius:11px;font:600 14px/1.2 Segoe UI,system-ui,sans-serif;',
-      'color:var(--nc-navlink,#98A6C4);text-decoration:none;background:none;isolation:isolate;',
-      'transition:color .18s,transform .18s}',
-      '.sidebar #ncnav a.ncl::before{content:"";position:absolute;inset:0;border-radius:11px;z-index:-1;',
-      'background:linear-gradient(105deg,rgba(124,92,255,.22),rgba(0,229,255,.13));',
-      'opacity:0;transition:opacity .2s}',
-      '.sidebar #ncnav a.ncl:hover{color:var(--nc-navon,#EAF2FF);transform:translateX(2px)}',
-      '.sidebar #ncnav a.ncl:hover::before{opacity:1}',
+      /* Trend Spotter's .nc-nav-item, now the whole site's. Its states are a
+         background and a border rather than the old lit gradient with a bar
+         welded to the left edge — softer, and it does not shift the row when
+         it turns on. The border is transparent when idle so nothing moves by
+         a pixel between states. */
+      'padding:clamp(5px,.8vh,10px) 12px;border-radius:11px;font:700 14px/1.2 Segoe UI,system-ui,sans-serif;',
+      'color:var(--nc-navlink,#98A6C4);text-decoration:none;border:1px solid transparent;',
+      'background:none;transition:background .15s,color .15s,border-color .15s,transform .12s}',
+      '.sidebar #ncnav a.ncl:hover{color:var(--nc-navon,#EAF2FF);background:var(--nc-navhoverbg,rgba(255,255,255,.04))}',
+      '.sidebar #ncnav a.ncl:active{transform:scale(.985)}',
       '.sidebar #ncnav a.ncl:focus-visible{outline:2px solid #00E5FF;outline-offset:2px}',
 
-      /* active: the gradient stays lit, plus a rail on the left edge */
-      '.sidebar #ncnav a.ncl.on{color:var(--nc-navon,#fff)}',
-      '.sidebar #ncnav a.ncl.on::before{opacity:1;',
-      'background:linear-gradient(105deg,rgba(247,37,133,.26),rgba(124,92,255,.30) 55%,rgba(0,229,255,.18))}',
-      '.sidebar #ncnav a.ncl.on::after{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);',
-      'width:3px;height:22px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,#F72585,#7C5CFF,#00E5FF);',
-      'box-shadow:0 0 12px rgba(124,92,255,.75)}',
+      /* active: a violet-to-cyan wash with a violet edge, exactly as on the
+         Trend Spotter page. No left rail, no ::before, no glow. */
+      '.sidebar #ncnav a.ncl.on{color:var(--nc-navon,#fff);',
+      'background:var(--nc-navonbg,linear-gradient(90deg,rgba(167,139,250,.16),rgba(56,189,248,.08)));',
+      'border-color:var(--nc-navonline,rgba(167,139,250,.28))}',
 
-      /* the icon sits in its own tile so the rows line up whatever the glyph */
-      '.sidebar #ncnav a.ncl .nci{width:17px;height:17px;flex:0 0 auto;opacity:.72;transition:opacity .18s,transform .18s}',
-      '.sidebar #ncnav a.ncl:hover .nci{opacity:1;transform:scale(1.08)}',
-      '.sidebar #ncnav a.ncl.on .nci{opacity:1}',
+      /* 19px icons that answer the state: muted at rest, blue on hover,
+         violet when the row is the page you are on. */
+      '.sidebar #ncnav a.ncl .nci{width:19px;height:19px;flex:0 0 auto;color:var(--nc-navhead,#5D6A88);',
+      'opacity:1;transition:color .15s,transform .18s}',
+      '.sidebar #ncnav a.ncl:hover .nci{color:var(--nc-navicohover,#38BDF8)}',
+      '.sidebar #ncnav a.ncl.on .nci{color:var(--nc-navicoon,#A78BFA)}',
       '.sidebar #ncnav a.ncl .nct{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
 
-      /* profile and brand, tidied to match */
-      '.sidebar #ncprof{border-radius:13px !important;transition:background .18s,border-color .18s}',
-      '.sidebar #ncprof:hover{background:rgba(255,255,255,.07) !important;border-color:rgba(124,92,255,.5) !important}',
-      '.sidebar .themewrap{border-top:1px solid rgba(255,255,255,.06);margin-top:auto;position:sticky;bottom:0;z-index:2;background:var(--nc-rail3,#080B14)}',
+      /* ------------------------------------------------------------------
+         THE FOOT: coins card, then profile card
+         ------------------------------------------------------------------
+         Trend Spotter's .nc-points-card and .nc-profile-card. Same 18px
+         radius, same 12px/14px padding, same two-line block of a bold value
+         over a small uppercase caption — so the two pages stop looking like
+         two products.
+         ------------------------------------------------------------------ */
+      '.sidebar #ncfoot{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding:12px 2px 4px}',
+      '.sidebar #ncfoot #nccoins,.sidebar #ncfoot #ncprof{display:flex;align-items:center;gap:12px;',
+      'width:100%;margin:0;padding:12px 14px;border-radius:18px;text-align:left;cursor:pointer;',
+      'border:1px solid var(--nc-railline,rgba(255,255,255,.08));color:inherit;font:inherit;',
+      'text-decoration:none;transition:background .15s,border-color .15s,transform .12s}',
+      '.sidebar #ncfoot #nccoins{background:var(--nc-coinbg,linear-gradient(135deg,rgba(167,139,250,.12),rgba(244,114,182,.08)))}',
+      '.sidebar #ncfoot #ncprof{background:var(--nc-cardbg,rgba(255,255,255,.03))}',
+      '.sidebar #ncfoot #nccoins:hover,.sidebar #ncfoot #ncprof:hover{border-color:var(--nc-navonline,rgba(167,139,250,.28))}',
+      '.sidebar #ncfoot #nccoins:active,.sidebar #ncfoot #ncprof:active{transform:scale(.985)}',
+      '.sidebar #ncfoot #nccoins:focus-visible,.sidebar #ncfoot #ncprof:focus-visible{outline:2px solid #00E5FF;outline-offset:2px}',
+      /* the gradient tile the coin icon sits in */
+      '.sidebar #ncfoot .ncfi{width:38px;height:38px;border-radius:12px;flex:0 0 auto;display:grid;',
+      'place-items:center;color:#fff;background:linear-gradient(135deg,#F72585,#7C5CFF,#00E5FF);',
+      'box-shadow:0 4px 16px rgba(124,92,255,.35)}',
+      '.sidebar #ncfoot .ncfi svg{width:19px;height:19px}',
+      /* the avatar, square-cornered like Trend Spotter's rather than a circle */
+      '.sidebar #ncfoot .ncav{width:40px;height:40px;border-radius:12px;flex:0 0 auto;object-fit:cover}',
+      '.sidebar #ncfoot .ncave{display:grid;place-items:center;font-size:19px;',
+      'background:linear-gradient(135deg,var(--nc-rail1,#0E1220),var(--nc-rail3,#080B14));',
+      'border:1px solid var(--nc-railline,rgba(255,255,255,.12))}',
+      /* value over caption */
+      '.sidebar #ncfoot .ncfb{display:flex;flex-direction:column;min-width:0;line-height:1.2}',
+      '.sidebar #ncfoot .ncfb b{font-weight:900;font-size:.95rem;letter-spacing:-.01em;',
+      'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--nc-navon,#EAF2FF)}',
+      '.sidebar #ncfoot #nccoins .ncfb b{font-size:1.05rem;font-family:ui-monospace,Consolas,monospace}',
+      '.sidebar #ncfoot .ncfb i{font-style:normal;font-size:.66rem;font-weight:800;letter-spacing:.1em;',
+      'text-transform:uppercase;color:var(--nc-navhead,#5D6A88);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+
+      /* The foot claims the free space now, so this must not also claim it —
+         two auto margins in a flex column split the gap and would have left
+         a hole between the cards and the controls. */
+      '.sidebar .themewrap{border-top:1px solid rgba(255,255,255,.06);margin-top:0;position:sticky;bottom:0;z-index:2;background:var(--nc-rail3,#080B14)}',
 
       /* phones: a horizontal strip, icons above labels so it stays readable */
       '@media (max-width:760px){',
@@ -2962,6 +3092,10 @@ function ncNav() {
      navigations disagreeing about where things are. */
   [...bar.querySelectorAll('a')].forEach(a => {
     if (a.id === 'ncbrand') return;
+    /* The foot's cards are ours, and the coins one is an <a> — it was being
+       swept up here and deleted the moment the nav was built, which is why it
+       rendered and then vanished. Anything inside #ncfoot stays. */
+    if (a.closest('#ncfoot')) return;
     a.remove();
   });
 

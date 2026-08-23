@@ -194,5 +194,48 @@ Hook: ${F.hook}`);Sn(te?{title:"Copied to clipboard",body:F.title,variant:"succe
 <script src="nova.js"></script>
 <script src="biometric.js" defer></script>
 <script src="jarvis.js" defer></script>
+<script>
+/* ---------------------------------------------------------------------------
+   A WAY BACK OUT
+   ---------------------------------------------------------------------------
+   This page is a bundled app with its own rail, and that rail listed only its
+   own routes — Home, Trend Spotter, Video Ideas, Scripts, Thumbnails, Editor,
+   Publish, all of them hash routes inside this one file. There was not a single
+   link to the rest of novaclip.org anywhere on it. Opening it from the site's
+   sidebar meant the browser Back button or nothing.
+
+   The rail is React-rendered, so the link is added afterwards rather than by
+   editing the bundle: wait for the nav, add one row at the top styled with the
+   page's own .nc-nav-item class so it cannot drift from the others, and stop
+   watching. If the app ever re-renders the nav away, the observer puts it
+   back.
+   --------------------------------------------------------------------------- */
+(function () {
+  var ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M19 12H5M12 19l-7-7 7-7"/></svg>';
+
+  function add() {
+    var navs = document.querySelectorAll('.nc-nav');
+    if (!navs.length) return false;
+    for (var i = 0; i < navs.length; i++) {
+      var nav = navs[i];
+      if (nav.querySelector('.nc-backhome')) continue;
+      var a = document.createElement('a');
+      a.className = 'nc-nav-item nc-backhome';
+      a.href = 'index.html';
+      a.innerHTML = ICON + '<span>Back to NovaClip</span>';
+      a.style.marginBottom = '6px';
+      nav.insertBefore(a, nav.firstChild);
+    }
+    return true;
+  }
+
+  /* The drawer on a phone mounts its own copy of the nav later, so this keeps
+     watching rather than disconnecting after the first success. */
+  add();
+  new MutationObserver(add).observe(document.documentElement, { childList: true, subtree: true });
+})();
+</script>
 </body>
 </html>
