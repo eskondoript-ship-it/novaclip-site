@@ -6,6 +6,10 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
   "orientation": "portrait-primary",
   "background_color": "#050505",
   "theme_color": "#050505",
@@ -48,7 +52,7 @@
       "sizes": "1200x630",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "NovaClip — run your channel like a game"
+      "label": "NovaClip \u2014 run your channel like a game"
     }
   ]
 }
