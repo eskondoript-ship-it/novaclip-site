@@ -273,6 +273,28 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
 .sttile b{font-size:1.85rem;font-weight:750;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.15}
 .sttile i{font-style:normal;font-size:.78rem;color:var(--nc-dim,#7E8AA6)}
 #connectrow{margin:0 0 18px}
+
+/* Fair Fight */
+#fairfight { margin: 26px 0; }
+.ffpick { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:14px 0 8px; }
+.ffpick label { font-size:.85rem; color:var(--nc-dim,#8c96ad); }
+.ffpick select { flex:1 1 240px; min-width:0; min-height:44px; padding:10px 12px; border-radius:12px;
+  background:var(--nc-bg3,rgba(255,255,255,.05)); color:var(--nc-text,#EAF2FF);
+  border:1px solid var(--nc-line,rgba(255,255,255,.14)); font-size:15px; }
+.ffpick .gbtn { min-height:44px; }
+.ffcards { display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:center; margin:16px 0; }
+.ffcard { background:var(--nc-bg2,rgba(255,255,255,.04)); border:1px solid var(--nc-line,rgba(255,255,255,.12));
+  border-radius:18px; padding:16px; min-width:0; }
+.ffcard h4 { font-size:1rem; margin:0 0 4px; overflow-wrap:anywhere; }
+.ffcard .ffsub { font-size:.8rem; color:var(--nc-dim,#8c96ad); }
+.ffvs { font-weight:800; color:var(--nc-dim,#8c96ad); font-size:.9rem; }
+.fftable { width:100%; border-collapse:collapse; font-size:.92rem; }
+.fftable th, .fftable td { padding:11px 10px; border-bottom:1px solid var(--nc-line,rgba(255,255,255,.1)); text-align:left; }
+.fftable th { color:var(--nc-dim,#8c96ad); font-size:.78rem; font-weight:600; }
+.fftable td.num { text-align:right; font-variant-numeric:tabular-nums; }
+.fftable td.win { color:var(--nc-lime,#B6FF3C); font-weight:700; }
+.fftable .ffwhy { color:var(--nc-dim,#8c96ad); font-size:.8rem; }
+@media (max-width:640px){ .ffcards{grid-template-columns:1fr;} .ffvs{justify-self:center} }
 </style>
 </head>
 <body>
@@ -336,6 +358,54 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
       <div class='sttile'><span class='stlab'>Subscribers</span><b id='stSubs' class='nc-skel'>0</b><i id='stSubsD'></i></div>
       <div class='sttile'><span class='stlab'>Videos</span><b id='stVids' class='nc-skel'>0</b><i id='stVidsD'></i></div>
       <div class='sttile'><span class='stlab'>Avg views / video</span><b id='stAvg' class='nc-skel'>0</b><i id='stAvgD'></i></div>
+    </div>
+  </section>
+
+
+  <!-- ==================================================================
+       FAIR FIGHT — the same channel question, asked against somebody else
+       ==================================================================
+       Ported from the prototype, where two "fighters" were compared and a
+       winner was declared from `engagement * 4.5 + retention * 0.55`. That
+       formula is invented precision: nobody can say why 4.5, and the sample
+       creators it ran on did not exist.
+
+       What survives is the good idea underneath it — SIZE-NORMALISED
+       comparison. A channel with 400 subscribers loses every raw number
+       against one with 400,000 and learns nothing. Divide through by size
+       and the comparison starts being about the videos.
+
+       So this compares real channels on ratios that do not care how big you
+       are, shows each one side by side, and marks who leads on each. There
+       is no single score, because a single score would be a number this page
+       cannot justify.
+       ================================================================== -->
+  <section id='fairfight'>
+    <div class='sthead'>
+      <h2>Fair Fight</h2>
+      <span class='stsince'>Size-normalised — big channels get no free points</span>
+    </div>
+
+    <div class='ffpick'>
+      <label for='ffopp'>Against</label>
+      <select id='ffopp'><option value=''>Pick a channel your size…</option></select>
+      <button id='ffgo' class='gbtn' type='button'>Compare</button>
+    </div>
+
+    <p class='hint' id='ffnote'>Sign in above and this fills with channels close
+      to your own size. Nothing here is a rating of anybody — it is your numbers
+      and theirs, divided by how big each channel is.</p>
+
+    <div id='ffwrap' style='display:none'>
+      <div class='ffcards'>
+        <div class='ffcard' id='ffA'></div>
+        <div class='ffvs'>vs</div>
+        <div class='ffcard' id='ffB'></div>
+      </div>
+      <table class='fftable' id='fftable'></table>
+      <p class='hint'>Each row is a ratio, so channel size is already divided
+        out. Leading on a row means the videos did more with what they had —
+        not that the channel is better, and not that it will grow faster.</p>
     </div>
   </section>
 
@@ -511,6 +581,7 @@ async function enterDash() {
   }
   document.getElementById('connectrow').style.display = 'none';
   document.getElementById('dash').style.display = 'block';
+  ffFill();                       // real channels near your size, for Fair Fight
   drawAll();
   try {
     myUploads = await fetchUploads(myStats, 50);
@@ -1008,6 +1079,185 @@ function mk(id, type, labels, datasets, extra) {
 }
 function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; }
 function kpi(n, l) { return '<div class="kpi"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
+
+
+/* Titles come from YouTube and are somebody else's text, so they are escaped
+   before going near innerHTML. */
+function ncEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+/* ============================================================================
+   FAIR FIGHT — size-normalised comparison on real channels
+   ============================================================================
+   Every number below comes from the YouTube Data API through the same yt()
+   helper the rest of this page uses: your channel, and one you pick. Nothing
+   is sampled, seeded or invented.
+
+   WHY RATIOS AND NOT A SCORE
+
+   Raw totals only ever say who is bigger, which you already know. These four
+   ratios divide size out:
+
+     views per subscriber   did the recent uploads reach beyond the sub count
+     engagement rate        likes + comments against the views they got
+     uploads per month      output, measured against how long the channel has
+                            existed rather than against a rival's back catalogue
+     steadiness             how close the recent uploads are to each other, so
+                            one lucky video does not read as a trend
+
+   Each row is shown for both channels and the leader is marked. There is
+   deliberately no combined score: weighting these against each other would be
+   a number with no defensible source, which is exactly what the prototype's
+   `engagement * 4.5 + retention * 0.55` was.
+   ============================================================================ */
+let ffPool = [];
+
+function ffNum(n) {
+  if (!isFinite(n)) return '—';
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return (Math.round(n * 100) / 100).toString();
+}
+
+/* Months since the channel opened, floored at one so a channel that opened
+   this week does not divide by zero and claim an enormous upload rate. */
+function ffMonths(ch) {
+  const started = Date.parse((ch.snippet && ch.snippet.publishedAt) || '') || Date.now();
+  return Math.max(1, (Date.now() - started) / (1000 * 60 * 60 * 24 * 30.44));
+}
+
+/* Everything this comparison needs about one channel, from real calls. */
+async function ffRead(ch) {
+  const st = ch.statistics || {};
+  const subs = +st.subscriberCount || 0;
+  const eng = await recentEngagement(ch);
+  const views = eng.series.reduce((a, b) => a + b, 0);
+  const n = eng.series.length;
+  const avgViews = n ? views / n : 0;
+
+  /* Steadiness: the average distance from the mean, as a percentage of it,
+     turned round so higher is steadier. One viral upload among fifteen ordinary
+     ones is a spike, not a pattern, and this is what stops it reading as one. */
+  let steady = 0;
+  if (n > 1 && avgViews > 0) {
+    const spread = eng.series.reduce((a, v) => a + Math.abs(v - avgViews), 0) / n;
+    steady = Math.max(0, 100 - (spread / avgViews) * 100);
+  }
+
+  return {
+    name: (ch.snippet && ch.snippet.title) || 'Channel',
+    subs: subs,
+    videos: +st.videoCount || 0,
+    sampled: n,
+    perSub: subs ? avgViews / subs : 0,
+    engagement: views ? ((eng.likes + eng.comments) / views) * 100 : 0,
+    perMonth: (+st.videoCount || 0) / ffMonths(ch),
+    steady: steady
+  };
+}
+
+/* Within one percent of each other is a tie. Two channels uploading at 2.0 a
+   month are not separated by the twelfth decimal place. */
+function ffTie(x, y) {
+  const big = Math.max(Math.abs(x), Math.abs(y));
+  return big === 0 || Math.abs(x - y) <= big * 0.01;
+}
+
+function ffCard(el, d) {
+  el.innerHTML =
+    '<h4>' + ncEsc(d.name) + '</h4>' +
+    '<div class="ffsub">' + ffNum(d.subs) + ' subscribers · ' + ffNum(d.videos) + ' videos</div>' +
+    '<div class="ffsub">last ' + d.sampled + ' upload' + (d.sampled === 1 ? '' : 's') + ' measured</div>';
+}
+
+const FF_ROWS = [
+  { key: 'perSub',     label: 'Views per subscriber', fmt: (v) => v.toFixed(2),
+    why: 'Recent uploads against the subscriber count — did they reach past the people already following.' },
+  { key: 'engagement', label: 'Engagement rate',      fmt: (v) => v.toFixed(2) + '%',
+    why: 'Likes and comments against the views those uploads got.' },
+  { key: 'perMonth',   label: 'Uploads per month',    fmt: (v) => v.toFixed(1),
+    why: 'Output measured against how long the channel has been going.' },
+  { key: 'steady',     label: 'Steadiness',           fmt: (v) => Math.round(v) + '/100',
+    why: 'How close the recent uploads are to each other. One lucky video is not a trend.' }
+];
+
+async function ffCompare(oppId) {
+  const wrap = document.getElementById('ffwrap');
+  const note = document.getElementById('ffnote');
+  const opp = ffPool.find(c => c.id === oppId);
+  if (!myStats || !opp) return;
+
+  note.textContent = 'Reading both channels…';
+  let a, b;
+  try {
+    a = await ffRead(myStats);
+    b = await ffRead(opp);
+  } catch (e) {
+    note.textContent = 'YouTube did not answer for one of those channels. Nothing is shown rather than a guess.';
+    return;
+  }
+
+  ffCard(document.getElementById('ffA'), a);
+  ffCard(document.getElementById('ffB'), b);
+
+  document.getElementById('fftable').innerHTML =
+    '<tr><th>Measure</th><th class="num">' + ncEsc(a.name.slice(0, 18)) + '</th>' +
+    '<th class="num">' + ncEsc(b.name.slice(0, 18)) + '</th></tr>' +
+    FF_ROWS.map(r => {
+      const va = a[r.key], vb = b[r.key];
+      /* A tie is a tie: within one percent of each other, nobody leads. */
+      const close = ffTie(va, vb);
+      const aWin = !close && va > vb, bWin = !close && vb > va;
+      return '<tr><td>' + r.label + '<div class="ffwhy">' + r.why + '</div></td>' +
+             '<td class="num' + (aWin ? ' win' : '') + '">' + r.fmt(va) + (aWin ? ' ▲' : '') + '</td>' +
+             '<td class="num' + (bWin ? ' win' : '') + '">' + r.fmt(vb) + (bWin ? ' ▲' : '') + '</td></tr>';
+    }).join('');
+
+  /* The same tie rule the table uses. Counting a strict > here said "leads on
+     3 of 4" while the table showed two marks and two ties, because two channels
+     uploading at 2.0 a month differ in the twelfth decimal place. */
+  const led = FF_ROWS.filter(r => !ffTie(a[r.key], b[r.key]) && a[r.key] > b[r.key]).length;
+  const tied = FF_ROWS.filter(r => ffTie(a[r.key], b[r.key])).length;
+  note.textContent = a.name + ' leads on ' + led + ' of ' + FF_ROWS.length +
+    (tied ? ' (' + tied + ' too close to call)' : '') +
+    ' — on ratios, with size divided out. It is not a verdict on either channel.';
+  wrap.style.display = 'block';
+}
+
+/* Filled from the competitor list this page already builds: real channels
+   picked for being close to your own size, which is what makes the fight
+   fair in the first place. */
+async function ffFill() {
+  if (!myStats) return;
+  const sel = document.getElementById('ffopp');
+  try { ffPool = await getCompetitors(); } catch (e) { ffPool = []; }
+  if (!ffPool.length) {
+    document.getElementById('ffnote').textContent =
+      'No channels close to your size came back from YouTube this time. Try again in a minute.';
+    return;
+  }
+  sel.innerHTML = '<option value="">Pick a channel your size…</option>' +
+    ffPool.map(c => '<option value="' + c.id + '">' + ncEsc(c.snippet.title) +
+      ' · ' + ffNum(+c.statistics.subscriberCount || 0) + ' subs</option>').join('');
+  document.getElementById('ffnote').textContent =
+    'These are real channels near your own size. Pick one and press Compare.';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const go = document.getElementById('ffgo');
+  if (go) go.addEventListener('click', function () {
+    const v = document.getElementById('ffopp').value;
+    if (v) ffCompare(v);
+  });
+  /* Arriving from the Fair Fight tab should land on it. */
+  if (location.hash === '#fairfight') {
+    const el = document.getElementById('fairfight');
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+  }
+});
 
 async function drawAll() {
   // reviewing your numbers is a tracked skill — counted once per session
