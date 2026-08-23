@@ -10,6 +10,22 @@ var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').m
 var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
 r.style.colorScheme=t;}catch(e){}})();</script>
 <meta charset="UTF-8">
+<!-- Google Analytics 4 (gtag.js) — measurement ID G-QN1QE08F2K.
+     In the head on every page, which is where Google's own snippet goes: it
+     loads async so it never blocks a paint, and page_view fires without any
+     further wiring.
+
+     THIS IS WHY privacy.html CHANGED IN THE SAME COMMIT. That page said there
+     was no analytics on NovaClip. From here that is not true, and a policy
+     that quietly drifts from what the software does is a promise being broken
+     without telling anybody. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QN1QE08F2K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-QN1QE08F2K');
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- PWA. The manifest and the icons sit at the site root so they resolve at
      https://novaclip.org/manifest.json and /icons/..., which is what an install
