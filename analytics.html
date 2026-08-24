@@ -68,7 +68,20 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050505">
 <title>Studio — NovaClip</title>
-<script src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'></script>
+<!-- Chart.js is served from this repo, not from a CDN.
+     It used to come from cdn.jsdelivr.net, which meant the whole dashboard
+     went blank behind a school filter, an ad blocker, or an aeroplane — and
+     this is a Store app now, so "offline" is a normal Tuesday rather than an
+     edge case. The file is the same v4.4.1 build, taken from the npm tarball,
+     with its MIT licence beside it in vendor/.
+     The CDN stays as a fallback for the one case the local copy cannot cover:
+     a stale service worker cache that predates this file existing. -->
+<script src='vendor/chart.umd.js'></script>
+<script>
+  if (typeof Chart === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>');
+  }
+</script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
 body { background: var(--nc-bg,#060608); color: var(--nc-text,#EAF2FF); overflow-x: hidden; }
@@ -647,8 +660,9 @@ async function enterDash() {
   if (typeof Chart === 'undefined') {
     document.getElementById('connectrow').innerHTML =
       '<p class="hint"><b>Your channel loaded, but the chart library did not.</b><br>' +
-      'This page needs <code>cdn.jsdelivr.net</code>, and something blocked it — usually an ad blocker ' +
-      'or a school network filter. Turn the blocker off for this site or try another network, then reload.</p>';
+      'It ships with the site now, so this usually means an old cached copy of the page is still ' +
+      'being served. Reload once; if it persists, close every NovaClip tab and open it again. ' +
+      'The numbers above are unaffected either way.</p>';
     return;
   }
   document.getElementById('connectrow').style.display = 'none';

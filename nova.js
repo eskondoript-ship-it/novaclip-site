@@ -4457,11 +4457,94 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!secure) return;
 
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function (e) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function (reg) {
+      watchForUpdate(reg);
+      /* A worker can already be waiting from a previous visit — updatefound
+         will not fire for that one, so it has to be checked directly. */
+      if (reg.waiting) takeOver(reg.waiting);
+      reg.addEventListener('updatefound', function () { watchForUpdate(reg); });
+      /* Ask the server whether there is a newer worker. Without this a tab
+         that stays open for days never finds out. */
+      setInterval(function () { reg.update().catch(function () {}); }, 60 * 60 * 1000);
+    }).catch(function (e) {
       /* Not fatal and not worth a dialog: the site works without it. */
       if (window.console && console.warn) console.warn('NovaClip: service worker not registered —', e && e.message);
     });
   });
+
+  /* --------------------------------------------------------------------------
+     TAKING A NEW VERSION, WHICH THE SITE PREVIOUSLY NEVER DID
+     --------------------------------------------------------------------------
+     sw.js does not call skipWaiting, for a good reason it states itself: a new
+     worker swapping assets under a page that is mid-edit can break it. But
+     registration was fire-and-forget, so nothing ever asked the waiting worker
+     to take over — and a browser only retires the old one when EVERY tab of
+     the site is closed. In practice that is never. Weeks of deploys sat in
+     'waiting' while people were served the old files, which is exactly what a
+     site looking unchanged after a push feels like.
+
+     So: pages with nothing to lose swap and reload themselves. The editor and
+     the photo tool can have work open, so they ask instead — the same handover,
+     at a moment the reader picks.
+     -------------------------------------------------------------------------- */
+  var reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (reloading) return;
+    reloading = true;
+    location.reload();
+  });
+
+  function risky() {
+    var here = (location.pathname.split('/').pop() || '').toLowerCase();
+    if (window.NC_UNSAVED) return true;              // any page may declare itself busy
+    return here === 'editor.html' || here === 'photo.html';
+  }
+
+  function takeOver(worker) {
+    if (!worker) return;
+    if (!navigator.serviceWorker.controller) return; // first ever visit: nothing to replace
+    if (!risky()) { worker.postMessage({ type: 'SKIP_WAITING' }); return; }
+    offerReload(worker);
+  }
+
+  function watchForUpdate(reg) {
+    var w = reg.installing || reg.waiting;
+    if (!w) return;
+    if (w.state === 'installed') return takeOver(w);
+    w.addEventListener('statechange', function () {
+      if (w.state === 'installed') takeOver(w);
+    });
+  }
+
+  /* A quiet pill, not a modal. It never steals focus and never reloads on its
+     own, because the pages that show it are the ones holding work. */
+  function offerReload(worker) {
+    if (document.getElementById('ncupdate')) return;
+    var box = document.createElement('div');
+    box.id = 'ncupdate';
+    box.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;' +
+      'display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;border-radius:999px;' +
+      'background:#12172a;color:#EAF2FF;border:1px solid rgba(167,139,250,.45);' +
+      'box-shadow:0 16px 40px rgba(0,0,0,.5);font:600 13px/1.3 "Segoe UI",system-ui,sans-serif;' +
+      'max-width:calc(100vw - 24px)';
+    var msg = document.createElement('span');
+    msg.textContent = 'A new version of NovaClip is ready.';
+    var go = document.createElement('button');
+    go.type = 'button';
+    go.textContent = 'Reload';
+    go.style.cssText = 'min-height:36px;padding:0 14px;border-radius:999px;cursor:pointer;border:0;' +
+      'background:linear-gradient(90deg,#7C5CFF,#00E5FF);color:#04121a;font:800 13px/1 inherit';
+    go.onclick = function () { worker.postMessage({ type: 'SKIP_WAITING' }); };
+    var no = document.createElement('button');
+    no.type = 'button';
+    no.setAttribute('aria-label', 'Not now');
+    no.textContent = '\u00d7';
+    no.style.cssText = 'min-height:36px;min-width:36px;border-radius:999px;cursor:pointer;' +
+      'border:1px solid rgba(255,255,255,.18);background:transparent;color:inherit;font-size:16px';
+    no.onclick = function () { box.remove(); };
+    box.append(msg, go, no);
+    document.body.appendChild(box);
+  }
 })();
 
 

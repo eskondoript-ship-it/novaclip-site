@@ -48,7 +48,11 @@
    ============================================================================ */
 
 /* Bump this to invalidate everything the previous version cached. */
-const CACHE = 'novaclip-v1';
+/* Bumped whenever what is cached changes shape. v1 shipped before the sticker
+   library, the effect previews, the RTL fixes and the new rail — and because
+   nothing ever retired it, returning visitors kept being served the old files
+   from it. A new name means activate() deletes the old cache outright. */
+const CACHE = 'novaclip-v2';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -59,6 +63,13 @@ const SHELL = [
   '/offline.html',
   '/nova.js',
   '/logo.svg',
+  /* Analytics is the page most likely to be opened on a train, and its charts
+     came from a CDN until now — which is to say they did not come at all. */
+  '/vendor/chart.umd.js',
+  /* The sticker art and the effect previews: the editor and the photo tool are
+     both offline-capable without them, but both are much less useful. */
+  '/stickers.js',
+  '/studio-kit.js',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
