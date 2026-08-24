@@ -961,7 +961,7 @@ function ncBuildBar() {
        picker, and at 1440 it still clipped by 19px. Dropping the status line
        clears both. Below 1300 nothing fits and it goes under the bar. */
     '@media (min-width:1360px) and (max-width:1500px){html body .jr-pill #jr-status{display:none}}' +
-    '@media (max-width:1359px){html body .jr-pill{top:' + (NC_BAR_H + 8) + 'px;' +
+    '@media (max-width:1359px){html body .jr-pill{top:calc(' + (NC_BAR_H + 8) + 'px + var(--nc-strip-h,0px));' +
       'left:50%;transform:translateX(-50%)}' +
       'html body .jr-pill:hover{transform:translateX(-50%) translateY(-1px)}' +
       'html body .jr-pill.hidden{transform:translateX(-50%) translateY(-8px)}}' +
@@ -1667,8 +1667,71 @@ ncFit.textContent =
   "html[dir=rtl] .content, html[dir=rtl] .shell, html[dir=rtl] .main { margin-left:0; margin-right:var(--nc-rail); }" +
   "html[dir=rtl] .main { padding-left:clamp(0px, 1.2vw, 22px); padding-right:clamp(20px, 3.4vw, 64px); }" +
   "html[dir=rtl] .wrap { margin-left:auto; margin-right:clamp(24px, 3.6vw, 64px); }" +
+  /* Trend Spotter brings its own fixed rail and its own padding to clear it.
+     Both were pinned left, so in Farsi that page had its navigation on one
+     side and its reserved space on the other. */
+  "html[dir=rtl] .nc-sidebar { left:auto; right:0; border-right:0; " +
+    "border-left:1px solid var(--nc-border,rgba(255,255,255,.08)); }" +
+  "html[dir=rtl] body.nova .nc-app { padding-left:0; padding-right:var(--nc-sidebar,248px); }" +
 
 "}" +
+
+/* ---------------------------------------------------------------------------
+   RTL, PART TWO: THE CHROME THAT IS FIXED TO THE VIEWPORT
+   ---------------------------------------------------------------------------
+   The block above mirrors the rail and the content. What it never touched is
+   everything pinned to the viewport with position:fixed — the top bar, the
+   coins badge, the Nova pill, the corner controls. Those kept hugging the
+   left/right edges they were written for, so in Farsi the bar started where
+   the content starts and ran UNDER the rail on the right, leaving a dead strip
+   on the left and the controls squashed into the corner underneath the pill.
+   Reported on five pages; it was one cause.
+
+   `left`/`right` are used rather than logical properties on purpose: these
+   elements are positioned against the viewport, not against a text flow, so
+   inset-inline-start would follow the direction of whatever contains them and
+   two of them are direct children of <body>.
+   --------------------------------------------------------------------------- */
+"html[dir=rtl] #ncbar { padding: 0 14px 0 88px; }" +
+"@media (max-width:760px) { html[dir=rtl] #ncbar { padding: 0 10px 0 84px; } }" +
+"@media (min-width:761px) { html[dir=rtl] body:has(.sidebar) #ncbar { left:0; right:var(--nc-rail); } }" +
+"@media (min-width:901px) { html[dir=rtl] body:has(.nc-sidebar) #ncbar " +
+  "{ left:0; right:var(--nc-sidebar,248px); } }" +
+/* the badge moves to the far end of the bar, which in RTL is the left */
+"html[dir=rtl] #ncpts { right:auto; left:16px; }" +
+/* The pill parks in the gap beside the badge — mirrored, same 176px offset.
+   The three width bands are about how much room the controls need, which does
+   not change with direction, so they are restated rather than rethought. */
+"html[dir=rtl] body .jr-pill { left:176px; transform:none; }" +
+"html[dir=rtl] body .jr-pill:hover { transform:translateY(-1px); }" +
+"html[dir=rtl] body .jr-pill.hidden { transform:translateY(-8px); }" +
+"@media (max-width:1359px) {" +
+  "html[dir=rtl] body .jr-pill { left:50%; transform:translateX(-50%); }" +
+  "html[dir=rtl] body .jr-pill:hover { transform:translateX(-50%) translateY(-1px); }" +
+  "html[dir=rtl] body .jr-pill.hidden { transform:translateX(-50%) translateY(-8px); } }" +
+
+/* ---------------------------------------------------------------------------
+   ENGLISH SENTENCES INSIDE AN RTL PAGE
+   ---------------------------------------------------------------------------
+   Not every string is translated into all twenty languages, so a Farsi page
+   carries English sentences. Inside dir=rtl the bidi algorithm treats the full
+   stop at the end of an English sentence as neutral and moves it to the left
+   edge: ".Race the clock" instead of "Race the clock." Every untranslated
+   line on the site read like that.
+
+   unicode-bidi:plaintext resolves each element's direction from its own first
+   strong character instead of inheriting it. Farsi stays right-to-left,
+   English goes left-to-right with its punctuation where it belongs, and no
+   string has to be tagged by hand. Listed by element rather than applied to
+   everything, so it only touches things that hold sentences.
+   --------------------------------------------------------------------------- */
+"html[dir=rtl] p, html[dir=rtl] li, html[dir=rtl] h1, html[dir=rtl] h2," +
+"html[dir=rtl] h3, html[dir=rtl] h4, html[dir=rtl] h5, html[dir=rtl] h6," +
+"html[dir=rtl] td, html[dir=rtl] th, html[dir=rtl] dd, html[dir=rtl] dt," +
+"html[dir=rtl] figcaption, html[dir=rtl] blockquote, html[dir=rtl] label," +
+"html[dir=rtl] small, html[dir=rtl] summary, html[dir=rtl] option," +
+"html[dir=rtl] .hint, html[dir=rtl] .sub, html[dir=rtl] .subtitle" +
+"{ unicode-bidi: plaintext; text-align: start; }" +
 
 /* Text that is comfortable on a 1280 laptop is small on a 2560 monitor, and
    the whole site is px-sized so nothing scales on its own. A gentle ramp:
@@ -3087,6 +3150,32 @@ function ncNav() {
     ].join('');
     document.head.appendChild(st);
   }
+
+  /* --------------------------------------------------------------------
+     HOW TALL IS THE PHONE STRIP, AND IS IT AT THE TOP?
+     --------------------------------------------------------------------
+     On a phone the rail becomes a horizontal strip. Most pages let it sit
+     at the bottom of the screen; analytics.html pins its own .sidebar to
+     `position:static`, so on that page the strip flows directly under the
+     top bar instead — and the Nova pill, parked at a fixed 60px, landed
+     right on top of it. In English as well as in Farsi; the RTL sweep is
+     just what finally surfaced it.
+
+     Rather than special-casing that page, measure. If the strip is up at
+     the top, publish its height and the pill's own rule adds it on.
+     -------------------------------------------------------------------- */
+  function ncStripHeight() {
+    var el = document.querySelector('.sidebar');
+    var root = document.documentElement;
+    if (!el || innerWidth > 760) { root.style.setProperty('--nc-strip-h', '0px'); return; }
+    var b = el.getBoundingClientRect();
+    /* "at the top" means it starts in the upper third and is short — a
+       bottom-docked strip and a full-height rail both fail that. */
+    var docked = b.top < innerHeight / 3 && b.height < innerHeight / 2;
+    root.style.setProperty('--nc-strip-h', docked ? Math.round(b.height) + 'px' : '0px');
+  }
+  addEventListener('resize', ncStripHeight, { passive: true });
+  setTimeout(ncStripHeight, 0);
 
   /* Any link the page shipped with is replaced. Keeping them would mean two
      navigations disagreeing about where things are. */
