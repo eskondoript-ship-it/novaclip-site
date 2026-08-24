@@ -203,6 +203,24 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
   </div>
 
   <div class='grid'>
+    <!-- The passkey card is deliberately first among equals: it is the only
+         sign-in on this page that is not a demonstration. Its spec rows say so
+         rather than leaving the reader to infer it from the other two. -->
+    <div class='card' id='pkcard'>
+      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M7 14a4 4 0 100-8 4 4 0 000 8z'/><path d='M10.5 12.5L21 23M17 19l2-2M14 16l2-2'/></svg></span>Passkey</h2>
+      <p>The strong one. A key made inside this device's secure hardware, unlocked by the same
+        fingerprint, face or PIN that unlocks the device itself. Nothing on this page can read it,
+        copy it or send it anywhere.</p>
+      <div class='spec'>
+        <div><b>Standard</b><span>WebAuthn — the same thing banks use</span></div>
+        <div><b>Strength</b><span>real; the private key never leaves the hardware</span></div>
+        <div><b>Still local</b><span>unlocks this browser, not an account on a server</span></div>
+      </div>
+      <p class='pkmsg' id='pkMsg' role='status'></p>
+      <button class='go' id='btnPkNew' type='button'>Set up a passkey</button>
+      <button class='go alt' id='btnPkIn' type='button'>Sign in</button>
+      <button class='go alt' id='btnPkOff' type='button'>Remove</button>
+    </div>
     <div class='card'>
       <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3'/><circle cx='12' cy='11' r='3'/></svg></span>Face</h2>
       <p>A 128-number descriptor of your face, from face-api.js running in the tab. Not a photo —
@@ -244,6 +262,13 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
   <p class='sub'>A sample. Anything in the rail works, and so does any button on the page you are looking at.</p>
   <div class='says' id='says'></div>
 
+  <h3>What has been tried on this browser</h3>
+  <p class='sub'>Kept on this device, newest first, the last fifty. Nobody else can see it — and
+    neither can NovaClip, because it never leaves here. A sign-in you do not recognise is worth
+    knowing about, which is the whole reason this list exists.</p>
+  <div class='audit' id='audit'></div>
+  <button class='go alt' id='btnAuditClear' type='button'>Clear this list</button>
+
   <div class='note' id='privacy'>
     <b>What "sign in with your face" means here.</b> It unlocks <b>this browser</b>, the way a
     password manager uses a fingerprint — it is not a server-side identity, and it cannot prove
@@ -253,6 +278,138 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
   </div>
 </div>
 
+<style>
+.pkmsg{min-height:0;margin:2px 0 10px;font-size:.9rem;line-height:1.55;color:var(--nc-dim,#8B97B0)}
+.pkmsg.bad{color:#FF8A9B}
+.pkmsg.good{color:#6FE3B0}
+.audit{display:flex;flex-direction:column;gap:6px;margin:10px 0 14px}
+.audit .row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:9px 12px;border-radius:10px;
+  background:var(--nc-bg2,rgba(255,255,255,.04));border:1px solid var(--nc-line,rgba(255,255,255,.09))}
+.audit .row b{font-weight:700}
+.audit .row .when{margin-left:auto;font-size:.8rem;color:var(--nc-dim,#8B97B0);font-variant-numeric:tabular-nums}
+.audit .row .tag{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 8px;border-radius:999px}
+.audit .row.ok .tag{background:rgba(111,227,176,.16);color:#6FE3B0}
+.audit .row.no .tag{background:rgba(255,138,155,.16);color:#FF8A9B}
+.audit .row .why{flex-basis:100%;font-size:.86rem;color:var(--nc-dim,#8B97B0)}
+.audit .none{color:var(--nc-dim,#8B97B0);padding:4px 2px}
+html[dir=rtl] .audit .row .when{margin-left:0;margin-right:auto}
+</style>
+<script src='passkey.js'></script>
+<script>
+/* ============================================================================
+   WIRING THE PASSKEY CARD
+   ============================================================================
+   Three buttons and a message line. The message line is the important part:
+   every failure here has a specific cause and a specific fix, and "something
+   went wrong" would waste all of that. passkey.js does the translating; this
+   just puts it on screen and keeps the buttons honest about what is possible
+   right now.
+   ========================================================================== */
+(function () {
+  var msg = document.getElementById('pkMsg');
+  var bNew = document.getElementById('btnPkNew');
+  var bIn  = document.getElementById('btnPkIn');
+  var bOff = document.getElementById('btnPkOff');
+  if (!msg || !window.NC_PASSKEY) return;
+  var PK = window.NC_PASSKEY;
+
+  function say(text, kind) {
+    msg.textContent = text || '';
+    msg.className = 'pkmsg' + (kind ? ' ' + kind : '');
+  }
+
+  function paint() {
+    var have = PK.keys().length;
+    bIn.style.display  = have ? 'inline-block' : 'none';
+    bOff.style.display = have ? 'inline-block' : 'none';
+    bNew.textContent = have ? 'Add another passkey' : 'Set up a passkey';
+    if (have) say(have === 1 ? 'One passkey is set up on this browser.'
+                             : have + ' passkeys are set up on this browser.');
+  }
+
+  /* Asked once, up front. A button that looks ready and then explains it was
+     never going to work is worse than one that says so from the start. */
+  PK.available().then(function (a) {
+    if (!a.ok) {
+      bNew.disabled = true; bIn.disabled = true;
+      say(a.why, 'bad');
+      return;
+    }
+    paint();
+  });
+
+  bNew.onclick = function () {
+    var who = '';
+    try { who = localStorage.getItem('nc_name') || ''; } catch (e) {}
+    say('Follow the prompt from your device…');
+    bNew.disabled = true;
+    PK.enrol(who || 'NovaClip user')
+      /* paint() sets its own status line, so it runs FIRST — the other way
+         round it replaced the confirmation the instant it appeared. */
+      .then(function () { paint(); say('Passkey created. It stays on this device.', 'good'); })
+      .catch(function (e) { say(e.message, 'bad'); })
+      .then(function () { bNew.disabled = false; });
+  };
+
+  bIn.onclick = function () {
+    say('Follow the prompt from your device…');
+    bIn.disabled = true;
+    PK.signIn()
+      .then(function () {
+        say('Unlocked. Remember this only unlocks this browser — there is no account behind it.', 'good');
+        /* Signing in is a real thing done on the site, so it counts like the
+           other skills do. Guarded because this page also loads standalone. */
+        try { if (typeof logSkill === 'function') logSkill('biometric'); } catch (e) {}
+      })
+      .catch(function (e) { say(e.message, 'bad'); })
+      .then(function () { bIn.disabled = false; });
+  };
+
+  bOff.onclick = function () {
+    PK.forget();
+    paint();
+    say('Removed from NovaClip. The key itself is still in your device\u2019s own passkey list — ' +
+        'delete it there if you want it gone completely.', 'good');
+  };
+
+  /* ---- the audit list ---- */
+  var box = document.getElementById('audit');
+  var clear = document.getElementById('btnAuditClear');
+
+  function when(ms) {
+    var d = Math.round((Date.now() - ms) / 1000);
+    if (d < 60) return 'just now';
+    if (d < 3600) return Math.round(d / 60) + ' min ago';
+    if (d < 86400) return Math.round(d / 3600) + ' h ago';
+    return new Date(ms).toLocaleDateString();
+  }
+  function esc(t) { return String(t).replace(/[<>&]/g, function (m) {
+    return ({ '<':'&lt;', '>':'&gt;', '&':'&amp;' })[m]; }); }
+
+  function drawAudit() {
+    if (!box) return;
+    var rows = PK.auditRows();
+    if (!rows.length) {
+      box.innerHTML = '<div class="none">Nothing yet. Set up a passkey and this fills in.</div>';
+      if (clear) clear.style.display = 'none';
+      return;
+    }
+    if (clear) clear.style.display = 'inline-block';
+    box.innerHTML = rows.map(function (r) {
+      return '<div class="row ' + (r.ok ? 'ok' : 'no') + '">' +
+        '<span class="tag">' + (r.ok ? 'ok' : 'failed') + '</span>' +
+        '<b>' + esc(r.what) + '</b>' +
+        '<span class="when">' + when(r.at) + '</span>' +
+        (r.detail ? '<span class="why">' + esc(r.detail) + '</span>' : '') +
+      '</div>';
+    }).join('');
+  }
+  if (clear) clear.onclick = function () { PK.clearAudit(); };
+  addEventListener('nc-audit', drawAudit);
+  drawAudit();
+})();
+</script>
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>
