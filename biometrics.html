@@ -68,948 +68,255 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050505">
 <title>Biometrics — NovaClip</title>
-<meta name='description' content='Face and voice sign-in that never leaves your device, and the voice commands that come with it.'>
+<meta name='description' content='BioSentinel — fingerprint, face, voice, click rhythm and FIDO2 passkey sign-in on this device, with an encrypted vault and an audit trail. Nothing is uploaded.'>
 <link rel='icon' href='logo.svg' type='image/svg+xml'>
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --ink:var(--nc-bg,#05070E); --panel:var(--nc-bg2,#0C1220);
-  --line:var(--nc-line,rgba(255,255,255,.10)); --txt:var(--nc-text,#EAF2FF);
-  --dim:var(--nc-dim,#7E8AA6); --cyan:var(--nc-cyan,#00F0FF);
-  --violet:var(--nc-violet,#7C5CFF); --pink:var(--nc-pink,#FF2E97);
-  --lime:var(--nc-lime,#B6FF3C); --amber:var(--nc-amber,#FFB443);
-  --grad:linear-gradient(110deg,var(--violet),var(--cyan) 48%,var(--pink));
-}
-body{background:var(--ink);color:var(--txt);min-height:100vh;
-  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
-  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-a{color:var(--cyan)}
-:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px}
-
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--nc-rail,200px);z-index:998;
-  background:rgba(12,12,16,.85);backdrop-filter:blur(20px);display:flex;flex-direction:column;
-  padding:20px 0;gap:4px;border-right:1px solid var(--line);overflow-y:auto}
-.sidebar .themewrap{margin-top:auto;padding:16px 20px}
-
-.wrap{position:relative;z-index:2;width:min(1080px,100% - 34px);margin:0 auto;padding:30px 0 90px}
-
-/* ---- the scanner: a ring that sweeps while the page is idle, and locks
-   to a solid colour once a profile exists on this device ---- */
-.hero{display:grid;grid-template-columns:190px minmax(0,1fr);gap:30px;align-items:center;
-  margin-bottom:34px}
-@media (max-width:720px){.hero{grid-template-columns:1fr;text-align:center;justify-items:center}}
-.scan{position:relative;width:180px;height:180px;display:grid;place-items:center}
-.scan svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-.scan .track{fill:none;stroke:var(--line);stroke-width:6}
-.scan .arc{fill:none;stroke:url(#nbg);stroke-width:6;stroke-linecap:round;
-  stroke-dasharray:180 500;animation:nbspin 2.6s cubic-bezier(.5,0,.5,1) infinite}
-.scan.locked .arc{animation:none;stroke-dasharray:540 0;opacity:.95}
-@keyframes nbspin{to{transform:rotate(360deg);transform-origin:50% 50%}}
-.scan .face{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;
-  background:radial-gradient(circle at 50% 35%,rgba(124,92,255,.35),transparent 65%);
-  border:1px solid var(--line)}
-.scan .face svg{position:static;width:52px;height:52px;transform:none;stroke:var(--cyan);
-  fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.scan .ping{position:absolute;inset:-6px;border-radius:50%;border:1px solid var(--cyan);
-  opacity:0;animation:nbping 2.6s ease-out infinite}
-@keyframes nbping{0%{transform:scale(.86);opacity:.5}70%{opacity:0}100%{transform:scale(1.12);opacity:0}}
-
-h1{font-size:clamp(1.9rem,4.6vw,2.9rem);font-weight:680;letter-spacing:-.04em;line-height:1.05}
-h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lede{color:var(--dim);margin-top:12px;max-width:60ch}
-
-.status{display:inline-flex;align-items:center;gap:9px;margin-top:16px;padding:8px 15px;
-  border-radius:30px;border:1px solid var(--line);background:rgba(255,255,255,.04);
-  font-size:.85rem;font-weight:650}
-.status .dot{width:9px;height:9px;border-radius:50%;background:var(--dim);flex:0 0 auto}
-.status.on .dot{background:var(--lime);box-shadow:0 0 12px var(--lime)}
-.status.on{border-color:rgba(182,255,60,.4)}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:16px}
-.card{border:1px solid var(--line);border-radius:20px;padding:22px;position:relative;overflow:hidden;
-  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015))}
-.card::after{content:'';position:absolute;left:0;right:0;top:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5}
-.card h2{font-size:1.05rem;font-weight:680;letter-spacing:-.015em;display:flex;align-items:center;gap:10px}
-.card h2 .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto;
-  background:var(--grad);color:#05070E}
-.card h2 .ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;
-  stroke-linecap:round;stroke-linejoin:round}
-.card p{color:var(--dim);font-size:.9rem;margin-top:9px}
-.card .go{margin-top:15px;padding:11px 20px;border-radius:30px;border:0;cursor:pointer;
-  font:inherit;font-weight:680;font-size:.9rem;color:#05070E;background:var(--grad)}
-/* var(--nc-card2) rather than a white wash: on a white page a 6% white fill
-   is not a button, it is a rumour of one. */
-.card .go.alt{background:var(--nc-card2,rgba(255,255,255,.06));color:var(--txt);
-  border:1px solid var(--nc-line2,var(--line))}
-.card .go:disabled{opacity:.5;cursor:default}
-
-.spec{margin-top:14px;display:grid;gap:7px;font-size:.8rem}
-.spec div{display:flex;gap:9px;color:var(--dim)}
-.spec b{color:var(--txt);font-weight:650;flex:0 0 92px}
-
-h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
-.sub{color:var(--dim);font-size:.88rem;margin-bottom:14px}
-
-/* ---- what you can say ---- */
-.says{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:9px}
-.say{border:1px solid var(--line);border-radius:12px;padding:10px 13px;font-size:.86rem;
-  background:rgba(255,255,255,.03);display:flex;align-items:center;gap:9px}
-.say::before{content:'“';color:var(--cyan);font-size:1.3rem;line-height:0;opacity:.8}
-.say b{font-weight:600}
-
-.note{color:var(--dim);font-size:.83rem;line-height:1.75;margin-top:26px;padding:16px 18px;
-  border-radius:14px;background:rgba(255,255,255,.025);border:1px solid var(--line)}
-.note b{color:var(--txt)}
-@media (max-width:760px){ body{padding-bottom:74px} .wrap{padding-top:22px} }
-</style>
-<!-- The Biometric ID design, applied to the page it came from. -->
+<!-- The uploaded design's frontend, hand-written. See the top of the file for
+     what was and was not copied from it. -->
 <link rel='stylesheet' href='theme-biometric.css'>
 </head>
 <body class='bio'>
+
+<!-- NovaClip's rail. The page below is the upload's frontend; this is how
+     somebody leaves it, so it stays and wears the same palette. -->
 <div class='sidebar'>
-  <!-- nova.js builds the links; this is only the shell it fills -->
   <div class='themewrap'>
     <label data-t='language'>Language</label>
     <select id='langpick'></select>
   </div>
 </div>
 
-<div class='wrap'>
-  <div class='hero'>
-    <div class='scan scanwrap' id='scan'>
-      <svg viewBox='0 0 100 100' aria-hidden='true'>
-        <defs><linearGradient id='nbg' x1='0' y1='0' x2='1' y2='1'>
-          <stop offset='0' stop-color='#7C5CFF'/><stop offset='.5' stop-color='#00F0FF'/>
-          <stop offset='1' stop-color='#FF2E97'/></linearGradient></defs>
-        <circle class='track' cx='50' cy='50' r='45'/>
-        <circle class='arc' cx='50' cy='50' r='45'/>
-      </svg>
-      <span class='ping'></span>
-      <div class='face'>
-        <svg viewBox='0 0 24 24' aria-hidden='true'>
-          <path d='M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3'/>
-          <circle cx='9' cy='10' r='1'/><circle cx='15' cy='10' r='1'/>
-          <path d='M9 15c.9.8 1.9 1.2 3 1.2s2.1-.4 3-1.2'/>
-        </svg>
+<div class='bs-app'>
+
+<!-- ==================================================================== -->
+<!-- HEADER                                                               -->
+<!-- ==================================================================== -->
+<header class='bs-head'>
+  <div class='bs-head-in'>
+    <div class='bs-brand'>
+      <div class='bs-shield'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 01-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 011-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 011.52 0C14.51 3.81 17 5 19 5a1 1 0 011 1z'/><path d='M9 12l2 2 4-4'/></svg>
+        <span class='ping'></span><span class='dot'></span>
+      </div>
+      <div>
+        <h1>BIO<em>SENTINEL</em> <span class='bs-chip'>On this device</span></h1>
+        <p class='sub'>
+          <span class='a'>
+            <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='4' width='16' height='16' rx='2'/><rect x='9' y='9' width='6' height='6'/><path d='M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2'/></svg>
+            <span id='bsPlatform'>Checking this device…</span>
+          </span>
+          <span class='sep'>•</span>
+          <span class='b'><i></i> Nothing leaves this browser</span>
+        </p>
       </div>
     </div>
 
-    <div>
-      <h1>Your face and voice, <span class='g'>on this device</span></h1>
-      <p class='lede'>Sign in by looking at the camera or saying a passphrase, then drive
-        the whole site by talking to it. Nothing is uploaded — the profile is a row in this
-        browser's storage, and deleting it is one button.</p>
-      <div class='status' id='status'><span class='dot'></span><span id='statusTxt'>Checking…</span></div>
+    <div class='bs-head-right'>
+      <div class='bs-clock'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M22 12h-4l-3 9L9 3l-3 9H2'/></svg>
+        <span id='bsClock'>00:00:00</span>
+      </div>
+
+      <button class='bs-vaultchip' id='bsVaultChip' type='button'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0110 0v4'/></svg>
+        <span id='bsVaultChipTxt'>Vault Locked</span>
+      </button>
+
+      <button class='bs-btn bs-btn-em6 bs-btn-sm' id='bsEnrollBtn' type='button'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M19 8v6M22 11h-6'/></svg>
+        <span>Enrol Profile (<span id='bsProfCount'>0</span>)</span>
+      </button>
+
+      <button class='bs-icon-btn' id='bsSettingsBtn' type='button' title='Security configuration' aria-label='Security configuration'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z'/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ==================================================================== -->
+<!-- MAIN                                                                 -->
+<!-- ==================================================================== -->
+<main class='bs-main'>
+
+  <div id='bsToastSlot'></div>
+
+  <!-- Four telemetry tiles. Every one of these is a real reading; see the
+       stylesheet's header for why the upload's invented ones were dropped. -->
+  <div class='bs-tiles'>
+    <div class='bs-tile'>
+      <div>
+        <span class='k'>Enrolled Modalities</span>
+        <span class='v' id='bsTileModalities'>0 Active</span>
+      </div>
+      <div class='bs-ic'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M2 12C2 6.5 6.5 2 12 2a10 10 0 018 4'/><path d='M5 19.5C5.5 18 6 15 6 12a6 6 0 018-5.66'/><path d='M17.29 21.02c.12-.6.43-2.3.5-3.02M12 10a2 2 0 00-2 2c0 1.02-.1 2.51-.26 4'/><path d='M8.65 22c.21-.66.45-1.32.57-2M14 13.12c0 2.38 0 6.38-1 8.88'/><path d='M22 12a10 10 0 00-.59-3.4'/><path d='M2 16h.01M21.8 16c.2-2 .131-5.354 0-6'/></svg>
+      </div>
+    </div>
+
+    <div class='bs-tile'>
+      <div>
+        <span class='k'>Device Authenticator</span>
+        <span class='v em' id='bsTilePlatform'>CHECKING</span>
+      </div>
+      <div class='bs-ic cyan'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 01-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 011-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 011.52 0C14.51 3.81 17 5 19 5a1 1 0 011 1z'/><path d='M9 12l2 2 4-4'/></svg>
+      </div>
+    </div>
+
+    <div class='bs-tile'>
+      <div>
+        <span class='k'>Vault Cipher</span>
+        <span class='v indigo'>AES-256 GCM</span>
+      </div>
+      <div class='bs-ic indigo'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='4' width='16' height='16' rx='2'/><rect x='9' y='9' width='6' height='6'/><path d='M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2'/></svg>
+      </div>
+    </div>
+
+    <div class='bs-tile'>
+      <div>
+        <span class='k'>Vault Security</span>
+        <span class='v rose' id='bsTileVault'>LOCKED</span>
+      </div>
+      <div class='bs-ic rose' id='bsTileVaultIc'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0110 0v4'/></svg>
+      </div>
     </div>
   </div>
 
-  <div class='grid'>
-    <!-- The passkey card is deliberately first among equals: it is the only
-         sign-in on this page that is not a demonstration. Its spec rows say so
-         rather than leaving the reader to infer it from the other two. -->
-    <div class='card' id='pkcard'>
-      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M7 14a4 4 0 100-8 4 4 0 000 8z'/><path d='M10.5 12.5L21 23M17 19l2-2M14 16l2-2'/></svg></span>Passkey</h2>
-      <p>The strong one. A key made inside this device's secure hardware, unlocked by the same
-        fingerprint, face or PIN that unlocks the device itself. Nothing on this page can read it,
-        copy it or send it anywhere.</p>
-      <div class='spec'>
-        <div><b>Standard</b><span>WebAuthn — the same thing banks use</span></div>
-        <div><b>Strength</b><span>real; the private key never leaves the hardware</span></div>
-        <div><b>Still local</b><span>unlocks this browser, not an account on a server</span></div>
-      </div>
-      <p class='pkmsg' id='pkMsg' role='status'></p>
-      <button class='go' id='btnPkNew' type='button'>Set up a passkey</button>
-      <button class='go alt' id='btnPkIn' type='button'>Sign in</button>
-      <button class='go alt' id='btnPkOff' type='button'>Remove</button>
-    </div>
-    <!-- The locker is what makes the passkey do something. Before it, you could
-         enrol one and sign in with it, and nothing on the site was any safer
-         for it. -->
-    <div class='card' id='lkcard'>
-      <h2><span class='ic'><svg viewBox='0 0 24 24'><rect x='4' y='10' width='16' height='11' rx='2'/><path d='M8 10V7a4 4 0 018 0v3'/></svg></span>Locker</h2>
-      <p>A few lines you would rather nobody read if they picked up your phone. Encrypted on this
-        device, and the key is made from your passkey — so it is your fingerprint or face that
-        opens it, not a button that says Unlock.</p>
-      <div class='spec'>
-        <div><b>Cipher</b><span>AES-GCM 256, key from the passkey via HKDF</span></div>
-        <div><b>On disk</b><span>ciphertext only — never the words themselves</span></div>
-        <div><b>Locks itself</b><span>after five minutes, or when you leave the page</span></div>
-      </div>
-      <p class='pkmsg' id='lkMsg' role='status'></p>
-      <div id='lkGate'>
-        <button class='go' id='lkOpen' type='button'>Unlock with passkey</button>
-        <button class='go alt' id='lkPassBtn' type='button'>Use a passphrase</button>
-      </div>
-      <div id='lkPassRow' style='display:none'>
-        <input id='lkPass' type='password' autocomplete='current-password'
-               placeholder='Passphrase, eight characters or more' aria-label='Locker passphrase'>
-        <button class='go' id='lkPassGo' type='button'>Open</button>
-      </div>
-      <div id='lkBody' style='display:none'>
-        <div class='lkadd'>
-          <input id='lkT' maxlength='80' placeholder='What is it?' aria-label='Title'>
-          <textarea id='lkB' maxlength='2000' rows='3' placeholder='The bit you want kept'
-                    aria-label='The note'></textarea>
-          <button class='go' id='lkAdd' type='button'>Keep it</button>
-        </div>
-        <ul class='lknotes' id='lkList'></ul>
-        <div class='lkfoot'>
-          <button class='go alt' id='lkLock' type='button'>Lock now</button>
-          <button class='go alt' id='lkWipe' type='button'>Empty the locker</button>
-        </div>
-      </div>
-    </div>
+  <!-- Modality tab strip -->
+  <div class='bs-tabs bs-noscroll' id='bsTabs' role='tablist' aria-label='Biometric modality'></div>
 
-    <!-- Click rhythm. Mouse only, and the card says why rather than appearing
-         on a phone and then not working: a tap has no press-and-hold worth
-         measuring, and dwell is half of what this reads. -->
-    <div class='card' id='rhcard'>
-      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M4 13h3l2.5-7 3.5 14 2.5-7H20'/></svg></span>Click rhythm</h2>
-      <p>A password you perform instead of typing. Click <b>left</b> and <b>right</b> in an order you
-        will remember — and it is not the order that identifies you, it is the way you do it. You
-        will never repeat it exactly, so it does not ask you to.</p>
-      <div class='spec'>
-        <div><b>Reads</b><span>how long each click is held, and the gap between them</span></div>
-        <div><b>Matching</b><span>close enough, not exact — scaled by how much you vary</span></div>
-        <div><b>Weak against</b><span>somebody who has watched you do it</span></div>
-      </div>
+  <!-- The scanner portal. One panel per tab, built by biosentinel.js. -->
+  <div id='bsPortal'></div>
 
-      <div id='rhLive'>
-        <div class='pad' id='rhPad'>
-          <button class='zone' type='button' data-z='L'>LEFT</button>
-          <button class='zone' type='button' data-z='R'>RIGHT</button>
-        </div>
-        <div class='rhslots' id='rhSlots' aria-hidden='true'></div>
-        <p class='rhtrace' id='rhTrace'></p>
+  <!-- Enrolled profiles -->
+  <section class='bs-panel bs-profiles'>
+    <div class='top'>
+      <div>
+        <h2>
+          <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 01-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 011-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 011.52 0C14.51 3.81 17 5 19 5a1 1 0 011 1z'/><path d='M9 12l2 2 4-4'/></svg>
+          Enrolled on this device (<span id='bsProfCount2'>0</span>)
+        </h2>
+        <p>Templates kept in this browser's storage. None of them has ever been sent anywhere.</p>
       </div>
-
-      <p class='pkmsg' id='rhMsg' role='status'></p>
-      <button class='go' id='rhGo' type='button'>Set a pattern</button>
-      <button class='go alt' id='rhAgain' type='button'>Start over</button>
-      <button class='go alt' id='rhOff' type='button'>Remove</button>
+      <button class='bs-btn bs-btn-ghost bs-btn-sm' id='bsAddModality' type='button'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 5v14M5 12h14'/></svg>
+        <span>Add Modality</span>
+      </button>
     </div>
+    <div class='bs-plist' id='bsProfiles'></div>
+  </section>
 
-    <div class='card'>
-      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3'/><circle cx='12' cy='11' r='3'/></svg></span>Face</h2>
-      <p>A 128-number descriptor of your face, from face-api.js running in the tab. Not a photo —
-        the image never leaves the canvas it was drawn on.</p>
-      <div class='spec'>
-        <div><b>Model</b><span>tiny detector + 68 landmarks + recognition net</span></div>
-        <div><b>Stored</b><span>localStorage, key <code>nc_bio_profiles</code></span></div>
-        <div><b>Needs</b><span>camera permission, and a CDN for the weights</span></div>
+  <!-- The honesty block. This page is wired to real cryptography and a real
+       face descriptor, and the difference in strength between them is large
+       enough that leaving it unsaid would be the dishonest part. -->
+  <section class='bs-panel bs-card' id='bsTruth'>
+    <h3>
+      <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><path d='M12 16v-4M12 8h.01'/></svg>
+      What each of these is actually worth
+    </h3>
+    <div class='bs-metrics' style='grid-template-columns:1fr'>
+      <div class='bs-metric'>
+        <span class='k'>Passkey and fingerprint</span>
+        <span class='v small'>Real. The private key is made inside the device's secure hardware and
+          never leaves it. It unlocks <b>this browser</b> — there is no NovaClip server checking the
+          signature, so it is not proof of identity to anyone else.</span>
       </div>
-      <button class='go' id='btnFace' type='button'>Set up face</button>
+      <div class='bs-metric'>
+        <span class='k'>Vault</span>
+        <span class='v small'>Real AES-GCM 256. The key comes from the passkey by HKDF, or from a
+          passphrase at 310,000 PBKDF2 rounds. Only ciphertext is on disk. Delete the passkey and
+          what is in there cannot be read again by anybody.</span>
+      </div>
+      <div class='bs-metric'>
+        <span class='k'>Face and voice</span>
+        <span class='v small'>A 128-number descriptor and a 24-number voiceprint, compared in the
+          page. Good enough to tell you from someone else in the room. The voice one in particular
+          can be beaten by a good impression, and it says so.</span>
+      </div>
+      <div class='bs-metric'>
+        <span class='k'>Click rhythm</span>
+        <span class='v small'>Measured over 3000 simulated hands: turns you away 8% of the time,
+          lets a stranger in 1.2%, and lets somebody who <em>watched</em> you in about one try in
+          six. Use it like a screen-lock pattern. It is not allowed to open the vault.</span>
+      </div>
     </div>
+  </section>
+</main>
 
-    <div class='card'>
-      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M12 3a3 3 0 013 3v6a3 3 0 01-6 0V6a3 3 0 013-3z'/><path d='M5 11a7 7 0 0014 0M12 18v3'/></svg></span>Voice</h2>
-      <p>About 2.5 seconds of speech, averaged into 24 numbers describing the shape of your
-        voice. Sign-in compares how close two of those are.</p>
-      <div class='spec'>
-        <div><b>Method</b><span>Web Audio analyser, log-scaled spectrum</span></div>
-        <div><b>Strength</b><span>demo-grade — a good impersonation can beat it</span></div>
-        <div><b>Stored</b><span>same device, same key, never sent</span></div>
-      </div>
-      <button class='go' id='btnVoice' type='button'>Set up voice</button>
-    </div>
-
-    <div class='card'>
-      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M4 12h3l2-6 3 12 2.5-8 1.7 4H21'/></svg></span>Voice commands</h2>
-      <p>Speech recognition listening for the site's own vocabulary — every page, in
-        <b id='langCount'>20</b> languages, plus whatever buttons the page you are on is showing.</p>
-      <div class='spec'>
-        <div><b>API</b><span>Web Speech, Chrome and Edge</span></div>
-        <div><b>Off by default</b><span>the mic only opens when you turn it on</span></div>
-      </div>
-      <button class='go' id='btnVoiceCmd' type='button'>Turn on listening</button>
-      <button class='go alt' id='btnPanel' type='button'>Open the panel</button>
-    </div>
+<footer class='bs-foot'>
+  <div class='in'>
+    <span>BIOSENTINEL · ON-DEVICE BIOMETRIC ENCLAVE · W3C WEBAUTHN</span>
+    <span class='ok' id='bsFootStatus'>NOTHING UPLOADED · NOTHING SHARED</span>
   </div>
+</footer>
 
-  <h3>Things you can say</h3>
-  <p class='sub'>A sample. Anything in the rail works, and so does any button on the page you are looking at.</p>
-  <div class='says' id='says'></div>
+</div><!-- /.bs-app -->
 
-  <h3>What has been tried on this browser</h3>
-  <p class='sub'>Kept on this device, newest first, the last fifty. Nobody else can see it — and
-    neither can NovaClip, because it never leaves here. A sign-in you do not recognise is worth
-    knowing about, which is the whole reason this list exists.</p>
-  <div class='audit' id='audit'></div>
-  <button class='go alt' id='btnAuditClear' type='button'>Clear this list</button>
-
-  <div class='note' id='privacy'>
-    <b>What "sign in with your face" means here.</b> It unlocks <b>this browser</b>, the way a
-    password manager uses a fingerprint — it is not a server-side identity, and it cannot prove
-    who you are to anyone else. Clearing your browser data deletes the profile, and so does the
-    button in the panel. The voiceprint in particular is honest about being demo-grade: it is
-    good enough to tell you apart from someone else in the room, not good enough to be a lock.
-  </div>
-
-  <div class='note'>
-    <b>How good the click rhythm actually is.</b> It was measured over 3000 simulated hands
-    before it shipped, at eight clicks. It turns the owner away about <b>8%</b> of the time.
-    Somebody who knows your left-and-right order but has never watched you perform it gets in
-    <b>1.2%</b> of the time — that is the case a PIN loses badly, and the reason this exists.
-    But somebody who <em>has</em> watched you gets in about <b>one try in six</b>, and this
-    allows three tries before it starts making them wait, so watching you once is worth roughly
-    a 30% chance. Somebody who can read this browser's storage has the numbers themselves and
-    walks straight in. Use it the way you would use a screen-lock pattern, not the way you would
-    use a password — and note that it is deliberately not allowed to open the Locker, which
-    needs the passkey.
+<!-- ==================================================================== -->
+<!-- MODALS                                                               -->
+<!-- ==================================================================== -->
+<div class='bs-modal' id='bsEnrollModal' hidden role='dialog' aria-modal='true' aria-labelledby='bsEnrollTitle'>
+  <div class='box wide'>
+    <div class='hd'>
+      <h3 id='bsEnrollTitle'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M19 8v6M22 11h-6'/></svg>
+        Enrol a modality
+      </h3>
+      <button type='button' data-close='bsEnrollModal' aria-label='Close'>✕</button>
+    </div>
+    <p style='font-size:12px;color:#94a3b8;margin:0'>Each of these enrols in its own way, because each
+      one measures something different. Pick one and it takes you to its sensor.</p>
+    <div class='bs-plist' id='bsEnrollGrid' style='grid-template-columns:1fr'></div>
   </div>
 </div>
 
-<style>
-.pkmsg{min-height:0;margin:2px 0 10px;font-size:.9rem;line-height:1.55;color:var(--nc-dim,#8B97B0)}
-.pkmsg.bad{color:#FF8A9B}
-.pkmsg.good{color:#6FE3B0}
-.audit{display:flex;flex-direction:column;gap:6px;margin:10px 0 14px}
-.audit .row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:9px 12px;border-radius:10px;
-  background:var(--nc-bg2,rgba(255,255,255,.04));border:1px solid var(--nc-line,rgba(255,255,255,.09))}
-.audit .row b{font-weight:700}
-.audit .row .when{margin-left:auto;font-size:.8rem;color:var(--nc-dim,#8B97B0);font-variant-numeric:tabular-nums}
-.audit .row .tag{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  padding:2px 8px;border-radius:999px}
-.audit .row.ok .tag{background:rgba(111,227,176,.16);color:#6FE3B0}
-.audit .row.no .tag{background:rgba(255,138,155,.16);color:#FF8A9B}
-.audit .row .why{flex-basis:100%;font-size:.86rem;color:var(--nc-dim,#8B97B0)}
-.audit .none{color:var(--nc-dim,#8B97B0);padding:4px 2px}
+<div class='bs-modal' id='bsSettingsModal' hidden role='dialog' aria-modal='true' aria-labelledby='bsSettingsTitle'>
+  <div class='box'>
+    <div class='hd'>
+      <h3 id='bsSettingsTitle'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'/><path d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z'/></svg>
+        Security configuration
+      </h3>
+      <button type='button' data-close='bsSettingsModal' aria-label='Close'>✕</button>
+    </div>
 
-/* ---- the click-rhythm pad ----
-   Big targets on purpose. A small button changes how you click it — you aim
-   first and then press — and aiming time lands in the gap measurement as
-   noise. Two slabs mean the hand goes to the same place every time. */
-.pad{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 10px}
-.pad .zone{min-height:96px;border-radius:14px;cursor:pointer;user-select:none;
-  font:800 .82rem/1 inherit;letter-spacing:.18em;
-  border:1px solid var(--line,rgba(255,255,255,.14));background:var(--panel,rgba(255,255,255,.03));
-  color:var(--dim,#8B97B0);transition:background .08s,border-color .08s,color .08s,transform .06s}
-.pad .zone:hover:not(:disabled){border-color:var(--cyan,#00F0FF);color:var(--txt,#EAF2FF)}
-/* .down, not :active — :active drops the moment the pointer leaves the button
-   and the whole point is that the press is still being timed. */
-.pad .zone.down{background:var(--cyan,#00F0FF);color:#04121a;border-color:transparent;transform:scale(.985)}
-.pad .zone:disabled{opacity:.4;cursor:default}
-.rhslots{display:flex;gap:6px;flex-wrap:wrap;min-height:12px;margin-bottom:8px}
-.rhslots i{width:11px;height:11px;border-radius:50%;display:block;
-  border:1px solid var(--line,rgba(255,255,255,.22))}
-.rhslots i.on{background:var(--cyan,#00F0FF);border-color:transparent}
-.rhtrace{min-height:1.3em;margin:0 0 8px;font-size:.78rem;letter-spacing:.02em;
-  font-family:ui-monospace,Consolas,monospace;color:var(--dim,#8B97B0);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#rhcard .go{margin-right:8px}
-#lkPassRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-#lkPass{flex:1;min-width:180px;min-height:44px;padding:0 14px;border-radius:12px;font:inherit;
-  background:var(--nc-bg,rgba(0,0,0,.25));color:inherit;border:1px solid var(--nc-line,rgba(255,255,255,.14))}
-.lkadd{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
-.lkadd input,.lkadd textarea{min-height:44px;padding:11px 14px;border-radius:12px;font:inherit;resize:vertical;
-  background:var(--nc-bg,rgba(0,0,0,.25));color:inherit;border:1px solid var(--nc-line,rgba(255,255,255,.14))}
-ul.lknotes{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
-ul.lknotes li{padding:12px 14px;border-radius:12px;background:var(--nc-bg,rgba(0,0,0,.2));
-  border:1px solid var(--nc-line,rgba(255,255,255,.09))}
-ul.lknotes .top{display:flex;align-items:baseline;gap:10px}
-ul.lknotes b{font-weight:700;flex:1;min-width:0;word-break:break-word}
-ul.lknotes .when{font-size:.78rem;color:var(--nc-dim,#8B97B0)}
-ul.lknotes .rm{min-width:34px;min-height:34px;border:0;background:transparent;cursor:pointer;
-  color:var(--nc-dim,#8B97B0);font-size:1.1rem;border-radius:8px}
-ul.lknotes .rm:hover{color:#FF8A9B}
-ul.lknotes p{margin-top:6px;white-space:pre-wrap;word-break:break-word;line-height:1.6;
-  color:var(--nc-dim,#B9C4D8)}
-.lkfoot{display:flex;gap:8px;flex-wrap:wrap}
-html[dir=rtl] .audit .row .when{margin-left:0;margin-right:auto}
-</style>
+    <div class='bs-switch'>
+      <div class='t'><b>Lock the vault when the tab is hidden</b>
+        <span>Switching away or minimising drops the key from memory.</span></div>
+      <input type='checkbox' id='bsCfgHide' checked disabled>
+    </div>
+    <div class='bs-switch'>
+      <div class='t'><b>Idle auto-lock</b>
+        <span id='bsCfgIdleTxt'>Five minutes untouched and the vault locks itself.</span></div>
+      <input type='checkbox' id='bsCfgIdle' checked disabled>
+    </div>
+    <div class='bs-switch'>
+      <div class='t'><b>Rate-limit the click rhythm</b>
+        <span id='bsCfgRateTxt'>Three wrong tries, then a doubling wait.</span></div>
+      <input type='checkbox' id='bsCfgRate' checked disabled>
+    </div>
+    <p style='font-size:11px;color:#64748b;margin:0;line-height:1.6'>These three are not switches you
+      can turn off. The upload had them as toggles; here they are how the code actually behaves, and a
+      toggle that claims to disable a safety measure it cannot disable would be a worse lie than
+      leaving it out. They are shown so you can see what is on.</p>
+
+    <div class='hd' style='border-bottom:0;border-top:1px solid #1e293b;padding:12px 0 0'>
+      <h3 style='font-size:12px'>Danger zone</h3>
+    </div>
+    <div class='ft' style='justify-content:flex-start;flex-wrap:wrap'>
+      <button class='bs-btn bs-btn-danger bs-btn-sm' id='bsWipeAll' type='button'>Delete everything on this page</button>
+    </div>
+  </div>
+</div>
+
 <script src='passkey.js'></script>
 <script src='locker.js'></script>
 <script src='rhythm.js'></script>
-<script>
-/* ============================================================================
-   WIRING THE PASSKEY CARD
-   ============================================================================
-   Three buttons and a message line. The message line is the important part:
-   every failure here has a specific cause and a specific fix, and "something
-   went wrong" would waste all of that. passkey.js does the translating; this
-   just puts it on screen and keeps the buttons honest about what is possible
-   right now.
-   ========================================================================== */
-(function () {
-  var msg = document.getElementById('pkMsg');
-  var bNew = document.getElementById('btnPkNew');
-  var bIn  = document.getElementById('btnPkIn');
-  var bOff = document.getElementById('btnPkOff');
-  if (!msg || !window.NC_PASSKEY) return;
-  var PK = window.NC_PASSKEY;
-
-  function say(text, kind) {
-    msg.textContent = text || '';
-    msg.className = 'pkmsg' + (kind ? ' ' + kind : '');
-  }
-
-  function paint() {
-    var have = PK.keys().length;
-    /* The locker's Unlock button is disabled until a passkey exists, so it has
-       to be repainted whenever that changes. Without this it stayed greyed out
-       immediately after enrolling one, and the only way to reach it was a
-       reload. */
-    try { if (typeof lkPaint === 'function') lkPaint(); } catch (e) {}
-    bIn.style.display  = have ? 'inline-block' : 'none';
-    bOff.style.display = have ? 'inline-block' : 'none';
-    bNew.textContent = have ? 'Add another passkey' : 'Set up a passkey';
-    if (have) say(have === 1 ? 'One passkey is set up on this browser.'
-                             : have + ' passkeys are set up on this browser.');
-  }
-
-  /* Asked once, up front. A button that looks ready and then explains it was
-     never going to work is worse than one that says so from the start. */
-  PK.available().then(function (a) {
-    if (!a.ok) {
-      bNew.disabled = true; bIn.disabled = true;
-      say(a.why, 'bad');
-      return;
-    }
-    paint();
-  });
-
-  bNew.onclick = function () {
-    var who = '';
-    try { who = localStorage.getItem('nc_name') || ''; } catch (e) {}
-    say('Follow the prompt from your device…');
-    bNew.disabled = true;
-    PK.enrol(who || 'NovaClip user')
-      /* paint() sets its own status line, so it runs FIRST — the other way
-         round it replaced the confirmation the instant it appeared. */
-      .then(function () { paint(); say('Passkey created. It stays on this device.', 'good'); })
-      .catch(function (e) { say(e.message, 'bad'); })
-      .then(function () { bNew.disabled = false; });
-  };
-
-  bIn.onclick = function () {
-    say('Follow the prompt from your device…');
-    bIn.disabled = true;
-    PK.signIn()
-      .then(function () {
-        say('Unlocked. Remember this only unlocks this browser — there is no account behind it.', 'good');
-        /* Signing in is a real thing done on the site, so it counts like the
-           other skills do. Guarded because this page also loads standalone. */
-        try { if (typeof logSkill === 'function') logSkill('biometric'); } catch (e) {}
-      })
-      .catch(function (e) { say(e.message, 'bad'); })
-      .then(function () { bIn.disabled = false; });
-  };
-
-  bOff.onclick = function () {
-    PK.forget();
-    paint();
-    say('Removed from NovaClip. The key itself is still in your device\u2019s own passkey list — ' +
-        'delete it there if you want it gone completely.', 'good');
-  };
-
-  /* ==========================================================================
-     THE LOCKER
-     ==========================================================================
-     Three states: no passkey yet, locked, open. The messages name the specific
-     thing to do in each — a locker that says "unavailable" and stops has told
-     the reader nothing they can act on.
-     ========================================================================== */
-  var LK = window.NC_LOCKER;
-  var lkMsg = document.getElementById('lkMsg');
-  var lkGate = document.getElementById('lkGate');
-  var lkPassRow = document.getElementById('lkPassRow');
-  var lkBody = document.getElementById('lkBody');
-  var lkList = document.getElementById('lkList');
-
-  function lsay(t, kind) {
-    if (!lkMsg) return;
-    lkMsg.textContent = t || '';
-    lkMsg.className = 'pkmsg' + (kind ? ' ' + kind : '');
-  }
-
-  function lkPaint() {
-    if (!LK) return;
-    var open = LK.isOpen();
-    lkGate.style.display = open ? 'none' : 'block';
-    lkBody.style.display = open ? 'block' : 'none';
-    if (!open) lkPassRow.style.display = 'none';
-    var btn = document.getElementById('lkOpen');
-    if (btn) {
-      var have = PK.keys().length;
-      btn.disabled = !have;
-      btn.textContent = LK.exists() ? 'Unlock with passkey' : 'Create the locker';
-      if (!have && !LK.exists()) lsay('Set up a passkey above and this can use it.');
-    }
-    if (open) drawNotes();
-  }
-
-  function esc2(t) { return String(t); }   /* textContent below, never innerHTML */
-
-  function drawNotes() {
-    LK.items().then(function (list) {
-      lkList.textContent = '';
-      if (!list.length) {
-        var e = document.createElement('li');
-        e.style.cssText = 'background:none;border:0;color:var(--nc-dim,#8B97B0);padding:2px';
-        e.textContent = 'Empty. Nothing is stored until you put something here.';
-        lkList.appendChild(e);
-        return;
-      }
-      list.forEach(function (it, i) {
-        var li = document.createElement('li');
-        var top = document.createElement('div'); top.className = 'top';
-        var b = document.createElement('b'); b.textContent = it.t || 'Untitled';
-        var w = document.createElement('span'); w.className = 'when';
-        w.textContent = new Date(it.at).toLocaleDateString();
-        var rm = document.createElement('button');
-        rm.type = 'button'; rm.className = 'rm'; rm.innerHTML = '&times;';
-        rm.setAttribute('aria-label', 'Delete: ' + (it.t || 'Untitled'));
-        rm.onclick = function () { LK.remove(i).then(drawNotes); };
-        top.append(b, w, rm);
-        var p2 = document.createElement('p');
-        p2.textContent = it.b || '';
-        li.append(top, p2);
-        lkList.appendChild(li);
-      });
-    }).catch(function (e) { lsay(e.message, 'bad'); });
-  }
-
-  if (LK) {
-    document.getElementById('lkOpen').onclick = function () {
-      lsay('Follow the prompt from your device…');
-      LK.unlockWithPasskey().then(function () {
-        lsay(LK.exists() ? 'Open. It locks itself after five minutes.' : 'Locker created.', 'good');
-        lkPaint();
-      }).catch(function (e) {
-        if (e && e.message === 'NO_PRF') {
-          /* The honest branch. There is no way to derive a key from a passkey
-             without PRF, so rather than pretend, say so and offer the other
-             door. */
-          lsay('This device\u2019s passkey cannot produce an encryption key — not every ' +
-               'authenticator supports that. Use a passphrase instead.', 'bad');
-          lkPassRow.style.display = 'flex';
-          return;
-        }
-        lsay(e.message, 'bad');
-      });
-    };
-
-    document.getElementById('lkPassBtn').onclick = function () {
-      lkPassRow.style.display = lkPassRow.style.display === 'flex' ? 'none' : 'flex';
-      if (lkPassRow.style.display === 'flex') document.getElementById('lkPass').focus();
-    };
-
-    function passGo() {
-      var v = document.getElementById('lkPass').value;
-      lsay('Working…');
-      LK.unlockWithPass(v).then(function () {
-        document.getElementById('lkPass').value = '';
-        lsay('Open. It locks itself after five minutes.', 'good');
-        lkPaint();
-      }).catch(function (e) { lsay(e.message, 'bad'); });
-    }
-    document.getElementById('lkPassGo').onclick = passGo;
-    document.getElementById('lkPass').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') passGo();
-    });
-
-    document.getElementById('lkAdd').onclick = function () {
-      var t = document.getElementById('lkT'), b = document.getElementById('lkB');
-      if (!t.value.trim() && !b.value.trim()) return;
-      LK.add(t.value.trim(), b.value).then(function () {
-        t.value = ''; b.value = '';
-        drawNotes();
-        lsay('Kept.', 'good');
-      }).catch(function (e) { lsay(e.message, 'bad'); });
-    };
-
-    document.getElementById('lkLock').onclick = function () {
-      LK.lock(); lkPaint(); lsay('Locked.');
-    };
-
-    document.getElementById('lkWipe').onclick = function () {
-      /* No undo, and there is no copy anywhere to restore from, so it asks. */
-      if (!confirm('Delete everything in the locker? There is no copy of it anywhere, ' +
-                   'so this cannot be undone.')) return;
-      LK.destroy(); lkPaint(); lsay('Emptied.', 'good');
-    };
-
-    addEventListener('nc-locker', lkPaint);
-    lkPaint();
-  }
-
-  /* ======================================================================
-     CLICK RHYTHM
-     ======================================================================
-     rhythm.js does the measuring and the deciding; everything here is the
-     pad, the state machine and the words. Three states and no more:
-
-       idle       a pattern exists or does not, and buttons say which
-       enrolling  five goes, and the count is on screen the whole time
-       checking   one go, then a verdict with the closeness in it
-
-     The press is captured on pointerdown and the release on pointerup, with
-     the pointer captured in between — otherwise pressing on LEFT and letting
-     go anywhere else loses the release, and the dwell with it.  */
-  (function () {
-    var R = window.NC_RHYTHM;
-    var card = document.getElementById('rhcard');
-    if (!card || !R) return;
-
-    var pad = document.getElementById('rhPad');
-    var slots = document.getElementById('rhSlots');
-    var trace = document.getElementById('rhTrace');
-    var msg = document.getElementById('rhMsg');
-    var live = document.getElementById('rhLive');
-    var bGo = document.getElementById('rhGo');
-    var bAgain = document.getElementById('rhAgain');
-    var bOff = document.getElementById('rhOff');
-    var zones = [].slice.call(pad.querySelectorAll('.zone'));
-
-    /* A touchscreen has no press-and-hold worth measuring, so the pad is not
-       offered at all rather than offered and then failing. */
-    if (!R.supported()) {
-      live.style.display = 'none';
-      bGo.style.display = bAgain.style.display = bOff.style.display = 'none';
-      rsay('This one needs a mouse or a trackpad. Half of what it measures is how long ' +
-           'you hold the button down, and a tap on a screen has no such thing.', '');
-      return;
-    }
-
-    var mode = 'idle';           // idle | enrolling | checking
-    var rec = null;
-    var taken = [];              // enrolment samples so far
-    var want = 0;                // clicks the enrolment settled on
-
-    function rsay(t, kind) {
-      msg.textContent = t || '';
-      msg.className = 'pkmsg' + (kind ? ' ' + kind : '');
-    }
-
-    function drawSlots(n, filled) {
-      var out = '';
-      for (var i = 0; i < n; i++) out += '<i' + (i < filled ? " class='on'" : '') + '></i>';
-      slots.innerHTML = out;
-    }
-
-    /* The running trace. Showing the numbers as they are captured is the
-       point of the card — it is a page about what a measurement is. */
-    function drawTrace() {
-      if (!rec || !rec.length()) { trace.textContent = ''; return; }
-      var s = rec.zones().join(' ');
-      trace.textContent = s + '   ' + rec.length() + (want ? '/' + want : '') + ' clicks';
-    }
-
-    function paint() {
-      var has = R.exists();
-      var info = R.info();
-      if (mode === 'enrolling') {
-        bGo.textContent = taken.length === R.ENROL_REPEATS - 1
-          ? 'Save the pattern'
-          : 'Done — go ' + (taken.length + 1) + ' of ' + R.ENROL_REPEATS;
-        bGo.style.display = '';
-        bAgain.style.display = '';
-        bAgain.textContent = 'Start over';
-        bOff.style.display = 'none';
-      } else if (mode === 'checking') {
-        bGo.textContent = 'Check it';
-        bGo.style.display = '';
-        bAgain.style.display = '';
-        bAgain.textContent = 'Cancel';
-        bOff.style.display = 'none';
-      } else {
-        bGo.textContent = has ? 'Sign in with it' : 'Set a pattern';
-        bGo.style.display = '';
-        bAgain.style.display = has ? '' : 'none';
-        bAgain.textContent = 'Set a new one';
-        bOff.style.display = has ? '' : 'none';
-      }
-      zones.forEach(function (z) { z.disabled = (mode === 'idle'); });
-      if (mode === 'idle') {
-        drawSlots(info ? info.clicks : 0, 0);
-        trace.textContent = info
-          ? info.clicks + ' clicks, ' + info.features + ' numbers kept'
-          : '';
-      }
-    }
-
-    /* ---- capture ---- */
-    function press(zone, el, ev) {
-      if (mode === 'idle') return;
-      if (!rec) return;
-      if (!rec.press(zone)) return;
-      el.classList.add('down');
-      if (ev && ev.pointerId != null && el.setPointerCapture) {
-        try { el.setPointerCapture(ev.pointerId); } catch (e) {}
-      }
-    }
-    function release(el) {
-      if (!rec || !rec.held()) return;
-      rec.release();
-      el.classList.remove('down');
-      /* On the very first go the length is not known yet, so the row of dots
-         grows with the clicks rather than showing twelve empty ones and
-         implying that twelve is the number. */
-      drawSlots(want || Math.max(R.MIN_CLICKS, rec.length()), rec.length());
-      drawTrace();
-      if (mode === 'checking' && want && rec.length() >= want) submit();
-    }
-
-    zones.forEach(function (el) {
-      var zone = el.getAttribute('data-z');
-      el.addEventListener('pointerdown', function (e) { e.preventDefault(); press(zone, el, e); });
-      el.addEventListener('pointerup', function (e) { e.preventDefault(); release(el); });
-      el.addEventListener('pointercancel', function () { rec && rec.cancel(); el.classList.remove('down'); });
-      /* Keyboard gets the same treatment rather than a click handler: holding
-         Space has a duration too, and a click event would have none. */
-      el.addEventListener('keydown', function (e) {
-        if (e.key !== ' ' && e.key !== 'Enter') return;
-        e.preventDefault();
-        if (e.repeat) return;
-        press(zone, el, null);
-      });
-      el.addEventListener('keyup', function (e) {
-        if (e.key !== ' ' && e.key !== 'Enter') return;
-        e.preventDefault();
-        release(el);
-      });
-      el.addEventListener('click', function (e) { e.preventDefault(); });
-    });
-
-    /* ---- enrolment ---- */
-    function startEnrol() {
-      mode = 'enrolling';
-      taken = [];
-      want = 0;
-      rec = R.newRecorder();
-      drawSlots(R.MIN_CLICKS, 0);
-      trace.textContent = '';
-      rsay('Go 1 of ' + R.ENROL_REPEATS + '. Click at least ' + R.MIN_CLICKS +
-           ' times — eight is noticeably harder for somebody else to fake — then press ' +
-           'the button below. Do it the way you would actually do it.', '');
-      paint();
-    }
-
-    function takeGo() {
-      var s = rec.sample();
-      if (!s) {
-        rsay('That is only ' + rec.length() + ' clicks. It needs at least ' +
-             R.MIN_CLICKS + '.', 'bad');
-        return;
-      }
-      if (!want) want = s.seq.length;
-      taken.push(s);
-      if (taken.length < R.ENROL_REPEATS) {
-        rec = R.newRecorder();
-        drawSlots(want, 0);
-        drawTrace();
-        rsay('Go ' + (taken.length + 1) + ' of ' + R.ENROL_REPEATS +
-             '. Same pattern, same way — it is learning how much you vary, so do not try ' +
-             'to be perfect.', '');
-        paint();
-        return;
-      }
-      try {
-        var out = R.enrol(taken);
-        mode = 'idle';
-        rec = null;
-        try { if (window.NC_PASSKEY) window.NC_PASSKEY.log('Click rhythm set up', true,
-              out.clicks + ' clicks'); } catch (e) {}
-        paint();
-        rsay('Kept. ' + out.clicks + ' clicks, ' + out.features + ' numbers. Nothing left this ' +
-             'device — and because a rhythm has to be measured rather than matched, those ' +
-             'numbers are stored as numbers and not as a hash.', 'good');
-      } catch (e) {
-        rsay(e.message, 'bad');
-        startEnrol();
-      }
-    }
-
-    /* ---- checking ---- */
-    function startCheck() {
-      var wait = R.cooling();
-      if (wait > 0) {
-        rsay('Too many wrong tries. Wait ' + Math.ceil(wait / 1000) + ' seconds.', 'bad');
-        return;
-      }
-      var info = R.info();
-      mode = 'checking';
-      want = info.clicks;
-      rec = R.newRecorder();
-      drawSlots(want, 0);
-      trace.textContent = '';
-      rsay('Do your pattern — all ' + want + ' clicks. It checks itself on the last one.', '');
-      paint();
-    }
-
-    function submit() {
-      var s = rec.sample();
-      mode = 'idle';
-      rec = null;
-      var r = R.verify(s);
-      paint();
-      if (r.ok) {
-        rsay('That is you — ' + r.pct + '% match. Signed in on this browser.', 'good');
-        try { if (typeof logSkill === 'function') logSkill('biometric'); } catch (e) {}
-        return;
-      }
-      if (r.why === 'COOLING') {
-        rsay('Too many wrong tries. Wait ' + Math.ceil(r.wait / 1000) + ' seconds.', 'bad');
-      } else if (r.why === 'SEQ') {
-        rsay('That was a different left-and-right order.', 'bad');
-      } else if (r.why === 'TEMPO') {
-        rsay('Right pattern, wrong speed — that was much faster or slower than the one it ' +
-             'learned.', 'bad');
-      } else if (r.why === 'ONE_OFF') {
-        rsay('Close on most of it, but one gap was a long way out — ' + r.pct + '% overall.', 'bad');
-      } else {
-        rsay('Not close enough — ' + r.pct + '% match. It wants about 50% or better.', 'bad');
-      }
-    }
-
-    /* ---- buttons ---- */
-    bGo.onclick = function () {
-      if (mode === 'enrolling') return takeGo();
-      if (mode === 'checking') {
-        if (rec && rec.length() >= want) return submit();
-        return rsay('That is ' + (rec ? rec.length() : 0) + ' of ' + want + ' clicks.', 'bad');
-      }
-      if (R.exists()) return startCheck();
-      startEnrol();
-    };
-
-    bAgain.onclick = function () {
-      if (mode === 'idle') return startEnrol();
-      mode = 'idle'; rec = null; taken = []; want = 0;
-      paint();
-      rsay('Stopped.', '');
-    };
-
-    bOff.onclick = function () {
-      if (!confirm('Remove the click pattern from this browser?')) return;
-      R.forget();
-      mode = 'idle'; rec = null; taken = []; want = 0;
-      paint();
-      rsay('Removed. The numbers are gone from this device.', '');
-    };
-
-    paint();
-    if (R.exists()) {
-      var i = R.info();
-      rsay('A pattern is set: ' + i.clicks + ' clicks. Sign in with it, or set a new one.', '');
-    } else {
-      rsay('Nothing set yet on this browser.', '');
-    }
-  })();
-
-  /* ---- the audit list ---- */
-  var box = document.getElementById('audit');
-  var clear = document.getElementById('btnAuditClear');
-
-  function when(ms) {
-    var d = Math.round((Date.now() - ms) / 1000);
-    if (d < 60) return 'just now';
-    if (d < 3600) return Math.round(d / 60) + ' min ago';
-    if (d < 86400) return Math.round(d / 3600) + ' h ago';
-    return new Date(ms).toLocaleDateString();
-  }
-  function esc(t) { return String(t).replace(/[<>&]/g, function (m) {
-    return ({ '<':'&lt;', '>':'&gt;', '&':'&amp;' })[m]; }); }
-
-  function drawAudit() {
-    if (!box) return;
-    var rows = PK.auditRows();
-    if (!rows.length) {
-      box.innerHTML = '<div class="none">Nothing yet. Set up a passkey and this fills in.</div>';
-      if (clear) clear.style.display = 'none';
-      return;
-    }
-    if (clear) clear.style.display = 'inline-block';
-    box.innerHTML = rows.map(function (r) {
-      return '<div class="row ' + (r.ok ? 'ok' : 'no') + '">' +
-        '<span class="tag">' + (r.ok ? 'ok' : 'failed') + '</span>' +
-        '<b>' + esc(r.what) + '</b>' +
-        '<span class="when">' + when(r.at) + '</span>' +
-        (r.detail ? '<span class="why">' + esc(r.detail) + '</span>' : '') +
-      '</div>';
-    }).join('');
-  }
-  if (clear) clear.onclick = function () { PK.clearAudit(); };
-  addEventListener('nc-audit', drawAudit);
-  drawAudit();
-})();
-</script>
+<script src='biosentinel.js'></script>
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>
-<script>
-/* The page is a face for window.ncBiometric — it owns no state of its own, so
-   whatever the panel does is reflected here and nothing can disagree. */
-(function () {
-  var $ = function (id) { return document.getElementById(id); };
-
-  var SAMPLES = [
-    'go home', 'open studio', 'open the editor', 'what is trending',
-    'sign in with google', 'change the language to spanish',
-    'switch the theme to dark', 'change the vibe to gen z',
-    'edit this video with the glitch effect', 'my progress',
-    'play a game', 'copy the link', 'scroll to the top', 'what can i say'
-  ];
-
-  function drawSays() {
-    var box = $('says');
-    if (!box) return;
-    box.innerHTML = SAMPLES.map(function (s) {
-      return '<div class="say"><b></b></div>';
-    }).join('');
-    /* textContent rather than innerHTML for the phrases themselves — they are
-       data, and one day they will come from the vocabulary rather than a list
-       written here. */
-    box.querySelectorAll('.say b').forEach(function (b, i) { b.textContent = SAMPLES[i]; });
-  }
-
-  function refresh() {
-    var B = window.ncBiometric;
-    var st = $('status'), txt = $('statusTxt'), scan = $('scan');
-    if (!B) {
-      txt.textContent = 'Biometrics did not load on this page.';
-      return;
-    }
-    var inName = B.signedInName && B.signedInName();
-    if (B.isSignedIn && B.isSignedIn()) {
-      st.classList.add('on');
-      scan.classList.add('locked');
-      txt.textContent = inName ? ('Signed in as ' + inName) : 'Signed in on this device';
-    } else {
-      st.classList.remove('on');
-      scan.classList.remove('locked');
-      txt.textContent = 'Not signed in on this device';
-    }
-    var on = B.voiceOn && B.voiceOn();
-    $('btnVoiceCmd').textContent = on ? 'Stop listening' : 'Turn on listening';
-  }
-
-  function wire() {
-    var B = window.ncBiometric;
-    if (!B) { refresh(); return; }
-    $('btnFace').onclick = function () { B.enroll(); };
-    $('btnVoice').onclick = function () { B.enroll(); };
-    $('btnPanel').onclick = function () { B.open(); };
-    $('btnVoiceCmd').onclick = function () {
-      if (B.voiceOn && B.voiceOn()) B.stopVoice(); else B.startVoice();
-      setTimeout(refresh, 250);
-    };
-    /* biometric.js dispatches on document as nc:bio-<name> */
-    ['signin', 'signout', 'command'].forEach(function (ev) {
-      document.addEventListener('nc:bio-' + ev, refresh);
-    });
-    refresh();
-  }
-
-  drawSays();
-  /* biometric.js is deferred, so it may not be there on DOMContentLoaded. */
-  var tries = 0;
-  (function wait() {
-    if (window.ncBiometric || tries++ > 40) { wire(); return; }
-    setTimeout(wait, 100);
-  })();
-})();
-</script>
 </body>
 </html>

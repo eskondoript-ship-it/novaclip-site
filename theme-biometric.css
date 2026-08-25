@@ -1,34 +1,36 @@
 /* ============================================================================
-   THE BIOMETRIC ID LOOK
+   BIOSENTINEL — the uploaded design's frontend, as a stylesheet
    ============================================================================
-   The uploaded design's own visual language, read out of its source:
+   The upload is a React app built with Tailwind. This is the same frontend
+   without either: the class names are its class names, and the values behind
+   them are Tailwind's own, read off its scale rather than eyeballed.
 
-     background      slate-950 #020617, panels slate-900 #0f172a at 60%
-     borders         slate-800 #1e293b, slate-700 #334155 for the raised ones
-     accent          emerald — #34d399 for text, #10b981 for fills,
-                     with BLACK-ish slate-950 text on a filled emerald button
-     danger          rose-400 #fb7185
-     text            slate-200/300/400/500 down the scale, white at the top
-     numbers, codes  JetBrains Mono
-     body            Plus Jakarta Sans
-     motion          scanBeam, radarSweep, biometricPulse, irisDilation —
-                     copied verbatim from its index.css
+     slate-950 #020617   slate-900 #0f172a   slate-800 #1e293b
+     slate-700 #334155   slate-600 #475569   slate-500 #64748b
+     slate-400 #94a3b8   slate-300 #cbd5e1   slate-200 #e2e8f0
 
-   It is a security console: near-black, one green, and everything else grey.
-   That is a deliberate choice by whoever made it and it suits a page about
-   locks, so it is kept rather than blended into NovaClip's cyan and violet.
+     emerald-300 #6ee7b7  emerald-400 #34d399  emerald-500 #10b981
+     emerald-600 #059669
+     rose-400 #fb7185     cyan-400 #22d3ee     indigo-400 #818cf8
+     amber-400 #fbbf24
 
-   The mono face is a stack rather than a download. JetBrains Mono is another
-   80KB for the handful of places a fixed-width digit actually matters here,
-   and every desktop and phone already ships something that does the job.
+     rounded-2xl 16px   rounded-xl 12px   rounded-lg 8px
+
+   The first attempt at this recoloured NovaClip's own card grid in these
+   colours and called it done. It was not the same page. This is the page:
+   header, four telemetry tiles, a modality tab strip, a seven-and-five
+   scanner grid, the enrolled-profiles list, the mono footer, two modals.
+
+   WHAT IS DELIBERATELY NOT COPIED
+
+   The upload's numbers. It reports 74 BPM of subdermal pulse, 1200 DPI, a
+   Zurich Security Gateway and a TPM that is 100% operational, and it is a
+   prototype so that is fine. This page is wired to real WebAuthn, a real
+   AES-GCM locker and a real face descriptor, and printing an invented
+   heart rate beside those would make the true numbers unreadable as true.
+   Every tile here either shows something measured or says it is not measured.
    ========================================================================== */
 
-/* Plus Jakarta Sans is declared again here rather than shared with the other
-   skin's file. The two skins are never on the same page, so a page that loads
-   only this one would otherwise name a face nothing had fetched and quietly
-   fall back to the system sans — which is what it did until this was added.
-   Declaring it twice costs nothing: both point at the same URL and the
-   browser fetches it once. */
 @font-face {
   font-family: 'Plus Jakarta Sans';
   src: url('fonts/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
@@ -38,172 +40,722 @@
 }
 
 .bio {
-  --bio-bg:     #020617;   /* slate-950 */
-  --bio-panel:  #0f172a;   /* slate-900 */
-  --bio-panel2: #1e293b;   /* slate-800 */
+  --bio-bg:     #020617;
+  --bio-panel:  #0f172a;
+  --bio-panel2: #1e293b;
   --bio-line:   #1e293b;
-  --bio-line2:  #334155;   /* slate-700 */
-  --bio-txt:    #e2e8f0;   /* slate-200 */
-  --bio-txt2:   #cbd5e1;   /* slate-300 */
-  --bio-dim:    #94a3b8;   /* slate-400 */
-  --bio-dim2:   #64748b;   /* slate-500 */
-  --bio-em:     #34d399;   /* emerald-400 */
-  --bio-em2:    #10b981;   /* emerald-500 */
-  --bio-rose:   #fb7185;   /* rose-400 */
-  --bio-sans:   'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --bio-line2:  #334155;
+  --bio-line3:  #475569;
+  --bio-txt:    #e2e8f0;
+  --bio-txt2:   #cbd5e1;
+  --bio-dim:    #94a3b8;
+  --bio-dim2:   #64748b;
+  --bio-dim3:   #475569;
+  --bio-em:     #34d399;
+  --bio-em2:    #10b981;
+  --bio-em3:    #059669;
+  --bio-em4:    #6ee7b7;
+  --bio-rose:   #fb7185;
+  --bio-rose2:  #f43f5e;
+  --bio-cyan:   #22d3ee;
+  --bio-indigo: #818cf8;
+  --bio-amber:  #fbbf24;
+  --bio-sans:   'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --bio-mono:   'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
-  --bio-glow:   0 0 15px rgba(16, 185, 129, .35);
+  --bio-glow:   0 0 15px rgba(16, 185, 129, .25);
 }
 
 body.bio {
   background: var(--bio-bg) !important;
-  color: var(--bio-txt);
+  color: #f1f5f9;
   font-family: var(--bio-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
-.bio h1, .bio h2, .bio h3 { color: #fff; letter-spacing: -0.01em; }
-.bio code, .bio kbd, .bio samp, .bio pre, .bio .mono { font-family: var(--bio-mono); }
+body.bio *,
+body.bio *::before,
+body.bio *::after { box-sizing: border-box; }
+body.bio ::selection { background: rgba(16,185,129,.3); color: #a7f3d0; }
+body.bio code, body.bio kbd, body.bio samp, body.bio pre,
+body.bio .mono { font-family: var(--bio-mono); }
 
-/* ---- surfaces ---------------------------------------------------------- */
-.bio .card {
-  background: color-mix(in srgb, var(--bio-panel) 60%, transparent);
-  border: 1px solid var(--bio-line);
-  border-radius: 14px;
-}
-.bio .card:hover { border-color: color-mix(in srgb, var(--bio-em2) 25%, transparent); }
-.bio .spec > div { border-bottom: 1px solid color-mix(in srgb, var(--bio-line) 80%, transparent); }
-.bio .spec b { color: var(--bio-txt2); }
-.bio .spec span { color: var(--bio-dim); }
-.bio .lede, .bio .sub, .bio .hint { color: var(--bio-dim); }
+/* Its scrollbar, from its index.css. */
+body.bio ::-webkit-scrollbar { width: 6px; height: 6px; }
+body.bio ::-webkit-scrollbar-track { background: #020617; }
+body.bio ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+body.bio ::-webkit-scrollbar-thumb:hover { background: #334155; }
+.bs-noscroll::-webkit-scrollbar { display: none; }
+.bs-noscroll { scrollbar-width: none; }
 
-/* The icon tile beside each heading: emerald on a dark emerald wash, which is
-   this design's one repeated ornament. */
-.bio .card .ic {
-  background: color-mix(in srgb, var(--bio-em2) 10%, transparent) !important;
-  border: 1px solid color-mix(in srgb, var(--bio-em2) 20%, transparent);
-  color: var(--bio-em) !important;
+/* ============================================================================
+   THE PRIMITIVES ITS COMPONENTS ARE BUILT OUT OF
+   ========================================================================== */
+.bs-panel {
+  background: rgba(15, 23, 42, .6);
+  border: 1px solid rgba(30, 41, 59, .8);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
 }
-.bio .card .ic svg { stroke: var(--bio-em); }
-
-/* ---- buttons ----------------------------------------------------------- */
-.bio .go {
-  font-family: var(--bio-sans);
-  border-radius: 10px;
-  background: var(--bio-em2) !important;
-  color: #021 !important;
-  border: 0 !important;
-  font-weight: 700;
-  box-shadow: var(--bio-glow);
+.bs-inset {
+  background: rgba(2, 6, 23, .6);
+  border: 1px solid rgba(30, 41, 59, .6);
+  border-radius: 12px;
 }
-.bio .go:hover:not(:disabled) { background: var(--bio-em) !important; }
-.bio .go:disabled { opacity: .45; box-shadow: none; }
-.bio .go.alt {
-  background: transparent !important;
-  color: var(--bio-txt2) !important;
-  border: 1px solid var(--bio-line2) !important;
-  box-shadow: none;
-}
-.bio .go.alt:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--bio-em2) 40%, transparent) !important;
-  color: var(--bio-em) !important;
-}
-
-/* ---- status lines ------------------------------------------------------ */
-.bio .pkmsg { color: var(--bio-dim); font-family: var(--bio-sans); }
-.bio .pkmsg.good { color: var(--bio-em); }
-.bio .pkmsg.bad { color: var(--bio-rose); }
-
-/* ---- fields ------------------------------------------------------------ */
-.bio input, .bio textarea {
-  background: color-mix(in srgb, var(--bio-panel) 70%, #000);
-  border: 1px solid var(--bio-line2);
-  color: var(--bio-txt);
-  border-radius: 10px;
-  font-family: var(--bio-sans);
-}
-.bio input:focus, .bio textarea:focus {
-  outline: none;
-  border-color: var(--bio-em2);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, .18);
-}
-.bio ::placeholder { color: var(--bio-dim2); }
-
-/* ---- the audit trail, as a console log --------------------------------- */
-.bio .audit .row {
-  background: color-mix(in srgb, var(--bio-panel) 55%, transparent);
-  border: 1px solid var(--bio-line);
-  border-radius: 8px;
+.bs-mono {
   font-family: var(--bio-mono);
-  font-size: .82rem;
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--bio-dim2);
 }
-.bio .audit .row .tag { font-family: var(--bio-sans); border-radius: 5px; }
-.bio .audit .row.ok .tag { background: rgba(16,185,129,.14); color: var(--bio-em); }
-.bio .audit .row.no .tag { background: rgba(251,113,133,.14); color: var(--bio-rose); }
-.bio .audit .row .when, .bio .audit .row .why { color: var(--bio-dim2); }
 
-/* ---- the locker's notes ------------------------------------------------ */
-.bio ul.lknotes li {
-  background: color-mix(in srgb, var(--bio-panel) 55%, transparent);
-  border: 1px solid var(--bio-line);
+/* Its one repeated ornament: a dotted emerald circuit grid behind a panel. */
+.bs-grid-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(16,185,129,.065) 1px, transparent 1px);
+  background-size: 16px 16px;
 }
-.bio ul.lknotes .when { font-family: var(--bio-mono); color: var(--bio-dim2); }
-.bio ul.lknotes p { color: var(--bio-txt2); }
 
-/* ---- the status chip at the top ---------------------------------------- */
-.bio .status {
-  background: color-mix(in srgb, var(--bio-em2) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--bio-em2) 22%, transparent);
-  color: var(--bio-em);
+/* Buttons ---------------------------------------------------------------- */
+.bs-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--bio-sans); font-size: 12px; font-weight: 700;
+  border-radius: 12px; padding: 8px 16px; cursor: pointer;
+  border: 0; transition: background .15s, color .15s, border-color .15s, transform .1s;
 }
-.bio .status .dot { background: var(--bio-em); box-shadow: 0 0 8px var(--bio-em); }
+.bs-btn:active:not(:disabled) { transform: scale(.96); }
+.bs-btn:disabled { opacity: .5; cursor: not-allowed; }
+.bs-btn svg { width: 14px; height: 14px; flex: 0 0 auto; }
+
+.bs-btn-em { background: var(--bio-em2); color: #020617; box-shadow: 0 0 15px rgba(16,185,129,.3); }
+.bs-btn-em:hover:not(:disabled) { background: var(--bio-em); }
+.bs-btn-em6 { background: var(--bio-em3); color: #020617; box-shadow: 0 0 12px rgba(16,185,129,.25); }
+.bs-btn-em6:hover:not(:disabled) { background: var(--bio-em2); }
+
+.bs-btn-slate { background: var(--bio-panel2); color: var(--bio-txt2); font-weight: 500; }
+.bs-btn-slate:hover:not(:disabled) { background: #293548; }
+
+.bs-btn-ghost {
+  background: rgba(15,23,42,.8); color: var(--bio-txt2);
+  border: 1px solid var(--bio-line); font-weight: 500;
+}
+.bs-btn-ghost:hover:not(:disabled) { border-color: var(--bio-line2); color: #fff; }
+
+.bs-btn-danger {
+  background: #020617; color: var(--bio-dim); border: 1px solid var(--bio-line); font-weight: 500;
+}
+.bs-btn-danger:hover:not(:disabled) { background: rgba(76,5,25,.4); color: var(--bio-rose); }
+
+.bs-btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+.bs-icon-btn {
+  display: inline-grid; place-items: center; width: 32px; height: 32px;
+  border-radius: 8px; cursor: pointer; background: var(--bio-panel);
+  border: 1px solid var(--bio-line); color: var(--bio-txt2);
+  transition: background .15s, border-color .15s, color .15s;
+}
+.bs-icon-btn:hover { background: var(--bio-panel2); border-color: var(--bio-line2); }
+.bs-icon-btn svg { width: 16px; height: 16px; }
+
+/* Chips and pills -------------------------------------------------------- */
+.bs-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--bio-mono); font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em;
+  padding: 2px 6px; border-radius: 4px;
+  background: rgba(16,185,129,.1); color: var(--bio-em);
+  border: 1px solid rgba(16,185,129,.2);
+}
+.bs-chip.rose { background: rgba(244,63,94,.1); color: var(--bio-rose); border-color: rgba(244,63,94,.2); }
+.bs-chip.slate { background: var(--bio-panel2); color: var(--bio-dim); border-color: var(--bio-line2); }
+.bs-chip.amber { background: rgba(245,158,11,.1); color: var(--bio-amber); border-color: rgba(245,158,11,.2); }
+
+/* The small square icon tile that sits beside almost every heading. */
+.bs-ic {
+  display: grid; place-items: center; border-radius: 12px; flex: 0 0 auto;
+  padding: 10px; background: rgba(16,185,129,.1);
+  border: 1px solid rgba(16,185,129,.2); color: var(--bio-em);
+}
+.bs-ic svg { width: 16px; height: 16px; }
+.bs-ic.cyan   { background: rgba(6,182,212,.1);  border-color: rgba(6,182,212,.2);  color: var(--bio-cyan); }
+.bs-ic.indigo { background: rgba(99,102,241,.1); border-color: rgba(99,102,241,.2); color: var(--bio-indigo); }
+.bs-ic.rose   { background: rgba(244,63,94,.1);  border-color: rgba(244,63,94,.2);  color: var(--bio-rose); }
+
+/* ============================================================================
+   HEADER
+   ========================================================================== */
+.bs-head {
+  border-bottom: 1px solid var(--bio-line);
+  background: rgba(2,6,23,.9);
+  backdrop-filter: blur(8px);
+  position: sticky; z-index: 40;
+  padding: 14px 16px;
+}
+.bs-head-in {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.bs-brand { display: flex; align-items: center; gap: 14px; }
+.bs-shield {
+  position: relative; display: grid; place-items: center;
+  width: 40px; height: 40px; border-radius: 12px; flex: 0 0 auto;
+  background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3);
+  color: var(--bio-em); box-shadow: 0 0 15px rgba(16,185,129,.15);
+}
+.bs-shield svg { width: 20px; height: 20px; }
+.bs-shield .ping, .bs-shield .dot {
+  position: absolute; top: -4px; right: -4px;
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.bs-shield .ping { background: var(--bio-em); animation: bsPing 1.6s cubic-bezier(0,0,.2,1) infinite; }
+.bs-shield .dot { background: var(--bio-em2); }
+@keyframes bsPing { 75%, 100% { transform: scale(2); opacity: 0; } }
+
+.bs-brand h1 {
+  font-size: 16px; font-weight: 700; letter-spacing: -.02em; color: #fff;
+  display: flex; align-items: center; gap: 8px; margin: 0;
+}
+.bs-brand h1 em { font-style: normal; color: var(--bio-em); }
+.bs-brand .sub {
+  font-size: 12px; color: var(--bio-dim);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 0;
+}
+.bs-brand .sub .a { display: inline-flex; align-items: center; gap: 4px; color: var(--bio-txt2); }
+.bs-brand .sub .a svg { width: 12px; height: 12px; color: var(--bio-em); }
+.bs-brand .sub .sep { color: var(--bio-dim3); }
+.bs-brand .sub .b {
+  color: rgba(52,211,153,.9); font-family: var(--bio-mono); font-size: 11px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.bs-brand .sub .b i { width: 6px; height: 6px; border-radius: 50%; background: var(--bio-em); }
+
+.bs-head-right { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.bs-clock {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 8px;
+  background: rgba(15,23,42,.8); border: 1px solid var(--bio-line);
+  font-family: var(--bio-mono); font-size: 12px; color: var(--bio-txt2);
+}
+.bs-clock svg { width: 14px; height: 14px; color: var(--bio-em); animation: bsPulse 2s ease-in-out infinite; }
+@keyframes bsPulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+
+.bs-vaultchip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500;
+  background: rgba(15,23,42,.8); border: 1px solid var(--bio-line); color: var(--bio-dim);
+}
+.bs-vaultchip svg { width: 14px; height: 14px; color: var(--bio-dim2); }
+.bs-vaultchip.open {
+  background: rgba(16,185,129,.15); border-color: rgba(16,185,129,.4);
+  color: #6ee7b7; cursor: pointer;
+}
+.bs-vaultchip.open svg { color: var(--bio-em); }
+.bs-vaultchip.open:hover { background: rgba(16,185,129,.25); }
+.bs-vaultchip .hint { font-family: var(--bio-mono); font-size: 10px; color: rgba(52,211,153,.8); }
+
+/* ============================================================================
+   MAIN
+   ========================================================================== */
+.bs-main {
+  flex: 1; width: 100%; max-width: 1280px; margin: 0 auto;
+  padding: 24px 16px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+@media (min-width: 1024px) {
+  .bs-head { padding-left: 32px; padding-right: 32px; }
+  .bs-main { padding-left: 32px; padding-right: 32px; }
+}
+
+/* Toast ------------------------------------------------------------------ */
+.bs-toast {
+  padding: 14px; border-radius: 16px; border: 1px solid;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-size: 12px; animation: bsToastIn .3s ease-out;
+}
+@keyframes bsToastIn { from { opacity: 0; transform: translateY(-8px); } }
+.bs-toast .l { display: flex; align-items: center; gap: 10px; }
+.bs-toast .l svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.bs-toast .msg { font-weight: 500; }
+.bs-toast .x { background: none; border: 0; color: var(--bio-dim); cursor: pointer; font-size: 12px; padding: 0 4px; }
+.bs-toast .x:hover { color: #fff; }
+.bs-toast.success {
+  background: rgba(2,44,34,.7); border-color: rgba(16,185,129,.5); color: #a7f3d0;
+  box-shadow: 0 0 20px rgba(16,185,129,.2);
+}
+.bs-toast.success svg { color: var(--bio-em); }
+.bs-toast.error {
+  background: rgba(76,5,25,.7); border-color: rgba(244,63,94,.5); color: #fecdd3;
+  box-shadow: 0 0 20px rgba(244,63,94,.2);
+}
+.bs-toast.error svg { color: var(--bio-rose); }
+.bs-toast.info { background: rgba(15,23,42,.9); border-color: var(--bio-line2); color: var(--bio-txt); }
+.bs-toast.info svg { color: var(--bio-em); }
+
+/* Telemetry tiles -------------------------------------------------------- */
+.bs-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+@media (min-width: 768px) { .bs-tiles { grid-template-columns: repeat(4, 1fr); } }
+.bs-tile {
+  background: rgba(15,23,42,.6); border: 1px solid rgba(30,41,59,.8);
+  border-radius: 16px; padding: 16px; backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.bs-tile .k {
+  display: block; font-family: var(--bio-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--bio-dim2);
+}
+.bs-tile .v {
+  display: block; margin-top: 2px; font-family: var(--bio-mono);
+  font-size: 20px; font-weight: 700; color: #fff; line-height: 1.2;
+}
+.bs-tile .v.em { color: var(--bio-em); }
+.bs-tile .v.rose { color: var(--bio-rose); }
+.bs-tile .v.indigo { color: #a5b4fc; }
+.bs-tile .v.dim { color: var(--bio-dim); }
+
+/* Tab strip -------------------------------------------------------------- */
+.bs-tabs {
+  display: flex; align-items: center; gap: 8px;
+  overflow-x: auto; padding-bottom: 8px;
+}
+.bs-tab {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  padding: 10px 16px; border-radius: 16px; cursor: pointer;
+  white-space: nowrap; flex: 0 0 auto;
+  background: rgba(2,6,23,.6); border: 1px solid rgba(30,41,59,.8);
+  color: var(--bio-dim); font-family: var(--bio-sans);
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+}
+.bs-tab:hover { color: var(--bio-txt); border-color: rgba(51,65,85,.8); }
+.bs-tab .t { padding: 8px; border-radius: 12px; background: var(--bio-panel); color: var(--bio-dim); display: grid; place-items: center; }
+.bs-tab .t svg { width: 16px; height: 16px; }
+.bs-tab .lab { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.bs-tab .subl { font-size: 10px; font-family: var(--bio-mono); color: var(--bio-dim2); }
+.bs-tab[aria-selected=true] {
+  background: var(--bio-panel); border-color: rgba(16,185,129,.5); color: #fff;
+  box-shadow: 0 0 20px rgba(16,185,129,.15), 0 0 0 1px rgba(16,185,129,.3);
+}
+.bs-tab[aria-selected=true] .t { background: rgba(16,185,129,.2); color: var(--bio-em); }
+.bs-tab[aria-selected=true] .subl { color: rgba(52,211,153,.9); }
+.bs-tab .live { width: 6px; height: 6px; border-radius: 50%; background: var(--bio-em); animation: bsPulse 2s ease-in-out infinite; }
+
+/* The scanner grid: seven columns of visualiser, five of telemetry. */
+.bs-scan-grid { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
+@media (min-width: 1024px) {
+  .bs-scan-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .bs-scan-main { grid-column: span 7 / span 7; }
+  .bs-scan-side { grid-column: span 5 / span 5; }
+}
+.bs-scan-main { position: relative; overflow: hidden; padding: 24px; }
+.bs-scan-side { display: flex; flex-direction: column; gap: 16px; }
+
+.bs-scan-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 24px; position: relative; z-index: 1; }
+.bs-scan-head h2 {
+  font-size: 14px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--bio-txt); margin: 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.bs-scan-head h2 i { width: 8px; height: 8px; border-radius: 50%; background: var(--bio-em); flex: 0 0 auto; }
+.bs-scan-head p { font-size: 12px; color: var(--bio-dim); margin: 2px 0 0; }
+.bs-scan-head .spec { font-family: var(--bio-mono); font-size: 12px; text-align: right; flex: 0 0 auto; }
+.bs-scan-head .spec span { color: var(--bio-dim2); }
+.bs-scan-head .spec b { color: var(--bio-em); font-weight: 600; }
+
+/* The circular sensor housing, shared by every modality that has one. */
+.bs-sensor-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 24px 0; position: relative; z-index: 1; }
+.bs-sensor-rel { position: relative; }
+.bs-sensor-glow {
+  position: absolute; inset: -16px; border-radius: 50%;
+  background: rgba(30,41,59,.4); filter: blur(12px);
+  transition: background .7s, filter .7s;
+}
+.bs-sensor-glow.scanning { background: rgba(16,185,129,.2); filter: blur(24px); animation: bsPulse 2s ease-in-out infinite; }
+.bs-sensor-glow.ok      { background: rgba(16,185,129,.3); filter: blur(32px); }
+.bs-sensor-glow.bad     { background: rgba(244,63,94,.3);  filter: blur(32px); }
+
+.bs-bezel {
+  position: relative; width: 224px; height: 224px; border-radius: 50%;
+  background: linear-gradient(to bottom, var(--bio-panel2), #020617);
+  padding: 8px; border: 2px solid rgba(51,65,85,.7);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,.6);
+}
+.bs-glass {
+  width: 100%; height: 100%; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; cursor: pointer; user-select: none;
+  background: rgba(15,23,42,.9); border: 1px solid rgba(51,65,85,.5);
+  transition: background .3s, border-color .3s, box-shadow .3s;
+}
+.bs-glass:hover { background: rgba(20,30,50,.95); }
+.bs-glass.scanning { background: #020617; box-shadow: inset 0 0 30px rgba(16,185,129,.2); }
+.bs-glass.ok  { background: rgba(2,44,34,.4); border-color: rgba(16,185,129,.5); box-shadow: inset 0 0 30px rgba(16,185,129,.4); }
+.bs-glass.bad { background: rgba(76,5,25,.4); border-color: rgba(244,63,94,.5);  box-shadow: inset 0 0 30px rgba(244,63,94,.4); }
+.bs-glass .art { position: relative; z-index: 10; text-align: center; }
+.bs-glass .art svg {
+  width: 112px; height: 112px; margin: 0 auto; display: block;
+  color: var(--bio-dim2); transition: color .5s, transform .5s, filter .5s;
+}
+.bs-glass.scanning .art svg { color: var(--bio-em); transform: scale(1.05); filter: drop-shadow(0 0 12px rgba(16,185,129,.8)); }
+.bs-glass.ok  .art svg { color: var(--bio-em4); transform: scale(1.1);  filter: drop-shadow(0 0 16px rgba(16,185,129,.9)); }
+.bs-glass.bad .art svg { color: var(--bio-rose); transform: scale(.95); filter: drop-shadow(0 0 12px rgba(244,63,94,.8)); }
+.bs-glass .cap {
+  display: block; margin-top: 4px;
+  font-family: var(--bio-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: .03em; text-transform: uppercase; color: var(--bio-dim);
+}
+/* the concentric ridge rings */
+.bs-rings { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: .2; }
+.bs-rings i { position: absolute; border-radius: 50%; display: block; }
+.bs-rings i:nth-child(1) { width: 176px; height: 176px; border: 1px solid rgba(16,185,129,.4); }
+.bs-rings i:nth-child(2) { width: 128px; height: 128px; border: 1px solid rgba(16,185,129,.3); }
+.bs-rings i:nth-child(3) { width: 80px;  height: 80px;  border: 1px solid rgba(16,185,129,.2); }
+/* the sweeping laser */
+.bs-beam {
+  position: absolute; left: 0; right: 0; height: 4px; z-index: 20;
+  background: linear-gradient(90deg, transparent, var(--bio-em4), transparent);
+  box-shadow: 0 0 12px var(--bio-em2);
+  animation: scanBeam 2s ease-in-out infinite alternate;
+}
+
+/* Progress --------------------------------------------------------------- */
+.bs-prog { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
+.bs-prog .row { display: flex; justify-content: space-between; align-items: center; font-family: var(--bio-mono); font-size: 12px; }
+.bs-prog .row .l { color: var(--bio-dim); display: flex; align-items: center; gap: 6px; }
+.bs-prog .row .l svg { width: 14px; height: 14px; color: var(--bio-em); }
+.bs-prog .row .pct { color: var(--bio-em); font-weight: 700; }
+.bs-prog .track {
+  height: 8px; width: 100%; border-radius: 999px; overflow: hidden;
+  background: #020617; border: 1px solid var(--bio-line); padding: 1px;
+}
+.bs-prog .bar {
+  height: 100%; border-radius: 999px; width: 0;
+  background: linear-gradient(90deg, var(--bio-em3), var(--bio-em));
+  box-shadow: 0 0 10px rgba(16,185,129,.7);
+  transition: width .15s linear;
+}
+.bs-prog .bar.bad { background: var(--bio-rose2); box-shadow: 0 0 10px rgba(244,63,94,.7); }
+
+.bs-actions {
+  margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--bio-line);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  position: relative; z-index: 1;
+}
+.bs-actions .l { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Side column ------------------------------------------------------------ */
+.bs-card { padding: 20px; }
+.bs-card h3 {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--bio-txt2); display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+}
+.bs-card h3 svg { width: 16px; height: 16px; color: var(--bio-em); }
+
+.bs-tpl { display: flex; flex-direction: column; gap: 8px; }
+.bs-tpl .row {
+  padding: 12px; border-radius: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: rgba(2,6,23,.5); border: 1px solid rgba(30,41,59,.8); color: var(--bio-dim);
+  transition: background .15s, border-color .15s, color .15s;
+}
+.bs-tpl .row:hover { border-color: var(--bio-line2); color: var(--bio-txt); }
+.bs-tpl .row[aria-selected=true] { background: rgba(2,44,34,.3); border-color: rgba(16,185,129,.4); color: #a7f3d0; }
+.bs-tpl .row .n { font-size: 12px; font-weight: 600; color: #fff; }
+.bs-tpl .row .h { font-size: 10px; font-family: var(--bio-mono); color: var(--bio-dim2); }
+.bs-tpl .none { font-size: 12px; color: var(--bio-dim); padding: 4px 2px; }
+
+.bs-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.bs-metric { background: rgba(2,6,23,.6); border: 1px solid rgba(30,41,59,.6); border-radius: 12px; padding: 12px; }
+.bs-metric .k {
+  display: block; font-family: var(--bio-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--bio-dim2);
+}
+.bs-metric .v { display: block; font-family: var(--bio-mono); font-size: 18px; font-weight: 700; color: var(--bio-em); }
+.bs-metric .v.dim { color: var(--bio-dim); }
+.bs-metric .v.rose { color: var(--bio-rose); }
+/* A metric slot carrying a sentence rather than a number. Mono emerald reads
+   as a machine reading; this is prose about what a machine reading is worth,
+   and setting it in the same face made the whole honesty block look like a
+   terminal dump nobody would read. */
+.bs-metric .v.small {
+  font-family: var(--bio-sans);
+  font-size: 13px; font-weight: 400; line-height: 1.6;
+  color: var(--bio-txt2); margin-top: 4px;
+}
+.bs-metric .v.small b { color: #fff; font-weight: 700; }
+.bs-metric .v.small em { font-style: italic; color: var(--bio-em); }
+
+.bs-diag {
+  padding: 12px; border-radius: 12px; font-size: 12px;
+  display: flex; align-items: flex-start; gap: 10px;
+  background: rgba(2,6,23,.4); border: 1px solid rgba(30,41,59,.6); color: var(--bio-dim);
+}
+.bs-diag svg { width: 16px; height: 16px; flex: 0 0 auto; margin-top: 2px; color: var(--bio-dim2); }
+.bs-diag b { display: block; color: var(--bio-txt); font-weight: 600; }
+.bs-diag span { display: block; margin-top: 2px; font-size: 11px; color: var(--bio-dim); }
+.bs-diag.ok  { background: rgba(2,44,34,.3); border-color: rgba(16,185,129,.3); color: #6ee7b7; }
+.bs-diag.ok svg { color: var(--bio-em); }
+.bs-diag.bad { background: rgba(76,5,25,.3); border-color: rgba(244,63,94,.3); color: #fda4af; }
+.bs-diag.bad svg { color: var(--bio-rose); }
+
+/* ============================================================================
+   PROFILES OVERVIEW
+   ========================================================================== */
+.bs-profiles { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.bs-profiles .top {
+  display: flex; flex-direction: column; gap: 12px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--bio-line);
+}
+@media (min-width: 640px) { .bs-profiles .top { flex-direction: row; align-items: center; justify-content: space-between; } }
+.bs-profiles h2 {
+  font-size: 14px; font-weight: 700; color: #fff; margin: 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.bs-profiles h2 svg { width: 16px; height: 16px; color: var(--bio-em); }
+.bs-profiles .top p { font-size: 12px; color: var(--bio-dim); margin: 2px 0 0; }
+.bs-plist { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 640px)  { .bs-plist { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .bs-plist { grid-template-columns: repeat(3, 1fr); } }
+.bs-pcard {
+  background: rgba(2,6,23,.6); border: 1px solid rgba(30,41,59,.9);
+  border-radius: 12px; padding: 14px;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
+  transition: border-color .15s;
+}
+.bs-pcard:hover { border-color: var(--bio-line2); }
+.bs-pcard .a { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.bs-pcard .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.bs-pcard .who .bs-ic { padding: 8px; border-radius: 8px; }
+.bs-pcard h3 { font-size: 12px; font-weight: 700; color: #fff; margin: 0; line-height: 1.4; }
+.bs-pcard .h { font-size: 10px; font-family: var(--bio-mono); color: var(--bio-dim2); }
+.bs-pcard .b {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding-top: 8px; border-top: 1px solid rgba(30,41,59,.7);
+  font-size: 10px; font-family: var(--bio-mono); color: var(--bio-dim);
+}
+.bs-pcard .b .go {
+  background: none; border: 0; cursor: pointer; color: var(--bio-em);
+  font-family: var(--bio-sans); font-weight: 600; font-size: 12px;
+}
+.bs-pcard .b .go:hover { color: var(--bio-em4); }
+.bs-pcard .b .del { background: none; border: 0; cursor: pointer; color: var(--bio-dim2); display: grid; place-items: center; }
+.bs-pcard .b .del:hover { color: var(--bio-rose); }
+.bs-pcard .b .del svg { width: 12px; height: 12px; }
+.bs-empty {
+  padding: 32px; text-align: center; font-size: 12px; color: var(--bio-dim2);
+  background: rgba(2,6,23,.4); border-radius: 12px; border: 1px solid var(--bio-line);
+}
+
+/* ============================================================================
+   VAULT, AUDIT
+   ========================================================================== */
+.bs-vault-locked {
+  position: relative; border-radius: 16px; border: 1px solid var(--bio-line);
+  background: rgba(2,6,23,.9); padding: 32px; text-align: center; overflow: hidden;
+}
+.bs-vault-locked .in { position: relative; z-index: 1; max-width: 28rem; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.bs-vault-locked .big {
+  width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+  background: rgba(244,63,94,.1); border: 1px solid rgba(244,63,94,.3);
+  color: var(--bio-rose); box-shadow: 0 0 20px rgba(244,63,94,.15);
+}
+.bs-vault-locked .big svg { width: 28px; height: 28px; }
+.bs-vault-locked h3 { font-size: 16px; font-weight: 700; color: #fff; margin: 0; }
+.bs-vault-locked p { font-size: 12px; color: var(--bio-dim); line-height: 1.65; margin: 0; }
+
+.bs-items { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 768px) { .bs-items { grid-template-columns: repeat(2, 1fr); } }
+.bs-item {
+  background: rgba(2,6,23,.7); border: 1px solid rgba(30,41,59,.9);
+  border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+}
+.bs-item:hover { border-color: rgba(51,65,85,.8); }
+.bs-item .a { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.bs-item .a .t { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bs-item .a .t svg { width: 16px; height: 16px; color: var(--bio-em); flex: 0 0 auto; }
+.bs-item .a .t span { font-size: 12px; font-weight: 700; color: var(--bio-txt); }
+.bs-item .val {
+  background: rgba(15,23,42,.9); border: 1px solid var(--bio-line); border-radius: 8px;
+  padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.bs-item .val .txt {
+  font-family: var(--bio-mono); font-size: 12px; color: var(--bio-txt2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; user-select: all;
+}
+.bs-item .val .btns { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.bs-item .val button { background: none; border: 0; cursor: pointer; color: var(--bio-dim); padding: 4px; display: grid; place-items: center; border-radius: 4px; }
+.bs-item .val button:hover { color: var(--bio-txt); }
+.bs-item .val button svg { width: 14px; height: 14px; }
+.bs-item .foot { display: flex; align-items: center; justify-content: space-between; font-family: var(--bio-mono); font-size: 10px; color: var(--bio-dim2); }
+.bs-item .foot button { background: none; border: 0; cursor: pointer; color: var(--bio-dim2); display: grid; place-items: center; }
+.bs-item .foot button:hover { color: var(--bio-rose); }
+.bs-item .foot button svg { width: 12px; height: 12px; }
+
+.bs-filters { display: flex; flex-direction: column; gap: 12px; }
+@media (min-width: 640px) { .bs-filters { flex-direction: row; align-items: center; justify-content: space-between; } }
+.bs-search { position: relative; width: 100%; }
+@media (min-width: 640px) { .bs-search { width: 18rem; } }
+.bs-search svg { width: 14px; height: 14px; color: var(--bio-dim); position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
+.bs-search input {
+  width: 100%; background: #020617; border: 1px solid var(--bio-line);
+  border-radius: 12px; padding: 7px 12px 7px 34px; font-size: 12px; color: #fff;
+  font-family: var(--bio-sans);
+}
+.bs-search input::placeholder { color: var(--bio-dim2); }
+.bs-search input:focus { outline: none; border-color: var(--bio-em2); }
+.bs-pills { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.bs-pill {
+  padding: 4px 10px; border-radius: 8px; font-size: 12px; font-family: var(--bio-mono);
+  cursor: pointer; white-space: nowrap;
+  background: rgba(2,6,23,.6); border: 1px solid var(--bio-line); color: var(--bio-dim);
+}
+.bs-pill:hover { color: var(--bio-txt); }
+.bs-pill[aria-pressed=true] { background: rgba(16,185,129,.2); border-color: rgba(16,185,129,.5); color: #6ee7b7; font-weight: 600; }
+
+.bs-logs { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
+.bs-log {
+  background: rgba(2,6,23,.7); border: 1px solid rgba(30,41,59,.8); border-radius: 12px;
+  padding: 14px; display: flex; flex-direction: column; gap: 12px; font-size: 12px;
+}
+@media (min-width: 768px) { .bs-log { flex-direction: row; align-items: center; justify-content: space-between; } }
+.bs-log:hover { border-color: rgba(51,65,85,.8); }
+.bs-log .l { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.bs-log .l .bs-ic { padding: 8px; border-radius: 8px; margin-top: 2px; }
+.bs-log .l .bs-ic svg { width: 14px; height: 14px; }
+.bs-log .nm { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bs-log .nm b { font-weight: 700; color: #fff; }
+.bs-log .note { font-size: 11px; color: var(--bio-dim); margin: 2px 0 0; }
+.bs-log .r { display: flex; align-items: center; gap: 16px; font-family: var(--bio-mono); font-size: 11px; color: var(--bio-dim); flex: 0 0 auto; }
+.bs-log .r .a { text-align: right; }
+.bs-log .r .a .x { color: var(--bio-em); font-weight: 600; }
+.bs-log .r .a .y { color: var(--bio-dim2); }
+
+/* ============================================================================
+   MODALS
+   ========================================================================== */
+.bs-modal {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(2,6,23,.8); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.bs-modal[hidden] { display: none; }
+.bs-modal .box {
+  background: var(--bio-panel); border: 1px solid var(--bio-line);
+  border-radius: 16px; max-width: 28rem; width: 100%; padding: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,.8);
+  display: flex; flex-direction: column; gap: 16px;
+  max-height: 88vh; overflow-y: auto;
+}
+.bs-modal .box.wide { max-width: 34rem; }
+.bs-modal .hd {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 8px; border-bottom: 1px solid var(--bio-line);
+}
+.bs-modal .hd h3 { font-size: 14px; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
+.bs-modal .hd h3 svg { width: 16px; height: 16px; color: var(--bio-em); }
+.bs-modal .hd button { background: none; border: 0; cursor: pointer; color: var(--bio-dim); font-size: 12px; }
+.bs-modal .hd button:hover { color: #fff; }
+.bs-field label { font-size: 12px; font-weight: 600; color: var(--bio-txt2); display: block; margin-bottom: 4px; }
+.bs-field input, .bs-field select, .bs-field textarea {
+  width: 100%; background: #020617; border: 1px solid var(--bio-line);
+  border-radius: 12px; padding: 8px 12px; font-size: 12px; color: #fff;
+  font-family: var(--bio-sans);
+}
+.bs-field textarea { font-family: var(--bio-mono); resize: vertical; }
+.bs-field input:focus, .bs-field select:focus, .bs-field textarea:focus { outline: none; border-color: var(--bio-em2); }
+.bs-field + .bs-field { margin-top: 14px; }
+.bs-modal .ft { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 8px; }
+
+.bs-switch {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px; border-radius: 12px;
+  background: rgba(2,6,23,.6); border: 1px solid rgba(30,41,59,.8);
+}
+.bs-switch .t b { display: block; font-size: 12px; font-weight: 600; color: var(--bio-txt); }
+.bs-switch .t span { display: block; font-size: 11px; color: var(--bio-dim2); margin-top: 2px; }
+.bs-switch input { width: 16px; height: 16px; accent-color: var(--bio-em2); flex: 0 0 auto; }
+
+/* ============================================================================
+   FOOTER
+   ========================================================================== */
+.bs-foot {
+  border-top: 1px solid var(--bio-panel); background: rgba(2,6,23,.8);
+  padding: 16px; font-family: var(--bio-mono); font-size: 12px;
+  color: var(--bio-dim2); text-align: center;
+}
+.bs-foot .in {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 8px;
+}
+@media (min-width: 640px) { .bs-foot .in { flex-direction: row; } }
+.bs-foot .ok { color: rgba(16,185,129,.8); }
 
 /* ============================================================================
    THE MOTION, COPIED FROM ITS index.css
-   ============================================================================
-   scanBeam is the line that travels down a scanner; radarSweep is the hand
-   going round; biometricPulse is the ring breathing while it waits. All three
-   are its own keyframes, unchanged.
-
-   The ring on this page is the site's own and it already animates, so the
-   pulse is applied to it rather than a new element being invented to carry a
-   borrowed animation.
    ========================================================================== */
-@keyframes bioScanBeam {
+@keyframes scanBeam {
   0%   { top: 0%;   opacity: .8; }
-  50%  {             opacity: 1; }
+  50%  {            opacity: 1; }
   100% { top: 100%; opacity: .8; }
 }
-@keyframes bioRadarSweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes bioPulse {
+@keyframes radarSweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes biometricPulse {
   0%, 100% { transform: scale(1);    opacity: .3; }
   50%      { transform: scale(1.08); opacity: .8; }
 }
-@keyframes bioIris {
+@keyframes irisDilation {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.15); }
 }
+.animate-scan-beam      { animation: scanBeam 2s ease-in-out infinite alternate; }
+.animate-radar-sweep    { animation: radarSweep 3s linear infinite; }
+.animate-bio-pulse      { animation: biometricPulse 2.5s ease-in-out infinite; }
+.animate-iris-dilation  { animation: irisDilation 4s ease-in-out infinite; }
 
-.bio .animate-scan-beam { animation: bioScanBeam 2s ease-in-out infinite alternate; }
-.bio .animate-radar-sweep { animation: bioRadarSweep 3s linear infinite; }
-.bio .animate-bio-pulse { animation: bioPulse 2.5s ease-in-out infinite; }
-.bio .animate-iris-dilation { animation: bioIris 4s ease-in-out infinite; }
-
-/* The scanner beam over the face ring in the hero. */
-.bio .scanwrap { position: relative; overflow: hidden; border-radius: 50%; }
-.bio .scanwrap::after {
-  content: ''; position: absolute; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--bio-em), transparent);
-  box-shadow: 0 0 12px var(--bio-em);
-  animation: bioScanBeam 2s ease-in-out infinite alternate;
-  pointer-events: none;
-}
 @media (prefers-reduced-motion: reduce) {
-  .bio .scanwrap::after,
-  .bio .animate-scan-beam, .bio .animate-radar-sweep,
-  .bio .animate-bio-pulse, .bio .animate-iris-dilation { animation: none; }
-  .bio .scanwrap::after { top: 50%; }
+  body.bio .bs-beam, body.bio .animate-scan-beam, body.bio .animate-radar-sweep,
+  body.bio .animate-bio-pulse, body.bio .animate-iris-dilation,
+  body.bio .bs-shield .ping, body.bio .bs-clock svg, body.bio .bs-tab .live {
+    animation: none;
+  }
+  body.bio .bs-beam { top: 50%; }
 }
 
-/* ---- the shared rail, restated in this palette -------------------------- */
+/* ============================================================================
+   THE CLICK-RHYTHM PAD
+   ==========================================================================
+   The upload's fourth modality is an iris scanner. There is no iris camera in
+   a browser, so that slot holds the click rhythm instead — a real measurement
+   in the place of one that could only ever have been a picture of a
+   measurement. It is dressed in the same chrome as the sensors either side.
+   ========================================================================== */
+.bs-pad { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 420px; }
+.bs-pad .zone {
+  min-height: 132px; border-radius: 16px; cursor: pointer; user-select: none;
+  font-family: var(--bio-mono); font-size: 12px; font-weight: 700; letter-spacing: .18em;
+  background: linear-gradient(to bottom, var(--bio-panel2), #020617);
+  border: 2px solid rgba(51,65,85,.7); color: var(--bio-dim);
+  display: grid; place-items: center;
+  transition: background .08s, border-color .08s, color .08s, transform .06s, box-shadow .08s;
+}
+.bs-pad .zone:hover:not(:disabled) { border-color: rgba(16,185,129,.45); color: var(--bio-em); }
+/* .down and not :active — :active drops the instant the pointer leaves the
+   button, and the press is still being timed at that moment. */
+.bs-pad .zone.down {
+  background: var(--bio-em2); border-color: transparent; color: #020617;
+  transform: scale(.985); box-shadow: 0 0 24px rgba(16,185,129,.45);
+}
+.bs-pad .zone:disabled { opacity: .45; cursor: default; }
+.bs-slots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; min-height: 12px; margin-top: 16px; }
+.bs-slots i { width: 11px; height: 11px; border-radius: 50%; display: block; border: 1px solid var(--bio-line2); }
+.bs-slots i.on { background: var(--bio-em); border-color: transparent; }
+
+/* ============================================================================
+   THE SHARED RAIL, RESTATED IN THIS PALETTE
+   ==========================================================================
+   nova.js draws NovaClip's rail on every page from its own variables. The page
+   content below is the upload's frontend; the rail is how somebody leaves it,
+   so it stays and takes these colours instead.
+   ========================================================================== */
 body.bio {
   --nc-rail1: #0b1220; --nc-rail2: #020617; --nc-rail3: #020617;
   --nc-railline: #1e293b; --nc-railglow: rgba(16,185,129,.10);
@@ -221,9 +773,31 @@ body.bio {
   --nc-cyan: #34d399;
 }
 
-/* Same trap as the other skin: --nc-navon is the text on the active pill AND
-   the text in the rail's foot cards. Dark on the pill is right; dark on the
-   cards is unreadable. */
+/* Only the box. nova.js fills it with the links, paints the background itself,
+   and pushes the page over by --nc-rail once it sees a .sidebar — but it does
+   NOT position it. The old page carried these six lines in its own <style>;
+   replacing that block dropped them, and the rail fell into normal flow and
+   shoved the whole app 560px down the page. */
+body.bio .sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: var(--nc-rail, 200px); z-index: 998;
+  display: flex; flex-direction: column; padding: 20px 0; gap: 4px;
+  overflow-y: auto;
+}
+body.bio .sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+body.bio .sidebar .themewrap label { display: block; font-size: 12px; opacity: .6; margin-bottom: 6px; }
+body.bio .sidebar select {
+  width: 100%; font: inherit; font-size: 13px; padding: 9px; border-radius: 10px;
+  background: rgba(15,23,42,.8); color: var(--bio-txt); border: 1px solid var(--bio-line2);
+}
+
+/* The app's own sticky header has to start below nova.js's fixed bar, or the
+   two of them occupy the same strip and the brand disappears under it. */
+body.bio .bs-head { top: var(--nc-bar-h, 0px); }
+body.bio .bs-app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* --nc-navon is the text ON the green active pill AND the text IN the rail's
+   foot cards. Dark is right for the pill and unreadable on the cards. */
 body.bio .sidebar #ncfoot .ncfb b { color: var(--bio-txt); }
 body.bio .sidebar #ncfoot .ncfb i { color: var(--bio-dim2); }
 body.bio .sidebar #ncfoot #nccoins,
@@ -233,70 +807,3 @@ body.bio .sidebar #ncfoot .ncfi {
   color: #021;
   box-shadow: 0 4px 16px rgba(16, 185, 129, .28);
 }
-
-/* ============================================================================
-   THE PAGE'S OWN VARIABLES, RENAMED RATHER THAN FOUGHT
-   ============================================================================
-   biometrics.html opens with a :root block naming its palette — --violet,
-   --cyan, --pink, --panel, --grad — and every rule below refers to those
-   names. Changing the seven values here recolours the whole page, including
-   the parts this file never mentions.
-
-   Set on body rather than :root: custom properties inherit downwards, so a
-   value on body shadows the one on <html> for everything inside it, whereas
-   :root is the ancestor and could not.
-
-   The two accents both become emerald, which is not a loss — this design has
-   exactly one colour and the fact that a security console looks monochrome is
-   the point of it. --pink keeps a warm slot because it marks failures, and a
-   failure that is the same green as a success is a worse page. */
-body.bio {
-  --ink:    var(--bio-bg);
-  --panel:  var(--bio-panel);
-  --line:   var(--bio-line);
-  --txt:    var(--bio-txt);
-  --dim:    var(--bio-dim);
-  --violet: var(--bio-em2);
-  --cyan:   var(--bio-em);
-  --pink:   var(--bio-rose);
-  --lime:   var(--bio-em);
-  --amber:  #fbbf24;
-  --grad:   linear-gradient(110deg, var(--bio-em2), var(--bio-em));
-}
-
-/* The scanner ring in the hero is stroked with an SVG gradient whose stops are
-   written as presentation attributes — beaten by a CSS rule of any
-   specificity. Three emeralds rather than violet, cyan and pink. */
-body.bio #nbg stop:nth-child(1) { stop-color: #10b981; }
-body.bio #nbg stop:nth-child(2) { stop-color: #34d399; }
-body.bio #nbg stop:nth-child(3) { stop-color: #6ee7b7; }
-
-/* The wash behind the face icon inside the ring, spelled out as violet rather
-   than read from a variable. */
-body.bio .scan .face {
-  background: radial-gradient(circle at 50% 35%, rgba(16, 185, 129, .28), transparent 65%);
-}
-
-/* ---- the click-rhythm pad ---------------------------------------------
-   Two slabs and a row of dots, in this design's one colour. The pressed
-   state is a filled emerald because the press is the measurement — it wants
-   to be the loudest thing on the card while it is happening. */
-body.bio .pad .zone {
-  background: color-mix(in srgb, var(--bio-panel) 70%, #000);
-  border-color: var(--bio-line2);
-  color: var(--bio-dim);
-  font-family: var(--bio-mono);
-}
-body.bio .pad .zone:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--bio-em2) 45%, transparent);
-  color: var(--bio-em);
-}
-body.bio .pad .zone.down {
-  background: var(--bio-em2);
-  border-color: transparent;
-  color: #021;
-  box-shadow: var(--bio-glow);
-}
-body.bio .rhslots i { border-color: var(--bio-line2); }
-body.bio .rhslots i.on { background: var(--bio-em); border-color: transparent; }
-body.bio .rhtrace { color: var(--bio-dim2); font-family: var(--bio-mono); }
