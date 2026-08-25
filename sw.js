@@ -80,6 +80,8 @@ const SHELL = [
   '/locker.js',
   '/rhythm.js',
   '/leaderboard.js',
+  '/tools-data.js',
+  '/tools-extra.js',
   '/teenverse.js',
   /* The lock: every page fetches it, so it has to be there offline too. */
   '/guard.js',

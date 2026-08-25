@@ -209,7 +209,7 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
 </div>
 
 <div class='wrap'>
-  <h1><span class='g'>Tools</span></h1>
+  <h1><span class="g">Tools</span></h1>
   <p class='lede'>498 small things that each do one job — 109 of them for social. Everything here runs in your browser — nothing uploads,
     nothing is saved, and it all works with the wifi off.</p>
 
@@ -217,6 +217,11 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
     <input id='q' type='search' placeholder='Search tools…' autocomplete='off'>
   </div>
   <div class='cats' id='cats'></div>
+  <!-- The count is live: it follows the search and the category filter, so it
+       says how many match rather than repeating a marketing number. -->
+  <p class='note' id='countline' style='margin:2px 2px 14px'>
+    <b id='toolcount'>0</b> tools, all of them running in this tab.
+  </p>
   <div class='grid' id='grid'></div>
   <p class='empty' id='empty' style='display:none'>Nothing matches that.</p>
 </div>
@@ -231,6 +236,8 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
   </div>
 </div>
 
+<script src='tools-data.js'></script>
+<script src='tools-extra.js'></script>
 <script>
 /* ---------------------------------------------------------------------------
    THE CATALOGUE
@@ -354,20 +361,82 @@ const CATS = [['all','All'],['text','Text'],['developer','Developer'],['images',
               ['video','Video'],['generators','Generators'],['converters','Converters'],
               ['math','Maths'],['marketing','Marketing'],['social','Social'],['ai','AI']];
 
-let cat = 'all', q = '';
+/* ============================================================================
+   THE FULL CATALOGUE — three sources, one list
+   ============================================================================
+     TOOLS            hand-built, written into this page
+     NC_TOOLS_EXTRA   hand-built, in tools-extra.js
+     NC_TOOLS         the generated conversion families, in tools-data.js
+
+   Hand-built first, always. A search for "time" has to find the timestamp
+   converter before it finds nine hundred time-zone pairs, and ordering by
+   source is the cheapest way to get that right. */
+const ALL = TOOLS
+  .concat(window.NC_TOOLS_EXTRA || [])
+  .concat(window.NC_TOOLS || []);
+
+const GEN_BY_ID = {};
+(window.NC_TOOLS || []).forEach(t => { GEN_BY_ID[t.id] = t; });
+
+/* Looked up lazily rather than merged into IMPL up front, because IMPL is a
+   const declared further down this file: an Object.assign here runs before it
+   exists and throws "cannot access IMPL before initialization". Inside a
+   function body the reference is fine, because by the time anything calls it
+   the whole script has finished parsing. */
+function implFor(id) {
+  if (IMPL[id]) return IMPL[id];
+  const extra = window.NC_TOOLS_EXTRA_IMPL && window.NC_TOOLS_EXTRA_IMPL[id];
+  if (extra) return extra;
+  const g = GEN_BY_ID[id];
+  return g && window.NC_TOOLS_IMPL ? window.NC_TOOLS_IMPL(g) : null;
+}
+
+let cat = 'all', q = '', shown = 0;
+const PAGE = 60;
 const $ = id => document.getElementById(id);
 
-function render() {
+/* Ten thousand buttons at once is a frozen tab. Only a page is ever built and
+   the rest arrive when asked for; the FILTER still runs over all ten thousand,
+   which costs a few milliseconds and is what makes the search box worth
+   having at this size. */
+function matching() {
   const term = q.trim().toLowerCase();
-  const list = TOOLS.filter(t =>
+  return ALL.filter(t =>
     (cat === 'all' || t.cat === cat) &&
     (!term || (t.name + ' ' + t.desc).toLowerCase().includes(term)));
-  $('grid').innerHTML = list.map(t =>
-    '<button class="tool' + (t.ai ? ' ai' : '') + '" data-id="' + t.id + '">' +
+}
+
+function card(t) {
+  return '<button class="tool' + (t.ai ? ' ai' : '') + '" data-id="' + t.id + '">' +
     '<b>' + t.name + '</b><p>' + t.desc + '</p>' +
-    '<span class="tag">' + (t.ai ? 'Assistant' : 'In your browser') + '</span></button>').join('');
+    '<span class="tag">' + (t.ai ? 'Assistant' : 'In your browser') + '</span></button>';
+}
+
+function render(more) {
+  const list = matching();
+  shown = more ? Math.min(list.length, shown + PAGE) : Math.min(list.length, PAGE);
+  $('grid').innerHTML = list.slice(0, shown).map(card).join('');
   $('empty').style.display = list.length ? 'none' : 'block';
-  document.querySelectorAll('.tool').forEach(b => b.onclick = () => open(b.dataset.id));
+
+  let bar = $('morebar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'morebar';
+    bar.style.cssText = 'text-align:center;margin:22px 0 8px';
+    $('grid').parentNode.insertBefore(bar, $('grid').nextSibling);
+  }
+  const left = list.length - shown;
+  bar.innerHTML = left > 0
+    ? '<button class="alt" id="moreBtn">Show ' + Math.min(PAGE, left) + ' more</button>' +
+      '<p class="note" style="margin-top:8px">Showing ' + shown + ' of ' +
+      list.length.toLocaleString() + '</p>'
+    : (list.length > PAGE ? '<p class="note">All ' + list.length.toLocaleString() + ' shown.</p>' : '');
+  const mb = $('moreBtn');
+  if (mb) mb.onclick = () => render(true);
+
+  const c = $('toolcount');
+  if (c) c.textContent = list.length.toLocaleString();
+  document.querySelectorAll('.tool').forEach(b => { b.onclick = () => open(b.dataset.id); });
 }
 $('cats').innerHTML = CATS.map(([id,n]) =>
   '<button class="cat' + (id === 'all' ? ' on' : '') + '" data-c="' + id + '">' + n + '</button>').join('');
@@ -2488,11 +2557,12 @@ function setMeta(t) {
 }
 
 function open(id, fromUrl) {
-  const t = TOOLS.find(x => x.id === id);
+  const t = ALL.find(x => x.id === id);
   if (!t) return;
   if (!fromUrl) history.pushState({ t: id }, '', toolUrl(id));
   setMeta(t);
-  const impl = t.ai ? aiTool(t) : IMPL[t.id];
+  const impl = t.ai ? aiTool(t) : implFor(t.id);
+  if (!impl) return;                    // never open a panel with nothing in it
   $('sTitle').textContent = t.name;
   $('sDesc').textContent = t.desc;
   $('sBody').innerHTML = impl.html;
