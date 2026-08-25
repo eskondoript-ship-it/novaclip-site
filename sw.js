@@ -79,6 +79,8 @@ const SHELL = [
   '/passkey.js',
   '/locker.js',
   '/rhythm.js',
+  /* The lock: every page fetches it, so it has to be there offline too. */
+  '/guard.js',
   '/biosentinel.js',
   /* The two skins, and the faces they are set in. Without the woff2 files the
      first offline visit falls back to the system sans and the page looks

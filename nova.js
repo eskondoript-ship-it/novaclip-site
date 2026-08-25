@@ -4311,8 +4311,27 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.ncAgeGate) ncAgeGate();
   }
 
-  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); ncAgeBoot(); });
-  if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); }
+  /* THE IDENTITY GATE.
+     Loaded from here rather than from a script tag on each page, for the same
+     reason the age gate lives here: twenty-nine pages, and a lock that one of
+     them forgets to carry is not a lock.
+
+     It is fetched on every page but it does nothing on most of them — the
+     first thing guard.js does is read four localStorage keys, and if none of
+     them holds an enrolment it returns without drawing anything. Somebody who
+     has never asked for a lock never meets one, and never gets asked to set
+     one up either. */
+  function ncGuardBoot() {
+    if (NC_EMBED) return;
+    if (document.getElementById('nc-guard-js')) return;
+    var s = document.createElement('script');
+    s.id = 'nc-guard-js';
+    s.src = 'guard.js';
+    document.head.appendChild(s);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); ncAgeBoot(); ncGuardBoot(); });
+  if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); ncGuardBoot(); }
 })();
 
 /* ============================================================
