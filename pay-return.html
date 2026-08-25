@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var b=localStorage.getItem('nc_skin_bg');
+var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Payment — NovaClip</title>
+<meta name='description' content='Where Stripe sends you back to after paying. It checks with the payment service before saying anything, so what it says is true.'>
+<meta name='robots' content='noindex'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+<link rel='manifest' href='/manifest.json'>
+<!-- ============================================================================
+     WHERE STRIPE SENDS YOU BACK TO
+     ============================================================================
+     This page does one thing that matters: it does NOT believe the URL.
+
+     Stripe appends ?session_id=cs_... on the way back. Anybody can type that,
+     and a page that reads it and says "thank you, here is your Pro account"
+     is a page that gives the product away to anybody who reads the address
+     bar. So the id goes to the pay worker, which asks Stripe whether that
+     session was actually paid, and only then does anything unlock.
+
+     THIS IS STILL NOT THE SOURCE OF TRUTH.
+
+     A buyer who pays and closes the tab never loads this page at all. The
+     webhook in pay-worker.js is what must eventually grant the entitlement
+     for real. What happens here is the on-device grant that every other
+     entitlement on this site already uses, done at the first honest moment.
+     ========================================================================= -->
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--nc-bg,#05070E);color:var(--nc-text,#EAF2FF);min-height:100vh;
+  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  display:grid;place-items:center;padding:24px;line-height:1.6}
+.box{width:100%;max-width:460px;text-align:center;
+  background:var(--nc-bg2,rgba(255,255,255,.04));
+  border:1px solid var(--nc-line,rgba(255,255,255,.1));border-radius:22px;padding:34px 28px}
+.ic{width:72px;height:72px;margin:0 auto 20px;border-radius:50%;display:grid;place-items:center}
+.ic svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.ic.ok{background:rgba(111,227,176,.12);border:1px solid rgba(111,227,176,.35);color:#6FE3B0}
+.ic.no{background:rgba(255,138,155,.12);border:1px solid rgba(255,138,155,.35);color:#FF8A9B}
+.ic.wait{background:rgba(0,240,255,.1);border:1px solid rgba(0,240,255,.3);color:var(--nc-cyan,#00F0FF)}
+h1{font-size:1.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+p{color:var(--nc-dim,#8B97B0);font-size:.94rem;margin-bottom:18px}
+.sum{text-align:left;background:var(--nc-bg,rgba(0,0,0,.25));border-radius:14px;padding:14px 16px;
+  margin-bottom:18px;font-size:.9rem;display:flex;flex-direction:column;gap:7px}
+.sum div{display:flex;justify-content:space-between;gap:12px}
+.sum b{color:var(--nc-dim,#8B97B0);font-weight:600}
+.sum span{text-align:right}
+.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+a.b,button.b{min-height:46px;padding:0 22px;border-radius:12px;cursor:pointer;border:0;
+  display:inline-flex;align-items:center;justify-content:center;font:800 .93rem/1 inherit;
+  text-decoration:none;background:linear-gradient(90deg,#7C5CFF,#00E5FF);color:#04121a}
+a.b.alt,button.b.alt{background:transparent;color:var(--nc-text,#EAF2FF);
+  border:1px solid var(--nc-line2,rgba(255,255,255,.18))}
+.spin{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.14);
+  border-top-color:var(--nc-cyan,#00F0FF);animation:sp .8s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.tiny{font-size:.78rem;color:var(--nc-dim2,#6B7690);margin-top:16px;line-height:1.55}
+</style>
+</head>
+<body>
+<div class='box' id='box'>
+  <div class='ic wait'><div class='spin'></div></div>
+  <h1>Checking with the payment service…</h1>
+  <p>One moment. This asks Stripe whether the payment actually went through rather than
+    taking the web address's word for it.</p>
+</div>
+
+<script>
+(function () {
+  var box = document.getElementById('box');
+  var qs = new URLSearchParams(location.search);
+  var sid = qs.get('session_id') || '';
+  var NC_PAY = '';
+  try { NC_PAY = localStorage.getItem('nc_pay_worker') || ''; } catch (e) {}
+
+  var IC = {
+    ok:   "<svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='10'/><path d='M8 12l3 3 5-6'/></svg>",
+    no:   "<svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='10'/><path d='M15 9l-6 6M9 9l6 6'/></svg>",
+    warn: "<svg viewBox='0 0 24 24'><path d='M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z'/><path d='M12 9v4M12 17h.01'/></svg>"
+  };
+
+  function esc(t) {
+    return String(t == null ? '' : t).replace(/[<>&]/g, function (m) {
+      return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[m];
+    });
+  }
+
+  function show(kind, title, body, sum, btns) {
+    box.innerHTML =
+      "<div class='ic " + kind + "'>" + (kind === 'ok' ? IC.ok : kind === 'no' ? IC.no : IC.warn) + '</div>' +
+      '<h1>' + esc(title) + '</h1>' +
+      '<p>' + body + '</p>' +
+      (sum || '') +
+      "<div class='btns'>" + btns + '</div>';
+  }
+
+  var HOME = "<a class='b' href='index.html'>Open NovaClip</a>";
+  var BACK = "<a class='b alt' href='pricing.html'>Back to pricing</a>";
+
+  if (qs.get('checkout') === 'cancelled' || !sid) {
+    return show('no', 'Nothing was paid',
+      'The checkout was closed before it finished, so no money moved and nothing has changed. ' +
+      'Your basket is still where you left it.',
+      '', BACK + HOME);
+  }
+
+  if (!NC_PAY) {
+    return show('warn', 'Cannot check this payment',
+      'The payment worker address is not set in this browser, so there is no way to ask Stripe ' +
+      'whether this went through. Nothing has been unlocked — deliberately, because guessing ' +
+      'either way would be wrong.',
+      '', BACK);
+  }
+
+  fetch(NC_PAY.replace(/\/$/, '') + '/verify?session_id=' + encodeURIComponent(sid))
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+    .then(function (res) {
+      if (!res.ok) throw new Error(res.j.message || res.j.error || 'The payment service could not answer.');
+      if (!res.j.paid) {
+        return show('no', 'That payment did not complete',
+          'Stripe says this checkout was not paid. If you think it was, check your email for a ' +
+          'receipt before trying again — and do not pay twice.',
+          '', BACK);
+      }
+
+      /* Paid. Grant it, once. */
+      var order = null;
+      try { order = JSON.parse(localStorage.getItem('nc_pending_order') || 'null'); } catch (e) {}
+
+      var already = false;
+      try {
+        var done = JSON.parse(localStorage.getItem('nc_paid_sessions') || '[]');
+        if (!Array.isArray(done)) done = [];
+        already = done.indexOf(sid) >= 0;
+        if (!already) { done.push(sid); localStorage.setItem('nc_paid_sessions', JSON.stringify(done.slice(-40))); }
+      } catch (e) {}
+
+      if (!already) {
+        try {
+          localStorage.setItem('nc_pro', '1');
+          localStorage.setItem('nc_subscription', JSON.stringify({
+            plan: res.j.plan || (order && order.plan) || 'NovaClip',
+            price: money(res.j.amount, res.j.currency),
+            cycle: (order && order.cycle) || '',
+            email: res.j.email || '',
+            method: 'Stripe',
+            session: sid,
+            started: new Date().toISOString()
+          }));
+          localStorage.removeItem('nc_cart');
+          localStorage.removeItem('nc_pending_order');
+        } catch (e) {}
+      }
+
+      var sum =
+        "<div class='sum'>" +
+          '<div><b>Plan</b><span>' + esc(res.j.plan || '—') + '</span></div>' +
+          '<div><b>Paid</b><span>' + esc(money(res.j.amount, res.j.currency)) + '</span></div>' +
+          (res.j.email ? '<div><b>Receipt to</b><span>' + esc(res.j.email) + '</span></div>' : '') +
+        '</div>';
+
+      show('ok', 'Payment confirmed',
+        'Stripe has taken the payment and it is unlocked on this device. A receipt is on its way ' +
+        'to the email address the checkout was completed with.',
+        sum, HOME + "<a class='b alt' href='pricing.html'>See what you have</a>");
+    })
+    .catch(function (e) {
+      show('warn', 'Could not check the payment',
+        esc(e.message) + '<br><br>Nothing has been unlocked here. If the money left your account, ' +
+        'the receipt from Stripe is the proof — nothing is lost, and it can be sorted out without ' +
+        'paying again.',
+        '', BACK);
+    });
+
+  /* Stripe returns the amount in the smallest unit. Three currencies here have
+     no minor unit at all, and dividing those by 100 would report a tenth of
+     what somebody actually paid. */
+  function money(amount, cur) {
+    if (amount == null) return '—';
+    cur = String(cur || '').toUpperCase();
+    var zero = ['JPY', 'KRW', 'VND', 'CLP', 'ISK'];
+    var v = zero.indexOf(cur) >= 0 ? amount : amount / 100;
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur }).format(v);
+    } catch (e) {
+      return cur + ' ' + v.toFixed(2);
+    }
+  }
+})();
+</script>
+<script src='nova.js'></script>
+</body>
+</html>

@@ -195,12 +195,16 @@ html[data-device="phone-s"] .btsave { display: none; }
 .scanframe span:nth-child(4){ bottom:0; right:0; border-left:none; border-top:none; border-radius:0 0 8px 0; }
 .scanstatus { text-align: center; font-size: .85rem; color: var(--nc-cyan,#00F0FF); margin: 12px 0; min-height: 20px; font-weight: 700; }
 
-#walletBtn { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer;
-  background: #000; color: #fff; font-size: 1.05rem; font-weight: 700; font-family: inherit;
-  display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform .2s, box-shadow .2s;
-  border: 1px solid rgba(255,255,255,0.22); }
-#walletBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.5); }
-#walletBtn.gpay { background: #fff; color: #3c4043; border-color: #dadce0; }
+/* The panel that replaces the card fields: it says where the card details
+   actually get typed, because "Continue to secure payment" without that reads
+   like the button is about to ask for them. */
+.costripe { margin: 14px 0 4px; }
+.costripe-row { display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px; border-radius: 14px;
+  background: rgba(0,240,255,0.05); border: 1px solid rgba(0,240,255,0.22); }
+.costripe-row svg { width: 22px; height: 22px; flex: 0 0 auto; color: var(--nc-cyan,#00F0FF); margin-top: 1px; }
+.costripe-row b { display: block; font-size: .95rem; color: var(--nc-text,#EAF2FF); margin-bottom: 3px; }
+.costripe-row span { display: block; font-size: .84rem; line-height: 1.55; color: var(--nc-dim,#8B97B0); }
 .walletsub { font-size: .74rem; color: var(--nc-dim,#7E8AA6); text-align: center; margin-top: 8px; line-height: 1.5; }
 .ordiv { display: flex; align-items: center; gap: 10px; margin: 18px 0 4px; color: var(--nc-dim,#7E8AA6); font-size: .74rem; }
 .ordiv::before, .ordiv::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12); }
@@ -341,7 +345,7 @@ html[data-device="phone-s"] .btsave { display: none; }
 <p id='billnote' style='text-align:center;color:#7E8AA6;font-size:0.85rem;margin:-6px auto 22px;max-width:52ch;line-height:1.6'></p>
 
 <div class='grid'>
-    <div class='plan' data-kind='sub'>
+    <div class='plan' data-plan='family' data-kind='sub'>
       <h3 data-t='fam_dash'>Family Dashboard</h3>
       <div class='price' data-eur='6.99' data-usd='7.99' data-gbp='5.99' data-cny='49.9' data-chf='6.90' data-inr='599' data-bdt='799'><small class='per' data-t='permonth'>/month</small></div>
       <ul>
@@ -352,10 +356,10 @@ html[data-device="phone-s"] .btsave { display: none; }
         <li data-t='f5'>All ads shown to parents only</li>
               <li data-t='f_shield'>Content blocking on YouTube, TikTok, Instagram and Twitch &mdash; nine categories, your own allow and block lists, and a log of what it stopped</li>
 </ul>
-      <button class='cta' onclick="alert('Secure checkout opening soon')" data-t='cta_trial'>Start free trial</button>
+      <button class='cta' data-t='cta_trial'>Start free trial</button>
     </div>
 
-    <div class='plan' data-kind='sub'>
+    <div class='plan' data-plan='tools' data-kind='sub'>
       <h3 data-t='kids_up'>Kids' Tools Upgrade</h3>
       <div class='price' data-eur='4.99' data-usd='5.99' data-gbp='4.49' data-cny='39.9' data-chf='4.90' data-inr='449' data-bdt='599'><small class='per' data-t='permonth'>/month</small></div>
       <ul>
@@ -364,10 +368,10 @@ html[data-device="phone-s"] .btsave { display: none; }
         <li data-t='f8'>Extra effects & transitions</li>
         <li data-t='f9'>Exclusive game skins</li>
       </ul>
-      <button class='cta' onclick="alert('Secure checkout opening soon')" data-t='cta_upgrade'>Upgrade tools</button>
+      <button class='cta' data-t='cta_upgrade'>Upgrade tools</button>
     </div>
 
-    <div class='plan best' data-kind='sub'>
+    <div class='plan best' data-plan='bundle' data-kind='sub'>
       <span class='tag' data-t='bestvalue'>BEST VALUE</span>
       <h3 data-t='fam_bundle'>Family Bundle</h3>
       <div class='price' data-eur='9.99' data-usd='10.99' data-gbp='8.99' data-cny='79.9' data-chf='9.90' data-inr='899' data-bdt='1199'><small class='per' data-t='permonth'>/month</small></div>
@@ -377,10 +381,10 @@ html[data-device="phone-s"] .btsave { display: none; }
         <li id='saveline' data-eur='1.99' data-usd='2.99' data-gbp='1.49' data-cny='9.9' data-chf='1.90' data-inr='150' data-bdt='200'>Save €1.99 every month</li>
         <li data-t='f12'>Priority support</li>
       </ul>
-      <button class='cta' onclick="alert('Secure checkout opening soon')" data-t='cta_bundle'>Get the bundle</button>
+      <button class='cta' data-t='cta_bundle'>Get the bundle</button>
     </div>
 
-    <div class='plan' data-kind='once'>
+    <div class='plan' data-plan='basic' data-kind='once'>
       <h3 data-t='cert_basic'>Basic Certificate</h3>
       <div class='price' data-eur='24.99' data-usd='27.99' data-gbp='21.99' data-cny='199' data-chf='24.90' data-inr='1999' data-bdt='2799'><small class='per once' data-t='peronce'> one-time</small></div>
       <ul>
@@ -389,10 +393,10 @@ html[data-device="phone-s"] .btsave { display: none; }
         <li data-t='f15'>Shareable on socials & CVs</li>
         <li data-t='f16'>Verified badge on your profile</li>
       </ul>
-      <button class='cta' onclick="alert('Secure checkout opening soon')" data-t='cta_basic'>Get Basic</button>
+      <button class='cta' data-t='cta_basic'>Get Basic</button>
     </div>
 
-    <div class='plan' data-kind='once'>
+    <div class='plan' data-plan='advanced' data-kind='once'>
       <h3 data-t='cert_adv'>Advanced Certificate</h3>
       <div class='price' data-eur='49.99' data-usd='54.99' data-gbp='44.99' data-cny='399' data-chf='49.90' data-inr='3999' data-bdt='5499'><small class='per once' data-t='peronce'> one-time</small></div>
       <ul>
@@ -401,10 +405,10 @@ html[data-device="phone-s"] .btsave { display: none; }
         <li data-t='f18'>Portfolio review by a mentor</li>
         <li data-t='f19'>Gold verified badge</li>
       </ul>
-      <button class='cta' onclick="alert('Secure checkout opening soon')" data-t='cta_adv'>Get Advanced</button>
+      <button class='cta' data-t='cta_adv'>Get Advanced</button>
     </div>
 
-    <div class='plan best' data-kind='once'>
+    <div class='plan best' data-plan='master' data-kind='once'>
       <span class='tag' data-t='toptier'>TOP TIER</span>
       <h3 data-t='cert_master'>Master Certificate</h3>
       <div class='price' data-eur='99.99' data-usd='109.99' data-gbp='89.99' data-cny='799' data-chf='99.90' data-inr='7999' data-bdt='10999'><small class='per once' data-t='peronce'> one-time</small></div>
@@ -415,7 +419,7 @@ html[data-device="phone-s"] .btsave { display: none; }
         <li data-t='f22'>Priority support & 1:1 session</li>
         <li data-t='f23'>Platinum verified badge</li>
       </ul>
-      <button class='cta' onclick="alert('Secure checkout opening soon')" data-t='cta_master'>Get Master</button>
+      <button class='cta' data-t='cta_master'>Get Master</button>
     </div>
   </div>
 
@@ -747,112 +751,17 @@ function wirePinGate() {
 //  wallet and is unlocked with Face ID / fingerprint, exactly
 //  like tapping a terminal in a shop.
 // ============================================================
-function walletAmount() {
-  const cur = (localStorage.getItem('nc_currency') || 'eur').toUpperCase();
-  const total = CART.reduce((s, i) => s + i.unit * i.qty, 0);
-  return { currency: cur, value: (Math.round(total * 100) / 100).toFixed(2) };
-}
+/* THE IN-PAGE WALLET BUTTON IS GONE, AND IT HAD TO BE.
 
-function buildPaymentRequest() {
-  if (!window.PaymentRequest) return null;
-  const amt = walletAmount();
-  const methods = [
-    {
-      supportedMethods: 'https://apple.com/apple-pay',
-      data: {
-        version: 3,
-        merchantIdentifier: 'merchant.com.novaclip',   // replace with your real Apple merchant ID
-        merchantCapabilities: ['supports3DS'],
-        supportedNetworks: ['visa', 'masterCard', 'amex'],
-        countryCode: 'PT'
-      }
-    },
-    {
-      supportedMethods: 'https://google.com/pay',
-      data: {
-        environment: 'TEST',
-        apiVersion: 2, apiVersionMinor: 0,
-        allowedPaymentMethods: [{
-          type: 'CARD',
-          parameters: { allowedAuthMethods: ['PAN_ONLY','CRYPTOGRAM_3DS'], allowedCardNetworks: ['VISA','MASTERCARD'] },
-          tokenizationSpecification: {
-            type: 'PAYMENT_GATEWAY',
-            parameters: { gateway: 'stripe', 'stripe:version': '2023-10-16', 'stripe:publishableKey': 'pk_test_REPLACE_ME' }
-          }
-        }],
-        merchantInfo: { merchantName: 'NovaClip' }
-      }
-    },
-    { supportedMethods: 'basic-card', data: { supportedNetworks: ['visa','mastercard','amex'] } }
-  ];
-  const details = {
-    total: { label: 'NovaClip', amount: { currency: amt.currency, value: amt.value } },
-    displayItems: CART.map(i => ({
-      label: i.name + (i.qty > 1 ? ' ×' + i.qty : ''),
-      amount: { currency: amt.currency, value: (Math.round(i.unit * i.qty * 100) / 100).toFixed(2) }
-    }))
-  };
-  try {
-    return new PaymentRequest(methods, details, { requestPayerEmail: true, requestPayerName: true });
-  } catch (e) { return null; }
-}
+   It called PaymentRequest, then resp.complete('success'), then grantPro() —
+   so tapping Apple Pay handed out every entitlement without a single penny
+   moving. Its own comment said so: "A real charge needs the token sent to
+   Stripe from a server. Without that we accept it as a completed demo
+   payment." That is a button that gives the product away.
 
-async function setupWallet() {
-  const zone = document.getElementById('walletZone');
-  if (!zone) return;
-  zone.style.display = 'none';
-  if (!window.PaymentRequest || !CART.length) return;
-
-  const pr = buildPaymentRequest();
-  if (!pr) return;
-  let can = false;
-  try { can = await pr.canMakePayment(); } catch (e) { can = false; }
-  if (!can) return;                      // no wallet set up on this device
-
-  // label the button for the platform
-  const isApple = /iPhone|iPad|Macintosh/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
-  const btn = document.getElementById('walletBtn');
-  document.getElementById('walletIcon').textContent = isApple ? '\uf8ff' : 'G';
-  document.getElementById('walletLabel').textContent = isApple ? 'Pay' : 'Pay';
-  btn.classList.toggle('gpay', !isApple);
-  zone.style.display = 'block';
-
-  btn.onclick = async () => {
-    const req = buildPaymentRequest();
-    if (!req) return;
-    try {
-      const resp = await req.show();
-      // A real charge needs the token sent to Stripe from a server.
-      // Without that we accept it as a completed demo payment.
-      await resp.complete('success');
-      const amt = walletAmount();
-      const sub = {
-        plan: CART.length === 1 ? CART[0].name : CART.length + ' items',
-        price: amt.currency + ' ' + amt.value,
-        cycle: CART.some(i => i.sub) ? (billCycle === 'year' ? 'Yearly' : 'Monthly') : 'One-time payment',
-        email: resp.payerEmail || '(wallet)',
-        last4: 'wallet', exp: '—', method: 'Apple Pay / Google Pay',
-        started: new Date().toISOString()
-      };
-      localStorage.setItem('nc_subscription', JSON.stringify(sub));
-      const boughtItems = CART.slice();
-      grantPro(boughtItems);
-      CART = []; saveCart();
-      issueCertificates(boughtItems);
-      document.getElementById('coSentTo').textContent = sub.email;
-      document.getElementById('coSummary').innerHTML =
-        '<div><b>Plan:</b> ' + sub.plan + '</div>' +
-        '<div><b>Billing:</b> ' + sub.cycle + '</div>' +
-        '<div><b>Amount:</b> ' + sub.price + '</div>' +
-        '<div><b>Paid with:</b> ' + sub.method + '</div>';
-      document.getElementById('coStep1').style.display = 'none';
-      document.getElementById('coStep2').style.display = 'block';
-    } catch (e) {
-      // user cancelled — nothing to do
-    }
-  };
-}
-
+   Nothing is lost by removing it. Stripe's hosted Checkout offers Apple Pay
+   and Google Pay by itself, on any device that has one set up, and those ones
+   actually take the money. */
 
 // ============================================================
 //  CERTIFICATE ISSUING — shown right after a certificate is bought
@@ -886,8 +795,13 @@ function holderName() {
     const y = JSON.parse(localStorage.getItem('nc_yt') || 'null');
     if (y && y.channel) return String(y.channel).toUpperCase();
   } catch (e) {}
-  const typed = ((document.getElementById('coName2') || {}).value || '').trim();
-  if (typed) return typed.toUpperCase();
+  /* There is no cardholder field any more — the name is typed on Stripe's
+     page. The channel name is the better source anyway, and the fallback is
+     what it always was. */
+  try {
+    const n = localStorage.getItem('nc_name');
+    if (n) return String(n).toUpperCase();
+  } catch (e) {}
   return 'NOVACLIP CREATOR';
 }
 
@@ -1081,339 +995,115 @@ function openCheckout(planName, priceText, cycle) {
   document.getElementById('coStep2').style.display = 'none';
   document.getElementById('coErr').textContent = '';
   document.getElementById('checkout').classList.add('show');
-  setupWallet();
 }
 window.closeCheckout = function () { document.getElementById('checkout').classList.remove('show'); };
 
-function luhn(num) {
-  const d = num.replace(/\D/g, '');
-  if (d.length < 13) return false;
-  let sum = 0, alt = false;
-  for (let i = d.length - 1; i >= 0; i--) {
-    let n = parseInt(d[i], 10);
-    if (alt) { n *= 2; if (n > 9) n -= 9; }
-    sum += n; alt = !alt;
-  }
-  return sum % 10 === 0;
-}
+/* The card scanner and the Luhn check used to live here — about 250 lines that
+   pulled a Tesseract OCR build from a CDN so somebody could point a camera at a
+   card and have the number typed into this page.
 
+   All of it is gone with the card fields. Not because it did not work, but
+   because its entire purpose was to get a PAN into a static page on GitHub
+   Pages, and that is the one thing this page must never do. Stripe's page
+   collects the card now, and on a phone the camera scan is built into the
+   browser's own autofill anyway. */
 
-// ============================================================
-//  CARD CAMERA SCANNER
-//  Reads the card locally with OCR. Nothing is uploaded.
-// ============================================================
-let scanStream = null, scanTimer = null, ocrWorker = null, ocrReady = false;
-let scanFound = { number: '', exp: '', name: '' };
-let scanPass = 0;
+/* ---------------------------------------------------------------------------
+   THE REAL CHECKOUT
+   ---------------------------------------------------------------------------
+   Point this at the deployed pay-worker. It is a URL and not a key, so it
+   belongs in the page; the Stripe SECRET lives on the worker and nothing here
+   has ever seen it. See the header of pay-worker.js.
 
-window.closeScanner = function () {
-  document.getElementById('scanner').classList.remove('show');
-  if (scanTimer) { clearInterval(scanTimer); scanTimer = null; }
-  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
-};
+   Left empty on purpose until the worker is deployed. Empty means the button
+   says so plainly rather than throwing at a blank address. */
+const NC_PAY = localStorage.getItem('nc_pay_worker') || '';
 
-function setScanStatus(msg) { const el = document.getElementById('scanStatus'); if (el) el.textContent = msg; }
-
-async function loadOCR() {
-  if (ocrReady) return true;
-  setScanStatus('Loading reader…');
-  try {
-    if (!window.Tesseract) {
-      await new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
-    }
-    ocrWorker = await Tesseract.createWorker('eng');
-    // letters AND digits so we can read the name and expiry too
-    await ocrWorker.setParameters({
-      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/- ',
-      preserve_interword_spaces: '1'
-    });
-    ocrReady = true;
-    return true;
-  } catch (e) {
-    console.warn('OCR unavailable', e);
-    return false;
-  }
-}
-
-async function openScanner() {
-  const box = document.getElementById('scanner');
-  box.classList.add('show');
-  setScanStatus('Starting camera…');
-  scanFound = { number: '', exp: '', name: '' };
-  scanPass = 0;
-  // must be a secure context (https) — cameras are blocked on plain http
-  if (!window.isSecureContext && location.protocol !== 'file:') {
-    setScanStatus('Camera needs a secure (https) connection.');
-    return;
-  }
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    setScanStatus('This browser does not support camera access.');
-    return;
-  }
-
-  // try the rear camera first, then any camera at all
-  const camModes = [
-    { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false },
-    { video: { facingMode: 'environment' }, audio: false },
-    { video: true, audio: false }
-  ];
-  let lastErr = null;
-  for (const c of camModes) {
-    try { scanStream = await navigator.mediaDevices.getUserMedia(c); break; }
-    catch (e) { lastErr = e; }
-  }
-
-  if (!scanStream) {
-    const n = lastErr && lastErr.name ? lastErr.name : '';
-    let msg = 'Camera unavailable — type the details instead.';
-    if (n === 'NotAllowedError' || n === 'SecurityError') {
-      msg = 'Camera blocked. Allow camera access in your browser, then try again.';
-    } else if (n === 'NotFoundError' || n === 'DevicesNotFoundError') {
-      msg = 'No camera found on this device — type the details instead.';
-    } else if (n === 'NotReadableError' || n === 'TrackStartError') {
-      msg = 'Camera is in use by another app. Close it and try again.';
-    }
-    setScanStatus(msg);
-    return;
-  }
-
-  try {
-    const v = document.getElementById('scanVideo');
-    v.srcObject = scanStream;
-    await v.play();
-  } catch (e) {
-    setScanStatus('Could not start the camera preview — type the details instead.');
-    return;
-  }
-
-  const ok = await loadOCR();
-  if (!ok) { setScanStatus('Reader unavailable — type the details instead.'); return; }
-
-  setScanStatus('Hold the card steady…');
-  let attempts = 0;
-  scanTimer = setInterval(async () => {
-    attempts++;
-    await readWholeCard();
-
-    // report progress on each field as it is captured
-    const miss = [];
-    if (!scanFound.number) miss.push('number');
-    if (!scanFound.exp) miss.push('expiry');
-    if (!scanFound.name) miss.push('name');
-    if (miss.length && miss.length < 3) setScanStatus('Reading… still looking for ' + miss.join(' + '));
-    else if (!miss.length) setScanStatus('Got everything');
-
-    // finish once we have the number plus at least one other field, or on timeout
-    const done = scanFound.number && scanFound.exp && scanFound.name;
-    if (done || (scanFound.number && attempts > 26) || attempts > 45) {
-      clearInterval(scanTimer); scanTimer = null;
-      if (!scanFound.number) { setScanStatus('Could not read it — try better lighting, or type it in.'); return; }
-      applyScan();
-    }
-  }, 900);
-}
-
-// fill whatever we managed to read into the form
-function applyScan() {
-  const parts = [];
-  if (scanFound.number) {
-    document.getElementById('coCard').value = scanFound.number.replace(/(.{4})/g, '$1 ').trim();
-    parts.push('number');
-  }
-  if (scanFound.exp) { document.getElementById('coExp').value = scanFound.exp; parts.push('expiry'); }
-  if (scanFound.name) { document.getElementById('coName2').value = scanFound.name; parts.push('name'); }
-  setScanStatus('Captured ' + parts.join(', '));
-  setTimeout(closeScanner, 900);
-}
-
-// read the WHOLE card: number, expiry and cardholder name.
-// Cards vary hugely, so we try several crops and several contrast levels.
-// Sharpen then ADAPTIVE-threshold a crop. Adaptive beats a single global cutoff
-// because cards have gradients, holograms and glare across their surface.
-function grab(v, cv, x0, y0, w0, h0, opts) {
-  opts = opts || {};
-  const scale = opts.scale || 3;
-  const cw = v.videoWidth * w0, ch = v.videoHeight * h0;
-  cv.width = Math.round(cw * scale);
-  cv.height = Math.round(ch * scale);
-  const g = cv.getContext('2d', { willReadFrequently: true });
-  g.imageSmoothingEnabled = true;
-  g.imageSmoothingQuality = 'high';
-  g.drawImage(v, v.videoWidth * x0, v.videoHeight * y0, cw, ch, 0, 0, cv.width, cv.height);
-
-  const W = cv.width, H = cv.height;
-  const img = g.getImageData(0, 0, W, H);
-  const d = img.data;
-
-  // 1) greyscale
-  const grey = new Float32Array(W * H);
-  for (let i = 0, p = 0; i < d.length; i += 4, p++) {
-    grey[p] = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-  }
-
-  // 2) unsharp mask — makes embossed digits stand out
-  if (opts.sharpen !== false) {
-    const sharp = new Float32Array(W * H);
-    for (let y = 1; y < H - 1; y++) {
-      for (let x = 1; x < W - 1; x++) {
-        const p = y * W + x;
-        const blur = (grey[p-1] + grey[p+1] + grey[p-W] + grey[p+W] + grey[p]) / 5;
-        sharp[p] = grey[p] + (grey[p] - blur) * 1.6;
-      }
-    }
-    grey.set(sharp);
-  }
-
-  // 3) adaptive threshold using a box mean over a local window
-  const win = Math.max(9, Math.round(Math.min(W, H) / 22)) | 1;
-  const half = (win - 1) / 2;
-  const bias = opts.bias != null ? opts.bias : 8;
-  // integral image for fast local means
-  const integ = new Float64Array((W + 1) * (H + 1));
-  for (let y = 0; y < H; y++) {
-    let rowSum = 0;
-    for (let x = 0; x < W; x++) {
-      rowSum += grey[y * W + x];
-      integ[(y + 1) * (W + 1) + (x + 1)] = integ[y * (W + 1) + (x + 1)] + rowSum;
-    }
-  }
-  for (let y = 0; y < H; y++) {
-    const y0i = Math.max(0, y - half), y1i = Math.min(H - 1, y + half);
-    for (let x = 0; x < W; x++) {
-      const x0i = Math.max(0, x - half), x1i = Math.min(W - 1, x + half);
-      const area = (y1i - y0i + 1) * (x1i - x0i + 1);
-      const sum = integ[(y1i+1)*(W+1) + (x1i+1)] - integ[y0i*(W+1) + (x1i+1)]
-                - integ[(y1i+1)*(W+1) + x0i]   + integ[y0i*(W+1) + x0i];
-      const mean = sum / area;
-      const p = y * W + x;
-      let val = grey[p] > (mean - bias) ? 255 : 0;
-      if (opts.invert) val = 255 - val;
-      const i4 = p * 4;
-      d[i4] = d[i4+1] = d[i4+2] = val; d[i4+3] = 255;
-    }
-  }
-  g.putImageData(img, 0, 0);
-  return cv;
-}
-
-// Tesseract page-segmentation modes: 6 = block of text, 7 = single line, 11 = sparse
-async function ocr(cv, psm) {
-  try {
-    if (psm != null) await ocrWorker.setParameters({ tessedit_pageseg_mode: String(psm) });
-    const r = await ocrWorker.recognize(cv);
-    return (r.data && r.data.text) || '';
-  } catch (e) { return ''; }
-}
-
-async function readWholeCard() {
-  const v = document.getElementById('scanVideo');
-  if (!v.videoWidth) return;
-  const cv = document.getElementById('scanCanvas');
-
-  // vary the threshold bias and polarity between ticks so different card
-  // finishes (matte, glossy, dark, metal) all get a fair attempt
-  const BIAS = [4, 10, 18];
-  const bias = BIAS[scanPass % BIAS.length];
-  const invert = (scanPass % (BIAS.length * 2)) >= BIAS.length;
-  scanPass++;
-
-  // --- NUMBER: the middle band, read as a single line ---
-  if (!scanFound.number) {
-    const c1 = grab(v, cv, 0.06, 0.34, 0.88, 0.22, { scale: 3, bias: bias, invert: invert });
-    const t1 = (await ocr(c1, 7)).toUpperCase();
-    const n = parseNumber(t1);
-    if (n) scanFound.number = n;
-    else {
-      // fall back to the whole card as a text block
-      const c2 = grab(v, cv, 0.06, 0.10, 0.88, 0.80, { scale: 2, bias: bias, invert: invert });
-      const t2 = (await ocr(c2, 6)).toUpperCase();
-      const n2 = parseNumber(t2);
-      if (n2) scanFound.number = n2;
-      if (!scanFound.exp) { const e = parseExpiry(t2); if (e) scanFound.exp = e; }
-      if (!scanFound.name) { const nm = parseName(t2); if (nm) scanFound.name = nm; }
-    }
-  }
-
-  // --- EXPIRY: small print under the number, sparse-text mode ---
-  if (!scanFound.exp) {
-    const c3 = grab(v, cv, 0.30, 0.52, 0.50, 0.20, { scale: 4, bias: bias, invert: invert });
-    const t3 = (await ocr(c3, 11)).toUpperCase();
-    const e = parseExpiry(t3);
-    if (e) scanFound.exp = e;
-  }
-
-  // --- NAME: bottom strip, single line, heavily upscaled ---
-  if (!scanFound.name) {
-    const c4 = grab(v, cv, 0.06, 0.70, 0.72, 0.18, { scale: 4, bias: bias, invert: invert });
-    const t4 = (await ocr(c4, 7)).toUpperCase();
-    const nm = parseName(t4);
-    if (nm) scanFound.name = nm;
-  }
-}
-
-function wireScanner() {
-  const b = document.getElementById('scanBtn');
-  if (b) b.onclick = openScanner;
-  // hide the hint on desktops without a camera
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    const sb = document.getElementById('scanBtn'); if (sb) sb.style.display = 'none';
-    const sh = document.getElementById('scanHint'); if (sh) sh.style.display = 'none';
-  }
+function planIdFor(name) {
+  /* The cart carries display names; the worker knows ids. The plan cards
+     carry data-plan, so the id comes from the DOM rather than from matching
+     translated strings — this page ships in twenty languages and matching on
+     "Family Bundle" would break in every one of them but English. */
+  const card = [...document.querySelectorAll('.plan')].find(c => {
+    const h = c.querySelector('h3');
+    return h && h.textContent.trim() === String(name).trim();
+  });
+  return card ? card.getAttribute('data-plan') : null;
 }
 
 function initCheckout() {
   wireCartPay();
   wirePinGate();
-  wireScanner();
   updateCartCount();
-  const cardEl = document.getElementById('coCard');
-  if (!cardEl) return;
-  cardEl.oninput = (e) => {
-    const v = e.target.value.replace(/\D/g, '').slice(0, 16);
-    e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
-  };
-  document.getElementById('coExp').oninput = (e) => {
-    const v = e.target.value.replace(/\D/g, '').slice(0, 4);
-    e.target.value = v.length > 2 ? v.slice(0, 2) + '/' + v.slice(2) : v;
-  };
-  document.getElementById('coPay').onclick = () => {
-    const err = document.getElementById('coErr');
-    const email = document.getElementById('coEmail').value.trim();
-    const nm = document.getElementById('coName2').value.trim();
-    const card = document.getElementById('coCard').value.trim();
-    const exp = document.getElementById('coExp').value.trim();
-    const cvc = document.getElementById('coCvc').value.trim();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = 'Enter a valid parent email.'; return; }
-    if (nm.length < 3) { err.textContent = 'Enter the cardholder name.'; return; }
-    if (!luhn(card)) { err.textContent = 'That card number is not valid.'; return; }
-    if (!/^\d{2}\/\d{2}$/.test(exp)) { err.textContent = 'Expiry must be MM/YY.'; return; }
-    if (!/^\d{3,4}$/.test(cvc)) { err.textContent = 'CVC must be 3 or 4 digits.'; return; }
-    const sub = { plan: coCurrent.plan, price: coCurrent.price, cycle: coCurrent.cycle,
-      email: email, last4: card.replace(/\D/g, '').slice(-4), exp: exp, started: new Date().toISOString() };
-    localStorage.setItem('nc_subscription', JSON.stringify(sub));
-    grantPro(CART.length ? CART.slice() : [{ name: coCurrent.plan }]);
-    document.getElementById('coSentTo').textContent = email;
-    document.getElementById('coSummary').innerHTML =
-      '<div><b>Plan:</b> ' + sub.plan + '</div>' +
-      '<div><b>Billing:</b> ' + sub.cycle + '</div>' +
-      '<div><b>Amount:</b> ' + sub.price + '</div>' +
-      '<div><b>Card:</b> \u2022\u2022\u2022\u2022 ' + sub.last4 + '</div>';
-    issueCertificates(CART);
-    CART = []; saveCart();
-    document.getElementById('coStep1').style.display = 'none';
-    document.getElementById('coStep2').style.display = 'block';
-  };
+
+  const pay = document.getElementById('coPay');
+  if (pay) pay.onclick = startStripeCheckout;
+
   document.querySelectorAll('.plan').forEach(card => {
     const btn = card.querySelector('button, .btn');
     if (!btn) return;
     btn.onclick = (e) => { e.preventDefault(); addToCart(card); };
   });
 }
+
+async function startStripeCheckout() {
+  const err = document.getElementById('coErr');
+  const btn = document.getElementById('coPay');
+  const email = (document.getElementById('coEmail').value || '').trim();
+  err.textContent = '';
+
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    err.textContent = 'That email does not look right. Leave it blank and Stripe will ask.';
+    return;
+  }
+
+  const plan = planIdFor(coCurrent && coCurrent.plan) ||
+               (CART.length === 1 ? planIdFor(CART[0].name) : null);
+  if (!plan) {
+    err.textContent = 'Could not work out which plan this is. Pick one plan at a time for now.';
+    return;
+  }
+
+  if (!NC_PAY) {
+    /* Honest, and actionable. The alternative is a button that appears to do
+       nothing, which is how somebody concludes the site is broken. */
+    err.innerHTML = 'Payments are not switched on yet — the payment worker has not been ' +
+      'deployed. See <code>pay-worker.js</code> for the four steps, then run<br>' +
+      "<code>localStorage.setItem('nc_pay_worker','https://your-worker.workers.dev')</code>";
+    return;
+  }
+
+  btn.disabled = true;
+  const was = btn.textContent;
+  btn.textContent = 'Opening Stripe…';
+  try {
+    const res = await fetch(NC_PAY.replace(/\/$/, '') + '/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: plan, currency: (CUR || 'eur'), email: email || undefined })
+    });
+    const out = await res.json();
+    if (!res.ok || !out.url) {
+      err.textContent = out.message || out.error || 'The payment service refused the request.';
+      btn.disabled = false; btn.textContent = was;
+      return;
+    }
+    /* Remember what is being bought so the return page can grant it. The
+       session id in the URL is what proves it was paid for; this is only the
+       shopping list. */
+    try {
+      localStorage.setItem('nc_pending_order', JSON.stringify({
+        plan: plan, cart: CART.slice(), cycle: coCurrent ? coCurrent.cycle : '',
+        price: coCurrent ? coCurrent.price : '', at: Date.now()
+      }));
+    } catch (e) {}
+    location.href = out.url;
+  } catch (e) {
+    err.textContent = 'Could not reach the payment service. Check the connection and try again.';
+    btn.disabled = false; btn.textContent = was;
+  }
+}
+
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCheckout);
 else initCheckout();
 
@@ -1483,28 +1173,28 @@ else initCheckout();
         <div><b id='coName'>Plan</b><small id='coCycle'>Monthly</small></div>
         <div class='coprice' id='coPrice'>—</div>
       </div>
-      <div id='walletZone' style='display:none'>
-        <button type='button' id='walletBtn'><span id='walletIcon'>􀣺</span> <span id='walletLabel'>Pay</span></button>
-        <div class='walletsub'>Tap to pay with your saved card — no typing, no card details entered here.</div>
-        <div class='ordiv'><span>or pay by card</span></div>
-      </div>
-
       <label class='colab'>Parent / guardian email</label>
       <input type='email' id='coEmail' name='email' autocomplete='email' placeholder='parent@example.com'>
-      <label class='colab'>Cardholder name</label>
-      <input type='text' id='coName2' name='ccname' autocomplete='cc-name' placeholder='Name on card'>
-      <label class='colab'>Card number</label>
-      <div class='cardwrap'>
-        <input type='text' id='coCard' name='cardnumber' autocomplete='cc-number' inputmode='numeric' maxlength='19' placeholder='4242 4242 4242 4242'>
-        <button type='button' id='scanBtn' title='Scan your card with the camera'></button>
+
+      <!-- No card fields. On purpose, and it is the whole design:
+           a page that touches a card number is in PCI DSS scope, and this one
+           is a static file on GitHub Pages. The number is typed on Stripe's
+           own page, on Stripe's domain, and NovaClip never sees it. Apple Pay
+           and Google Pay come along there for free. -->
+      <div class='costripe'>
+        <div class='costripe-row'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8'
+               stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>
+            <rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0110 0v4'/></svg>
+          <div>
+            <b>You will pay on Stripe</b>
+            <span>Card, Apple&nbsp;Pay or Google&nbsp;Pay. Your card details are entered on Stripe's
+              page and never touch NovaClip.</span>
+          </div>
+        </div>
       </div>
-      <div class='scanhint' id='scanHint'>Tap the camera to scan the whole card — number, expiry and name</div>
-      <div class='corow'>
-        <div><label class='colab'>Expiry</label><input type='text' id='coExp' name='ccexp' autocomplete='cc-exp' maxlength='5' placeholder='MM/YY'></div>
-        <div><label class='colab'>CVC</label><input type='text' id='coCvc' name='cvc' autocomplete='cc-csc' inputmode='numeric' maxlength='4' placeholder='123'></div>
-      </div>
-      <div class='conotice'><b>Demo checkout.</b> This does not take real payment and no card details are stored or sent anywhere. Live payments require a Stripe account and a server.</div>
-      <button class='cobtn' id='coPay'>Confirm payment</button>
+
+      <button class='cobtn' id='coPay'>Continue to secure payment</button>
       <div class='coerr' id='coErr'></div>
     </div>
     <div class='costep' id='coStep2' style='display:none'>
