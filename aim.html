@@ -203,6 +203,8 @@ function stop() {
   document.getElementById('start').textContent = 'Go again';
   overlay.style.display = 'flex';
 
+  try { if (window.NC_BOARD) NC_BOARD.submit('aim', score); } catch (e) {}
+
   let prior = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
   if (score > prior) {
     localStorage.setItem(BEST_KEY, String(score));
@@ -238,6 +240,22 @@ document.getElementById('start').addEventListener('click', start);
 
 const savedBest = localStorage.getItem(BEST_KEY);
 if (savedBest) document.getElementById('best').textContent = 'Your best so far: ' + savedBest + ' points.';
+</script>
+<script src='leaderboard.js'></script>
+<script>
+/* The live board. Mounted after the game's own markup so it lands at the
+   bottom of the page rather than above the thing you came to play. */
+(function () {
+  if (window.NC_EMBED === undefined && /[?&]embed=1/.test(location.search)) return;
+  function go() {
+    var host = document.createElement('div');
+    var main = document.querySelector('.wrap') || document.querySelector('main') || document.body;
+    main.appendChild(host);
+    NC_BOARD.mount('aim', host);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
+})();
 </script>
 </body>
 </html>

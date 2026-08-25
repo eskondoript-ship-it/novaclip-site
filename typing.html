@@ -356,5 +356,91 @@ fn distance(a: Point, b: Point) -> f64 {
     <script src="nova.js"></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>
-  </body>
+  <script src='leaderboard.js'></script>
+<script>
+/* ============================================================================
+   TYPING — the one that could not be hooked directly
+   ============================================================================
+   typing.html is a compiled bundle on one line. There is no exported function
+   to call when a race ends, and editing minified code to add one would be
+   undone by the next rebuild of it.
+
+   So this watches its own storage instead. The bundle keeps everything under
+   keys beginning "typemaster.v1." and writes them when a race finishes; this
+   reads whatever WPM it can find in them and posts the best it has seen. It
+   never writes to those keys and never assumes a shape beyond "a number
+   called wpm somewhere in there", so a rebuild that renames things degrades to
+   posting nothing rather than to posting nonsense.
+
+   One second, not four: this is a localStorage read, not a network call, and
+   it stops as soon as the tab is hidden. */
+(function () {
+  if (/[?&]embed=1/.test(location.search)) return;
+
+  function best() {
+    var top = 0;
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (!k || k.indexOf('typemaster.v1.') !== 0) continue;
+        var v;
+        try { v = JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { continue; }
+        top = Math.max(top, scan(v, 0));
+      }
+    } catch (e) {}
+    return top;
+  }
+
+  /* Walks whatever shape it finds. Depth-capped so a cyclic or huge structure
+     cannot lock the tab up for the sake of a leaderboard. */
+  function scan(v, depth) {
+    if (depth > 4 || v == null) return 0;
+    if (Array.isArray(v)) {
+      var m = 0;
+      for (var i = 0; i < v.length && i < 400; i++) m = Math.max(m, scan(v[i], depth + 1));
+      return m;
+    }
+    if (typeof v !== 'object') return 0;
+    var out = 0;
+    for (var k in v) {
+      if (!Object.prototype.hasOwnProperty.call(v, k)) continue;
+      var val = v[k];
+      if (/^(wpm|bestWpm|best_wpm|topWpm)$/i.test(k) && typeof val === 'number' &&
+          isFinite(val) && val > 0 && val < 400) {
+        out = Math.max(out, Math.round(val));
+      } else {
+        out = Math.max(out, scan(val, depth + 1));
+      }
+    }
+    return out;
+  }
+
+  var posted = 0, timer = 0;
+  function look() {
+    var b = best();
+    if (b > posted) {
+      posted = b;
+      try { localStorage.setItem('nc_typing_best', String(b)); } catch (e) {}
+      try { if (window.NC_BOARD) NC_BOARD.submit('typing', b); } catch (e) {}
+    }
+  }
+  function run() {
+    clearInterval(timer);
+    if (document.visibilityState === 'visible') timer = setInterval(look, 1000);
+  }
+  document.addEventListener('visibilitychange', run);
+  addEventListener('pagehide', function () { clearInterval(timer); });
+
+  function go() {
+    var host = document.createElement('div');
+    (document.querySelector('.wrap') || document.body).appendChild(host);
+    NC_BOARD.mount('typing', host);
+    posted = best();          // do not re-post a best that was already up there
+    run();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
+})();
+</script>
+</body>
 </html>

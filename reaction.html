@@ -245,6 +245,8 @@ function finish() {
   resultEl.classList.add('on');
   againBtn.style.display = 'inline-block';
 
+  try { if (window.NC_BOARD) NC_BOARD.submit('reaction', mid); } catch (e) {}
+
   let prior = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
   if (!prior || mid < prior) {
     localStorage.setItem(BEST_KEY, String(mid));
@@ -276,6 +278,22 @@ againBtn.addEventListener('click', () => {
 drawRuns();
 const savedBest = localStorage.getItem(BEST_KEY);
 if (savedBest) document.getElementById('best').textContent = 'Your best so far: ' + savedBest + 'ms.';
+</script>
+<script src='leaderboard.js'></script>
+<script>
+/* The live board. Mounted after the game's own markup so it lands at the
+   bottom of the page rather than above the thing you came to play. */
+(function () {
+  if (window.NC_EMBED === undefined && /[?&]embed=1/.test(location.search)) return;
+  function go() {
+    var host = document.createElement('div');
+    var main = document.querySelector('.wrap') || document.querySelector('main') || document.body;
+    main.appendChild(host);
+    NC_BOARD.mount('reaction', host);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
+})();
 </script>
 </body>
 </html>

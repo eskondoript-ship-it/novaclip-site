@@ -197,6 +197,10 @@ canvas{display:block;width:100vw;height:100vh}
       best = S.score; S.newBest = true;
       try { localStorage.setItem(BEST_KEY, best); } catch (e) {}
     }
+    /* Every run goes up, not only a personal best: the worker is the only
+       party that can see everybody's scores, so it decides what is an
+       improvement. */
+    try { if (window.NC_BOARD) NC_BOARD.submit('flap', S.score); } catch (e) {}
     ovScore.textContent = S.score;
     ovBest.textContent = best;
     bestVal.textContent = best;
@@ -417,5 +421,21 @@ canvas{display:block;width:100vw;height:100vh}
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>
+<script src='leaderboard.js'></script>
+<script>
+/* The live board. Mounted after the game's own markup so it lands at the
+   bottom of the page rather than above the thing you came to play. */
+(function () {
+  if (window.NC_EMBED === undefined && /[?&]embed=1/.test(location.search)) return;
+  function go() {
+    var host = document.createElement('div');
+    var main = document.querySelector('.wrap') || document.querySelector('main') || document.body;
+    main.appendChild(host);
+    NC_BOARD.mount('flap', host);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
+})();
+</script>
 </body>
 </html>

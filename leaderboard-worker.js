@@ -139,6 +139,46 @@ const validKey = (v) => typeof v === 'string' && /^[a-z0-9]{32}$/.test(v);
 const cleanCode = (v) => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
   .replace(/^NOVA/, '').slice(0, 8);
 
+/* ---- WHO OWNS A NAME ------------------------------------------------------
+   A name is claimed by whoever first posts under it, and after that only they
+   may use it. Without that, the boards key rows by name and anybody can
+   overwrite anybody — including by typing a real YouTube channel's title.
+
+   THE BUG THIS REPLACES, BECAUSE IT IS WORTH REMEMBERING
+
+   The claim was stored as `claimant || 'anon:' + ip` and then compared against
+   `claimant` — which is null for anybody without an account key. So the stored
+   owner was "anon:1.2.3.4" and the next comparison was against null, they were
+   not equal, and the answer was 409.
+
+   An anonymous player could post exactly ONE score under a name, ever, and was
+   then locked out of their own name with "that name belongs to another
+   player". It had been live on the arena board the whole time. A test that
+   posted the same three names to a second game is what surfaced it.
+
+   Now the anonymous identity is the thing compared, not null. And somebody who
+   played anonymously and later signs in keeps their name rather than losing it
+   to their own earlier self — the claim upgrades from the IP to the account
+   key when the same IP presents one. */
+async function nameOwner(env, name, key, ip) {
+  const nameKey = 'name:' + String(name).toLowerCase();
+  const claimant = validKey(key) ? key : 'anon:' + ip;
+  const owner = await env.DB.get(nameKey);
+
+  if (!owner) {
+    await env.DB.put(nameKey, claimant);
+    return { ok: true };
+  }
+  if (owner === claimant) return { ok: true };
+
+  // an anonymous claim from this same address, now with an account behind it
+  if (validKey(key) && owner === 'anon:' + ip) {
+    await env.DB.put(nameKey, key);
+    return { ok: true };
+  }
+  return { ok: false };
+}
+
 async function rateLimited(env, bucket, ms) {
   const seen = await env.DB.get('rl:' + bucket);
   if (seen && Date.now() - Number(seen) < ms) return true;
@@ -382,14 +422,10 @@ export default {
 
            A player with no account key can still post, but only under a name
            nobody has claimed — which is the honest trade for not signing in. */
-        const claimant = validKey(body.key) ? body.key : null;
         const wanted = cleanName(body.name);
-        const nameKey = 'name:' + wanted.toLowerCase();
-        const owner = await env.DB.get(nameKey);
-        if (owner && owner !== claimant) {
+        if (!(await nameOwner(env, wanted, body.key, ip)).ok) {
           return json({ error: 'the name "' + wanted + '" belongs to another player', taken: true }, 409);
         }
-        if (!owner) await env.DB.put(nameKey, claimant || 'anon:' + ip);
 
         const run = {
           name:   wanted,
@@ -416,6 +452,92 @@ export default {
       }
     }
 
+
+    /* ======================================================================
+       MINI-GAME SCORES  —  GET /scores?game=flap   POST /scores
+       ======================================================================
+       /board above is the arena's: it is shaped around kills, deaths and a
+       map. The four mini-games have one number each and no map, so they get
+       their own route rather than four awkward map names.
+
+       WHICH WAY IS UP IS PER GAME, AND IT MATTERS
+
+       Reaction time is the odd one out: 180ms beats 240ms. Sorting every game
+       descending would have put the slowest reflexes on top of that board and
+       nobody would have spotted it from the code, because the board would
+       still look like a board. The direction lives in GAMES below, on the
+       server, so a client cannot claim its own.
+
+       ONE ROW PER NAME
+
+       A player's entry is their best, not every attempt. Otherwise one person
+       playing all afternoon owns the whole table.
+       ==================================================================== */
+    if (path === '/scores') {
+      const GAMES = {
+        typing:   { dir: 'high', max: 400,    label: 'WPM' },
+        flap:     { dir: 'high', max: 100000, label: 'score' },
+        reaction: { dir: 'low',  max: 5000,   label: 'ms' },
+        aim:      { dir: 'high', max: 10000,  label: 'points' }
+      };
+      const cleanGame = (v) => {
+        const g = String(v || '').toLowerCase().replace(/[^a-z]/g, '');
+        return GAMES[g] ? g : null;
+      };
+      const scoreKey = (g) => 'scores:' + g;
+
+      if (request.method === 'GET') {
+        const g = cleanGame(url.searchParams.get('game'));
+        if (!g) return json({ error: 'unknown game' }, 400);
+        const rows = (await env.DB.get(scoreKey(g), 'json')) || [];
+        return json({ game: g, dir: GAMES[g].dir, label: GAMES[g].label, board: rows });
+      }
+
+      if (request.method === 'POST') {
+        const g = cleanGame(body.game);
+        if (!g) return json({ error: 'unknown game' }, 400);
+        const spec = GAMES[g];
+
+        if (await rateLimited(env, 'sc:' + g + ':' + ip, 5000)) {
+          return json({ error: 'slow down' }, 429);
+        }
+
+        /* A score is a number in range or it is nothing. 0 is a legitimate
+           score in three of these games, so this cannot use a falsy check. */
+        const raw = Number(body.score);
+        if (!Number.isFinite(raw)) return json({ error: 'score must be a number' }, 400);
+        const score = clampInt(Math.round(raw), 0, spec.max);
+
+        /* Same name rule as the arena board: the first account to play under a
+           name owns it, and after that only that account may post under it.
+           Without this, one row per name means anybody can overwrite anybody. */
+        const wanted = cleanName(body.name);
+        if (!(await nameOwner(env, wanted, body.key, ip)).ok) {
+          return json({ error: 'the name "' + wanted + '" belongs to another player', taken: true }, 409);
+        }
+
+        const rows = (await env.DB.get(scoreKey(g), 'json')) || [];
+        const better = (a, b) => (spec.dir === 'low' ? a < b : a > b);
+
+        const best = new Map();
+        for (const r of rows) {
+          const cur = best.get(r.name);
+          if (!cur || better(r.score, cur.score)) best.set(r.name, r);
+        }
+        const mine = best.get(wanted);
+        const improved = !mine || better(score, mine.score);
+        if (improved) best.set(wanted, { name: wanted, score: score, at: Date.now() });
+
+        const top = [...best.values()]
+          .sort((a, b) => (spec.dir === 'low' ? a.score - b.score : b.score - a.score) || a.at - b.at)
+          .slice(0, TOP_N);
+        await env.DB.put(scoreKey(g), JSON.stringify(top));
+
+        const rank = top.findIndex((r) => r.name === wanted) + 1;
+        return json({ ok: true, improved, rank: rank || null,
+                      dir: spec.dir, label: spec.label, board: top });
+      }
+    }
 
     // ---------- suspension status ----------
     if (path === '/me' && request.method === 'POST') {
