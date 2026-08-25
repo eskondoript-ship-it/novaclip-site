@@ -539,6 +539,123 @@ export default {
       }
     }
 
+    /* ======================================================================
+       MODERATION
+       ======================================================================
+       The worker already suspends accounts by itself for swearing and spam.
+       That catches the obvious and misses everything else — a post that is
+       cruel without a single rude word, a photo that should not be up, someone
+       being ground down in the replies. Those need a person.
+
+       WHO IS A MODERATOR
+
+       Whoever's account key is in the MOD_KEYS secret, comma separated:
+
+         wrangler secret put MOD_KEYS
+
+       Not a flag in KV, because anything in KV is written by a route and a
+       route can have a bug. A secret is changed by whoever holds the
+       Cloudflare login, which for a site aimed at 13-18s is the right bar. If
+       MOD_KEYS is unset there are no moderators and the tools say so rather
+       than letting everybody in.
+
+       WHAT A MODERATOR CAN AND CANNOT DO
+
+       Can: see the queue, hide a post, suspend an account for a day, and
+       dismiss a report. Every action is written to a log with who did it.
+
+       Cannot: read anybody's saves, see an account's recovery code, or unhide
+       something they hid without it showing in the log. A moderator is not an
+       administrator, and the difference matters when the moderators are
+       teenagers too.
+       ==================================================================== */
+    const modKeys = String(env.MOD_KEYS || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const isMod = (k) => validKey(k) && modKeys.includes(k);
+
+    /* Anybody may report. A report is a request for a human to look, so it is
+       deliberately cheap to make and rate limited rather than gated. */
+    if (path === '/report' && request.method === 'POST') {
+      if (await rateLimited(env, 'rep:' + ip, 10000)) return json({ error: 'slow down' }, 429);
+      const id = String(body.postId || '').slice(0, 64);
+      if (!id) return json({ error: 'which post?' }, 400);
+
+      const queue = (await env.DB.get('mod:queue', 'json')) || [];
+      /* One row per post. Ten people reporting the same thing is one job for a
+         moderator, not ten — but the count is what tells them it is urgent. */
+      const found = queue.find((r) => r.postId === id);
+      if (found) {
+        found.count = (found.count || 1) + 1;
+        found.at = Date.now();
+      } else {
+        queue.unshift({
+          postId: id,
+          reason: cleanName(body.reason || 'Not specified').slice(0, 60),
+          note: String(body.note || '').replace(/[ -]/g, '').slice(0, 200),
+          count: 1, at: Date.now(), state: 'open'
+        });
+      }
+      await env.DB.put('mod:queue', JSON.stringify(queue.slice(0, 200)));
+      return json({ ok: true });
+    }
+
+    if (path === '/mod/queue' && request.method === 'POST') {
+      if (!modKeys.length) {
+        return json({ error: 'no_moderators',
+          message: 'No moderator keys are set on this worker, so nobody can moderate. ' +
+                   'Set MOD_KEYS — see the MODERATION block in leaderboard-worker.js.' }, 503);
+      }
+      if (!isMod(body.key)) return json({ error: 'not_a_moderator' }, 403);
+      const queue = (await env.DB.get('mod:queue', 'json')) || [];
+      const log = (await env.DB.get('mod:log', 'json')) || [];
+      const hidden = (await env.DB.get('mod:hidden', 'json')) || [];
+      return json({ ok: true, queue, log: log.slice(0, 50), hidden });
+    }
+
+    if (path === '/mod/act' && request.method === 'POST') {
+      if (!isMod(body.key)) return json({ error: 'not_a_moderator' }, 403);
+      const act = String(body.act || '');
+      const id = String(body.postId || '').slice(0, 64);
+      const who = String(body.key).slice(0, 6);          // enough to tell them apart, not the key
+
+      const queue = (await env.DB.get('mod:queue', 'json')) || [];
+      const row = queue.find((r) => r.postId === id);
+
+      if (act === 'hide' || act === 'unhide') {
+        let hidden = (await env.DB.get('mod:hidden', 'json')) || [];
+        if (act === 'hide') { if (!hidden.includes(id)) hidden.push(id); }
+        else hidden = hidden.filter((x) => x !== id);
+        await env.DB.put('mod:hidden', JSON.stringify(hidden.slice(-500)));
+        if (row) row.state = act === 'hide' ? 'hidden' : 'open';
+      } else if (act === 'dismiss') {
+        if (row) row.state = 'dismissed';
+      } else if (act === 'suspend') {
+        const code = cleanCode(body.code || '');
+        if (!code) return json({ error: 'which account?' }, 400);
+        await suspend(env, code, 'Moderator review: ' + (body.reason || 'community guidelines'));
+        if (row) row.state = 'actioned';
+      } else {
+        return json({ error: 'unknown action' }, 400);
+      }
+
+      await env.DB.put('mod:queue', JSON.stringify(queue));
+
+      /* The log is append-only from here. A moderator who hides something and
+         then quietly unhides it still leaves both lines. */
+      const log = (await env.DB.get('mod:log', 'json')) || [];
+      log.unshift({ act: act, postId: id || null, by: who, at: Date.now(),
+                    reason: String(body.reason || '').slice(0, 80) });
+      await env.DB.put('mod:log', JSON.stringify(log.slice(0, 200)));
+
+      return json({ ok: true, queue });
+    }
+
+    /* The feed asks for this so a hidden post stays hidden for everybody, not
+       only for the moderator who hid it. Public on purpose: it is a list of
+       ids that are NOT to be shown, which leaks nothing. */
+    if (path === '/mod/hidden' && request.method === 'GET') {
+      return json({ hidden: (await env.DB.get('mod:hidden', 'json')) || [] });
+    }
+
     // ---------- suspension status ----------
     if (path === '/me' && request.method === 'POST') {
       const code = cleanCode(body.code || '');

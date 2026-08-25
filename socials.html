@@ -68,72 +68,16 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050505">
 <title>Socials — NovaClip</title>
-<meta name='description' content='Community and Gifts in one place.'>
+<meta name='description' content='TeenVerse — the NovaClip community. Feed, clubs, showcase, study lounge, peer advice and your gifts, with moderation you can see.'>
 <link rel='icon' href='logo.svg' type='image/svg+xml'>
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--ink:var(--nc-bg,#05070E);--panel:var(--nc-bg2,#0C1220);--line:rgba(255,255,255,.1);--txt:var(--nc-text,#E8EEFF);--dim:var(--nc-dim2,#8A97B4);
-  --cyan:var(--nc-cyan2,#00E5FF);--violet:var(--nc-violet,#7C5CFF);--pink:var(--nc-pink,#FF3D9A);
-  --grad:linear-gradient(110deg,var(--violet),var(--cyan) 48%,var(--pink))}
-html,body{height:100%}
-body{background:var(--ink);color:var(--txt);overflow:hidden;
-  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
-a{color:inherit;text-decoration:none}
-:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px}
-/* nova.js drives the rail width; 200px is the fallback for a load before it runs */
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--nc-rail,200px);z-index:998;
-  background:rgba(12,12,16,.85);backdrop-filter:blur(20px);display:flex;flex-direction:column;
-  padding:20px 0;gap:4px;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto}
-.sidebar .themewrap{margin-top:auto;padding:16px 20px}
-.shell{margin-left:var(--nc-rail,200px);height:100vh;display:flex;flex-direction:column}
-/* A segmented control rather than folder tabs. One moving indicator instead of
-   a background swap per button: the eye follows the movement and knows where it
-   came from, which a hard swap never tells you. */
-.tabs{display:flex;gap:12px;align-items:center;flex-shrink:0;
-  padding:14px clamp(14px,2vw,26px) 12px}
-.tabnav{position:relative;display:flex;gap:3px;padding:5px;border-radius:16px;
-  background:rgba(255,255,255,.045);border:1px solid var(--line);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
-.tabnav .ind{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:12px;
-  background:var(--grad);z-index:0;box-shadow:0 6px 20px -8px rgba(0,240,255,.75);
-  transform:translateX(0)}
-@media (prefers-reduced-motion:no-preference){
-  .tabnav .ind{transition:transform .34s cubic-bezier(.2,.9,.3,1.1),
-    width .34s cubic-bezier(.2,.9,.3,1.1)}
-  .tabnav button svg{transition:transform .3s cubic-bezier(.2,.9,.3,1.3)}
-  .tabnav button.on svg{transform:scale(1.12)}
-}
-.tabnav button{position:relative;z-index:1;display:flex;align-items:center;gap:8px;
-  padding:9px 18px;border:0;border-radius:12px;background:transparent;color:var(--dim);
-  cursor:pointer;font:600 14px/1 inherit;white-space:nowrap;transition:color .22s}
-.tabnav button svg{width:16px;height:16px;fill:none;stroke:currentColor;
-  stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.tabnav button:hover:not(.on){color:var(--txt)}
-.tabnav button.on{color:#04121a}
-.tabnav button:focus-visible{outline:2px solid var(--cyan,#00F0FF);outline-offset:3px}
-.tabmeta{color:var(--dim);font-size:.82rem;min-width:0;overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap}
-.tabmeta b{color:var(--txt);font-weight:600}
-.tabspin{width:13px;height:13px;border-radius:50%;border:2px solid var(--line);
-  border-top-color:var(--cyan,#00F0FF);display:inline-block;vertical-align:-2px;
-  margin-right:7px;animation:tabspin .7s linear infinite}
-@keyframes tabspin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.tabspin{animation-duration:2.4s}}
-.frames{flex:1;min-height:0;border-top:1px solid var(--line);position:relative}
-.frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:var(--ink)}
-.frames iframe.on{display:block}
-@media (max-width:760px){
-  .shell{margin-left:0;height:calc(100vh - 64px)}
-  .tabs{padding:8px 10px}
-  .tabnav{flex:1}
-  .tabnav button{flex:1;justify-content:center;padding:9px 8px;font-size:13px}
-  .tabmeta{display:none}
-}
-</style>
-<!-- The TeenVerse design, applied to the pages it came from. -->
+<!-- The uploaded design's frontend, hand-written. See the top of
+     theme-teenverse.css for what was and was not copied from it. -->
 <link rel='stylesheet' href='theme-teenverse.css'>
 </head>
 <body class='tv'>
+
+<!-- NovaClip's rail. The page below is the upload's frontend; this is how you
+     leave it, so it stays and wears the same palette. -->
 <div class='sidebar'>
   <div class='themewrap'>
     <label data-t='language'>Language</label>
@@ -141,145 +85,116 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
-<div class='shell'>
-  <div class='tabs'>
-    <div class='tabnav' id='tabs' role='tablist'><span class='ind' id='tabInd'></span></div>
-    <span class='tabmeta' id='tabMeta'></span>
+<!-- teenverse.js builds the navbar, the six views and the footer in here. -->
+<div id='tvApp'></div>
+
+<!-- ==================================================================== -->
+<!-- MODALS                                                               -->
+<!-- ==================================================================== -->
+<div class='tv-modal' id='tvCreateModal' hidden role='dialog' aria-modal='true' aria-labelledby='tvCreateTitle'>
+  <div class='box'>
+    <div class='hd'>
+      <h3 id='tvCreateTitle'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 5v14M5 12h14'/></svg>
+        Share something
+      </h3>
+      <button class='x' type='button' aria-label='Close'>&#10005;</button>
+    </div>
+    <div class='tv-field'>
+      <label for='tvPostCh'>Channel</label>
+      <select id='tvPostCh'></select>
+    </div>
+    <div class='tv-field'>
+      <label for='tvPostTitle'>Title <span style='opacity:.5;font-weight:600'>(optional)</span></label>
+      <input id='tvPostTitle' maxlength='90' placeholder='What is it about?'>
+    </div>
+    <div class='tv-field'>
+      <label for='tvPostText'>What do you want to say?</label>
+      <textarea id='tvPostText' rows='5' maxlength='2000' placeholder='Take your time. Nobody is scoring the first sentence.'></textarea>
+    </div>
+    <div class='tv-field'>
+      <label for='tvPostTags'>Tags <span style='opacity:.5;font-weight:600'>(up to five)</span></label>
+      <input id='tvPostTags' maxlength='80' placeholder='editing, firstvideo, help'>
+    </div>
+    <p style='font-size:11px;color:var(--tv-n500);line-height:1.6;margin:0 0 8px'>
+      Swearing and spam suspend the account for two days, checked on the server — so clearing your
+      browser does not undo it. Everything else a person looks at.
+    </p>
+    <div class='ft'>
+      <button class='tv-btn tv-btn-green tv-skew6' id='tvPostGo' type='button'><span>Post it</span></button>
+    </div>
   </div>
-  <div class='frames' id='frames'></div>
 </div>
 
+<div class='tv-modal' id='tvSafetyModal' hidden role='dialog' aria-modal='true' aria-labelledby='tvSafetyTitle'>
+  <div class='box'>
+    <div class='hd'>
+      <h3 id='tvSafetyTitle' style='color:var(--tv-cyan)'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='color:var(--tv-cyan)'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='M9 12l2 2 4-4'/></svg>
+        Safe harbour
+      </h3>
+      <button class='x' type='button' aria-label='Close'>&#10005;</button>
+    </div>
+
+    <!-- Said first and said plainly. A page that buries this under community
+         guidelines has its priorities the wrong way round. -->
+    <div style='padding:16px;border-radius:12px;background:rgba(0,242,255,.07);
+                border:1px solid rgba(0,242,255,.28);margin-bottom:18px'>
+      <b style='display:block;font-size:14px;color:#fff;margin-bottom:6px'>If you are not safe right now</b>
+      <p style='font-size:13px;color:var(--tv-n300);line-height:1.65;margin:0'>
+        Nobody on this site is a professional and this page is not a crisis service. In the UK,
+        <b>Samaritans on 116 123</b> is free, open all night and does not show on a phone bill.
+        <b>Childline on 0800 1111</b> is free for under-19s. Outside the UK,
+        <a href='https://findahelpline.com' target='_blank' rel='noreferrer'
+           style='color:var(--tv-cyan)'>findahelpline.com</a> lists the number for your country.
+        If somebody is in danger now, ring 999 or your local emergency number.
+      </p>
+    </div>
+
+    <h4 style='font-family:var(--tv-head);font-size:12px;font-weight:900;text-transform:uppercase;
+               letter-spacing:.08em;color:#fff;margin:0 0 10px'>The rules here, in full</h4>
+    <ul style='margin:0 0 16px;padding-left:18px;font-size:13px;color:var(--tv-n300);line-height:1.75'>
+      <li>Nobody gets ground down. Pile-ons, nicknames somebody did not ask for, and screenshotting
+        someone to laugh at them all count.</li>
+      <li>No personal details — yours or anybody else's. Not your school, not your address, not
+        your phone number.</li>
+      <li>Swearing and spam are caught by the server and suspend the account for two days.</li>
+      <li>Everything else, a person reads. Report it and a moderator sees it.</li>
+      <li>Moderators keep a log of every action they take, and other moderators can read it.</li>
+    </ul>
+    <p style='font-size:12px;color:var(--tv-n500);line-height:1.65;margin:0'>
+      Blocking somebody is not rude and you do not owe anyone an explanation for it.
+    </p>
+  </div>
+</div>
+
+<div class='tv-modal' id='tvProfileModal' hidden role='dialog' aria-modal='true' aria-labelledby='tvProfileTitle'>
+  <div class='box' style='max-width:26rem'>
+    <div class='hd'>
+      <h3 id='tvProfileTitle'>
+        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='8' r='6'/><path d='M15.5 13.5L17 22l-5-3-5 3 1.5-8.5'/></svg>
+        Your profile
+      </h3>
+      <button class='x' type='button' aria-label='Close'>&#10005;</button>
+    </div>
+    <div class='tv-field'>
+      <label for='tvPName'>Display name</label>
+      <input id='tvPName' maxlength='24' placeholder='What people see'>
+    </div>
+    <p style='font-size:11px;color:var(--tv-n500);line-height:1.6;margin:0 0 8px'>
+      This is the name your posts and your leaderboard rows carry. The first account to use a name
+      keeps it, so pick one you want.
+    </p>
+    <div class='ft'>
+      <button class='tv-btn tv-btn-green tv-skew6' id='tvPSave' type='button'><span>Save</span></button>
+    </div>
+  </div>
+</div>
+
+<div class='tv-toasts' id='tvToasts' aria-live='polite'></div>
+
 <script src='nova.js'></script>
-<script src='biometric.js' defer></script>
+<script src='teenverse.js'></script>
 <script src='jarvis.js' defer></script>
-<script>
-/* Two pages, one address. The tab you are on is in the URL as #<name>, so a
-   link or a reload lands where you left rather than always on the first tab. */
-const TABS = [{"key": "community", "label": "Community", "src": "community.html?embed=1", "icon": "<path d=\"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75\"/>", "note": "Posts and replies from other NovaClip creators."}, {"key": "gifts", "label": "Gifts", "src": "gift.html?embed=1", "icon": "<path d=\"M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z\"/><path d=\"M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z\"/>", "note": "Rewards you have unlocked, and what is next."}, {"key": "study", "label": "Study", "src": "study.html?embed=1", "icon": "<path d=\"M4 19.5A2.5 2.5 0 016.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z\"/>", "note": "A focus timer, what you are working on, and quiet sound."}];
-
-const tabs = document.getElementById('tabs');
-const frames = document.getElementById('frames');
-
-const ind = document.getElementById('tabInd');
-const meta = document.getElementById('tabMeta');
-
-TABS.forEach((t, i) => {
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.setAttribute('role', 'tab');
-  b.setAttribute('aria-selected', 'false');
-  /* Roving tabindex: one stop for the whole group, then arrow keys inside it.
-     Making every tab tabbable is what turns a two-tab nav into two extra tab
-     stops on the way to the content. */
-  b.tabIndex = -1;
-  b.dataset.k = t.key;
-  b.innerHTML = (t.icon ? '<svg viewBox="0 0 24 24">' + t.icon + '</svg>' : '') +
-    '<span>' + t.label + '</span>';
-  tabs.appendChild(b);
-
-  const f = document.createElement('iframe');
-  f.dataset.k = t.key;
-  f.title = t.label;
-  /* Only the first frame loads now. The other one loads the first time it is
-     asked for — two heavy pages booting at once is a slow, janky open. */
-  if (i === 0) f.src = t.src;
-  else f.dataset.src = t.src;
-  frames.appendChild(f);
-});
-
-/* The indicator is positioned from the real button box rather than from an
-   index times a guessed width — the labels are translated, so their widths are
-   not knowable in advance.
-
-   AND IT HAS TO BE RE-MEASURED, NOT JUST MEASURED ONCE.
-
-   This ran only when a tab was chosen, which meant it captured the layout as
-   it stood at that instant and then never looked again. Two things move the
-   buttons afterwards: nova.js applies the translations, which changes every
-   label's width, and it sets dir=rtl for Arabic, Farsi and Urdu, which swaps
-   the buttons end for end. In Farsi the active tab ended up at offsetLeft 95
-   while the indicator was still transformed to 5 — the bright pill sat under
-   the wrong tab, on top of its neighbour's text. Measured, not guessed at:
-   181px out.
-
-   A ResizeObserver on the row covers all of it, because every one of those
-   causes a relayout of this element. */
-let activeBtn = null;
-
-function moveIndicator(btn) {
-  if (btn) activeBtn = btn;
-  if (!activeBtn || !ind) return;
-  ind.style.width = activeBtn.offsetWidth + 'px';
-  ind.style.transform = 'translateX(' + activeBtn.offsetLeft + 'px)';
-}
-
-if (window.ResizeObserver && tabs) {
-  /* Fires on the direction flip, on translated labels, and on a window
-     resize — the three things that used to leave it stranded. */
-  new ResizeObserver(() => moveIndicator()).observe(tabs);
-}
-/* Belt and braces for the ordering: nova.js translates and flips direction
-   after this script has run, and a font swapping in can move things again. */
-addEventListener('load', () => moveIndicator());
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => moveIndicator());
-
-function show(key) {
-  const t = TABS.find(x => x.key === key) || TABS[0];
-  let current = null;
-  tabs.querySelectorAll('button').forEach(b => {
-    const on = b.dataset.k === t.key;
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-selected', on ? 'true' : 'false');
-    b.tabIndex = on ? 0 : -1;
-    if (on) current = b;
-  });
-  moveIndicator(current);
-
-  frames.querySelectorAll('iframe').forEach(f => {
-    const on = f.dataset.k === t.key;
-    f.classList.toggle('on', on);
-    if (on && !f.src && f.dataset.src) {
-      /* First open of this tab: say it is coming rather than showing a blank
-         panel while a whole page boots inside the frame. */
-      if (meta) meta.innerHTML = '<span class="tabspin"></span>Loading ' + t.label + '…';
-      f.addEventListener('load', function () {
-        if (meta && f.classList.contains('on')) meta.innerHTML = t.note || '';
-      }, { once: true });
-      f.src = f.dataset.src;
-    } else if (on && meta) {
-      meta.innerHTML = t.note || '';
-    }
-  });
-  if (location.hash.slice(1) !== t.key) history.replaceState(null, '', '#' + t.key);
-  document.title = t.label + ' — NovaClip';
-}
-
-tabs.addEventListener('click', e => {
-  const b = e.target.closest('button');
-  if (b) show(b.dataset.k);
-});
-
-/* Arrow keys move between tabs, which is what a role="tablist" promises a
-   screen reader it will do. */
-tabs.addEventListener('keydown', e => {
-  const keys = { ArrowRight: 1, ArrowLeft: -1, Home: 'first', End: 'last' };
-  if (!(e.key in keys)) return;
-  e.preventDefault();
-  const btns = [...tabs.querySelectorAll('button')];
-  const i = btns.findIndex(b => b.classList.contains('on'));
-  let next;
-  if (keys[e.key] === 'first') next = 0;
-  else if (keys[e.key] === 'last') next = btns.length - 1;
-  else next = (i + keys[e.key] + btns.length) % btns.length;
-  show(btns[next].dataset.k);
-  btns[next].focus();
-});
-
-/* The rail resizes with the viewport, so the button the indicator sits on
-   moves. Without this it detaches on the first resize. */
-addEventListener('resize', () => moveIndicator(tabs.querySelector('button.on')));
-window.addEventListener('hashchange', () => show(location.hash.slice(1)));
-show(location.hash.slice(1) || TABS[0].key);
-</script>
 </body>
 </html>

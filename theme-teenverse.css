@@ -1,281 +1,745 @@
 /* ============================================================================
-   THE TEENVERSE LOOK
+   TEENVERSE — the uploaded design's frontend, as a stylesheet
    ============================================================================
-   The uploaded design's own visual language, taken from its source rather than
-   from a screenshot:
+   The upload is a React app built with Tailwind. This is the same frontend
+   without either. Class names are its class names; values are Tailwind's own,
+   read off its scale rather than eyeballed.
 
-     background      #000 with #0a0a0a and neutral-900 (#171717) panels
-     borders         neutral-800 (#262626)
-     primary         #7DFF00, acid green, with BLACK text on it
-     secondary       #00F2FF cyan and #FF00FF magenta, used sparingly
-     headings        Space Grotesk, letter-spacing -0.02em
-     body            Plus Jakarta Sans
-     corners         rounded-xl (12px), rounded-lg (8px), pills for chips
-     glow            0 0 14px of the accent at 35%
+     #050505 page          #0a0a0a footer      #0d0d0d hero
+     #121212 cards         #0e0e0e dropdowns
+     neutral-800 #262626   neutral-700 #404040 neutral-900 #171717
+     neutral-500 #737373   neutral-400 #a3a3a3 neutral-300 #d4d4d4
 
-   Its index.css and the class names across its components are where all of
-   that came from; nothing here is invented to fill a gap.
+     #7DFF00 acid green, BLACK text on it — the primary
+     #ff00ff magenta      — Create, upvoted, feedback badges
+     #00f2ff cyan         — safety, study
 
-   WHY IT IS A SEPARATE FILE AND NOT IN nova.js
+   THE SIGNATURE MOVE, WHICH THE FIRST ATTEMPT MISSED ENTIRELY
 
-   nova.js paints every page in NovaClip's own palette and runs a theme engine
-   on top of it. This is a different identity for two pages, the way Trend
-   Spotter already has its own. Keeping it in one file means it can be dropped
-   without unpicking anything, and it cannot leak onto pages that did not ask
-   for it.
+   Skew. The active nav pill is skew-x(-4deg) with its label counter-skewed
+   +4deg so the text stays upright inside a slanted box. Create is -6deg, the
+   active channel pill -5deg, the COMMUNITY badge -10deg. It is the whole
+   reason the design reads as a teen product rather than a dashboard, and a
+   recolour without it is not this design.
 
-   The fonts are served from this repo, not from Google. An installed app has
-   to work on a train, and a webfont fetched from a third party is both a
-   request that fails offline and a request that tells somebody else which page
-   somebody opened.
+   The other half is weight: font-black, uppercase, tracking-wider on nearly
+   every label, mono for anything that is a number or a timestamp.
+
+   WHAT IS NOT COPIED
+
+   Its mock data. The upload ships invented users, clubs and posts, which for
+   a prototype is right. Here the feed, the clubs and the profile come from
+   NovaClip's own account and its worker, and where there is nothing yet the
+   page says so instead of showing a fake conversation.
    ========================================================================== */
 
 @font-face {
   font-family: 'Plus Jakarta Sans';
   src: url('fonts/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
-  font-weight: 200 800;
-  font-display: swap;      /* text now in a fallback beats no text at all */
-  font-style: normal;
+  font-weight: 200 800; font-display: swap; font-style: normal;
 }
 @font-face {
   font-family: 'Space Grotesk';
   src: url('fonts/space-grotesk-latin-wght-normal.woff2') format('woff2');
-  font-weight: 300 700;
-  font-display: swap;
-  font-style: normal;
+  font-weight: 300 700; font-display: swap; font-style: normal;
 }
 
 .tv {
-  --tv-bg:      #000000;
+  --tv-bg:      #050505;
   --tv-bg2:     #0a0a0a;
-  --tv-panel:   #171717;   /* neutral-900 */
-  --tv-line:    #262626;   /* neutral-800 */
-  --tv-line2:   #404040;   /* neutral-700 */
-  --tv-txt:     #ffffff;
-  --tv-dim:     #a3a3a3;   /* neutral-400 */
-  --tv-dim2:    #737373;   /* neutral-500 */
+  --tv-hero:    #0d0d0d;
+  --tv-card:    #121212;
+  --tv-drop:    #0e0e0e;
+  --tv-n900:    #171717;
+  --tv-n800:    #262626;
+  --tv-n700:    #404040;
+  --tv-n600:    #525252;
+  --tv-n500:    #737373;
+  --tv-n400:    #a3a3a3;
+  --tv-n300:    #d4d4d4;
   --tv-green:   #7DFF00;
-  --tv-cyan:    #00F2FF;
-  --tv-magenta: #FF00FF;
-  --tv-sans:    'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --tv-green2:  #6edb00;
+  --tv-magenta: #ff00ff;
+  --tv-magenta2:#e000e0;
+  --tv-cyan:    #00f2ff;
+  --tv-amber:   #fbbf24;
+  --tv-rose:    #fb7185;
+  --tv-sans:    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --tv-head:    'Space Grotesk', 'Outfit', system-ui, sans-serif;
+  --tv-mono:    ui-monospace, 'JetBrains Mono', Consolas, monospace;
 }
 
-/* The page itself. !important on the background only, because nova.js paints a
-   cyber skin straight onto the element and would otherwise win. */
 body.tv {
   background: var(--tv-bg) !important;
-  color: var(--tv-txt);
+  color: #fff;
   font-family: var(--tv-sans);
+  font-size: 16px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
-.tv h1, .tv h2, .tv h3, .tv h4, .tv .font-heading {
-  font-family: var(--tv-head);
-  letter-spacing: -0.02em;
+body.tv *, body.tv *::before, body.tv *::after { box-sizing: border-box; }
+body.tv ::selection { background: var(--tv-green); color: #000; }
+body.tv h1, body.tv h2, body.tv h3, body.tv h4 {
+  font-family: var(--tv-head); letter-spacing: -.02em; margin: 0;
 }
+body.tv ::-webkit-scrollbar { width: 6px; height: 6px; }
+body.tv ::-webkit-scrollbar-track { background: var(--tv-bg2); }
+body.tv ::-webkit-scrollbar-thumb { background: var(--tv-n800); border-radius: 9999px; }
+body.tv ::-webkit-scrollbar-thumb:hover { background: var(--tv-green); }
+.tv-noscroll::-webkit-scrollbar { display: none; }
+.tv-noscroll { scrollbar-width: none; }
 
-/* Its scrollbar, which is a small thing that does a lot of the work. */
-.tv ::-webkit-scrollbar { width: 6px; height: 6px; }
-.tv ::-webkit-scrollbar-track { background: var(--tv-bg2); }
-.tv ::-webkit-scrollbar-thumb {
-  background: var(--tv-line); border-radius: 9999px; border: 1px solid var(--tv-line2);
-}
-.tv ::-webkit-scrollbar-thumb:hover {
-  background: var(--tv-green); box-shadow: 0 0 10px var(--tv-green);
-}
-.tv { scrollbar-color: var(--tv-line) var(--tv-bg2); scrollbar-width: thin; }
+/* ============================================================================
+   THE SKEW, AS A PAIR
+   ==========================================================================
+   Every slanted control needs its label counter-skewed or the text leans too.
+   Doing it with two classes rather than by hand each time is what keeps it
+   consistent across thirty buttons.
+   ========================================================================== */
+.tv-skew4  { transform: skewX(-4deg);  } .tv-skew4 > *  { display: inline-block; transform: skewX(4deg); }
+.tv-skew5  { transform: skewX(-5deg);  } .tv-skew5 > *  { display: inline-block; transform: skewX(5deg); }
+.tv-skew6  { transform: skewX(-6deg);  } .tv-skew6 > *  { display: inline-block; transform: skewX(6deg); }
+.tv-skew10 { transform: skewX(-10deg); } .tv-skew10 > * { display: inline-block; transform: skewX(10deg); }
 
-/* ---- surfaces ---------------------------------------------------------- */
-.tv .card, .tv .panel, .tv .box, .tv .tile, .tv .sect, .tv .postcard,
-.tv .community, .tv .group, .tv .item {
-  background: var(--tv-panel);
-  border: 1px solid var(--tv-line);
+/* ---- primitives -------------------------------------------------------- */
+.tv-card {
+  background: var(--tv-card);
+  border: 1px solid var(--tv-n800);
   border-radius: 12px;
 }
+.tv-card:hover { border-color: var(--tv-n700); }
+.tv-mono { font-family: var(--tv-mono); font-size: 11px; color: var(--tv-n500); }
+.tv-lab {
+  font-size: 12px; font-weight: 900; text-transform: uppercase;
+  letter-spacing: .06em; font-family: var(--tv-head);
+}
 
-/* ---- type -------------------------------------------------------------- */
-.tv .sub, .tv .hint, .tv .muted, .tv .meta, .tv small { color: var(--tv-dim); }
+.tv-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: var(--tv-sans); font-size: 12px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .06em;
+  padding: 10px 20px; border-radius: 8px; border: 0; cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s, transform .1s;
+}
+.tv-btn:active:not(:disabled) { transform: scale(.95) skewX(var(--sk, 0deg)); }
+.tv-btn:disabled { opacity: .5; cursor: not-allowed; }
+.tv-btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
 
-/* ---- buttons ----------------------------------------------------------- */
-.tv button, .tv .btn, .tv a.btn {
-  font-family: var(--tv-sans);
-  border-radius: 10px;
+.tv-btn-green { background: var(--tv-green); color: #000; box-shadow: 0 0 12px rgba(125,255,0,.3); }
+.tv-btn-green:hover:not(:disabled) { background: var(--tv-green2); }
+.tv-btn-mag { background: var(--tv-magenta); color: #000; box-shadow: 0 0 12px rgba(255,0,255,.35); }
+.tv-btn-mag:hover:not(:disabled) { background: var(--tv-magenta2); }
+.tv-btn-ghost {
+  background: var(--tv-n900); color: #fff; font-weight: 700;
+  border: 1px solid var(--tv-n700);
 }
-/* The primary action is acid green with black on it — the design's single
-   loudest move, and the reason the rest of it can stay quiet. */
-.tv .btn-primary, .tv button.primary, .tv .go:not(.alt), .tv .gbtn,
-.tv button[type=submit]:not(.alt) {
-  background: var(--tv-green) !important;
-  color: #000 !important;
-  border: 0 !important;
-  font-weight: 700;
-  box-shadow: 0 0 14px rgba(125, 255, 0, .35);
-}
-.tv .btn-primary:hover, .tv button.primary:hover, .tv .go:not(.alt):hover,
-.tv .gbtn:hover { filter: brightness(1.08); }
+.tv-btn-ghost:hover:not(:disabled) { background: var(--tv-n800); border-color: var(--tv-green); }
+.tv-btn-sm { padding: 7px 14px; font-size: 11px; }
 
-.tv .go.alt, .tv .btn-ghost, .tv button.alt {
-  background: transparent !important;
-  color: var(--tv-txt) !important;
-  border: 1px solid var(--tv-line2) !important;
+.tv-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--tv-mono); font-size: 10px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .1em;
+  padding: 3px 8px; border-radius: 4px;
+  background: #000; color: var(--tv-green); border: 1px solid rgba(125,255,0,.4);
 }
-.tv .go.alt:hover, .tv button.alt:hover { border-color: var(--tv-green) !important; }
+.tv-chip.mag { background: var(--tv-magenta); color: #000; border-color: transparent; }
+.tv-chip.grey { background: var(--tv-n900); color: var(--tv-n300); border-color: var(--tv-n800); }
 
-/* ---- chips and tabs ---------------------------------------------------- */
-.tv .chip, .tv .tag, .tv .pill {
-  border-radius: 9999px;
-  border: 1px solid var(--tv-line);
-  background: var(--tv-bg2);
-  color: var(--tv-dim);
+/* ============================================================================
+   NAVBAR
+   ========================================================================== */
+.tv-nav {
+  position: sticky; z-index: 40;
+  background: rgba(5,5,5,.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--tv-n800);
 }
-.tv .chip.on, .tv .tag.on, .tv .pill.on, .tv .chip[aria-pressed=true] {
-  background: var(--tv-green);
-  border-color: var(--tv-green);
-  color: #000;
-  font-weight: 700;
+.tv-nav-in { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+.tv-nav-row {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; gap: 12px;
 }
+@media (min-width: 640px) { .tv-nav-in { padding: 0 24px; } .tv-nav-row { gap: 24px; } }
+@media (min-width: 1024px) { .tv-nav-in { padding: 0 32px; } }
+
+.tv-brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto;
+  background: none; border: 0; cursor: pointer; padding: 0; text-align: left; }
+.tv-brand .sq {
+  width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center;
+  background: var(--tv-green); color: #000; box-shadow: 0 0 12px var(--tv-green);
+  transition: transform .2s; flex: 0 0 auto;
+}
+.tv-brand:hover .sq { transform: scale(1.05) rotate(3deg); }
+.tv-brand .sq svg { width: 20px; height: 20px; }
+.tv-brand .nm {
+  font-family: var(--tv-head); font-weight: 900; font-size: 20px; color: #fff;
+  letter-spacing: -.02em; text-transform: uppercase; display: flex; align-items: center; gap: 8px;
+}
+.tv-brand .nm em { font-style: normal; color: var(--tv-green); }
+.tv-brand .tag {
+  font-family: var(--tv-mono); font-size: 9px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .12em;
+  background: var(--tv-magenta); color: #000; padding: 2px 6px; border-radius: 2px;
+}
+.tv-brand .sub {
+  font-family: var(--tv-mono); font-size: 10px; color: var(--tv-n400);
+  line-height: 1; margin-top: 2px;
+}
+@media (max-width: 767px) { .tv-brand .sub { display: none; } }
+@media (max-width: 639px) { .tv-brand .tag { display: none; } }
+
+/* min-width:0 because a flex item defaults to min-width:auto and will not
+   shrink below its own content — which is how a search box with a long
+   placeholder pushes a navbar wider than its container. */
+.tv-search { position: relative; flex: 1 1 0; min-width: 0; max-width: 28rem; }
+@media (max-width: 767px) { .tv-nav-row .tv-search { display: none; } }
+.tv-search svg {
+  width: 16px; height: 16px; color: var(--tv-n500);
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none;
+}
+/* min-width:0, because an <input> carries a UA intrinsic width from its size
+   attribute and will not shrink past it. Measured at 1920: the search box had
+   flexed to 0 wide and the input inside it was still 70px, sticking out over
+   the nav links and eating their clicks. width:100% of a zero-width parent is
+   zero; the intrinsic minimum is what overrides it. */
+.tv-search input {
+  width: 100%; min-width: 0; padding: 9px 32px 9px 36px; font-size: 12px; font-weight: 500;
+  background: rgba(23,23,23,.9); color: #fff; border: 1px solid var(--tv-n800);
+  border-radius: 12px; font-family: var(--tv-sans);
+}
+.tv-search input::placeholder { color: var(--tv-n500); }
+.tv-search input:focus {
+  outline: none; background: #000; border-color: var(--tv-green);
+  box-shadow: 0 0 0 2px rgba(125,255,0,.2);
+}
+.tv-search .x {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; cursor: pointer; color: var(--tv-n400); padding: 2px;
+}
+
+/* ---- the nav links, and the space the rail does not leave them ----------
+   The upload's navbar assumes a 1280px container with nothing beside it. Here
+   NovaClip's rail takes 176-248px off the left before this starts, and six
+   labelled links plus a search box plus four actions do not fit in what is
+   left of a 1440px laptop: measured at 1423px of content in a 1166px row,
+   which scrolled the whole document sideways by 217px and pushed the brand off
+   the left edge.
+
+   Rather than hide the nav behind a burger on a desktop, the labels drop and
+   the icons stay between 1024 and 1500. Six icons is 276px where six labelled
+   links is 741. The label comes back when there is room for it, and every link
+   carries a title so the icon-only state is not a guessing game. */
+.tv-links { display: none; align-items: center; gap: 6px; min-width: 0; }
+@media (min-width: 1024px) { .tv-links { display: flex; } }
+
+/* WHAT HAS TO FIT, AND THE ARITHMETIC THAT SETS THE BREAKPOINTS
+   ------------------------------------------------------------------------
+   Every number below was measured by hit-testing the centre of every control
+   at eleven widths, not guessed. Two earlier guesses (1024 then 1500) both
+   left the links sliding underneath Create and the profile pill, swallowing
+   clicks meant for them — which is the worst kind of layout bug, because a
+   link you cannot see is one you notice and a link that eats your click is
+   one you do not.
+
+   With icons only and the brand reduced to its square:
+     square 40 + search 120 + six icons 294 + actions 300 + gaps 72 = 826
+   At 1024 the rail takes 176, leaving 848. It fits, with 22 to spare.
+
+   With labels the links alone are 741, and the row needs about 1553 of
+   content. The rail takes up to 248, so the labels only come back at 1900. */
+/* flex 0 0 auto, not 0 1 auto. Letting the links shrink is what clipped the
+   last one or two at 1024, 1280, 1920 and 2200 — a link still laid out, still
+   reporting a box, but with its centre outside the clip and its click going to
+   whatever was underneath. The SEARCH gives up space instead: it shrinks to
+   nothing gracefully and there is a second search row for the widths where it
+   does. Nothing that navigates is ever allowed to shrink. */
+.tv-links { flex: 0 0 auto; overflow: hidden; }
+/* THE CONTAINER, NOT THE VIEWPORT, IS WHAT THE LABELS DID NOT FIT IN.
+   The upload's navbar is capped at max-width 1280 and carries FIVE links.
+   This one carries six — Gifts is NovaClip's and predates the redesign — and
+   six labelled links plus brand plus actions measure 1353 against the 1216 a
+   1280 container leaves after padding. No viewport breakpoint fixes that,
+   because the cap is the constraint. So above 1900 the whole shell widens
+   with the labels, and the main column widens with it or the navbar would
+   stop lining up with the content underneath it. */
+@media (min-width: 1900px) {
+  .tv-nav-in, .tv-main { max-width: 1600px; }
+  .tv-links .tv-link span { display: inline-block; }
+  .tv-links .tv-link { padding: 8px 14px; }
+}
+@media (max-width: 1899px) {
+  .tv-links .tv-link span { display: none; }
+  .tv-links .tv-link { padding: 8px 10px; }
+}
+/* Below 1280 the brand is the square alone. The wordmark is 190px that the
+   nav links need more than the logo does, and the square is still the thing
+   you click to get home. */
+@media (max-width: 1279px) {
+  .tv-brand .nm, .tv-brand .sub { display: none; }
+}
+.tv-link {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+  background: transparent; border: 1px solid transparent; color: var(--tv-n300);
+  font-family: var(--tv-sans); white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.tv-link svg { width: 16px; height: 16px; color: var(--tv-n400); }
+.tv-link:hover { color: #fff; background: var(--tv-n900); border-color: var(--tv-n800); }
+.tv-link[aria-selected=true] {
+  background: var(--tv-green); color: #000; border-color: transparent;
+  box-shadow: 0 0 10px rgba(125,255,0,.3); transform: skewX(-4deg);
+}
+.tv-link[aria-selected=true] svg,
+.tv-link[aria-selected=true] span { color: #000; transform: skewX(4deg); }
+
+.tv-nav-acts { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+@media (min-width: 640px) { .tv-nav-acts { gap: 12px; } }
+.tv-iconbtn {
+  position: relative; display: grid; place-items: center;
+  padding: 8px; border-radius: 8px; cursor: pointer;
+  background: transparent; border: 1px solid transparent; color: var(--tv-n300);
+}
+.tv-iconbtn:hover { background: var(--tv-n900); border-color: var(--tv-n800); color: #fff; }
+.tv-iconbtn svg { width: 20px; height: 20px; }
+.tv-iconbtn .pip {
+  position: absolute; top: 4px; right: 4px; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--tv-green); border: 2px solid #000;
+  box-shadow: 0 0 6px var(--tv-green); animation: tvPulse 2s ease-in-out infinite;
+}
+@keyframes tvPulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+.tv-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 12px 4px 4px; border-radius: 9999px; cursor: pointer;
+  background: var(--tv-n900); border: 1px solid var(--tv-n800);
+  transition: background .15s, border-color .15s;
+}
+.tv-pill:hover { background: var(--tv-n800); border-color: rgba(125,255,0,.5); }
+.tv-pill .av {
+  width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
+  display: grid; place-items: center; font-size: 15px;
+  background: var(--tv-n800); box-shadow: 0 0 0 2px var(--tv-n700);
+}
+.tv-pill:hover .av { box-shadow: 0 0 0 2px var(--tv-green); }
+.tv-pill .who { text-align: left; }
+@media (max-width: 639px) { .tv-pill .who { display: none; } }
+.tv-pill .who b { display: block; font-size: 12px; font-weight: 700; color: #fff; line-height: 1; }
+.tv-pill:hover .who b { color: var(--tv-green); }
+.tv-pill .who span {
+  display: flex; align-items: center; gap: 4px; margin-top: 3px;
+  font-family: var(--tv-mono); font-size: 10px; font-weight: 700; color: var(--tv-n400);
+}
+.tv-pill .who span svg { width: 10px; height: 10px; color: var(--tv-green); }
+
+.tv-drop {
+  position: absolute; right: 0; top: calc(100% + 8px); width: min(384px, 92vw);
+  background: var(--tv-drop); border: 1px solid var(--tv-n800);
+  border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,.8);
+  padding: 12px 0; z-index: 50; overflow: hidden;
+}
+.tv-drop[hidden] { display: none; }
+.tv-drop .hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px 10px; border-bottom: 1px solid var(--tv-n800);
+}
+.tv-drop .hd b {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--tv-head); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em; color: #fff;
+}
+.tv-drop .hd b svg { width: 16px; height: 16px; color: var(--tv-green); }
+.tv-drop .list { max-height: 288px; overflow-y: auto; }
+.tv-drop .row { padding: 14px; display: flex; gap: 12px; border-bottom: 1px solid var(--tv-n900); }
+.tv-drop .row.unread { background: rgba(23,23,23,.9); box-shadow: inset 2px 0 0 var(--tv-green); }
+.tv-drop .row .dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--tv-green);
+  margin-top: 6px; flex: 0 0 auto; box-shadow: 0 0 4px var(--tv-green);
+}
+.tv-drop .row b { display: block; font-size: 12px; font-weight: 700; color: #fff; }
+.tv-drop .row p { font-size: 12px; color: var(--tv-n300); margin: 2px 0 0; line-height: 1.5; }
+.tv-drop .row time { display: block; font-family: var(--tv-mono); font-size: 10px; color: var(--tv-n500); margin-top: 4px; }
+.tv-drop .none { padding: 24px; text-align: center; font-family: var(--tv-mono); font-size: 12px; color: var(--tv-n500); }
+
+.tv-burger { display: grid; }
+@media (min-width: 1024px) { .tv-burger { display: none; } }
+.tv-mobile { border-top: 1px solid var(--tv-n800); padding: 12px 0; display: flex; flex-direction: column; gap: 4px; }
+.tv-mobile[hidden] { display: none; }
+@media (min-width: 1024px) { .tv-mobile { display: none !important; } }
+.tv-mobile button {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 16px; border-radius: 8px; cursor: pointer; text-align: left;
+  background: transparent; border: 0; color: var(--tv-n300);
+  font-family: var(--tv-sans); font-size: 12px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.tv-mobile button svg { width: 16px; height: 16px; }
+.tv-mobile button:hover { background: var(--tv-n900); }
+.tv-mobile button[aria-selected=true] { background: var(--tv-green); color: #000; }
+.tv-msearch { padding-bottom: 12px; }
+@media (min-width: 768px) { .tv-msearch { display: none; } }
+
+/* ============================================================================
+   MAIN + HERO
+   ========================================================================== */
+.tv-main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+@media (min-width: 640px) { .tv-main { padding: 24px 24px 48px; } }
+@media (min-width: 1024px) { .tv-main { padding: 24px 32px 48px; } }
+
+.tv-hero {
+  position: relative; overflow: hidden; margin-bottom: 24px;
+  background: var(--tv-hero); border-radius: 16px; padding: 24px;
+  border: 2px solid var(--tv-n800); border-left: 8px solid var(--tv-green);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,.8);
+}
+@media (min-width: 640px) { .tv-hero { padding: 32px; } }
+.tv-hero .g1, .tv-hero .g2 { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(48px); }
+.tv-hero .g1 { right: -40px; bottom: -40px; width: 256px; height: 256px; background: rgba(125,255,0,.1); }
+.tv-hero .g2 { top: 0; right: 25%; width: 192px; height: 192px; background: rgba(255,0,255,.1); }
+.tv-hero .in { position: relative; z-index: 1; max-width: 42rem; }
+.tv-hero .kick {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  padding: 5px 12px; border-radius: 4px; background: #000; color: var(--tv-green);
+  font-family: var(--tv-mono); font-size: 12px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid rgba(125,255,0,.4); box-shadow: 0 0 8px rgba(125,255,0,.2);
+  transform: skewX(-6deg);
+}
+.tv-hero .kick > * { display: inline-block; transform: skewX(6deg); }
+.tv-hero .kick svg { width: 14px; height: 14px; }
+.tv-hero h1 {
+  font-family: var(--tv-head); font-weight: 900; text-transform: uppercase;
+  font-size: clamp(1.5rem, 4.2vw, 2.25rem); line-height: 1.15;
+  letter-spacing: -.02em; margin-bottom: 8px; color: #fff;
+}
+.tv-hero h1 em { font-style: normal; color: var(--tv-green); }
+.tv-hero p { font-size: 15px; color: var(--tv-n300); line-height: 1.65; margin: 0 0 20px; }
+.tv-hero .acts { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* ---- channel bar ------------------------------------------------------- */
+.tv-channels { width: 100%; overflow-x: auto; padding: 8px 0 12px; }
+.tv-channels .row { display: flex; align-items: center; gap: 8px; min-width: max-content; }
+.tv-ch {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap;
+  font-family: var(--tv-sans); font-size: 12px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .06em;
+  background: var(--tv-card); color: var(--tv-n300); border: 1px solid var(--tv-n800);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.tv-ch:hover { background: var(--tv-n800); color: #fff; }
+.tv-ch .n {
+  padding: 2px 6px; border-radius: 4px;
+  font-family: var(--tv-mono); font-size: 10px; font-weight: 700;
+  background: var(--tv-n800); color: var(--tv-n400);
+}
+.tv-ch[aria-selected=true] {
+  background: var(--tv-green); color: #000; border-color: var(--tv-green);
+  box-shadow: 0 0 12px rgba(125,255,0,.35); transform: skewX(-5deg) scale(1.02);
+}
+.tv-ch[aria-selected=true] > * { transform: skewX(5deg); }
+.tv-ch[aria-selected=true] .n { background: #000; color: var(--tv-green); }
+
+/* ---- the two-column body ----------------------------------------------- */
+.tv-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+@media (min-width: 1024px) {
+  .tv-grid { grid-template-columns: repeat(12, minmax(0,1fr)); }
+  .tv-feed { grid-column: span 8 / span 8; }
+  .tv-side { grid-column: span 4 / span 4; }
+}
+.tv-feed { display: flex; flex-direction: column; gap: 16px; }
+.tv-side { display: flex; flex-direction: column; gap: 16px; }
+
+.tv-sort { display: flex; align-items: center; gap: 4px; padding: 4px;
+  background: var(--tv-card); border: 1px solid var(--tv-n800); border-radius: 8px; }
+.tv-sort button {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 4px; cursor: pointer; border: 0;
+  background: transparent; color: var(--tv-n400);
+  font-family: var(--tv-sans); font-size: 12px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.tv-sort button svg { width: 14px; height: 14px; }
+.tv-sort button:hover { color: #fff; }
+.tv-sort button[aria-selected=true] { background: var(--tv-green); color: #000; box-shadow: 0 0 8px var(--tv-green); }
+
+/* ---- post card --------------------------------------------------------- */
+.tv-post { background: var(--tv-card); border: 1px solid var(--tv-n800); border-radius: 12px; overflow: hidden; }
+.tv-post:hover { border-color: var(--tv-n700); }
+.tv-post.pin { border: 2px solid var(--tv-green); box-shadow: 0 0 15px rgba(125,255,0,.15); }
+.tv-post .pinbar {
+  background: var(--tv-n900); padding: 6px 16px; border-bottom: 1px solid rgba(125,255,0,.4);
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--tv-mono); font-size: 12px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--tv-green);
+}
+.tv-post .body { padding: 16px; }
+@media (min-width: 640px) { .tv-post .body { padding: 20px; } }
+.tv-post .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.tv-post .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tv-post .av {
+  width: 40px; height: 40px; border-radius: 50%; flex: 0 0 auto;
+  display: grid; place-items: center; font-size: 20px;
+  background: var(--tv-n800); box-shadow: 0 0 0 2px var(--tv-n700);
+}
+.tv-post .nm { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tv-post .nm b { font-size: 14px; font-weight: 700; color: #fff; }
+.tv-post .nm .h { font-family: var(--tv-mono); font-size: 12px; color: var(--tv-n400); }
+.tv-post .meta {
+  display: flex; align-items: center; gap: 8px; margin-top: 2px;
+  font-family: var(--tv-mono); font-size: 11px; color: var(--tv-n500);
+}
+.tv-post h3 {
+  font-family: var(--tv-head); font-weight: 900; text-transform: uppercase;
+  font-size: 17px; line-height: 1.3; letter-spacing: -.01em; color: #fff; margin: 0 0 8px;
+}
+.tv-post .txt { font-size: 14px; color: var(--tv-n300); line-height: 1.65; white-space: pre-line; margin: 0 0 16px; }
+.tv-post .tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.tv-post .tags button {
+  font-family: var(--tv-mono); font-size: 12px; font-weight: 700;
+  padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  background: var(--tv-n900); color: var(--tv-n300); border: 1px solid var(--tv-n800);
+}
+.tv-post .tags button:hover { background: var(--tv-n800); color: var(--tv-green); border-color: rgba(125,255,0,.4); }
+.tv-post .bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 12px; border-top: 1px solid var(--tv-n800); flex-wrap: wrap; gap: 8px;
+}
+.tv-post .bar .l { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tv-act {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 8px; cursor: pointer;
+  font-family: var(--tv-sans); font-size: 12px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .06em;
+  background: var(--tv-n900); color: var(--tv-n300); border: 1px solid var(--tv-n800);
+}
+.tv-act:hover { background: var(--tv-n800); color: #fff; }
+.tv-act svg { width: 14px; height: 14px; }
+.tv-act .c { font-family: var(--tv-mono); }
+.tv-act.on { background: var(--tv-magenta); color: #000; border-color: var(--tv-magenta); box-shadow: 0 0 10px rgba(255,0,255,.4); }
+.tv-act.on svg { fill: #000; }
+.tv-emoji {
+  padding: 5px 9px; border-radius: 8px; cursor: pointer; font-size: 13px;
+  background: var(--tv-n900); border: 1px solid var(--tv-n800); color: var(--tv-n300);
+  font-family: var(--tv-mono);
+}
+.tv-emoji:hover { background: var(--tv-n800); }
+.tv-emoji.on { background: rgba(125,255,0,.15); border-color: var(--tv-green); color: var(--tv-green); }
+
+/* ---- widgets ----------------------------------------------------------- */
+.tv-widget { background: var(--tv-card); border: 1px solid var(--tv-n800); border-radius: 12px; overflow: hidden; }
+.tv-widget .hd {
+  display: flex; align-items: center; gap: 8px; padding: 14px 16px;
+  border-bottom: 1px solid var(--tv-n800);
+}
+.tv-widget .hd h3 {
+  font-family: var(--tv-head); font-size: 12px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .06em; color: #fff;
+}
+.tv-widget .hd svg { width: 16px; height: 16px; color: var(--tv-green); flex: 0 0 auto; }
+.tv-widget .in { padding: 14px 16px; }
+.tv-widget .none { font-family: var(--tv-mono); font-size: 12px; color: var(--tv-n500); line-height: 1.6; }
+
+.tv-empty {
+  padding: 40px 24px; text-align: center;
+  background: var(--tv-card); border: 1px dashed var(--tv-n700); border-radius: 12px;
+}
+.tv-empty h3 {
+  font-family: var(--tv-head); font-weight: 900; text-transform: uppercase;
+  font-size: 18px; color: #fff; margin-bottom: 6px;
+}
+.tv-empty p { font-size: 13px; color: var(--tv-n400); line-height: 1.6; margin: 0 auto 16px; max-width: 34rem; }
 
 /* ---- fields ------------------------------------------------------------ */
-.tv input, .tv textarea, .tv select {
-  background: var(--tv-bg2);
-  border: 1px solid var(--tv-line);
-  color: var(--tv-txt);
-  border-radius: 10px;
-  font-family: var(--tv-sans);
+.tv-field { margin-bottom: 14px; }
+.tv-field label {
+  display: block; margin-bottom: 6px;
+  font-family: var(--tv-head); font-size: 11px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--tv-n300);
 }
-.tv input:focus, .tv textarea:focus, .tv select:focus {
-  outline: none;
-  border-color: var(--tv-green);
-  box-shadow: 0 0 0 3px rgba(125, 255, 0, .18);
+.tv-field input, .tv-field textarea, .tv-field select {
+  width: 100%; padding: 10px 12px; border-radius: 8px; font-size: 14px; color: #fff;
+  background: var(--tv-bg2); border: 1px solid var(--tv-n800); font-family: var(--tv-sans);
 }
-.tv ::placeholder { color: var(--tv-dim2); }
-
-/* ---- links and accents ------------------------------------------------- */
-.tv a:not(.btn):not(.ncl) { color: var(--tv-cyan); }
-.tv a:not(.btn):not(.ncl):hover { color: var(--tv-green); }
-.tv .accent-green { color: var(--tv-green); }
-.tv .accent-cyan { color: var(--tv-cyan); }
-.tv .accent-magenta { color: var(--tv-magenta); }
-.tv .glow-green { box-shadow: 0 0 14px rgba(125, 255, 0, .35); }
-.tv .glow-cyan { box-shadow: 0 0 14px rgba(0, 242, 255, .35); }
-.tv .glow-magenta { box-shadow: 0 0 14px rgba(255, 0, 255, .35); }
-
-/* The gradient headline the design uses on its section titles. */
-.tv .g, .tv .grad {
-  background: linear-gradient(90deg, var(--tv-green), var(--tv-cyan));
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent; color: transparent;
+.tv-field textarea { resize: vertical; min-height: 90px; }
+.tv-field input::placeholder, .tv-field textarea::placeholder { color: var(--tv-n500); }
+.tv-field input:focus, .tv-field textarea:focus, .tv-field select:focus {
+  outline: none; border-color: var(--tv-green); box-shadow: 0 0 0 3px rgba(125,255,0,.18);
 }
 
-/* ---- the shared rail, in this design's colours -------------------------
-   nova.js draws the rail on every page from its own variables, so rather than
-   fight it selector by selector, its variables are simply restated. */
+/* ---- modals ------------------------------------------------------------ */
+.tv-modal {
+  position: fixed; inset: 0; z-index: 60; padding: 16px;
+  background: rgba(0,0,0,.8); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.tv-modal[hidden] { display: none; }
+.tv-modal .box {
+  width: 100%; max-width: 34rem; max-height: 88vh; overflow-y: auto;
+  background: var(--tv-card); border: 1px solid var(--tv-n800);
+  border-radius: 16px; padding: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,.9);
+}
+.tv-modal .hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--tv-n800);
+}
+.tv-modal .hd h3 {
+  font-family: var(--tv-head); font-size: 16px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: -.01em; color: #fff;
+  display: flex; align-items: center; gap: 8px;
+}
+.tv-modal .hd h3 svg { width: 18px; height: 18px; color: var(--tv-green); }
+.tv-modal .hd .x { background: none; border: 0; cursor: pointer; color: var(--tv-n400); font-size: 15px; padding: 4px; }
+.tv-modal .hd .x:hover { color: #fff; }
+.tv-modal .ft { display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; }
+
+/* ---- toasts ------------------------------------------------------------ */
+.tv-toasts {
+  position: fixed; right: 16px; bottom: 16px; z-index: 70;
+  display: flex; flex-direction: column; gap: 8px; max-width: min(360px, calc(100vw - 32px));
+}
+.tv-toast {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: 12px; font-size: 13px; font-weight: 600;
+  background: var(--tv-drop); border: 1px solid var(--tv-n700); color: #fff;
+  box-shadow: 0 20px 40px -12px rgba(0,0,0,.9);
+  animation: tvToastIn .22s ease-out;
+}
+@keyframes tvToastIn { from { opacity: 0; transform: translateY(10px); } }
+.tv-toast svg { width: 16px; height: 16px; flex: 0 0 auto; margin-top: 1px; }
+.tv-toast.success { border-color: var(--tv-green); box-shadow: 0 0 18px rgba(125,255,0,.2); }
+.tv-toast.success svg { color: var(--tv-green); }
+.tv-toast.error { border-color: var(--tv-rose); }
+.tv-toast.error svg { color: var(--tv-rose); }
+.tv-toast.info svg { color: var(--tv-cyan); }
+
+/* ---- footer ------------------------------------------------------------ */
+.tv-foot {
+  margin-top: 64px; background: var(--tv-bg2); border-top: 1px solid var(--tv-n800);
+  padding: 40px 16px; font-size: 12px; color: var(--tv-n400);
+}
+.tv-foot .in {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  gap: 24px; text-align: center;
+}
+@media (min-width: 640px) { .tv-foot .in { flex-direction: row; text-align: left; } }
+.tv-foot .brand { display: flex; align-items: center; gap: 12px; }
+.tv-foot .brand .sq {
+  width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;
+  background: var(--tv-green); color: #000; box-shadow: 0 0 10px var(--tv-green); flex: 0 0 auto;
+}
+.tv-foot .brand .sq svg { width: 16px; height: 16px; }
+.tv-foot .brand b {
+  font-family: var(--tv-head); font-weight: 900; font-size: 16px;
+  text-transform: uppercase; letter-spacing: -.02em; color: #fff;
+}
+.tv-foot .brand b em { font-style: normal; color: var(--tv-green); }
+.tv-foot .brand p { font-family: var(--tv-mono); font-size: 11px; color: var(--tv-n500); margin: 2px 0 0; }
+.tv-foot .links {
+  display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;
+  font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 11px;
+}
+.tv-foot .links button {
+  background: none; border: 0; cursor: pointer; color: var(--tv-n300);
+  font: inherit; text-transform: inherit; letter-spacing: inherit;
+}
+.tv-foot .links button:hover { color: var(--tv-green); }
+.tv-foot .links button.safe { color: var(--tv-cyan); display: inline-flex; align-items: center; gap: 4px; }
+.tv-foot .links button.safe:hover { color: #fff; }
+.tv-foot .links button.safe svg { width: 14px; height: 14px; }
+.tv-foot .fine { font-family: var(--tv-mono); font-size: 11px; color: var(--tv-n500); }
+
+/* ============================================================================
+   MODERATOR TOOLS
+   ==========================================================================
+   Same design language, one deliberate difference: the accent is amber rather
+   than acid green. A moderator acting on somebody's post should not feel like
+   the same click as posting — the colour changing is a small, constant
+   reminder of which hat is on.
+   ========================================================================== */
+.tv-mod .tv-widget .hd svg { color: var(--tv-amber); }
+.tv-modrow {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 14px; border-radius: 12px; margin-bottom: 10px;
+  background: var(--tv-bg2); border: 1px solid var(--tv-n800);
+}
+.tv-modrow.hot { border-color: rgba(251,191,36,.5); box-shadow: 0 0 14px rgba(251,191,36,.12); }
+.tv-modrow.done { opacity: .5; }
+.tv-modrow .l { min-width: 0; }
+.tv-modrow .l b { display: block; font-size: 13px; font-weight: 800; color: #fff; }
+.tv-modrow .l p { font-size: 12px; color: var(--tv-n400); margin: 3px 0 0; line-height: 1.5; }
+.tv-modrow .l .id { font-family: var(--tv-mono); font-size: 10px; color: var(--tv-n500); margin-top: 4px; display: block; }
+.tv-modrow .acts { display: flex; gap: 6px; flex-wrap: wrap; flex: 0 0 auto; }
+.tv-count {
+  font-family: var(--tv-mono); font-size: 10px; font-weight: 900;
+  padding: 2px 7px; border-radius: 9999px;
+  background: var(--tv-amber); color: #000;
+}
+.tv-btn-amber { background: var(--tv-amber); color: #000; }
+.tv-btn-amber:hover:not(:disabled) { background: #f59e0b; }
+.tv-btn-danger { background: transparent; color: var(--tv-rose); border: 1px solid rgba(251,113,133,.4); font-weight: 700; }
+.tv-btn-danger:hover:not(:disabled) { background: rgba(251,113,133,.12); }
+.tv-logrow {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 1px solid var(--tv-n900);
+  font-family: var(--tv-mono); font-size: 11px; color: var(--tv-n400);
+}
+.tv-logrow b { color: var(--tv-amber); font-weight: 700; text-transform: uppercase; }
+.tv-logrow time { margin-left: auto; color: var(--tv-n500); }
+
+/* ============================================================================
+   THE SHARED RAIL, RESTATED
+   ========================================================================== */
 body.tv {
-  --nc-rail1: #0a0a0a; --nc-rail2: #000000; --nc-rail3: #000000;
+  --nc-rail1: #0a0a0a; --nc-rail2: #050505; --nc-rail3: #050505;
   --nc-railline: #262626; --nc-railglow: rgba(125,255,0,.10);
   --nc-navlink: #a3a3a3; --nc-navon: #000000; --nc-navhead: #737373;
   --nc-navhoverbg: rgba(255,255,255,.05);
   --nc-navonbg: linear-gradient(90deg, #7DFF00, #7DFF00);
   --nc-navonline: #7DFF00;
-  --nc-navicohover: #00F2FF; --nc-navicoon: #000000;
+  --nc-navicohover: #00f2ff; --nc-navicoon: #000000;
   --nc-coinbg: linear-gradient(135deg, rgba(125,255,0,.16), rgba(0,242,255,.10));
   --nc-cardbg: #0a0a0a;
-  --nc-bar-bg: rgba(0,0,0,.82);
+  --nc-bar-bg: rgba(5,5,5,.82);
   --nc-line: #262626; --nc-line2: #262626;
-  --nc-bg: #000000; --nc-bg2: #0a0a0a;
+  --nc-bg: #050505; --nc-bg2: #0a0a0a;
   --nc-text: #ffffff; --nc-dim: #a3a3a3;
-  --nc-cyan: #00F2FF;
+  --nc-cyan: #00f2ff;
 }
+body.tv .sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: var(--nc-rail, 200px); z-index: 998;
+  display: flex; flex-direction: column; padding: 20px 0; gap: 4px; overflow-y: auto;
+}
+body.tv .sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+body.tv .sidebar .themewrap label { display: block; font-size: 12px; opacity: .6; margin-bottom: 6px; }
+body.tv .sidebar select {
+  width: 100%; font: inherit; font-size: 13px; padding: 9px; border-radius: 10px;
+  background: var(--tv-n900); color: #fff; border: 1px solid var(--tv-n700);
+}
+body.tv .tv-nav { top: var(--nc-bar-h, 0px); }
 
-/* The rail's foot cards take their text colour from --nc-navon, which is also
-   the colour of text ON the green active pill — black. Setting one for the
-   pill made the coins and the profile name black on black. They are named
-   separately here. */
-body.tv .sidebar #ncfoot .ncfb b { color: var(--tv-txt); }
-body.tv .sidebar #ncfoot .ncfb i { color: var(--tv-dim2); }
+/* THE NOVA PILL SAT ON TOP OF THE NAVBAR.
+   jarvis.js parks its floating pill at --nc-bar-h + 12px, which is exactly
+   where this page's sticky navbar starts. Hit-testing the centre of every
+   control found jr-wake and jr-speak taking the clicks meant for the first
+   two nav links at 1024, 1180 and 1280 — invisibly, because the pill is
+   drawn above them and looks like it belongs to the top bar.
+
+   The pill moves below the navbar here rather than the navbar moving, because
+   the navbar is the page and the pill is a visitor. 64px is the navbar's
+   height; the 12px is jarvis.js's own offset kept. */
+body.tv .jr-pill { top: calc(var(--nc-bar-h, 0px) + 64px + 12px) !important; }
+
+/* --nc-navon is the text ON the green active pill AND the text IN the rail's
+   foot cards. Black is right for the pill and unreadable on the cards. */
+body.tv .sidebar #ncfoot .ncfb b { color: #fff; }
+body.tv .sidebar #ncfoot .ncfb i { color: var(--tv-n500); }
 body.tv .sidebar #ncfoot #nccoins,
-body.tv .sidebar #ncfoot #ncprof { color: var(--tv-txt); }
-/* and the coin tile is a hard-coded pink/violet/cyan gradient in nova.js */
+body.tv .sidebar #ncfoot #ncprof { color: #fff; }
 body.tv .sidebar #ncfoot .ncfi {
   background: linear-gradient(135deg, var(--tv-green), var(--tv-cyan)) !important;
-  color: #000;
-  box-shadow: 0 4px 16px rgba(125, 255, 0, .28);
-}
-
-/* ============================================================================
-   THE PAGES' OWN VARIABLES, RENAMED RATHER THAN FOUGHT
-   ============================================================================
-   community.html, socials.html and study.html each open with a :root block
-   that names its palette — --violet, --cyan, --pink, --panel, --grad — and
-   then every rule in the page refers to those names instead of to a colour.
-   That is a gift: rather than chasing the rules one at a time, the names are
-   simply given different values here.
-
-   They are set on body, not on :root. Custom properties inherit downwards, so
-   a value on body reaches every element in the page and shadows the one the
-   page set on <html> — while :root is the ancestor and could not shadow it.
-
-   --violet is the slot these pages use for their primary accent, so it gets
-   the acid green. The name stops being descriptive; the alternative is
-   rewriting three stylesheets to rename it, which would be a much larger
-   change for the same pixels. */
-body.tv {
-  --ink:    var(--tv-bg);
-  --panel:  var(--tv-panel);
-  --line:   var(--tv-line);
-  --txt:    var(--tv-txt);
-  --dim:    var(--tv-dim);
-  --violet: var(--tv-green);
-  --cyan:   var(--tv-cyan);
-  --pink:   var(--tv-magenta);
-  --lime:   var(--tv-green);
-  --grad:   linear-gradient(110deg, var(--tv-green), var(--tv-cyan));
-}
-
-/* Anything sitting on that gradient was written for a dark-text-on-bright
-   fill, and both ends of this one are bright, so that still holds. */
-body.tv .gbtn, body.tv .pill.on { color: #000; }
-
-/* ============================================================================
-   study.html PARTICULARS
-   ============================================================================
-   It is the one page of the three that sets a font on the universal selector
-   ( *{font-family:'Segoe UI',…} ), which beats an inherited value from body no
-   matter what body says — inheritance loses to any rule that matches the
-   element itself. So the font has to be set on the elements too.
-
-   .tv * is (0,1,0); the * it is overriding is (0,0,0). The heading rule above
-   is (0,1,1) and so still wins over this one whatever the order. */
-body.tv * { font-family: var(--tv-sans); }
-body.tv h1, body.tv h2, body.tv h3, body.tv h4 { font-family: var(--tv-head); }
-body.tv code, body.tv kbd, body.tv samp, body.tv pre,
-body.tv #nccoins .ncfb b { font-family: ui-monospace, Consolas, monospace; }
-
-/* The timer dial is stroked with an SVG gradient whose stops are written as
-   presentation attributes. A CSS rule of any specificity beats one of those. */
-body.tv #sg stop:first-child { stop-color: #7DFF00; }
-body.tv #sg stop:last-child  { stop-color: #00F2FF; }
-
-/* The mode chips, the sound buttons and the ticked checkbox are the three
-   places study.html spells the violet out rather than reading a variable. */
-body.tv .mode.on {
-  background: var(--tv-green);
-  border-color: var(--tv-green);
-  color: #000;
-}
-body.tv .snd.on {
-  background: color-mix(in srgb, var(--tv-green) 16%, transparent);
-  border-color: var(--tv-green);
-  color: var(--tv-txt);
-}
-body.tv ul.goals li.tick .box {
-  background: var(--tv-green);
-  border-color: var(--tv-green);
-  color: #000;
-}
-body.tv .vol input { accent-color: var(--tv-green); }
-
-/* The blurred bloom behind the page title, spelled out as violet rather than
-   read from a variable — the last piece of the old palette still visible. */
-body.tv .hero::before {
-  background: radial-gradient(closest-side, rgba(125, 255, 0, .22), transparent 72%);
+  color: #000; box-shadow: 0 4px 16px rgba(125,255,0,.28);
 }
