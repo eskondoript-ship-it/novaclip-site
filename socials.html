@@ -187,12 +187,39 @@ TABS.forEach((t, i) => {
 
 /* The indicator is positioned from the real button box rather than from an
    index times a guessed width — the labels are translated, so their widths are
-   not knowable in advance. */
+   not knowable in advance.
+
+   AND IT HAS TO BE RE-MEASURED, NOT JUST MEASURED ONCE.
+
+   This ran only when a tab was chosen, which meant it captured the layout as
+   it stood at that instant and then never looked again. Two things move the
+   buttons afterwards: nova.js applies the translations, which changes every
+   label's width, and it sets dir=rtl for Arabic, Farsi and Urdu, which swaps
+   the buttons end for end. In Farsi the active tab ended up at offsetLeft 95
+   while the indicator was still transformed to 5 — the bright pill sat under
+   the wrong tab, on top of its neighbour's text. Measured, not guessed at:
+   181px out.
+
+   A ResizeObserver on the row covers all of it, because every one of those
+   causes a relayout of this element. */
+let activeBtn = null;
+
 function moveIndicator(btn) {
-  if (!btn || !ind) return;
-  ind.style.width = btn.offsetWidth + 'px';
-  ind.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
+  if (btn) activeBtn = btn;
+  if (!activeBtn || !ind) return;
+  ind.style.width = activeBtn.offsetWidth + 'px';
+  ind.style.transform = 'translateX(' + activeBtn.offsetLeft + 'px)';
 }
+
+if (window.ResizeObserver && tabs) {
+  /* Fires on the direction flip, on translated labels, and on a window
+     resize — the three things that used to leave it stranded. */
+  new ResizeObserver(() => moveIndicator()).observe(tabs);
+}
+/* Belt and braces for the ordering: nova.js translates and flips direction
+   after this script has run, and a font swapping in can move things again. */
+addEventListener('load', () => moveIndicator());
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => moveIndicator());
 
 function show(key) {
   const t = TABS.find(x => x.key === key) || TABS[0];

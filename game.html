@@ -187,12 +187,27 @@ TABS.forEach((t, i) => {
 
 /* The indicator is positioned from the real button box rather than from an
    index times a guessed width — the labels are translated, so their widths are
-   not knowable in advance. */
+   not knowable in advance.
+
+   Re-measured rather than measured once, for the same reason as on socials.html
+   (see the longer note there). It used to run only when a tab was chosen, so it
+   captured the layout at that instant; nova.js then translates the labels and,
+   for Arabic, Farsi and Urdu, sets dir=rtl and swaps the buttons end for end.
+   The indicator stayed where it was and ended up lit under the wrong tab. */
+let activeBtn = null;
+
 function moveIndicator(btn) {
-  if (!btn || !ind) return;
-  ind.style.width = btn.offsetWidth + 'px';
-  ind.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
+  if (btn) activeBtn = btn;
+  if (!activeBtn || !ind) return;
+  ind.style.width = activeBtn.offsetWidth + 'px';
+  ind.style.transform = 'translateX(' + activeBtn.offsetLeft + 'px)';
 }
+
+if (window.ResizeObserver && tabs) {
+  new ResizeObserver(() => moveIndicator()).observe(tabs);
+}
+addEventListener('load', () => moveIndicator());
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => moveIndicator());
 
 function show(key) {
   const t = TABS.find(x => x.key === key) || TABS[0];

@@ -1725,13 +1725,28 @@ ncFit.textContent =
    string has to be tagged by hand. Listed by element rather than applied to
    everything, so it only touches things that hold sentences.
    --------------------------------------------------------------------------- */
+/* The element list matters more than it looks. The first version of this rule
+   named p, li, headings, table cells and a few classes — and left out span,
+   div, b, strong and button, which is where most of this site's prose actually
+   lives. Forty-six lines across fourteen pages were still coming out with
+   their full stop on the wrong side; "Wrapped. Send them this link." and
+   "None of it is uploaded." among them.
+
+   text-align is deliberately NOT set here any more. The first version added
+   `text-align: start`, which reads as harmless and is not: at (0,1,1) it
+   outranks a page's own `.something { text-align: center }` at (0,1,0), so it
+   would have quietly left-aligned every centred caption in Farsi. It is also
+   unnecessary — `start` is already the initial value, and under plaintext it
+   resolves against each block's own detected direction on its own. */
 "html[dir=rtl] p, html[dir=rtl] li, html[dir=rtl] h1, html[dir=rtl] h2," +
 "html[dir=rtl] h3, html[dir=rtl] h4, html[dir=rtl] h5, html[dir=rtl] h6," +
 "html[dir=rtl] td, html[dir=rtl] th, html[dir=rtl] dd, html[dir=rtl] dt," +
 "html[dir=rtl] figcaption, html[dir=rtl] blockquote, html[dir=rtl] label," +
 "html[dir=rtl] small, html[dir=rtl] summary, html[dir=rtl] option," +
-"html[dir=rtl] .hint, html[dir=rtl] .sub, html[dir=rtl] .subtitle" +
-"{ unicode-bidi: plaintext; text-align: start; }" +
+"html[dir=rtl] span, html[dir=rtl] div, html[dir=rtl] b, html[dir=rtl] strong," +
+"html[dir=rtl] em, html[dir=rtl] i, html[dir=rtl] a, html[dir=rtl] button," +
+"html[dir=rtl] code, html[dir=rtl] output, html[dir=rtl] legend, html[dir=rtl] caption" +
+"{ unicode-bidi: plaintext; }" +
 
 /* Text that is comfortable on a 1280 laptop is small on a 2560 monitor, and
    the whole site is px-sized so nothing scales on its own. A gentle ramp:
