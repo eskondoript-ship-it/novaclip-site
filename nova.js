@@ -4625,8 +4625,79 @@ function ncPairTabs() {
   else { wrap.classList.add('float'); document.body.appendChild(wrap); }
 }
 
+/* ============================================================================
+   GETTING OUT OF THE WAY OF A DIALOG
+   ============================================================================
+   The floating chrome this file adds — the Editor/Photo tabs at z-index 99991
+   and the Nova pill at 99995 — sits above everything a page can reasonably
+   give a modal. The editor's Project settings dialog is z-index 50, so both
+   were drawn on top of it: the tabs across its title and the pill over its
+   top-right corner.
+
+   Raising the dialog is not possible from here, and lowering the pill would
+   put it under things it is meant to float over the rest of the time. So they
+   stand down while a dialog is open, and come back when it closes.
+
+   "A dialog is open" is deliberately narrow: a fixed element that covers most
+   of the viewport, or one that says aria-modal. A dropdown or a toast covers
+   neither test and does not make the chrome vanish.
+   ============================================================================ */
+function ncModalWatch() {
+  if (!document.body) return;
+
+  function anyModal() {
+    var nodes = document.querySelectorAll('[aria-modal="true"], [role="dialog"], .fixed');
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      var cs = getComputedStyle(n);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') continue;
+      if (n.getAttribute('aria-modal') === 'true') return true;
+      if (cs.position !== 'fixed') continue;
+      var b = n.getBoundingClientRect();
+      /* most of the screen, both ways — a top bar is wide but not tall, a
+         side panel is tall but not wide, and neither should count. */
+      if (b.width >= innerWidth * 0.8 && b.height >= innerHeight * 0.8) return true;
+    }
+    return false;
+  }
+
+  var on = false;
+  function check() {
+    var now = anyModal();
+    if (now === on) return;
+    on = now;
+    document.body.classList.toggle('nc-modal-open', on);
+  }
+
+  if (!document.getElementById('ncmodalcss')) {
+    var st = document.createElement('style');
+    st.id = 'ncmodalcss';
+    st.textContent =
+      'body.nc-modal-open #ncpairtabs.float,' +
+      'body.nc-modal-open .jr-pill{opacity:0;pointer-events:none;transition:opacity .15s}';
+    document.head.appendChild(st);
+  }
+
+  check();
+
+  /* Throttled, NOT debounced. The first version cleared the pending timer on
+     every mutation — and the editor mutates continuously while a timeline is
+     on screen, so the check was pushed back a few milliseconds at a time and
+     never ran once. A debounce only settles if the noise stops, and here it
+     never stops. This runs at most once every 120ms and always runs. */
+  var pending = 0;
+  new MutationObserver(function () {
+    if (pending) return;
+    pending = setTimeout(function () { pending = 0; check(); }, 120);
+  }).observe(document.body, { childList: true, subtree: true, attributes: true,
+                              attributeFilter: ['class', 'style', 'aria-modal', 'hidden'] });
+  addEventListener('resize', check, { passive: true });
+}
+
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ncPairTabs);
 else ncPairTabs();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ncModalWatch);
+else ncModalWatch();
 
 
 /* ============================================================================

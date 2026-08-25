@@ -274,7 +274,11 @@
       '100%{clip-path:inset(0 0 0 100%)}}',
     '@keyframes ncShine{0%{transform:translateX(-120%)}100%{transform:translateX(120%)}}',
     /* A still frame instead of movement, rather than no preview at all. */
-    '@media (prefers-reduced-motion:reduce){.nckit-fx i,.nckit-fx u{animation:none !important}}'
+    '@media (prefers-reduced-motion:reduce){.nckit-fx i,.nckit-fx u{animation:none !important}}',
+    /* see FREEING MODALS above — dropped only while a dialog is inside */
+    '.nckit-unfix{backdrop-filter:none !important;-webkit-backdrop-filter:none !important;' +
+      'filter:none !important;transform:none !important;perspective:none !important;' +
+      'contain:none !important;will-change:auto !important}'
   ].join('');
 
   /* ==========================================================================
@@ -482,6 +486,69 @@
   }
 
   /* ==========================================================================
+     FREEING MODALS THAT ARE TRAPPED IN A HEADER
+     ==========================================================================
+     The editor's Project settings dialog is markup that says
+     `fixed inset-0 flex items-center justify-center` — cover the screen, centre
+     the panel. It was landing 1,53 1438x54: the width of the screen and the
+     height of the toolbar, with the panel's top 239px cut off above it.
+
+     Nothing is wrong with the dialog. It is a child of the editor's <header>,
+     and that header is .glass-strong, which is
+     `backdrop-filter: blur(24px) saturate(160%)`. A backdrop-filter makes an
+     element the containing block for every position:fixed descendant — so
+     "fixed inset-0" resolved to a 56px header instead of the viewport, and the
+     panel was being centred inside it. transform, filter, perspective and
+     contain:paint all do the same thing; it is one of the sharper edges in
+     CSS, and it is invisible until something lands in the wrong place.
+
+     The proper fix is a portal — render the dialog on <body> instead. That
+     lives inside the compiled bundle. Moving the node from out here would
+     work until React unmounted it and could not find it where it left it.
+
+     So the ancestor is neutralised instead, and only while a fixed overlay is
+     actually inside it. The header loses its blur for as long as a dialog is
+     open, which nobody can see because a dialog is covering it.
+     ========================================================================== */
+  var TRAPS = /* properties that create a containing block for fixed children */
+    ['backdropFilter', 'webkitBackdropFilter', 'filter', 'transform', 'perspective'];
+
+  function trapAbove(node) {
+    for (var n = node.parentElement; n && n !== document.documentElement; n = n.parentElement) {
+      var cs = getComputedStyle(n);
+      for (var i = 0; i < TRAPS.length; i++) {
+        var v = cs[TRAPS[i]];
+        if (v && v !== 'none') return n;
+      }
+      if (cs.contain && /paint|layout|strict|content/.test(cs.contain)) return n;
+      if (cs.willChange && /transform|filter|perspective/.test(cs.willChange)) return n;
+    }
+    return null;
+  }
+
+  function freeFixed() {
+    /* Anything asking to cover the screen. Checked by intent — the inset-0
+       class or explicit inset — rather than by measuring, because a trapped
+       overlay measures wrong by definition. */
+    var want = document.querySelectorAll('.fixed.inset-0, [class*="inset-0"]');
+    var traps = [];
+    for (var i = 0; i < want.length; i++) {
+      var o = want[i];
+      var cs = getComputedStyle(o);
+      if (cs.position !== 'fixed') continue;
+      if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+      var t = trapAbove(o);
+      if (t) traps.push(t);
+    }
+    /* Release anything that no longer holds one. */
+    var held = document.querySelectorAll('.nckit-unfix');
+    for (var j = 0; j < held.length; j++) {
+      if (traps.indexOf(held[j]) === -1) held[j].classList.remove('nckit-unfix');
+    }
+    traps.forEach(function (t) { t.classList.add('nckit-unfix'); });
+  }
+
+  /* ==========================================================================
      THE STICKER SHEET
      ========================================================================== */
   var openCat = 0, veil = null;
@@ -661,7 +728,7 @@
   function rescan() {
     if (queued) return;
     queued = true;
-    var run = function () { queued = false; try { wirePhoto(); wireEditor(); decorate(); } catch (e) {} };
+    var run = function () { queued = false; try { wirePhoto(); wireEditor(); decorate(); freeFixed(); } catch (e) {} };
     if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 600 });
     else setTimeout(run, 250);
   }
