@@ -276,3 +276,27 @@ body.bio #nbg stop:nth-child(3) { stop-color: #6ee7b7; }
 body.bio .scan .face {
   background: radial-gradient(circle at 50% 35%, rgba(16, 185, 129, .28), transparent 65%);
 }
+
+/* ---- the click-rhythm pad ---------------------------------------------
+   Two slabs and a row of dots, in this design's one colour. The pressed
+   state is a filled emerald because the press is the measurement — it wants
+   to be the loudest thing on the card while it is happening. */
+body.bio .pad .zone {
+  background: color-mix(in srgb, var(--bio-panel) 70%, #000);
+  border-color: var(--bio-line2);
+  color: var(--bio-dim);
+  font-family: var(--bio-mono);
+}
+body.bio .pad .zone:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--bio-em2) 45%, transparent);
+  color: var(--bio-em);
+}
+body.bio .pad .zone.down {
+  background: var(--bio-em2);
+  border-color: transparent;
+  color: #021;
+  box-shadow: var(--bio-glow);
+}
+body.bio .rhslots i { border-color: var(--bio-line2); }
+body.bio .rhslots i.on { background: var(--bio-em); border-color: transparent; }
+body.bio .rhtrace { color: var(--bio-dim2); font-family: var(--bio-mono); }

@@ -148,6 +148,12 @@ th { color:var(--nc-dim,#8c96ad); font-weight:600; font-size:0.85rem; }
         passphrase you choose), and that key is never written down anywhere. Delete
         the passkey, or forget the passphrase, and what is in there cannot be read
         again — by you, by us, or by anybody</li>
+    <li>Your <strong>click rhythm</strong>, if you set one — the left-and-right order, and
+        for each click how long you held the button and how long you waited. It is stored
+        as those numbers rather than as a hash, because a rhythm has to be measured
+        against something and you cannot measure against a hash. Anyone who can read this
+        browser's storage can read it, which is the honest reason it signs you in here and
+        is not allowed to open the Locker</li>
     <li>A list of sign-in attempts on this device, so you can see anything you do not
         recognise. It stays here and is never sent</li>
     <li>Parent settings: the screen-time limits, and a <strong>hashed</strong> parent PIN</li>

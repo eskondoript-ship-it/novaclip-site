@@ -261,6 +261,35 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
       </div>
     </div>
 
+    <!-- Click rhythm. Mouse only, and the card says why rather than appearing
+         on a phone and then not working: a tap has no press-and-hold worth
+         measuring, and dwell is half of what this reads. -->
+    <div class='card' id='rhcard'>
+      <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M4 13h3l2.5-7 3.5 14 2.5-7H20'/></svg></span>Click rhythm</h2>
+      <p>A password you perform instead of typing. Click <b>left</b> and <b>right</b> in an order you
+        will remember — and it is not the order that identifies you, it is the way you do it. You
+        will never repeat it exactly, so it does not ask you to.</p>
+      <div class='spec'>
+        <div><b>Reads</b><span>how long each click is held, and the gap between them</span></div>
+        <div><b>Matching</b><span>close enough, not exact — scaled by how much you vary</span></div>
+        <div><b>Weak against</b><span>somebody who has watched you do it</span></div>
+      </div>
+
+      <div id='rhLive'>
+        <div class='pad' id='rhPad'>
+          <button class='zone' type='button' data-z='L'>LEFT</button>
+          <button class='zone' type='button' data-z='R'>RIGHT</button>
+        </div>
+        <div class='rhslots' id='rhSlots' aria-hidden='true'></div>
+        <p class='rhtrace' id='rhTrace'></p>
+      </div>
+
+      <p class='pkmsg' id='rhMsg' role='status'></p>
+      <button class='go' id='rhGo' type='button'>Set a pattern</button>
+      <button class='go alt' id='rhAgain' type='button'>Start over</button>
+      <button class='go alt' id='rhOff' type='button'>Remove</button>
+    </div>
+
     <div class='card'>
       <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3'/><circle cx='12' cy='11' r='3'/></svg></span>Face</h2>
       <p>A 128-number descriptor of your face, from face-api.js running in the tab. Not a photo —
@@ -316,6 +345,19 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
     button in the panel. The voiceprint in particular is honest about being demo-grade: it is
     good enough to tell you apart from someone else in the room, not good enough to be a lock.
   </div>
+
+  <div class='note'>
+    <b>How good the click rhythm actually is.</b> It was measured over 3000 simulated hands
+    before it shipped, at eight clicks. It turns the owner away about <b>8%</b> of the time.
+    Somebody who knows your left-and-right order but has never watched you perform it gets in
+    <b>1.2%</b> of the time — that is the case a PIN loses badly, and the reason this exists.
+    But somebody who <em>has</em> watched you gets in about <b>one try in six</b>, and this
+    allows three tries before it starts making them wait, so watching you once is worth roughly
+    a 30% chance. Somebody who can read this browser's storage has the numbers themselves and
+    walks straight in. Use it the way you would use a screen-lock pattern, not the way you would
+    use a password — and note that it is deliberately not allowed to open the Locker, which
+    needs the passkey.
+  </div>
 </div>
 
 <style>
@@ -333,6 +375,29 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
 .audit .row.no .tag{background:rgba(255,138,155,.16);color:#FF8A9B}
 .audit .row .why{flex-basis:100%;font-size:.86rem;color:var(--nc-dim,#8B97B0)}
 .audit .none{color:var(--nc-dim,#8B97B0);padding:4px 2px}
+
+/* ---- the click-rhythm pad ----
+   Big targets on purpose. A small button changes how you click it — you aim
+   first and then press — and aiming time lands in the gap measurement as
+   noise. Two slabs mean the hand goes to the same place every time. */
+.pad{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 10px}
+.pad .zone{min-height:96px;border-radius:14px;cursor:pointer;user-select:none;
+  font:800 .82rem/1 inherit;letter-spacing:.18em;
+  border:1px solid var(--line,rgba(255,255,255,.14));background:var(--panel,rgba(255,255,255,.03));
+  color:var(--dim,#8B97B0);transition:background .08s,border-color .08s,color .08s,transform .06s}
+.pad .zone:hover:not(:disabled){border-color:var(--cyan,#00F0FF);color:var(--txt,#EAF2FF)}
+/* .down, not :active — :active drops the moment the pointer leaves the button
+   and the whole point is that the press is still being timed. */
+.pad .zone.down{background:var(--cyan,#00F0FF);color:#04121a;border-color:transparent;transform:scale(.985)}
+.pad .zone:disabled{opacity:.4;cursor:default}
+.rhslots{display:flex;gap:6px;flex-wrap:wrap;min-height:12px;margin-bottom:8px}
+.rhslots i{width:11px;height:11px;border-radius:50%;display:block;
+  border:1px solid var(--line,rgba(255,255,255,.22))}
+.rhslots i.on{background:var(--cyan,#00F0FF);border-color:transparent}
+.rhtrace{min-height:1.3em;margin:0 0 8px;font-size:.78rem;letter-spacing:.02em;
+  font-family:ui-monospace,Consolas,monospace;color:var(--dim,#8B97B0);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rhcard .go{margin-right:8px}
 #lkPassRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 #lkPass{flex:1;min-width:180px;min-height:44px;padding:0 14px;border-radius:12px;font:inherit;
   background:var(--nc-bg,rgba(0,0,0,.25));color:inherit;border:1px solid var(--nc-line,rgba(255,255,255,.14))}
@@ -355,6 +420,7 @@ html[dir=rtl] .audit .row .when{margin-left:0;margin-right:auto}
 </style>
 <script src='passkey.js'></script>
 <script src='locker.js'></script>
+<script src='rhythm.js'></script>
 <script>
 /* ============================================================================
    WIRING THE PASSKEY CARD
@@ -567,6 +633,270 @@ html[dir=rtl] .audit .row .when{margin-left:0;margin-right:auto}
     addEventListener('nc-locker', lkPaint);
     lkPaint();
   }
+
+  /* ======================================================================
+     CLICK RHYTHM
+     ======================================================================
+     rhythm.js does the measuring and the deciding; everything here is the
+     pad, the state machine and the words. Three states and no more:
+
+       idle       a pattern exists or does not, and buttons say which
+       enrolling  five goes, and the count is on screen the whole time
+       checking   one go, then a verdict with the closeness in it
+
+     The press is captured on pointerdown and the release on pointerup, with
+     the pointer captured in between — otherwise pressing on LEFT and letting
+     go anywhere else loses the release, and the dwell with it.  */
+  (function () {
+    var R = window.NC_RHYTHM;
+    var card = document.getElementById('rhcard');
+    if (!card || !R) return;
+
+    var pad = document.getElementById('rhPad');
+    var slots = document.getElementById('rhSlots');
+    var trace = document.getElementById('rhTrace');
+    var msg = document.getElementById('rhMsg');
+    var live = document.getElementById('rhLive');
+    var bGo = document.getElementById('rhGo');
+    var bAgain = document.getElementById('rhAgain');
+    var bOff = document.getElementById('rhOff');
+    var zones = [].slice.call(pad.querySelectorAll('.zone'));
+
+    /* A touchscreen has no press-and-hold worth measuring, so the pad is not
+       offered at all rather than offered and then failing. */
+    if (!R.supported()) {
+      live.style.display = 'none';
+      bGo.style.display = bAgain.style.display = bOff.style.display = 'none';
+      rsay('This one needs a mouse or a trackpad. Half of what it measures is how long ' +
+           'you hold the button down, and a tap on a screen has no such thing.', '');
+      return;
+    }
+
+    var mode = 'idle';           // idle | enrolling | checking
+    var rec = null;
+    var taken = [];              // enrolment samples so far
+    var want = 0;                // clicks the enrolment settled on
+
+    function rsay(t, kind) {
+      msg.textContent = t || '';
+      msg.className = 'pkmsg' + (kind ? ' ' + kind : '');
+    }
+
+    function drawSlots(n, filled) {
+      var out = '';
+      for (var i = 0; i < n; i++) out += '<i' + (i < filled ? " class='on'" : '') + '></i>';
+      slots.innerHTML = out;
+    }
+
+    /* The running trace. Showing the numbers as they are captured is the
+       point of the card — it is a page about what a measurement is. */
+    function drawTrace() {
+      if (!rec || !rec.length()) { trace.textContent = ''; return; }
+      var s = rec.zones().join(' ');
+      trace.textContent = s + '   ' + rec.length() + (want ? '/' + want : '') + ' clicks';
+    }
+
+    function paint() {
+      var has = R.exists();
+      var info = R.info();
+      if (mode === 'enrolling') {
+        bGo.textContent = taken.length === R.ENROL_REPEATS - 1
+          ? 'Save the pattern'
+          : 'Done — go ' + (taken.length + 1) + ' of ' + R.ENROL_REPEATS;
+        bGo.style.display = '';
+        bAgain.style.display = '';
+        bAgain.textContent = 'Start over';
+        bOff.style.display = 'none';
+      } else if (mode === 'checking') {
+        bGo.textContent = 'Check it';
+        bGo.style.display = '';
+        bAgain.style.display = '';
+        bAgain.textContent = 'Cancel';
+        bOff.style.display = 'none';
+      } else {
+        bGo.textContent = has ? 'Sign in with it' : 'Set a pattern';
+        bGo.style.display = '';
+        bAgain.style.display = has ? '' : 'none';
+        bAgain.textContent = 'Set a new one';
+        bOff.style.display = has ? '' : 'none';
+      }
+      zones.forEach(function (z) { z.disabled = (mode === 'idle'); });
+      if (mode === 'idle') {
+        drawSlots(info ? info.clicks : 0, 0);
+        trace.textContent = info
+          ? info.clicks + ' clicks, ' + info.features + ' numbers kept'
+          : '';
+      }
+    }
+
+    /* ---- capture ---- */
+    function press(zone, el, ev) {
+      if (mode === 'idle') return;
+      if (!rec) return;
+      if (!rec.press(zone)) return;
+      el.classList.add('down');
+      if (ev && ev.pointerId != null && el.setPointerCapture) {
+        try { el.setPointerCapture(ev.pointerId); } catch (e) {}
+      }
+    }
+    function release(el) {
+      if (!rec || !rec.held()) return;
+      rec.release();
+      el.classList.remove('down');
+      /* On the very first go the length is not known yet, so the row of dots
+         grows with the clicks rather than showing twelve empty ones and
+         implying that twelve is the number. */
+      drawSlots(want || Math.max(R.MIN_CLICKS, rec.length()), rec.length());
+      drawTrace();
+      if (mode === 'checking' && want && rec.length() >= want) submit();
+    }
+
+    zones.forEach(function (el) {
+      var zone = el.getAttribute('data-z');
+      el.addEventListener('pointerdown', function (e) { e.preventDefault(); press(zone, el, e); });
+      el.addEventListener('pointerup', function (e) { e.preventDefault(); release(el); });
+      el.addEventListener('pointercancel', function () { rec && rec.cancel(); el.classList.remove('down'); });
+      /* Keyboard gets the same treatment rather than a click handler: holding
+         Space has a duration too, and a click event would have none. */
+      el.addEventListener('keydown', function (e) {
+        if (e.key !== ' ' && e.key !== 'Enter') return;
+        e.preventDefault();
+        if (e.repeat) return;
+        press(zone, el, null);
+      });
+      el.addEventListener('keyup', function (e) {
+        if (e.key !== ' ' && e.key !== 'Enter') return;
+        e.preventDefault();
+        release(el);
+      });
+      el.addEventListener('click', function (e) { e.preventDefault(); });
+    });
+
+    /* ---- enrolment ---- */
+    function startEnrol() {
+      mode = 'enrolling';
+      taken = [];
+      want = 0;
+      rec = R.newRecorder();
+      drawSlots(R.MIN_CLICKS, 0);
+      trace.textContent = '';
+      rsay('Go 1 of ' + R.ENROL_REPEATS + '. Click at least ' + R.MIN_CLICKS +
+           ' times — eight is noticeably harder for somebody else to fake — then press ' +
+           'the button below. Do it the way you would actually do it.', '');
+      paint();
+    }
+
+    function takeGo() {
+      var s = rec.sample();
+      if (!s) {
+        rsay('That is only ' + rec.length() + ' clicks. It needs at least ' +
+             R.MIN_CLICKS + '.', 'bad');
+        return;
+      }
+      if (!want) want = s.seq.length;
+      taken.push(s);
+      if (taken.length < R.ENROL_REPEATS) {
+        rec = R.newRecorder();
+        drawSlots(want, 0);
+        drawTrace();
+        rsay('Go ' + (taken.length + 1) + ' of ' + R.ENROL_REPEATS +
+             '. Same pattern, same way — it is learning how much you vary, so do not try ' +
+             'to be perfect.', '');
+        paint();
+        return;
+      }
+      try {
+        var out = R.enrol(taken);
+        mode = 'idle';
+        rec = null;
+        try { if (window.NC_PASSKEY) window.NC_PASSKEY.log('Click rhythm set up', true,
+              out.clicks + ' clicks'); } catch (e) {}
+        paint();
+        rsay('Kept. ' + out.clicks + ' clicks, ' + out.features + ' numbers. Nothing left this ' +
+             'device — and because a rhythm has to be measured rather than matched, those ' +
+             'numbers are stored as numbers and not as a hash.', 'good');
+      } catch (e) {
+        rsay(e.message, 'bad');
+        startEnrol();
+      }
+    }
+
+    /* ---- checking ---- */
+    function startCheck() {
+      var wait = R.cooling();
+      if (wait > 0) {
+        rsay('Too many wrong tries. Wait ' + Math.ceil(wait / 1000) + ' seconds.', 'bad');
+        return;
+      }
+      var info = R.info();
+      mode = 'checking';
+      want = info.clicks;
+      rec = R.newRecorder();
+      drawSlots(want, 0);
+      trace.textContent = '';
+      rsay('Do your pattern — all ' + want + ' clicks. It checks itself on the last one.', '');
+      paint();
+    }
+
+    function submit() {
+      var s = rec.sample();
+      mode = 'idle';
+      rec = null;
+      var r = R.verify(s);
+      paint();
+      if (r.ok) {
+        rsay('That is you — ' + r.pct + '% match. Signed in on this browser.', 'good');
+        try { if (typeof logSkill === 'function') logSkill('biometric'); } catch (e) {}
+        return;
+      }
+      if (r.why === 'COOLING') {
+        rsay('Too many wrong tries. Wait ' + Math.ceil(r.wait / 1000) + ' seconds.', 'bad');
+      } else if (r.why === 'SEQ') {
+        rsay('That was a different left-and-right order.', 'bad');
+      } else if (r.why === 'TEMPO') {
+        rsay('Right pattern, wrong speed — that was much faster or slower than the one it ' +
+             'learned.', 'bad');
+      } else if (r.why === 'ONE_OFF') {
+        rsay('Close on most of it, but one gap was a long way out — ' + r.pct + '% overall.', 'bad');
+      } else {
+        rsay('Not close enough — ' + r.pct + '% match. It wants about 50% or better.', 'bad');
+      }
+    }
+
+    /* ---- buttons ---- */
+    bGo.onclick = function () {
+      if (mode === 'enrolling') return takeGo();
+      if (mode === 'checking') {
+        if (rec && rec.length() >= want) return submit();
+        return rsay('That is ' + (rec ? rec.length() : 0) + ' of ' + want + ' clicks.', 'bad');
+      }
+      if (R.exists()) return startCheck();
+      startEnrol();
+    };
+
+    bAgain.onclick = function () {
+      if (mode === 'idle') return startEnrol();
+      mode = 'idle'; rec = null; taken = []; want = 0;
+      paint();
+      rsay('Stopped.', '');
+    };
+
+    bOff.onclick = function () {
+      if (!confirm('Remove the click pattern from this browser?')) return;
+      R.forget();
+      mode = 'idle'; rec = null; taken = []; want = 0;
+      paint();
+      rsay('Removed. The numbers are gone from this device.', '');
+    };
+
+    paint();
+    if (R.exists()) {
+      var i = R.info();
+      rsay('A pattern is set: ' + i.clicks + ' clicks. Sign in with it, or set a new one.', '');
+    } else {
+      rsay('Nothing set yet on this browser.', '');
+    }
+  })();
 
   /* ---- the audit list ---- */
   var box = document.getElementById('audit');
