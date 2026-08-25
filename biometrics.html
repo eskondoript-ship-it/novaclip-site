@@ -221,6 +221,44 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
       <button class='go alt' id='btnPkIn' type='button'>Sign in</button>
       <button class='go alt' id='btnPkOff' type='button'>Remove</button>
     </div>
+    <!-- The locker is what makes the passkey do something. Before it, you could
+         enrol one and sign in with it, and nothing on the site was any safer
+         for it. -->
+    <div class='card' id='lkcard'>
+      <h2><span class='ic'><svg viewBox='0 0 24 24'><rect x='4' y='10' width='16' height='11' rx='2'/><path d='M8 10V7a4 4 0 018 0v3'/></svg></span>Locker</h2>
+      <p>A few lines you would rather nobody read if they picked up your phone. Encrypted on this
+        device, and the key is made from your passkey — so it is your fingerprint or face that
+        opens it, not a button that says Unlock.</p>
+      <div class='spec'>
+        <div><b>Cipher</b><span>AES-GCM 256, key from the passkey via HKDF</span></div>
+        <div><b>On disk</b><span>ciphertext only — never the words themselves</span></div>
+        <div><b>Locks itself</b><span>after five minutes, or when you leave the page</span></div>
+      </div>
+      <p class='pkmsg' id='lkMsg' role='status'></p>
+      <div id='lkGate'>
+        <button class='go' id='lkOpen' type='button'>Unlock with passkey</button>
+        <button class='go alt' id='lkPassBtn' type='button'>Use a passphrase</button>
+      </div>
+      <div id='lkPassRow' style='display:none'>
+        <input id='lkPass' type='password' autocomplete='current-password'
+               placeholder='Passphrase, eight characters or more' aria-label='Locker passphrase'>
+        <button class='go' id='lkPassGo' type='button'>Open</button>
+      </div>
+      <div id='lkBody' style='display:none'>
+        <div class='lkadd'>
+          <input id='lkT' maxlength='80' placeholder='What is it?' aria-label='Title'>
+          <textarea id='lkB' maxlength='2000' rows='3' placeholder='The bit you want kept'
+                    aria-label='The note'></textarea>
+          <button class='go' id='lkAdd' type='button'>Keep it</button>
+        </div>
+        <ul class='lknotes' id='lkList'></ul>
+        <div class='lkfoot'>
+          <button class='go alt' id='lkLock' type='button'>Lock now</button>
+          <button class='go alt' id='lkWipe' type='button'>Empty the locker</button>
+        </div>
+      </div>
+    </div>
+
     <div class='card'>
       <h2><span class='ic'><svg viewBox='0 0 24 24'><path d='M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3'/><circle cx='12' cy='11' r='3'/></svg></span>Face</h2>
       <p>A 128-number descriptor of your face, from face-api.js running in the tab. Not a photo —
@@ -293,9 +331,28 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
 .audit .row.no .tag{background:rgba(255,138,155,.16);color:#FF8A9B}
 .audit .row .why{flex-basis:100%;font-size:.86rem;color:var(--nc-dim,#8B97B0)}
 .audit .none{color:var(--nc-dim,#8B97B0);padding:4px 2px}
+#lkPassRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+#lkPass{flex:1;min-width:180px;min-height:44px;padding:0 14px;border-radius:12px;font:inherit;
+  background:var(--nc-bg,rgba(0,0,0,.25));color:inherit;border:1px solid var(--nc-line,rgba(255,255,255,.14))}
+.lkadd{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.lkadd input,.lkadd textarea{min-height:44px;padding:11px 14px;border-radius:12px;font:inherit;resize:vertical;
+  background:var(--nc-bg,rgba(0,0,0,.25));color:inherit;border:1px solid var(--nc-line,rgba(255,255,255,.14))}
+ul.lknotes{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+ul.lknotes li{padding:12px 14px;border-radius:12px;background:var(--nc-bg,rgba(0,0,0,.2));
+  border:1px solid var(--nc-line,rgba(255,255,255,.09))}
+ul.lknotes .top{display:flex;align-items:baseline;gap:10px}
+ul.lknotes b{font-weight:700;flex:1;min-width:0;word-break:break-word}
+ul.lknotes .when{font-size:.78rem;color:var(--nc-dim,#8B97B0)}
+ul.lknotes .rm{min-width:34px;min-height:34px;border:0;background:transparent;cursor:pointer;
+  color:var(--nc-dim,#8B97B0);font-size:1.1rem;border-radius:8px}
+ul.lknotes .rm:hover{color:#FF8A9B}
+ul.lknotes p{margin-top:6px;white-space:pre-wrap;word-break:break-word;line-height:1.6;
+  color:var(--nc-dim,#B9C4D8)}
+.lkfoot{display:flex;gap:8px;flex-wrap:wrap}
 html[dir=rtl] .audit .row .when{margin-left:0;margin-right:auto}
 </style>
 <script src='passkey.js'></script>
+<script src='locker.js'></script>
 <script>
 /* ============================================================================
    WIRING THE PASSKEY CARD
@@ -321,6 +378,11 @@ html[dir=rtl] .audit .row .when{margin-left:0;margin-right:auto}
 
   function paint() {
     var have = PK.keys().length;
+    /* The locker's Unlock button is disabled until a passkey exists, so it has
+       to be repainted whenever that changes. Without this it stayed greyed out
+       immediately after enrolling one, and the only way to reach it was a
+       reload. */
+    try { if (typeof lkPaint === 'function') lkPaint(); } catch (e) {}
     bIn.style.display  = have ? 'inline-block' : 'none';
     bOff.style.display = have ? 'inline-block' : 'none';
     bNew.textContent = have ? 'Add another passkey' : 'Set up a passkey';
@@ -372,6 +434,137 @@ html[dir=rtl] .audit .row .when{margin-left:0;margin-right:auto}
     say('Removed from NovaClip. The key itself is still in your device\u2019s own passkey list — ' +
         'delete it there if you want it gone completely.', 'good');
   };
+
+  /* ==========================================================================
+     THE LOCKER
+     ==========================================================================
+     Three states: no passkey yet, locked, open. The messages name the specific
+     thing to do in each — a locker that says "unavailable" and stops has told
+     the reader nothing they can act on.
+     ========================================================================== */
+  var LK = window.NC_LOCKER;
+  var lkMsg = document.getElementById('lkMsg');
+  var lkGate = document.getElementById('lkGate');
+  var lkPassRow = document.getElementById('lkPassRow');
+  var lkBody = document.getElementById('lkBody');
+  var lkList = document.getElementById('lkList');
+
+  function lsay(t, kind) {
+    if (!lkMsg) return;
+    lkMsg.textContent = t || '';
+    lkMsg.className = 'pkmsg' + (kind ? ' ' + kind : '');
+  }
+
+  function lkPaint() {
+    if (!LK) return;
+    var open = LK.isOpen();
+    lkGate.style.display = open ? 'none' : 'block';
+    lkBody.style.display = open ? 'block' : 'none';
+    if (!open) lkPassRow.style.display = 'none';
+    var btn = document.getElementById('lkOpen');
+    if (btn) {
+      var have = PK.keys().length;
+      btn.disabled = !have;
+      btn.textContent = LK.exists() ? 'Unlock with passkey' : 'Create the locker';
+      if (!have && !LK.exists()) lsay('Set up a passkey above and this can use it.');
+    }
+    if (open) drawNotes();
+  }
+
+  function esc2(t) { return String(t); }   /* textContent below, never innerHTML */
+
+  function drawNotes() {
+    LK.items().then(function (list) {
+      lkList.textContent = '';
+      if (!list.length) {
+        var e = document.createElement('li');
+        e.style.cssText = 'background:none;border:0;color:var(--nc-dim,#8B97B0);padding:2px';
+        e.textContent = 'Empty. Nothing is stored until you put something here.';
+        lkList.appendChild(e);
+        return;
+      }
+      list.forEach(function (it, i) {
+        var li = document.createElement('li');
+        var top = document.createElement('div'); top.className = 'top';
+        var b = document.createElement('b'); b.textContent = it.t || 'Untitled';
+        var w = document.createElement('span'); w.className = 'when';
+        w.textContent = new Date(it.at).toLocaleDateString();
+        var rm = document.createElement('button');
+        rm.type = 'button'; rm.className = 'rm'; rm.innerHTML = '&times;';
+        rm.setAttribute('aria-label', 'Delete: ' + (it.t || 'Untitled'));
+        rm.onclick = function () { LK.remove(i).then(drawNotes); };
+        top.append(b, w, rm);
+        var p2 = document.createElement('p');
+        p2.textContent = it.b || '';
+        li.append(top, p2);
+        lkList.appendChild(li);
+      });
+    }).catch(function (e) { lsay(e.message, 'bad'); });
+  }
+
+  if (LK) {
+    document.getElementById('lkOpen').onclick = function () {
+      lsay('Follow the prompt from your device…');
+      LK.unlockWithPasskey().then(function () {
+        lsay(LK.exists() ? 'Open. It locks itself after five minutes.' : 'Locker created.', 'good');
+        lkPaint();
+      }).catch(function (e) {
+        if (e && e.message === 'NO_PRF') {
+          /* The honest branch. There is no way to derive a key from a passkey
+             without PRF, so rather than pretend, say so and offer the other
+             door. */
+          lsay('This device\u2019s passkey cannot produce an encryption key — not every ' +
+               'authenticator supports that. Use a passphrase instead.', 'bad');
+          lkPassRow.style.display = 'flex';
+          return;
+        }
+        lsay(e.message, 'bad');
+      });
+    };
+
+    document.getElementById('lkPassBtn').onclick = function () {
+      lkPassRow.style.display = lkPassRow.style.display === 'flex' ? 'none' : 'flex';
+      if (lkPassRow.style.display === 'flex') document.getElementById('lkPass').focus();
+    };
+
+    function passGo() {
+      var v = document.getElementById('lkPass').value;
+      lsay('Working…');
+      LK.unlockWithPass(v).then(function () {
+        document.getElementById('lkPass').value = '';
+        lsay('Open. It locks itself after five minutes.', 'good');
+        lkPaint();
+      }).catch(function (e) { lsay(e.message, 'bad'); });
+    }
+    document.getElementById('lkPassGo').onclick = passGo;
+    document.getElementById('lkPass').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') passGo();
+    });
+
+    document.getElementById('lkAdd').onclick = function () {
+      var t = document.getElementById('lkT'), b = document.getElementById('lkB');
+      if (!t.value.trim() && !b.value.trim()) return;
+      LK.add(t.value.trim(), b.value).then(function () {
+        t.value = ''; b.value = '';
+        drawNotes();
+        lsay('Kept.', 'good');
+      }).catch(function (e) { lsay(e.message, 'bad'); });
+    };
+
+    document.getElementById('lkLock').onclick = function () {
+      LK.lock(); lkPaint(); lsay('Locked.');
+    };
+
+    document.getElementById('lkWipe').onclick = function () {
+      /* No undo, and there is no copy anywhere to restore from, so it asks. */
+      if (!confirm('Delete everything in the locker? There is no copy of it anywhere, ' +
+                   'so this cannot be undone.')) return;
+      LK.destroy(); lkPaint(); lsay('Emptied.', 'good');
+    };
+
+    addEventListener('nc-locker', lkPaint);
+    lkPaint();
+  }
 
   /* ---- the audit list ---- */
   var box = document.getElementById('audit');

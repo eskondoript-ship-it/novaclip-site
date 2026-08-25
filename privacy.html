@@ -141,6 +141,15 @@ th { color:var(--nc-dim,#8c96ad); font-weight:600; font-size:0.85rem; }
     <li>Your progress: levels, streaks, coins, certificates and skill history</li>
     <li>Video editor projects and their settings</li>
     <li>Your face and voice profiles, if you turn on face or voice sign-in</li>
+    <li>A passkey's public handle, if you set one up — an id, not the key itself,
+        which never leaves your device's secure hardware</li>
+    <li>Anything you put in the <strong>Locker</strong>, stored only as ciphertext.
+        It is encrypted with AES-GCM using a key made from your passkey (or from a
+        passphrase you choose), and that key is never written down anywhere. Delete
+        the passkey, or forget the passphrase, and what is in there cannot be read
+        again — by you, by us, or by anybody</li>
+    <li>A list of sign-in attempts on this device, so you can see anything you do not
+        recognise. It stays here and is never sent</li>
     <li>Parent settings: the screen-time limits, and a <strong>hashed</strong> parent PIN</li>
     <li>The last four digits of a saved card, its expiry and the name on it —
         <strong>never the full number</strong>, which is not stored anywhere</li>

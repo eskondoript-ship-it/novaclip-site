@@ -73,6 +73,8 @@ const SHELL = [
   /* The focus timer is the one page here most likely to be opened with the
      wifi off on purpose. */
   '/study.html',
+  '/passkey.js',
+  '/locker.js',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png'

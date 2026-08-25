@@ -129,12 +129,20 @@
             residentKey: 'preferred'
           },
           timeout: 60000,
-          attestation: 'none'                      // nothing here needs to identify the hardware
+          attestation: 'none',                     // nothing here needs to identify the hardware
+          /* Ask for PRF at enrolment. It is the extension that lets a passkey
+             produce a stable secret later — the thing that makes the locker
+             really locked rather than a button that hides a list. Asking costs
+             nothing on a device that does not support it. */
+          extensions: { prf: {} }
         }
       }).then(function (cred) {
         if (!cred) throw new Error('The device did not create a passkey.');
+        var ext = {};
+        try { ext = cred.getClientExtensionResults() || {}; } catch (e) {}
         var list = keys();
-        list.push({ id: cred.id, name: name, at: Date.now() });
+        list.push({ id: cred.id, name: name, at: Date.now(),
+                    prf: !!(ext.prf && ext.prf.enabled) });
         write(STORE, list);
         log('Passkey set up', true, name);
         return { id: cred.id, name: name };
@@ -180,6 +188,55 @@
     });
   }
 
+  /* ---- the secret behind the locker ------------------------------------
+     A PRF evaluation is a passkey signing a fixed input and handing back 32
+     bytes derived from its private key. The same passkey and the same input
+     always give the same bytes; nothing else can produce them, and they never
+     touch the private key itself. That is what the locker's encryption key is
+     built from, which is why unlocking it needs the actual fingerprint and
+     not merely a click on a button that says Unlock.
+
+     The salt is per-install and public — its job is to make the derived key
+     specific to this browser's locker, not to be secret. */
+  var PRF_INPUT = 'novaclip-locker-v1';
+
+  function prfSupported() {
+    return keys().some(function (k) { return k.prf; });
+  }
+
+  function secret() {
+    var list = keys();
+    if (!list.length) return Promise.reject(new Error('No passkey on this device yet.'));
+    var enc = new TextEncoder().encode(PRF_INPUT);
+    return navigator.credentials.get({
+      publicKey: {
+        challenge: randomBytes(32),
+        rpId: location.hostname,
+        timeout: 60000,
+        userVerification: 'required',
+        allowCredentials: list.map(function (k) {
+          return { type: 'public-key', id: fromB64(k.id) };
+        }),
+        extensions: { prf: { eval: { first: enc } } }
+      }
+    }).then(function (cred) {
+      var ext = {};
+      try { ext = cred.getClientExtensionResults() || {}; } catch (e) {}
+      var out = ext.prf && ext.prf.results && ext.prf.results.first;
+      if (!out) {
+        log('Locker unlock', false, 'this device cannot derive a key from a passkey');
+        throw new Error('NO_PRF');
+      }
+      log('Locker unlocked', true, '');
+      return new Uint8Array(out);
+    }).catch(function (e) {
+      if (e && e.message === 'NO_PRF') throw e;
+      var why = friendly(e);
+      log('Locker unlock', false, why);
+      throw new Error(why);
+    });
+  }
+
   function forget() {
     write(STORE, []);
     log('Passkeys removed from this browser', true, '');
@@ -209,6 +266,7 @@
 
   window.NC_PASSKEY = {
     available: available, enrol: enrol, signIn: signIn, forget: forget,
-    keys: keys, log: log, auditRows: auditRows, clearAudit: clearAudit
+    keys: keys, log: log, auditRows: auditRows, clearAudit: clearAudit,
+    secret: secret, prfSupported: prfSupported, PRF_INPUT: PRF_INPUT
   };
 })();
