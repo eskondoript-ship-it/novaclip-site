@@ -163,8 +163,10 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
 .note b{color:var(--txt)}
 @media (max-width:760px){ body{padding-bottom:74px} .wrap{padding-top:22px} }
 </style>
+<!-- The Biometric ID design, applied to the page it came from. -->
+<link rel='stylesheet' href='theme-biometric.css'>
 </head>
-<body>
+<body class='bio'>
 <div class='sidebar'>
   <!-- nova.js builds the links; this is only the shell it fills -->
   <div class='themewrap'>
@@ -175,7 +177,7 @@ h3{font-size:1.15rem;font-weight:680;margin:34px 0 6px;letter-spacing:-.02em}
 
 <div class='wrap'>
   <div class='hero'>
-    <div class='scan' id='scan'>
+    <div class='scan scanwrap' id='scan'>
       <svg viewBox='0 0 100 100' aria-hidden='true'>
         <defs><linearGradient id='nbg' x1='0' y1='0' x2='1' y2='1'>
           <stop offset='0' stop-color='#7C5CFF'/><stop offset='.5' stop-color='#00F0FF'/>

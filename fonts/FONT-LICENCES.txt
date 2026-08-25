@@ -1,0 +1,14 @@
+Copyright 2020 The Space Grotesk Project Authors (https://github.com/floriankarsten/space-grotesk)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+Space Grotesk and Plus Jakarta Sans are both under the SIL Open Font License
+1.1, which permits bundling and redistribution with a project like this one.
+Taken from the Fontsource packages (@fontsource-variable/space-grotesk and
+@fontsource-variable/plus-jakarta-sans, both v5.3.0), latin subset, variable
+weight.
+
+They are served from this repo rather than from Google Fonts on purpose:
+NovaClip is installed as an app and has to work offline, and a webfont fetched
+from a third party is both a request that fails on a train and a request that
+tells somebody else which page was opened.

@@ -1,0 +1,278 @@
+/* ============================================================================
+   THE BIOMETRIC ID LOOK
+   ============================================================================
+   The uploaded design's own visual language, read out of its source:
+
+     background      slate-950 #020617, panels slate-900 #0f172a at 60%
+     borders         slate-800 #1e293b, slate-700 #334155 for the raised ones
+     accent          emerald — #34d399 for text, #10b981 for fills,
+                     with BLACK-ish slate-950 text on a filled emerald button
+     danger          rose-400 #fb7185
+     text            slate-200/300/400/500 down the scale, white at the top
+     numbers, codes  JetBrains Mono
+     body            Plus Jakarta Sans
+     motion          scanBeam, radarSweep, biometricPulse, irisDilation —
+                     copied verbatim from its index.css
+
+   It is a security console: near-black, one green, and everything else grey.
+   That is a deliberate choice by whoever made it and it suits a page about
+   locks, so it is kept rather than blended into NovaClip's cyan and violet.
+
+   The mono face is a stack rather than a download. JetBrains Mono is another
+   80KB for the handful of places a fixed-width digit actually matters here,
+   and every desktop and phone already ships something that does the job.
+   ========================================================================== */
+
+/* Plus Jakarta Sans is declared again here rather than shared with the other
+   skin's file. The two skins are never on the same page, so a page that loads
+   only this one would otherwise name a face nothing had fetched and quietly
+   fall back to the system sans — which is what it did until this was added.
+   Declaring it twice costs nothing: both point at the same URL and the
+   browser fetches it once. */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('fonts/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+  font-style: normal;
+}
+
+.bio {
+  --bio-bg:     #020617;   /* slate-950 */
+  --bio-panel:  #0f172a;   /* slate-900 */
+  --bio-panel2: #1e293b;   /* slate-800 */
+  --bio-line:   #1e293b;
+  --bio-line2:  #334155;   /* slate-700 */
+  --bio-txt:    #e2e8f0;   /* slate-200 */
+  --bio-txt2:   #cbd5e1;   /* slate-300 */
+  --bio-dim:    #94a3b8;   /* slate-400 */
+  --bio-dim2:   #64748b;   /* slate-500 */
+  --bio-em:     #34d399;   /* emerald-400 */
+  --bio-em2:    #10b981;   /* emerald-500 */
+  --bio-rose:   #fb7185;   /* rose-400 */
+  --bio-sans:   'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --bio-mono:   'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --bio-glow:   0 0 15px rgba(16, 185, 129, .35);
+}
+
+body.bio {
+  background: var(--bio-bg) !important;
+  color: var(--bio-txt);
+  font-family: var(--bio-sans);
+}
+.bio h1, .bio h2, .bio h3 { color: #fff; letter-spacing: -0.01em; }
+.bio code, .bio kbd, .bio samp, .bio pre, .bio .mono { font-family: var(--bio-mono); }
+
+/* ---- surfaces ---------------------------------------------------------- */
+.bio .card {
+  background: color-mix(in srgb, var(--bio-panel) 60%, transparent);
+  border: 1px solid var(--bio-line);
+  border-radius: 14px;
+}
+.bio .card:hover { border-color: color-mix(in srgb, var(--bio-em2) 25%, transparent); }
+.bio .spec > div { border-bottom: 1px solid color-mix(in srgb, var(--bio-line) 80%, transparent); }
+.bio .spec b { color: var(--bio-txt2); }
+.bio .spec span { color: var(--bio-dim); }
+.bio .lede, .bio .sub, .bio .hint { color: var(--bio-dim); }
+
+/* The icon tile beside each heading: emerald on a dark emerald wash, which is
+   this design's one repeated ornament. */
+.bio .card .ic {
+  background: color-mix(in srgb, var(--bio-em2) 10%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--bio-em2) 20%, transparent);
+  color: var(--bio-em) !important;
+}
+.bio .card .ic svg { stroke: var(--bio-em); }
+
+/* ---- buttons ----------------------------------------------------------- */
+.bio .go {
+  font-family: var(--bio-sans);
+  border-radius: 10px;
+  background: var(--bio-em2) !important;
+  color: #021 !important;
+  border: 0 !important;
+  font-weight: 700;
+  box-shadow: var(--bio-glow);
+}
+.bio .go:hover:not(:disabled) { background: var(--bio-em) !important; }
+.bio .go:disabled { opacity: .45; box-shadow: none; }
+.bio .go.alt {
+  background: transparent !important;
+  color: var(--bio-txt2) !important;
+  border: 1px solid var(--bio-line2) !important;
+  box-shadow: none;
+}
+.bio .go.alt:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--bio-em2) 40%, transparent) !important;
+  color: var(--bio-em) !important;
+}
+
+/* ---- status lines ------------------------------------------------------ */
+.bio .pkmsg { color: var(--bio-dim); font-family: var(--bio-sans); }
+.bio .pkmsg.good { color: var(--bio-em); }
+.bio .pkmsg.bad { color: var(--bio-rose); }
+
+/* ---- fields ------------------------------------------------------------ */
+.bio input, .bio textarea {
+  background: color-mix(in srgb, var(--bio-panel) 70%, #000);
+  border: 1px solid var(--bio-line2);
+  color: var(--bio-txt);
+  border-radius: 10px;
+  font-family: var(--bio-sans);
+}
+.bio input:focus, .bio textarea:focus {
+  outline: none;
+  border-color: var(--bio-em2);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, .18);
+}
+.bio ::placeholder { color: var(--bio-dim2); }
+
+/* ---- the audit trail, as a console log --------------------------------- */
+.bio .audit .row {
+  background: color-mix(in srgb, var(--bio-panel) 55%, transparent);
+  border: 1px solid var(--bio-line);
+  border-radius: 8px;
+  font-family: var(--bio-mono);
+  font-size: .82rem;
+}
+.bio .audit .row .tag { font-family: var(--bio-sans); border-radius: 5px; }
+.bio .audit .row.ok .tag { background: rgba(16,185,129,.14); color: var(--bio-em); }
+.bio .audit .row.no .tag { background: rgba(251,113,133,.14); color: var(--bio-rose); }
+.bio .audit .row .when, .bio .audit .row .why { color: var(--bio-dim2); }
+
+/* ---- the locker's notes ------------------------------------------------ */
+.bio ul.lknotes li {
+  background: color-mix(in srgb, var(--bio-panel) 55%, transparent);
+  border: 1px solid var(--bio-line);
+}
+.bio ul.lknotes .when { font-family: var(--bio-mono); color: var(--bio-dim2); }
+.bio ul.lknotes p { color: var(--bio-txt2); }
+
+/* ---- the status chip at the top ---------------------------------------- */
+.bio .status {
+  background: color-mix(in srgb, var(--bio-em2) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--bio-em2) 22%, transparent);
+  color: var(--bio-em);
+}
+.bio .status .dot { background: var(--bio-em); box-shadow: 0 0 8px var(--bio-em); }
+
+/* ============================================================================
+   THE MOTION, COPIED FROM ITS index.css
+   ============================================================================
+   scanBeam is the line that travels down a scanner; radarSweep is the hand
+   going round; biometricPulse is the ring breathing while it waits. All three
+   are its own keyframes, unchanged.
+
+   The ring on this page is the site's own and it already animates, so the
+   pulse is applied to it rather than a new element being invented to carry a
+   borrowed animation.
+   ========================================================================== */
+@keyframes bioScanBeam {
+  0%   { top: 0%;   opacity: .8; }
+  50%  {             opacity: 1; }
+  100% { top: 100%; opacity: .8; }
+}
+@keyframes bioRadarSweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes bioPulse {
+  0%, 100% { transform: scale(1);    opacity: .3; }
+  50%      { transform: scale(1.08); opacity: .8; }
+}
+@keyframes bioIris {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+
+.bio .animate-scan-beam { animation: bioScanBeam 2s ease-in-out infinite alternate; }
+.bio .animate-radar-sweep { animation: bioRadarSweep 3s linear infinite; }
+.bio .animate-bio-pulse { animation: bioPulse 2.5s ease-in-out infinite; }
+.bio .animate-iris-dilation { animation: bioIris 4s ease-in-out infinite; }
+
+/* The scanner beam over the face ring in the hero. */
+.bio .scanwrap { position: relative; overflow: hidden; border-radius: 50%; }
+.bio .scanwrap::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--bio-em), transparent);
+  box-shadow: 0 0 12px var(--bio-em);
+  animation: bioScanBeam 2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bio .scanwrap::after,
+  .bio .animate-scan-beam, .bio .animate-radar-sweep,
+  .bio .animate-bio-pulse, .bio .animate-iris-dilation { animation: none; }
+  .bio .scanwrap::after { top: 50%; }
+}
+
+/* ---- the shared rail, restated in this palette -------------------------- */
+body.bio {
+  --nc-rail1: #0b1220; --nc-rail2: #020617; --nc-rail3: #020617;
+  --nc-railline: #1e293b; --nc-railglow: rgba(16,185,129,.10);
+  --nc-navlink: #94a3b8; --nc-navon: #021; --nc-navhead: #64748b;
+  --nc-navhoverbg: rgba(255,255,255,.04);
+  --nc-navonbg: linear-gradient(90deg, #10b981, #10b981);
+  --nc-navonline: #10b981;
+  --nc-navicohover: #34d399; --nc-navicoon: #021;
+  --nc-coinbg: linear-gradient(135deg, rgba(16,185,129,.16), rgba(52,211,153,.08));
+  --nc-cardbg: rgba(15,23,42,.6);
+  --nc-bar-bg: rgba(2,6,23,.82);
+  --nc-line: #1e293b; --nc-line2: #1e293b;
+  --nc-bg: #020617; --nc-bg2: rgba(15,23,42,.6);
+  --nc-text: #e2e8f0; --nc-dim: #94a3b8;
+  --nc-cyan: #34d399;
+}
+
+/* Same trap as the other skin: --nc-navon is the text on the active pill AND
+   the text in the rail's foot cards. Dark on the pill is right; dark on the
+   cards is unreadable. */
+body.bio .sidebar #ncfoot .ncfb b { color: var(--bio-txt); }
+body.bio .sidebar #ncfoot .ncfb i { color: var(--bio-dim2); }
+body.bio .sidebar #ncfoot #nccoins,
+body.bio .sidebar #ncfoot #ncprof { color: var(--bio-txt); }
+body.bio .sidebar #ncfoot .ncfi {
+  background: linear-gradient(135deg, var(--bio-em2), var(--bio-em)) !important;
+  color: #021;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, .28);
+}
+
+/* ============================================================================
+   THE PAGE'S OWN VARIABLES, RENAMED RATHER THAN FOUGHT
+   ============================================================================
+   biometrics.html opens with a :root block naming its palette — --violet,
+   --cyan, --pink, --panel, --grad — and every rule below refers to those
+   names. Changing the seven values here recolours the whole page, including
+   the parts this file never mentions.
+
+   Set on body rather than :root: custom properties inherit downwards, so a
+   value on body shadows the one on <html> for everything inside it, whereas
+   :root is the ancestor and could not.
+
+   The two accents both become emerald, which is not a loss — this design has
+   exactly one colour and the fact that a security console looks monochrome is
+   the point of it. --pink keeps a warm slot because it marks failures, and a
+   failure that is the same green as a success is a worse page. */
+body.bio {
+  --ink:    var(--bio-bg);
+  --panel:  var(--bio-panel);
+  --line:   var(--bio-line);
+  --txt:    var(--bio-txt);
+  --dim:    var(--bio-dim);
+  --violet: var(--bio-em2);
+  --cyan:   var(--bio-em);
+  --pink:   var(--bio-rose);
+  --lime:   var(--bio-em);
+  --amber:  #fbbf24;
+  --grad:   linear-gradient(110deg, var(--bio-em2), var(--bio-em));
+}
+
+/* The scanner ring in the hero is stroked with an SVG gradient whose stops are
+   written as presentation attributes — beaten by a CSS rule of any
+   specificity. Three emeralds rather than violet, cyan and pink. */
+body.bio #nbg stop:nth-child(1) { stop-color: #10b981; }
+body.bio #nbg stop:nth-child(2) { stop-color: #34d399; }
+body.bio #nbg stop:nth-child(3) { stop-color: #6ee7b7; }
+
+/* The wash behind the face icon inside the ring, spelled out as violet rather
+   than read from a variable. */
+body.bio .scan .face {
+  background: radial-gradient(circle at 50% 35%, rgba(16, 185, 129, .28), transparent 65%);
+}

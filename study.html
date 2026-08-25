@@ -161,9 +161,32 @@ ul.goals .del:hover{color:#FF8A9B}
   color:var(--nc-dim,#8B97B0);background:var(--nc-bg2,rgba(255,255,255,.03));
   border:1px solid var(--nc-line,rgba(255,255,255,.09))}
 .note b{color:var(--nc-text,#EAF2FF)}
+
+/* ---- the rail ----
+   Only the box: nova.js fills it with the links and paints the background
+   itself, and it is nova.js that pushes the page over by --nc-rail once it
+   sees a .sidebar here. This page shipped without one, which is why it was
+   the only page on the site with no navigation on it. */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--nc-rail,200px);z-index:998;
+  display:flex;flex-direction:column;padding:20px 0;gap:4px;overflow-y:auto}
+.sidebar .themewrap{margin-top:auto;padding:16px 20px}
+.sidebar .themewrap label{display:block;font-size:.78rem;opacity:.6;margin-bottom:6px}
+.sidebar select{width:100%;font:inherit;font-size:.95rem;padding:9px;border-radius:10px;
+  background:var(--nc-bg2,rgba(255,255,255,.05));color:var(--nc-text,#EAF2FF);
+  border:1px solid var(--nc-line,rgba(255,255,255,.15))}
 </style>
+<!-- The TeenVerse design, applied to the pages it came from. -->
+<link rel='stylesheet' href='theme-teenverse.css'>
 </head>
-<body>
+<body class='tv'>
+<div class='sidebar'>
+  <!-- nova.js builds the links; this is only the shell it fills -->
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
 <div class='wrap'>
   <h1>The <span class='g'>study lounge</span></h1>
   <p class='lede'>Twenty-five minutes on, five off. A list of what you are actually doing, and

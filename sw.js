@@ -52,7 +52,10 @@
    library, the effect previews, the RTL fixes and the new rail — and because
    nothing ever retired it, returning visitors kept being served the old files
    from it. A new name means activate() deletes the old cache outright. */
-const CACHE = 'novaclip-v2';
+/* v3 adds the two skins and the two typefaces they are drawn in. A page that
+   comes back from the cache in its own colours but with the fallback font is
+   a visibly different page, so the fonts belong in the shell beside them. */
+const CACHE = 'novaclip-v3';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -75,6 +78,13 @@ const SHELL = [
   '/study.html',
   '/passkey.js',
   '/locker.js',
+  /* The two skins, and the faces they are set in. Without the woff2 files the
+     first offline visit falls back to the system sans and the page looks
+     wrong rather than merely plain. 50KB for both, once. */
+  '/theme-teenverse.css',
+  '/theme-biometric.css',
+  '/fonts/plus-jakarta-sans-latin-wght-normal.woff2',
+  '/fonts/space-grotesk-latin-wght-normal.woff2',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png'

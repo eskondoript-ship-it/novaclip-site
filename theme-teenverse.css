@@ -1,0 +1,281 @@
+/* ============================================================================
+   THE TEENVERSE LOOK
+   ============================================================================
+   The uploaded design's own visual language, taken from its source rather than
+   from a screenshot:
+
+     background      #000 with #0a0a0a and neutral-900 (#171717) panels
+     borders         neutral-800 (#262626)
+     primary         #7DFF00, acid green, with BLACK text on it
+     secondary       #00F2FF cyan and #FF00FF magenta, used sparingly
+     headings        Space Grotesk, letter-spacing -0.02em
+     body            Plus Jakarta Sans
+     corners         rounded-xl (12px), rounded-lg (8px), pills for chips
+     glow            0 0 14px of the accent at 35%
+
+   Its index.css and the class names across its components are where all of
+   that came from; nothing here is invented to fill a gap.
+
+   WHY IT IS A SEPARATE FILE AND NOT IN nova.js
+
+   nova.js paints every page in NovaClip's own palette and runs a theme engine
+   on top of it. This is a different identity for two pages, the way Trend
+   Spotter already has its own. Keeping it in one file means it can be dropped
+   without unpicking anything, and it cannot leak onto pages that did not ask
+   for it.
+
+   The fonts are served from this repo, not from Google. An installed app has
+   to work on a train, and a webfont fetched from a third party is both a
+   request that fails offline and a request that tells somebody else which page
+   somebody opened.
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('fonts/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;      /* text now in a fallback beats no text at all */
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('fonts/space-grotesk-latin-wght-normal.woff2') format('woff2');
+  font-weight: 300 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+.tv {
+  --tv-bg:      #000000;
+  --tv-bg2:     #0a0a0a;
+  --tv-panel:   #171717;   /* neutral-900 */
+  --tv-line:    #262626;   /* neutral-800 */
+  --tv-line2:   #404040;   /* neutral-700 */
+  --tv-txt:     #ffffff;
+  --tv-dim:     #a3a3a3;   /* neutral-400 */
+  --tv-dim2:    #737373;   /* neutral-500 */
+  --tv-green:   #7DFF00;
+  --tv-cyan:    #00F2FF;
+  --tv-magenta: #FF00FF;
+  --tv-sans:    'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --tv-head:    'Space Grotesk', 'Outfit', system-ui, sans-serif;
+}
+
+/* The page itself. !important on the background only, because nova.js paints a
+   cyber skin straight onto the element and would otherwise win. */
+body.tv {
+  background: var(--tv-bg) !important;
+  color: var(--tv-txt);
+  font-family: var(--tv-sans);
+}
+.tv h1, .tv h2, .tv h3, .tv h4, .tv .font-heading {
+  font-family: var(--tv-head);
+  letter-spacing: -0.02em;
+}
+
+/* Its scrollbar, which is a small thing that does a lot of the work. */
+.tv ::-webkit-scrollbar { width: 6px; height: 6px; }
+.tv ::-webkit-scrollbar-track { background: var(--tv-bg2); }
+.tv ::-webkit-scrollbar-thumb {
+  background: var(--tv-line); border-radius: 9999px; border: 1px solid var(--tv-line2);
+}
+.tv ::-webkit-scrollbar-thumb:hover {
+  background: var(--tv-green); box-shadow: 0 0 10px var(--tv-green);
+}
+.tv { scrollbar-color: var(--tv-line) var(--tv-bg2); scrollbar-width: thin; }
+
+/* ---- surfaces ---------------------------------------------------------- */
+.tv .card, .tv .panel, .tv .box, .tv .tile, .tv .sect, .tv .postcard,
+.tv .community, .tv .group, .tv .item {
+  background: var(--tv-panel);
+  border: 1px solid var(--tv-line);
+  border-radius: 12px;
+}
+
+/* ---- type -------------------------------------------------------------- */
+.tv .sub, .tv .hint, .tv .muted, .tv .meta, .tv small { color: var(--tv-dim); }
+
+/* ---- buttons ----------------------------------------------------------- */
+.tv button, .tv .btn, .tv a.btn {
+  font-family: var(--tv-sans);
+  border-radius: 10px;
+}
+/* The primary action is acid green with black on it — the design's single
+   loudest move, and the reason the rest of it can stay quiet. */
+.tv .btn-primary, .tv button.primary, .tv .go:not(.alt), .tv .gbtn,
+.tv button[type=submit]:not(.alt) {
+  background: var(--tv-green) !important;
+  color: #000 !important;
+  border: 0 !important;
+  font-weight: 700;
+  box-shadow: 0 0 14px rgba(125, 255, 0, .35);
+}
+.tv .btn-primary:hover, .tv button.primary:hover, .tv .go:not(.alt):hover,
+.tv .gbtn:hover { filter: brightness(1.08); }
+
+.tv .go.alt, .tv .btn-ghost, .tv button.alt {
+  background: transparent !important;
+  color: var(--tv-txt) !important;
+  border: 1px solid var(--tv-line2) !important;
+}
+.tv .go.alt:hover, .tv button.alt:hover { border-color: var(--tv-green) !important; }
+
+/* ---- chips and tabs ---------------------------------------------------- */
+.tv .chip, .tv .tag, .tv .pill {
+  border-radius: 9999px;
+  border: 1px solid var(--tv-line);
+  background: var(--tv-bg2);
+  color: var(--tv-dim);
+}
+.tv .chip.on, .tv .tag.on, .tv .pill.on, .tv .chip[aria-pressed=true] {
+  background: var(--tv-green);
+  border-color: var(--tv-green);
+  color: #000;
+  font-weight: 700;
+}
+
+/* ---- fields ------------------------------------------------------------ */
+.tv input, .tv textarea, .tv select {
+  background: var(--tv-bg2);
+  border: 1px solid var(--tv-line);
+  color: var(--tv-txt);
+  border-radius: 10px;
+  font-family: var(--tv-sans);
+}
+.tv input:focus, .tv textarea:focus, .tv select:focus {
+  outline: none;
+  border-color: var(--tv-green);
+  box-shadow: 0 0 0 3px rgba(125, 255, 0, .18);
+}
+.tv ::placeholder { color: var(--tv-dim2); }
+
+/* ---- links and accents ------------------------------------------------- */
+.tv a:not(.btn):not(.ncl) { color: var(--tv-cyan); }
+.tv a:not(.btn):not(.ncl):hover { color: var(--tv-green); }
+.tv .accent-green { color: var(--tv-green); }
+.tv .accent-cyan { color: var(--tv-cyan); }
+.tv .accent-magenta { color: var(--tv-magenta); }
+.tv .glow-green { box-shadow: 0 0 14px rgba(125, 255, 0, .35); }
+.tv .glow-cyan { box-shadow: 0 0 14px rgba(0, 242, 255, .35); }
+.tv .glow-magenta { box-shadow: 0 0 14px rgba(255, 0, 255, .35); }
+
+/* The gradient headline the design uses on its section titles. */
+.tv .g, .tv .grad {
+  background: linear-gradient(90deg, var(--tv-green), var(--tv-cyan));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* ---- the shared rail, in this design's colours -------------------------
+   nova.js draws the rail on every page from its own variables, so rather than
+   fight it selector by selector, its variables are simply restated. */
+body.tv {
+  --nc-rail1: #0a0a0a; --nc-rail2: #000000; --nc-rail3: #000000;
+  --nc-railline: #262626; --nc-railglow: rgba(125,255,0,.10);
+  --nc-navlink: #a3a3a3; --nc-navon: #000000; --nc-navhead: #737373;
+  --nc-navhoverbg: rgba(255,255,255,.05);
+  --nc-navonbg: linear-gradient(90deg, #7DFF00, #7DFF00);
+  --nc-navonline: #7DFF00;
+  --nc-navicohover: #00F2FF; --nc-navicoon: #000000;
+  --nc-coinbg: linear-gradient(135deg, rgba(125,255,0,.16), rgba(0,242,255,.10));
+  --nc-cardbg: #0a0a0a;
+  --nc-bar-bg: rgba(0,0,0,.82);
+  --nc-line: #262626; --nc-line2: #262626;
+  --nc-bg: #000000; --nc-bg2: #0a0a0a;
+  --nc-text: #ffffff; --nc-dim: #a3a3a3;
+  --nc-cyan: #00F2FF;
+}
+
+/* The rail's foot cards take their text colour from --nc-navon, which is also
+   the colour of text ON the green active pill — black. Setting one for the
+   pill made the coins and the profile name black on black. They are named
+   separately here. */
+body.tv .sidebar #ncfoot .ncfb b { color: var(--tv-txt); }
+body.tv .sidebar #ncfoot .ncfb i { color: var(--tv-dim2); }
+body.tv .sidebar #ncfoot #nccoins,
+body.tv .sidebar #ncfoot #ncprof { color: var(--tv-txt); }
+/* and the coin tile is a hard-coded pink/violet/cyan gradient in nova.js */
+body.tv .sidebar #ncfoot .ncfi {
+  background: linear-gradient(135deg, var(--tv-green), var(--tv-cyan)) !important;
+  color: #000;
+  box-shadow: 0 4px 16px rgba(125, 255, 0, .28);
+}
+
+/* ============================================================================
+   THE PAGES' OWN VARIABLES, RENAMED RATHER THAN FOUGHT
+   ============================================================================
+   community.html, socials.html and study.html each open with a :root block
+   that names its palette — --violet, --cyan, --pink, --panel, --grad — and
+   then every rule in the page refers to those names instead of to a colour.
+   That is a gift: rather than chasing the rules one at a time, the names are
+   simply given different values here.
+
+   They are set on body, not on :root. Custom properties inherit downwards, so
+   a value on body reaches every element in the page and shadows the one the
+   page set on <html> — while :root is the ancestor and could not shadow it.
+
+   --violet is the slot these pages use for their primary accent, so it gets
+   the acid green. The name stops being descriptive; the alternative is
+   rewriting three stylesheets to rename it, which would be a much larger
+   change for the same pixels. */
+body.tv {
+  --ink:    var(--tv-bg);
+  --panel:  var(--tv-panel);
+  --line:   var(--tv-line);
+  --txt:    var(--tv-txt);
+  --dim:    var(--tv-dim);
+  --violet: var(--tv-green);
+  --cyan:   var(--tv-cyan);
+  --pink:   var(--tv-magenta);
+  --lime:   var(--tv-green);
+  --grad:   linear-gradient(110deg, var(--tv-green), var(--tv-cyan));
+}
+
+/* Anything sitting on that gradient was written for a dark-text-on-bright
+   fill, and both ends of this one are bright, so that still holds. */
+body.tv .gbtn, body.tv .pill.on { color: #000; }
+
+/* ============================================================================
+   study.html PARTICULARS
+   ============================================================================
+   It is the one page of the three that sets a font on the universal selector
+   ( *{font-family:'Segoe UI',…} ), which beats an inherited value from body no
+   matter what body says — inheritance loses to any rule that matches the
+   element itself. So the font has to be set on the elements too.
+
+   .tv * is (0,1,0); the * it is overriding is (0,0,0). The heading rule above
+   is (0,1,1) and so still wins over this one whatever the order. */
+body.tv * { font-family: var(--tv-sans); }
+body.tv h1, body.tv h2, body.tv h3, body.tv h4 { font-family: var(--tv-head); }
+body.tv code, body.tv kbd, body.tv samp, body.tv pre,
+body.tv #nccoins .ncfb b { font-family: ui-monospace, Consolas, monospace; }
+
+/* The timer dial is stroked with an SVG gradient whose stops are written as
+   presentation attributes. A CSS rule of any specificity beats one of those. */
+body.tv #sg stop:first-child { stop-color: #7DFF00; }
+body.tv #sg stop:last-child  { stop-color: #00F2FF; }
+
+/* The mode chips, the sound buttons and the ticked checkbox are the three
+   places study.html spells the violet out rather than reading a variable. */
+body.tv .mode.on {
+  background: var(--tv-green);
+  border-color: var(--tv-green);
+  color: #000;
+}
+body.tv .snd.on {
+  background: color-mix(in srgb, var(--tv-green) 16%, transparent);
+  border-color: var(--tv-green);
+  color: var(--tv-txt);
+}
+body.tv ul.goals li.tick .box {
+  background: var(--tv-green);
+  border-color: var(--tv-green);
+  color: #000;
+}
+body.tv .vol input { accent-color: var(--tv-green); }
+
+/* The blurred bloom behind the page title, spelled out as violet rather than
+   read from a variable — the last piece of the old palette still visible. */
+body.tv .hero::before {
+  background: radial-gradient(closest-side, rgba(125, 255, 0, .22), transparent 72%);
+}
