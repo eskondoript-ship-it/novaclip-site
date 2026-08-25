@@ -70,6 +70,9 @@ const SHELL = [
      both offline-capable without them, but both are much less useful. */
   '/stickers.js',
   '/studio-kit.js',
+  /* The focus timer is the one page here most likely to be opened with the
+     wifi off on purpose. */
+  '/study.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png'

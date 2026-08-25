@@ -1417,6 +1417,18 @@ const SKILLS = {
      so a typo cannot invent a skill. That also means a game calling
      logSkill('reaction') does nothing at all until the id is listed here,
      which is exactly what happened while these two were being written. */
+  focus:      { icon:'', label:'Finish a 25-minute focus block' },
+
+  /* THREE THAT WERE BEING LOGGED INTO NOTHING.
+     logSkill() drops any id it does not recognise, so these three calls —
+     one on biometrics.html, one on gift.html, one shared by publish.html and
+     animator.js — have been running and doing nothing for as long as they
+     have existed. Found by listing every logSkill() call on the site and
+     comparing it against this table, which is a check worth repeating any
+     time a new one is added. */
+  biometric:  { icon:'', label:'Set up face, voice or a passkey on this device' },
+  community:  { icon:'', label:'Join in on the community page' },
+  editing:    { icon:'', label:'Publish or animate something you made' },
   reaction:   { icon:'', label:'Finish a set of five in Reaction' },
   aim:        { icon:'', label:'Finish a round of Target' },
   fair_fight: { icon:'', label:'Compare your channel in Fair Fight' }
