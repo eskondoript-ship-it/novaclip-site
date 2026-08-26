@@ -160,6 +160,22 @@ body.tv ::-webkit-scrollbar-thumb:hover { background: var(--tv-green); }
 }
 @media (min-width: 640px) { .tv-nav-in { padding: 0 24px; } .tv-nav-row { gap: 24px; } }
 @media (min-width: 1024px) { .tv-nav-in { padding: 0 32px; } }
+/* The smallest phones still sold are 360px across, and at 360 this row wants
+   366: the brand, Create, the bell, the safety shield, the avatar and the
+   burger, plus 32px of container padding and five 12px gaps. Six pixels over
+   is not a squeeze anybody notices as a squeeze — what it looks like is the
+   whole page being pannable sideways, because a flex row that cannot fit
+   pushes its container wider rather than wrapping.
+   Nothing is dropped. The gaps and the padding come in, which is where the
+   six pixels are, and the word CREATE gives up some of its side padding —
+   the button is a magenta slab with a + on it and reads fine slightly
+   narrower. */
+@media (max-width: 400px) {
+  .tv-nav-in { padding: 0 10px; }
+  .tv-nav-row { gap: 8px; }
+  .tv-nav-acts { gap: 6px; }
+  .tv-nav-acts .tv-btn-sm { padding: 7px 10px; }
+}
 
 .tv-brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto;
   background: none; border: 0; cursor: pointer; padding: 0; text-align: left; }
@@ -730,8 +746,17 @@ body.tv .tv-nav { top: var(--nc-bar-h, 0px); }
 
    The pill moves below the navbar here rather than the navbar moving, because
    the navbar is the page and the pill is a visitor. 64px is the navbar's
-   height; the 12px is jarvis.js's own offset kept. */
-body.tv .jr-pill { top: calc(var(--nc-bar-h, 0px) + 64px + 12px) !important; }
+   height; the 12px is jarvis.js's own offset kept.
+
+   Desktop only. Below 761px jarvis.js docks the pill in the bottom-right
+   corner instead, and that dock is made of `top:auto` plus a `bottom` — so
+   this !important top pinned it back up into the page, where it landed on
+   the search row. A fixed box given both a top and a bottom uses the top,
+   which is why it looked like the dock had simply been ignored. There is no
+   navbar to avoid down here anyway: below 1024px it is a burger. */
+@media (min-width: 761px) {
+  body.tv .jr-pill { top: calc(var(--nc-bar-h, 0px) + 64px + 12px) !important; }
+}
 
 /* --nc-navon is the text ON the green active pill AND the text IN the rail's
    foot cards. Black is right for the pill and unreadable on the cards. */

@@ -150,6 +150,14 @@ html[data-device="phone-s"] .btsave { display: none; }
   border: 1px solid rgba(0,240,255,0.4); color: var(--nc-cyan,#00F0FF); padding: 9px 18px; border-radius: 30px;
   font-weight: 800; cursor: pointer; font-family: inherit; backdrop-filter: blur(8px); transition: .2s; font-size: .9rem; }
 #cartbtn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,240,255,0.28); }
+/* top:16 right:120 is a gap in nova.js's bar on a desktop. On a phone the bar
+   runs the full width of the screen at a z-index four orders of magnitude
+   above this one, so the basket — and the count of what is in it — was drawn
+   underneath it: invisible, and untappable. Hit-testing its centre returned
+   #ncbar. It moves below the bar, on the right, where a basket goes. */
+@media (max-width: 760px) {
+  #cartbtn { top: calc(52px + 10px); right: 12px; z-index: 99994; }
+}
 #cart { position: fixed; inset: 0; z-index: 998; display: none; align-items: center; justify-content: center;
   background: rgba(5,6,10,0.86); backdrop-filter: blur(8px); padding: 20px; overflow-y: auto; }
 #cart.show { display: flex; }

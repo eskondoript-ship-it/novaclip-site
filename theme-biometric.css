@@ -293,8 +293,16 @@ body.bio ::-webkit-scrollbar-thumb:hover { background: #334155; }
 .bs-toast.info svg { color: var(--bio-em); }
 
 /* Telemetry tiles -------------------------------------------------------- */
-.bs-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-@media (min-width: 768px) { .bs-tiles { grid-template-columns: repeat(4, 1fr); } }
+/* minmax(0, 1fr) and not 1fr. `1fr` is shorthand for minmax(auto, 1fr), and
+   an auto minimum will not go below the track's content — so a tile whose
+   label, value and 38px icon want 210px keeps 210px and the grid grows past
+   its container instead of the tiles getting narrower. */
+.bs-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+/* Four across needs about 840px of content column, and the number that has to
+   clear it is not the window — the rail takes 176px off the left before this
+   grid sees any of it. At the old 768 breakpoint that left 592px for a grid
+   that wanted 838, and the whole page scrolled sideways on a tablet. */
+@media (min-width: 1100px) { .bs-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .bs-tile {
   background: rgba(15,23,42,.6); border: 1px solid rgba(30,41,59,.8);
   border-radius: 16px; padding: 16px; backdrop-filter: blur(8px);

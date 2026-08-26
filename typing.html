@@ -342,6 +342,41 @@ fn distance(a: Point, b: Point) -> f64 {
          would run right to left while the keys do not. The game stays LTR; the
          site chrome around it still translates. */
       #root { direction: ltr; }
+
+      /* TWO BOTTOM BARS, STACKED, AND YOU COULD SEE THROUGH BOTH.
+
+         TypeMaster ships its own phone navigation — Play, Leaderboard,
+         Challenges, Profile — pinned to bottom:0. So does the site: nova.js
+         turns the rail into a strip along the bottom of every page. On a
+         phone both were there at once, the site's strip drawn over the game's
+         nav because it is fixed later and higher, and the game's nav is
+         translucent so the page's own text showed through the middle of it.
+
+         The game's bar is the one that belongs to what you are doing, so it
+         keeps its place and the site's strip sits under it. Two things to
+         get right: it has to move up by the strip's height, and it has to be
+         opaque. color-mix at 88% is a nice effect over a page background and
+         a mess over a second navigation bar.
+
+         The page also has to reserve both. nova.js reserves 74px for its own
+         strip; this adds the game's bar on top of that, or the last row of
+         the leaderboard sits behind it. */
+      @media (max-width: 760px) {
+        .mobile-nav {
+          bottom: 74px;
+          background: var(--bg);
+          -webkit-backdrop-filter: none; backdrop-filter: none;
+          padding-bottom: 6px;
+        }
+        body:has(.sidebar) { padding-bottom: 142px !important; }
+        /* Nova's orb docks at bottom:74px, which is now exactly where this
+           bar is — it was sitting on the Profile button. Above both.
+           !important because jarvis.js appends its stylesheet at runtime,
+           after this one, with the same `html body .jr-pill` selector — so
+           at equal specificity source order handed it the win and the orb
+           stayed on Profile. */
+        html body .jr-pill { bottom: calc(142px + env(safe-area-inset-bottom, 0px)) !important; }
+      }
     </style>
   </head>
   <body>

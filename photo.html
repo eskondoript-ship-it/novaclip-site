@@ -115,6 +115,23 @@ body{background:var(--ink);color:var(--txt);
    toolbar buttons sit either side of it instead of underneath it. Below the
    wrap point the bar goes multi-row and the reservation stops mattering. */
 @media (max-width:900px){.bar .sp{min-width:0}}
+/* THE SHELL NEVER LEARNED THAT THE RAIL MOVES.
+   `left:var(--nc-rail)` and `top:0;bottom:0` describe a screen with a tall
+   rail down the side. Below 761px nova.js turns that rail into a strip along
+   the bottom, and this shell went on reserving 176px on the left for a rail
+   that is no longer there while covering the top bar and the strip at both
+   ends. Measured on a 390px phone: the whole photo editor rendered into a
+   214px column starting a third of the way across the screen, with the
+   Editor/Photo switch drawn underneath nova.js's bar.
+
+   So the offsets move with it: nothing on the left, the bar's height at the
+   top, the strip's at the bottom. The 112px reserved on the right of the
+   toolbar goes with them — that was for the coin badge, which on a phone is
+   up in the top bar and no longer over this shell at all. */
+@media (max-width:760px){
+  .shell{left:0;top:52px;bottom:74px}
+  .bar{padding-right:16px}
+}
 .pill{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:20px;
   background:rgba(0,240,255,.12);color:var(--cyan);font-weight:700}
 .pill.warn{background:rgba(255,180,67,.14);color:var(--amber)}

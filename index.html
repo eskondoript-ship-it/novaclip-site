@@ -195,6 +195,36 @@ h1 .m{color:var(--magenta);text-shadow:0 0 40px rgba(255,46,151,.4);display:inli
 .scroll-hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:var(--dim);font-size:.78rem;letter-spacing:3px;animation:bob 2s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translate(-50%,0);opacity:.5}50%{transform:translate(-50%,10px);opacity:1}}
 
+/* THE HERO ON A PHONE.
+   Three things went wrong here and they all came from the same assumption,
+   that the hero has a screen's worth of width to spend.
+
+   .hero-meta is a flex row of three stats with a 44px gap. In 350px of
+   content that wraps to two lines, and the second line lands exactly on
+   .scroll-hint — which is absolutely positioned at the bottom of the hero
+   and so does not participate in the wrap it caused. Measured on a 390px
+   phone: "quests & rewards" and "▼ SCROLL" drawn on top of each other.
+
+   min-height:min(100vh,860px) with justify-content:center then reserved a
+   whole screen for it. Minus the top bar and the nav strip that is a lot of
+   empty sky above a headline, and the buttons ended up below the fold.
+
+   The stats become a three-up grid — they are three short numbers and they
+   fit side by side if they are not asked to carry a 44px gutter each. The
+   scroll hint goes: it is decoration, it was the thing being collided with,
+   and nobody has ever needed to be told a phone scrolls. */
+@media (max-width: 760px){
+  .hero{min-height:auto;justify-content:flex-start;padding:34px 20px 44px}
+  .console{margin:18px 0 24px;min-height:2.6em}
+  .herobtns{display:flex;flex-direction:column;align-items:stretch;gap:12px}
+  .herobtns a{display:block}
+  .herobtns button,.herobtns .btn-ghost{width:100%;text-align:center}
+  .hero-meta{margin-top:34px;display:grid;grid-template-columns:repeat(3,1fr);
+    gap:14px 10px;font-size:.7rem;line-height:1.25;text-align:center}
+  .hero-meta b{font-size:1.25rem}
+  .scroll-hint{display:none}
+}
+
 /* ===== SECTIONS ===== */
 section{padding:70px 7vw;position:relative}
 .sec-label{font-size:.78rem;letter-spacing:4px;text-transform:uppercase;color:var(--dim);margin-bottom:16px;display:flex;align-items:center;gap:12px}

@@ -639,7 +639,51 @@
       '.jr-cap{font:.84rem/1.45 Segoe UI,system-ui,sans-serif;color:#E8EEFF;text-align:center;max-width:100%;min-height:1.3em;word-wrap:break-word}',
       '.jr-hint{font:600 .58rem/1 Segoe UI,system-ui,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#5D6A88;text-align:center}',
 
-      '@media (max-width:640px){.jr-pill{top:calc(var(--nc-bar-h, 0px) + 8px)}.jr-sheet{top:6px;width:calc(100vw - 12px);padding:16px 12px 12px}}',
+      /* ON A PHONE THE PILL STOPS BEING A BAR AND BECOMES A BUTTON.
+
+         Parked at the top centre it is 300px of "NOVA / hi, I'm Nova — tap
+         me" laid across whatever the page opens with. Measured on a 390px
+         phone: the <h1> on tools.html, the hero on index.html, the search
+         row on socials.html, the transport controls on editor.html. It is
+         the first thing on the page and it is on top of the second thing.
+
+         Nothing about that is fixable by nudging the offset — the top of a
+         phone screen is where every page puts its heading, so anything
+         floating there lands on something. It moves to the bottom-right
+         corner instead, above the nav strip, which is where a phone puts a
+         chat button and is the one part of the screen no page uses.
+
+         The name and status line come out with it: they are what made it
+         wide, and a 56px orb reads as Nova perfectly well. The two toggles
+         go into the sheet, which is where a setting belongs anyway.
+
+         `left:auto` and the transform reset are load-bearing. The pill is
+         draggable and centred with translateX(-50%) at wider widths; both
+         have to be undone here or it sits half off the right edge. */
+      /* 1023 and not 760: the top of a tablet is as much "where the page puts
+         its heading" as the top of a phone is. At 768 the centred pill was
+         sitting on BioSentinel's own title. Below 1024 it docks. */
+      '@media (max-width:1023px){' +
+        'html body .jr-pill{top:auto;left:auto;right:12px;transform:none;' +
+          'bottom:calc(14px + env(safe-area-inset-bottom,0px));' +
+          'width:56px;height:56px;padding:0;border-radius:50%;' +
+          'justify-content:center;gap:0}' +
+        /* Every state the drag and the hide put on it was written as a
+           transform built around that centring translate. */
+        'html body .jr-pill:hover{transform:none}' +
+        'html body .jr-pill.hidden{transform:translateY(-8px)}' +
+        'html body .jr-pill .jr-ptxt,' +
+        'html body .jr-pill .jr-idot,' +
+        'html body .jr-pill .jr-togs{display:none}' +
+        'html body .jr-pill .jr-orb.small{width:34px;height:34px}}' +
+      /* Clear of the nav strip, which only exists below 761 — above that the
+         rail is back down the left-hand side and there is nothing along the
+         bottom to clear. The editor has no rail at any width, so it keeps the
+         14px above and the orb does not float up the preview. */
+      '@media (max-width:760px){' +
+        'html body:has(.sidebar) .jr-pill{' +
+          'bottom:calc(74px + env(safe-area-inset-bottom,0px))}' +
+        '.jr-sheet{top:6px;width:calc(100vw - 12px);padding:16px 12px 12px}}',
       '@media (prefers-reduced-motion:reduce){.jr-pill,.jr-sheet,.jr-orb.big::after,.jr-idot,.jr-bar{animation:none!important;transition:none}}'
     ].join('');
     document.head.appendChild(st);
@@ -663,8 +707,15 @@
 
     /* Remember where the reader parked the pill, so it stays put on the next
        page instead of blocking something again. */
+    /* Not on a phone. Where it was parked is a coordinate on whatever screen
+       it was parked on, restored as an inline style — which outranks every
+       rule in the stylesheet, so a spot picked on a 1440px desktop puts the
+       pill somewhere off the right edge of a 390px phone with no way to get
+       it back. On a phone it is docked in the corner by CSS and that is the
+       only place it goes. */
     var savedPos = null;
-    try { savedPos = JSON.parse(localStorage.getItem('nc_nova_pos') || 'null'); } catch (e) {}
+    var phone = (innerWidth || document.documentElement.clientWidth || 0) <= 760;
+    try { if (!phone) savedPos = JSON.parse(localStorage.getItem('nc_nova_pos') || 'null'); } catch (e) {}
     if (savedPos && typeof savedPos.x === 'number' && typeof savedPos.y === 'number') {
       pill.style.left = savedPos.x + 'px';
       pill.style.top = savedPos.y + 'px';

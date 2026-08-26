@@ -790,6 +790,121 @@ html[data-theme="light"] #ncAR .ncar-dims{color:#5A6478;background:none}
    pale buttons sitting on it. */
 html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
   border-color:rgba(16,24,44,.14);box-shadow:0 14px 34px -14px rgba(16,24,44,.35)}
+
+/* ============================================================================
+   THE EDITOR ON A PHONE
+   ============================================================================
+   The app is built as three columns in a viewport-height flex box: media on
+   the left, preview and properties in the middle, timeline underneath. That
+   is the right shape for the screen it was drawn for and it does not survive
+   contact with 390px.
+
+   What it actually did, measured:
+
+   The header is one flex row of shrink-0 controls, 1275px of them. In a 390px
+   window that is not a squeeze, it is a cliff — Undo, Redo, Save, Settings
+   and Export sit between x=998 and x=1275, roughly 900px past the right edge
+   of the screen, in a header with no wrap and no scroll. They were not small
+   or awkward, they were unreachable. The one thing in the row that could
+   shrink was the project-name field, which came out 18px wide: a text input
+   showing about one character.
+
+   Below it, 190px went to the media panel and 4px to a resize handle, which
+   left 196px for the preview, the properties panel and the timeline together
+   — a video editor previewing video in a strip narrower than a business card.
+
+   The fix is the ordinary phone one: stop being columns. The header wraps
+   instead of overflowing, the three panels stack, and the app scrolls
+   instead of being pinned to exactly one screen. Nothing is hidden — every
+   control that existed still exists, which is the whole point, since the
+   complaint was that they could not be got at.
+
+   Selectors are anchored at #root because these are Tailwind utility class
+   names and they repeat: `.flex.min-h-0.flex-1` matches both the body row
+   and the preview row nested two levels inside it. Walking down from #root
+   with child combinators is what makes each one mean a single panel.
+   ========================================================================= */
+@media (max-width: 900px) {
+  /* h-screen pins the app to exactly one viewport and hides the overflow.
+     Stacked panels are taller than that by design, so the page has to be
+     allowed to scroll. dvh, not vh: on a phone browser vh includes the
+     address bar that is not there, which puts the timeline under the chrome. */
+  #root > div.h-screen {
+    height: auto; min-height: 100dvh; width: 100%; overflow: visible;
+  }
+  /* And the document has to be allowed to scroll, which is the half of this
+     that is easy to miss. The app sets overflow:hidden on both html and body
+     — correct when it fills the screen exactly and every panel scrolls
+     inside itself, and fatal the moment it does not. Measured after the
+     panels were stacked: the app was 1426px tall in an 844px window with the
+     timeline, the export row and half the preview simply unreachable. The
+     layout was fixed and the page still was not. */
+  html, body { overflow: auto !important; height: auto !important; }
+
+  /* THE HEADER WRAPS. h-14 and shrink-0 are what made it a cliff. */
+  #root > div > header {
+    height: auto; min-height: 0; flex-wrap: wrap; row-gap: 8px;
+    padding-top: 8px; padding-bottom: 8px;
+  }
+  /* ml-auto on the last group means "push me to the right edge", and on a
+     wrapped row that reserves a whole empty line above itself. */
+  #root > div > header > .ml-auto { margin-left: 0; }
+  /* The vertical hairline separators are for reading a single row. Across
+     four wrapped rows they are just marks. */
+  #root > div > header > .w-px { display: none; }
+  /* The name field was the only flexible thing in the row and paid for all
+     of it. On its own line it has room to be a text field again. */
+  #root > div > header > input {
+    width: 100%; order: 9; min-height: 40px; font-size: 16px;
+    border-color: rgba(255,255,255,.12);
+  }
+
+  /* THE PANELS STACK. */
+  #root > div > div.flex-1 { flex-direction: column; min-height: 0; }
+  /* Both resize handles go. They are 4px and 1px targets meant for a mouse
+     pointer, and once the panels are stacked full-width there is nothing
+     left for them to resize. */
+  #root > div > div.flex-1 > .cursor-col-resize,
+  #root > div > div.flex-1 > .flex-col > .cursor-row-resize { display: none; }
+
+  /* Media library: full width, and tall enough to see a few files in. The
+     inline width the drag-to-resize handle writes has to be overridden — it
+     is a pixel count from a wider screen. */
+  #root > div > div.flex-1 > div:first-child {
+    width: 100% !important; max-width: none !important;
+    height: 44vh; min-height: 260px; flex: 0 0 auto;
+  }
+  /* Inside it, the 64px icon rail and the panel body stay side by side —
+     that part was always a phone-shaped layout. */
+  #root > div > div.flex-1 > div:first-child > .flex-row { height: 100%; }
+
+  /* Preview, properties and timeline. */
+  #root > div > div.flex-1 > .flex-col { width: 100%; flex: 1 1 auto; }
+  #root > div > div.flex-1 > .flex-col > .flex-1 {
+    flex-direction: column; min-height: 62vh;
+  }
+  /* The preview and the properties panel were side by side; stacking the row
+     leaves them at the widths they had as columns, so the properties panel
+     rendered as a 210px strip with 180px of blank page beside it and its tab
+     row clipped. Once they are rows they should each take the width. */
+  #root > div > div.flex-1 > .flex-col > .flex-1 > * {
+    width: 100% !important; max-width: none !important; flex: 0 0 auto;
+  }
+  /* ...except the preview itself, which should take the leftover height so
+     the video is as big as the screen will allow. */
+  #root > div > div.flex-1 > .flex-col > .flex-1 > :first-child {
+    flex: 1 1 auto; min-height: 46vh;
+  }
+  #root > div > div.flex-1 > .flex-col > .shrink-0 {
+    height: auto !important; min-height: 220px;
+  }
+
+  /* Every icon button in the header and the toolbars was drawn at 32px wide.
+     nova.js sets a 40px floor for coarse pointers but exempts anything with
+     "icon" in its class name, so a row of them does not blow apart — here
+     the row wraps, so they can have the width. */
+  #root .btn-icon, #root .btn-ghost { min-width: 40px; min-height: 40px; }
+}
 </style>
 </head>
   <body data-nc-editor-tools>
@@ -1565,6 +1680,17 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
             'border:1px solid rgba(255,255,255,.14);background:rgba(12,14,24,.9);color:#EAF2FF;' +
             'backdrop-filter:blur(12px)}' +
           '#ncpj-btn:hover{border-color:rgba(0,240,255,.55)}' +
+          /* translateX(-190px) from the centre of the window is a spot in the
+             bar's empty middle on a desktop. On a 390px phone it resolves to
+             x=5, on top of the settings button, with the Editor/Photo switch
+             overlapping its other end. nova.js moves that switch onto a row
+             below the bar on phones; this joins it at the other end of the
+             same row, and gives up the project name to an ellipsis rather
+             than the two of them colliding again. The editor header has a
+             full-width name field of its own down there anyway. */
+          '@media (max-width:760px){#ncpj-btn{top:calc(52px + 6px);left:auto;right:8px;' +
+            'transform:none;max-width:44vw;overflow:hidden;white-space:nowrap}' +
+            '#ncpj-btn #ncpj-now{overflow:hidden;text-overflow:ellipsis}}' +
           'html[data-theme="light"] #ncpj-btn{background:rgba(255,255,255,.95);color:#101828;' +
             'border-color:rgba(16,24,44,.16)}' +
           '#ncpj{position:fixed;inset:0;z-index:10000;display:none;place-items:center;' +

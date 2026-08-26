@@ -896,21 +896,120 @@ function ncBuildBar() {
       'body:has(#ncbar):not(:has(.content)):not(:has(.shell)):not(:has(.main))' +
         '{padding-top:' + NC_BAR_H + 'px}' +
     '}' +
-    /* On a phone the rail is a bottom strip and the bar is the full width. */
-    '@media (max-width:760px){#ncbar{padding:0 84px 0 10px;gap:10px}' +
-      '#ncbar .themewrap{gap:10px}' +
-      /* The labels go: the sun/screen/moon row and a Normal|Gen Z switch say
-         what they are, and on a 390px screen the three controls only fit
-         without a sideways swipe if the words come out. */
-      /* !important because both labels are built with an inline
-         style="display:block" — an inline style outranks any stylesheet rule
-         that does not say otherwise, so without this only the Language label
-         (the one nova.js builds without inline styles) actually went away. */
-      '#ncbar .themewrap label{display:none !important}' +
-      '#ncbar #nc-themerow .nc-themerow{width:84px}' +
-      '#ncbar #genzToggle{width:112px}' +
-      '#ncbar select{max-width:116px;font-size:.74rem}' +
-      'body{padding-top:' + NC_BAR_H + 'px}}' +
+    /* On a phone the rail is a bottom strip and the bar is the full width.
+
+       THE SETTINGS GO BEHIND ONE BUTTON.
+
+       They used to be laid out flat, squeezed: the three theme buttons at
+       84px, the skin picker at 116, the language picker, the Gen Z switch,
+       and whatever was left over for the brand. On a 390px phone "whatever
+       was left over" is 76px, so the site's own name rendered as "No" —
+       clipped mid-word, in the most valuable strip on the screen, on every
+       page. The three theme buttons came out 27px wide, which is not a tap
+       target.
+
+       None of those controls is something you touch twice a year. Appearance
+       and language belong in a menu; they were only ever laid out flat
+       because on a 1440px desktop there is room to be lazy about it. So on a
+       phone the whole themewrap drops into a sheet under one 40px button and
+       the bar gets its width back.
+
+       1023 AND NOT 760, WHICH IS THE OTHER BREAKPOINT ON THIS BLOCK.
+
+       760 is where the rail becomes a bottom strip; it is not where these
+       controls stop fitting. Laid flat they need about 850px: the theme
+       label and its three buttons, the skin picker at 170, the Gen Z switch
+       at 261, the language label and its picker at 157. On a 768px tablet
+       the bar also starts at the rail, so there are 592px for 850px of
+       controls — the language picker ended up at x=814 on a 768 screen,
+       entirely off the side, and took the page's horizontal scroll with it.
+
+       So the sheet covers everything below 1024 and the strip rules keep
+       their own 760 block further down. The two were one block until the
+       tablet sweep caught this. */
+    '@media (max-width:1023px){#ncbar{padding:0 96px 0 10px;gap:8px}' +
+      /* Out of the bar's flow and into a panel hanging off it. Positioned
+         from the right edge rather than the button, so it cannot be pushed
+         off-screen by a page that adds something of its own to the bar. */
+      /* padding carries !important because the flat-bar rule above sets
+         `padding:0 !important` — it has to, because the pages this wrap is
+         adopted from bring their own. In the sheet that left every control
+         hard against the border and the labels touching the rounded corner;
+         only another !important reaches it.
+         overflow-x too: the bar version scrolls sideways, which in a
+         column-shaped menu would clip the shadow and add a scrollbar to a
+         list that already fits. */
+      '#ncbar .themewrap{position:absolute;top:100%;right:8px;left:auto;' +
+        'display:none;flex-direction:column;align-items:stretch;gap:14px;' +
+        'width:min(19rem,calc(100vw - 16px));padding:14px !important;margin-top:6px;' +
+        'overflow-x:hidden;' +
+        'border-radius:14px;border:1px solid var(--nc-line2,rgba(255,255,255,.15));' +
+        /* Two layers, and the bottom one is the point. --nc-bar-bg is the top
+           bar's colour and every skin defines it translucent, because a bar
+           is meant to have the page sliding under it. A menu is not: with
+           just that, the page showed straight through the sheet and the word
+           LANGUAGE was printed over BioSentinel's vault tiles. --nc-bg is the
+           page's own background, so it is opaque in every skin and in both
+           light and dark; the bar tint goes on top of it as an image so the
+           sheet still looks like it belongs to the bar it hangs off. */
+        'background-color:var(--nc-bg,#0a0d16);' +
+        'background-image:linear-gradient(var(--nc-bar-bg,rgba(10,13,24,.98)),' +
+          'var(--nc-bar-bg,rgba(10,13,24,.98)));' +
+        '-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);' +
+        'box-shadow:0 18px 50px rgba(0,0,0,.6);max-height:70vh;overflow-y:auto}' +
+      '#ncbar.ncset-open .themewrap{display:flex}' +
+      /* In a sheet there is room for the words again, so the labels come
+         back — the flat bar was the only reason they had to go. */
+      '#ncbar .themewrap label{display:block !important;font-size:.72rem;' +
+        'font-weight:800;letter-spacing:.08em;text-transform:uppercase;' +
+        'opacity:.6;margin:0 0 6px}' +
+      /* Full width inside the sheet: these were the 27x44 targets.
+
+         Named ids first, then a catch-all. The language picker arrives from
+         whichever page shipped it, wrapped in whatever that page felt like
+         wrapping it in — usually a label or a bare div sized to its content,
+         which left the select 131px wide in a 304px sheet however many
+         !importants the select itself carried. `width:100%` on a select is
+         100% of that wrapper, so the wrapper is the thing to widen, and only
+         a catch-all reaches all of them. */
+      '#ncbar #nc-themerow,#ncbar #genzwrap,#ncbar #ncLangPick{width:100%}' +
+      '#ncbar .themewrap > *{width:100%;max-width:100%;box-sizing:border-box}' +
+      /* #nc-themerow is itself a flex ROW holding a label, the three theme
+         buttons and the skin picker side by side — which is why width:100%
+         on the select did nothing: it was a flex item sharing 302px with two
+         siblings and came out 131 wide. In the sheet these are two separate
+         settings and each gets its own line. */
+      '#ncbar #nc-themerow,#ncbar #genzwrap{display:flex;flex-direction:column;' +
+        'align-items:stretch;gap:8px}' +
+      '#ncbar #nc-themerow .nc-themerow{width:100%;display:flex}' +
+      '#ncbar #nc-themerow .nc-themerow button{flex:1 1 0;min-height:44px}' +
+      '#ncbar #genzToggle{width:100%}' +
+      '#ncbar #genzToggle > div{flex:1 1 0;text-align:center;min-height:44px;' +
+        'display:flex;align-items:center;justify-content:center}' +
+      /* width:auto is what the desktop rule needs; in the sheet the select
+         should fill the row, so both the width and the cap are overridden. */
+      '#ncbar select{width:100% !important;max-width:none;font-size:.9rem;' +
+        'min-height:44px;padding:10px 30px 10px 12px}' +
+      /* The button itself. 40px square, and it sits in the bar where the
+         controls used to start. */
+      '#ncgear{display:flex;align-items:center;justify-content:center;' +
+        'width:40px;height:40px;flex:0 0 auto;padding:0;border-radius:11px;' +
+        'cursor:pointer;color:var(--nc-text,inherit);' +
+        'background:var(--nc-card,rgba(255,255,255,.05));' +
+        'border:1px solid var(--nc-line2,rgba(255,255,255,.15))}' +
+      '#ncbar.ncset-open #ncgear{background:var(--nc-cyan,#00F0FF);color:#04121a;' +
+        'border-color:transparent}' +
+      '#ncgear svg{width:20px;height:20px;display:block}' +
+      /* The brand can breathe now: it is the reason for all of the above. */
+      '#ncbar #ncbrand{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;' +
+        'min-width:0;flex:0 1 auto}}' +
+    /* Reserving the bar's height is the strip's breakpoint, not the sheet's.
+       Above 760 there are rules further up that offset .content/.shell/.main
+       instead, and doing both puts the page 104px down. */
+    '@media (max-width:760px){body{padding-top:' + NC_BAR_H + 'px}}' +
+    /* Wide enough to lay the controls out flat, so the button that would open
+       them has nothing to open. */
+    '@media (min-width:1024px){#ncgear{display:none}}' +
     /* The sidebar copy would be a second set of the same three controls. */
     '.sidebar .themewrap{display:none !important}' +
     /* JARVIS MOVES INTO THE BAR.
@@ -935,9 +1034,18 @@ function ncBuildBar() {
        and the reader gets the final say. `right` is avoided for the same
        reason — a dragged pill has an inline `left`, and left+right together on
        an auto-width box stretches it across the gap. */
-    'html body .jr-pill{top:8px;left:calc(100% - 176px);transform:translateX(-100%)}' +
-    'html body .jr-pill:hover{transform:translateX(-100%) translateY(-1px)}' +
-    'html body .jr-pill.hidden{transform:translateX(-100%) translateY(-8px)}' +
+    /* Wrapped in a min-width for the same reason as the band below it. This
+       rule and jarvis.js's phone dock both read `html body .jr-pill`, and
+       this stylesheet is appended when the bar is built — after jarvis has
+       booted on most pages, so at equal specificity this one won and put the
+       pill back at top:8px on a 390px screen, on top of the page's heading.
+       There is no gap beside the controls to slide into down there anyway:
+       the controls have moved into a sheet and the bar is a gear and a
+       badge. */
+    '@media (min-width:1024px){' +
+      'html body .jr-pill{top:8px;left:calc(100% - 176px);transform:translateX(-100%)}' +
+      'html body .jr-pill:hover{transform:translateX(-100%) translateY(-1px)}' +
+      'html body .jr-pill.hidden{transform:translateX(-100%) translateY(-8px)}}' +
     /* Not enough room beside the controls: it goes back to the centre, below
        the bar, where the page has not started yet.
 
@@ -961,7 +1069,16 @@ function ncBuildBar() {
        picker, and at 1440 it still clipped by 19px. Dropping the status line
        clears both. Below 1300 nothing fits and it goes under the bar. */
     '@media (min-width:1360px) and (max-width:1500px){html body .jr-pill #jr-status{display:none}}' +
-    '@media (max-width:1359px){html body .jr-pill{top:calc(' + (NC_BAR_H + 8) + 'px + var(--nc-strip-h,0px));' +
+    /* The lower bound is new. Below 761px jarvis.js docks the pill in the
+       bottom-right corner as a round button, and this rule sets `top`,
+       `left` and `transform` — the three properties that dock is made of.
+       Both selectors read `html body .jr-pill`, so which one won came down
+       to which stylesheet was appended last, and that is decided by whether
+       nova.js built its bar before jarvis.js booted. Scoping this to the
+       widths it was written for means the two rules never both apply and
+       the order stops mattering. */
+    '@media (min-width:1024px) and (max-width:1359px){' +
+      'html body .jr-pill{top:calc(' + (NC_BAR_H + 8) + 'px + var(--nc-strip-h,0px));' +
       'left:50%;transform:translateX(-50%)}' +
       'html body .jr-pill:hover{transform:translateX(-50%) translateY(-1px)}' +
       'html body .jr-pill.hidden{transform:translateX(-50%) translateY(-8px)}}' +
@@ -977,6 +1094,51 @@ function ncBuildBar() {
   const inner = document.createElement('div');
   inner.className = 'themewrap';              // what the two builders look for
   bar.appendChild(inner);
+
+  /* THE ONE BUTTON THE PHONE SHEET HANGS OFF.
+     Built on every screen and hidden by CSS above 760px, rather than built
+     conditionally — the bar is made once at parse time and a phone that is
+     rotated, or a desktop window dragged narrow, would otherwise be left
+     with a sheet and nothing to open it. It is in the DOM before .themewrap
+     is filled, so it keeps its place at the left of the bar whatever the two
+     builders and the adoption pass below put in there. */
+  const gear = document.createElement('button');
+  gear.id = 'ncgear';
+  gear.type = 'button';
+  gear.setAttribute('aria-label', 'Appearance and language');
+  gear.setAttribute('aria-expanded', 'false');
+  gear.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="3"></circle>' +
+    '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>' +
+    '</svg>';
+  gear.addEventListener('click', function (e) {
+    e.stopPropagation();
+    const open = bar.classList.toggle('ncset-open');
+    gear.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  bar.insertBefore(gear, inner);
+
+  /* Anywhere else closes it. `mousedown` and not `click`, so a tap that
+     starts outside the sheet closes it before whatever it landed on runs —
+     otherwise the first tap on a page behind the sheet is spent shutting it.
+     Taps inside the sheet are exempt: choosing a language is one tap, and
+     the select's own dropdown counts as inside. */
+  document.addEventListener('mousedown', function (e) {
+    if (!bar.classList.contains('ncset-open')) return;
+    if (inner.contains(e.target) || gear.contains(e.target)) return;
+    bar.classList.remove('ncset-open');
+    gear.setAttribute('aria-expanded', 'false');
+  }, true);
+  /* Escape closes it too — it is a menu, and that is what menus do. */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || !bar.classList.contains('ncset-open')) return;
+    bar.classList.remove('ncset-open');
+    gear.setAttribute('aria-expanded', 'false');
+    gear.focus();
+  });
+
   document.body.insertBefore(bar, document.body.firstChild);
 
   /* Bring the page's own language picker across, label and all. */
@@ -1065,7 +1227,16 @@ function ncBuildThemeSwitch() {
         'border:1px solid var(--nc-line,rgba(255,255,255,.14));font:inherit;font-size:.86rem;cursor:pointer}' +
       '#ncbar #nc-skinpick{margin-top:0;width:auto;max-width:170px}' +
       '#ncbar #nc-themerow{display:flex;align-items:center;gap:10px;margin-bottom:0}' +
-      '#ncbar #nc-themerow > label{margin-bottom:0}';
+      '#ncbar #nc-themerow > label{margin-bottom:0}' +
+      /* In the bar these two are squeezed into a strip beside everything
+         else. In the phone sheet they are a settings list and each one has
+         a line to itself, so the widths that keep the bar in order are the
+         wrong ones. Both carry an id, which outranks the `#ncbar select`
+         rule doing the same job over in the bar's own stylesheet — this is
+         where the override has to be to reach them. */
+      '@media (max-width:1023px){' +
+        '#ncbar #nc-skinpick{width:100%;max-width:100%}' +
+        '#ncbar #nc-themerow{flex-direction:column;align-items:stretch;gap:8px}}';
     document.head.appendChild(css);
   }
 
@@ -1276,7 +1447,9 @@ function ncCornerBox() {
     '#ncCorner .nccbody select{width:100%;padding:8px 10px;border-radius:10px;' +
       'border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);' +
       'color:#EAF2FF;font:600 13px inherit;cursor:pointer}' +
-    '@media (max-width:760px){#ncCorner{bottom:74px}}';
+    /* Above the nav strip, on the pages that have one. The editor does not,
+       and there the 74px lifted this straight onto the preview toolbar. */
+    '@media (max-width:760px){body:has(.sidebar) #ncCorner{bottom:74px}}';
   document.head.appendChild(st);
 
   box = document.createElement('div');
@@ -1713,14 +1886,25 @@ ncFit.textContent =
 "html[dir=rtl] #ncpts { right:auto; left:16px; }" +
 /* The pill parks in the gap beside the badge — mirrored, same 176px offset.
    The three width bands are about how much room the controls need, which does
-   not change with direction, so they are restated rather than rethought. */
-"html[dir=rtl] body .jr-pill { left:176px; transform:none; }" +
-"html[dir=rtl] body .jr-pill:hover { transform:translateY(-1px); }" +
-"html[dir=rtl] body .jr-pill.hidden { transform:translateY(-8px); }" +
-"@media (max-width:1359px) {" +
+   not change with direction, so they are restated rather than rethought.
+
+   Both bands stop at 761px. Below that the pill is a round button docked in
+   a bottom corner, and these rules set the `left` and the `transform` that
+   dock is made of — so in Farsi on a phone the orb went back to the middle
+   of the page heading. The dock is mirrored just below instead, which is one
+   line rather than three. */
+"@media (min-width:1024px) {" +
+  "html[dir=rtl] body .jr-pill { left:176px; transform:none; }" +
+  "html[dir=rtl] body .jr-pill:hover { transform:translateY(-1px); }" +
+  "html[dir=rtl] body .jr-pill.hidden { transform:translateY(-8px); } }" +
+"@media (min-width:1024px) and (max-width:1359px) {" +
   "html[dir=rtl] body .jr-pill { left:50%; transform:translateX(-50%); }" +
   "html[dir=rtl] body .jr-pill:hover { transform:translateX(-50%) translateY(-1px); }" +
   "html[dir=rtl] body .jr-pill.hidden { transform:translateX(-50%) translateY(-8px); } }" +
+/* The corner the orb docks in is the one your thumb is not reading past, so
+   it mirrors with the text. */
+"@media (max-width:1023px) {" +
+  "html[dir=rtl] body .jr-pill { right:auto; left:12px; } }" +
 
 /* ---------------------------------------------------------------------------
    ENGLISH SENTENCES INSIDE AN RTL PAGE
@@ -1823,10 +2007,53 @@ ncFit.textContent =
 "html[data-pointer=\"coarse\"] li a," +
 "html[data-pointer=\"coarse\"] a[style*=\"inline\"] { min-height: 0; }" +
 
+/* A finger is round, and only the height was ever checked. The audit found
+   the other axis full of 27x44 and 30x40 controls — tall enough to pass the
+   rule above and still too narrow to hit: the three theme buttons on every
+   page, and the 1-5 rating rows on analytics.html and app.html.
+
+   Buttons and selects only. `a` is deliberately not in this list: a link is
+   usually a run of text inside a sentence, and a minimum width would either
+   do nothing or stretch a two-letter link into a gap in the paragraph. Links
+   that are really buttons carry role="button" and are covered. */
+"html[data-pointer=\"coarse\"] button," +
+"html[data-pointer=\"coarse\"] [role=\"button\"]," +
+"html[data-pointer=\"coarse\"] select { min-width: 40px; }" +
+/* An icon button inside a tight toolbar is sized by its row, and the editor
+   has rows of them. Anything that has opted into being small stays small
+   rather than breaking the row it is in. */
+"html[data-pointer=\"coarse\"] button[class*=\"icon\"]," +
+"html[data-pointer=\"coarse\"] button[class*=\"chip\"] { min-width: 0; }" +
+
+/* THE STRIP HAS TO WIN, AND ON FOUR PAGES IT WAS LOSING.
+
+   Every geometry line below is !important, which is not how the rest of this
+   file is written and needs the reason on the record.
+
+   Four pages pin the rail themselves: study.html and community.html in their
+   own <style> block, socials.html and biometrics.html through
+   `body.tv .sidebar` and `body.bio .sidebar` in the two skin stylesheets.
+   All four say `position:fixed; left:0; top:0; bottom:0; width:200px`, which
+   is correct for the tall desktop rail they were written for.
+
+   A media query adds no specificity. `.sidebar` here scores (0,1,0);
+   `body.tv .sidebar` scores (0,2,1) and beats it at every width — so on a
+   390px phone those four pages kept the full-height 200px rail, pinned over
+   the top-left corner of their own content, covering half the top bar. The
+   TeenVerse feed was unreadable behind it.
+
+   Raising the selector cannot fix this: whatever is written here, the next
+   page added by hand can out-specify it, and this site is edited by hand
+   between sessions. !important on the geometry says the thing that is
+   actually true — below 760px there is no room for a vertical rail, and no
+   page gets to decide otherwise. Colour, shadow and border are left alone,
+   so a skin still looks like itself. */
 "@media (max-width: 760px) {" +
   ".sidebar {" +
-    "display: flex; flex-direction: row; align-items: center;" +
-    "top: auto; bottom: 0; left: 0; right: 0;" +
+    "display: flex !important; flex-direction: row !important; align-items: center;" +
+    "position: fixed !important;" +
+    "top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important;" +
+    "z-index: 99990;" +
     /* border-box or the 4px padding is added to the 100% and the strip is
        wider than the screen — community.html measured 394 on a 390 phone. */
     /* 100% resolves against the containing block, and an ancestor with a
@@ -1834,12 +2061,23 @@ ncFit.textContent =
        community.html resolved it to 394 on a 390px phone and put a
        horizontal scrollbar on the page. 100vw is the viewport by
        definition, so it is the ceiling. */
-    "width: 100%; max-width: 100vw; height: 64px; padding: 0 4px; box-sizing: border-box;" +
+    /* width is !important for a reason that is easy to miss: on a fixed box
+       given left, right AND width, the width wins and the right is dropped.
+       So `right:0 !important` above did nothing on the four themed pages —
+       their `width: var(--nc-rail, 200px)` was still in force and the strip
+       came out 176px wide in a 390px window, a sixth of the navigation with
+       the rest of it off the end. */
+    "width: 100% !important; max-width: 100vw; height: 64px !important;" +
+    "padding: 0 4px; box-sizing: border-box;" +
     "overflow-x: auto; overflow-y: hidden;" +
   "}" +
-  ".sidebar .themewrap { display: none; }" +
-  /* Reserve the strip's height, or the last thing on every page sits under it. */
-  "body { padding-bottom: 74px; margin-left: 0; }" +
+  ".sidebar .themewrap { display: none !important; }" +
+  /* Reserve the strip's height, or the last thing on every page sits under it.
+     Only where there is a strip: the editor has no rail, and reserving 74px
+     for one on a page that fills the screen exactly is 74px of dead grey
+     under a timeline. */
+  "body:has(.sidebar) { padding-bottom: 74px !important; }" +
+  "body { margin-left: 0 !important; }" +
 "}" +
 
 /* A font ramp used to sit here, growing the root size on wider screens. It
@@ -3011,12 +3249,42 @@ function ncNav() {
       '@media (min-width:761px){.sidebar{overflow-x:hidden}}',
       '@media (max-width:760px){.sidebar{overflow-x:auto;overflow-y:hidden;' +
         '-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;' +
+        /* The profile button is stuck to the right edge and painted over the
+           links, so the last 64px of the scrollport is not really visible.
+           scrollIntoView does not know that on its own — it scrolled the
+           active link to x=297 with the foot starting at x=337, which is
+           "in view" by its arithmetic and half hidden on the screen. This is
+           the number that tells it where the edge actually is. */
+        'scroll-padding:0 64px 0 8px;' +
         /* A visible scrollbar inside a 64px strip eats a fifth of it. */
         'scrollbar-width:none}' +
         '.sidebar::-webkit-scrollbar{display:none}' +
-        /* Rows in a row, not a column stacked inside a 64px-tall box. */
-        '#ncnav{flex-direction:row;align-items:center;gap:2px;padding:0 4px;' +
-        'flex:0 0 auto}' +
+        /* Rows in a row, not a column stacked inside a 64px-tall box.
+
+           `.sidebar #ncnav` and not `#ncnav`, and this is the line that made
+           the whole bottom bar useless. The tall rail's own rule further down
+           this same stylesheet says `flex:1 1 auto` so the nav takes the
+           leftover height and scrolls inside itself. Same specificity, later
+           in the file, so it won here too — and `1 1 auto` in a ROW means the
+           nav shrinks to whatever is left of the width.
+
+           Measured on a 390px phone: #ncnav held 936px of links inside a
+           321px box that clipped them, while the strip around it reported
+           scrollWidth 390 and so had nothing to scroll. Four of the fifteen
+           destinations were reachable and no swipe would reveal the other
+           eleven. That is the site's entire navigation on a phone.
+
+           `0 0 auto` lets the nav be its natural 936px, which makes the strip
+           genuinely overflow, which is what turns on the scroll the strip has
+           always asked for with overflow-x:auto. */
+        /* The trailing padding is the sticky profile button's width. Without
+           it the last link in the list can never be scrolled out from under
+           the button — you reach the end of the scroll and Pricing is still
+           behind the avatar. Links passing under it mid-scroll is what a
+           pinned element does and is fine; the end of the list not being
+           reachable at all is not. */
+        '.sidebar #ncnav{flex-direction:row;align-items:center;gap:2px;' +
+        'padding:0 60px 0 4px;flex:0 0 auto}' +
         '#ncnav .ncg{flex-direction:row;align-items:center;flex:0 0 auto}' +
         '#ncnav .ncgi{flex-direction:row;align-items:center;flex:0 0 auto}' +
         /* The group headings are collapse toggles for a vertical rail. In a
@@ -3044,7 +3312,26 @@ function ncNav() {
            styled further down this same stylesheet at the same specificity,
            and a later rule wins a tie — so without `a#` and `button#` the
            coins card stayed visible in the strip and ate a third of it. */
-        '.sidebar #ncfoot{order:9;flex-direction:row;margin:0;padding:0;gap:4px;align-items:center}' +
+        /* Sticky to the right of the scrollport, not simply last in the row.
+           Once the nav is allowed its full 936px the foot sits at x=936 —
+           off the end of a strip you now have to swipe to reach, and your own
+           profile is not something to go looking for. Stuck to the right edge
+           it is always there, and the links scroll underneath it.
+
+           It needs its own background for that: without one the link passing
+           behind it is drawn through the avatar. The strip's own colour is
+           the right one, and it is on --nc-rail1 like the rest of the bar.
+
+           This is also what the hit test was complaining about. `Publish` was
+           reported as stolen by the avatar on ten pages: with the nav clipped
+           to 321px the foot was laid on top of the last link that fit, so the
+           tap landed on the profile. Pinned and painted, that stops being an
+           accident and becomes the arrangement. */
+        '.sidebar #ncfoot{order:9;flex-direction:row;margin:0;padding:0 2px 0 6px;' +
+          'gap:4px;align-items:center;position:sticky;right:0;flex:0 0 auto;' +
+          'align-self:stretch;justify-content:center;z-index:2;' +
+          'background:var(--nc-rail1,rgba(10,13,24,.96));' +
+          'box-shadow:-10px 0 12px -8px var(--nc-shadow,rgba(0,0,0,.6))}' +
         '.sidebar #ncfoot a#nccoins{display:none}' +
         '.sidebar #ncfoot button#ncprof{width:auto;flex:0 0 auto;' +
         'margin:0 0 0 4px;padding:5px;border-radius:12px;white-space:nowrap}' +
@@ -3203,6 +3490,36 @@ function ncNav() {
   }
   addEventListener('resize', ncStripHeight, { passive: true });
   setTimeout(ncStripHeight, 0);
+
+  /* --------------------------------------------------------------------
+     LAND ON THE PAGE YOU ARE ACTUALLY ON.
+     --------------------------------------------------------------------
+     Fifteen destinations in a strip that shows four means eleven of them
+     are behind a swipe. That is survivable for going somewhere else; it is
+     not survivable for knowing where you are, because the strip always
+     starts at the left and the highlighted link is usually not there. On
+     biometrics.html — the eleventh link — the bar looked exactly as it does
+     on the home page.
+
+     So scroll the active one into view once, at the start. `nearest` and
+     not `center`: for the first few links the answer is "do not move", and
+     centring Home would scroll Studio and Trend Spotter off the left for
+     no reason. Instant rather than smooth — this is the state the page
+     opens in, not an animation somebody asked for.
+     -------------------------------------------------------------------- */
+  function ncStripFocus() {
+    if (innerWidth > 760) return;
+    var el = document.querySelector('.sidebar #ncnav a.ncl.on');
+    if (!el || !el.scrollIntoView) return;
+    try {
+      el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+    } catch (e) {
+      /* behavior:'instant' is newer than the rest of this; if it is not
+         understood the call throws rather than falling back. */
+      try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e2) {}
+    }
+  }
+  setTimeout(ncStripFocus, 0);
 
   /* Any link the page shipped with is replaced. Keeping them would mean two
      navigations disagreeing about where things are. */
@@ -4648,7 +4965,18 @@ function ncPairTabs() {
     '#ncpairtabs .ncpt.on{background:var(--nc-cyan,#00F0FF);color:#04121a}' +
     /* editor.html has no content column to sit inside, so there it floats. */
     '#ncpairtabs.float{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:99991;' +
-      'background:var(--nc-bg,#0a0d16);box-shadow:0 6px 22px rgba(0,0,0,.45)}';
+      'background:var(--nc-bg,#0a0d16);box-shadow:0 6px 22px rgba(0,0,0,.45)}' +
+    /* On a desktop the bar has a wide empty middle for the floating pair to
+       sit in. On a phone the bar is a settings button and a coins badge with
+       32px between them, so `top:10px` put the Editor/Photo switch straight
+       on top of both — and on editor.html the project button lands there too,
+       three fixed things in the same 52px strip. Below the bar instead, on a
+       row of their own, with the body making room for it so the row is not
+       covering the first thing on the page in turn. */
+    '@media (max-width:760px){' +
+      '#ncpairtabs.float{top:calc(' + NC_BAR_H + 'px + 6px);left:8px;transform:none;' +
+        'max-width:calc(100vw - 16px)}' +
+      'body:has(#ncpairtabs.float){padding-top:' + (NC_BAR_H + 56) + 'px}}';
   document.head.appendChild(css);
 
   const host = document.querySelector('.main') || document.querySelector('.shell');
