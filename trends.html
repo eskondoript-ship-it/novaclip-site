@@ -112,6 +112,47 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 @media (min-width: 901px) {
   body.nova .nc-app { padding-left: var(--nc-sidebar, 248px); }
 }
+
+/* ---------------------------------------------------------------------------
+   THE PHONE MENU WAS HIDDEN BY THE RULE THAT HIDES THE DESKTOP RAIL
+   ---------------------------------------------------------------------------
+   This page is the only one on the site with no NovaClip rail of its own —
+   nova.js builds its navigation into a `.sidebar`, and this page's rail is a
+   `.nc-sidebar` belonging to the bundled app. That is deliberate and fine on a
+   desktop, where the app's rail is right there and the injector at the bottom
+   of this file puts a "Back to NovaClip" row at the top of it.
+
+   On a phone that rail is hidden and a burger opens a drawer instead. The
+   bundle renders that drawer as:
+
+       <aside class="nc-drawer nc-sidebar" aria-label="Mobile navigation">
+
+   — it borrows nc-sidebar for the padding and the nav-item styling, which is
+   reasonable, except that the very next thing in the stylesheet is
+
+       @media (max-width: 900px) { .nc-sidebar { display: none } }
+
+   the rule whose job is to hide the DESKTOP rail on small screens. Same class,
+   so it hides the drawer too. Tapping the burger dimmed the page and opened
+   nothing: the backdrop is a separate element and it appeared, the menu did
+   not. Every link on the page is a hash route inside this one file, so with
+   the drawer dead there was no way off trends.html at all — including the
+   Back to NovaClip row, which was being added correctly to a menu nobody
+   could see. That is the "can't go back" — not a missing link, a hidden one.
+
+   Two classes beat one, so the drawer wins where it has to.
+
+   The top offset is nova.js's bar. The drawer is z-index 45 and the site bar
+   is up in the 99000s, so a drawer starting at 0 would have its first row —
+   the way out — behind the bar.
+   --------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .nc-drawer.nc-sidebar {
+    display: flex;
+    top: 52px;
+    overflow-y: auto;
+  }
+}
 </style>
 </head>
 <!-- class='nova' is load-bearing, not decoration. Every rule in this page's

@@ -90,8 +90,16 @@ a{color:var(--cyan)}
   border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px}
 
 .hero{position:relative}
-.hero::before{content:"";position:absolute;left:-90px;top:-130px;width:460px;height:290px;
+/* The same decorative glow community.html carries, and the same problem:
+   left:-90 plus width:460 ends 370px from the start of .hero, which on a
+   360px phone is 41px past the right edge of the screen. A ::before is not
+   in the DOM, so nothing that walks elements looking for what is sticking
+   out can find it — what it looks like is the whole page being pannable
+   sideways. Anchored to both edges instead of given a width, so it still
+   bleeds off the left where there is room and never off the right. */
+.hero::before{content:"";position:absolute;left:-90px;right:0;top:-130px;height:290px;
   background:radial-gradient(closest-side,rgba(124,92,255,.28),transparent 72%);filter:blur(28px);z-index:-1}
+@media (min-width:900px){.hero::before{right:auto;width:460px}}
 h1{font-size:clamp(2rem,5.4vw,3rem);font-weight:680;letter-spacing:-.042em;line-height:1.03}
 h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lede{color:var(--dim);margin-top:14px;max-width:60ch}

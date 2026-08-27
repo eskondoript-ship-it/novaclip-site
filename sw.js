@@ -55,7 +55,12 @@
 /* v3 adds the two skins and the two typefaces they are drawn in. A page that
    comes back from the cache in its own colours but with the fallback font is
    a visibly different page, so the fonts belong in the shell beside them. */
-const CACHE = 'novaclip-v3';
+/* v4 adds photos.js, and retires a cache full of the pre-phone stylesheets.
+   nova.js and jarvis.js are served network-first so they refresh themselves,
+   but a returning visitor who goes offline before that happens would get the
+   old rail and the old top bar back — which is the whole of the phone work
+   undone. A new name is one line and rules that out. */
+const CACHE = 'novaclip-v4';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -73,6 +78,11 @@ const SHELL = [
      both offline-capable without them, but both are much less useful. */
   '/stickers.js',
   '/studio-kit.js',
+  /* The photo picker itself is cached even though the photographs it fetches
+     are not and cannot be. That is the point: offline, the button is still
+     there and says in words that it needs the network and that Stickers does
+     not. A missing button would just look like the feature had gone. */
+  '/photos.js',
   /* The focus timer is the one page here most likely to be opened with the
      wifi off on purpose. */
   '/study.html',

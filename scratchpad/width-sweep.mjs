@@ -8,7 +8,7 @@ const { chromium } = pw;
 const BASE = 'http://localhost:8099';
 const PAGES = ['index.html', 'tools.html', 'socials.html', 'biometrics.html', 'editor.html',
   'pricing.html', 'game.html', 'analytics.html', 'study.html', 'photo.html',
-  'community.html', 'typing.html', 'parent.html', 'trends.html', 'ai.html', 'progress.html'];
+  'community.html', 'typing.html', 'parent.html', 'trends.html', 'ai.html', 'progress.html', 'shield.html', 'pro.html', 'app.html', 'gift.html', 'coder.html', 'publish.html', 'studio-ai.html'];
 
 const SIZES = [
   { w: 360, h: 640, m: true,  label: 'phone-s' },
@@ -52,6 +52,29 @@ const CHECK = () => {
     }
   });
 
+  /* CAN YOU GET OFF THIS PAGE?
+     trends.html passed every other check on this list while being a dead end:
+     no site rail, every link a hash route inside itself, and the one way out
+     sitting in a drawer that the desktop rail's own hide-rule had switched
+     off. Nothing that measures boxes or hit-tests controls can see that. */
+  const out2 = [...document.querySelectorAll('a[href]')].filter((a) => {
+    const href = a.getAttribute('href') || '';
+    if (!/\.html(\?|#|$)/.test(href) || /^https?:/.test(href)) return false;
+    const r = a.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return false;
+    const cs = getComputedStyle(a);
+    return cs.visibility !== 'hidden' && cs.display !== 'none';
+  });
+  if (!out2.length) out.trapped = true;
+  /* A burger counts as a way out, but only if opening it actually produces
+     one — which is the whole point, since the bug was a burger that opened a
+     menu CSS had switched off. The driver clicks it and asks again. */
+  out.menuBtn = out.trapped && [...document.querySelectorAll('button')].some((x) => {
+    const r = x.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 &&
+      /menu|burger|nav|btn-ico/i.test(x.className + ' ' + (x.id || '') + ' ' + (x.getAttribute('aria-label') || ''));
+  });
+
   /* Is the page's first heading readable, or is something floating on it? */
   const h = document.querySelector('h1, h2');
   if (h) {
@@ -90,9 +113,30 @@ for (const s of SIZES) {
     try {
       await page.goto(BASE + '/' + p, { waitUntil: 'load', timeout: 20000 });
       await page.waitForTimeout(1200);
-      const r = await page.evaluate(CHECK);
+      let r = await page.evaluate(CHECK);
+      /* Nothing visible leads off the page — try the burger the way a reader
+         would, then ask again. */
+      if (r.trapped && r.menuBtn) {
+        await page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')].find((x) => {
+            const q = x.getBoundingClientRect();
+            return q.width > 0 && q.height > 0 &&
+              /menu|burger|nav|btn-ico/i.test(x.className + ' ' + (x.id || '') + ' ' + (x.getAttribute('aria-label') || ''));
+          });
+          if (b) b.click();
+        });
+        await page.waitForTimeout(600);
+        const after = await page.evaluate(CHECK);
+        /* Keep the trapped verdict from the second look — that is what the
+           click was for — but keep the heading verdict from the first. An
+           open menu covering the page behind it is a menu working, and
+           reporting it as a covered heading is the tool lying about a page
+           it disturbed itself. */
+        r = { ...after, covered: r.covered };
+      }
       const f = [];
       if (r.bleed) f.push('BLEED +' + r.bleed);
+      if (r.trapped) f.push('TRAPPED (no way off this page)');
       r.offscreen.slice(0, 4).forEach((o) => f.push('OFFSCREEN ' + o));
       r.covered.forEach((c) => f.push('COVERED ' + c));
       errs.slice(0, 2).forEach((e) => f.push('JS ' + e));

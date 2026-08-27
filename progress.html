@@ -88,7 +88,19 @@ body { background: var(--nc-bg,#060608); color: var(--nc-text,#f4f4f6); }
 @keyframes f2 { 0%,100% { transform: translate(0,0);} 50% { transform: translate(-50px,-35px);} }
 
 .wrap { position: relative; z-index: 2; margin-left: 200px; padding: 54px 6vw 90px; max-width: 1100px; }
-@media (max-width: 820px) { .wrap { margin-left: 0; padding: 30px 20px 70px; } .sidebar { display: none; } #orbs { left: 0; } }
+/* Two breakpoints, because they answer two different questions.
+
+   820 is where this page's own column stops needing the rail's margin, and
+   that is a judgement about this layout — it stays where it was.
+
+   Hiding the rail is not that question. nova.js turns the rail into the
+   bottom strip below 761, so hiding it at 820 left the band from 761 to 820
+   with the rail switched off and the strip not yet started: on a 768px tablet
+   this page had no navigation on it at all, and every one of its fourteen
+   links was display:none. The hide has to line up with the width the strip
+   actually takes over at, which is 760. */
+@media (max-width: 820px) { .wrap { margin-left: 0; padding: 30px 20px 70px; } #orbs { left: 0; } }
+@media (max-width: 760px) { .sidebar { display: none; } }
 h1 { font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 800; letter-spacing: -1.5px; }
 h1 .grad { background: linear-gradient(90deg, var(--nc-mag,#F72585), var(--nc-violet2,#7209B7), var(--nc-blue,#4CC9F0)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .sub { opacity: 0.75; margin: 12px 0 34px; line-height: 1.7; max-width: 60ch; }
