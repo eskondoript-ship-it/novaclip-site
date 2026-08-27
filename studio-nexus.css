@@ -1,0 +1,381 @@
+/* ============================================================================
+   NOVACLIP STUDIO — THE NEXUSSTREAM SKIN
+   ============================================================================
+   The look from the NexusStream YouTube Analytics app, applied to the Studio:
+   a fine grid behind the dashboard, panels with a single neon edge instead of
+   a grey one, HUD labels in small caps above every number, and the numbers
+   themselves in a monospaced face so a column of them lines up.
+
+   WHAT CAME ACROSS AND WHAT DID NOT
+
+   The design came across. The data did not, and could not: that project has
+   no network code in it at all — 3,677 lines, four matches for `fetch` and
+   all four are a font link or the word "WebSockets" in a tag list. Every
+   figure it shows is a random walk seeded from a constants file. Its channel
+   has 984,520 subscribers and 14,850 people watching right now, and it will
+   say that on any machine that opens it.
+
+   This is the second time a design has arrived here that way — the comment
+   above the performance panels in analytics.html records the first, "three
+   invented channels, 284,500 dollars of revenue, and series built out of
+   Math.sin()". The decision then was to keep the design and wire it to the
+   channel that is actually signed in. Same decision here, for the same
+   reason: a creator with 300 subscribers opening a dashboard that reads
+   984,520 has not been given a dashboard.
+
+   TYPEFACES
+
+   The original sets three Google fonts — Rajdhani, Space Grotesk and JetBrains
+   Mono. None are fetched here. Two of them would be a third-party request on
+   every Studio load, which is a line in the privacy policy and a paragraph of
+   layout shift, to change the shape of some labels. The HUD look comes from
+   the letter-spacing and the caps, which is where most of it lived anyway, and
+   the numbers use the monospaced face the reader already has.
+
+   LIGHT THEME
+
+   The original is dark-only — #020203, hard-coded. This site has a light
+   theme, so every colour here comes from a token with the neon accents laid
+   over it. A skin that only works in one theme is a skin that breaks the theme
+   switch, and the theme switch is not this panel's to break.
+   ========================================================================== */
+
+#dash {
+  --nx-cyan: #22d3ee;
+  --nx-fuchsia: #d946ef;
+  --nx-emerald: #10b981;
+  --nx-amber: #f59e0b;
+  --nx-pink: #ec4899;
+  /* The panel fill. Dark theme gets the original's near-black; light theme
+     gets the page's own card colour, because #0A0A0F on a white page is a
+     hole rather than a panel. */
+  --nx-panel: rgba(10, 10, 15, 0.6);
+  --nx-hud: var(--nc-dim, #7E8AA6);
+}
+html[data-theme='light'] #dash {
+  --nx-panel: rgba(255, 255, 255, 0.72);
+  --nx-hud: #5a6478;
+}
+
+/* The grid behind everything. 24px, and barely there — at the original's
+   opacity on a light background it is invisible, so it is set per theme. */
+#dash {
+  background-size: 24px 24px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+}
+html[data-theme='light'] #dash {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+}
+
+/* --------------------------------------------------------------------------
+   PANELS
+   --------------------------------------------------------------------------
+   One neon edge per panel rather than the grey hairline. The glow is inside
+   and outside at low alpha, which is what stops it reading as a border and
+   starts it reading as a lit edge.
+   -------------------------------------------------------------------------- */
+#dash .chartcard,
+#dash .perfbox,
+#dash .reviewbox,
+#dash .nx-tile {
+  background: var(--nx-panel);
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.06), inset 0 0 14px rgba(34, 211, 238, 0.03);
+}
+#dash .chartcard h4,
+#dash .perfbox .rvhead h4,
+#dash .reviewbox .rvhead h4 {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nx-cyan);
+}
+
+/* --------------------------------------------------------------------------
+   THE TELEMETRY ROW
+   --------------------------------------------------------------------------
+   Four tiles across the top: the headline number, what it is, and one line of
+   context under it. Each takes an accent from --nx so a glance at the colour
+   is enough to know which tile is which.
+   -------------------------------------------------------------------------- */
+.nx-telemetry {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+}
+.nx-tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  padding: 14px 15px;
+  border-color: color-mix(in srgb, var(--a, #22d3ee) 34%, transparent) !important;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--a, #22d3ee) 12%, transparent),
+              inset 0 0 12px color-mix(in srgb, var(--a, #22d3ee) 5%, transparent) !important;
+}
+/* The soft bloom in the corner, from the original. Decorative and behind
+   everything, so it never eats a click. */
+.nx-tile::after {
+  content: '';
+  position: absolute;
+  right: -14px;
+  bottom: -14px;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: var(--a, #22d3ee);
+  opacity: 0.07;
+  filter: blur(22px);
+  pointer-events: none;
+}
+.nx-tile .nx-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.nx-tile .nx-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--a, #22d3ee);
+}
+.nx-tile .nx-chip {
+  font: 700 0.58rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+  padding: 4px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  color: var(--a, #22d3ee);
+  background: color-mix(in srgb, var(--a, #22d3ee) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--a, #22d3ee) 30%, transparent);
+}
+.nx-tile .nx-n {
+  margin: 7px 0 0;
+  font: 800 clamp(1.5rem, 4vw, 1.95rem)/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: -0.02em;
+  color: var(--nc-text, #EAF2FF);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--a, #22d3ee) 40%, transparent);
+}
+.nx-tile .nx-sub {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--nx-hud);
+}
+.nx-tile .nx-sub b { color: var(--a, #22d3ee); font-weight: 700; }
+
+/* The milestone bar under the subscriber tile. */
+.nx-goal { margin-top: 10px; }
+.nx-goal .nx-goalrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font: 600 0.62rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.06em;
+  color: var(--nx-hud);
+  margin-bottom: 5px;
+}
+.nx-goal .nx-track {
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(127, 140, 170, 0.18);
+}
+.nx-goal .nx-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--nx-cyan), var(--nx-fuchsia));
+}
+
+/* --------------------------------------------------------------------------
+   THE VIEW TABS
+   -------------------------------------------------------------------------- */
+.nx-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  margin: 0 0 16px;
+  border-bottom: 1px solid rgba(127, 140, 170, 0.16);
+}
+.nx-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: 700 0.7rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nx-hud);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.nx-tab:hover { color: var(--nc-text, #EAF2FF); background: rgba(127, 140, 170, 0.1); }
+.nx-tab[aria-selected='true'] {
+  color: var(--nx-cyan);
+  background: rgba(34, 211, 238, 0.14);
+  border-color: rgba(34, 211, 238, 0.42);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.2);
+}
+/* The window the numbers actually cover, said next to the tabs rather than
+   the original's "WebSocket Live Stream: 60 FPS" — which was a caption on a
+   websocket that does not exist. */
+.nx-window {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 600 0.62rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nx-hud);
+}
+.nx-window i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nx-emerald);
+  box-shadow: 0 0 8px var(--nx-emerald);
+}
+
+/* --------------------------------------------------------------------------
+   SPIKE ALERTS
+   --------------------------------------------------------------------------
+   The original fires these from a timer with a random multiplier. Here one
+   only appears when a video in the window genuinely outran the channel's own
+   median by the margin named on it, so the banner is a finding rather than
+   decoration — which also means it is often absent, and that is correct.
+   -------------------------------------------------------------------------- */
+.nx-spike {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  margin: 0 0 16px;
+  background: color-mix(in srgb, var(--nx-fuchsia) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--nx-fuchsia) 36%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--nx-fuchsia) 12%, transparent);
+}
+.nx-spike .nx-ping {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--nx-fuchsia);
+  box-shadow: 0 0 10px var(--nx-fuchsia);
+  animation: nx-pulse 1.9s ease-in-out infinite;
+}
+@keyframes nx-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .nx-spike .nx-ping { animation: none; } }
+.nx-spike .nx-body { flex: 1 1 auto; min-width: 0; }
+.nx-spike b {
+  display: block;
+  font-size: 0.86rem;
+  color: var(--nc-text, #EAF2FF);
+  margin-bottom: 3px;
+}
+.nx-spike span {
+  display: block;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--nx-hud);
+}
+.nx-spike .nx-x {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 17px;
+  line-height: 1;
+  color: inherit;
+  background: transparent;
+  border: 1px solid rgba(127, 140, 170, 0.28);
+}
+
+/* --------------------------------------------------------------------------
+   THE RETENTION CURVE
+   --------------------------------------------------------------------------
+   The one panel in the original that the Studio genuinely did not have, and
+   the one worth the most: how far through the video people actually get.
+   -------------------------------------------------------------------------- */
+.nx-retain .nx-pick {
+  width: 100%;
+  max-width: 460px;
+  min-height: 44px;
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  border-radius: 11px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--nc-text, #EAF2FF);
+  background: var(--nc-bg3, rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(34, 211, 238, 0.28);
+}
+.nx-retain .nx-read {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.nx-retain .nx-read div {
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: rgba(127, 140, 170, 0.08);
+  border-left: 3px solid var(--nx-cyan);
+}
+.nx-retain .nx-read b {
+  display: block;
+  font: 800 0.6rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nx-cyan);
+  margin-bottom: 4px;
+}
+.nx-retain .nx-read span {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--nc-text, #EAF2FF);
+}
+
+/* --------------------------------------------------------------------------
+   PHONE
+   --------------------------------------------------------------------------
+   The original is a desktop dashboard — max-w-7xl with a four-across tile row
+   and a twelve-column split. The tiles already wrap on their own; the rest is
+   making sure the HUD type stays readable rather than merely small.
+   -------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+  .nx-telemetry { gap: 10px; }
+  .nx-tile { padding: 12px 13px; }
+  .nx-tabs { gap: 6px; }
+  .nx-tab { padding: 8px 11px; font-size: 0.66rem; letter-spacing: 0.05em; }
+  /* On a phone the window label under a wrapped row of tabs reads as a fifth
+     tab. Its own line, left-aligned with them. */
+  .nx-window { margin-left: 0; width: 100%; }
+}
+
+/* Printing the Studio is not a thing anybody does on purpose, but a lit edge
+   and a bloom are toner either way. */
+@media print {
+  #dash { background-image: none; }
+  #dash .chartcard, #dash .perfbox, #dash .reviewbox, #dash .nx-tile {
+    box-shadow: none !important;
+    border-color: #999 !important;
+  }
+  .nx-tile::after, .nx-tabs, .nx-spike .nx-x { display: none !important; }
+}

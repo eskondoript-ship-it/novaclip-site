@@ -333,6 +333,11 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
 .fftable .ffwhy { color:var(--nc-dim,#8c96ad); font-size:.8rem; }
 @media (max-width:640px){ .ffcards{grid-template-columns:1fr;} .ffvs{justify-self:center} }
 </style>
+<!-- The NexusStream skin, last so it wins. Most of its rules are #dash-scoped
+     and would outrank the block above on specificity anyway, but the plain
+     ones (.nx-tile, .nx-tab) are not, and "it happens to be more specific" is
+     a thing that stops being true the next time somebody edits either file. -->
+<link rel='stylesheet' href='studio-nexus.css'>
 </head>
 <body>
 <div class='sidebar'>
@@ -478,8 +483,15 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
         <button data-n='3'>3</button><button data-n='4'>4</button><button data-n='5'>5</button>
       </div>
     </div>
+    <!-- The NexusStream panels. studio-nexus.js fills all four and does
+         nothing at all until NX.refresh() is called with the channel, so on a
+         page with no connection these are four empty divs. -->
+    <div id='nxSpike'></div>
+    <div class='nx-telemetry' id='nxTelemetry'></div>
+    <div class='nx-tabs' id='nxTabs'></div>
+
     <div class='kpis' id='kpis'></div>
-    <div class='grid'>
+    <div class='grid' id='dashgrid'>
       <div class='chartcard'><h4>Subscribers</h4><canvas id='c_subs' height='190'></canvas></div>
       <div class='chartcard'><h4>Total views</h4><canvas id='c_views' height='190'></canvas></div>
       <div class='chartcard'><h4>Videos</h4><canvas id='c_videos' height='190'></canvas></div>
@@ -525,9 +537,28 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
       <div class='moneybox' id='moneyBox'></div>
     </div>
 
+    <!-- ===== AUDIENCE RETENTION =====
+         The one panel the NexusStream design had that this page did not, and
+         the only one of its panels whose number could not be got from what was
+         already fetched. audienceWatchRatio against elapsedVideoTimeRatio, per
+         video, from the Analytics API scope this page already asks for.
+
+         Hidden until the Retention tab is opened, because it costs a request
+         per video and nobody wants it fetched for a video they did not pick. -->
+    <div class='chartcard wide nx-retain' id='nxRetainBox' style='display:none'>
+      <h4>Where people stop watching</h4>
+      <select class='nx-pick' id='nxPick' aria-label='Which video'></select>
+      <div style='position:relative;height:260px'><canvas id='nxRetainChart'></canvas></div>
+      <p class='perfnote' id='nxRetainNote' style='margin-top:10px'></p>
+      <div class='nx-read' id='nxRetainRead'></div>
+    </div>
+
     <!-- The channel review. renderReview() has always written into rvTitle and
          rvStats; the markup for them was never in the page, so the function
-         threw on its first line and the whole section silently did not exist. -->
+         threw on its first line and the whole section silently did not exist.
+         Wrapped with the ratings below it so the view tabs can show or hide
+         the pair as one thing. -->
+    <div id='reviewwrap'>
     <div class='reviewbox'>
       <div class='rvhead'>
         <h4 id='rvTitle'>Channel review</h4>
@@ -545,6 +576,7 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
       <div class='rvhead'><h4>Your videos, ranked</h4>
         <span class='rvnote' id='rateNote'></span></div>
       <div id='rateList'></div>
+    </div>
     </div>
   </div>
 </div>
@@ -673,6 +705,14 @@ async function enterDash() {
   renderReview();
   renderRatings();
   renderYearChart();
+  /* The NexusStream tiles, tabs and spike banner. Called here with the
+     channel and the uploads, and again from renderPerformance() once the
+     Analytics API has answered — the first call fills the subscriber tile,
+     the second fills the other three. */
+  if (window.NX) NX.refresh({
+    stats: myStats, uploads: myUploads, days: perfDays,
+    yta: yta, nfmt: nfmt, hms: hms
+  });
   renderPerformance();
   document.querySelectorAll('.pfp').forEach(b => b.onclick = () => {
     document.querySelectorAll('.pfp').forEach(x => x.classList.remove('on'));
@@ -1024,12 +1064,17 @@ async function renderPerformance() {
       : 'YouTube would not return your analytics: ' + String(e.message).replace(/</g, '&lt;'), true);
     document.getElementById('perfKpis').innerHTML = '';
     document.getElementById('moneyBox').innerHTML = '';
+    /* Drop the three Analytics tiles rather than leaving the last window's
+       numbers under the new window's heading. The subscriber tile stays: it
+       comes from the Data API and is unaffected by whatever went wrong here. */
+    if (window.NX) NX.refresh({ totals: null, days: perfDays });
     return;
   }
 
   if (!totals || !totals[0]) {
     perfSay('No views in the last ' + perfDays + ' days, so there is nothing to chart yet. Upload something and come back.', true);
     document.getElementById('perfKpis').innerHTML = '';
+    if (window.NX) NX.refresh({ totals: null, days: perfDays });
     return;
   }
   perfSay('Straight from your channel, for the ' + perfDays + ' days ending yesterday. Today is left out because it is still counting.');
@@ -1042,6 +1087,10 @@ async function renderPerformance() {
     kpi('Avg % watched', (avgPct || 0).toFixed(1) + '%') +
     kpi('Subs gained', '+' + nfmt(gained)) +
     kpi('Net subs', (gained - lost >= 0 ? '+' : '') + nfmt(gained - lost));
+
+  /* Same six numbers, up in the telemetry row. Passed rather than refetched:
+     this call cost a request and there is no reason to spend a second one. */
+  if (window.NX) NX.refresh({ totals: totals, days: perfDays });
 
   /* ---- day by day ---- */
   try {
@@ -1920,6 +1969,10 @@ getRedirectResult(auth).then(r => { if (r) afterSignIn(r); }).catch(e => note(ex
 </script>
 
 <script src='rank.js'></script>
+<!-- The NexusStream panels. Reads nothing on its own — the page hands it the
+     channel through NX.refresh(), so the order relative to nova.js does not
+     matter, but it must come after the page script that defines yta(). -->
+<script src='studio-nexus.js'></script>
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>

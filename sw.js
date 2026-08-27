@@ -60,7 +60,12 @@
    but a returning visitor who goes offline before that happens would get the
    old rail and the old top bar back — which is the whole of the phone work
    undone. A new name is one line and rules that out. */
-const CACHE = 'novaclip-v4';
+/* v5 adds the Studio's NexusStream skin and panels. The stylesheet is the
+   reason for the bump rather than the script: a returning visitor offline
+   would be served the cached analytics.html, which now asks for a stylesheet
+   the old cache has never heard of, and a dashboard with the skin's markup
+   and none of its CSS is worse than either version on its own. */
+const CACHE = 'novaclip-v5';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -74,6 +79,15 @@ const SHELL = [
   /* Analytics is the page most likely to be opened on a train, and its charts
      came from a CDN until now — which is to say they did not come at all. */
   '/vendor/chart.umd.js',
+  /* The Studio's skin and its panels. Both are small and both belong to the
+     page above — the tiles and the tabs are markup this file's own script
+     writes, so shipping analytics.html without them offline would leave three
+     empty divs where the top of the dashboard should be. */
+  '/studio-nexus.css',
+  '/studio-nexus.js',
+  /* The shared 1-10 scale. analytics.html and publish.html both call into it
+     and both throw without it. */
+  '/rank.js',
   /* The sticker art and the effect previews: the editor and the photo tool are
      both offline-capable without them, but both are much less useful. */
   '/stickers.js',
