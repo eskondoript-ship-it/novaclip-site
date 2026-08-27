@@ -4170,18 +4170,16 @@ function ncEditorTools() {
                  document.body.hasAttribute('data-nc-editor-tools');
   if (!wanted) return;
   if (document.getElementById('ncanimjs')) return;
-  /* Two files, two tools, and they are not the same thing:
-       animator.js  the limb puppet, plus the object remover
-       motionlabs.js the paper cut-out effect (Animation Studio)
-     Loaded separately so one missing file does not take the other down. */
-  [['ncanimjs', 'animator.js', 'Animate a drawing and Remove something'],
-   ['ncmljs', 'motionlabs.js', 'Paper animation'],
-   /* Dragging a clip around the preview instead of typing two decimals into
-      the Transform panel. Same reason as the other two: the bundle is 397 kB,
-      so a script tag inside it is a re-paste of the whole file. */
+  /* animator.js, motionlabs.js and motion-transfer.js are no longer loaded.
+     They backed the Animator, Animation Studio and Copy a move tabs, which
+     have been taken off the editor's rail — and a script whose only way in
+     was a tab that no longer exists is 200 kB fetched on every editor load to
+     define a global nothing calls. The files stay in the repo; putting the
+     tabs back is putting these three lines back. */
+  [/* Dragging a clip around the preview instead of typing two decimals into
+      the Transform panel. The bundle is 397 kB, so a script tag inside it is
+      a re-paste of the whole file — hence a separate load. */
    ['ncmovejs', 'editor-move.js', 'Drag on the preview'],
-   /* Motion transfer: a character image driven by the movement in a video. */
-   ['ncmtjs', 'motion-transfer.js', 'Copy a move'],
    /* Changing a voice, and recording one to change. All arithmetic, no
       server — see the file header for why this is not the "Voice Cloning"
       the bundle still lists as unavailable. */

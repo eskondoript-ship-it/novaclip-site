@@ -384,6 +384,11 @@
     '#ncss.on{display:flex}',
     /* The light itself: behind everything, filling the viewport. */
     '#ncSsGlow{position:absolute;inset:0;opacity:0;transition:background .25s;pointer-events:none}',
+    '#ncss .ncss-x{position:absolute;top:10px;right:10px;width:40px;height:40px;padding:0;',
+    'display:grid;place-items:center;font-size:24px;line-height:1;border-radius:11px;cursor:pointer;',
+    'background:rgba(255,255,255,.06);border:1px solid #17324a;color:#dbeafe}',
+    '#ncss .ncss-x:hover{background:rgba(255,255,255,.13);color:#fff}',
+    '#ncss h2{padding-right:46px}',
     '#ncss .box{position:relative;z-index:1;width:100%;max-width:520px;max-height:96vh;overflow:auto;',
     'background:rgba(8,18,28,.92);border:1px solid #17324a;border-radius:16px;padding:16px;',
     'color:#dbeafe;font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}',
@@ -432,6 +437,15 @@
     ui.innerHTML =
       '<div id="ncSsGlow"></div>' +
       '<div class="box">' +
+        /* A way out that looks like a way out. This panel fills the screen and
+           blacks out the editor behind it, and the only exit used to be a
+           button called Close sitting fifth in a row of camera controls —
+           Record, Flip camera, Mirror, Fullscreen, Close — which reads as one
+           more camera setting rather than as the door. It was reported as
+           having no back button, and that is a fair reading of it.
+           The X goes where every dialog on the web keeps it. Close stays too;
+           this adds an exit rather than moving one. */
+        '<button id="ncSsX" class="ncss-x" type="button" aria-label="Close and go back to the editor" title="Back to the editor">&times;</button>' +
         '<h2>Record yourself</h2>' +
         '<p class="lede">The screen is the light. It comes up over the countdown so you are not ' +
         'squinting on the first frame.</p>' +
@@ -486,6 +500,13 @@
       else if (ui.requestFullscreen) ui.requestFullscreen().catch(function () {});
     };
     $('ncSsClose').onclick = close;
+    $('ncSsX').onclick = close;
+    /* Escape closes it, which is what every other overlay on this site does
+       and the first thing anybody tries when a panel has taken the screen.
+       Capture, so it still works while a slider has focus. */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && ui && ui.classList.contains('on')) { e.stopPropagation(); close(); }
+    }, true);
     paintLight();
   }
 

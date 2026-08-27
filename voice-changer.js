@@ -379,6 +379,12 @@
     '#ncvc{position:fixed;inset:0;z-index:100000;background:rgba(3,8,14,.86);',
     'backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px}',
     '#ncvc.on{display:flex}',
+    '#ncvc .box{position:relative}',
+    '#ncvc .ncvc-x{position:absolute;top:10px;right:10px;width:40px;height:40px;padding:0;',
+    'display:grid;place-items:center;font-size:24px;line-height:1;border-radius:11px;cursor:pointer;',
+    'background:rgba(255,255,255,.06);border:1px solid #17324a;color:#dbeafe;z-index:2}',
+    '#ncvc .ncvc-x:hover{background:rgba(255,255,255,.13);color:#fff}',
+    '#ncvc h2{padding-right:46px}',
     '#ncvc .box{background:#0b1622;border:1px solid #17324a;border-radius:16px;',
     'max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:22px;color:#dbeafe;',
     'font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}',
@@ -433,6 +439,10 @@
     ui.id = 'ncvc';
     ui.innerHTML =
       '<div class="box">' +
+        /* Same exit as Record yourself, for the same reason: this panel takes
+           the whole screen, and a Close button at the far end of a long form
+           is not a door anybody sees. */
+        '<button id="ncVcX" class="ncvc-x" type="button" aria-label="Close and go back to the editor" title="Back to the editor">&times;</button>' +
         '<h2>Voice changer</h2>' +
         '<p class="lede">Pick a clip that has sound, or record a new line. ' +
         'It is changed on this device — nothing is uploaded, and it works offline.</p>' +
@@ -646,6 +656,10 @@
     $('ncVcGo').onclick = run;
     $('ncVcAdd').onclick = addToProject;
     $('ncVcClose').onclick = close;
+    $('ncVcX').onclick = close;
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && ui && ui.classList.contains('on')) { e.stopPropagation(); close(); }
+    }, true);
     ui.onclick = function (e) { if (e.target === ui) close(); };
   }
 

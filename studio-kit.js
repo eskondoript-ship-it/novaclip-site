@@ -687,35 +687,27 @@
     return null;
   }
 
+  /* Stickers is a rail tab now, beside Emojis, rather than a button sitting
+     in the Media Library's header under Upload. A library belongs in the list
+     of libraries; it was only ever put next to Upload because that was the
+     one anchor in the bundle this file could find without touching React.
+     The rail calls __ncOpenStickers the same way it calls __ncOpenVoice. */
   function wireEditor() {
-    if (document.getElementById('nckit-ed-btn')) return;
-    /* Sit next to Upload, which is where somebody already goes to add a
-       picture. If that button has not rendered yet there is nothing to sit
-       beside, so this returns and the observer tries again. */
-    var up = null, all = document.querySelectorAll('button,label');
-    for (var i = 0; i < all.length; i++) {
-      var t = (all[i].textContent || '').trim().toLowerCase();
-      if (t === 'upload' || t === 'upload media') { up = all[i]; break; }
-    }
-    if (!up || !editorInput()) return;
+    if (!editorInput()) return;
     boot();
-    var b = el('button', 'nckit-open', '✦ Stickers');
-    b.id = 'nckit-ed-btn';
-    b.type = 'button';
-    b.style.marginTop = '8px';
-    b.style.width = '100%';
-    b.onclick = function () {
-      openSheet(function (file) {
-        var input = editorInput();
-        if (!input) return;
-        var dt = new DataTransfer();
-        dt.items.add(file);
-        input.files = dt.files;
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-    };
-    (up.parentNode || document.body).insertBefore(b, up.nextSibling);
   }
+
+  window.__ncOpenStickers = function () {
+    boot();
+    openSheet(function (file) {
+      var input = editorInput();
+      if (!input) return;
+      var dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  };
 
   /* ==========================================================================
      START, AND KEEP UP WITH REACT

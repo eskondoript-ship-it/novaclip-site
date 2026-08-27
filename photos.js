@@ -58,7 +58,18 @@
   /* The chips. Ordered by what somebody making a video actually reaches for,
      and phrased as the search that returns good lead images rather than as
      the bare word — "sports car" gives photographs, "car" gives diagrams. */
+  /* "All" is first and is not a search — it is every other chip's search run
+     together and dealt out round-robin, so the first screen is a car, then an
+     animal, then a plate of food, rather than twenty cars. It is what you
+     want when you do not yet know what you are looking for, which is most of
+     the time somebody opens a picture library.
+
+     Six categories and not twelve: twelve requests to open a panel is rude to
+     a free API and slow on a phone, and six already fills more than a screen. */
+  var ALL = ['sports car', 'wild animal', 'food dish', 'landscape', 'city skyline', 'flower'];
+
   var CATS = [
+    ['All',     '*'],
     ['Cars',    'sports car'],
     ['Animals', 'wild animal'],
     ['Food',    'food dish'],
@@ -329,10 +340,32 @@
       }
       note('<b>Looking…</b>');
 
-      search(q).then(function (list) {
+      /* "All" is several searches dealt out one each in turn. allSettled and
+         not all: one category failing should thin the grid, not empty it. */
+      var job = q !== '*' ? search(q) :
+        Promise.allSettled(ALL.map(search)).then(function (rs) {
+          var lists = rs.map(function (r) { return r.status === 'fulfilled' ? r.value : []; });
+          var out = [], seen = {}, i = 0, took = true;
+          while (took) {
+            took = false;
+            for (var c = 0; c < lists.length; c++) {
+              var it = lists[c][i];
+              if (!it) continue;
+              took = true;
+              if (seen[it.title]) continue;      // the same article can match two categories
+              seen[it.title] = 1;
+              out.push(it);
+            }
+            i++;
+          }
+          return out;
+        });
+
+      job.then(function (list) {
         if (mine !== reqId) return;                 // a later search already won
         if (!list.length) {
-          note('<b>No photos for “' + esc(q) + '”.</b>Try a broader word, or one of the buttons above.');
+          note(q === '*' ? '<b>Nothing came back.</b>Try one of the buttons above.'
+            : '<b>No photos for “' + esc(q) + '”.</b>Try a broader word, or one of the buttons above.');
           return;
         }
         grid.textContent = '';
@@ -420,53 +453,30 @@
     return null;
   }
 
-  function wire() {
-    if (document.getElementById('ncph-btn')) return;
-    /* Beside Stickers if it is there, beside Upload if it is not — this file
-       does not depend on studio-kit.js having loaded first. */
-    var anchor = document.getElementById('nckit-ed-btn');
-    if (!anchor) {
-      var all = document.querySelectorAll('button,label');
-      for (var i = 0; i < all.length; i++) {
-        var t = (all[i].textContent || '').trim().toLowerCase();
-        if (t === 'upload' || t === 'upload media') { anchor = all[i]; break; }
-      }
-    }
-    if (!anchor || !editorInput()) return;
+  /* --------------------------------------------------------------------------
+     THE WAY IN IS THE RAIL
+     --------------------------------------------------------------------------
+     This used to add a "🖼 Photos" button into the Media Library panel, under
+     Upload, because that is where studio-kit.js had put Stickers and it was
+     the path already proven. Both are now rail tabs instead, beside Emojis,
+     where the rest of the editor's libraries live — a picture library is a
+     library, not a control that belongs in another library's header.
 
-    var b = el('button', 'nckit-open', '🖼 Photos');
-    b.id = 'ncph-btn';
-    b.type = 'button';
-    b.style.marginTop = '8px';
-    b.style.width = '100%';
-    b.onclick = function () {
-      open(function (file) {
-        var input = editorInput();
-        if (!input) return;
-        var dt = new DataTransfer();
-        dt.items.add(file);
-        input.files = dt.files;
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-    };
-    (anchor.parentNode || document.body).insertBefore(b, anchor.nextSibling);
+     So this file no longer builds a button at all. It publishes an opener
+     under the name the rail already looks for, next to __ncOpenVoice and
+     __ncOpenSelfie, and the rail calls it. If this file is missing the rail's
+     own __ncMissing says so by name.
+     -------------------------------------------------------------------------- */
+  function intoEditor(file) {
+    var input = editorInput();
+    if (!input) return;
+    var dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  var queued = false;
-  function rescan() {
-    if (queued) return;
-    queued = true;
-    var run = function () { queued = false; try { wire(); } catch (e) {} };
-    if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 600 });
-    else setTimeout(run, 250);
-  }
-
-  function start() {
-    rescan();
-    new MutationObserver(rescan).observe(document.documentElement, { childList: true, subtree: true });
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-  else start();
+  window.__ncOpenPhotos = function () { open(intoEditor); };
 
   window.NC_PHOTOS = { open: open, search: search, fileFor: fileFor, cats: CATS, blocked: blocked };
 })();
