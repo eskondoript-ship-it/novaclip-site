@@ -196,23 +196,10 @@ h1 { animation: anIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
 .rvcell .d { font-size: 0.74rem; font-weight: 700; }
 .rvcell .d.up { color: var(--nc-lime,#B6FF3C); } .rvcell .d.down { color: #ff6b6b; } .rvcell .d.flat { color: var(--nc-dim,#7E8AA6); }
 
-.vrow { display: grid; grid-template-columns: 54px minmax(0,1fr) auto; gap: 14px; align-items: center;
-        padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.07); }
-.vrow:first-child { border-top: 0; }
-.vgrade { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-          font-weight: 800; font-size: 1.25rem; }
-.vgrade.a { background: rgba(182,255,60,0.16); color: var(--nc-lime,#B6FF3C); }
-.vgrade.b { background: rgba(0,240,255,0.14); color: var(--nc-cyan,#00F0FF); }
-.vgrade.c { background: rgba(255,210,74,0.14); color: #ffd24a; }
-.vgrade.d { background: rgba(255,107,107,0.14); color: #ff6b6b; }
-.vtitle { font-weight: 700; font-size: 0.94rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vmeta { color: var(--nc-dim,#7E8AA6); font-size: 0.78rem; margin-top: 3px; }
-.vfix { color: var(--nc-text,#cfe0ff); font-size: 0.8rem; margin-top: 5px; line-height: 1.55; }
-.vfix b { color: #ffd24a; }
-.vbars { display: flex; gap: 4px; margin-top: 6px; }
-.vbar { height: 5px; border-radius: 3px; flex: 1; background: rgba(255,255,255,0.09); overflow: hidden; }
-.vbar i { display: block; height: 100%; background: linear-gradient(90deg,var(--nc-cyan,#00F0FF),var(--nc-lime,#B6FF3C)); }
-.vopen { color: var(--nc-cyan,#00F0FF); font-size: 0.8rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+/* The .vrow / .vgrade / .vbar rules that were here drew the old A-B-C-D list.
+   That renderer lives in rank.js now and brings its own styles (.ncrk*), so
+   these matched nothing — CSS for markup no longer generated is the kind of
+   thing that gets copied forward for years. */
 
 /* chart panels */
 .card, .chartbox {
@@ -555,7 +542,7 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
     </div>
 
     <div class='reviewbox'>
-      <div class='rvhead'><h4>Your videos, rated</h4>
+      <div class='rvhead'><h4>Your videos, ranked</h4>
         <span class='rvnote' id='rateNote'></span></div>
       <div id='rateList'></div>
     </div>
@@ -671,6 +658,15 @@ async function enterDash() {
   drawAll();
   try {
     myUploads = await fetchUploads(myStats, 50);
+    /* Publish scores a video that is about to go out, and one of the four
+       parts is Timing — which is only meaningful against this channel's own
+       posting rhythm. That page has no YouTube connection of its own, so the
+       dates are left here for it to read. Dates only: no titles, no view
+       counts, nothing that is not needed to work out a median gap. */
+    try {
+      localStorage.setItem('nc_hist', JSON.stringify(
+        myUploads.slice(0, 30).map(v => v.date.getTime())));
+    } catch (e) {}
     const rivals = await getCompetitors();
     if (rivals && rivals.length) { rivalName = rivals[0].snippet.title; rivalUploads = await fetchUploads(rivals[0], 50); }
   } catch (e) { console.warn('upload history unavailable', e); }
@@ -1498,92 +1494,26 @@ function sum(list, k) { return list.reduce((s, v) => s + v[k], 0); }
 
 /* ============================================================================
    RATING A VIDEO
-   Every score here comes from the creator's OWN numbers, compared against
-   their own median — not against YouTube at large. That matters: a channel
-   with 300 subscribers measured against global averages would score F on
-   everything forever, which teaches nothing. Measured against itself, a 300-sub
-   channel can see which of ITS videos worked, which is the only comparison that
-   can actually change what they do next.
+   ============================================================================
+   The scoring used to live here, in full, and a second copy of the same idea
+   was about to be written on the publish page for a video that has not gone
+   out yet. Two scorers with the same name and different arithmetic is how a
+   7 on one page and a 7 on another quietly stop meaning the same thing.
 
-   Four dimensions, all computed, none invented:
+   So it moved to rank.js, which both pages load, along with the reasoning for
+   why every part is measured against the creator's OWN median rather than
+   against YouTube at large. The renderer moved with it, for the same reason.
 
-     REACH        views against the channel's median video
-     ENGAGEMENT   (likes + comments) per view, against the channel's median
-     TITLE        length, and whether it does any of the things titles that get
-                  clicked do — a number, a question, a specific noun
-     TIMING       the gap since the previous upload against the usual gap
-
-   And one recommendation: the weakest dimension, said as an action.
+   REQUIRES rank.js. The <script> tag is at the bottom of this page, before
+   nova.js — the two files go together.
    ============================================================================ */
-function median(nums) {
-  const a = nums.filter(n => isFinite(n)).sort((x, y) => x - y);
-  if (!a.length) return 0;
-  const m = Math.floor(a.length / 2);
-  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
-}
-// 0-100 from a ratio against the median, where 1.0 (exactly typical) is 60
-function ratioScore(value, mid) {
-  if (!mid) return 50;
-  const r = value / mid;
-  return Math.max(0, Math.min(100, Math.round(60 * Math.pow(r, 0.6))));
-}
-
-function titleScore(t) {
-  const s = String(t || '');
-  let score = 40;
-  const len = s.length;
-  // 30-70 characters survives truncation on mobile and still says something
-  if (len >= 30 && len <= 70) score += 22;
-  else if (len >= 20 && len <= 85) score += 10;
-  if (/\d/.test(s)) score += 12;                      // a number is a promise
-  if (/\?/.test(s)) score += 8;                       // a question is a hook
-  if (/^(how|why|what|i |we |this|the day|stop|never|do not|don't)/i.test(s)) score += 10;
-  const caps = s.replace(/[^A-Z]/g, '').length;
-  if (len > 8 && caps / len > 0.6) score -= 20;       // ALL CAPS reads as spam
-  if (len < 15) score -= 15;                          // too short to say anything
-  return Math.max(0, Math.min(100, score));
-}
-
-function rateVideos(list) {
-  if (!list || list.length < 2) return [];
-  const sorted = list.slice().sort((a, b) => b.date - a.date);
-  const midViews = median(sorted.map(v => v.views));
-  const midEng = median(sorted.map(v => v.views > 0 ? (v.likes + v.comments) / v.views : 0));
-  // the usual gap between uploads, in days
-  const gaps = [];
-  for (let i = 0; i < sorted.length - 1; i++) gaps.push((sorted[i].date - sorted[i + 1].date) / 86400000);
-  const midGap = median(gaps) || 7;
-
-  return sorted.slice(0, 10).map((v, i) => {
-    const eng = v.views > 0 ? (v.likes + v.comments) / v.views : 0;
-    const gap = i < sorted.length - 1 ? (v.date - sorted[i + 1].date) / 86400000 : midGap;
-    const parts = {
-      reach: ratioScore(v.views, midViews),
-      engagement: ratioScore(eng, midEng),
-      title: titleScore(v.title),
-      // posting sooner than usual scores well; a long silence does not
-      timing: Math.max(0, Math.min(100, Math.round(100 - (gap / Math.max(1, midGap) - 1) * 40)))
-    };
-    const overall = Math.round(parts.reach * 0.35 + parts.engagement * 0.3 + parts.title * 0.25 + parts.timing * 0.1);
-    // the single weakest thing, phrased as something to do
-    const worst = Object.keys(parts).sort((a, b) => parts[a] - parts[b])[0];
-    const FIX = {
-      reach: 'Fewest views of your recent run. Look at what the thumbnail promises — nobody clicked it, so the video never got a chance.',
-      engagement: 'People watched but did not react. Ask one direct question in the first 20 seconds and pin it as a comment.',
-      title: 'The title is doing no work. Aim for 30-70 characters with a number or a question in it — "3 things" beats "my new video".',
-      timing: 'This came ' + Math.round(gap) + ' days after the last one, against your usual ' + Math.round(midGap) + '. The gap costs you more reach than the video itself did.'
-    };
-    return { v, parts, overall, fix: FIX[worst],
-             grade: overall >= 78 ? 'A' : overall >= 62 ? 'B' : overall >= 45 ? 'C' : 'D' };
-  });
-}
 
 function renderRatings() {
   const box = document.getElementById('rateList');
   const note = document.getElementById('rateNote');
   if (!box) return;
   const pro = (typeof ncProHas === 'function') && ncProHas('tools');
-  const rated = rateVideos(myUploads);
+  const rated = window.NC_RANK.posted(myUploads);
 
   if (!rated.length) {
     box.innerHTML = '<p class="hint">Post at least two videos and this fills in — a rating needs something of yours to compare against.</p>';
@@ -1593,25 +1523,21 @@ function renderRatings() {
      rating, not a teaser: you can act on it without paying. */
   const show = pro ? rated : rated.slice(0, 1);
   note.textContent = pro
-    ? 'Your last ' + show.length + ' videos, scored against your own median.'
-    : 'Your latest video. Pro rates the last ten.';
+    ? 'Your last ' + rated.length + ' videos, ranked best first and scored out of ten against your own median.'
+    : 'Your best recent video, scored out of ten. Pro ranks the last ten.';
 
-  box.innerHTML = show.map(r =>
-    '<div class="vrow">' +
-      '<div class="vgrade ' + r.grade.toLowerCase() + '">' + r.grade + '</div>' +
-      '<div><div class="vtitle">' + String(r.v.title).replace(/</g, '&lt;') + '</div>' +
-        '<div class="vmeta">' + r.v.views.toLocaleString() + ' views · ' + r.v.likes.toLocaleString() + ' likes · ' +
-          r.v.comments.toLocaleString() + ' comments · ' + r.v.date.toLocaleDateString() + '</div>' +
-        '<div class="vbars">' +
-          ['reach','engagement','title','timing'].map(k =>
-            '<div class="vbar" title="' + k + ' ' + r.parts[k] + '/100"><i style="width:' + r.parts[k] + '%"></i></div>').join('') +
-        '</div>' +
-        '<div class="vfix"><b>Do this next:</b> ' + r.fix + '</div>' +
-      '</div>' +
-      '<a class="vopen" target="_blank" href="https://www.youtube.com/watch?v=' + r.v.id + '">Open →</a>' +
-    '</div>').join('') +
-    (pro ? '' : '<p class="hint" style="margin-top:12px">' +
-      '<a href="pricing.html" style="color:#00F0FF;font-weight:700">NovaClip Pro</a> rates your last ten and shows what changed between them.</p>');
+  /* Ranked, not chronological, and out of ten rather than a letter. The
+     question somebody with ten videos has is "which of these worked", and a
+     list in upload order does not answer it. rank.js owns the scale so the
+     number here and the one on the publish page mean the same thing. */
+  window.NC_RANK.render(box, show, {
+    meta: r => r.v.views.toLocaleString() + ' views · ' + r.v.likes.toLocaleString() + ' likes · ' +
+               r.v.comments.toLocaleString() + ' comments · ' + r.v.date.toLocaleDateString()
+  });
+  if (!pro) {
+    box.insertAdjacentHTML('beforeend', '<p class="hint" style="margin-top:12px">' +
+      '<a href="pricing.html" style="color:#00F0FF;font-weight:700">NovaClip Pro</a> ranks your last ten and shows what changed between them.</p>');
+  }
 }
 
 function renderReview() {
@@ -1993,6 +1919,7 @@ onAuthStateChanged(auth, (user) => { if (user) signedInUI(user.displayName); });
 getRedirectResult(auth).then(r => { if (r) afterSignIn(r); }).catch(e => note(explainAuth(e)));
 </script>
 
+<script src='rank.js'></script>
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>

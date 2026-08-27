@@ -255,6 +255,17 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
       <button class='alt' id='copyMeta'>Copy all</button>
     </div>
     <div class='say' id='metaSay'></div>
+
+    <!-- The same 1-10 scale Studio ranks the posted videos on, applied to this
+         one before it goes out. It appears once there is a clip in, and it
+         updates as the title, the description, the tags and the thumbnail
+         change — so it is worth watching while you write rather than a verdict
+         handed down at the end. -->
+    <div id='rankWrap' style='display:none;margin-top:22px'>
+      <h3 style='margin:0 0 4px;font-size:.98rem;font-weight:800'>How this one is set up</h3>
+      <p class='sub' id='rankNote' style='margin-bottom:12px'></p>
+      <div id='rankBox'></div>
+    </div>
   </div>
 
   <!-- 5 ---------------------------------------------------------------- -->
@@ -298,6 +309,10 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
   </div>
 </div>
 
+<!-- rank.js defines NC_RANK, which the block below calls. It has to be a plain
+     script and it has to come first: the page script runs inline at the end of
+     <body> and would otherwise call into something that is not there yet. -->
+<script src='rank.js'></script>
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>
@@ -342,7 +357,7 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
   const NOT_HERE = ['background removal', 'object tracking', 'voice cloning', 'beat sync',
                     'auto-subtitles from speech', '3D camera moves', 'motion tracking text'];
 
-  let file = null, dur = 0;
+  let file = null, dur = 0, thumbDrawn = false, thumbChosen = false;
   const state = { plan: 'ai', words: 'ai', thumb: 'ai' };
   let tags = [];
 
@@ -370,18 +385,48 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     v.src = URL.createObjectURL(f);
     v.style.display = 'block';
     v.onloadedmetadata = () => {
-      dur = v.duration;
-      $('vmeta').style.display = 'flex';
-      $('vmeta').innerHTML =
-        '<span><b>' + fmt(dur) + '</b> long</span>' +
-        '<span><b>' + v.videoWidth + '×' + v.videoHeight + '</b></span>' +
-        '<span><b>' + (f.size / 1048576).toFixed(1) + ' MB</b></span>' +
-        '<span>' + (v.videoWidth >= v.videoHeight ? 'landscape' : 'portrait — Shorts shape') + '</span>';
-      /* Step 2 is the question the request asked for: it opens the moment a
-         clip is in, and nothing past it is reachable until it is answered. */
-      $('s2').classList.remove('off');
-      $('s2').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      drawThumb();
+      /* A WebM written by MediaRecorder has no duration in its header, so the
+         browser reports Infinity until it has seen the end of the file. That
+         is not an exotic case here: it is what every video exported from
+         NovaClip's own editor looks like, and what a screen or webcam
+         recording looks like. Untreated it printed "Infinity:NaN long" in the
+         meta line and threw on the thumbnail, because currentTime will not
+         take a non-finite number — so the thumbnail never drew at all.
+
+         Seeking past the end forces the browser to scan to the real end and
+         report it. Then seek back to the start, and carry on as normal. */
+      if (!isFinite(v.duration)) {
+        const settle = () => {
+          if (!isFinite(v.duration)) return;               // still scanning
+          v.removeEventListener('durationchange', settle);
+          v.currentTime = 0;
+          ready();
+        };
+        v.addEventListener('durationchange', settle);
+        try { v.currentTime = 1e101; } catch (e) { ready(); }
+        /* If the file genuinely has no seekable end, do not hang on it. */
+        setTimeout(() => {
+          if (!dur) { v.removeEventListener('durationchange', settle); ready(); }
+        }, 3000);
+        return;
+      }
+      ready();
+
+      function ready() {
+        dur = isFinite(v.duration) ? v.duration : 0;
+        $('vmeta').style.display = 'flex';
+        $('vmeta').innerHTML =
+          '<span><b>' + (dur ? fmt(dur) : 'unknown') + '</b> long</span>' +
+          '<span><b>' + v.videoWidth + '×' + v.videoHeight + '</b></span>' +
+          '<span><b>' + (f.size / 1048576).toFixed(1) + ' MB</b></span>' +
+          '<span>' + (v.videoWidth >= v.videoHeight ? 'landscape' : 'portrait — Shorts shape') + '</span>';
+        /* Step 2 is the question the request asked for: it opens the moment a
+           clip is in, and nothing past it is reachable until it is answered. */
+        $('s2').classList.remove('off');
+        $('s2').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        drawThumb();
+        scoreDraft();
+      }
     };
   }
   function fmt(s) {
@@ -493,7 +538,57 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     $('cDesc').classList.toggle('over', d > 5000);
     $('cTags').classList.toggle('over', tg > 500);
   }
-  ['title', 'desc'].forEach(id => $(id).oninput = counts);
+  ['title', 'desc'].forEach(id => $(id).oninput = () => { counts(); scoreDraft(); });
+
+  /* ---- the score ---------------------------------------------------------
+     Studio ranks the videos already on the channel 1-10. This is the same
+     scale and the same renderer (rank.js), pointed at the one that has not
+     gone out yet — which was the other half of the request.
+
+     What it is not: a prediction of how the video will do. Nothing here can
+     know that, and a made-up number would be worse than none. It scores the
+     parts that are still in your hands an hour before you post — the title,
+     the length for the shape it is in, whether there is a thumbnail, whether
+     the description and tags are filled in, and how this lands against your
+     usual posting rhythm.
+
+     Timing only appears when Studio has been connected, because the rhythm it
+     is measured against is your own. nc_hist is the list of dates analytics
+     leaves behind for exactly this. Without it, rank.js leaves that part out
+     rather than inventing one.
+     ---------------------------------------------------------------------- */
+  function history() {
+    try {
+      const raw = JSON.parse(localStorage.getItem('nc_hist') || '[]');
+      if (!Array.isArray(raw)) return null;
+      return raw.filter(n => typeof n === 'number' && isFinite(n)).map(n => ({ date: n }));
+    } catch (e) { return null; }
+  }
+
+  function scoreDraft() {
+    if (!file || !window.NC_RANK) return;
+    const v = $('vid');
+    const hist = history();
+    const rated = window.NC_RANK.draft({
+      title: $('title').value,
+      description: $('desc').value,
+      tags: tags,
+      duration: dur,
+      width: v.videoWidth,
+      height: v.videoHeight,
+      hasThumbnail: thumbDrawn && thumbChosen
+    }, hist);
+    $('rankWrap').style.display = 'block';
+    $('rankNote').textContent = hist && hist.length >= 2
+      ? 'Out of ten, on the same scale Studio ranks your posted videos on. Timing is measured against your own posting rhythm.'
+      : 'Out of ten, on the same scale Studio ranks your posted videos on. It is how well this is set up, not a guess at how it will do.';
+    window.NC_RANK.render($('rankBox'), rated, {
+      title: $('title').value.trim() || (file ? file.name : 'This video'),
+      meta: () => (dur ? fmt(dur) + ' · ' : '') +
+                  (v.videoWidth ? (v.videoWidth >= v.videoHeight ? 'landscape' : 'vertical') : '') +
+                  ' · not posted yet'
+    });
+  }
 
   function drawTags() {
     $('tagbox').innerHTML = tags.map((t, i) =>
@@ -501,6 +596,7 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     $('tagbox').querySelectorAll('button').forEach(b =>
       b.onclick = () => { tags.splice(+b.dataset.i, 1); drawTags(); counts(); });
     counts();
+    scoreDraft();
   }
   $('tagin').addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
@@ -553,7 +649,8 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
   function drawThumb() {
     const v = $('vid'), c = $('thumb'), x = c.getContext('2d');
     if (!v.videoWidth) return;
-    const t = (+$('tScrub').value / 100) * (dur || 0);
+    let t = (+$('tScrub').value / 100) * (dur || 0);
+    if (!isFinite(t)) t = 0;        // never hand currentTime a NaN or Infinity
     $('tTime').textContent = fmt(t);
     /* Seeking is asynchronous; draw on the seeked event or you capture the
        frame you were already showing. */
@@ -576,14 +673,20 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
         x.fillText(txt, 640, 720 - 110, 1180);
       }
       v.removeEventListener('seeked', paint);
+      thumbDrawn = true;
+      scoreDraft();
     };
     v.addEventListener('seeked', paint);
     if (Math.abs(v.currentTime - t) < 0.05) paint(); else v.currentTime = t;
   }
-  $('tScrub').oninput = drawThumb;
-  $('tText').oninput = drawThumb;
+  /* Moving the scrubber or typing on it is the difference between a thumbnail
+     and the frame that happened to be a quarter of the way in. The score
+     counts the second one as no thumbnail, because that is what it is. */
+  $('tScrub').oninput = () => { thumbChosen = true; drawThumb(); };
+  $('tText').oninput = () => { thumbChosen = true; drawThumb(); };
 
   $('dlThumb').onclick = () => {
+    thumbChosen = true;
     $('thumb').toBlob(b => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(b); a.download = 'thumbnail.png'; a.click();
@@ -604,7 +707,7 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
       'Reply with the words only.', { maxTokens: 60, temperature: 0.9 });
     if (r.err) return say('thumbSay', 'no', 'Could not reach the AI', r.err);
     const v = r.text.trim().replace(/^["']|["'.]$/g, '').slice(0, 24);
-    $('tText').value = v; drawThumb();
+    $('tText').value = v; thumbChosen = true; drawThumb();
     say('thumbSay', 'yes', 'Try this', v);
   };
 
