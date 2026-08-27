@@ -87,6 +87,10 @@ const SHELL = [
      already in memory, so unlike the photo picker this one works offline. */
   '/grade.js',
   '/grade-ui.js',
+  /* The mixer is Web Audio and a generated impulse response — no files to
+     fetch, so it works on a train like the grade does. */
+  '/mixer.js',
+  '/mixer-ui.js',
   /* The focus timer is the one page here most likely to be opened with the
      wifi off on purpose. */
   '/study.html',
