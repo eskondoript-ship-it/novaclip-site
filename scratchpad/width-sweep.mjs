@@ -8,7 +8,11 @@ const { chromium } = pw;
 const BASE = 'http://localhost:8099';
 const PAGES = ['index.html', 'tools.html', 'socials.html', 'biometrics.html', 'editor.html',
   'pricing.html', 'game.html', 'analytics.html', 'study.html', 'photo.html',
-  'community.html', 'typing.html', 'parent.html', 'trends.html', 'ai.html', 'progress.html', 'shield.html', 'pro.html', 'app.html', 'gift.html', 'coder.html', 'publish.html', 'studio-ai.html'];
+  'community.html', 'typing.html', 'parent.html', 'trends.html', 'ai.html', 'progress.html', 'shield.html', 'pro.html', 'app.html', 'gift.html', 'coder.html', 'publish.html', 'studio-ai.html',
+  /* The two documents. They are plain text pages and unlikely to break, but
+     they are also the two most likely to be read on a phone by a parent who
+     has never opened the site before. */
+  'privacy.html', 'terms.html'];
 
 const SIZES = [
   { w: 360, h: 640, m: true,  label: 'phone-s' },

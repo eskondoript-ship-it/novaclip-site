@@ -1086,7 +1086,22 @@ function ncBuildBar() {
     /* The coins badge and the Pro badge are already at the far right of the
        strip's height, so they read as part of the bar rather than fighting it —
        they only need centring against it. */
-    '#ncpts{top:' + Math.round((NC_BAR_H - 32) / 2) + 'px}';
+    '#ncpts{top:' + Math.round((NC_BAR_H - 32) / 2) + 'px}' +
+    /* PRINTING.
+       Everything nova.js pins to the viewport is screen furniture: the top
+       bar, the settings cog, the coins badge, the corner button, the toast,
+       the Nova pill and the cookie banner. On paper they are stamped wherever
+       they happened to be sitting — measured, a printed copy of the terms had
+       a cog over the first heading and a coin count in the top corner of
+       every page.
+
+       It lives here rather than in the two pages that get printed because
+       nova.js is what puts these on the page, so nova.js is what should take
+       them off it. Every page gets a printable version for free, and a new
+       piece of furniture added later only has to be hidden once. */
+    '@media print{#ncbar,#ncgear,#ncpts,#ncCorner,#ncst,#nctoast,#nccookie,' +
+      '.jr-pill,.jr-sheet,.sidebar,.nc-sidebar{display:none !important}' +
+      'body{padding-top:0 !important}}';
   document.head.appendChild(css);
 
   bar = document.createElement('div');
@@ -4381,7 +4396,11 @@ window.addEventListener('DOMContentLoaded', () => {
      policy. A parent checking what their child's site collects, and a
      store reviewer checking the same thing, both arrive here before they
      have any reason to tell us anything about themselves. */
-  const NC_AGE_EXEMPT = /(^|\/)(parent|shield|report|privacy)\.html$/i;
+  /* terms.html joins it for the same reason privacy.html did, and one more:
+     the terms are what says you have to be 13. A page that will not show you
+     the rule until you have already answered the question the rule is about
+     has the order backwards. */
+  const NC_AGE_EXEMPT = /(^|\/)(parent|shield|report|privacy|terms)\.html$/i;
 
   window.ncAge = function () { return parseInt(localStorage.getItem('nc_user_age') || '0'); };
   window.ncControlsRelaxed = function () { const a = ncAge(); return a >= 16 && a <= 18; };
@@ -5103,7 +5122,10 @@ function ncCookieBanner() {
   if (ncConsent()) return;                    // already answered, on any page
   if (document.getElementById('nccookie')) return;
   const here = (location.pathname.split('/').pop() || '').toLowerCase();
-  if (/^(report|privacy|offline)\.html$/.test(here)) return;
+  /* terms.html too: it is one of the two pages people print, and a cookie
+     banner across the bottom of a document somebody is trying to read — or
+     save as a PDF — is the wrong thing in the wrong place. */
+  if (/^(report|privacy|terms|offline)\.html$/.test(here)) return;
 
   const css = document.createElement('style');
   css.textContent =

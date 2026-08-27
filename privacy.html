@@ -108,17 +108,65 @@ th, td { text-align:left; padding:9px 10px; vertical-align:top;
          border-bottom:1px solid var(--nc-line,rgba(255,255,255,0.1)); }
 th { color:var(--nc-dim,#8c96ad); font-weight:600; font-size:0.85rem; }
 .wrapscroll { overflow-x:auto; }
+.top { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
+a.back { margin-bottom:0; }
+.print { margin-left:auto; background:var(--nc-bg2,rgba(255,255,255,0.06));
+         color:inherit; border:1px solid var(--nc-line,rgba(255,255,255,0.14));
+         border-radius:10px; padding:9px 15px; font-size:0.88rem; font-weight:600;
+         cursor:pointer; min-height:40px; }
+.print:hover { border-color:var(--nc-cyan,#00F0FF); }
+
+/* --------------------------------------------------------------------------
+   PRINTING
+   --------------------------------------------------------------------------
+   A privacy policy is a document people print: a parent reads it on paper, a
+   school files it, a store submission attaches it. On screen this site is
+   dark, and a dark theme on paper is a solid block of toner with unreadable
+   grey text on top — so print is black on white whatever the browser is set
+   to. Link addresses are printed after the link text, because an underlined
+   phrase on paper has lost the address it pointed at.
+
+   The same block is in terms.html. It is duplicated rather than shared on
+   purpose: these two pages are the ones most likely to be copied somewhere on
+   their own, and a policy that needs a second file to print properly is a
+   policy that will one day print wrong.
+   -------------------------------------------------------------------------- */
+@media print {
+  @page { margin: 18mm 16mm; }
+  html, body { background:#fff !important; color:#000 !important; }
+  body { display:block; padding:0; font-size:11pt; line-height:1.5; }
+  .wrap { max-width:none; }
+  .top, .print, nav, header, footer, .jr-pill, #nc-consent, .nc-nav, .nav { display:none !important; }
+  h1 { font-size:20pt; }
+  h2 { font-size:13pt; margin:16pt 0 5pt; }
+  h3 { font-size:11.5pt; }
+  h1, h2, h3 { color:#000 !important; break-after:avoid; page-break-after:avoid; }
+  p, li, table { break-inside:avoid; page-break-inside:avoid; }
+  .card { background:none !important; border:1px solid #999 !important;
+          border-radius:0; padding:10pt 12pt; margin-bottom:12pt; }
+  .lede, .updated, th { color:#333 !important; }
+  strong, code { color:#000 !important; }
+  code { background:none !important; border:1px solid #bbb; }
+  a { color:#000 !important; text-decoration:underline; }
+  a[href^='http']:after { content:' (' attr(href) ')'; font-size:9pt; color:#444; }
+  th, td { border-bottom:1px solid #bbb; }
+  .wrapscroll { overflow:visible; }
+}
 </style>
 </head>
 <body>
 <div class='wrap'>
 
-  <a class='back' href='/'>← Back to NovaClip</a>
+  <div class='top'>
+    <a class='back' href='/'>← Back to NovaClip</a>
+    <button class='print' type='button' id='printBtn'>Print or save as PDF</button>
+  </div>
 
   <h1>Privacy</h1>
   <p class='lede big'>Most people using NovaClip are between 13 and 18. This page
      is written to be read by them, not by a lawyer.</p>
-  <p class='updated'>Last updated 22 August 2026 · NovaClip · novaclip.org</p>
+  <p class='updated'>Last updated 22 August 2026 · NovaClip · novaclip.org ·
+     <a href='/terms.html'>Terms of Use</a></p>
 
   <div class='card'>
     <h2 style='margin-top:0'>The short version</h2>
@@ -271,6 +319,11 @@ th { color:var(--nc-dim,#8c96ad); font-weight:600; font-size:0.85rem; }
      it connects to.</p>
 
 </div>
+<script>
+  /* "Ctrl+P" is not obvious on a phone, and this is a page somebody is
+     genuinely likely to want on paper. */
+  document.getElementById('printBtn').onclick = function () { window.print(); };
+</script>
 <script src='nova.js'></script>
 </body>
 </html>

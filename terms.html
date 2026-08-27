@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint, same as every other page. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var b=localStorage.getItem('nc_skin_bg');
+var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;
+if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QN1QE08F2K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  /* Denied first, same as every other page — see privacy.html for why the
+     order matters. */
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    wait_for_update: 500
+  });
+  try {
+    if (localStorage.getItem('nc_consent') === 'yes') {
+      gtag('consent', 'update', { analytics_storage: 'granted' });
+    }
+  } catch (e) {}
+  gtag('js', new Date());
+  gtag('config', 'G-QN1QE08F2K');
+</script>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050505">
+<title>Terms of Use — NovaClip</title>
+<meta name='description' content='The rules for using NovaClip: who it is for, what you may and may not do with it, what happens with paid plans, and what we do and do not promise.'>
+<link rel='canonical' href='https://novaclip.org/terms.html'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+
+<!-- WHY THIS PAGE READS THE WAY IT DOES
+     The same reason privacy.html does. Most of the people bound by these terms
+     are between 13 and 18, and terms nobody can read are terms nobody agreed
+     to in any sense that matters. So this is written in sentences, and every
+     claim in it was checked against the code rather than copied off a
+     template — including the awkward ones: the checkout is in demo mode until
+     Stripe links are filled in, a lost account code cannot be recovered, and
+     an unsaved editor project lives in one browser and nowhere else.
+
+     If the software changes, this page changes in the same commit. -->
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',-apple-system,sans-serif; }
+body { background:var(--nc-bg,#060608); color:var(--nc-text,#f4f4f6);
+       min-height:100vh; display:flex; justify-content:center;
+       padding:40px 20px 90px; line-height:1.65; }
+.wrap { width:100%; max-width:720px; }
+.top { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
+a.back { color:var(--nc-dim,#8c96ad); text-decoration:none; font-size:0.92rem; }
+a.back:hover { color:var(--nc-text,#f4f4f6); }
+.print { margin-left:auto; background:var(--nc-bg2,rgba(255,255,255,0.06));
+         color:inherit; border:1px solid var(--nc-line,rgba(255,255,255,0.14));
+         border-radius:10px; padding:9px 15px; font-size:0.88rem; font-weight:600;
+         cursor:pointer; min-height:40px; }
+.print:hover { border-color:var(--nc-cyan,#00F0FF); }
+h1 { font-size:2.1rem; margin-bottom:10px; letter-spacing:-0.01em; }
+.lede { color:var(--nc-dim,#8c96ad); margin-bottom:10px; }
+.updated { color:var(--nc-dim,#8c96ad); font-size:0.85rem; margin-bottom:28px; }
+h2 { font-size:1.25rem; margin:32px 0 10px; }
+h3 { font-size:1rem; margin:20px 0 6px; }
+p { margin-bottom:12px; }
+ul { margin:0 0 14px 20px; }
+li { margin-bottom:8px; }
+.card { background:var(--nc-bg2,rgba(255,255,255,0.04));
+        border:1px solid var(--nc-line,rgba(255,255,255,0.1));
+        border-radius:18px; padding:22px 24px; margin-bottom:22px; }
+.big { font-size:1.05rem; }
+strong { color:var(--nc-text,#f4f4f6); }
+code { background:var(--nc-bg3,rgba(255,255,255,0.07)); padding:2px 7px;
+       border-radius:6px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.9em; }
+a { color:#4CC9F0; }
+table { width:100%; border-collapse:collapse; margin:6px 0 14px; font-size:0.94rem; }
+th, td { text-align:left; padding:9px 10px; vertical-align:top;
+         border-bottom:1px solid var(--nc-line,rgba(255,255,255,0.1)); }
+th { color:var(--nc-dim,#8c96ad); font-weight:600; font-size:0.85rem; }
+.wrapscroll { overflow-x:auto; }
+
+/* --------------------------------------------------------------------------
+   PRINTING
+   --------------------------------------------------------------------------
+   These are the two pages most likely to be printed or saved as a PDF — for a
+   parent, for a school, for a store submission. On screen the site is dark;
+   on paper a dark theme is a solid block of toner and unreadable grey-on-grey
+   text, so print gets black on white regardless of the theme in the browser.
+
+   The link URLs are printed after the link text, because a printed page with
+   "the report form" underlined and no address on it has lost the address.
+   Headings do not break away from the paragraph under them, and the cards
+   lose their fills and keep only a hairline.
+   -------------------------------------------------------------------------- */
+@media print {
+  @page { margin: 18mm 16mm; }
+  html, body { background:#fff !important; color:#000 !important; }
+  body { display:block; padding:0; font-size:11pt; line-height:1.5; }
+  .wrap { max-width:none; }
+  .top, .print, nav, header, footer, .jr-pill, #nc-consent, .nc-nav, .nav { display:none !important; }
+  h1 { font-size:20pt; }
+  h2 { font-size:13pt; margin:16pt 0 5pt; }
+  h3 { font-size:11.5pt; }
+  h1, h2, h3 { color:#000 !important; break-after:avoid; page-break-after:avoid; }
+  p, li, table { break-inside:avoid; page-break-inside:avoid; }
+  .card { background:none !important; border:1px solid #999 !important;
+          border-radius:0; padding:10pt 12pt; margin-bottom:12pt; }
+  .lede, .updated, th { color:#333 !important; }
+  strong, code { color:#000 !important; }
+  code { background:none !important; border:1px solid #bbb; }
+  a { color:#000 !important; text-decoration:underline; }
+  /* The address, after the words, so a printout is still usable. Skipped for
+     in-page anchors and mailto:, where it would only add noise. */
+  a[href^='http']:after { content:' (' attr(href) ')'; font-size:9pt; color:#444; }
+  th, td { border-bottom:1px solid #bbb; }
+  .wrapscroll { overflow:visible; }
+}
+</style>
+</head>
+<body>
+<div class='wrap'>
+
+  <div class='top'>
+    <a class='back' href='/'>← Back to NovaClip</a>
+    <button class='print' type='button' id='printBtn'>Print or save as PDF</button>
+  </div>
+
+  <h1>Terms of Use</h1>
+  <p class='lede big'>The rules for using NovaClip. Same as the privacy page:
+     written to be read by the people it applies to, most of whom are 13 to 18.</p>
+  <p class='updated'>Last updated 27 August 2026 · NovaClip · novaclip.org ·
+     <a href='/privacy.html'>Privacy policy</a></p>
+
+  <div class='card'>
+    <h2 style='margin-top:0'>The short version</h2>
+    <ul class='big'>
+      <li>You have to be <strong>13 or over</strong>. Under 18, ask a parent before you pay for anything.</li>
+      <li><strong>What you make is yours.</strong> We claim no ownership of your videos, photos or writing.</li>
+      <li>Don't use NovaClip to hurt, harass, or impersonate anybody, and don't upload things you have no right to.</li>
+      <li>The <strong>AI can be wrong</strong>. It is a starting point, not advice, and never a substitute for a person.</li>
+      <li>Almost everything lives <strong>in your browser</strong>. Clear your data and it is gone — there is no copy on our side.</li>
+      <li>Subscriptions renew until you cancel. <strong>Cancel any time</strong>, and you keep what you paid for until the period ends.</li>
+    </ul>
+  </div>
+
+  <h2>1. Agreeing to these terms</h2>
+  <p>Using NovaClip means you accept what is on this page. If you do not accept
+     it, that is a fair choice — do not use the site.</p>
+  <p>NovaClip is an independent project run by the person behind
+     <a href='https://novaclip.org'>novaclip.org</a>. It is not a company with a
+     legal department, and these terms are not going to pretend otherwise.</p>
+
+  <h2>2. Who can use NovaClip</h2>
+  <p>You must be <strong>13 or over</strong>. The site asks your age once and will
+     not let you in below that. Thirteen is where COPPA draws the line: below it,
+     a service like this one needs verifiable consent from a parent, which
+     NovaClip has no way to obtain and does not pretend to have.</p>
+  <p>If you are under 18, you may use everything here, but <strong>you should have
+     a parent's or guardian's permission before you buy anything</strong>. Most
+     countries treat a contract signed by a minor as something a parent can
+     undo, and we would rather you asked first than have that argument later.</p>
+  <p>Parents: the <a href='/parent.html'>parent dashboard</a> is where the screen-time
+     limits, the content blocking and the activity overview live.</p>
+
+  <h2>3. Your account is a code</h2>
+  <p>Saving progress across devices gives you <strong>a code</strong>, not a username
+     and password. Whoever has the code has the account, so treat it like a key.</p>
+  <p>Two things follow from that, and both are worth saying plainly:</p>
+  <ul>
+    <li><strong>Lose the code and the account cannot be recovered.</strong> There is
+        nothing on our side that could prove it was yours, because we never
+        collected anything that would.</li>
+    <li><strong>Share the code and you have shared the account.</strong> Anything done
+        with it counts as done by you.</li>
+  </ul>
+  <p>Face sign-in, voice sign-in, the click rhythm and a passkey all unlock this
+     browser on this device. They are not an identity we hold; see the
+     <a href='/privacy.html'>privacy policy</a> for exactly what is stored where.</p>
+
+  <h2>4. What you make stays yours</h2>
+  <p>Videos, photos, edits, writing, thumbnails, anything you produce here — it
+     is <strong>yours</strong>. NovaClip takes no ownership of it and no licence to
+     use it, and it is not used to train anything.</p>
+  <p>It also mostly never reaches us. The editor, the photo tools and the studio
+     run in your browser, and what they make is written to your browser's own
+     storage. That has a cost worth understanding: <strong>if you clear your site
+     data, or use a different device, or your browser evicts the storage, the work
+     is gone</strong>, and there is no backup on our side to restore it from. Export
+     anything you care about.</p>
+
+  <h2>5. What you may not do</h2>
+  <p>Short list, and none of it should be a surprise:</p>
+  <ul>
+    <li>Nothing illegal, and nothing that harasses, bullies, threatens or sexualises
+        anybody — least of all another young person.</li>
+    <li>Do not upload or edit material you have no right to use, and do not use
+        NovaClip to pass somebody else's work off as your own.</li>
+    <li>Do not use the face, voice or camera features on <strong>anybody who has not
+        agreed to it</strong>. That includes making somebody appear to say or do
+        something they did not.</li>
+    <li>Do not pretend to be somebody else, or to be NovaClip.</li>
+    <li>Do not attack the site — no scraping at volume, no attempts to break the
+        rate limits, the age gate, the parent PIN or anybody else's account.</li>
+    <li>Do not use the AI to produce anything on this list, or to work out how to.</li>
+  </ul>
+  <p>If you see something here that breaks these rules, the
+     <a href='/report.html'>report form</a> reaches a person.</p>
+
+  <h2>6. The AI, and what it is not</h2>
+  <p>NovaClip's AI features send the text you type to a Cloudflare Worker, which
+     passes it to Google's Gemini API. What comes back is <strong>generated text
+     that can be confidently wrong</strong>.</p>
+  <p>It is not medical, legal, financial or safety advice, and the safety tools
+     — the message scanner, the harassment checker — are a second opinion, not a
+     verdict. <strong>If something has actually happened to you, tell an adult you
+     trust, or the police.</strong> A website cannot do that part.</p>
+
+  <h2>7. Paid plans</h2>
+  <p>The core of NovaClip is free and stays free. The paid plans are:</p>
+  <div class='wrapscroll'>
+  <table>
+    <tr><th>Plan</th><th>What it is</th><th>How it is billed</th></tr>
+    <tr><td>Family Dashboard</td><td>Parental controls, activity overview, content blocking, comment scanning</td><td>Monthly or yearly subscription</td></tr>
+    <tr><td>Kids' Tools Upgrade</td><td>Priority AI, longer exports, extra effects, game skins</td><td>Monthly or yearly subscription</td></tr>
+    <tr><td>Family Bundle</td><td>Both of the above, plus priority support</td><td>Monthly or yearly subscription</td></tr>
+    <tr><td>Certificates</td><td>Basic, Advanced and Master creator credentials</td><td>One-time payment</td></tr>
+  </table>
+  </div>
+  <p>Prices are shown on the <a href='/pricing.html'>pricing page</a> in your own
+     currency, and the price you see at checkout is the price charged. Yearly is
+     ten months' worth for twelve, which is where "2 months free" comes from.</p>
+
+  <h3>Certificates are earned, not bought</h3>
+  <p>Paying for a certificate <strong>enrols</strong> you. The credential itself only
+     issues once you have actually done the work — the exports, the trend scans,
+     the tutor sessions and the coins the pricing page lists. That is deliberate:
+     a certificate you could simply buy would not be worth putting on anything.
+     If you pay and never finish the work, you have paid for enrolment and the
+     credential does not issue.</p>
+
+  <h3>Renewals and cancelling</h3>
+  <p>A subscription renews automatically at the end of each period until you
+     cancel. <strong>You can cancel at any time</strong>, and you keep what you paid
+     for until the end of the period you have already paid for. Cancelling does
+     not delete anything you made.</p>
+
+  <h3>Refunds</h3>
+  <p>If you are in the UK or the EU you have <strong>14 days to change your mind</strong>
+     about a digital purchase. That right can end early if you have already started
+     using the thing you bought and agreed to that at the time — which is how the
+     law works for digital content everywhere, not a rule we invented.</p>
+  <p>Beyond that: if something did not work, or you were charged for something you
+     did not mean to buy, email <a href='mailto:novacliptools@gmail.com'>novacliptools@gmail.com</a>
+     and say what happened. Parents of under-18s who find a charge they did not
+     agree to should do the same, and we will refund it.</p>
+
+  <h3>How payment is taken, honestly</h3>
+  <p>Payments are handled by <strong>Stripe</strong>. NovaClip never sees or stores your
+     full card number — the site keeps only the last four digits, the expiry and
+     the name, so a saved card is recognisable to you.</p>
+  <p>The awkward part, stated rather than hidden: where a Stripe payment link has
+     not been configured for a plan, <strong>that checkout is a demonstration and no
+     money is taken</strong>. The checkout says so on screen when it is in that mode.
+     A simulated purchase is not a purchase, and it does not entitle you to
+     anything.</p>
+
+  <h2>8. Other people's services</h2>
+  <p>NovaClip connects to YouTube, Google, Stripe, map providers and a handful of
+     others, listed in the <a href='/privacy.html'>privacy policy</a>. Those
+     services have their own terms, and when you use a NovaClip feature that
+     depends on one, you are agreeing to theirs as well as ours.</p>
+  <p>We cannot make promises on their behalf, and if one of them changes or goes
+     away, the feature that uses it will change or go away too.</p>
+  <p>NovaClip is not affiliated with, endorsed by, or connected to Google,
+     YouTube, Microsoft, Stripe or any other service it talks to.</p>
+
+  <h2>9. What we do not promise</h2>
+  <p>NovaClip is provided <strong>as it is</strong>. There is no guarantee that it will
+     be available, that a feature will keep working, that an export will succeed
+     on your particular device, or that the AI will be right.</p>
+  <p>It is one person's project, not an enterprise service with a support
+     contract behind it. We will fix what we can, and we would rather say that
+     here than imply an uptime nobody promised.</p>
+
+  <h2>10. Liability, in plain words</h2>
+  <p>If NovaClip loses your work, gets something wrong, or is unavailable when
+     you needed it, our responsibility is limited to <strong>what you actually paid
+     us</strong> — which for most people is nothing. We are not liable for indirect
+     losses: missed deadlines, lost views, lost income.</p>
+  <p>Nothing here removes rights you have by law. In the UK and the EU your
+     statutory consumer rights stand whatever this page says, and we do not
+     exclude liability for death or personal injury caused by negligence, or for
+     fraud. Those exclusions would not be enforceable and we are not going to
+     print them.</p>
+
+  <h2>11. Ending it</h2>
+  <p>You can stop using NovaClip whenever you like. Clearing this site's data in
+     your browser removes everything held on your device; to delete a saved
+     account, email us the code and ask.</p>
+  <p>We can suspend access for anybody using the site to break section 5 — to
+     harass somebody, to attack the service, or to get around the age gate. For
+     anything less than that, we would ask first.</p>
+
+  <h2>12. Which law applies</h2>
+  <p>These terms are governed by the law of <strong>England and Wales</strong>, and the
+     courts there can hear a dispute about them. If you live in another country
+     in the EU or the UK, you keep the protection of your own country's consumer
+     law and can bring a claim where you live — a choice-of-law line in a website
+     footer does not override that.</p>
+
+  <h2>13. If part of this does not hold</h2>
+  <p>If a court decides one part of these terms cannot be enforced, the rest still
+     stands. And if we do not enforce something straight away, that does not mean
+     we have given it up.</p>
+
+  <h2>14. Changes</h2>
+  <p>If NovaClip changes, this page changes with it and the date at the top moves.
+     Continuing to use the site after a change means accepting the new version;
+     if a change matters — pricing, what happens to your work, what we collect —
+     it will be said on the site rather than quietly slipped in here.</p>
+
+  <h2>15. Contact</h2>
+  <p>Questions, refunds, deletion requests, or anything that felt wrong:
+     <a href='mailto:novacliptools@gmail.com'>novacliptools@gmail.com</a>,
+     or use the <a href='/report.html'>report form</a>.</p>
+  <p class='updated' style='margin-top:26px'>NovaClip is an independent project.
+     It is not affiliated with Google, YouTube, Microsoft, Stripe or any of the
+     services it connects to.</p>
+
+</div>
+<script>
+  /* The button exists because "Ctrl+P" is not obvious on a phone, and this
+     page is one somebody is genuinely likely to want on paper. */
+  document.getElementById('printBtn').onclick = function () { window.print(); };
+</script>
+<script src='nova.js'></script>
+</body>
+</html>
