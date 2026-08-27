@@ -23,25 +23,33 @@
      WORLD LEADERBOARD  scores from every player, which cannot exist in a
                         browser at all.
 
-   HOW ACCOUNTS WORK, AND WHY THERE ARE NO PASSWORDS
-     Your users are 13-18. Collecting emails and passwords from minors means
-     storing personal data, handling resets, and a breach that matters — for a
-     game that awards points. So there are none.
-
+   HOW ACCOUNTS WORK
      On first sync the browser generates a random 32-character KEY and keeps it
      in localStorage. That key IS the account. The server also prints a short
      RECOVERY CODE (like NOVA-7K2P-9QF4) that maps to the same account, so
-     signing in on a phone means typing nine characters, not remembering a
-     password. Anyone holding the code holds the account — same as a Google Doc
-     "anyone with the link" — which is the right trade for points and badges and
-     the wrong one for anything you would be upset to lose. Say that plainly to
-     your users rather than implying the save is protected.
+     signing in on a phone means typing nine characters. Anyone holding the
+     code holds the account — same as a Google Doc "anyone with the link" —
+     which is the right trade for points and badges and the wrong one for
+     anything you would be upset to lose. Say that plainly to your users
+     rather than implying the save is protected.
 
-     No email, no name required, no password, nothing that identifies a child.
+     A PROFILE IS OPTIONAL, ON TOP OF THAT
+     A username and password can be added to an existing account. It is a
+     second way in, not a second account and not a stronger one: it resolves
+     to the same key the code does.
+
+     Still no email and nothing that identifies a child. The password itself
+     never reaches this worker — the browser derives it through 600,000 rounds
+     of PBKDF2 first, for reasons set out beside PBKDF2_ROUNDS below, and what
+     arrives is the output.
 
    ENDPOINTS
      POST /account                  -> { key, code }         make a new account
      POST /account/resolve {code}   -> { key }               sign in with a code
+     GET  /account/salt?u=          -> { salt, rounds }      before deriving
+     POST /account/register         -> { key, code }         add a username
+     POST /account/login            -> { key }               sign in with one
+     POST /account/password         -> { ok }                change it
      GET  /save?key=...             -> { data, at }          load progress
      POST /save {key, data}         -> { ok, at }            store progress
      GET  /board?map=&mode=         -> [ rows ]              top 25
@@ -134,6 +142,80 @@ function randomFrom(alphabet, n) {
 }
 const newKey = () => randomFrom('abcdefghijklmnopqrstuvwxyz0123456789', 32);
 const newCode = () => 'NOVA-' + randomFrom(CODE_ALPHABET, 4) + '-' + randomFrom(CODE_ALPHABET, 4);
+
+/* ---- USERNAMES AND PASSWORDS ---------------------------------------------
+   Added because they were asked for. The code-only account above still works
+   and is still what an account without a profile uses — this sits beside it,
+   it does not replace it. A registered account gets a code too, because a
+   forgotten password with nothing behind it is an account nobody can reach.
+
+   THE PASSWORD NEVER ARRIVES HERE
+
+   The browser runs PBKDF2-SHA256 over the password 600,000 times and sends
+   the 32 bytes that come out. This worker never sees the password itself, in
+   a request body or a log line or anywhere else.
+
+   That is not only a nicety. Cloudflare Workers get 10ms of CPU per request
+   on the free plan, and 600,000 rounds of PBKDF2 is comfortably more than
+   that — a server-side KDF here would either be killed mid-request or be
+   turned down to an iteration count too low to be worth running. Moving it to
+   the browser buys the full work factor on hardware that has time to spare,
+   at the cost of half a second on the sign-in button.
+
+   What is stored is SHA-256 over those bytes with the salt again. Fast, which
+   is the point — it has to fit in the CPU budget — and safe to be fast,
+   because the value it hashes is already the output of 600,000 rounds. An
+   attacker holding this database still has to run the full PBKDF2 for every
+   password they want to guess.
+
+   WHAT IT IS NOT
+
+   It is not a second factor, and it is not proof of who anybody is. Password
+   plus username gets you the same 32-character key the code does. Say that to
+   users rather than letting a password imply a protection it does not add. */
+const PBKDF2_ROUNDS = 600000;
+const USERNAME_RE = /^[a-z0-9](?:[a-z0-9._-]{1,18}[a-z0-9])$/;
+const cleanUser = (v) => String(v || '').trim().toLowerCase();
+const validUser = (v) => USERNAME_RE.test(v);
+/* 64 hex characters: the browser sends PBKDF2 output, nothing else. */
+const validAuth = (v) => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v);
+
+const hex = (buf) => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+
+async function sha256Hex(str) {
+  return hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)));
+}
+
+/* The salt a browser needs before it can derive anything — which means it has
+   to be handed out BEFORE anyone has proved who they are.
+
+   For a real account it is that account's stored salt. For a username nobody
+   has taken it is HMAC(pepper, username): stable, so asking twice gives the
+   same answer, and indistinguishable from a real one. Without that, "does
+   this username exist" is a single unauthenticated request, and on a site
+   whose users are mostly teenagers a list of who has an account here is
+   exactly the thing not to publish.
+
+   PEPPER is a Worker secret. With none set this still works and still hands
+   out stable salts — it just uses a constant, so the fake salts are derivable
+   by anybody with this file. /health says so out loud rather than leaving it
+   to be discovered. */
+async function saltFor(env, user) {
+  const row = await env.DB.get('user:' + user, 'json');
+  if (row && row.salt) return { salt: row.salt, rounds: row.rounds || PBKDF2_ROUNDS, real: true };
+  const pepper = (env && env.PEPPER) || 'novaclip-unpeppered';
+  return { salt: (await sha256Hex(pepper + '|salt|' + user)).slice(0, 32),
+           rounds: PBKDF2_ROUNDS, real: false };
+}
+
+/* Compared byte by byte with no early return. A === on hex strings can stop at
+   the first wrong character, and the time that takes is a hint. */
+function sameSecret(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
 
 const validKey = (v) => typeof v === 'string' && /^[a-z0-9]{32}$/.test(v);
 const cleanCode = (v) => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
@@ -338,6 +420,15 @@ export default {
         ok: !!env.DB,
         worker: 'leaderboard',
         db: env.DB ? 'bound' : 'MISSING — Settings -> Bindings -> Add -> KV namespace, variable name DB',
+        /* Not an error — usernames and passwords work without it. It only
+           decides whether the salt handed out for an unregistered username is
+           derivable from this file, which is what stops the salt endpoint
+           answering "does this person have an account here". Worth saying,
+           because nothing else would ever surface it. */
+        pepper: env.PEPPER
+          ? 'set'
+          : 'not set — add a Worker secret called PEPPER (any long random string) ' +
+            'so an unused username cannot be told apart from a taken one',
         hint: env.DB ? 'Put this address in NC_SERVER in nova.js.'
                      : 'The community pages stay offline until DB is bound.'
       }, env.DB ? 200 : 500);
@@ -363,6 +454,100 @@ export default {
       await env.DB.put('code:' + cleanCode(code), key);
       await env.DB.put('save:' + key, JSON.stringify({ data: {}, at: Date.now() }));
       return json({ key, code });
+    }
+
+    /* The salt, handed out before anyone has proved anything — see saltFor.
+       GET so it can be cached by nothing and read by anything; there is no
+       secret in the answer. */
+    if (path === '/account/salt' && request.method === 'GET') {
+      const user = cleanUser(url.searchParams.get('u'));
+      if (!validUser(user)) return json({ error: 'that username will not work' }, 400);
+      const s = await saltFor(env, user);
+      return json({ salt: s.salt, rounds: s.rounds });
+    }
+
+    if (path === '/account/register' && request.method === 'POST') {
+      if (await rateLimited(env, 'reg:' + ip, 15000)) return json({ error: 'slow down' }, 429);
+      const user = cleanUser(body.username);
+      if (!validUser(user)) {
+        return json({ error: 'A username is 3 to 20 characters: letters, numbers, and . _ - in the middle.' }, 400);
+      }
+      if (!validAuth(body.authKey)) return json({ error: 'bad request' }, 400);
+      if (await env.DB.get('user:' + user)) {
+        return json({ error: 'that username is taken' }, 409);
+      }
+
+      /* An existing device already has a key and a save on it. Registering
+         should put a name on THAT account rather than silently starting an
+         empty one and orphaning everything they have done — which is what
+         handing back a fresh key would do. */
+      let key = validKey(body.key) ? body.key : null;
+      let code = null;
+      if (key && !(await env.DB.get('save:' + key))) key = null;   // key we have never seen
+
+      if (key) {
+        code = String(body.code || '') || null;
+      } else {
+        key = newKey();
+        code = newCode();
+        let tries = 0;
+        while (await env.DB.get('code:' + cleanCode(code)) && tries++ < 5) code = newCode();
+        await env.DB.put('code:' + cleanCode(code), key);
+        await env.DB.put('save:' + key, JSON.stringify({ data: {}, at: Date.now() }));
+      }
+
+      const salt = (await saltFor(env, user)).salt;
+      const hash = await sha256Hex(body.authKey + '|' + salt);
+      await env.DB.put('user:' + user, JSON.stringify({
+        key, salt, rounds: PBKDF2_ROUNDS, hash, at: Date.now()
+      }));
+      return json({ ok: true, key, code, username: user });
+    }
+
+    if (path === '/account/login' && request.method === 'POST') {
+      const user = cleanUser(body.username);
+      /* Per username AND per address. Per username alone lets one attacker
+         lock a real person out of their own account by guessing at it; per
+         address alone lets a spread of usernames through from one machine. */
+      if (await rateLimited(env, 'login:' + user, 1500) ||
+          await rateLimited(env, 'loginip:' + ip, 800)) {
+        return json({ error: 'too many tries just now — wait a moment' }, 429);
+      }
+      if (!validUser(user) || !validAuth(body.authKey)) {
+        return json({ error: 'that username and password do not match' }, 401);
+      }
+      const row = await env.DB.get('user:' + user, 'json');
+      /* Same message and the same work whether the username exists or not.
+         "No such user" versus "wrong password" is the same enumeration the
+         salt endpoint goes to trouble to avoid. */
+      const expect = row ? row.hash : await sha256Hex('no-such-user|' + user);
+      const got = await sha256Hex(body.authKey + '|' + (row ? row.salt : (await saltFor(env, user)).salt));
+      if (!row || !sameSecret(expect, got)) {
+        return json({ error: 'that username and password do not match' }, 401);
+      }
+      return json({ ok: true, key: row.key, username: user });
+    }
+
+    /* Changing a password re-derives from the SAME salt, so the browser does
+       not need a new one and an old device holding the old password simply
+       stops working. The key does not change: it is the account, not the
+       credential. */
+    if (path === '/account/password' && request.method === 'POST') {
+      const user = cleanUser(body.username);
+      if (await rateLimited(env, 'pw:' + user, 3000)) return json({ error: 'slow down' }, 429);
+      if (!validUser(user) || !validAuth(body.authKey) || !validAuth(body.newAuthKey)) {
+        return json({ error: 'bad request' }, 400);
+      }
+      const row = await env.DB.get('user:' + user, 'json');
+      if (!row) return json({ error: 'that username and password do not match' }, 401);
+      const got = await sha256Hex(body.authKey + '|' + row.salt);
+      if (!sameSecret(row.hash, got)) {
+        return json({ error: 'that username and password do not match' }, 401);
+      }
+      row.hash = await sha256Hex(body.newAuthKey + '|' + row.salt);
+      row.at = Date.now();
+      await env.DB.put('user:' + user, JSON.stringify(row));
+      return json({ ok: true });
     }
 
     if (path === '/account/resolve' && request.method === 'POST') {

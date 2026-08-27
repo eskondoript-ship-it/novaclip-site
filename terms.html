@@ -42,7 +42,7 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 
 <!-- WHY THIS PAGE READS THE WAY IT DOES
      The same reason privacy.html does. Most of the people bound by these terms
-     are between 13 and 18, and terms nobody can read are terms nobody agreed
+     are teenagers, and terms nobody can read are terms nobody agreed
      to in any sense that matters. So this is written in sentences, and every
      claim in it was checked against the code rather than copied off a
      template — including the awkward ones: the checkout is in demo mode until
@@ -135,7 +135,7 @@ th { color:var(--nc-dim,#8c96ad); font-weight:600; font-size:0.85rem; }
 
   <h1>Terms of Use</h1>
   <p class='lede big'>The rules for using NovaClip. Same as the privacy page:
-     written to be read by the people it applies to, most of whom are 13 to 18.</p>
+     written to be read by the people it applies to, most of whom are teenagers.</p>
   <p class='updated'>Last updated 27 August 2026 · NovaClip · novaclip.org ·
      <a href='/privacy.html'>Privacy policy</a></p>
 
@@ -170,9 +170,15 @@ th { color:var(--nc-dim,#8c96ad); font-weight:600; font-size:0.85rem; }
   <p>Parents: the <a href='/parent.html'>parent dashboard</a> is where the screen-time
      limits, the content blocking and the activity overview live.</p>
 
-  <h2>3. Your account is a code</h2>
-  <p>Saving progress across devices gives you <strong>a code</strong>, not a username
-     and password. Whoever has the code has the account, so treat it like a key.</p>
+  <h2>3. Your account is a code, and optionally a username</h2>
+  <p>Saving progress across devices gives you <strong>a code</strong>. Whoever has the
+     code has the account, so treat it like a key.</p>
+  <p>You can add a <strong>username and password</strong> on the
+     <a href='/profile.html'>profile page</a>. It is a second way into the same
+     account, not a stronger one — both open the same thing. Your password is put
+     through 600,000 rounds of PBKDF2 in your browser and never sent to us, and
+     since we hold no email, <strong>nobody can reset it for you</strong>: the
+     recovery code is the way back.</p>
   <p>Two things follow from that, and both are worth saying plainly:</p>
   <ul>
     <li><strong>Lose the code and the account cannot be recovered.</strong> There is

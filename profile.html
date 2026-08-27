@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint, same as every other page. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var b=localStorage.getItem('nc_skin_bg');
+var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;
+if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QN1QE08F2K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    ad_storage: 'denied', ad_user_data: 'denied',
+    ad_personalization: 'denied', analytics_storage: 'denied', wait_for_update: 500
+  });
+  try {
+    if (localStorage.getItem('nc_consent') === 'yes') gtag('consent', 'update', { analytics_storage: 'granted' });
+  } catch (e) {}
+  gtag('js', new Date());
+  gtag('config', 'G-QN1QE08F2K');
+</script>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050505">
+<title>Profile — NovaClip</title>
+<meta name='description' content='Make a NovaClip profile with a username and password, or sign in to one. Your progress follows you to another device.'>
+<link rel='canonical' href='https://novaclip.org/profile.html'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+
+<!-- WHY THIS PAGE EXISTS AND WHAT IT DOES NOT CLAIM
+     A username and password were asked for. What was already here is a random
+     key in localStorage plus a NOVA-XXXX-XXXX recovery code, and that has not
+     been replaced — a profile is a second door into the same account, so that
+     signing in on a new phone is a thing you can remember rather than a code
+     you have to still have.
+
+     The page says, in the copy and not only in a comment, that a password here
+     is not a stronger lock than the code. Both resolve to the same key. A
+     password field implies a promise and this one must not imply more than it
+     keeps.
+
+     The password never leaves the browser: account.js runs 600,000 rounds of
+     PBKDF2 over it and sends the result. See the header of that file. -->
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',-apple-system,sans-serif; }
+body { background:var(--nc-bg,#060608); color:var(--nc-text,#f4f4f6);
+       min-height:100vh; display:flex; justify-content:center;
+       padding:40px 20px 90px; line-height:1.6; }
+.wrap { width:100%; max-width:560px; }
+a.back { display:inline-block; margin-bottom:20px; color:var(--nc-dim,#8c96ad);
+         text-decoration:none; font-size:.92rem; }
+a.back:hover { color:var(--nc-text,#f4f4f6); }
+h1 { font-size:2rem; font-weight:800; letter-spacing:-.02em; margin-bottom:8px; }
+.lede { color:var(--nc-dim,#8c96ad); margin-bottom:24px; }
+a { color:#4CC9F0; }
+
+.card { background:var(--nc-bg2,rgba(255,255,255,.04));
+        border:1px solid var(--nc-line,rgba(255,255,255,.1));
+        border-radius:18px; padding:22px; margin-bottom:18px; }
+.card h2 { font-size:1.1rem; font-weight:700; margin-bottom:4px; }
+.card .sub { color:var(--nc-dim,#8c96ad); font-size:.86rem; margin-bottom:16px; }
+
+label { display:block; font-size:.8rem; font-weight:700; letter-spacing:.04em;
+        text-transform:uppercase; color:var(--nc-dim,#8c96ad); margin:14px 0 6px; }
+input { width:100%; min-height:46px; padding:11px 13px; border-radius:11px;
+        font:inherit; font-size:.95rem; color:var(--nc-text,#f4f4f6);
+        background:var(--nc-bg3,rgba(255,255,255,.06));
+        border:1px solid var(--nc-line2,rgba(255,255,255,.14)); }
+input:focus { outline:none; border-color:var(--nc-cyan,#00F0FF);
+              box-shadow:0 0 0 3px rgba(0,240,255,.12); }
+.pwrow { position:relative; }
+/* The reveal button sits inside the field, so it needs the room. */
+.pwrow input { padding-right:74px; }
+.pwrow button { position:absolute; right:6px; top:50%; transform:translateY(-50%);
+        min-height:36px; padding:6px 11px; border-radius:9px; cursor:pointer;
+        font:700 .74rem/1 inherit; color:var(--nc-dim,#8c96ad);
+        background:transparent; border:1px solid var(--nc-line2,rgba(255,255,255,.14)); }
+.pwrow button:hover { color:var(--nc-text,#f4f4f6); }
+
+.meter { display:flex; align-items:center; gap:9px; margin-top:8px; font-size:.78rem;
+         color:var(--nc-dim,#8c96ad); }
+.meter .t { flex:1 1 auto; height:5px; border-radius:3px; overflow:hidden;
+            background:rgba(127,140,170,.2); }
+.meter .t i { display:block; height:100%; width:0; border-radius:3px; transition:width .2s; }
+.s0 i{background:#fb7185}.s1 i{background:#fb7185}.s2 i{background:#fbbf24}
+.s3 i{background:#7DFF00}.s4 i{background:#34d399}
+
+.go { width:100%; min-height:48px; margin-top:18px; padding:13px 20px; border:none;
+      border-radius:12px; cursor:pointer; font-weight:800; font-size:.98rem;
+      background:linear-gradient(90deg,var(--nc-cyan,#00F0FF),#4CC9F0); color:#04121a; }
+.go:disabled { opacity:.55; cursor:default; }
+.alt { width:100%; min-height:46px; margin-top:10px; padding:12px 18px; border-radius:12px;
+       cursor:pointer; font-weight:700; font-size:.92rem; color:inherit;
+       background:transparent; border:1px solid var(--nc-line2,rgba(255,255,255,.14)); }
+
+.say { display:none; margin-top:14px; padding:12px 14px; border-radius:12px; font-size:.88rem;
+       line-height:1.55; }
+.say.no { display:block; background:rgba(251,113,133,.12); border:1px solid rgba(251,113,133,.4); }
+.say.yes { display:block; background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.4); }
+.say.wait { display:block; background:rgba(255,255,255,.05); border:1px solid var(--nc-line,rgba(255,255,255,.1));
+            color:var(--nc-dim,#8c96ad); }
+.say b { display:block; margin-bottom:3px; }
+
+.who { display:flex; align-items:center; gap:14px; }
+.who .av { width:52px; height:52px; flex:0 0 auto; border-radius:14px; display:grid;
+           place-items:center; font-weight:800; font-size:1.3rem; color:#04121a;
+           background:linear-gradient(140deg,var(--nc-cyan,#00F0FF),#7C5CFF); }
+.who .n { font-weight:800; font-size:1.12rem; }
+.who .c { color:var(--nc-dim,#8c96ad); font-size:.84rem; }
+code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-radius:6px;
+       font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.92em; }
+.note { color:var(--nc-dim,#8c96ad); font-size:.82rem; line-height:1.6; margin-top:14px; }
+.tabs { display:flex; gap:8px; margin-bottom:18px; }
+.tabs button { flex:1 1 0; min-height:44px; padding:11px; border-radius:12px; cursor:pointer;
+       font-weight:700; font-size:.9rem; color:var(--nc-dim,#8c96ad);
+       background:transparent; border:1px solid var(--nc-line2,rgba(255,255,255,.14)); }
+.tabs button[aria-selected='true'] { color:var(--nc-text,#f4f4f6);
+       background:rgba(0,240,255,.12); border-color:rgba(0,240,255,.42); }
+.hide { display:none !important; }
+</style>
+</head>
+<body>
+<div class='wrap'>
+
+  <a class='back' href='/index.html'>← Back to NovaClip</a>
+  <h1>Your profile</h1>
+  <p class='lede'>A username and a password, so signing in on another device is
+     something you remember rather than a code you have to still have.
+     <a href='/progress.html'>Your progress</a> is what follows you when you do,
+     and <a href='/privacy.html'>the privacy page</a> says what is kept where.</p>
+
+  <!-- SIGNED IN ------------------------------------------------------------ -->
+  <div class='card hide' id='inBox'>
+    <div class='who'>
+      <div class='av' id='av'>?</div>
+      <div>
+        <div class='n' id='who'></div>
+        <div class='c' id='whoCode'></div>
+      </div>
+    </div>
+    <p class='note'>Your recovery code is the other way in. Keep it somewhere —
+       it is what gets you back if you forget the password.</p>
+    <button class='alt' id='pwBtn'>Change password</button>
+    <button class='alt' id='outBtn'>Sign out on this device</button>
+    <div class='say' id='inSay'></div>
+
+    <div class='hide' id='pwBox'>
+      <label for='pwOld'>Current password</label>
+      <div class='pwrow'>
+        <input type='password' id='pwOld' autocomplete='current-password'>
+        <button type='button' data-see='pwOld'>Show</button>
+      </div>
+      <label for='pwNew'>New password</label>
+      <div class='pwrow'>
+        <input type='password' id='pwNew' autocomplete='new-password'>
+        <button type='button' data-see='pwNew'>Show</button>
+      </div>
+      <button class='go' id='pwGo'>Change it</button>
+    </div>
+  </div>
+
+  <!-- SIGNED OUT ----------------------------------------------------------- -->
+  <div id='outBox'>
+    <div class='tabs' role='tablist'>
+      <button role='tab' id='tabNew' aria-selected='true'>Create a profile</button>
+      <button role='tab' id='tabIn' aria-selected='false'>Sign in</button>
+    </div>
+
+    <div class='card' id='newBox'>
+      <h2>Create a profile</h2>
+      <p class='sub'>No email. Nothing that says who you are — just a name to sign
+        in with.</p>
+
+      <label for='nUser'>Username</label>
+      <input type='text' id='nUser' autocomplete='username' maxlength='20'
+             placeholder='3 to 20 characters' spellcheck='false' autocapitalize='none'>
+
+      <label for='nPass'>Password</label>
+      <div class='pwrow'>
+        <input type='password' id='nPass' autocomplete='new-password' placeholder='At least 8 characters'>
+        <button type='button' data-see='nPass'>Show</button>
+      </div>
+      <div class='meter s0'><span class='t'><i></i></span><span class='w'>—</span></div>
+
+      <button class='go' id='newGo'>Create it</button>
+      <div class='say' id='newSay'></div>
+
+      <p class='note'><b>Read this bit.</b> A password here is not a stronger lock
+        than the recovery code — both open the same account. It is a way in you
+        can remember. There is no email on file, so <b>nobody can reset it for
+        you</b>: if you forget it, the code is what gets you back in.</p>
+    </div>
+
+    <div class='card hide' id='inFormBox'>
+      <h2>Sign in</h2>
+      <p class='sub'>Your progress, points and certificates come with you.</p>
+
+      <label for='iUser'>Username</label>
+      <input type='text' id='iUser' autocomplete='username' maxlength='20'
+             spellcheck='false' autocapitalize='none'>
+
+      <label for='iPass'>Password</label>
+      <div class='pwrow'>
+        <input type='password' id='iPass' autocomplete='current-password'>
+        <button type='button' data-see='iPass'>Show</button>
+      </div>
+
+      <button class='go' id='inGo'>Sign in</button>
+      <div class='say' id='inFormSay'></div>
+
+      <p class='note'>Forgotten it? Sign in with your <b>NOVA-XXXX-XXXX</b>
+        recovery code instead, below.</p>
+    </div>
+
+    <div class='card'>
+      <h2>Or use a recovery code</h2>
+      <p class='sub'>The way that has always worked. No profile needed.</p>
+      <label for='cCode'>Recovery code</label>
+      <input type='text' id='cCode' placeholder='NOVA-7K2P-9QF4' spellcheck='false'
+             autocapitalize='characters' maxlength='14'>
+      <button class='go' id='codeGo'>Sign in with the code</button>
+      <div class='say' id='codeSay'></div>
+    </div>
+  </div>
+
+</div>
+
+<script src='nova.js'></script>
+<script src='account.js'></script>
+<script>
+/* ============================================================================
+   THE PAGE
+   ============================================================================
+   account.js does the cryptography and the API calls. This is the four
+   buttons that call it, and the state of the page either side.
+   ========================================================================== */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+
+  function say(id, kind, title, body) {
+    var s = $(id);
+    s.className = 'say ' + kind;
+    s.innerHTML = (title ? '<b>' + esc(title) + '</b>' : '') + esc(body || '');
+  }
+  function clear(id) { $(id).className = 'say'; $(id).innerHTML = ''; }
+  function esc(t) {
+    return String(t == null ? '' : t).replace(/[<>&]/g, function (c) {
+      return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c];
+    });
+  }
+
+  /* ---- show / hide the password fields ---------------------------------- */
+  document.querySelectorAll('[data-see]').forEach(function (b) {
+    b.onclick = function () {
+      var f = $(b.dataset.see);
+      var on = f.type === 'password';
+      f.type = on ? 'text' : 'password';
+      b.textContent = on ? 'Hide' : 'Show';
+    };
+  });
+
+  /* ---- which half of the page ------------------------------------------- */
+  function paint() {
+    var user = window.NC_ACCOUNT ? NC_ACCOUNT.current() : '';
+    var key = (typeof ncKey === 'function' && ncKey()) || '';
+    var signedIn = !!(user && key);
+    $('inBox').classList.toggle('hide', !signedIn);
+    $('outBox').classList.toggle('hide', signedIn);
+    if (!signedIn) return;
+    $('who').textContent = user;
+    $('av').textContent = user.charAt(0).toUpperCase();
+    var code = (typeof ncCode === 'function' && ncCode()) || '';
+    $('whoCode').innerHTML = code
+      ? 'Recovery code <code>' + esc(code) + '</code>'
+      : 'No recovery code stored in this browser.';
+  }
+
+  /* ---- create / sign in tabs -------------------------------------------- */
+  function tab(which) {
+    $('tabNew').setAttribute('aria-selected', which === 'new');
+    $('tabIn').setAttribute('aria-selected', which === 'in');
+    $('newBox').classList.toggle('hide', which !== 'new');
+    $('inFormBox').classList.toggle('hide', which !== 'in');
+  }
+  $('tabNew').onclick = function () { tab('new'); };
+  $('tabIn').onclick = function () { tab('in'); };
+
+  /* ---- the strength read ------------------------------------------------- */
+  $('nPass').addEventListener('input', function () {
+    var s = NC_ACCOUNT.strength($('nPass').value);
+    var m = document.querySelector('.meter');
+    m.className = 'meter s' + s.n;
+    m.querySelector('i').style.width = (s.n / 4 * 100) + '%';
+    m.querySelector('.w').textContent = s.word;
+  });
+
+  /* --------------------------------------------------------------------------
+     The 600,000 rounds take about half a second on a phone, and a button that
+     goes dead for half a second with no explanation reads as a broken button.
+     So it says what it is doing.
+     -------------------------------------------------------------------------- */
+  async function working(btn, sayId, label, fn) {
+    var was = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = label;
+    say(sayId, 'wait', '', 'Scrambling your password on this device before anything is sent…');
+    try {
+      await fn();
+    } catch (e) {
+      say(sayId, 'no', 'That did not work', e && e.message ? e.message : String(e));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = was;
+    }
+  }
+
+  $('newGo').onclick = function () {
+    clear('newSay');
+    var u = $('nUser').value, p = $('nPass').value;
+    var bad = NC_ACCOUNT.checkUsername(u) || NC_ACCOUNT.checkPassword(p, u);
+    if (bad) return say('newSay', 'no', 'Not quite', bad);
+    working($('newGo'), 'newSay', 'Creating…', async function () {
+      var out = await NC_ACCOUNT.register(u, p);
+      say('newSay', 'yes', 'Done — you are signed in',
+        'Your recovery code is ' + (out.code || 'already saved in this browser') +
+        '. Write it down: it is the only way back if you forget the password.');
+      setTimeout(paint, 1400);
+    });
+  };
+
+  $('inGo').onclick = function () {
+    clear('inFormSay');
+    working($('inGo'), 'inFormSay', 'Signing in…', async function () {
+      await NC_ACCOUNT.login($('iUser').value, $('iPass').value);
+      say('inFormSay', 'yes', 'Signed in', 'Pulling your progress down now.');
+      /* nova.js owns the merge — it takes the higher of each counter rather
+         than letting one device flatten the other. */
+      if (typeof ncPull === 'function') { try { await ncPull(); } catch (e) {} }
+      setTimeout(paint, 900);
+    });
+  };
+
+  $('codeGo').onclick = async function () {
+    clear('codeSay');
+    var c = $('cCode').value.trim();
+    if (!c) return say('codeSay', 'no', 'Nothing typed', 'Paste the code you were given.');
+    $('codeGo').disabled = true;
+    try {
+      await ncSignIn(c);
+      say('codeSay', 'yes', 'Signed in', 'Your progress is coming down now.');
+      if (typeof ncPull === 'function') { try { await ncPull(); } catch (e) {} }
+      setTimeout(paint, 900);
+    } catch (e) {
+      say('codeSay', 'no', 'That code did not work', e && e.message ? e.message : String(e));
+    } finally { $('codeGo').disabled = false; }
+  };
+
+  /* ---- signed in -------------------------------------------------------- */
+  $('pwBtn').onclick = function () { $('pwBox').classList.toggle('hide'); };
+
+  $('pwGo').onclick = function () {
+    clear('inSay');
+    working($('pwGo'), 'inSay', 'Changing…', async function () {
+      await NC_ACCOUNT.changePassword(NC_ACCOUNT.current(), $('pwOld').value, $('pwNew').value);
+      say('inSay', 'yes', 'Changed', 'Any other device stays signed in — the key did not change, only the password.');
+      $('pwOld').value = ''; $('pwNew').value = '';
+    });
+  };
+
+  $('outBtn').onclick = function () {
+    /* Worth a confirm: on a shared device this is the right button, and on
+       your own it throws away the code if it was never written down. */
+    if (!confirm('Sign out on this device?\n\nYour progress stays in this browser and stays on the server. ' +
+                 'You will need your username and password, or your recovery code, to sign back in.')) return;
+    NC_ACCOUNT.signOut();
+    paint();
+  };
+
+  paint();
+})();
+</script>
+</body>
+</html>

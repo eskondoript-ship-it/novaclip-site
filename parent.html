@@ -376,12 +376,19 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
         <button class='btn' id='sendcodebtn' style='margin-bottom:12px;' data-t='par_sendcode'>Send confirmation code</button>
         <div id='codebox' style='display:none;'>
           <input type='text' id='confcode' placeholder='6-digit code from your email' maxlength='6' inputmode='numeric'>
-          <label class='sm' style='display:block; font-size:0.85rem; color:#7E8AA6; margin:6px 0 3px;' data-t='par_age'>Your child's age</label>
-          <input type='text' id='kidage' placeholder="Child's age (13–18)" maxlength='2' inputmode='numeric'>
         </div>
       </div>
       <input type='password' id='pin' placeholder='5-digit PIN' maxlength='5' inputmode='numeric' style='display:none;'>
       <div id='setuponly2' style='display:none;'>
+        <!-- The child's age used to sit up in #setuponly, beside the email
+             confirmation. That whole block is hidden the moment the code is
+             confirmed — which is the same moment this one appears — so the
+             field was taken off the screen and then required by the button.
+             Setting a PIN did nothing, printed the "ages 13 and over" line,
+             and looked for all the world like a dead button. It belongs with
+             the other two things being set up. -->
+        <label class='sm' style='display:block; font-size:0.85rem; color:#7E8AA6; margin:6px 0 3px;' data-t='par_age'>Your child's age</label>
+        <input type='text' id='kidage' placeholder="Child's age (13 or over)" maxlength='3' inputmode='numeric'>
         <select id='secq' style='width:100%; padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:#0A0C14; color:#EAF2FF; margin-bottom:12px; font-size:1rem;'>
           <option value=''>Choose a security question…</option>
           <option>What was the name of your first pet?</option>
@@ -717,9 +724,17 @@ document.getElementById('pinbtn').onclick = async () => {
     if (!CONF_CODE || document.getElementById('confcode').value !== CONF_CODE) {
       msg.textContent = 'Please confirm the parent email code first.'; return;
     }
+    /* 13 and over, with no upper bound — the site no longer has one, and a
+       parent setting up controls for a 19-year-old sibling is not an error.
+       Still required and still validated: an empty box used to fail this
+       silently-looking check too. */
     const age = parseInt(document.getElementById('kidage').value, 10);
-    if (isNaN(age) || age < 13 || age > 18) {
-      msg.innerHTML = 'NovaClip is for ages 13–18. For younger children, verified parental consent (COPPA/GDPR-K) is required — see our roadmap.';
+    if (isNaN(age)) {
+      msg.innerHTML = 'Please put your child\'s age in.';
+      return;
+    }
+    if (age < 13) {
+      msg.innerHTML = 'NovaClip is for ages 13 and over. For younger children, verified parental consent (COPPA/GDPR-K) is required — see our roadmap.';
       return;
     }
     const q = document.getElementById('secq').value;

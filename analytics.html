@@ -84,7 +84,7 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 </script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
-body { background: var(--nc-bg,#060608); color: var(--nc-text,#EAF2FF); overflow-x: hidden; }
+body { background: var(--nc-bg,#060608); color: var(--nc-text,#EAF2FF); overflow-x:clip/* clip, not hidden: overflow-x:hidden on one axis forces the other to auto, which makes body a second scroll container — two scrollbars and a dead strip the height of the top bar below the footer. clip does the same job without it. */; }
 a { text-decoration: none; color: inherit; }
 
 .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 210px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 20px 0; gap: 4px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); }

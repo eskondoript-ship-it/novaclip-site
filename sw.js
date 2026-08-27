@@ -65,7 +65,8 @@
    would be served the cached analytics.html, which now asks for a stylesheet
    the old cache has never heard of, and a dashboard with the skin's markup
    and none of its CSS is worse than either version on its own. */
-const CACHE = 'novaclip-v5';
+/* v6 adds the clip checker and the profile page's crypto helper. */
+const CACHE = 'novaclip-v6';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -107,6 +108,12 @@ const SHELL = [
   '/mixer-ui.js',
   /* Picks a video encoder that actually emits bytes on this machine. */
   '/export-fix.js',
+  /* Checks a dropped clip for fast flashing and blank footage. Pure
+     arithmetic on frames already in memory, so it works offline. */
+  '/moderate.js',
+  /* The profile page's crypto. Registering needs the network, but the page
+     should not be a blank screen on a train either. */
+  '/account.js',
   /* The focus timer is the one page here most likely to be opened with the
      wifi off on purpose. */
   '/study.html',

@@ -71,7 +71,7 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <meta name='description' content='Fill a NovaGift box with notes, doodles, a badge and some NovaCoins, then send your friend one link. They unwrap it one thing at a time.'>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
-body { background: var(--nc-bg,#05060A); color: var(--nc-text,#EAF2FF); margin-left: 200px; min-height: 100vh; overflow-x: hidden; }
+body { background: var(--nc-bg,#05060A); color: var(--nc-text,#EAF2FF); margin-left: 200px; min-height: 100vh; overflow-x:clip/* clip, not hidden: overflow-x:hidden on one axis forces the other to auto, which makes body a second scroll container — two scrollbars and a dead strip the height of the top bar below the footer. clip does the same job without it. */; }
 
 .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 200px; background: rgba(12,12,16,0.85); backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 20px 0; gap: 8px; z-index: 998; border-right: 1px solid rgba(255,255,255,0.06); overflow-y: auto; }
 .sidebar a { font-size: 1.05rem; text-decoration: none; color: var(--nc-text,#EAF2FF); display: flex; align-items: center; gap: 12px; padding: 12px 20px; font-weight: 600; transition: background .2s; }

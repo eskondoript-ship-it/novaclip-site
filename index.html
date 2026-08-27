@@ -98,7 +98,7 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 :root{ --void:var(--nc-bg,#05060A); --void2:var(--nc-bg3,#0A0C14); --cyan:var(--nc-cyan,#00F0FF); --magenta:var(--nc-pink,#FF2E97); --lime:var(--nc-lime,#B6FF3C); --white:var(--nc-text,#EAF2FF); --dim:var(--nc-dim,#7E8AA6); --line:rgba(120,140,200,0.14); }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{background:var(--void);color:var(--white);font-family:'Segoe UI',-apple-system,sans-serif;overflow-x:hidden;line-height:1.5}
+body{background:var(--void);color:var(--white);font-family:'Segoe UI',-apple-system,sans-serif;overflow-x:clip/* clip, not hidden: overflow-x:hidden on one axis forces the other to auto, which makes body a second scroll container — two scrollbars and a dead strip the height of the top bar below the footer. clip does the same job without it. */;line-height:1.5}
 ::selection{background:var(--magenta);color:#fff}
 a{color:inherit;text-decoration:none}
 

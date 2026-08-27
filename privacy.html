@@ -61,17 +61,18 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050505">
 <title>Privacy — NovaClip</title>
-<meta name='description' content='What NovaClip stores, what leaves your device and what does not. No accounts with your name on them, no advertising, no analytics.'>
+<meta name='description' content='What NovaClip stores, what leaves your device and what does not. No advertising, no email addresses, and one measurement tool you can switch off.'>
 <link rel='canonical' href='https://novaclip.org/privacy.html'>
 <link rel='icon' href='logo.svg' type='image/svg+xml'>
 
 <!-- WHY THIS PAGE READS THE WAY IT DOES
-     Most of the people using NovaClip are between 13 and 18. A policy written
+     Most of the people using NovaClip are teenagers. A policy written
      for lawyers is a policy they will not read, and a policy nobody reads
      protects nobody. So it is written to be understood, and every claim in it
      was checked against the code rather than copied off a template: there is
-     no advertising, no analytics, no account with a name on it, and the face
-     and voice features genuinely never leave the device.
+     no advertising, no account with a name on it, one measurement tool that is
+     named rather than hidden, and face and voice features that genuinely never
+     leave the device.
 
      If a feature ever changes, this page changes in the same commit. A privacy
      policy that has drifted from what the software does is worse than none,
@@ -163,9 +164,9 @@ a.back { margin-bottom:0; }
   </div>
 
   <h1>Privacy</h1>
-  <p class='lede big'>Most people using NovaClip are between 13 and 18. This page
+  <p class='lede big'>Most people using NovaClip are teenagers. This page
      is written to be read by them, not by a lawyer.</p>
-  <p class='updated'>Last updated 22 August 2026 · NovaClip · novaclip.org ·
+  <p class='updated'>Last updated 27 August 2026 · NovaClip · novaclip.org ·
      <a href='/terms.html'>Terms of Use</a></p>
 
   <div class='card'>
@@ -174,7 +175,9 @@ a.back { margin-bottom:0; }
       <li>There is <strong>no advertising</strong> on NovaClip, and nothing follows you between websites.</li>
       <li>There <strong>is</strong> one measurement tool — Google Analytics — counting which pages get
           visited. What it sees is set out below, and you can switch it off.</li>
-      <li>An account is <strong>a code</strong>. We never ask for your name, your email or a password.</li>
+      <li>An account is <strong>a code</strong>. You can add a username and password if you
+          want one — <strong>we still never ask for your name or your email</strong>, and the
+          password never leaves your device.</li>
       <li>Your <strong>face and your voice never leave your device</strong>, and neither does anything the camera sees.</li>
       <li>Almost everything you make is stored <strong>in your own browser</strong>, not on a server.</li>
       <li>We <strong>do not sell anything to anybody</strong>, because we do not hold anything worth selling.</li>
@@ -185,7 +188,7 @@ a.back { margin-bottom:0; }
   <p>Most of NovaClip works without a server at all. These live in your browser's
      local storage, on the computer or phone you are using:</p>
   <ul>
-    <li>Your display name, avatar and language, if you set them</li>
+    <li>Your display name, avatar, username and language, if you set them</li>
     <li>Your progress: levels, streaks, coins, certificates and skill history</li>
     <li>Video editor projects and their settings</li>
     <li>Your face and voice profiles, if you turn on face or voice sign-in</li>
@@ -216,6 +219,21 @@ a.back { margin-bottom:0; }
   <p>Signing in to save progress across devices gives you <strong>a code</strong> — a
      short string like a link to a shared document. Whoever has the code has the
      account.</p>
+  <p>You can also add a <strong>username and password</strong> on the
+     <a href='/profile.html'>profile page</a>, so signing in on a new phone is
+     something you remember rather than a code you have to still have. Three
+     things about it, because a password box implies more than this one
+     delivers:</p>
+  <ul>
+    <li><strong>The password never reaches our server.</strong> Your browser puts it
+        through 600,000 rounds of PBKDF2 first and sends only the result. There is
+        nowhere on our side it could be logged or leaked from, because it never
+        arrives.</li>
+    <li><strong>It is not a stronger lock than the code.</strong> Both open the same
+        account. It is a second door, not a better one.</li>
+    <li><strong>There is still no email</strong>, which means <strong>nobody can reset
+        it for you</strong>. Forget the password and the recovery code is the way back.</li>
+  </ul>
   <p>We chose this deliberately. Collecting email addresses and passwords from
      under-18s means holding data that can be breached, and it means a password
      a young person has probably reused elsewhere. So we hold neither. What our

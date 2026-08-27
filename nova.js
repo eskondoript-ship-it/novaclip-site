@@ -94,6 +94,7 @@ const T = {
   fight: { en:"Fight!", zh:"开战！", hi:"लड़ो!", es:"¡Pelea!", ar:"قاتِل!", fr:"Combat !", bn:"লড়াই!", pt:"Lutar!", ru:"В бой!", ur:"لڑو!", id:"Lawan!", de:"Kämpfen!", ja:"対戦！", tr:"Savaş!", ko:"대결!", fa:"مبارزه!", uk:"У бій!", it:"Combatti!", pl:"Walcz!", vi:"Chiến!" },
   ai_h: { en:"NovaClip AI", zh:"NovaClip 智能", hi:"NovaClip एआई", es:"IA NovaClip", ar:"ذكاء NovaClip", fr:"IA NovaClip", bn:"NovaClip এআই", pt:"IA NovaClip", ru:"ИИ NovaClip", ur:"NovaClip اے آئی", id:"AI NovaClip", de:"NovaClip KI", ja:"NovaClip AI", tr:"NovaClip YZ", ko:"NovaClip AI", fa:"هوش مصنوعی NovaClip", uk:"ШІ NovaClip", it:"IA NovaClip", pl:"AI NovaClip", vi:"AI NovaClip" },
   /* ===== PROGRESS PAGE ===== */
+  profile: { en:"Profile", zh:"资料", hi:"प्रोफ़ाइल", es:"Perfil", ar:"الملف الشخصي", fr:"Profil", bn:"প্রোফাইল", pt:"Perfil", ru:"Профиль", ur:"پروفائل", id:"Profil", de:"Profil", ja:"プロフィール", tr:"Profil", ko:"프로필", fa:"پروفایل", uk:"Профіль", it:"Profilo", pl:"Profil", vi:"Hồ sơ" },
   progress: { en:"Progress", zh:"进度", hi:"प्रगति", es:"Progreso", ar:"التقدّم", fr:"Progression", bn:"অগ্রগতি", pt:"Progresso", ru:"Прогресс", ur:"پیش رفت", id:"Progres", de:"Fortschritt", ja:"進捗", tr:"İlerleme", ko:"진행도", fa:"پیشرفت", uk:"Прогрес", it:"Progressi", pl:"Postęp", vi:"Tiến độ" },
   prog_h: { en:"Your progress", zh:"你的进度", hi:"आपकी प्रगति", es:"Tu progreso", ar:"تقدّمك", fr:"Ta progression", bn:"আপনার অগ্রগতি", pt:"O teu progresso", ru:"Твой прогресс", ur:"آپ کی پیش رفت", id:"Progresmu", de:"Dein Fortschritt", ja:"あなたの進捗", tr:"İlerlemen", ko:"내 진행도", fa:"پیشرفت تو", uk:"Твій прогрес", it:"I tuoi progressi", pl:"Twój postęp", vi:"Tiến độ của bạn" },
   prog_sub: { en:"Everything you have earned in one place — NovaCoins, rewards, achievements, the skills that count towards a certificate, and your AI chat history.", zh:"你赚到的一切都在这里——积分、奖励、成就、计入证书的技能，以及你的 AI 聊天记录。", hi:"आपकी सारी कमाई एक जगह — पॉइंट, रिवॉर्ड, अचीवमेंट, सर्टिफिकेट में गिने जाने वाले स्किल, और एआई चैट हिस्ट्री।", es:"Todo lo que has ganado en un solo sitio: puntos, recompensas, logros, las habilidades que cuentan para un certificado y tu historial de chat con la IA.", ar:"كل ما كسبته في مكان واحد — النقاط والجوائز والإنجازات والمهارات التي تُحتسب للشهادة وسجل محادثاتك مع الذكاء الاصطناعي.", fr:"Tout ce que tu as gagné au même endroit : points, récompenses, succès, les compétences qui comptent pour un certificat et ton historique de chat avec l'IA.", bn:"আপনার সব অর্জন এক জায়গায় — পয়েন্ট, পুরস্কার, অ্যাচিভমেন্ট, সার্টিফিকেটে গণ্য দক্ষতা এবং এআই চ্যাট ইতিহাস।", pt:"Tudo o que ganhaste num só sítio — pontos, recompensas, conquistas, as competências que contam para um certificado e o teu histórico de conversas com a IA.", ru:"Всё заработанное в одном месте — очки, награды, достижения, навыки, которые идут в зачёт сертификата, и история чатов с ИИ.", ur:"آپ کی تمام کمائی ایک جگہ — پوائنٹس، انعامات، کامیابیاں، سرٹیفکیٹ میں شمار ہونے والی مہارتیں، اور اے آئی چیٹ ہسٹری۔", id:"Semua yang kamu dapat dalam satu tempat — poin, hadiah, pencapaian, keterampilan yang dihitung untuk sertifikat, dan riwayat obrolan AI-mu.", de:"Alles Erreichte an einem Ort — Punkte, Belohnungen, Erfolge, die für ein Zertifikat zählenden Fähigkeiten und dein KI-Chatverlauf.", ja:"獲得したすべてをここに — ポイント、リワード、実績、証明書に加算されるスキル、そしてAIとの会話履歴。", tr:"Kazandığın her şey tek yerde — puanlar, ödüller, başarılar, sertifikaya sayılan beceriler ve YZ sohbet geçmişin.", ko:"획득한 모든 것을 한곳에 — 포인트, 보상, 업적, 수료증에 반영되는 스킬, 그리고 AI 대화 기록.", fa:"هرچه به دست آورده‌ای یک‌جا — امتیازها، جوایز، دستاوردها، مهارت‌هایی که برای گواهی حساب می‌شوند، و تاریخچه گفتگوهایت با هوش مصنوعی.", uk:"Усе зароблене в одному місці — бали, нагороди, досягнення, навички, що зараховуються до сертифіката, та історія чатів зі ШІ.", it:"Tutto ciò che hai guadagnato in un unico posto: punti, premi, obiettivi, le competenze che contano per un certificato e la cronologia delle chat con l'IA.", pl:"Wszystko, co zdobyłeś, w jednym miejscu — punkty, nagrody, osiągnięcia, umiejętności liczące się do certyfikatu i historia rozmów z AI.", vi:"Mọi thứ bạn đạt được ở một nơi — điểm, phần thưởng, thành tựu, các kỹ năng tính vào chứng chỉ, và lịch sử trò chuyện với AI." },
@@ -1844,13 +1845,27 @@ ncFit.textContent =
   /* the profile sits at the foot of the rail now, not above the logo */
 
   /* The reading column was centred in whatever space the rail left over, which
-     on a 1920 screen is 760px of text floating in 1688px of room — a 400px
+     on a 1920 screen was 760px of text floating in 1688px of room — a 400px
      dead strip against the sidebar on ai, community, publish, progress and
-     trends. Pinned to the same ~60px the home page uses, and allowed to grow
-     to 1120px before it stops, so wide screens gain content rather than
-     margin. The slack goes to the right, where nothing is competing with it. */
+     trends. Widening it to 1120px is what fixed that, and it stays.
+
+     PINNING IT LEFT WAS THE WRONG HALF OF THAT FIX
+
+     It also carried `margin-left: clamp(24px,3.6vw,64px); margin-right:auto`,
+     which put the whole of the slack on one side — and the dead strip came
+     back on the other. Reported on four pages at once: pricing kept 470px of
+     empty red beside the plans, and privacy, terms and report were worse
+     still, because those three have no rail at all. They are 720px documents
+     that centre themselves, and this rule reached them anyway and shoved them
+     against the left edge of a 1900px window. Measured: 84px from the edge,
+     1076px of nothing after them.
+
+     Auto on both sides is what the column wanted in the first place. At 760px
+     wide that centred badly; at 1120px it is a margin rather than a strip, and
+     on a page with a rail the flex/`margin-left` offset has already been taken
+     off before this centres in what is left. */
   ".wrap { padding-left: clamp(0px, 1.2vw, 22px); padding-right: clamp(0px, 1.2vw, 22px);" +
-  " margin-left: clamp(24px, 3.6vw, 64px); margin-right: auto;" +
+  " margin-left: auto; margin-right: auto;" +
   " width: min(1120px, 100% - clamp(24px, 3.6vw, 64px)); }" +
   /* The labels scale with the rail, or a 232px rail is a 164px rail with more
      empty space in it. */
@@ -2327,6 +2342,10 @@ async function ncSyncBoot() {
 window.ncCreateAccount = ncCreateAccount; window.ncSignIn = ncSignIn;
 window.ncPull = ncPull; window.ncPush = ncPush; window.ncSyncOn = ncSyncOn;
 window.ncKey = ncKey; window.ncCode = ncCode;
+/* account.js talks to the same worker through the same address override, so
+   it needs the same wrapper rather than a second copy of the base-URL logic
+   that could drift from this one. */
+window.ncApi = ncApi;
 
 function refreshPanels() {
   const pts = getPts();
@@ -3220,6 +3239,10 @@ const NC_NAV = [
       ['game.html', 'Games', 'games', 'games']] },
   { items: [['socials.html', 'Socials', 'socials', 'gift']] },
   { name: 'You', key: 'nav_you', icon: 'progress', items: [
+      /* First in the group, because it is the one somebody arrives looking
+         for. The icon is the sign-in one Biometrics uses — they are two ways
+         into the same account, so they should not look like separate ideas. */
+      ['profile.html', 'Profile', 'profile', 'signin'],
       ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
       ['biometrics.html', 'Biometrics', 'biometrics', 'signin'],
       ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
@@ -4386,7 +4409,17 @@ window.addEventListener('DOMContentLoaded', () => {
      needs verifiable parental consent, which this site has no way to obtain
      and does not pretend to. */
   const NC_MIN_AGE = 13;
-  const NC_MAX_AGE = 18;
+  /* There is no upper limit any more. There used to be one — anybody who
+     answered 19 or over was shown "this will not be your account" and pointed
+     at the Family Dashboard, which turned a nineteen-year-old creator, a
+     teacher and an older sibling all into somebody else's parent. Thirteen is
+     a legal line and worth holding; eighteen never was one, it was an
+     assumption about who the site is for, and it was enforced as if it were a
+     rule.
+
+     ncControlsRelaxed keeps its 16 floor and loses its 18 ceiling, which is
+     the same bug in miniature: an adult was having their chats logged for a
+     parent who does not exist. */
 
   /* Pages the blocked screen SENDS people to. Gating these would trap a child
      in a loop between the block and the page it tells them to open, which is
@@ -4403,7 +4436,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const NC_AGE_EXEMPT = /(^|\/)(parent|shield|report|privacy|terms)\.html$/i;
 
   window.ncAge = function () { return parseInt(localStorage.getItem('nc_user_age') || '0'); };
-  window.ncControlsRelaxed = function () { const a = ncAge(); return a >= 16 && a <= 18; };
+  window.ncControlsRelaxed = function () { return ncAge() >= 16; };
   window.ncAgeAllowed = function () { const a = ncAge(); return a >= NC_MIN_AGE; };
 
   /* The screen an under-age visitor gets, every time, on every page.
@@ -4600,13 +4633,6 @@ window.addEventListener('DOMContentLoaded', () => {
         ncAgeBlocked();
         return;
       }
-      if (a > NC_MAX_AGE) {
-        outcome(tr('ui_age_o_t'),
-          tr('ui_age_o_b'),
-          '<a href="parent.html" style="display:inline-block;margin-top:18px;padding:13px 28px;border-radius:30px;font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">' + tr('ui_fam_dash') + '</a>');
-        return;
-      }
-
       if (a >= 16) {
         localStorage.setItem('nc_controls_relaxed', '1');
         /* Was an alert(), which is a browser dialog on a page that has its own

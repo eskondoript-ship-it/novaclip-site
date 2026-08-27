@@ -12,7 +12,7 @@ const PAGES = ['index.html', 'tools.html', 'socials.html', 'biometrics.html', 'e
   /* The two documents. They are plain text pages and unlikely to break, but
      they are also the two most likely to be read on a phone by a parent who
      has never opened the site before. */
-  'privacy.html', 'terms.html'];
+  'privacy.html', 'terms.html', 'profile.html'];
 
 const SIZES = [
   { w: 360, h: 640, m: true,  label: 'phone-s' },
