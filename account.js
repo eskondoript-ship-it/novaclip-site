@@ -56,11 +56,28 @@
     return out;
   }
 
+  /* A 404 from one of these paths means one specific thing, and it is worth
+     naming: the site has been updated but the Worker behind it has not, so
+     /account/register does not exist there yet. Its own fallback answers
+     `{error:'not found'}` and ncApi passes that straight through — which is
+     how a perfectly working page came to show a red box reading "not found"
+     with nothing to act on. */
+  var NEEDS_DEPLOY =
+    'This site is asking for something the NovaClip server does not have yet. ' +
+    'Usernames and passwords need the newer leaderboard-worker.js deployed to ' +
+    'the Worker — until then, use a NOVA recovery code to sign in.';
+
   function api(path, opts) {
     if (typeof window.ncApi !== 'function') {
       return Promise.reject(new Error('nova.js has not loaded, so there is nothing to sign in to.'));
     }
-    return window.ncApi(path, opts);
+    return window.ncApi(path, opts).catch(function (e) {
+      var m = (e && e.message) || '';
+      if (/^not found$/i.test(m.trim()) || /HTTP 404/.test(m)) {
+        throw new Error(NEEDS_DEPLOY);
+      }
+      throw e;
+    });
   }
   function post(path, body) {
     return api(path, {

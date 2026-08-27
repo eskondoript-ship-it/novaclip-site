@@ -379,6 +379,7 @@ const UI_T = {
   ui_break_b: { en:"You have been here an hour and a half. Stand up, look out of a window, drink something. NovaClip will be here.", zh:"你已经在这里待了一个半小时。站起来，看看窗外，喝点东西。NovaClip 会一直在这里。", hi:"आप डेढ़ घंटे से यहाँ हैं। खड़े हो जाएँ, खिड़की से बाहर देखें, कुछ पीएँ। NovaClip यहीं रहेगा।", es:"Llevas aquí una hora y media. Levántate, mira por la ventana, bebe algo. NovaClip seguirá aquí.", ar:"لقد قضيت هنا ساعة ونصف. قف، انظر من النافذة، واشرب شيئًا. سيبقى NovaClip هنا.", fr:"Tu es là depuis une heure et demie. Lève-toi, regarde par la fenêtre, bois quelque chose. NovaClip sera toujours là.", bn:"আপনি এখানে দেড় ঘণ্টা ধরে আছেন। উঠে দাঁড়ান, জানালা দিয়ে বাইরে দেখুন, কিছু পান করুন। NovaClip এখানেই থাকবে।", pt:"Estás aqui há hora e meia. Levanta-te, olha pela janela, bebe qualquer coisa. A NovaClip vai continuar aqui.", ru:"Ты здесь уже полтора часа. Встань, посмотри в окно, выпей чего-нибудь. NovaClip никуда не денется.", ur:"آپ یہاں ڈیڑھ گھنٹے سے ہیں۔ کھڑے ہوں، کھڑکی سے باہر دیکھیں، کچھ پیئیں۔ NovaClip یہی رہے گا۔", id:"Kamu sudah di sini satu setengah jam. Berdiri, lihat ke luar jendela, minum sesuatu. NovaClip akan tetap di sini.", de:"Du bist schon eineinhalb Stunden hier. Steh auf, schau aus dem Fenster, trink etwas. NovaClip bleibt da.", ja:"あなたはここに1時間半います。立ち上がって、窓の外を見て、何か飲みましょう。NovaClipはここにあります。", tr:"Burada bir buçuk saattirsin. Kalk, pencereden dışarı bak, bir şeyler iç. NovaClip burada kalacak.", ko:"여기에 한 시간 반 동안 머물렀습니다. 일어나서 창밖을 보고, 물을 마시세요. NovaClip은 여기에 있습니다.", fa:"یک ساعت و نیم است اینجایی. بلند شو، از پنجره بیرون را نگاه کن، چیزی بنوش. NovaClip همین‌جا می‌ماند.", uk:"Ти тут уже півтори години. Встань, подивись у вікно, випий чогось. NovaClip нікуди не подінеться.", it:"Sei qui da un'ora e mezza. Alzati, guarda fuori dalla finestra, bevi qualcosa. NovaClip resterà qui.", pl:"Jesteś tu od półtorej godziny. Wstań, popatrz przez okno, napij się czegoś. NovaClip tu zostanie.", vi:"Bạn đã ở đây một tiếng rưỡi. Đứng dậy, nhìn ra ngoài cửa sổ, uống chút gì đó. NovaClip sẽ vẫn ở đây." },
   ui_left: { en:"{t} left", zh:"还剩 {t}", hi:"{t} बाकी", es:"quedan {t}", ar:"متبقي {t}", fr:"{t} restantes", bn:"বাকি {t}", pt:"faltam {t}", ru:"осталось {t}", ur:"{t} باقی", id:"tersisa {t}", de:"noch {t}", ja:"残り{t}", tr:"{t} kaldı", ko:"{t} 남음", fa:"{t} مانده", uk:"лишилось {t}", it:"restano {t}", pl:"zostało {t}", vi:"còn lại {t}" },
   ui_set_name: { en:"Set your name", zh:"设置你的名字", hi:"अपना नाम सेट करें", es:"Pon tu nombre", ar:"حدد اسمك", fr:"Choisis ton nom", bn:"আপনার নাম সেট করুন", pt:"Define o teu nome", ru:"Задай имя", ur:"اپنا نام سیٹ کریں", id:"Atur namamu", de:"Setz deinen Namen", ja:"名前を設定", tr:"Adını belirle", ko:"이름 설정하기", fa:"نامت را تنظیم کن", uk:"Задай своє ім'я", it:"Imposta il tuo nome", pl:"Ustaw swoją nazwę", vi:"Đặt tên của bạn" },
+  ui_su_chip: { en:"First visit" },
   ui_su_h: { en:"Make your profile" },
   ui_su_h2: { en:"Sign in" },
   ui_su_p: { en:"So your points, streaks and certificates follow you to your phone. No email, no real name \u2014 just a username you pick." },
@@ -2236,7 +2237,11 @@ window.ncServer = ncServer;
 /* What travels. Deliberately NOT nc_yt: that holds a YouTube OAuth token, and a
    token on someone else's server is a token you no longer control. The channel
    name is copied into nc_name instead, which is all the rest of the site needs. */
-const NC_SYNC_KEYS = ['nc_points', 'nc_skills', 'nc_certs','nc_pro','nc_subscription', 'nc_cert_enrolled',
+/* nc_username, nc_avatar_* — the profile itself, so the same account looks
+   the same on a phone as it does on a laptop. Two short strings and a name;
+   no image ever goes in here. */
+const NC_SYNC_KEYS = ['nc_username', 'nc_avatar_color', 'nc_avatar_emblem',
+                      'nc_points', 'nc_skills', 'nc_certs','nc_pro','nc_subscription', 'nc_cert_enrolled',
   /* New game bests, so they follow the code like the flap score does. */
   'nc_reaction_best', 'nc_aim_best',
                       'nc_ideas', 'nc_history', 'nc_unlocked', 'nc_lb', 'nc_name',
@@ -4763,28 +4768,46 @@ window.addEventListener('DOMContentLoaded', () => {
       'color:#EAF2FF;display:flex;align-items:center;justify-content:center;padding:20px;' +
       'font-family:Segoe UI,-apple-system,sans-serif;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);' +
       'overflow-y:auto';
+    /* The same editorial look as profile.html — serif heading, mono labels,
+       warm neutrals — so the sheet somebody meets on their first visit and the
+       page they manage the account on afterwards are recognisably one thing.
+       Inline because nova.js is on every page and this sheet is on almost none
+       of them: a stylesheet for it would be a request on every visit for
+       markup most visits never build. */
+    var SER = "'Newsreader','Playfair Display',Georgia,serif";
+    var MON = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace";
     var fld = 'width:100%;min-height:46px;padding:11px 13px;margin-top:7px;border-radius:11px;' +
-      'font:inherit;font-size:.95rem;color:#EAF2FF;background:rgba(255,255,255,.06);' +
-      'border:1px solid rgba(255,255,255,.15);box-sizing:border-box';
-    var lbl = 'display:block;margin-top:13px;font-size:.72rem;font-weight:800;letter-spacing:.09em;' +
-      'text-transform:uppercase;color:#8c96ad';
-    var go = 'width:100%;min-height:48px;margin-top:16px;padding:13px;border:none;border-radius:12px;' +
-      'cursor:pointer;font-weight:800;font-size:.98rem;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a';
-    var alt = 'margin-top:10px;background:none;border:0;color:#8c96ad;font:inherit;font-size:.85rem;' +
+      'font:inherit;font-size:.95rem;color:#EAF2FF;background:rgba(255,255,255,.055);' +
+      'border:1px solid rgba(255,255,255,.16);box-sizing:border-box';
+    var lbl = 'display:block;margin-top:15px;font-family:' + MON + ';font-size:.6rem;' +
+      'letter-spacing:.16em;text-transform:uppercase;color:#a8a29e';
+    var go = 'width:100%;min-height:48px;margin-top:18px;padding:13px;border:0;border-radius:12px;' +
+      'cursor:pointer;font-weight:600;font-size:.95rem;background:#ededed;color:#0c0d10';
+    var alt = 'margin-top:10px;background:none;border:0;color:#a8a29e;font:inherit;font-size:.85rem;' +
       'text-decoration:underline;cursor:pointer;padding:8px;min-height:40px';
 
     o.innerHTML =
-      '<div style="width:100%;max-width:380px;background:rgba(255,255,255,.04);' +
+      '<div style="width:100%;max-width:390px;background:rgba(255,255,255,.035);' +
         'border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:26px 24px">' +
-        '<h2 style="font-size:1.35rem;margin-bottom:6px">' + tr('ui_su_h') + '</h2>' +
-        '<p style="color:#8c96ad;font-size:.88rem;line-height:1.55">' + tr('ui_su_p') + '</p>' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">' +
+          '<span style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;' +
+            'background:#ededed;color:#0c0d10;font-family:' + SER + ';font-weight:700">&#10022;</span>' +
+          '<span style="font-family:' + SER + ';font-size:1.05rem">NovaClip</span>' +
+          '<span style="margin-left:auto;font-family:' + MON + ';font-size:.58rem;letter-spacing:.16em;' +
+            'text-transform:uppercase;color:#a8a29e;padding:3px 8px;border-radius:5px;' +
+            'background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1)">' +
+            tr('ui_su_chip') + '</span>' +
+        '</div>' +
+        '<h2 style="font-family:' + SER + ';font-size:1.5rem;font-weight:500;' +
+          'letter-spacing:-.02em;margin-bottom:6px">' + tr('ui_su_h') + '</h2>' +
+        '<p style="color:#a8a29e;font-size:.85rem;line-height:1.6">' + tr('ui_su_p') + '</p>' +
         '<label style="' + lbl + '" for="ncSuUser">' + tr('ui_su_user') + '</label>' +
         '<input id="ncSuUser" style="' + fld + '" autocomplete="username" maxlength="20" ' +
           'spellcheck="false" autocapitalize="none">' +
         '<label style="' + lbl + '" for="ncSuPass">' + tr('ui_su_pass') + '</label>' +
         '<input id="ncSuPass" type="password" style="' + fld + '" autocomplete="new-password">' +
         '<button id="ncSuGo" style="' + go + '">' + tr('ui_su_go') + '</button>' +
-        '<div id="ncSuSay" style="margin-top:11px;font-size:.84rem;line-height:1.5;color:#fb7185"></div>' +
+        '<div id="ncSuSay" style="margin-top:12px;font-size:.84rem;line-height:1.55;color:#c2683f"></div>' +
         '<div style="text-align:center">' +
           '<button id="ncSuHave" style="' + alt + '">' + tr('ui_su_have') + '</button><br>' +
           '<button id="ncSuSkip" style="' + alt + '">' + tr('ui_su_skip') + '</button>' +

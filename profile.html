@@ -33,161 +33,265 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <link rel='canonical' href='https://novaclip.org/profile.html'>
 <link rel='icon' href='logo.svg' type='image/svg+xml'>
 
-<!-- WHY THIS PAGE EXISTS AND WHAT IT DOES NOT CLAIM
-     A username and password were asked for. What was already here is a random
-     key in localStorage plus a NOVA-XXXX-XXXX recovery code, and that has not
-     been replaced — a profile is a second door into the same account, so that
-     signing in on a new phone is a thing you can remember rather than a code
-     you have to still have.
+<!-- THE DESIGN CAME FROM THE ACCOUNT PORTAL. THE AUTHENTICATION DID NOT.
+     ==========================================================================
+     The uploaded portal is an editorial layout — serif headings, mono labels,
+     a warm neutral palette, an avatar with a colour and an emblem, a live
+     @username preview, a strength meter. All of that is here.
 
-     The page says, in the copy and not only in a comment, that a password here
-     is not a stronger lock than the code. Both resolve to the same key. A
-     password field implies a promise and this one must not imply more than it
-     keeps.
+     Its account handling is not, and could not be. It keeps every account in
+     localStorage, and it keeps the passwords in it as plain text —
+     `password: 'Password123!'` sits in the seed data next to three invented
+     people with working-looking email addresses. On a site whose users are
+     mostly teenagers, that means anybody who can open the browser can read
+     everybody's password, and it would be a straight downgrade from what is
+     already here: PBKDF2 in the browser, the derived value hashed on a
+     Cloudflare Worker, and a password that never reaches the server at all.
 
-     The password never leaves the browser: account.js runs 600,000 rounds of
-     PBKDF2 over it and sends the result. See the header of that file. -->
+     Third design to arrive built on a fake backend, third time the answer is
+     the same one recorded above the performance panels in analytics.html:
+     keep the design, wire it to the thing that actually works.
+
+     TYPEFACES. The portal loads four Google fonts. Plus Jakarta Sans is
+     already shipped by this site, so it is free. The serif is a system stack
+     rather than a fifth network request on a page whose whole job is one
+     form. -->
 
 <style>
-* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',-apple-system,sans-serif; }
-body { background:var(--nc-bg,#060608); color:var(--nc-text,#f4f4f6);
-       min-height:100vh; display:flex; justify-content:center;
-       padding:40px 20px 90px; line-height:1.6; }
-.wrap { width:100%; max-width:560px; }
-a.back { display:inline-block; margin-bottom:20px; color:var(--nc-dim,#8c96ad);
-         text-decoration:none; font-size:.92rem; }
-a.back:hover { color:var(--nc-text,#f4f4f6); }
-h1 { font-size:2rem; font-weight:800; letter-spacing:-.02em; margin-bottom:8px; }
-.lede { color:var(--nc-dim,#8c96ad); margin-bottom:24px; }
-a { color:#4CC9F0; }
+:root {
+  /* The portal's warm neutral scale, as tokens, so the light theme has
+     somewhere to go — the original is #0c0d10 hard-coded throughout. */
+  --pt-bg: var(--nc-bg, #0c0d10);
+  --pt-panel: rgba(255,255,255,.035);
+  --pt-panel2: rgba(255,255,255,.055);
+  --pt-line: rgba(255,255,255,.10);
+  --pt-line2: rgba(255,255,255,.16);
+  --pt-text: var(--nc-text, #ededed);
+  --pt-dim: #a8a29e;
+  --pt-dim2: #78716c;
+  --pt-serif: 'Newsreader', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --pt-sans: 'Plus Jakarta Sans', 'Segoe UI', -apple-system, system-ui, sans-serif;
+  --pt-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+html[data-theme='light'] {
+  --pt-panel: rgba(0,0,0,.025);
+  --pt-panel2: rgba(0,0,0,.045);
+  --pt-line: rgba(0,0,0,.12);
+  --pt-line2: rgba(0,0,0,.20);
+  --pt-dim: #57534e;
+  --pt-dim2: #78716c;
+}
 
-.card { background:var(--nc-bg2,rgba(255,255,255,.04));
-        border:1px solid var(--nc-line,rgba(255,255,255,.1));
-        border-radius:18px; padding:22px; margin-bottom:18px; }
-.card h2 { font-size:1.1rem; font-weight:700; margin-bottom:4px; }
-.card .sub { color:var(--nc-dim,#8c96ad); font-size:.86rem; margin-bottom:16px; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--pt-bg); color:var(--pt-text); font-family:var(--pt-sans);
+       letter-spacing:-.01em; min-height:100vh; line-height:1.6;
+       display:flex; flex-direction:column; align-items:center;
+       padding:34px 18px 90px; position:relative; }
 
-label { display:block; font-size:.8rem; font-weight:700; letter-spacing:.04em;
-        text-transform:uppercase; color:var(--nc-dim,#8c96ad); margin:14px 0 6px; }
-input { width:100%; min-height:46px; padding:11px 13px; border-radius:11px;
-        font:inherit; font-size:.95rem; color:var(--nc-text,#f4f4f6);
-        background:var(--nc-bg3,rgba(255,255,255,.06));
-        border:1px solid var(--nc-line2,rgba(255,255,255,.14)); }
-input:focus { outline:none; border-color:var(--nc-cyan,#00F0FF);
-              box-shadow:0 0 0 3px rgba(0,240,255,.12); }
+/* The ambient wash behind everything, from the original. Fixed, behind, and
+   never in the way of a click. */
+.amb { position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+.amb i { position:absolute; display:block; border-radius:50%; filter:blur(70px); }
+.amb .a { top:-190px; left:50%; transform:translateX(-50%); width:min(900px,120vw); height:420px;
+          border-radius:0; background:linear-gradient(180deg, rgba(120,113,108,.16), rgba(120,53,15,.07), transparent); }
+.amb .b { top:32%; left:-130px; width:320px; height:320px; background:rgba(68,64,60,.22); }
+.amb .c { bottom:40px; right:-130px; width:320px; height:320px; background:rgba(41,37,36,.30); }
+html[data-theme='light'] .amb { opacity:.5; }
+
+.wrap { width:100%; max-width:560px; position:relative; z-index:1; }
+
+/* ---- masthead ---- */
+.mast { display:flex; align-items:center; gap:12px; margin-bottom:26px; }
+.mast .mark { width:34px; height:34px; flex:0 0 auto; border-radius:10px; display:grid; place-items:center;
+              background:var(--pt-text); color:var(--pt-bg); font-family:var(--pt-serif);
+              font-weight:700; font-size:1.05rem; }
+.mast .nm { font-family:var(--pt-serif); font-size:1.16rem; font-weight:500; letter-spacing:-.02em; }
+.mast .chip { font-family:var(--pt-mono); font-size:.6rem; text-transform:uppercase; letter-spacing:.16em;
+              padding:3px 8px; border-radius:5px; color:var(--pt-dim);
+              background:var(--pt-panel2); border:1px solid var(--pt-line); }
+.mast a.back { margin-left:auto; color:var(--pt-dim); text-decoration:none; font-size:.85rem; }
+.mast a.back:hover { color:var(--pt-text); }
+
+/* ---- card ---- */
+.card { background:var(--pt-panel); border:1px solid var(--pt-line); border-radius:18px;
+        padding:22px; margin-bottom:16px; }
+.card h2 { font-family:var(--pt-serif); font-size:1.5rem; font-weight:500; letter-spacing:-.02em; }
+.hrow { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.sub { color:var(--pt-dim); font-size:.8rem; margin-top:3px; }
+
+/* ---- the avatar preview bar ---- */
+.prev { display:flex; align-items:center; gap:12px; margin:16px 0 4px; padding:12px;
+        border-radius:14px; background:var(--pt-panel2); border:1px solid var(--pt-line); }
+.av { width:44px; height:44px; flex:0 0 auto; border-radius:13px; display:grid; place-items:center;
+      font-family:var(--pt-serif); font-weight:700; font-size:1.15rem; color:#fff;
+      background:linear-gradient(150deg, var(--av1,#57534e), var(--av2,#1c1917)); }
+.av.sm { width:30px; height:30px; border-radius:9px; font-size:.85rem; }
+.prev .who { min-width:0; flex:1 1 auto; }
+.prev .u { font-family:var(--pt-mono); font-size:.78rem; font-weight:600;
+           overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.prev .r { font-family:var(--pt-serif); font-style:italic; font-size:.78rem; color:var(--pt-dim); }
+.prev button { flex:0 0 auto; font-family:var(--pt-mono); font-size:.68rem; cursor:pointer;
+        color:var(--pt-dim); background:var(--pt-panel2); border:1px solid var(--pt-line2);
+        border-radius:9px; padding:7px 9px; min-height:36px; }
+.prev button:hover { color:var(--pt-text); }
+
+.picker { margin-top:10px; padding:13px; border-radius:14px;
+          background:var(--pt-panel2); border:1px solid var(--pt-line2); }
+.picker .pl { font-family:var(--pt-mono); font-size:.6rem; text-transform:uppercase;
+              letter-spacing:.16em; color:var(--pt-dim); display:block; margin-bottom:7px; }
+.swatches, .emblems { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px; }
+.sw { width:30px; height:30px; border-radius:9px; cursor:pointer; border:0; opacity:.65;
+      transition:transform .12s, opacity .12s; }
+.sw:hover { opacity:1; }
+.sw[aria-pressed='true'] { opacity:1; transform:scale(1.12); outline:2px solid var(--pt-text); outline-offset:2px; }
+.em { width:34px; height:34px; min-height:34px; border-radius:9px; cursor:pointer; font-size:1rem;
+      background:var(--pt-panel); border:1px solid var(--pt-line); color:inherit; }
+.em[aria-pressed='true'] { border-color:var(--pt-text); background:var(--pt-panel2); }
+
+/* ---- fields ---- */
+label.f { display:block; margin:15px 0 0; font-family:var(--pt-mono); font-size:.6rem;
+          text-transform:uppercase; letter-spacing:.16em; color:var(--pt-dim); }
+input { width:100%; min-height:46px; margin-top:7px; padding:11px 13px; border-radius:11px;
+        font:inherit; font-size:.95rem; color:var(--pt-text); background:var(--pt-panel2);
+        border:1px solid var(--pt-line2); }
+input:focus { outline:none; border-color:var(--pt-text); }
 .pwrow { position:relative; }
-/* The reveal button sits inside the field, so it needs the room. */
-.pwrow input { padding-right:74px; }
-.pwrow button { position:absolute; right:6px; top:50%; transform:translateY(-50%);
-        min-height:36px; padding:6px 11px; border-radius:9px; cursor:pointer;
-        font:700 .74rem/1 inherit; color:var(--nc-dim,#8c96ad);
-        background:transparent; border:1px solid var(--nc-line2,rgba(255,255,255,.14)); }
-.pwrow button:hover { color:var(--nc-text,#f4f4f6); }
+.pwrow input { padding-right:72px; }
+.pwrow button { position:absolute; right:6px; top:calc(50% + 3px); transform:translateY(-50%);
+        min-height:34px; padding:6px 10px; border-radius:8px; cursor:pointer;
+        font-family:var(--pt-mono); font-size:.66rem; color:var(--pt-dim);
+        background:var(--pt-panel); border:1px solid var(--pt-line2); }
+.pwrow button:hover { color:var(--pt-text); }
 
-.meter { display:flex; align-items:center; gap:9px; margin-top:8px; font-size:.78rem;
-         color:var(--nc-dim,#8c96ad); }
-.meter .t { flex:1 1 auto; height:5px; border-radius:3px; overflow:hidden;
-            background:rgba(127,140,170,.2); }
-.meter .t i { display:block; height:100%; width:0; border-radius:3px; transition:width .2s; }
-.s0 i{background:#fb7185}.s1 i{background:#fb7185}.s2 i{background:#fbbf24}
-.s3 i{background:#7DFF00}.s4 i{background:#34d399}
+/* ---- strength ---- */
+.meter { display:flex; align-items:center; gap:8px; margin-top:9px; }
+.meter .bars { display:flex; gap:4px; flex:1 1 auto; }
+.meter .bars i { flex:1 1 0; height:3px; border-radius:2px; background:var(--pt-line2); }
+.meter .w { font-family:var(--pt-mono); font-size:.62rem; text-transform:uppercase;
+            letter-spacing:.12em; color:var(--pt-dim); min-width:56px; text-align:right; }
+.s1 .bars i:nth-child(-n+1), .s2 .bars i:nth-child(-n+2),
+.s3 .bars i:nth-child(-n+3), .s4 .bars i:nth-child(-n+4) { background:currentColor; }
+.s1 { color:#c2683f } .s2 { color:#c9a227 } .s3 { color:#7d9a5b } .s4 { color:#5f9e6e }
 
-.go { width:100%; min-height:48px; margin-top:18px; padding:13px 20px; border:none;
-      border-radius:12px; cursor:pointer; font-weight:800; font-size:.98rem;
-      background:linear-gradient(90deg,var(--nc-cyan,#00F0FF),#4CC9F0); color:#04121a; }
-.go:disabled { opacity:.55; cursor:default; }
-.alt { width:100%; min-height:46px; margin-top:10px; padding:12px 18px; border-radius:12px;
-       cursor:pointer; font-weight:700; font-size:.92rem; color:inherit;
-       background:transparent; border:1px solid var(--nc-line2,rgba(255,255,255,.14)); }
+/* ---- buttons ---- */
+.go { width:100%; min-height:48px; margin-top:18px; padding:13px 20px; border:0; border-radius:12px;
+      cursor:pointer; font-family:var(--pt-sans); font-weight:600; font-size:.95rem;
+      background:var(--pt-text); color:var(--pt-bg); }
+.go:disabled { opacity:.5; cursor:default; }
+.alt { width:100%; min-height:46px; margin-top:9px; padding:12px 18px; border-radius:12px;
+       cursor:pointer; font:inherit; font-size:.88rem; color:var(--pt-text);
+       background:transparent; border:1px solid var(--pt-line2); }
+.alt:hover { background:var(--pt-panel2); }
 
-.say { display:none; margin-top:14px; padding:12px 14px; border-radius:12px; font-size:.88rem;
-       line-height:1.55; }
-.say.no { display:block; background:rgba(251,113,133,.12); border:1px solid rgba(251,113,133,.4); }
-.say.yes { display:block; background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.4); }
-.say.wait { display:block; background:rgba(255,255,255,.05); border:1px solid var(--nc-line,rgba(255,255,255,.1));
-            color:var(--nc-dim,#8c96ad); }
+/* ---- tabs ---- */
+.tabs { display:flex; gap:0; margin-bottom:18px; padding:4px; border-radius:13px;
+        background:var(--pt-panel); border:1px solid var(--pt-line); }
+.tabs button { flex:1 1 0; min-height:42px; padding:10px; border:0; border-radius:10px; cursor:pointer;
+       font:inherit; font-size:.88rem; font-weight:500; color:var(--pt-dim); background:transparent; }
+.tabs button[aria-selected='true'] { color:var(--pt-bg); background:var(--pt-text); font-weight:600; }
+
+/* ---- messages ---- */
+.say { display:none; margin-top:14px; padding:12px 14px; border-radius:12px;
+       font-size:.85rem; line-height:1.55; }
+.say.no  { display:block; background:rgba(194,104,63,.12);  border:1px solid rgba(194,104,63,.42); }
+.say.yes { display:block; background:rgba(95,158,110,.12);  border:1px solid rgba(95,158,110,.42); }
+.say.wait{ display:block; background:var(--pt-panel2); border:1px solid var(--pt-line); color:var(--pt-dim); }
 .say b { display:block; margin-bottom:3px; }
 
-.who { display:flex; align-items:center; gap:14px; }
-.who .av { width:52px; height:52px; flex:0 0 auto; border-radius:14px; display:grid;
-           place-items:center; font-weight:800; font-size:1.3rem; color:#04121a;
-           background:linear-gradient(140deg,var(--nc-cyan,#00F0FF),#7C5CFF); }
-.who .n { font-weight:800; font-size:1.12rem; }
-.who .c { color:var(--nc-dim,#8c96ad); font-size:.84rem; }
-code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-radius:6px;
-       font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.92em; }
-.note { color:var(--nc-dim,#8c96ad); font-size:.82rem; line-height:1.6; margin-top:14px; }
-.tabs { display:flex; gap:8px; margin-bottom:18px; }
-.tabs button { flex:1 1 0; min-height:44px; padding:11px; border-radius:12px; cursor:pointer;
-       font-weight:700; font-size:.9rem; color:var(--nc-dim,#8c96ad);
-       background:transparent; border:1px solid var(--nc-line2,rgba(255,255,255,.14)); }
-.tabs button[aria-selected='true'] { color:var(--nc-text,#f4f4f6);
-       background:rgba(0,240,255,.12); border-color:rgba(0,240,255,.42); }
+.note { color:var(--pt-dim); font-size:.79rem; line-height:1.65; margin-top:15px; }
+.note b { color:var(--pt-text); }
+code { font-family:var(--pt-mono); font-size:.88em; background:var(--pt-panel2);
+       padding:3px 7px; border-radius:6px; }
+a { color:var(--pt-text); }
 .hide { display:none !important; }
+.rule { height:1px; background:var(--pt-line); margin:18px 0; }
 </style>
 </head>
 <body>
+<div class='amb' aria-hidden='true'><i class='a'></i><i class='b'></i><i class='c'></i></div>
+
 <div class='wrap'>
 
-  <a class='back' href='/index.html'>← Back to NovaClip</a>
-  <h1>Your profile</h1>
-  <p class='lede'>A username and a password, so signing in on another device is
-     something you remember rather than a code you have to still have.
-     <a href='/progress.html'>Your progress</a> is what follows you when you do,
-     and <a href='/privacy.html'>the privacy page</a> says what is kept where.</p>
+  <div class='mast'>
+    <div class='mark'>✦</div>
+    <div>
+      <div class='nm'>NovaClip</div>
+    </div>
+    <span class='chip'>Profile</span>
+    <a class='back' href='/index.html'>← Back to the site</a>
+  </div>
 
   <!-- SIGNED IN ------------------------------------------------------------ -->
   <div class='card hide' id='inBox'>
-    <div class='who'>
+    <div class='prev' style='margin-top:0'>
       <div class='av' id='av'>?</div>
-      <div>
-        <div class='n' id='who'></div>
-        <div class='c' id='whoCode'></div>
+      <div class='who'>
+        <div class='u' id='who'></div>
+        <div class='r' id='whoCode'></div>
       </div>
+      <button type='button' id='avBtn'>Change look</button>
     </div>
-    <p class='note'>Your recovery code is the other way in. Keep it somewhere —
-       it is what gets you back if you forget the password.</p>
+    <div class='picker hide' id='avPick'></div>
+
+    <div class='rule'></div>
     <button class='alt' id='pwBtn'>Change password</button>
     <button class='alt' id='outBtn'>Sign out on this device</button>
     <div class='say' id='inSay'></div>
 
     <div class='hide' id='pwBox'>
-      <label for='pwOld'>Current password</label>
+      <label class='f' for='pwOld'>Current password</label>
       <div class='pwrow'>
         <input type='password' id='pwOld' autocomplete='current-password'>
         <button type='button' data-see='pwOld'>Show</button>
       </div>
-      <label for='pwNew'>New password</label>
+      <label class='f' for='pwNew'>New password</label>
       <div class='pwrow'>
         <input type='password' id='pwNew' autocomplete='new-password'>
         <button type='button' data-see='pwNew'>Show</button>
       </div>
       <button class='go' id='pwGo'>Change it</button>
     </div>
+
+    <p class='note'>Your recovery code is the other way in. Keep it somewhere —
+       it is what gets you back if you forget the password.</p>
   </div>
 
   <!-- SIGNED OUT ----------------------------------------------------------- -->
   <div id='outBox'>
     <div class='tabs' role='tablist'>
-      <button role='tab' id='tabNew' aria-selected='true'>Create a profile</button>
+      <button role='tab' id='tabNew' aria-selected='true'>Create an account</button>
       <button role='tab' id='tabIn' aria-selected='false'>Sign in</button>
     </div>
 
     <div class='card' id='newBox'>
-      <h2>Create a profile</h2>
-      <p class='sub'>No email. Nothing that says who you are — just a name to sign
-        in with.</p>
+      <div class='hrow'>
+        <h2>Create an account</h2>
+        <span class='chip'>No email</span>
+      </div>
+      <p class='sub'>Pick a name and a password. Nothing that says who you are.</p>
 
-      <label for='nUser'>Username</label>
+      <div class='prev'>
+        <div class='av' id='pAv'>N</div>
+        <div class='who'>
+          <div class='u' id='pName'>@username</div>
+          <div class='r'>Your NovaClip profile</div>
+        </div>
+        <button type='button' id='pBtn'>Choose a look</button>
+      </div>
+      <div class='picker hide' id='pPick'></div>
+
+      <label class='f' for='nUser'>Username</label>
       <input type='text' id='nUser' autocomplete='username' maxlength='20'
              placeholder='3 to 20 characters' spellcheck='false' autocapitalize='none'>
 
-      <label for='nPass'>Password</label>
+      <label class='f' for='nPass'>Password</label>
       <div class='pwrow'>
         <input type='password' id='nPass' autocomplete='new-password' placeholder='At least 8 characters'>
         <button type='button' data-see='nPass'>Show</button>
       </div>
-      <div class='meter s0'><span class='t'><i></i></span><span class='w'>—</span></div>
+      <div class='meter s0' id='meter'>
+        <span class='bars'><i></i><i></i><i></i><i></i></span><span class='w'>—</span>
+      </div>
 
       <button class='go' id='newGo'>Create it</button>
       <div class='say' id='newSay'></div>
@@ -199,14 +303,17 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
     </div>
 
     <div class='card hide' id='inFormBox'>
-      <h2>Sign in</h2>
+      <div class='hrow'>
+        <h2>Sign in</h2>
+        <span class='chip'>Welcome back</span>
+      </div>
       <p class='sub'>Your progress, points and certificates come with you.</p>
 
-      <label for='iUser'>Username</label>
+      <label class='f' for='iUser'>Username</label>
       <input type='text' id='iUser' autocomplete='username' maxlength='20'
              spellcheck='false' autocapitalize='none'>
 
-      <label for='iPass'>Password</label>
+      <label class='f' for='iPass'>Password</label>
       <div class='pwrow'>
         <input type='password' id='iPass' autocomplete='current-password'>
         <button type='button' data-see='iPass'>Show</button>
@@ -220,9 +327,11 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
     </div>
 
     <div class='card'>
-      <h2>Or use a recovery code</h2>
+      <div class='hrow'>
+        <h2 style='font-size:1.2rem'>Or use a recovery code</h2>
+      </div>
       <p class='sub'>The way that has always worked. No profile needed.</p>
-      <label for='cCode'>Recovery code</label>
+      <label class='f' for='cCode'>Recovery code</label>
       <input type='text' id='cCode' placeholder='NOVA-7K2P-9QF4' spellcheck='false'
              autocapitalize='characters' maxlength='14'>
       <button class='go' id='codeGo'>Sign in with the code</button>
@@ -234,12 +343,14 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
 
 <script src='nova.js'></script>
 <script src='account.js'></script>
+<script src='avatar.js'></script>
 <script>
 /* ============================================================================
    THE PAGE
    ============================================================================
-   account.js does the cryptography and the API calls. This is the four
-   buttons that call it, and the state of the page either side.
+   account.js does the cryptography and the API calls, avatar.js owns the
+   colour-and-emblem picker the portal's design brought with it. This is the
+   buttons that call them, and the state of the page either side.
    ========================================================================== */
 (function () {
   'use strict';
@@ -257,7 +368,6 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
     });
   }
 
-  /* ---- show / hide the password fields ---------------------------------- */
   document.querySelectorAll('[data-see]').forEach(function (b) {
     b.onclick = function () {
       var f = $(b.dataset.see);
@@ -267,6 +377,25 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
     };
   });
 
+  /* ---- the avatar, on both halves of the page ---------------------------- */
+  NC_AVATAR.picker($('pPick'), $('pAv'), function () { drawPreview(); });
+  $('pBtn').onclick = function () {
+    var open = $('pPick').classList.toggle('hide');
+    $('pBtn').textContent = open ? 'Choose a look' : 'Done';
+  };
+  NC_AVATAR.picker($('avPick'), $('av'), function () { paint(); });
+  $('avBtn').onclick = function () {
+    var open = $('avPick').classList.toggle('hide');
+    $('avBtn').textContent = open ? 'Change look' : 'Done';
+  };
+
+  function drawPreview() {
+    var u = $('nUser').value.trim().toLowerCase();
+    $('pName').textContent = u ? '@' + u : '@username';
+    NC_AVATAR.paint($('pAv'), u ? u.charAt(0).toUpperCase() : 'N');
+  }
+  $('nUser').addEventListener('input', drawPreview);
+
   /* ---- which half of the page ------------------------------------------- */
   function paint() {
     var user = window.NC_ACCOUNT ? NC_ACCOUNT.current() : '';
@@ -274,16 +403,15 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
     var signedIn = !!(user && key);
     $('inBox').classList.toggle('hide', !signedIn);
     $('outBox').classList.toggle('hide', signedIn);
-    if (!signedIn) return;
-    $('who').textContent = user;
-    $('av').textContent = user.charAt(0).toUpperCase();
+    if (!signedIn) { drawPreview(); return; }
+    $('who').textContent = '@' + user;
+    NC_AVATAR.paint($('av'), user.charAt(0).toUpperCase());
     var code = (typeof ncCode === 'function' && ncCode()) || '';
     $('whoCode').innerHTML = code
       ? 'Recovery code <code>' + esc(code) + '</code>'
       : 'No recovery code stored in this browser.';
   }
 
-  /* ---- create / sign in tabs -------------------------------------------- */
   function tab(which) {
     $('tabNew').setAttribute('aria-selected', which === 'new');
     $('tabIn').setAttribute('aria-selected', which === 'in');
@@ -293,20 +421,16 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
   $('tabNew').onclick = function () { tab('new'); };
   $('tabIn').onclick = function () { tab('in'); };
 
-  /* ---- the strength read ------------------------------------------------- */
   $('nPass').addEventListener('input', function () {
     var s = NC_ACCOUNT.strength($('nPass').value);
-    var m = document.querySelector('.meter');
+    var m = $('meter');
     m.className = 'meter s' + s.n;
-    m.querySelector('i').style.width = (s.n / 4 * 100) + '%';
     m.querySelector('.w').textContent = s.word;
   });
 
-  /* --------------------------------------------------------------------------
-     The 600,000 rounds take about half a second on a phone, and a button that
+  /* The 600,000 rounds take about half a second on a phone, and a button that
      goes dead for half a second with no explanation reads as a broken button.
-     So it says what it is doing.
-     -------------------------------------------------------------------------- */
+     So it says what it is doing. */
   async function working(btn, sayId, label, fn) {
     var was = btn.textContent;
     btn.disabled = true;
@@ -329,6 +453,7 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
     if (bad) return say('newSay', 'no', 'Not quite', bad);
     working($('newGo'), 'newSay', 'Creating…', async function () {
       var out = await NC_ACCOUNT.register(u, p);
+      NC_AVATAR.save();
       say('newSay', 'yes', 'Done — you are signed in',
         'Your recovery code is ' + (out.code || 'already saved in this browser') +
         '. Write it down: it is the only way back if you forget the password.');
@@ -341,8 +466,6 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
     working($('inGo'), 'inFormSay', 'Signing in…', async function () {
       await NC_ACCOUNT.login($('iUser').value, $('iPass').value);
       say('inFormSay', 'yes', 'Signed in', 'Pulling your progress down now.');
-      /* nova.js owns the merge — it takes the higher of each counter rather
-         than letting one device flatten the other. */
       if (typeof ncPull === 'function') { try { await ncPull(); } catch (e) {} }
       setTimeout(paint, 900);
     });
@@ -363,7 +486,6 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
     } finally { $('codeGo').disabled = false; }
   };
 
-  /* ---- signed in -------------------------------------------------------- */
   $('pwBtn').onclick = function () { $('pwBox').classList.toggle('hide'); };
 
   $('pwGo').onclick = function () {
@@ -376,8 +498,6 @@ code { background:var(--nc-bg3,rgba(255,255,255,.07)); padding:3px 8px; border-r
   };
 
   $('outBtn').onclick = function () {
-    /* Worth a confirm: on a shared device this is the right button, and on
-       your own it throws away the code if it was never written down. */
     if (!confirm('Sign out on this device?\n\nYour progress stays in this browser and stays on the server. ' +
                  'You will need your username and password, or your recovery code, to sign back in.')) return;
     NC_ACCOUNT.signOut();
