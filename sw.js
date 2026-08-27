@@ -69,7 +69,8 @@
 /* v7 adds avatar.js, and retires a cache holding the old profile page —
    which now asks for a script the v6 cache has never heard of, and would
    come back offline with a picker that does not exist. */
-const CACHE = 'novaclip-v7';
+/* v8 adds trends-nav.js. */
+const CACHE = 'novaclip-v8';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -114,6 +115,9 @@ const SHELL = [
   /* Checks a dropped clip for fast flashing and blank footage. Pure
      arithmetic on frames already in memory, so it works offline. */
   '/moderate.js',
+  /* Sends the Trend Spotter's rail to the real pages. Without it that rail
+     offers four features this site already has as though they were unbuilt. */
+  '/trends-nav.js',
   /* The profile page's crypto and its avatar picker. Registering needs the
      network, but the page should not be a blank screen on a train either. */
   '/account.js',
