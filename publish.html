@@ -503,9 +503,13 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     if (r.err) return say('planSay', 'no', 'Could not reach the AI', r.err);
 
     const j = window.ncJSON ? window.ncJSON(r.text) : null;
+    /* Not "type less". ncAsk already retried this once with three times the
+       room, so a cut answer here means the model spent a very large budget
+       thinking and still did not finish — which is nothing the reader did,
+       and nothing a shorter description would fix. */
     if (!j) return say('planSay', 'no',
-      r.cut ? 'The answer was cut off' : 'The answer came back unreadable',
-      r.cut ? 'It ran past its length limit before finishing the plan. Try again — a shorter description usually gets a complete one.'
+      r.cut ? 'The AI did not finish the plan' : 'The answer came back unreadable',
+      r.cut ? 'It stopped part-way through, twice. That is the model, not anything you typed. Press Plan the edit again, or write the steps yourself — the Editor has every tool it would have named.'
             : 'Try again.');
     if (j.ok === false) return say('planSay', 'no', 'It says no', j.why || 'Not possible with these tools.');
 
@@ -627,7 +631,9 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     if (r.err) return say('metaSay', 'no', 'Could not reach the AI', r.err);
     const j = window.ncJSON ? window.ncJSON(r.text) : null;
     if (!j) return say('metaSay', 'no',
-      r.cut ? 'The answer was cut off' : 'Unreadable answer', 'Try again.');
+      r.cut ? 'The AI did not finish' : 'Unreadable answer',
+      r.cut ? 'It stopped part-way through even with the budget widened. Press the button again, or write them yourself.'
+            : 'Try again.');
     if (j.title) $('title').value = String(j.title).slice(0, 100);
     if (j.description) $('desc').value = String(j.description).slice(0, 5000);
     if (Array.isArray(j.tags)) { tags = j.tags.map(t => String(t).replace(/[#,]/g, '').trim()).filter(Boolean).slice(0, 15); }

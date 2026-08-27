@@ -4057,6 +4057,39 @@ async function ncAsk(prompt, opts) {
       out = await send();
     }
 
+    /* ------------------------------------------------------------------
+       RAN OUT OF ROOM? ASK AGAIN WITH MORE ROOM.
+       ------------------------------------------------------------------
+       Every caller here asks for one JSON object, and half a JSON object is
+       worth nothing — so a MAX_TOKENS finish is not a result, it is a failed
+       call that happens to have a body.
+
+       What the pages did instead was tell the reader to type less. Publish
+       said "a shorter description usually gets a complete one" to somebody
+       whose description was "Neymar playing football": three words, and the
+       advice was both useless and wrong about whose fault it was. The length
+       of the question is almost never what filled the budget.
+
+       What fills it is thinking. The block above exists because some models
+       refuse thinkingConfig, and when one does, the retry goes out with
+       thinking ON — and a reasoning model can spend a thousand tokens before
+       it writes its first brace. Neither the caller nor the reader can see
+       any of that; from the page it looks like the model stopped mid-word.
+
+       So: one more attempt, with three times the budget, only when the answer
+       came back truncated. Bounded — it never loops, and it only ever costs a
+       second call on a request that already failed. */
+    try {
+      const first = JSON.parse(out.raw || '{}');
+      const why = first.candidates && first.candidates[0] && first.candidates[0].finishReason;
+      const asked = body.generationConfig.maxOutputTokens;
+      if (why === 'MAX_TOKENS' && asked && !opts.__widened) {
+        body.generationConfig.maxOutputTokens = Math.min(asked * 3, 8192);
+        opts.__widened = true;
+        out = await send();
+      }
+    } catch (e) { /* not JSON, or no candidates — the paths below report it */ }
+
     r = out.res; raw = out.raw;
     if (ncKeyLooksReal(own)) {
       if (r.status === 400 || r.status === 403) err = 'That key was refused by Google. Check it in your profile.';
@@ -4117,7 +4150,11 @@ async function ncAsk(prompt, opts) {
     if (blocked || finish === 'SAFETY') {
       err = 'The AI declined to answer that one. Rephrase it and try again.';
     } else if (cut) {
-      err = 'The AI ran out of room before it wrote anything. Ask for something shorter.';
+      /* The retry above already tripled the budget, so reaching here means it
+         filled a very large one without writing a word. Almost always the
+         model reasoning past its own limit; almost never the question. */
+      err = 'The AI used up its whole budget without writing an answer — twice. '
+          + 'That is the model, not your question. Try once more.';
     } else {
       err = 'The AI returned nothing that time. Try again.';
     }
