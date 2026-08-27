@@ -52,10 +52,10 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
      the same one recorded above the performance panels in analytics.html:
      keep the design, wire it to the thing that actually works.
 
-     TYPEFACES. The portal loads four Google fonts. Plus Jakarta Sans is
-     already shipped by this site, so it is free. The serif is a system stack
-     rather than a fifth network request on a page whose whole job is one
-     form. -->
+     TYPEFACES. The portal loads four Google fonts; this page loads none of
+     its own. It uses the two nova.js now sets for the whole site — Great Vibes
+     on the wordmark, EB Garamond on the headings — and Plus Jakarta Sans,
+     which this site already ships, for everything else. -->
 
 <style>
 :root {
@@ -69,7 +69,9 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
   --pt-text: var(--nc-text, #ededed);
   --pt-dim: #a8a29e;
   --pt-dim2: #78716c;
-  --pt-serif: 'Newsreader', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  /* The site's display face, set in nova.js. Named here too so the page
+     still reads correctly if it is opened on its own. */
+  --pt-serif: var(--nc-display, 'EB Garamond', Garamond, Georgia, serif);
   --pt-sans: 'Plus Jakarta Sans', 'Segoe UI', -apple-system, system-ui, sans-serif;
   --pt-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -215,7 +217,7 @@ a { color:var(--pt-text); }
   <div class='mast'>
     <div class='mark'>✦</div>
     <div>
-      <div class='nm'>NovaClip</div>
+      <div class='nm nc-wordmark'>NovaClip</div>
     </div>
     <span class='chip'>Profile</span>
     <a class='back' href='/index.html'>← Back to the site</a>

@@ -114,6 +114,14 @@ for (const s of SIZES) {
       localStorage.setItem('nc_username', 'sweeper');
     } catch (e) {}
   });
+  /* The font host is unreachable from this sandbox, and every page now asks
+     for it. Left alone, each navigation spends its timeout on a TLS handshake
+     that cannot succeed — which measures the network, not the layout, and on
+     a loaded machine took the whole run down. Failed fast here so the sweep
+     sees what a reader with the fonts cached sees. */
+  await ctx.route('https://fonts.googleapis.com/**', r => r.abort());
+  await ctx.route('https://fonts.gstatic.com/**', r => r.abort());
+
   const page = await ctx.newPage();
   const lines = [];
   for (const p of PAGES) {

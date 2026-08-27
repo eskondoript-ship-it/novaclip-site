@@ -684,6 +684,118 @@ window.ncThemePref = ncThemePref;
    anything paints. */
 ncApplyTheme();
 
+/* ============================================================================
+   THE SITE'S TYPEFACES
+   ============================================================================
+   Two faces, on all twenty-nine pages, from here — because "site-wide" through
+   twenty-nine <head> blocks is twenty-nine chances to forget one, and nova.js
+   is already the file every page loads.
+
+     GREAT VIBES   the NovaClip wordmark, and only the wordmark.
+     EB GARAMOND   every heading.
+
+   Body copy, the nav, buttons, labels and every number stay on the sans they
+   were already set in. That is the whole design: the script is a signature,
+   the serif carries the headings, and the parts people actually read fast are
+   left alone.
+
+   WHY THE WORDMARK IS THE ONLY SCRIPT
+
+   Great Vibes has no bold, joins its letters, and is drawn to be read once at
+   size. On a nav item at 13px it is a smear. Scoped to the wordmark it is what
+   a script is for — and it gets `font-weight:400` explicitly, because the
+   brand span asks for 800 and a synthesised bold on a joined script smudges
+   the joins.
+
+   INJECTED HERE, WHICH MEANS ONE FLASH
+
+   nova.js runs at the end of <body>, so the link goes in after first paint and
+   the first visit shows the fallback for a moment before swapping. `display=swap`
+   is deliberate: the alternative is invisible text while the font downloads,
+   which is worse. Every visit after that is cache. Putting the <link> in each
+   page's <head> would remove the flash and cost twenty-nine edits that have to
+   stay in step forever; if it becomes worth it, that is the trade.
+
+   THIS IS A THIRD-PARTY REQUEST, AND privacy.html SAYS SO
+   Google sees an IP address for the font files. That went into the table on
+   that page in the same commit as this. Dropping the two woff2 files into
+   /fonts/ beside the two already there would remove the request entirely —
+   the @font-face below tries there first, so the moment those files exist
+   Google stops being asked. */
+(function () {
+  try {
+    if (document.getElementById('nc-face-link')) return;
+    var pre1 = document.createElement('link');
+    pre1.rel = 'preconnect'; pre1.href = 'https://fonts.googleapis.com';
+    var pre2 = document.createElement('link');
+    pre2.rel = 'preconnect'; pre2.href = 'https://fonts.gstatic.com'; pre2.crossOrigin = '';
+    var link = document.createElement('link');
+    link.id = 'nc-face-link';
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Great+Vibes' +
+                '&family=EB+Garamond:ital,wght@0,400..700;1,400..700&display=swap';
+    /* NEVER RENDER-BLOCKING.
+       A stylesheet blocks rendering until it loads or fails, and this one is
+       on a host that can be slow, filtered by a school network, or blocked
+       outright. Loading it as `print` means the browser fetches it without
+       waiting for it, and the onload flip makes it apply the moment it lands.
+
+       Measured the difference: with a plain stylesheet and the font host
+       unreachable, page loads stalled long enough that the regression sweep
+       timed out navigating and fell over. Text was never actually invisible —
+       display=swap saw to that — but the load event waited, and anything that
+       waits on a third party is a third party deciding how fast this site
+       feels. */
+    link.media = 'print';
+    link.onload = function () { this.media = 'all'; this.onload = null; };
+    document.head.appendChild(pre1);
+    document.head.appendChild(pre2);
+    document.head.appendChild(link);
+  } catch (e) {}
+})();
+
+const ncFaceStyle = document.createElement('style');
+ncFaceStyle.id = 'nc-face-css';
+ncFaceStyle.textContent =
+  /* Local first. These files do not exist yet; when they do the browser uses
+     them and never reaches the network. A src list that names a file which is
+     not there is not an error — it falls through to the next source. */
+  "@font-face{font-family:'NC Brand';font-style:normal;font-weight:400;font-display:swap;" +
+    "src:url('/fonts/great-vibes-latin-400-normal.woff2') format('woff2'),local('Great Vibes')}" +
+  "@font-face{font-family:'NC Display';font-style:normal;font-weight:400 700;font-display:swap;" +
+    "src:url('/fonts/eb-garamond-latin-wght-normal.woff2') format('woff2'),local('EB Garamond')}" +
+
+  ":root{" +
+    "--nc-brand:'NC Brand','Great Vibes',cursive;" +
+    /* Georgia before the generic serif on purpose: it is on every Windows and
+       Mac, and it is the closest thing to Garamond that is already installed,
+       so the pre-swap frame and the offline case both look deliberate. */
+    "--nc-display:'NC Display','EB Garamond',Garamond,Georgia,serif;" +
+  "}" +
+
+  /* ---- headings ----
+     Scoped to the page's own headings. `.nx-label`, the Studio's HUD chips and
+     anything already given a face by its own panel keep it — those are set on
+     classes, and a bare h1/h2/h3 selector loses to every one of them. */
+  "h1,h2,h3,.nc-display{font-family:var(--nc-display)}" +
+  /* EB Garamond sits small on the body for its point size, so headings that
+     were tuned against a sans read a little quiet. A nudge, not a redesign. */
+  "h1,h2{letter-spacing:-.015em}" +
+
+  /* ---- the wordmark ----
+     Every place the name is drawn: the rail, the top bar, and the mark on the
+     pages that carry their own. 400 because Great Vibes has one weight and a
+     synthesised bold smears the joins. */
+  "#ncbrand span,#ncbar #ncbrand span,.nc-wordmark{" +
+    "font-family:var(--nc-brand) !important;font-weight:400 !important;" +
+    "letter-spacing:0 !important;font-size:1.6rem !important;line-height:1.1}" +
+
+  /* The editor is a bundled React app with its own dense type, and the games
+     draw their own. A serif on a 12px panel heading in there is not the site
+     looking classic, it is the site looking broken. */
+  "#root h1,#root h2,#root h3,canvas + h2{font-family:inherit}";
+document.head.appendChild(ncFaceStyle);
+
 /* Following the device means following it for as long as the page is open. */
 try {
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {

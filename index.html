@@ -189,10 +189,19 @@ h1 .m{color:var(--magenta);text-shadow:0 0 40px rgba(255,46,151,.4);display:inli
 .btn-primary:hover{box-shadow:0 0 60px rgba(0,240,255,.9);transform:translateY(-3px) scale(1.03)}
 .btn-ghost{color:var(--white);font-weight:600;padding:14px 30px;border-radius:40px;border:1px solid rgba(255,255,255,.25);font-size:1rem;transition:.3s;position:relative}
 .btn-ghost:hover{border-color:var(--magenta);color:var(--magenta);box-shadow:0 0 30px rgba(255,46,151,.4);transform:translateY(-2px)}
-.hero-meta{margin-top:50px;display:flex;gap:44px;flex-wrap:wrap;font-size:.82rem;color:var(--dim);animation:fadeSlide 1s 1.3s both}
+.hero-meta{margin-top:50px;margin-bottom:64px;display:flex;gap:44px;flex-wrap:wrap;font-size:.82rem;color:var(--dim);animation:fadeSlide 1s 1.3s both}
 .hero-meta b{font-size:1.5rem;font-weight:800;display:block;letter-spacing:-1px}
 .cy{color:var(--cyan)}.mg{color:var(--magenta)}.lm{color:var(--lime)}
-.scroll-hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:var(--dim);font-size:.78rem;letter-spacing:3px;animation:bob 2s ease-in-out infinite}
+/* The hint is absolutely positioned at the foot of the hero, so it does not
+   reserve any space — and on a laptop, where the hero is short enough that
+   .hero-meta reaches the bottom, it printed "▼ SCROLL" straight through
+   "AI tutors on call". Two overlapping strings, on the first screen of the
+   home page, on every desktop visit.
+
+   The hint keeps its position; the hero gets a band at the bottom for it to
+   sit in. `bottom` is measured from the padding edge, so the padding is what
+   moves the content up out of its way. */
+.scroll-hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:var(--dim);font-size:.78rem;letter-spacing:3px;animation:bob 2s ease-in-out infinite;pointer-events:none}
 @keyframes bob{0%,100%{transform:translate(-50%,0);opacity:.5}50%{transform:translate(-50%,10px);opacity:1}}
 
 /* THE HERO ON A PHONE.
@@ -219,7 +228,8 @@ h1 .m{color:var(--magenta);text-shadow:0 0 40px rgba(255,46,151,.4);display:inli
   .herobtns{display:flex;flex-direction:column;align-items:stretch;gap:12px}
   .herobtns a{display:block}
   .herobtns button,.herobtns .btn-ghost{width:100%;text-align:center}
-  .hero-meta{margin-top:34px;display:grid;grid-template-columns:repeat(3,1fr);
+  /* The hint is hidden below, so the band it needed goes too. */
+  .hero-meta{margin-top:34px;margin-bottom:0;display:grid;grid-template-columns:repeat(3,1fr);
     gap:14px 10px;font-size:.7rem;line-height:1.25;text-align:center}
   .hero-meta b{font-size:1.25rem}
   .scroll-hint{display:none}
