@@ -83,6 +83,10 @@ const SHELL = [
      there and says in words that it needs the network and that Stickers does
      not. A missing button would just look like the feature had gone. */
   '/photos.js',
+  /* The grade and its panels. Colour correction is arithmetic on the frame
+     already in memory, so unlike the photo picker this one works offline. */
+  '/grade.js',
+  '/grade-ui.js',
   /* The focus timer is the one page here most likely to be opened with the
      wifi off on purpose. */
   '/study.html',
