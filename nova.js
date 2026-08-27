@@ -3356,9 +3356,13 @@ const NC_NAV = [
      The Trend Spotter is back as its own entry. It had disappeared from the
      rail entirely and was only reachable through a button inside the editor,
      which is a strange place to hide the research tool. */
+  /* One way in, not two. Studio used to sit here beside Trend Spotter, and
+     the two of them were halves of the same thing: you scan a trend, you make
+     the video, and Studio is where you find out whether it worked. Studio now
+     lives at the end of the Trend Spotter's own rail, in the flow it belongs
+     to, so this group is the single door to all of it. */
   { name: 'Channel', key: 'nav_channel', icon: 'analytics', items: [
-      ['analytics.html', 'Studio', 'studio', 'studio'],
-      ['trends.html', 'Trends', 'trends', 'trends']] },
+      ['trends.html', 'Trend Spotter', 'trends', 'trends']] },
   /* Everything you make lives in Create: the editor, publishing and the AI
      toolkit. Games and NovaLife are for learning and play, so they sit in
      their own Learn group instead of pretending to be creation tools. */
@@ -5050,7 +5054,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const GENZ = {
     hero_line1:'run ur channel', hero_line2:'like a game fr',
     startchannel:'lock in', seerewards:'peep the rewards',
-    home:'Home', studio:'Studio', analytics:'Stats', trends:'Whats Hot',
+    home:'Home', studio:'Studio', analytics:'Stats', trends:'Studio',
     editor:'Editor', sniper:'Games', ai:'NovaClip AI',
     studio_h:'NovaClip Studio', studio_sub:'link ur channel n scope the competition',
     sysonline:'jarvis · all systems up', controldeck:'// control deck',

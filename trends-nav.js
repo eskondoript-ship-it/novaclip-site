@@ -36,11 +36,21 @@
      absent: that one is not a placeholder, it is a real screen inside this
      app, and sending it elsewhere would break something that works. */
   var REAL = {
-    '/scripts':    { href: 'ai.html',        why: 'Write it with the Video director on the AI page' },
-    '/thumbnails': { href: 'publish.html',   why: 'Make one from your clip — 1280x720, the size YouTube asks for' },
-    '/editor':     { href: 'editor.html',    why: 'Cut, grade, mix and export' },
-    '/publish':    { href: 'publish.html',   why: 'Plan the edit, write the words, pick a time' }
+    '/scripts':    { href: 'ai.html',      why: 'Write it with the Video director on the AI page' },
+    '/thumbnails': { href: 'publish.html', why: 'Make one from your clip — 1280x720, the size YouTube asks for' },
+    /* Editor and Publish are still redirected but no longer listed — see
+       DROP below. Somebody with #/editor bookmarked should still land on the
+       editor rather than on a placeholder. */
+    '/editor':     { href: 'editor.html',  why: 'Cut, grade, mix and export' },
+    '/publish':    { href: 'publish.html', why: 'Plan the edit, write the words, pick a time' }
   };
+
+  /* Taken out of this rail entirely. They are in the main site sidebar under
+     Create, two rows from here, and listing them again made this rail look
+     like a second navigation for the whole site rather than what it is: the
+     Trend Spotter's own steps. The routes above still work for anyone
+     arriving on one. */
+  var DROP = ['/editor', '/publish'];
 
   /* Added rather than redirected: there is no Studio item in this rail at all,
      and it is the page that closes the loop — the trends you scanned here
@@ -106,6 +116,7 @@
     Object.keys(REAL).forEach(function (route) {
       var a = railFor(route);
       if (!a) return;
+      if (DROP.indexOf(route) >= 0) { a.remove(); return; }
       var to = REAL[route];
       a.href = to.href;
       a.title = to.why;
