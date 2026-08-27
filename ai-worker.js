@@ -130,6 +130,45 @@ const DEFAULT_MODEL = {
 };
 
 const MAX_BODY = 64 * 1024;      // a prompt bigger than this is not a prompt
+
+/* ---- IMAGES ---------------------------------------------------------------
+   A request may carry frames as Gemini inlineData parts. That is how the
+   editor's clip checker asks whether a video contains nudity, and it is the
+   only caller today.
+
+   It needs its own budget because a JPEG is not a prompt: four 512px frames
+   are around 200KB of base64, which MAX_BODY refuses outright. A separate,
+   larger cap applies only when the request actually contains images, so the
+   text endpoint keeps its 64KB and cannot be widened by accident.
+
+   Everything here exists because an endpoint that forwards arbitrary images
+   to a vendor on your key is an image API you are paying for. Count, size,
+   and type are all checked before a byte leaves this Worker, and the per-IP
+   rate limit above applies to these the same as to any other request. */
+const MAX_IMAGE_BODY = 1.5 * 1024 * 1024;   // ~4 frames at 512px, with room
+const MAX_IMAGES = 6;
+const MAX_IMAGE_BYTES = 320 * 1024;          // per frame, decoded from base64
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+/* Walks the payload once and reports what is in it, so the caps above can be
+   applied and a bad part refused with a reason rather than passed upstream to
+   fail as a vendor error nobody can read. */
+function inspectImages(payload) {
+  let count = 0, biggest = 0, badType = null;
+  (payload.contents || []).forEach(function (c) {
+    (c.parts || []).forEach(function (part) {
+      const d = part && (part.inlineData || part.inline_data);
+      if (!d) return;
+      count++;
+      const mime = String(d.mimeType || d.mime_type || '').toLowerCase();
+      if (IMAGE_TYPES.indexOf(mime) < 0) badType = mime || '(none)';
+      /* base64 is 4 characters per 3 bytes. */
+      const bytes = Math.floor(String(d.data || '').length * 3 / 4);
+      if (bytes > biggest) biggest = bytes;
+    });
+  });
+  return { count: count, biggest: biggest, badType: badType };
+}
 const RATE_MAX = 20;             // requests per IP...
 const RATE_WINDOW = 60;          // ...per this many seconds
 const UPSTREAM_TIMEOUT_MS = 45000;
@@ -547,7 +586,15 @@ export default {
     }
 
     const raw = await request.text();
-    if (raw.length > MAX_BODY) return fail(413, 'That prompt is too long.');
+    /* Two caps, and the bigger one only unlocks if the body really does carry
+       images — checked below against the parsed payload, not against the size.
+       Reading a 1.5MB body first and then refusing it is the order that has to
+       happen: there is no way to know what is in a request without reading it.
+       The rate limit above has already run, so the cost of that is bounded. */
+    if (raw.length > MAX_IMAGE_BODY) return fail(413, 'That request is too large.');
+    if (raw.length > MAX_BODY && !/"inline_?[Dd]ata"/.test(raw)) {
+      return fail(413, 'That prompt is too long.');
+    }
 
     let body;
     try { body = JSON.parse(raw); }
@@ -636,6 +683,29 @@ export default {
     }
     if (!body || !body.payload || !Array.isArray(body.payload.contents)) {
       return fail(400, 'Expected { provider, model, payload: { contents: [...] } }.');
+    }
+
+    /* Frames, if there are any. Refused here with a reason rather than passed
+       upstream to come back as a vendor error the page cannot explain. */
+    const img = inspectImages(body.payload);
+    if (img.count) {
+      if (provider !== 'gemini') {
+        return fail(400, 'Only the Gemini adapter on this worker takes images.');
+      }
+      if (img.count > MAX_IMAGES) {
+        return fail(413, 'Too many images in one request — ' + MAX_IMAGES + ' at most.');
+      }
+      if (img.badType) {
+        return fail(400, 'Images must be JPEG, PNG or WebP. Got "' + img.badType + '".');
+      }
+      if (img.biggest > MAX_IMAGE_BYTES) {
+        return fail(413, 'One of those images is too big. Shrink the frames before sending them.');
+      }
+    } else if (raw.length > MAX_BODY) {
+      /* The body was over the text cap and the inlineData that let it through
+         the first check is not really there — a padded string shaped to look
+         like one. */
+      return fail(413, 'That prompt is too long.');
     }
 
     /* Grounding is a Google-side tool. Refuse rather than silently ignore, so a

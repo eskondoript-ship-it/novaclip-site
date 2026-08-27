@@ -33,22 +33,28 @@
                      It is not a classifier and it must never be described as
                      one — the word "flagged" is deliberately absent.
 
-   WHY THERE IS NO REAL CLASSIFIER
+   ASKING THE AI INSTEAD — OPT IN, AND IT LEAVES THE DEVICE
 
-   Two ways to do this properly, and both cost something this file will not
-   spend without being asked:
+   The colour count above is the free version. The accurate version is Gemini,
+   which can actually look at a frame, and there is no way to do that without
+   sending it four frames of somebody's video.
 
-     A MODEL         nsfwjs and friends are a 4MB download per visit from a
-                     CDN, and the editor is already the heaviest page here.
-     THE AI          ai-worker.js talks to Gemini, which can see images. That
-                     means uploading frames of somebody's video, and
-                     privacy.html says in as many words that what the editor
-                     holds stays on the device. Adding a quiet upload path
-                     under the word "moderation" would make that page a lie.
+   So it is off until asked for, every time it is used it says what is about to
+   leave the device before it leaves, and the consent is a real one: a
+   paragraph naming what is sent, where it goes, and what it is not. Turning it
+   on is one button. Turning it off again is one button in the same place.
 
-   So: the accurate checks run locally and automatically, the inaccurate one is
-   marked as inaccurate, and the option that would need a privacy change is not
-   taken behind anybody's back.
+   privacy.html and terms.html carry this too — the editor's "nothing you make
+   is uploaded" line now reads "nothing is uploaded unless you press the button
+   that says it will be". That page and this file changed in the same commit,
+   which is the rule.
+
+   WHAT IS STILL NOT DONE
+
+   No local model. nsfwjs and friends are a 4MB download per visit from a CDN,
+   and the editor is already the heaviest page here. If that becomes worth it,
+   it goes beside this rather than replacing it — a check that works on a train
+   is worth having.
 
    Loaded by editor.html. Depends on nothing else.
    ========================================================================== */
@@ -385,6 +391,166 @@
   }
 
   /* ==========================================================================
+     THE AI CHECK
+     ==========================================================================
+     Four frames to Gemini, through ai-worker.js so the key stays on the
+     worker. Off unless somebody turns it on, and the switch is remembered per
+     browser rather than per clip — being asked to consent on every import is
+     how consent becomes a button people click without reading.
+
+     GRABBED AT FULL SIZE, THEN SHRUNK
+     The coarse pass draws at 96x54, which is right for averaging pixels and
+     useless to a model. These are drawn at 512 on the long edge: small enough
+     to stay inside the worker's per-image cap, large enough that a person is
+     recognisably a person.
+     ========================================================================== */
+  var AI_FRAMES = 4;
+  var AI_EDGE = 512;
+  var AI_KEY = 'nc_mod_ai';
+
+  function aiOn() {
+    try { return localStorage.getItem(AI_KEY) === 'yes'; } catch (e) { return false; }
+  }
+  function setAiOn(on) {
+    try { localStorage.setItem(AI_KEY, on ? 'yes' : 'no'); } catch (e) {}
+  }
+
+  async function grabFrames(src, n) {
+    var v = document.createElement('video');
+    v.preload = 'auto'; v.muted = true; v.playsInline = true; v.src = src;
+    await new Promise(function (res, rej) {
+      v.onloadedmetadata = res;
+      v.onerror = function () { rej(new Error('That file could not be read as a video.')); };
+      setTimeout(function () { rej(new Error('That file took too long to open.')); }, 15000);
+    });
+    var dur = await realDuration(v);
+    var vw = v.videoWidth || 640, vh = v.videoHeight || 360;
+    var scale = Math.min(1, AI_EDGE / Math.max(vw, vh));
+    var c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(vw * scale));
+    c.height = Math.max(1, Math.round(vh * scale));
+    var ctx = c.getContext('2d');
+
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var t = dur > 0 ? ((i + 0.5) / n) * dur : 0;
+      await seek(v, t);
+      ctx.drawImage(v, 0, 0, c.width, c.height);
+      var url;
+      try { url = c.toDataURL('image/jpeg', 0.72); }
+      catch (e) {
+        v.src = '';
+        throw new Error('This video comes from another site, so the browser will not let the page read its frames.');
+      }
+      out.push({ at: t, b64: url.slice(url.indexOf(',') + 1) });
+    }
+    v.src = '';
+    return out;
+  }
+
+  /* The question. Written so the answer is usable rather than a paragraph:
+     one category and one line. "unsure" is a real option on purpose — a model
+     forced to choose between yes and no will choose, and a confident wrong
+     answer about somebody's video is worse than an honest shrug. */
+  var PROMPT =
+    'You are a content check inside a video editor used by teenage creators. ' +
+    'The images are frames sampled evenly from one clip the creator is editing. ' +
+    'Decide whether this clip would be a problem to post publicly.\n\n' +
+    'Answer with ONE line of JSON and nothing else:\n' +
+    '{"rating":"<ok|suggestive|nudity|sexual|violence|unsure>",' +
+    '"confidence":"<low|medium|high>",' +
+    '"why":"<one short sentence, addressed to the creator, saying what you saw>"}\n\n' +
+    'Use "ok" for ordinary content including people fully clothed, faces, talking heads, ' +
+    'gameplay, sport, swimwear at a beach or pool, and art. ' +
+    'Use "suggestive" only where clothing or posing is clearly sexualised. ' +
+    'Use "nudity" for exposed genitals, buttocks or female breasts. ' +
+    'Use "sexual" for sexual acts. ' +
+    'Use "violence" for real injury, blood or cruelty. ' +
+    'Use "unsure" whenever the frames are too dark, too blurred or too few to tell — ' +
+    'that is not a failure, it is the right answer when it is true. ' +
+    'Do not describe anybody\'s body or appearance beyond what the rating needs.';
+
+  async function askAI(src, onProgress) {
+    var url = window.NC_AI_WORKER_URL;
+    if (!url) throw new Error('No AI worker is configured on this site, so there is nothing to ask.');
+    if (onProgress) onProgress('Taking four frames…');
+    var frames = await grabFrames(src, AI_FRAMES);
+
+    var parts = [{ text: PROMPT }];
+    frames.forEach(function (f) {
+      parts.push({ inlineData: { mimeType: 'image/jpeg', data: f.b64 } });
+    });
+
+    if (onProgress) onProgress('Asking the AI…');
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: 'gemini',
+        payload: {
+          contents: [{ parts: parts }],
+          generationConfig: { temperature: 0, maxOutputTokens: 300 }
+        }
+      })
+    });
+    var j = await res.json().catch(function () { return {}; });
+    if (!res.ok) {
+      throw new Error(j.error || j.reason || ('The AI worker answered ' + res.status + '.'));
+    }
+
+    var cand = j.candidates && j.candidates[0];
+    var text = cand && cand.content && cand.content.parts &&
+      cand.content.parts.map(function (p) { return p.text || ''; }).join('').trim();
+
+    /* Gemini's own safety filter can refuse to answer, and a refusal is not
+       nothing — it usually means the frames were the thing it would not
+       discuss. Reported as its own outcome rather than as an error, because
+       "the AI would not look at this" is information the creator should have. */
+    if (!text) {
+      var reason = (cand && cand.finishReason) || (j.promptFeedback && j.promptFeedback.blockReason);
+      if (reason && /safety|block|prohibit/i.test(String(reason))) {
+        return { rating: 'refused', confidence: 'high',
+                 why: 'The AI declined to answer about these frames, which usually means it ' +
+                      'considered them unsafe to discuss. Treat that as a strong signal and ' +
+                      'watch the clip back yourself.' };
+      }
+      throw new Error('The AI sent an empty answer back.');
+    }
+
+    var m = text.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('The AI answered in a shape this could not read.');
+    var parsed;
+    try { parsed = JSON.parse(m[0]); } catch (e) { throw new Error('The AI answered in a shape this could not read.'); }
+    return parsed;
+  }
+
+  /* Its verdict, as something to show. Deliberately not a score: a percentage
+     invites an argument with the number instead of a look at the video. */
+  var RATING = {
+    ok:         ['ok',    'Nothing came up',            'The AI looked at four frames and saw nothing that would be a problem to post.'],
+    suggestive: ['check', 'The AI thinks this is suggestive', ''],
+    nudity:     ['high',  'The AI thinks there is nudity here', ''],
+    sexual:     ['high',  'The AI thinks this is sexual content', ''],
+    violence:   ['high',  'The AI thinks there is real violence here', ''],
+    unsure:     ['low',   'The AI could not tell',      'Too dark, too blurred, or too little in the frames it saw.'],
+    refused:    ['high',  'The AI would not answer',    '']
+  };
+
+  function aiFinding(v) {
+    var r = RATING[v && v.rating] || RATING.unsure;
+    var why = (v && v.why) || r[2];
+    var conf = v && v.confidence;
+    return {
+      id: 'ai',
+      level: r[0],
+      title: r[1],
+      body: why || '',
+      sure: 'Gemini looked at four frames' + (conf ? ', and rates its own confidence ' + conf : '') +
+            '. It gets things wrong in both directions — you are the one who decides.'
+    };
+  }
+
+  /* ==========================================================================
      THE PANEL
      ========================================================================== */
   function boot() {
@@ -411,20 +577,47 @@
       '.ncmod-i i{display:block;margin-top:6px;font-style:normal;font-size:.72rem;opacity:.75}',
       '.ncmod-f{padding:10px 13px;border-top:1px solid var(--nc-line,rgba(255,255,255,.1));',
         'font-size:.72rem;color:var(--nc-dim,#8c96ad)}',
+      /* The consent text is tall, and the footer is not a scroller — without
+         a cap it squeezed the findings above it down to a couple of lines,
+         so the panel argued with itself about what was worth reading. */
+      '.ncmod-ai{padding:11px 13px;max-height:56vh;overflow-y:auto;',
+        'border-top:1px solid var(--nc-line,rgba(255,255,255,.1))}',
+      '.ncmod-b{min-height:92px}',
+      '.ncmod-ai button{width:100%;min-height:40px;padding:10px 13px;border-radius:10px;cursor:pointer;',
+        'font:700 12.5px/1.3 inherit;color:inherit;background:var(--nc-bg3,rgba(255,255,255,.06));',
+        'border:1px solid var(--nc-line2,rgba(255,255,255,.14))}',
+      '.ncmod-ai button:hover{border-color:var(--nc-cyan,#00F0FF)}',
+      '.ncmod-ai button[disabled]{opacity:.55;cursor:default}',
+      '.ncmod-ai .off{margin-top:7px;font-size:11px;color:var(--nc-dim,#8c96ad);',
+        'background:none;border:0;padding:4px;min-height:0;text-decoration:underline;cursor:pointer;width:auto}',
+      '.ncmod-c{font-size:12px;line-height:1.55;color:var(--nc-dim,#8c96ad)}',
+      '.ncmod-c b{color:var(--nc-text,#EAF2FF);display:block;margin-bottom:5px}',
+      '.ncmod-c ul{margin:7px 0 9px 16px;padding:0}',
+      '.ncmod-c li{margin:3px 0}',
+      '.ncmod-c .row{display:flex;gap:7px;margin-top:10px}',
+      '.ncmod-c .row button{flex:1 1 0}',
+      '.ncmod-c .row .yes{background:var(--nc-cyan,#00F0FF);color:#04121a;border-color:transparent}',
       '@media (max-width:600px){.ncmod{right:8px;left:8px;bottom:8px;width:auto;max-height:60vh}}'
     ].join('');
     document.head.appendChild(st);
   }
 
   var panel = null;
+  /* The object URL of the clip the open panel is about, so the AI button can
+     reopen it. Released when the panel closes — see check(). */
+  var revokeOnClose = null;
   function close() {
     if (panel && panel.parentNode) panel.parentNode.removeChild(panel);
     panel = null;
+    if (revokeOnClose) { try { URL.revokeObjectURL(revokeOnClose); } catch (e) {} revokeOnClose = null; }
   }
 
-  function show(name, result, busy) {
+  function show(name, result, busy, src) {
     boot();
     close();
+    var footer = aiOn()
+      ? 'The checks above ran on this device. The AI check sends four stills when you press it, and only then.'
+      : 'Checked on this device. No part of this video was uploaded, and nothing was reported to anybody.';
     panel = document.createElement('div');
     panel.className = 'ncmod';
     panel.setAttribute('role', 'status');
@@ -439,7 +632,7 @@
               'That is not the same as "this is fine to post" — only you can say that.</p></div>';
     } else {
       items = result.findings.map(function (f) {
-        return '<div class="ncmod-i ' + f.level + '"><b>' + esc(f.title) + '</b>' +
+        return '<div class="ncmod-i ' + f.level + '" data-id="' + esc(f.id) + '"><b>' + esc(f.title) + '</b>' +
                '<p>' + esc(f.body) + '</p>' +
                (f.sure ? '<i>' + esc(f.sure) + '</i>' : '') + '</div>';
       }).join('');
@@ -449,14 +642,102 @@
       '<div class="ncmod-h"><b>' + esc(name || 'This clip') + '</b>' +
         '<button class="ncmod-x" type="button" aria-label="Close">&times;</button></div>' +
       '<div class="ncmod-b">' + items + '</div>' +
-      '<div class="ncmod-f">Checked on this device. No part of this video was uploaded, ' +
-        'and nothing was reported to anybody.</div>';
+      (busy || !src ? '' : '<div class="ncmod-ai" id="ncmodAi"></div>') +
+      '<div class="ncmod-f">' + footer + '</div>';
     panel.querySelector('.ncmod-x').onclick = close;
     document.body.appendChild(panel);
+    if (!busy && src) aiRow(src, name);
 
     /* A clean result is information, not an event — it goes away on its own.
-       Anything with a finding in it stays until it is dismissed. */
-    if (!busy && !result.findings.length) setTimeout(function () { close(); }, 6000);
+       Anything with a finding in it stays until it is dismissed. Not while the
+       AI row is offering something: a panel that vanishes mid-decision is a
+       decision taken for somebody. */
+    if (!busy && !result.findings.length && !src) setTimeout(function () { close(); }, 6000);
+  }
+
+  /* --------------------------------------------------------------------------
+     THE AI ROW
+     --------------------------------------------------------------------------
+     Three states: not turned on (offer it), turned on (a button that runs it),
+     and running. The consent is shown the first time and never again, with a
+     way to withdraw it sitting under the button afterwards.
+     -------------------------------------------------------------------------- */
+  function aiRow(src, name) {
+    var row = document.getElementById('ncmodAi');
+    if (!row) return;
+
+    if (!aiOn()) {
+      row.innerHTML =
+        '<div class="ncmod-c"><b>Want the AI to look at it?</b>' +
+        'The check above counts colours, which is why it gets nudity wrong in both ' +
+        'directions. Gemini can actually see the frames. To do that, four still ' +
+        'frames have to leave this device.' +
+        '<ul>' +
+          '<li><b style="display:inline">What is sent:</b> four stills at 512px, as JPEG. ' +
+            'Not the video, not the audio, not the filename.</li>' +
+          '<li><b style="display:inline">Where:</b> NovaClip\'s worker, which passes them to ' +
+            'Google\'s Gemini API. Neither NovaClip nor this page keeps them.</li>' +
+          '<li><b style="display:inline">What it is not:</b> nothing is reported to anybody, ' +
+            'no account is flagged, and nothing is blocked whatever it answers.</li>' +
+        '</ul>' +
+        '<div class="row"><button type="button" class="yes">Turn it on</button>' +
+        '<button type="button" class="no">No thanks</button></div></div>';
+      row.querySelector('.yes').onclick = function () { setAiOn(true); aiRow(src, name); run(); };
+      row.querySelector('.no').onclick = function () { setAiOn(false); row.innerHTML = ''; };
+      return;
+    }
+
+    row.innerHTML =
+      '<button type="button" id="ncmodRun">Ask the AI to look at this clip</button>' +
+      '<button type="button" class="off">Stop sending frames to the AI</button>';
+    row.querySelector('#ncmodRun').onclick = run;
+    row.querySelector('.off').onclick = function () { setAiOn(false); aiRow(src, name); };
+
+    async function run() {
+      var r2 = document.getElementById('ncmodAi');
+      if (!r2) return;
+      var btn = r2.querySelector('#ncmodRun');
+      if (btn) { btn.disabled = true; btn.textContent = 'Working…'; }
+      try {
+        var verdict = await askAI(src, function (msg) {
+          var b3 = document.getElementById('ncmodRun');
+          if (b3) b3.textContent = msg;
+        });
+        /* "unsure" and "refused" are not verdicts, so they leave the colour
+           count where it is — something is better than nothing there. */
+        var decided = verdict && ['ok', 'suggestive', 'nudity', 'sexual', 'violence']
+          .indexOf(verdict.rating) >= 0;
+        addFinding(aiFinding(verdict), decided ? ['skin', 'ai', 'aierr'] : ['ai', 'aierr']);
+      } catch (e) {
+        addFinding({ id: 'aierr', level: 'low', title: 'Could not ask the AI',
+                     body: (e && e.message) || String(e), sure: '' }, ['ai', 'aierr']);
+      }
+      var r3 = document.getElementById('ncmodAi');
+      if (r3) aiRow(src, name);
+    }
+  }
+
+  /* Adds a result to the open panel rather than replacing it, so the local
+     findings and the AI's sit together instead of one wiping the other. */
+  function addFinding(f, supersedes) {
+    var body = panel && panel.querySelector('.ncmod-b');
+    if (!body) return;
+    var ok = body.querySelector('.ncmod-i.ok');
+    if (ok && ok.parentNode) ok.parentNode.removeChild(ok);   // "nothing came up" is now out of date
+    /* An answer from something that can actually see the frames replaces the
+       colour count rather than arguing with it. Leaving both up gave the
+       panel two opposite verdicts on the same clip — "worth looking at this
+       again" directly above "nothing came up" — which is worse than either
+       on its own, and makes the reader arbitrate between two things they have
+       no way to judge. */
+    (supersedes || []).forEach(function (id) {
+      var old = body.querySelector('.ncmod-i[data-id="' + id + '"]');
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+    });
+    body.insertAdjacentHTML('beforeend',
+      '<div class="ncmod-i ' + f.level + '" data-id="' + esc(f.id) + '"><b>' + esc(f.title) + '</b>' +
+      '<p>' + esc(f.body) + '</p>' + (f.sure ? '<i>' + esc(f.sure) + '</i>' : '') + '</div>');
+    body.scrollTop = body.scrollHeight;
   }
 
   function esc(s) {
@@ -492,19 +773,22 @@
 
   async function check(file) {
     var url = URL.createObjectURL(file);
-    show(file.name, null, true);
+    show(file.name, null, true, null);
     try {
       var result = await scanVideo(url);
-      show(file.name, result, false);
+      show(file.name, result, false, url);
     } catch (err) {
       show(file.name, { findings: [{
         id: 'err', level: 'low', title: 'Could not check this one',
         body: err && err.message ? err.message : String(err),
         sure: ''
-      }] }, false);
-    } finally {
-      URL.revokeObjectURL(url);
+      }] }, false, url);
     }
+    /* The object URL is NOT revoked here. The AI button in the panel reopens
+       the same video to grab its frames, and revoking on the way out of this
+       function is what would make that button fail with a bare media error a
+       minute later. It goes when the panel does. */
+    revokeOnClose = url;
   }
 
   window.NC_MOD = {
@@ -512,7 +796,10 @@
     check: check,
     report: report,
     show: show,
-    close: close
+    close: close,
+    askAI: askAI,
+    aiEnabled: aiOn,
+    setAiEnabled: setAiOn
   };
 
   if (document.readyState === 'loading') {

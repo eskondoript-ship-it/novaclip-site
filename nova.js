@@ -379,6 +379,20 @@ const UI_T = {
   ui_break_b: { en:"You have been here an hour and a half. Stand up, look out of a window, drink something. NovaClip will be here.", zh:"你已经在这里待了一个半小时。站起来，看看窗外，喝点东西。NovaClip 会一直在这里。", hi:"आप डेढ़ घंटे से यहाँ हैं। खड़े हो जाएँ, खिड़की से बाहर देखें, कुछ पीएँ। NovaClip यहीं रहेगा।", es:"Llevas aquí una hora y media. Levántate, mira por la ventana, bebe algo. NovaClip seguirá aquí.", ar:"لقد قضيت هنا ساعة ونصف. قف، انظر من النافذة، واشرب شيئًا. سيبقى NovaClip هنا.", fr:"Tu es là depuis une heure et demie. Lève-toi, regarde par la fenêtre, bois quelque chose. NovaClip sera toujours là.", bn:"আপনি এখানে দেড় ঘণ্টা ধরে আছেন। উঠে দাঁড়ান, জানালা দিয়ে বাইরে দেখুন, কিছু পান করুন। NovaClip এখানেই থাকবে।", pt:"Estás aqui há hora e meia. Levanta-te, olha pela janela, bebe qualquer coisa. A NovaClip vai continuar aqui.", ru:"Ты здесь уже полтора часа. Встань, посмотри в окно, выпей чего-нибудь. NovaClip никуда не денется.", ur:"آپ یہاں ڈیڑھ گھنٹے سے ہیں۔ کھڑے ہوں، کھڑکی سے باہر دیکھیں، کچھ پیئیں۔ NovaClip یہی رہے گا۔", id:"Kamu sudah di sini satu setengah jam. Berdiri, lihat ke luar jendela, minum sesuatu. NovaClip akan tetap di sini.", de:"Du bist schon eineinhalb Stunden hier. Steh auf, schau aus dem Fenster, trink etwas. NovaClip bleibt da.", ja:"あなたはここに1時間半います。立ち上がって、窓の外を見て、何か飲みましょう。NovaClipはここにあります。", tr:"Burada bir buçuk saattirsin. Kalk, pencereden dışarı bak, bir şeyler iç. NovaClip burada kalacak.", ko:"여기에 한 시간 반 동안 머물렀습니다. 일어나서 창밖을 보고, 물을 마시세요. NovaClip은 여기에 있습니다.", fa:"یک ساعت و نیم است اینجایی. بلند شو، از پنجره بیرون را نگاه کن، چیزی بنوش. NovaClip همین‌جا می‌ماند.", uk:"Ти тут уже півтори години. Встань, подивись у вікно, випий чогось. NovaClip нікуди не подінеться.", it:"Sei qui da un'ora e mezza. Alzati, guarda fuori dalla finestra, bevi qualcosa. NovaClip resterà qui.", pl:"Jesteś tu od półtorej godziny. Wstań, popatrz przez okno, napij się czegoś. NovaClip tu zostanie.", vi:"Bạn đã ở đây một tiếng rưỡi. Đứng dậy, nhìn ra ngoài cửa sổ, uống chút gì đó. NovaClip sẽ vẫn ở đây." },
   ui_left: { en:"{t} left", zh:"还剩 {t}", hi:"{t} बाकी", es:"quedan {t}", ar:"متبقي {t}", fr:"{t} restantes", bn:"বাকি {t}", pt:"faltam {t}", ru:"осталось {t}", ur:"{t} باقی", id:"tersisa {t}", de:"noch {t}", ja:"残り{t}", tr:"{t} kaldı", ko:"{t} 남음", fa:"{t} مانده", uk:"лишилось {t}", it:"restano {t}", pl:"zostało {t}", vi:"còn lại {t}" },
   ui_set_name: { en:"Set your name", zh:"设置你的名字", hi:"अपना नाम सेट करें", es:"Pon tu nombre", ar:"حدد اسمك", fr:"Choisis ton nom", bn:"আপনার নাম সেট করুন", pt:"Define o teu nome", ru:"Задай имя", ur:"اپنا نام سیٹ کریں", id:"Atur namamu", de:"Setz deinen Namen", ja:"名前を設定", tr:"Adını belirle", ko:"이름 설정하기", fa:"نامت را تنظیم کن", uk:"Задай своє ім'я", it:"Imposta il tuo nome", pl:"Ustaw swoją nazwę", vi:"Đặt tên của bạn" },
+  ui_su_h: { en:"Make your profile" },
+  ui_su_h2: { en:"Sign in" },
+  ui_su_p: { en:"So your points, streaks and certificates follow you to your phone. No email, no real name \u2014 just a username you pick." },
+  ui_su_user: { en:"Username" },
+  ui_su_pass: { en:"Password" },
+  ui_su_go: { en:"Create it" },
+  ui_su_in: { en:"Sign in" },
+  ui_su_have: { en:"I already have one" },
+  ui_su_new: { en:"I need to make one" },
+  ui_su_skip: { en:"Have a look round first" },
+  ui_su_both: { en:"Both boxes, please." },
+  ui_su_wait: { en:"One moment\u2026" },
+  ui_su_local: { en:"Scrambling your password on this device before anything is sent\u2026" },
+  ui_su_off: { en:"Cannot reach the NovaClip server just now, so this will have to wait. Letting you in anyway \u2014 you can make a profile later from the You menu." },
   ui_profile: { en:"Your profile", zh:"你的资料", hi:"आपकी प्रोफ़ाइल", es:"Tu perfil", ar:"ملفك الشخصي", fr:"Ton profil", bn:"আপনার প্রোফাইল", pt:"O teu perfil", ru:"Твой профиль", ur:"آپ کا پروفائل", id:"Profilmu", de:"Dein Profil", ja:"あなたのプロフィール", tr:"Profilin", ko:"내 프로필", fa:"پروفایل تو", uk:"Твій профіль", it:"Il tuo profilo", pl:"Twój profil", vi:"Hồ sơ của bạn" },
   ui_name: { en:"Name", zh:"名字", hi:"नाम", es:"Nombre", ar:"الاسم", fr:"Nom", bn:"নাম", pt:"Nome", ru:"Имя", ur:"نام", id:"Nama", de:"Name", ja:"名前", tr:"Ad", ko:"이름", fa:"نام", uk:"Ім'я", it:"Nome", pl:"Nazwa", vi:"Tên" },
   ui_name_ph: { en:"What should we call you?", zh:"我们该叫你什么？", hi:"हम आपको क्या बुलाएँ?", es:"¿Cómo te llamamos?", ar:"بماذا نناديك؟", fr:"Comment t'appeler ?", bn:"আপনাকে কী বলে ডাকব?", pt:"Como te chamamos?", ru:"Как тебя называть?", ur:"ہم آپ کو کیا کہیں؟", id:"Kami memanggilmu apa?", de:"Wie sollen wir dich nennen?", ja:"あなたのことを何と呼べばいいですか？", tr:"Sana ne diyelim?", ko:"어떻게 부를까요?", fa:"چی صدايت کنیم؟", uk:"Як тебе називати?", it:"Come ti chiamiamo?", pl:"Jak cię nazwać?", vi:"Chúng tôi nên gọi bạn là gì?" },
@@ -4669,7 +4683,170 @@ window.addEventListener('DOMContentLoaded', () => {
   function ncAgeBoot() {
     if (NC_AGE_EXEMPT.test(location.pathname)) return;
     if (window.ncAgeGate) ncAgeGate();
+    ncSignupGate();
   }
+
+  /* ==========================================================================
+     THE SIGN-UP GATE
+     ==========================================================================
+     First visit, once the age question is answered: make an account. Anybody
+     who already has one — a key in this browser from any previous visit — never
+     sees it.
+
+     THREE WAYS OUT, AND ALL OF THEM ARE DELIBERATE
+
+     A gate on a static site is a promise that the server is up. This one is
+     not allowed to become a locked door:
+
+       ALREADY HAVE ONE   sign in with a username or a recovery code, in the
+                          same sheet, without going anywhere.
+       SKIP               it says "have a look round first" and means it.
+                          Everything on this site works without an account;
+                          what an account buys is your progress following you
+                          to another device. Making that mandatory to read a
+                          page would be a lie about what it is for.
+       THE SERVER IS DOWN If there is no worker configured, or it cannot be
+                          reached, the sheet says so and lets you past. The
+                          alternative is a site nobody can open because a
+                          Cloudflare Worker is having a bad afternoon.
+
+     It is not shown on the pages the age gate also skips — a parent reading
+     the privacy policy, or a store reviewer checking what is collected,
+     should not be asked to register first. Nor on profile.html, which is the
+     same thing with more room.
+     ========================================================================== */
+  var NC_SIGNUP_SKIP = /(^|\/)(parent|shield|report|privacy|terms|profile|offline)\.html$/i;
+
+  function ncSignupGate() {
+    if (window.NC_EMBED) return;
+    if (NC_SIGNUP_SKIP.test(location.pathname)) return;
+    if (ncAge() < NC_MIN_AGE) return;                 // the age gate owns this moment
+    /* A USERNAME, NOT A KEY.
+       The obvious test — "do they have nc_key" — is the wrong one, and
+       measurably so: ncPush() calls ncCreateAccount() the first time anything
+       syncs, so a random key lands in localStorage within a second or two of
+       the first page load. Gating on that meant the sheet raced the sync and
+       usually lost, and when it did win it was asking somebody to make an
+       account they had silently been given.
+
+       An anonymous key is not an account anybody knows they have. A username
+       is. That is also what was asked for: the people who should see this are
+       the ones without a profile. Registering attaches the name to whatever
+       key is already here, so nothing they have done is lost. */
+    try {
+      if (localStorage.getItem('nc_username')) return;
+      if (localStorage.getItem('nc_signup_skipped')) return;
+    } catch (e) { return; }
+    if (!ncSyncOn()) return;                          // no worker configured: nothing to join
+
+    /* account.js is not on most pages. Fetched once, here, rather than added
+       to twenty-nine script tags for a sheet most visits never see. */
+    ncNeed('account.js', function () { ncSignupSheet(); });
+  }
+
+  function ncNeed(src, then) {
+    if (document.querySelector('script[data-nc-need="' + src + '"]')) return then();
+    var t = document.createElement('script');
+    t.src = src;
+    t.setAttribute('data-nc-need', src);
+    t.onload = then;
+    t.onerror = function () { /* no sheet rather than a broken one */ };
+    document.head.appendChild(t);
+  }
+
+  function ncSignupSheet() {
+    if (!window.NC_ACCOUNT || document.getElementById('ncSignup')) return;
+
+    var o = document.createElement('div');
+    o.id = 'ncSignup';
+    o.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(5,6,10,.96);' +
+      'color:#EAF2FF;display:flex;align-items:center;justify-content:center;padding:20px;' +
+      'font-family:Segoe UI,-apple-system,sans-serif;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);' +
+      'overflow-y:auto';
+    var fld = 'width:100%;min-height:46px;padding:11px 13px;margin-top:7px;border-radius:11px;' +
+      'font:inherit;font-size:.95rem;color:#EAF2FF;background:rgba(255,255,255,.06);' +
+      'border:1px solid rgba(255,255,255,.15);box-sizing:border-box';
+    var lbl = 'display:block;margin-top:13px;font-size:.72rem;font-weight:800;letter-spacing:.09em;' +
+      'text-transform:uppercase;color:#8c96ad';
+    var go = 'width:100%;min-height:48px;margin-top:16px;padding:13px;border:none;border-radius:12px;' +
+      'cursor:pointer;font-weight:800;font-size:.98rem;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a';
+    var alt = 'margin-top:10px;background:none;border:0;color:#8c96ad;font:inherit;font-size:.85rem;' +
+      'text-decoration:underline;cursor:pointer;padding:8px;min-height:40px';
+
+    o.innerHTML =
+      '<div style="width:100%;max-width:380px;background:rgba(255,255,255,.04);' +
+        'border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:26px 24px">' +
+        '<h2 style="font-size:1.35rem;margin-bottom:6px">' + tr('ui_su_h') + '</h2>' +
+        '<p style="color:#8c96ad;font-size:.88rem;line-height:1.55">' + tr('ui_su_p') + '</p>' +
+        '<label style="' + lbl + '" for="ncSuUser">' + tr('ui_su_user') + '</label>' +
+        '<input id="ncSuUser" style="' + fld + '" autocomplete="username" maxlength="20" ' +
+          'spellcheck="false" autocapitalize="none">' +
+        '<label style="' + lbl + '" for="ncSuPass">' + tr('ui_su_pass') + '</label>' +
+        '<input id="ncSuPass" type="password" style="' + fld + '" autocomplete="new-password">' +
+        '<button id="ncSuGo" style="' + go + '">' + tr('ui_su_go') + '</button>' +
+        '<div id="ncSuSay" style="margin-top:11px;font-size:.84rem;line-height:1.5;color:#fb7185"></div>' +
+        '<div style="text-align:center">' +
+          '<button id="ncSuHave" style="' + alt + '">' + tr('ui_su_have') + '</button><br>' +
+          '<button id="ncSuSkip" style="' + alt + '">' + tr('ui_su_skip') + '</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    var user = o.querySelector('#ncSuUser'), pass = o.querySelector('#ncSuPass');
+    var btn = o.querySelector('#ncSuGo'), say = o.querySelector('#ncSuSay');
+    var mode = 'new';
+
+    function done() { o.remove(); }
+    function tell(msg, good) { say.style.color = good ? '#34d399' : '#fb7185'; say.textContent = msg; }
+
+    o.querySelector('#ncSuSkip').onclick = function () {
+      /* Remembered, so it is asked once rather than on every page of a look
+         round — which would be the same wall wearing a friendlier hat. */
+      try { localStorage.setItem('nc_signup_skipped', '1'); } catch (e) {}
+      done();
+    };
+
+    o.querySelector('#ncSuHave').onclick = function () {
+      mode = mode === 'new' ? 'in' : 'new';
+      pass.setAttribute('autocomplete', mode === 'new' ? 'new-password' : 'current-password');
+      btn.textContent = tr(mode === 'new' ? 'ui_su_go' : 'ui_su_in');
+      o.querySelector('#ncSuHave').textContent = tr(mode === 'new' ? 'ui_su_have' : 'ui_su_new');
+      o.querySelector('h2').textContent = tr(mode === 'new' ? 'ui_su_h' : 'ui_su_h2');
+      tell('');
+    };
+
+    btn.onclick = async function () {
+      var u = user.value.trim(), p = pass.value;
+      var bad = mode === 'new'
+        ? (NC_ACCOUNT.checkUsername(u) || NC_ACCOUNT.checkPassword(p, u))
+        : (!u || !p ? tr('ui_su_both') : null);
+      if (bad) return tell(bad);
+      btn.disabled = true;
+      var was = btn.textContent;
+      btn.textContent = tr('ui_su_wait');
+      tell(tr('ui_su_local'), true);
+      try {
+        await (mode === 'new' ? NC_ACCOUNT.register(u, p) : NC_ACCOUNT.login(u, p));
+        if (typeof ncPull === 'function') { try { await ncPull(); } catch (e) {} }
+        done();
+      } catch (e) {
+        var m = (e && e.message) || String(e);
+        /* A worker that cannot be reached must not hold the door shut. */
+        if (/failed to fetch|networkerror|load failed|no community server/i.test(m)) {
+          tell(tr('ui_su_off'));
+          setTimeout(done, 2200);
+          return;
+        }
+        tell(m);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = was;
+      }
+    };
+
+    user.focus();
+  }
+  window.ncSignupGate = ncSignupGate;
 
   /* THE IDENTITY GATE.
      Loaded from here rather than from a script tag on each page, for the same

@@ -241,6 +241,10 @@ a.back { margin-bottom:0; }
      saved it — nothing that identifies you.</p>
   <p>The cost is real and worth saying: <strong>lose the code and the account cannot
      be recovered</strong>, because there is nothing to prove it was yours.</p>
+  <p>On a first visit NovaClip asks you to make a profile. It is a question, not a
+     wall — <strong>"have a look round first" is on the same screen</strong>, and
+     every tool here works without an account. What an account buys is your
+     progress following you to another device.</p>
 
   <h2>Camera, microphone, face and voice</h2>
   <p>NovaClip can use your camera and microphone for the video editor, the selfie
@@ -252,6 +256,15 @@ a.back { margin-bottom:0; }
      browser's storage. "Sign in with your face" means "unlock on this browser"
      — like the fingerprint prompt on a password manager — not an identity held
      on a server.</p>
+  <p>There is <strong>one exception, and you have to switch it on yourself</strong>.
+     The editor checks every clip you drop in — how fast it flashes, whether it is
+     blank — and all of that happens on your device. It can also ask the AI to look
+     at the clip and say whether there is nudity in it, which is more accurate than
+     the check that runs for free. That one <strong>sends four still frames</strong>,
+     at 512 pixels, to our worker and on to Google's Gemini. It is off until you
+     turn it on, it says exactly that before it sends anything, and you can turn it
+     off again in the same place. Nothing it answers is reported to anybody, no
+     account is flagged, and nothing is ever blocked.</p>
   <p>One honest exception: <strong>voice commands</strong>. Those use your browser's
      own speech recognition, and some browsers — Chrome in particular — send the
      audio to the browser maker's servers to turn it into text. That is your
@@ -266,6 +279,7 @@ a.back { margin-bottom:0; }
   <table>
     <tr><th>When you…</th><th>What is sent</th><th>Who receives it</th></tr>
     <tr><td>Ask the AI anything</td><td>The text you typed</td><td>Our Cloudflare Worker, which passes it to Google's Gemini API</td></tr>
+    <tr><td>Press <b>“Ask the AI to look at this clip”</b> in the editor</td><td>Four still frames from that clip, at 512px. Not the video, not the sound, not the filename</td><td>The same worker, and on to Gemini. Off unless you turn it on</td></tr>
     <tr><td>Check a message with the safety tools</td><td>The text you pasted</td><td>The same worker; card numbers and codes are stripped out before it is sent</td></tr>
     <tr><td>Save progress with a code</td><td>Your progress and your code</td><td>Our Cloudflare Worker (Cloudflare KV storage)</td></tr>
     <tr><td>Research trends or connect a channel</td><td>The search, or the channel you authorised</td><td>YouTube's own API</td></tr>

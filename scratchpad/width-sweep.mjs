@@ -106,6 +106,12 @@ for (const s of SIZES) {
       localStorage.setItem('nc_user_age', '17');
       localStorage.setItem('nc_consent', 'yes');
       sessionStorage.setItem('nc_gate_ok', '1');
+      /* A returning visitor who already has a profile, which is what every
+         page below is being measured as. The first-run sign-up sheet is a
+         full-screen overlay, so without this every page would report its own
+         heading as covered — by the thing deliberately covering it. The sheet
+         has its own test. */
+      localStorage.setItem('nc_username', 'sweeper');
     } catch (e) {}
   });
   const page = await ctx.newPage();
