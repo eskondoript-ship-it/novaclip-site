@@ -1388,6 +1388,22 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 async function drawAll() {
+  /* Nothing is connected yet, so there are no numbers to draw.
+
+     This guard is here because of the 1-5 buttons under the comparison
+     toggle. Their handler calls drawAll() whenever you press one, with no
+     regard for whether a channel is connected — and drawAll starts with
+     `channels = [myStats]` and immediately reads c.statistics off every
+     entry. Signed out, myStats is null, so pressing any of those five threw
+     "Cannot read properties of null (reading 'statistics')" and the page
+     silently did nothing at all.
+
+     Guarding here rather than in that one handler, because drawAll is called
+     from three places and a fourth is only a matter of time. The signed-out
+     page already says "Connect your channel to load your analytics", so
+     returning is the whole of the right behaviour. */
+  if (!myStats) return;
+
   // reviewing your numbers is a tracked skill — counted once per session
   if (typeof logSkill === 'function' && !window.__ncAnalyticsLogged) { window.__ncAnalyticsLogged = true; logSkill('analytics'); }
   const withComp = document.getElementById('compToggle').checked;

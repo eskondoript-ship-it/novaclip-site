@@ -171,19 +171,81 @@
         'to compare with. Deploy <code>leaderboard-worker.js</code> and run ' +
         "<code>localStorage.setItem('nc_server','https://your-worker.workers.dev')</code>");
     }
-    return fetch(s.replace(/\/$/, '') + '/scores?game=' + encodeURIComponent(this.game),
+    /* --------------------------------------------------------------------
+       SAY WHAT ACTUALLY WENT WRONG
+       --------------------------------------------------------------------
+       This used to catch everything and print "It may be waking up." That is
+       one of at least five things it can be, and it is the only one that
+       fixes itself — so the message was reassuring in exactly the case where
+       it should not have been.
+
+       The five, and why telling them apart matters:
+
+         the fetch rejects          no such worker, DNS, or the response has
+                                    no CORS header — nothing to wait for
+         404 on /scores             something IS deployed there, but not the
+                                    leaderboard. This is the mistake the repo
+                                    has already made once: ai-worker.js put at
+                                    the leaderboard's address. Named, because
+                                    guessing costs an afternoon.
+         500                        deployed, running, and its KV binding is
+                                    missing — the DB binding, specifically
+         a JSON error field         the worker answered properly and is
+                                    telling you something
+         not JSON at all            an HTML error page, which usually means a
+                                    proxy or a parked domain, not the worker
+
+       The address is printed either way, because "the server" is not a thing
+       anybody can check and a URL is.
+       -------------------------------------------------------------------- */
+    var base = s.replace(/\/$/, '');
+    var where = ' <small>Trying <code>' + esc(base) + '</code>.</small>';
+
+    return fetch(base + '/scores?game=' + encodeURIComponent(this.game),
                  { cache: 'no-store' })
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        return r.text().then(function (body) {
+          var out = null;
+          try { out = JSON.parse(body); } catch (e) {}
+
+          if (!r.ok) {
+            if (r.status === 404) {
+              throw new Error('The address answered, but it has no <code>/scores</code> — so ' +
+                'something is deployed there and it is not the leaderboard. Check that it is ' +
+                '<code>leaderboard-worker.js</code> and not <code>ai-worker.js</code>.');
+            }
+            if (r.status >= 500) {
+              throw new Error('The leaderboard worker is running but failed (HTTP ' + r.status +
+                '). The usual cause is a missing <code>DB</code> KV binding.');
+            }
+            throw new Error('The leaderboard server answered HTTP ' + r.status + '.');
+          }
+          if (!out) {
+            throw new Error('The address answered with something that is not JSON, so it is ' +
+              'probably not the worker.');
+          }
+          if (out.error) throw new Error('The leaderboard said: ' + esc(String(out.error)));
+          return out;
+        });
+      })
       .then(function (out) {
-        if (out.error) throw new Error(out.error);
         self.dir = out.dir || 'high';
         self.label = out.label || '';
         self.rows = Array.isArray(out.board) ? out.board : [];
         self.dot.className = 'dot';
         self.paint();
       })
-      .catch(function () {
-        self.offline('Could not reach the leaderboard server just now. It may be waking up.');
+      .catch(function (err) {
+        var m = String((err && err.message) || err || '');
+        /* A rejected fetch has no status to report — the request never got an
+           answer at all. Everything above threw with a sentence in it. */
+        if (/Failed to fetch|NetworkError|Load failed|network/i.test(m)) {
+          m = navigator.onLine === false
+            ? 'You are offline, so there is nothing to compare with yet.'
+            : 'Nothing answered at that address. Either the worker is not deployed, ' +
+              'or it is not sending the CORS header the browser needs.';
+        }
+        self.offline(m + where);
       });
   };
 

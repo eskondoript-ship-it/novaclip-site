@@ -590,7 +590,7 @@ export default {
         queue.unshift({
           postId: id,
           reason: cleanName(body.reason || 'Not specified').slice(0, 60),
-          note: String(body.note || '').replace(/[ -]/g, '').slice(0, 200),
+          note: String(body.note || '').replace(/[\x00-\x1f]/g, '').slice(0, 200),
           count: 1, at: Date.now(), state: 'open'
         });
       }

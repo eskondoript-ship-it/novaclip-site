@@ -91,6 +91,8 @@ const SHELL = [
      fetch, so it works on a train like the grade does. */
   '/mixer.js',
   '/mixer-ui.js',
+  /* Picks a video encoder that actually emits bytes on this machine. */
+  '/export-fix.js',
   /* The focus timer is the one page here most likely to be opened with the
      wifi off on purpose. */
   '/study.html',
