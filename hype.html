@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<script>/* Theme before first paint. nova.js runs at the end of <body>, so a theme
+   applied there lands after the page has already been painted dark — a white
+   flash on every navigation for anyone using light mode. Six lines here cost
+   nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
+(function(){try{var p=localStorage.getItem('nc_theme')||'system';
+var b=localStorage.getItem('nc_skin_bg');
+var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+r.style.colorScheme=t;
+/* A cyber skin repaints the palette from nova.js, which runs at the end of
+   <body>. Painting its background here, before the first frame, is what stops
+   every navigation flashing the default dark first. */
+if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+<meta charset='UTF-8'>
+<!-- Google Analytics 4 (gtag.js) — measurement ID G-QN1QE08F2K.
+     In the head on every page, which is where Google's own snippet goes: it
+     loads async so it never blocks a paint, and page_view fires without any
+     further wiring.
+
+     THIS IS WHY privacy.html CHANGED IN THE SAME COMMIT. That page said there
+     was no analytics on NovaClip. From here that is not true, and a policy
+     that quietly drifts from what the software does is a promise being broken
+     without telling anybody. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QN1QE08F2K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+
+  /* CONSENT FIRST, MEASUREMENT SECOND.
+     Denied before anything else runs, so no analytics cookie is written and no
+     measurement is sent until somebody says yes. In the EU that is the order
+     the law asks for, and this audience is 13-18, which raises the bar rather
+     than lowering it.
+
+     Google's own snippet does not do this — the default is granted, and the
+     tag starts measuring on load. Reversing the default is the whole point:
+     "ask afterwards" is not asking.
+
+     nova.js draws the banner and calls gtag('consent','update',...) when the
+     answer comes in; a stored yes from a previous visit is applied here so the
+     question is asked once rather than on every page. */
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    wait_for_update: 500
+  });
+  try {
+    if (localStorage.getItem('nc_consent') === 'yes') {
+      gtag('consent', 'update', { analytics_storage: 'granted' });
+    }
+  } catch (e) {}
+
+  gtag('js', new Date());
+  gtag('config', 'G-QN1QE08F2K');
+</script>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<!-- PWA. The manifest and the icons sit at the site root so they resolve at
+     https://novaclip.org/manifest.json and /icons/..., which is what an install
+     prompt and PWABuilder look for. The service worker is registered at the end
+     of nova.js, which all 24 pages already load. -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050505">
+<title>Hype Lab — NovaClip</title>
+<meta name='description' content='Drop in a video you have already edited. NovaClip finds the seconds where attention drops and adds a beat-timed punch, a light wash, words on screen and a music bed — measured, not sprinkled, and capped so it can never flash.'>
+<link rel='icon' href='logo.svg' type='image/svg+xml'>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:var(--nc-bg,#05070E);--panel:var(--nc-bg2,#0C1220);--line:rgba(255,255,255,.1);--txt:var(--nc-text,#E8EEFF);--dim:var(--nc-dim2,#8A97B4);
+  --cyan:var(--nc-cyan2,#00E5FF);--violet:var(--nc-violet,#7C5CFF);--pink:var(--nc-pink,#FF3D9A);--lime:#B6FF4A;--amber:var(--nc-amber,#FFB443);
+  --grad:linear-gradient(110deg,var(--violet),var(--cyan) 48%,var(--pink))}
+body{background:var(--ink);color:var(--txt);min-height:100vh;margin-left:200px;
+  font-family:'Geist','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  /* clip, not hidden: hidden forces the other axis to auto and gives the page
+     a second scrollbar with a dead strip beside it. */
+  overflow-x:clip}
+.wrap{max-width:1080px;margin:auto;padding:34px 22px 90px}
+.hero h1{font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.hero .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lede{color:var(--dim);max-width:70ch;margin-top:10px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;margin-top:20px}
+.step h2{font-size:1.05rem;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.step h2 .n{display:grid;place-items:center;width:26px;height:26px;border-radius:9px;
+  background:var(--grad);color:#05070E;font-size:.85rem;font-weight:900;flex:none}
+.step .sub{color:var(--dim);font-size:.9rem;margin-bottom:14px}
+.drop{border:1.5px dashed rgba(255,255,255,.22);border-radius:14px;padding:30px 18px;text-align:center;
+  cursor:pointer;transition:.2s;background:rgba(255,255,255,.02)}
+.drop:hover,.drop.over{border-color:var(--cyan);background:rgba(0,229,255,.06)}
+.drop b{display:block;font-size:1rem}
+.drop span{display:block;color:var(--dim);font-size:.85rem;margin-top:4px}
+.btn{border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--txt);
+  padding:9px 15px;border-radius:11px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer;transition:.2s}
+.btn:hover:not(:disabled){border-color:var(--cyan);background:rgba(0,229,255,.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.go{background:var(--grad);border:none;color:#05070E;font-weight:800}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--dim);font-size:.86rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+canvas#stage{width:100%;border-radius:12px;background:#000;display:block;aspect-ratio:16/9}
+#curve{width:100%;height:74px;display:block;border-radius:10px;background:rgba(255,255,255,.03);margin-top:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--dim);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:12px}
+.fact{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.fact b{display:block;font-size:1.25rem;font-weight:800}
+.fact span{color:var(--dim);font-size:.76rem}
+.fx{border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-top:9px;background:rgba(255,255,255,.025)}
+.fx .top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.fx .tag{font-size:.7rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  padding:2px 7px;border-radius:6px;background:rgba(0,229,255,.16);color:var(--cyan)}
+.fx .tag.wash{background:rgba(255,61,154,.16);color:var(--pink)}
+.fx .tag.words{background:rgba(182,255,74,.16);color:var(--lime)}
+.fx .tag.music{background:rgba(255,180,67,.16);color:var(--amber)}
+.fx .at{font-variant-numeric:tabular-nums;font-size:.82rem;color:var(--dim)}
+.fx .why{color:var(--dim);font-size:.83rem;margin-top:5px}
+.fx input[type=text]{width:100%;margin-top:8px;background:rgba(0,0,0,.35);border:1px solid var(--line);
+  border-radius:9px;color:var(--txt);font:inherit;font-size:.9rem;padding:8px 11px}
+.fx input[type=text]:focus{outline:none;border-color:var(--cyan)}
+.sw{display:flex;align-items:center;gap:8px;font-size:.9rem;cursor:pointer}
+.note{border-left:3px solid var(--cyan);background:rgba(0,229,255,.05);border-radius:0 11px 11px 0;
+  padding:11px 14px;margin-top:14px;font-size:.88rem}
+.note.warn{border-left-color:var(--amber);background:rgba(255,180,67,.06)}
+.bar{height:7px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;width:0;background:var(--grad);transition:width .25s}
+.say{margin-top:12px;font-size:.9rem;border-radius:11px;padding:10px 13px;border:1px solid var(--line)}
+.say.no{border-color:rgba(255,90,90,.5);background:rgba(255,90,90,.08)}
+.say.ok{border-color:rgba(182,255,74,.45);background:rgba(182,255,74,.07)}
+@media(max-width:900px){body{margin-left:0}.wrap{padding:20px 16px 80px}}
+@media print{.sidebar,.btn,.drop{display:none!important}body{margin-left:0}}
+</style>
+</head>
+<body>
+<div class='sidebar'>
+  <!-- nova.js builds the links; this is only the shell it fills -->
+  <div class='themewrap'>
+    <label data-t='language'>Language</label>
+    <select id='langpick'></select>
+  </div>
+</div>
+
+<div class='wrap'>
+  <div class='hero'>
+    <h1>Your edit is done. <span class='g'>Now make it hold.</span></h1>
+    <p class='lede'>Drop in a video you have already cut. This does not re-edit it — it watches
+      it, finds the seconds where attention falls off, and puts something there: a punch on the
+      beat, a light wash behind a flat stretch, words at the hook, and a music bed at your clip's
+      own tempo. Everything is placed against a measurement, and nothing is uploaded to do it.</p>
+  </div>
+
+  <!-- 1 ------------------------------------------------------------------ -->
+  <div class='step'>
+    <h2><span class='n'>1</span>The clip</h2>
+    <p class='sub'>It stays on your device. Opening it here uploads nothing.</p>
+    <div class='drop' id='drop'>
+      <b>Drop your edited video here, or click to choose</b>
+      <span>MP4, WebM or MOV — the finished cut, not the raw footage</span>
+    </div>
+    <input type='file' id='file' accept='video/*' hidden>
+    <div class='bar' id='bar' hidden><i></i></div>
+    <div id='say1'></div>
+  </div>
+
+  <!-- 2 ------------------------------------------------------------------ -->
+  <div class='step' id='step2' hidden>
+    <h2><span class='n'>2</span>What the clip is doing</h2>
+    <p class='sub'>Measured from your video, not guessed. The dip is where viewers leave.</p>
+    <div class='facts' id='facts'></div>
+    <canvas id='curve' width='980' height='74'></canvas>
+    <div class='legend'>
+      <span><i style='background:var(--cyan)'></i>energy — motion and loudness together</span>
+      <span><i style='background:rgba(255,61,154,.55)'></i>flat stretch</span>
+      <span><i style='background:var(--lime)'></i>cut you already made</span>
+    </div>
+    <div id='say2'></div>
+  </div>
+
+  <!-- 3 ------------------------------------------------------------------ -->
+  <div class='step' id='step3' hidden>
+    <h2><span class='n'>3</span>The plan</h2>
+    <p class='sub'>Each one is here because of something in the curve above. Turn any of it off.</p>
+    <div class='row' style='margin-bottom:6px'>
+      <label class='sw'><input type='checkbox' id='t_punch' checked> Punch</label>
+      <label class='sw'><input type='checkbox' id='t_wash' checked> Light wash</label>
+      <label class='sw'><input type='checkbox' id='t_words' checked> Words</label>
+      <label class='sw'><input type='checkbox' id='t_music' checked> Music bed</label>
+    </div>
+    <div id='fxlist'></div>
+
+    <div class='row' style='margin-top:14px'>
+      <button class='btn' id='ai'>Ask the AI to write the words</button>
+      <span class='muted'>Sends four still frames at 512px. Not the video, not the sound, not the filename.</span>
+    </div>
+    <div id='sayAI'></div>
+  </div>
+
+  <!-- 4 ------------------------------------------------------------------ -->
+  <div class='step' id='step4' hidden>
+    <h2><span class='n'>4</span>Watch it back</h2>
+    <p class='sub'>The preview draws the real effects. What you see here is what exports.</p>
+    <div class='grid2'>
+      <div>
+        <canvas id='stage'></canvas>
+        <div class='row' style='margin-top:10px'>
+          <button class='btn go' id='play'>Play preview</button>
+          <button class='btn' id='export'>Export the hyped version</button>
+        </div>
+        <div class='bar' id='ebar' hidden><i></i></div>
+        <div id='say4'></div>
+      </div>
+      <div>
+        <div class='note' id='flashnote'></div>
+        <div class='note warn'>
+          <b>About the music.</b> It is generated here, in your browser, at your clip's tempo —
+          no track is downloaded and none is licensed. That is deliberate: a bed taken from
+          somewhere else is somebody's copyright sitting on your upload, and a claim on your
+          channel is a real cost to you.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<video id='vid' playsinline hidden></video>
+
+<script src='export-fix.js'></script>
+<script src='hype.js'></script>
+<script src='nova.js'></script>
+<script src='biometric.js' defer></script>
+<script src='jarvis.js' defer></script>
+<script>
+/* ============================================================================
+   HYPE LAB — the page. The measuring and the drawing live in hype.js; this
+   file is the wiring, and it is deliberately thin.
+   ========================================================================== */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var srcURL = null, analysis = null, fx = null, playing = false, raf = 0;
+
+  function say(where, kind, title, body) {
+    var el = $(where);
+    el.innerHTML = '';
+    if (!kind) return;
+    var d = document.createElement('div');
+    d.className = 'say ' + kind;
+    d.innerHTML = '<b>' + title + '</b>' + (body ? '<br><span class="muted">' + body + '</span>' : '');
+    el.appendChild(d);
+  }
+  function bar(id, v) {
+    var b = $(id);
+    b.hidden = v == null;
+    if (v != null) b.firstElementChild.style.width = Math.round(v * 100) + '%';
+  }
+  function fmt(t) {
+    var s = Math.max(0, t);
+    return (s < 10 ? '0' : '') + s.toFixed(1) + 's';
+  }
+
+  /* ---- 1. taking the file ------------------------------------------------ */
+  var drop = $('drop'), file = $('file');
+  drop.addEventListener('click', function () { file.click(); });
+  ['dragenter', 'dragover'].forEach(function (e) {
+    drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.add('over'); });
+  });
+  ['dragleave', 'drop'].forEach(function (e) {
+    drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.remove('over'); });
+  });
+  drop.addEventListener('drop', function (ev) {
+    var f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+    if (f) take(f);
+  });
+  file.addEventListener('change', function () { if (file.files[0]) take(file.files[0]); });
+
+  async function take(f) {
+    if (!/^video\//.test(f.type) && !/\.(mp4|webm|mov|m4v)$/i.test(f.name)) {
+      return say('say1', 'no', 'That is not a video', 'Drop an MP4, WebM or MOV.');
+    }
+    if (srcURL) URL.revokeObjectURL(srcURL);
+    srcURL = URL.createObjectURL(f);
+    say('say1', '', '');
+    bar('bar', 0);
+    try {
+      analysis = await window.NC_HYPE.analyse(srcURL, function (label, p) {
+        bar('bar', p);
+        say('say1', 'ok', label, '');
+      });
+      bar('bar', null);
+      say('say1', 'ok', 'Read ' + f.name,
+        analysis.dense
+          ? 'Every frame was looked at, so the cuts you made are in the plan below.'
+          : 'This browser does not hand pages individual frames, so the clip was sampled instead. ' +
+            'The energy curve is real; the cut list is not available here, and the plan uses the beat alone.');
+      showAnalysis();
+      rebuild();
+    } catch (err) {
+      bar('bar', null);
+      say('say1', 'no', 'Could not read that clip', err && err.message ? err.message : String(err));
+    }
+  }
+
+  /* ---- 2. showing what was measured -------------------------------------- */
+  function showAnalysis() {
+    var a = analysis;
+    $('step2').hidden = false;
+    var flatTotal = a.flat.reduce(function (s, f) { return s + (f.to - f.from); }, 0);
+    var facts = [
+      ['Length', a.duration.toFixed(1) + 's'],
+      ['Tempo', a.bpm ? a.bpm + ' BPM' : '—'],
+      ['Cuts found', a.dense ? a.cuts.length : '—'],
+      ['Flat stretches', a.flat.length],
+      ['Time in a dip', flatTotal.toFixed(1) + 's']
+    ];
+    $('facts').innerHTML = facts.map(function (f) {
+      return '<div class="fact"><b>' + f[1] + '</b><span>' + f[0] + '</span></div>';
+    }).join('');
+
+    if (!a.hasAudio) {
+      say('say2', 'ok', 'No audio track was readable',
+        'The energy curve is motion only, and the tempo is unknown — so punches land on your cuts ' +
+        'rather than on a beat. The music bed still works; it just picks its own tempo.');
+    } else if (!a.flat.length) {
+      say('say2', 'ok', 'No flat stretch in this one',
+        'Energy never sits below the clip\'s own median for long enough to lose anybody. There is ' +
+        'nothing here to rescue, so the plan is short — which is the right answer, not a failure.');
+    } else {
+      say('say2', '', '');
+    }
+    drawCurve();
+  }
+
+  function drawCurve() {
+    var a = analysis, c = $('curve'), ctx = c.getContext('2d');
+    var W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    var n = a.energy.length;
+    if (!n) return;
+
+    a.flat.forEach(function (f) {
+      var x0 = (f.from / a.duration) * W, x1 = (f.to / a.duration) * W;
+      ctx.fillStyle = 'rgba(255,61,154,.20)';
+      ctx.fillRect(x0, 0, Math.max(1, x1 - x0), H);
+    });
+
+    ctx.beginPath();
+    for (var i = 0; i < n; i++) {
+      var x = (i / (n - 1)) * W, y = H - 4 - a.energy[i] * (H - 12);
+      if (!i) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(182,255,74,.75)';
+    ctx.lineWidth = 1;
+    a.cuts.forEach(function (t) {
+      var x = (t / a.duration) * W;
+      ctx.beginPath(); ctx.moveTo(x, H - 12); ctx.lineTo(x, H); ctx.stroke();
+    });
+  }
+
+  /* ---- 3. the plan ------------------------------------------------------- */
+  ['t_punch', 't_wash', 't_words', 't_music'].forEach(function (id) {
+    $(id).addEventListener('change', rebuild);
+  });
+
+  function rebuild() {
+    if (!analysis) return;
+    /* Words the creator has already typed survive a rebuild — losing them
+       because a checkbox moved would be its own small betrayal. */
+    var kept = {};
+    if (fx) fx.forEach(function (e) { if (e.kind === 'words' && e.text) kept[e.slot] = e.text; });
+
+    fx = window.NC_HYPE.plan(analysis, {
+      punch: $('t_punch').checked, wash: $('t_wash').checked,
+      words: $('t_words').checked, music: $('t_music').checked
+    });
+    fx.forEach(function (e) { if (e.kind === 'words' && kept[e.slot]) e.text = kept[e.slot]; });
+
+    $('step3').hidden = false;
+    $('step4').hidden = false;
+    drawList();
+    flashNote();
+    sizeStage();
+    drawAt(0);
+  }
+
+  var WHY = {
+    punch: 'On a beat that lands on a cut you already made — it reinforces your edit instead of fighting it.',
+    wash: 'Over a stretch where motion and loudness both sit below this clip\'s own median.',
+    music: 'Generated here at your clip\'s tempo. Nothing is downloaded and nothing is licensed.'
+  };
+
+  function drawList() {
+    var host = $('fxlist');
+    host.innerHTML = '';
+    if (!fx.length) {
+      host.innerHTML = '<p class="muted">Nothing is switched on.</p>';
+      return;
+    }
+    fx.forEach(function (e, i) {
+      var d = document.createElement('div');
+      d.className = 'fx';
+      var label = e.kind === 'words' ? ('Words · ' + e.slot) : e.kind;
+      d.innerHTML =
+        '<div class="top"><span class="tag ' + e.kind + '">' + label + '</span>' +
+        '<span class="at">' + fmt(e.at) + (e.kind === 'music' ? '' : ' → ' + fmt(e.at + e.len)) + '</span></div>' +
+        '<div class="why">' + (e.hint || WHY[e.kind] || '') + '</div>';
+      if (e.kind === 'words') {
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.maxLength = 60;
+        inp.placeholder = e.slot === 'hook' ? 'Say the thing in six words'
+          : (e.slot === 'end' ? 'Ask for the follow' : 'Something for the quiet bit');
+        inp.value = e.text || '';
+        inp.addEventListener('input', function () {
+          fx[i].text = inp.value;
+          drawAt(Math.min(analysis.duration - 0.05, e.at + 0.5));
+        });
+        d.appendChild(inp);
+      }
+      host.appendChild(d);
+    });
+  }
+
+  function flashNote() {
+    var f = window.NC_HYPE.flash;
+    var rate = fx.flashRate == null ? 0 : fx.flashRate;
+    var dropped = fx.flashDropped || 0;
+    $('flashnote').innerHTML =
+      '<b>Flash check: ' + rate + ' of ' + f.limit + ' allowed per second.</b><br>' +
+      '<span class="muted">WCAG 2.3.1 draws the line at three luminance changes above 10% in any one ' +
+      'second — that is the threshold for photosensitive seizures. This plan is measured against it ' +
+      'before anything is drawn' +
+      (dropped ? ', and <b>' + dropped + ' effect' + (dropped > 1 ? 's were' : ' was') +
+                 ' dropped</b> to stay under the line' : '') +
+      '. There is no switch for this.</span>';
+  }
+
+  /* ---- the AI words ------------------------------------------------------ */
+  $('ai').addEventListener('click', async function () {
+    if (!srcURL) return;
+    var b = $('ai');
+    b.disabled = true;
+    try {
+      var w = await window.NC_HYPE.askWords(srcURL, function (m) { say('sayAI', 'ok', m, ''); });
+      if (!w.hook && !w.middle && !w.end) {
+        say('sayAI', 'no', 'The AI would not guess',
+          'It could not tell what the clip is about from four frames, and said so instead of ' +
+          'inventing a caption for the wrong video. Write them yourself.');
+      } else {
+        fx.forEach(function (e) {
+          if (e.kind !== 'words') return;
+          if (w[e.slot]) e.text = w[e.slot];
+        });
+        drawList();
+        drawAt(0.6);
+        say('sayAI', 'ok', 'Three captions written', 'Edit any of them — they are only a starting point.');
+      }
+    } catch (err) {
+      say('sayAI', 'no', 'The AI could not answer', err && err.message ? err.message : String(err));
+    }
+    b.disabled = false;
+  });
+
+  /* ---- 4. preview and export --------------------------------------------- */
+  var vid = $('vid'), stage = $('stage');
+
+  function sizeStage() {
+    var w = analysis && analysis.width ? analysis.width : 1280;
+    var h = analysis && analysis.height ? analysis.height : 720;
+    stage.width = Math.min(1280, w);
+    stage.height = Math.round(stage.width * (h / w));
+    stage.style.aspectRatio = w + '/' + h;
+  }
+
+  function drawAt(t) {
+    if (!srcURL || !fx) return;
+    if (vid.src !== srcURL) { vid.src = srcURL; }
+    var ctx = stage.getContext('2d');
+    function go() {
+      try { vid.currentTime = Math.max(0, Math.min(t, (vid.duration || 1) - 0.05)); } catch (e) {}
+      vid.addEventListener('seeked', function once() {
+        vid.removeEventListener('seeked', once);
+        window.NC_HYPE.drawFrame(ctx, vid, fx, t, stage.width, stage.height);
+      });
+    }
+    if (vid.readyState >= 1) go();
+    else vid.addEventListener('loadedmetadata', go, { once: true });
+  }
+
+  $('play').addEventListener('click', function () {
+    if (!srcURL) return;
+    var ctx = stage.getContext('2d');
+    if (playing) {
+      playing = false; vid.pause(); cancelAnimationFrame(raf);
+      $('play').textContent = 'Play preview';
+      return;
+    }
+    playing = true;
+    $('play').textContent = 'Stop';
+    if (vid.src !== srcURL) vid.src = srcURL;
+    vid.currentTime = 0;
+    vid.muted = false;
+    vid.play();
+    (function tick() {
+      if (!playing) return;
+      window.NC_HYPE.drawFrame(ctx, vid, fx, vid.currentTime, stage.width, stage.height);
+      if (vid.ended) {
+        playing = false;
+        $('play').textContent = 'Play preview';
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    })();
+  });
+
+  $('export').addEventListener('click', async function () {
+    if (!srcURL || !fx) return;
+    var b = $('export');
+    b.disabled = true;
+    bar('ebar', 0);
+    say('say4', 'ok', 'Recording in real time',
+      'A browser encodes a stream at the speed of the clock, so this takes about as long as the clip.');
+    try {
+      var out = await window.NC_HYPE.exportVideo(srcURL, fx, {
+        width: stage.width, height: stage.height,
+        music: $('t_music').checked
+      }, function (p) { bar('ebar', p); });
+      bar('ebar', null);
+      var url = URL.createObjectURL(out.blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'novaclip-hyped.' + out.ext;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+      say('say4', 'ok', 'Saved',
+        Math.round(out.blob.size / 1024) + ' KB. Take it to Publish when you want the title and the thumbnail.');
+    } catch (err) {
+      bar('ebar', null);
+      say('say4', 'no', 'Export failed', err && err.message ? err.message : String(err));
+    }
+    b.disabled = false;
+  });
+})();
+</script>
+</body>
+</html>

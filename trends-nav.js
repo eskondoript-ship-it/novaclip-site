@@ -52,27 +52,35 @@
      arriving on one. */
   var DROP = ['/editor', '/publish'];
 
-  /* Added rather than redirected: there is no Studio item in this rail at all,
-     and it is the page that closes the loop — the trends you scanned here
-     turn into videos, and Studio is where you find out whether they worked. */
-  var STUDIO = { label: 'Studio', href: 'analytics.html',
-                 why: 'How the videos you made from these trends are doing' };
+  /* Added rather than redirected: neither of these exists in this rail at all.
+     Studio is the page that closes the loop — the trends you scanned here turn
+     into videos, and Studio is where you find out whether they worked. Hype Lab
+     sits before it, because it is the step between finishing a cut and posting
+     it: it measures where the finished edit loses attention and puts something
+     there.
+
+     A bar chart and a bolt, both drawn in the app's own icon idiom — 24x24, no
+     fill, 2px round stroke — because everything else in this rail is drawn that
+     way and one odd icon is more noticeable than a missing one. */
+  var ADD = [
+    { key: 'hype', label: 'Hype Lab', href: 'hype.html',
+      why: 'Find the seconds where your finished edit loses people, and fill them',
+      icon: 'M13 2 4 14h7l-1 8 9-12h-7z' },
+    { key: 'studio', label: 'Studio', href: 'analytics.html',
+      why: 'How the videos you made from these trends are doing',
+      icon: 'M3 3v18h18M7 16v-5M12 16V8M17 16v-3' }
+  ];
 
   function railFor(href) {
     var a = document.querySelector('.nc-sidebar a[href="#' + href + '"]');
     return a || null;
   }
 
-  /* A bar chart, in the app's own icon idiom — 24x24, no fill, 2px round
-     stroke — because everything else in this rail is drawn that way and one
-     odd icon is more noticeable than a missing one. */
-  var CHART = 'M3 3v18h18M7 16v-5M12 16V8M17 16v-3';
-
   /* The row is cloned from a sibling so the layout, the classes and the
      hover behaviour are the app's rather than a guess at them. Only the icon
      path and the label are replaced. */
-  function addStudio(nav) {
-    if (!nav || nav.querySelector('[data-nc-studio]')) return;
+  function addItem(nav, spec) {
+    if (!nav || nav.querySelector('[data-nc-add="' + spec.key + '"]')) return;
     /* The LAST item, not the first. The first is "Back to NovaClip", whose
        icon is a back arrow — cloning that gave Studio an arrow pointing off
        the page, which is the one thing it does not do. */
@@ -80,29 +88,30 @@
     var model = models[models.length - 1];
     if (!model) return;
     var a = model.cloneNode(true);
-    a.setAttribute('data-nc-studio', '1');
+    a.setAttribute('data-nc-add', spec.key);
     a.className = 'nc-nav-item ';
-    a.href = STUDIO.href;
-    a.title = STUDIO.why;
+    a.href = spec.href;
+    a.title = spec.why;
     a.removeAttribute('aria-current');
     var svg = a.querySelector('svg');
     if (svg) {
       /* One path replaces however many the cloned icon had. */
       while (svg.firstChild) svg.removeChild(svg.firstChild);
       var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', CHART);
+      path.setAttribute('d', spec.icon);
       svg.appendChild(path);
     }
     /* Replace only the label, so the icon and the layout stay the app's. */
     var label = [].slice.call(a.childNodes).filter(function (n) {
       return n.nodeType === 1 && n.tagName !== 'svg' && !n.querySelector('svg');
     }).pop();
-    if (label) label.textContent = STUDIO.label;
-    else a.textContent = STUDIO.label;
-    /* Last, after Publish. This rail is a pipeline — trend, idea, script,
-       thumbnail, edit, publish — and Studio is what happens after the last
-       step: whether any of it worked. Putting it at the top read as a second
-       "Back to NovaClip" and broke the order the rest of the list is in. */
+    if (label) label.textContent = spec.label;
+    else a.textContent = spec.label;
+    /* Appended in ADD order, after whatever is already last. This rail is a
+       pipeline — trend, idea, script, thumbnail — and these two are what
+       happens after it: make the finished cut hold, then find out whether it
+       worked. Putting either at the top read as a second "Back to NovaClip"
+       and broke the order the rest of the list is in. */
     var items = nav.querySelectorAll('.nc-nav-item');
     var last = items[items.length - 1];
     if (last && last.parentNode) last.parentNode.insertBefore(a, last.nextSibling);
@@ -126,7 +135,8 @@
       a.classList.remove('nc-nav-item-active');
     });
 
-    addStudio(side.querySelector('nav') || side);
+    var nav = side.querySelector('nav') || side;
+    ADD.forEach(function (spec) { addItem(nav, spec); });
   }
 
   /* Somebody with #/publish bookmarked, or following an old link, still lands
@@ -142,8 +152,8 @@
     catchStaged();
     fix();
     /* React rebuilds the rail on every route change and would put the dead
-       hrefs back. Cheap to re-apply; the guard inside addStudio keeps it from
-       adding a second Studio. */
+       hrefs back. Cheap to re-apply; the guard inside addItem keeps it from
+       adding a second copy of anything in ADD. */
     try {
       new MutationObserver(fix).observe(document.body, { childList: true, subtree: true });
     } catch (e) {}

@@ -70,7 +70,11 @@
    which now asks for a script the v6 cache has never heard of, and would
    come back offline with a picker that does not exist. */
 /* v8 adds trends-nav.js. */
-const CACHE = 'novaclip-v8';
+/* v9 adds Hype Lab — hype.html and hype.js. The bump matters more than usual
+   here: a returning visitor would otherwise get the new rail from the network,
+   follow the new Hype Lab link, and land on a page the v8 cache has no entry
+   for. */
+const CACHE = 'novaclip-v9';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -118,6 +122,15 @@ const SHELL = [
   /* Sends the Trend Spotter's rail to the real pages. Without it that rail
      offers four features this site already has as though they were unbuilt. */
   '/trends-nav.js',
+  /* Hype Lab. The page and its engine go together: hype.html is markup with
+     no behaviour of its own, so shipping it without hype.js offline would give
+     somebody a drop zone that measures nothing and four dead checkboxes.
+     The analysis, the effects and the music are all arithmetic on frames and
+     samples already in memory — no model, no assets — so it genuinely works
+     on a train. Only the "ask the AI for the words" button needs the network,
+     and it says so when it cannot reach it. */
+  '/hype.html',
+  '/hype.js',
   /* The profile page's crypto and its avatar picker. Registering needs the
      network, but the page should not be a blank screen on a train either. */
   '/account.js',
