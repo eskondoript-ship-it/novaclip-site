@@ -378,6 +378,43 @@ fn distance(a: Point, b: Point) -> f64 {
         html body .jr-pill { bottom: calc(142px + env(safe-area-inset-bottom, 0px)) !important; }
       }
     </style>
+<style>
+/* ==========================================================================
+   THE TYPED TEXT HAD NO PLACE TO BREAK
+   ==========================================================================
+   Words ran off the right-hand edge and were cut mid-word — "lesson" arriving
+   as "less", the last word of a line simply gone.
+
+   Measured, rather than guessed at. The passage is rendered one character per
+   <span class="char">, and the gaps between words are char spans too — holding
+   U+00A0, a NON-BREAKING space. A non-breaking space is by definition not a
+   line-break opportunity, so the whole passage is one unbreakable word to the
+   browser however `white-space` is set. In an 820px box at 26px it measured
+   scrollWidth 28841px against clientWidth 820 — about thirty-five screens of
+   text on a single line, with `overflow: hidden` hiding the evidence.
+
+   (`white-space: pre-wrap` on the char spans was tried first and measured no
+   better, which is what proved the separator rather than the wrapping mode was
+   the cause.)
+
+   `overflow-wrap: anywhere` is what restores wrapping: it lets the browser
+   break inside a run that has no break opportunity of its own, but only when
+   the line would otherwise overflow. The box was always meant to wrap — its
+   scrollHeight is fifteen times its height, so the app expects to scroll
+   through wrapped lines — and this gives it that back.
+
+   THE TRADE, STATED: a word can now split across the end of a line. That is
+   worse than breaking at spaces and far better than the previous behaviour,
+   where everything past the first line was simply invisible. Breaking at the
+   spaces instead would mean rewriting the NBSP in DOM that React re-renders on
+   every keystroke, which in a typing game is a bad bargain.
+
+   Written here rather than in the bundle's own rule because this is a bundled
+   app and an edit inside it survives exactly until the next rebuild. Two
+   classes beat one, so this wins wherever it sits in the file.
+   ========================================================================== */
+.typing-box { overflow-wrap: anywhere; }
+</style>
   </head>
   <body>
     <div class="sidebar">

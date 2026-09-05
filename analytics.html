@@ -553,6 +553,25 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
       <div class='nx-read' id='nxRetainRead'></div>
     </div>
 
+    <!-- OPTIMIZE: every upload as a card, each carrying the two scores that
+         say whether to touch it. The panel is markup only — studio-nexus.js
+         fills it, because that file already owns the Studio's panels and the
+         tab that shows this one. Hidden until that tab is chosen. -->
+    <div id='nxOptimize' style='display:none'>
+      <div class='nxo-bar'>
+        <input id='nxoSearch' type='search' placeholder='Search your videos…' autocomplete='off'
+               aria-label='Search your videos by title'>
+        <select id='nxoSort' aria-label='Sort the videos'>
+          <option value='worst'>Needs work first</option>
+          <option value='new'>Newest first</option>
+          <option value='views'>Most views</option>
+          <option value='best'>Best first</option>
+        </select>
+      </div>
+      <div class='nxo-grid' id='nxoGrid'></div>
+      <p class='perfnote' id='nxoNote'></p>
+    </div>
+
     <!-- The channel review. renderReview() has always written into rvTitle and
          rvStats; the markup for them was never in the page, so the function
          threw on its first line and the whole section silently did not exist.
@@ -1525,14 +1544,23 @@ async function fetchUploads(channel, max) {
   if (!items.items) return [];
   const ids = items.items.map(i => i.contentDetails.videoId).join(',');
   const vs = await yt('videos?part=statistics,snippet&id=' + ids);
-  return (vs.items || []).map(v => ({
-    id: v.id,
-    title: v.snippet.title,
-    date: new Date(v.snippet.publishedAt),
-    views: parseInt(v.statistics.viewCount || 0),
-    likes: parseInt(v.statistics.likeCount || 0),
-    comments: parseInt(v.statistics.commentCount || 0)
-  }));
+  return (vs.items || []).map(v => {
+    /* The snippet is already in this response — it is what the title and the
+       date come from — so the thumbnail costs nothing extra. The Optimize grid
+       needs it; medium is 320x180 and is plenty at card size, with high as the
+       fallback for the few videos that have no medium. */
+    const th = (v.snippet.thumbnails) || {};
+    return {
+      id: v.id,
+      title: v.snippet.title,
+      date: new Date(v.snippet.publishedAt),
+      thumb: (th.medium && th.medium.url) || (th.high && th.high.url) ||
+             (th.default && th.default.url) || '',
+      views: parseInt(v.statistics.viewCount || 0),
+      likes: parseInt(v.statistics.likeCount || 0),
+      comments: parseInt(v.statistics.commentCount || 0)
+    };
+  });
 }
 
 function slice(list, days) {

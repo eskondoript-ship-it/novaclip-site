@@ -210,15 +210,21 @@
      with its own heading, and a tab that made a section further up the page
      appear and disappear would read as the page jumping rather than as a
      filter. It stays put in every view. */
-  var PANELS = ['dashgrid', 'perfbox', 'reviewwrap', 'nxRetainBox'];
+  var PANELS = ['dashgrid', 'perfbox', 'reviewwrap', 'nxRetainBox', 'nxOptimize'];
   var VIEWS = {
     overview:    ['dashgrid', 'perfbox', 'reviewwrap'],
+    optimize:    ['nxOptimize'],               // every upload as a card, with its scores
     competitors: ['dashgrid'],                 // the you-vs-them comparison charts
     retention:   ['nxRetainBox', 'perfbox'],
     library:     ['reviewwrap']                // the review and the ranked videos
   };
   var TABS = [
     ['overview', 'Overview'],
+    /* Second, not last. It is the tab somebody opens with a video in mind —
+       "which of mine is weak and what do I do about it" — and burying that
+       behind Competitors and Retention made the page answer questions nobody
+       had before the one they came with. */
+    ['optimize', 'Optimize'],
     ['competitors', 'Competitors'],
     ['retention', 'Retention'],
     ['library', 'Videos']
@@ -246,7 +252,146 @@
         }
       } catch (e) {}
       if (view === 'retention') retentionBoot();
+      if (view === 'optimize') optimizeBoot();
     });
+  }
+
+  /* ==========================================================================
+     OPTIMIZE — every upload as a card, carrying the two scores that matter
+     ==========================================================================
+     TWO CHIPS, NOT ONE, AND NOT FOUR
+
+     rank.js scores a posted video on four parts. Showing all four on a card
+     turns a library into a spreadsheet; showing one overall number tells you
+     something is wrong without saying what. Two is the number that maps onto
+     what can actually be done next:
+
+       Title    rank.js's title part, unchanged. Rewritable this afternoon.
+       Content  reach and engagement together — whether the video landed.
+                Nothing can be done to a posted video about this one; it is
+                what the NEXT video learns from.
+
+     WHY THESE ARE OUT OF TEN AND NOT OUT OF A HUNDRED
+
+     Because rank.js is out of ten everywhere else, and it argues the case in
+     its own header: nobody can tell 63 from 67, and both look like a mark
+     somebody stands behind. A 7.2 on this card means exactly what a 7.2 means
+     on the Publish page. Two scales for one judgement inside one product is
+     the bug, not the polish.
+     ========================================================================== */
+  var optState = { q: '', sort: 'worst' };
+
+  function fmtAge(d) {
+    var days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (days < 1) return 'today';
+    if (days < 2) return 'yesterday';
+    if (days < 30) return days + ' days ago';
+    var months = Math.round(days / 30.4);
+    if (months < 24) return months + ' month' + (months > 1 ? 's' : '') + ' ago';
+    return Math.round(months / 12) + ' years ago';
+  }
+
+  function chipClass(ten) { return ten >= 7.5 ? 'good' : (ten >= 5 ? 'mid' : 'bad'); }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function optimizeBoot() {
+    var grid = $('nxoGrid');
+    if (!grid) return;
+    var s = $('nxoSearch'), so = $('nxoSort');
+    if (s && !s.dataset.built) {
+      s.dataset.built = '1';
+      s.addEventListener('input', function () { optState.q = s.value.trim().toLowerCase(); optimizeDraw(); });
+    }
+    if (so && !so.dataset.built) {
+      so.dataset.built = '1';
+      so.addEventListener('change', function () { optState.sort = so.value; optimizeDraw(); });
+    }
+    optimizeDraw();
+  }
+
+  function optimizeDraw() {
+    var grid = $('nxoGrid'), note = $('nxoNote');
+    if (!grid) return;
+    var ups = D.uploads || [];
+
+    if (!window.NC_RANK) {
+      grid.innerHTML = '<p class="nxo-empty">The scale this grid uses lives in rank.js, and it did not load.</p>';
+      return;
+    }
+    /* rank.js needs at least two videos: every part is scored against this
+       channel's own median, and one video is its own median. */
+    if (ups.length < 2) {
+      grid.innerHTML = '<p class="nxo-empty">' + (ups.length
+        ? 'One upload is not enough to score anything. Every number here is measured against your own ' +
+          'median, and a single video is its own median — so it would score itself 10 out of 10 and mean nothing.'
+        : 'Connect your channel and your uploads appear here, each with its own scores.') + '</p>';
+      if (note) note.textContent = '';
+      return;
+    }
+
+    var rated = window.NC_RANK.posted(ups);
+    var rows = rated.map(function (r) {
+      var content = window.NC_RANK.outOfTen(r.parts.reach * 0.54 + r.parts.engagement * 0.46);
+      return { r: r, title: window.NC_RANK.outOfTen(r.parts.title), content: content };
+    });
+
+    if (optState.q) {
+      rows = rows.filter(function (x) { return x.r.v.title.toLowerCase().indexOf(optState.q) >= 0; });
+    }
+    var by = {
+      worst: function (a, b) { return (a.title + a.content) - (b.title + b.content); },
+      best:  function (a, b) { return (b.title + b.content) - (a.title + a.content); },
+      new:   function (a, b) { return b.r.v.date - a.r.v.date; },
+      views: function (a, b) { return b.r.v.views - a.r.v.views; }
+    };
+    rows.sort(by[optState.sort] || by.worst);
+
+    if (!rows.length) {
+      grid.innerHTML = '<p class="nxo-empty">Nothing matches “' + esc(optState.q) + '”.</p>';
+      if (note) note.textContent = '';
+      return;
+    }
+
+    grid.innerHTML = rows.map(function (x) {
+      var v = x.r.v;
+      /* The fix line is only shown where rank.js found a part genuinely
+         holding the video back. Where it did not, the card says nothing
+         rather than inventing a complaint — a grid where every card carries a
+         criticism teaches people to stop reading the criticisms. */
+      var fix = x.r.weakest ? esc(x.r.tip) : '';
+      return '<a class="nxo-card" href="https://www.youtube.com/watch?v=' + esc(v.id) + '" ' +
+             'target="_blank" rel="noopener noreferrer" title="' + esc(v.title) + '">' +
+        /* A video with no thumbnail in the API response is rare but real —
+           very new uploads, and anything still processing. An empty box reads
+           as a broken image; the first letter of the title reads as a video
+           whose picture has not arrived yet, which is what it is. */
+        '<div class="nxo-thumb">' +
+          (v.thumb
+            ? '<img src="' + esc(v.thumb) + '" alt="" loading="lazy" decoding="async">'
+            : '<span class="nxo-noimg">' + esc((v.title || '?').trim().charAt(0).toUpperCase()) + '</span>') +
+        '</div>' +
+        '<div class="nxo-body">' +
+          '<div class="nxo-chips">' +
+            '<span class="nxo-chip ' + chipClass(x.title) + '">Title <b>' + x.title.toFixed(1) + '</b></span>' +
+            '<span class="nxo-chip ' + chipClass(x.content) + '">Content <b>' + x.content.toFixed(1) + '</b></span>' +
+          '</div>' +
+          '<div class="nxo-title">' + esc(v.title) + '</div>' +
+          '<div class="nxo-meta">' + Number(v.views).toLocaleString() + ' view' +
+            (v.views === 1 ? '' : 's') + ' · ' + fmtAge(v.date) + '</div>' +
+          (fix ? '<div class="nxo-fix">' + fix + '</div>' : '') +
+        '</div></a>';
+    }).join('');
+
+    if (note) {
+      note.textContent = rows.length + ' of ' + rated.length + ' videos. ' +
+        'Both scores are out of ten, measured against this channel\'s own median — not against ' +
+        'anybody else\'s. Title is the one you can still change.';
+    }
   }
 
   function tabs() {

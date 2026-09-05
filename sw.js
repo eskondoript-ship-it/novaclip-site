@@ -74,7 +74,12 @@
    here: a returning visitor would otherwise get the new rail from the network,
    follow the new Hype Lab link, and land on a page the v8 cache has no entry
    for. */
-const CACHE = 'novaclip-v9';
+/* v10: nova.js lost the site-wide typefaces it was injecting, and
+   studio-nexus.js/.css gained the Optimize grid. Both are cached shell files,
+   so without the bump a returning visitor keeps the old pair — headings still
+   in the serif that was removed, and a Studio whose new tab points at a panel
+   its cached script does not know how to fill. */
+const CACHE = 'novaclip-v10';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

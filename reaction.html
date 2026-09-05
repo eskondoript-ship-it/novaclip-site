@@ -70,8 +70,14 @@ body { background:var(--nc-bg,#05070E); color:var(--nc-text,#EAF2FF); min-height
 .wrap { width:100%; max-width:640px; }
 h1 { font-size:1.5rem; margin-bottom:4px; }
 .sub { color:var(--nc-dim,#7E8AA6); font-size:.92rem; margin-bottom:18px; line-height:1.6; }
+/* flex-direction:column is load-bearing. Without it the pad's two children —
+   the big line and the note under it — are flex items in a ROW, so "Press to
+   start" and "Then wait for green" render jammed together on one line with no
+   gap at all. The margin-bottom on the <b> below is what the layout was
+   written to use, and a bottom margin does nothing between two boxes sitting
+   side by side. */
 #pad { height:clamp(230px,46vh,340px); border-radius:22px; display:flex; align-items:center;
-       justify-content:center; text-align:center; cursor:pointer; user-select:none;
+       flex-direction:column; justify-content:center; text-align:center; cursor:pointer; user-select:none;
        border:1px solid var(--nc-line,rgba(255,255,255,.12)); transition:background .12s;
        background:var(--nc-bg2,rgba(255,255,255,.04)); padding:20px; }
 #pad.wait { background:#3A1220; border-color:#7d2540; }

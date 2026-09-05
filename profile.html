@@ -52,10 +52,10 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
      the same one recorded above the performance panels in analytics.html:
      keep the design, wire it to the thing that actually works.
 
-     TYPEFACES. The portal loads four Google fonts; this page loads none of
-     its own. It uses the two nova.js now sets for the whole site — Great Vibes
-     on the wordmark, EB Garamond on the headings — and Plus Jakarta Sans,
-     which this site already ships, for everything else. -->
+     TYPEFACES. The portal loads four Google fonts; this page loads none. The
+     headings use Georgia, which is already on the machine, and everything else
+     uses Plus Jakarta Sans, which this site ships itself. Nothing is fetched
+     from a font host. -->
 
 <style>
 :root {
@@ -69,9 +69,12 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
   --pt-text: var(--nc-text, #ededed);
   --pt-dim: #a8a29e;
   --pt-dim2: #78716c;
-  /* The site's display face, set in nova.js. Named here too so the page
-     still reads correctly if it is opened on its own. */
-  --pt-serif: var(--nc-display, 'EB Garamond', Garamond, Georgia, serif);
+  /* This page's own editorial serif, from the portal design it was built
+     from. It used to read var(--nc-display) — the site-wide face nova.js
+     injected — but that has been removed, so it names its own stack and no
+     longer depends on a variable that is gone. Georgia first because it is on
+     every Windows and Mac, so this looks deliberate with nothing downloaded. */
+  --pt-serif: Georgia, 'Times New Roman', serif;
   --pt-sans: 'Plus Jakarta Sans', 'Segoe UI', -apple-system, system-ui, sans-serif;
   --pt-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -180,6 +183,19 @@ input:focus { outline:none; border-color:var(--pt-text); }
       cursor:pointer; font-family:var(--pt-sans); font-weight:600; font-size:.95rem;
       background:var(--pt-text); color:var(--pt-bg); }
 .go:disabled { opacity:.5; cursor:default; }
+
+/* Google's own button: white, its own mark, and not restyled into the site's
+   palette. Their brand guidelines ask for that, and a sign-in button that does
+   not look like every other Google sign-in button is one people hesitate over. */
+.gbtn { width:100%; min-height:48px; margin-top:14px; padding:12px 18px;
+        display:flex; align-items:center; justify-content:center; gap:10px;
+        border:1px solid #dadce0; border-radius:12px; cursor:pointer;
+        background:#fff; color:#3c4043;
+        font-family:var(--pt-sans); font-weight:600; font-size:.95rem; }
+.gbtn:hover:not(:disabled) { background:#f7f8f8; box-shadow:0 1px 3px rgba(0,0,0,.18); }
+.gbtn:disabled { opacity:.55; cursor:default; }
+.gbtn svg { flex:none; }
+#gBox .note { margin-top:12px; }
 .alt { width:100%; min-height:46px; margin-top:9px; padding:12px 18px; border-radius:12px;
        cursor:pointer; font:inherit; font-size:.88rem; color:var(--pt-text);
        background:transparent; border:1px solid var(--pt-line2); }
@@ -263,6 +279,37 @@ a { color:var(--pt-text); }
     <div class='tabs' role='tablist'>
       <button role='tab' id='tabNew' aria-selected='true'>Create an account</button>
       <button role='tab' id='tabIn' aria-selected='false'>Sign in</button>
+    </div>
+
+    <!-- GOOGLE -----------------------------------------------------------
+         Above both tabs rather than inside one, because it is useful whether
+         you are new here or coming back. What it does and does not do is
+         written on the card on purpose: it names the profile and saves you
+         signing in again in Studio. It is not a second password, and it is
+         not what carries the account to another device — the recovery code
+         still is. Saying that here is cheaper than somebody finding out on a
+         new phone. -->
+    <div class='card' id='gBox'>
+      <div class='hrow'>
+        <h2 style='font-size:1.12rem'>Continue with Google</h2>
+        <span class='chip'>Optional</span>
+      </div>
+      <p class='sub'>Fills in your name and picture, and signs you in to Studio at
+        the same time so it does not ask again.</p>
+      <button class='gbtn' id='gGo' type='button'>
+        <svg viewBox='0 0 18 18' width='18' height='18' aria-hidden='true'>
+          <path fill='#4285F4' d='M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z'/>
+          <path fill='#34A853' d='M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z'/>
+          <path fill='#FBBC05' d='M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z'/>
+          <path fill='#EA4335' d='M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z'/>
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+      <div class='say' id='gSay'></div>
+      <p class='note'>It does <b>not</b> replace your password, and it is not how
+        you get in on a different device — your <b>NOVA-XXXX-XXXX</b> code is still
+        the only thing that moves the account. Nothing is posted to Google; NovaClip
+        only reads the name and picture on your account.</p>
     </div>
 
     <div class='card' id='newBox'>
@@ -508,6 +555,141 @@ a { color:var(--pt-text); }
 
   paint();
 })();
+</script>
+
+<!-- ==========================================================================
+     CONTINUE WITH GOOGLE
+     ==========================================================================
+     The same Firebase project the Studio already signs into (novaclip-eaf8c),
+     so one sign-in covers both pages. A module, because the Firebase SDK is
+     one — the rest of this page is a classic script and stays that way.
+
+     WHAT THIS DOES, AND WHAT IT DELIBERATELY DOES NOT
+
+     It reads the name and picture on the Google account and uses them to fill
+     in the profile. It does NOT create a NovaClip account by itself, and the
+     card above says so.
+
+     The reason is worth writing down rather than discovering later: NovaClip
+     accounts live on the leaderboard Worker, which authenticates a username
+     and a PBKDF2-derived key. It has no endpoint that verifies a Google ID
+     token, so there is no honest way for a Google sign-in alone to unlock an
+     account on a different device. Pretending otherwise would mean a button
+     that appears to sign you in and then loses everything the moment you open
+     the site on a phone. Until /account/google exists on the Worker and
+     verifies the token signature properly, Google is what names your profile
+     and saves you a second sign-in — and the recovery code is still what
+     carries the account.
+     ========================================================================== -->
+<script type='module'>
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+/* Same project as analytics.html. A Firebase web config is not a secret — it
+   identifies the project and is protected by authorised domains and rules, not
+   by being hidden. The API keys that ARE secrets stay on the Workers. */
+const firebaseConfig = {
+  apiKey: 'AIzaSyCKJVKqArOofTZT4fiz18cs_-thLB1O2J4',
+  authDomain: 'novaclip-eaf8c.firebaseapp.com',
+  projectId: 'novaclip-eaf8c',
+  storageBucket: 'novaclip-eaf8c.firebasestorage.app',
+  messagingSenderId: '299962701489',
+  appId: '1:299962701489:web:766f4ea8632830c625b490'
+};
+const auth = getAuth(initializeApp(firebaseConfig));
+
+const btn = document.getElementById('gGo');
+const say = (kind, title, body) => {
+  const el = document.getElementById('gSay');
+  if (!el) return;
+  el.className = 'say' + (kind ? ' ' + kind : '');
+  el.innerHTML = title ? '<b>' + title + '</b>' + (body ? '<br>' + body : '') : '';
+};
+
+/* Google returns a code and a sentence written for developers. The Studio
+   already translates these into the thing that has to be clicked; the same
+   few that actually happen are translated here rather than importing the
+   whole table for one button. */
+function explain(e) {
+  const code = (e && e.code) || '';
+  const host = location.hostname || 'this site';
+  if (code === 'auth/unauthorized-domain')
+    return 'Google will not sign anyone in from this address yet. In the Firebase console for ' +
+      '<code>novaclip-eaf8c</code>: Authentication &rarr; Settings &rarr; Authorized domains &rarr; add <code>' +
+      host + '</code>.';
+  if (code === 'auth/operation-not-allowed')
+    return 'Google sign-in is switched off for this project. Firebase console &rarr; Authentication &rarr; ' +
+      'Sign-in method &rarr; Google &rarr; Enable.';
+  if (code === 'auth/popup-blocked')
+    return 'Your browser blocked the Google window. Press the button again and it will use a ' +
+      'full-page redirect instead.';
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request')
+    return 'The Google window closed before it finished. Press the button again when you are ready.';
+  if (code === 'auth/internal-error')
+    return 'Google refused the permission rather than the password &mdash; usually the consent screen is ' +
+      'still in Testing, which only lets listed test users through.';
+  return (e && e.message) || 'Sign-in failed.';
+}
+
+function slug(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 20);
+}
+
+/* Fill the form in rather than submitting it. The username field owns the live
+   preview and the availability check, so setting .value and firing `input` is
+   what makes the rest of the page agree — assigning the value alone updates
+   nothing, which is the usual way this kind of prefill silently half-works. */
+function useAccount(user) {
+  if (!user) return;
+  const name = user.displayName || (user.email || '').split('@')[0];
+  try {
+    localStorage.setItem('nc_google', JSON.stringify({
+      uid: user.uid, name: name || '', email: user.email || '', photo: user.photoURL || ''
+    }));
+  } catch (e) {}
+
+  const u = document.getElementById('nUser');
+  const suggestion = slug(name);
+  if (u && !u.value && suggestion.length >= 3) {
+    u.value = suggestion;
+    u.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  if (btn) {
+    btn.disabled = true;
+    const label = btn.querySelector('span');
+    if (label) label.textContent = 'Signed in as ' + name;
+  }
+  say('ok', 'Hello, ' + name,
+    (u && u.value ? 'Your username is filled in &mdash; pick a password and press Create it. ' : '') +
+    'Studio will not ask you to sign in again on this device.');
+}
+
+if (btn) {
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    say('', 'Opening Google&hellip;', '');
+    try {
+      const provider = new GoogleAuthProvider();
+      /* No YouTube scopes here. This page needs a name and a picture; asking
+         for a channel's data to fill in an avatar would be asking for far more
+         than the feature uses. Studio asks for those when Studio needs them. */
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const res = await signInWithPopup(auth, provider);
+      useAccount(res.user);
+    } catch (e) {
+      if (e && e.code === 'auth/popup-blocked') {
+        try { return await signInWithRedirect(auth, new GoogleAuthProvider()); } catch (e2) {}
+      }
+      btn.disabled = false;
+      say('no', 'Could not sign in with Google', explain(e));
+    }
+  });
+}
+
+/* Coming back from the redirect path, and the already-signed-in case. */
+getRedirectResult(auth).then(r => { if (r && r.user) useAccount(r.user); }).catch(() => {});
+onAuthStateChanged(auth, u => { if (u) useAccount(u); });
 </script>
 </body>
 </html>
