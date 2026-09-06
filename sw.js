@@ -84,7 +84,11 @@
    shell files. Without the bump a returning visitor keeps a rail whose items
    still navigate out of the app, and a Hype Lab whose content sits 872px below
    the fold. */
-const CACHE = 'novaclip-v11';
+/* v12: Hype Lab moved into the Trend Spotter as an embedded frame. hype.html
+   gained its embed mode and trends-nav.js gained the panel that holds it, and
+   both are cached shell files — a returning visitor on v11 would get a rail
+   that still navigates away from the app. */
+const CACHE = 'novaclip-v12';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

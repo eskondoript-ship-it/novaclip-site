@@ -25,13 +25,17 @@
    and the two are shown and hidden against each other. React re-renders its
    own subtree as much as it likes and never touches this one.
 
-   WHAT STILL LEAVES, AND WHY THAT IS RIGHT
+   HYPE LAB IS THE REAL PAGE, IN A FRAME
 
-   Hype Lab is a full tool: a file picker, frame decoding, a canvas preview and
-   a recorder. Embedding that here would be a second copy of a page that
-   already exists. It stays a link, like the Editor and Publish did before they
-   were taken out of this rail for being a second navigation for the whole
-   site.
+   It is a full tool — file picker, frame decoding, canvas preview, recorder —
+   and rebuilding it here would be a second copy that drifts from the first.
+   So it is not rebuilt: the panel holds hype.html?embed=1 in an iframe, which
+   is the same thing game.html already does with the four games. One page, one
+   copy of the code, and it stops being somewhere you get sent instead of
+   somewhere you go.
+
+   nova.js already understands ?embed=1 and skips the rail, the top bar and the
+   points badge; hype.html hides its own .sidebar markup on the same flag.
 
    The Studio panel is a snapshot rather than the whole dashboard, and it says
    so: the charts on analytics.html need a YouTube OAuth grant and the
@@ -60,14 +64,10 @@
                      why: 'Make a 1280x720 thumbnail, here' },
     '/studio':     { label: 'Studio',
                      icon: 'M3 3v18h18M7 16v-5M12 16V8M17 16v-3',
-                     why: 'How the videos you made from these trends are doing' }
-  };
-
-  /* Rail items that genuinely open a full page, because the tool is a page. */
-  var LINKS = {
-    hype: { label: 'Hype Lab', href: 'hype.html',
-            icon: 'M13 2 4 14h7l-1 8 9-12h-7z',
-            why: 'Find the seconds where your finished edit loses people, and fill them' }
+                     why: 'How the videos you made from these trends are doing' },
+    '/hype':       { label: 'Hype Lab',
+                     icon: 'M13 2 4 14h7l-1 8 9-12h-7z',
+                     why: 'Find the seconds where your finished edit loses people, and fill them' }
   };
 
   /* Old hrefs in the bundle, and where each should now point. Editor and
@@ -138,7 +138,7 @@
     });
 
     var nav = side.querySelector('nav') || side;
-    addItem(nav, 'hype', LINKS.hype, LINKS.hype.href);
+    addItem(nav, 'hype', PANELS['/hype'], '#/hype');
     addItem(nav, 'studio', PANELS['/studio'], '#/studio');
     markActive();
   }
@@ -198,6 +198,12 @@
       '.ncx .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}',
       '@media(max-width:820px){.ncx .two{grid-template-columns:1fr}.ncx{padding:20px 16px 60px}}',
       '.ncx canvas{width:100%;border-radius:12px;display:block;background:#000}',
+      /* The frame gets the height rather than the iframe getting a fixed one,
+         so the tool grows with the window instead of scrolling inside a box
+         that is always slightly too short. */
+      '.ncx .frame{border:1px solid color-mix(in srgb,currentColor 18%,transparent);',
+      '  border-radius:16px;overflow:hidden;height:calc(100vh - 190px);min-height:560px}',
+      '.ncx .frame iframe{width:100%;height:100%;border:0;display:block}',
       '.ncx .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:6px}',
       '.ncx .fact{border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:12px;',
       '  padding:11px 13px;background:color-mix(in srgb,currentColor 4%,transparent)}',
@@ -504,9 +510,34 @@
         '</div>' +
         '<div class="row">' +
           '<a href="analytics.html"><button class="go">Open the full Studio</button></a>' +
-          '<a href="hype.html"><button>Hype Lab</button></a>' +
+          '<a href="#/hype"><button>Hype Lab</button></a>' +
         '</div>' +
       '</div>';
+  }
+
+  /* ==========================================================================
+     HYPE LAB — the real page, embedded
+     ==========================================================================
+     Deliberately an iframe rather than a rebuild. hype.html is ~550 lines of
+     markup wired to hype.js; a second copy inside this file would be two
+     things to keep in step forever, and the first time they disagreed nobody
+     would know which one was right.
+
+     The frame is only built once. Rebuilding it on every visit to the route
+     would throw away a clip somebody had already dropped in and analysed,
+     which is a minute of their time and the whole point of the tool.
+     ========================================================================== */
+  function hypePanel(box) {
+    if (box.dataset.view === 'hype') return;
+    box.dataset.view = 'hype';
+    box.innerHTML =
+      '<h1>Hype Lab</h1>' +
+      '<p class="lede">Drop in a video you have already cut. It finds the seconds where attention ' +
+      'falls off and puts something there — a punch on the beat, a light wash, words, a music bed. ' +
+      'Nothing is uploaded to measure it.</p>' +
+      '<div class="frame"><iframe id="ncxHype" title="Hype Lab" ' +
+        'src="hype.html?embed=1" loading="lazy" ' +
+        'allow="camera; microphone; clipboard-write"></iframe></div>';
   }
 
   /* ==========================================================================
@@ -531,13 +562,19 @@
       box.style.display = '';
       if (h === '/scripts') scriptsPanel(box);
       else if (h === '/thumbnails') thumbPanel(box);
+      else if (h === '/hype') hypePanel(box);
       else studioPanel(box);
       /* A panel opened from halfway down the trends list should start at the
          top of itself, not wherever the last screen was scrolled to. */
       try { main.scrollTop = 0; window.scrollTo(0, 0); } catch (e) {}
     } else {
+      /* Hidden, NOT reset. Clearing dataset.view here made every panel rebuild
+         itself on the way back: a script you had typed, a thumbnail you had
+         set up, and — worst — the Hype Lab frame with a clip already dropped
+         in and analysed. Leaving the view marked means returning to the same
+         panel keeps its state, while switching to a different one still
+         rebuilds, because the marker no longer matches. */
       box.style.display = 'none';
-      box.dataset.view = '';
       if (page) page.style.display = '';
     }
     markActive();

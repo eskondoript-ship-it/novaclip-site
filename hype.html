@@ -14,6 +14,15 @@ r.style.colorScheme=t;
    <body>. Painting its background here, before the first frame, is what stops
    every navigation flashing the default dark first. */
 if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+<script>/* EMBED MODE, BEFORE FIRST PAINT.
+   nova.js already knows ?embed=1 and skips building the rail, the top bar and
+   the points badge — but this page carries its own .sidebar markup and a
+   200px body margin for it, and an empty fixed column plus that margin is a
+   dead 200px strip down the side of whatever is embedding it. Set here rather
+   than in nova.js because nova.js runs at the end of <body>, and a strip that
+   appears and then vanishes is worse than one that was never drawn. */
+(function(){try{if(/[?&]embed=1/.test(location.search))
+  document.documentElement.setAttribute('data-embed','1');}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <!-- Google Analytics 4 (gtag.js) — measurement ID G-QN1QE08F2K.
      In the head on every page, which is where Google's own snippet goes: it
@@ -156,6 +165,16 @@ canvas#stage{width:100%;border-radius:12px;background:#000;display:block;aspect-
   .sidebar .themewrap{display:none}
   .wrap{padding:20px 16px 80px}
 }
+/* Embedded: no rail, no left margin, and less padding — the host has already
+   spent its own chrome on the edges of the frame. */
+html[data-embed] body{margin-left:0}
+html[data-embed] .sidebar{display:none}
+html[data-embed] .wrap{padding:18px 18px 40px;max-width:none}
+/* The host already writes a heading and a line of explanation above the
+   frame, so the page's own hero would say the same thing twice, one inside
+   the other. Hidden rather than shortened — two titles is two titles. */
+html[data-embed] .hero{display:none}
+html[data-embed] .step:first-of-type{margin-top:0}
 @media print{.sidebar,.btn,.drop{display:none!important}body{margin-left:0}}
 </style>
 </head>
