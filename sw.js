@@ -91,7 +91,12 @@
 /* v13: Video Ideas became a panel too, so the whole Trend Spotter rail is now
    in-app. trends-nav.js is a cached shell file and the old copy still shows the
    signpost screen. */
-const CACHE = 'novaclip-v13';
+/* v14: leaderboard.js now accepts nc_username as a board name and asks for one
+   when there is none. It is a cached shell file, and the bump matters here more
+   than most: the old copy is the one that drops a score silently, so a
+   returning visitor would keep the exact bug this fixes — and would keep it on
+   all four game pages, since they share this one file. */
+const CACHE = 'novaclip-v14';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
