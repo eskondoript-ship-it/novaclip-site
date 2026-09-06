@@ -99,7 +99,10 @@
 /* v15 adds photo-fx.js — the photo editor's effects library, levels and curves,
    and its five new tools. New file in the shell, so the cache has to be retired
    for it to be fetched at all. */
-const CACHE = 'novaclip-v15';
+/* v16 adds media-probe.js. New file in the shell, and the editor asks for it
+   before its own bundle — a returning visitor served the v15 cache would get an
+   editor.html that requests a script the cache has never heard of. */
+const CACHE = 'novaclip-v16';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -147,6 +150,11 @@ const SHELL = [
   '/mixer-ui.js',
   /* Picks a video encoder that actually emits bytes on this machine. */
   '/export-fix.js',
+  /* Works out how long a dropped file actually is. It belongs in the shell for
+     the same reason export-fix.js does: the editor loads it before its own
+     bundle, and without it every import falls back to the four-line probe that
+     turned an undecodable file into a silent five-second clip. */
+  '/media-probe.js',
   /* Checks a dropped clip for fast flashing and blank footage. Pure
      arithmetic on frames already in memory, so it works offline. */
   '/moderate.js',
