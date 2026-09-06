@@ -81,6 +81,19 @@ body{background:var(--ink);color:var(--txt);min-height:100vh;margin-left:200px;
   /* clip, not hidden: hidden forces the other axis to auto and gives the page
      a second scrollbar with a dead strip beside it. */
   overflow-x:clip}
+/* THE RAIL'S LAYOUT LIVES ON THE PAGE, NOT IN nova.js.
+   nova.js fills .sidebar with the links; the positioning is each page's own,
+   and this page was written without it. The result was not a missing sidebar —
+   it was a sidebar in normal flow, 872px tall, pushing every bit of content
+   below the fold. The page looked completely blank with a working rail beside
+   it, which is exactly what it was. Same rules as the other pages. */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:200px;background:rgba(12,12,16,.85);
+  backdrop-filter:blur(20px);display:flex;flex-direction:column;padding:20px 0;gap:4px;
+  z-index:998;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto}
+.sidebar .themewrap{margin-top:auto;padding:16px 20px}
+.sidebar .themewrap label{display:block;font-size:.78rem;opacity:.6;margin-bottom:6px}
+.sidebar select{width:100%;font-size:.95rem;background:rgba(255,255,255,.05);color:var(--txt);
+  border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px}
 .wrap{max-width:1080px;margin:auto;padding:34px 22px 90px}
 .hero h1{font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:800;letter-spacing:-.02em;line-height:1.15}
 .hero .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -133,7 +146,16 @@ canvas#stage{width:100%;border-radius:12px;background:#000;display:block;aspect-
 .say{margin-top:12px;font-size:.9rem;border-radius:11px;padding:10px 13px;border:1px solid var(--line)}
 .say.no{border-color:rgba(255,90,90,.5);background:rgba(255,90,90,.08)}
 .say.ok{border-color:rgba(182,255,74,.45);background:rgba(182,255,74,.07)}
-@media(max-width:900px){body{margin-left:0}.wrap{padding:20px 16px 80px}}
+/* Same breakpoint as the other pages: below it the rail becomes a bar across
+   the top and the body loses its left margin. 760px, not 900px — at 900 the
+   body margin went but the rail was still a 200px fixed column, so the content
+   ran underneath it. */
+@media(max-width:760px){
+  body{margin-left:0;padding-bottom:74px}
+  .sidebar{flex-direction:row;top:auto;width:100%;height:64px;padding:0;overflow-x:auto;align-items:center}
+  .sidebar .themewrap{display:none}
+  .wrap{padding:20px 16px 80px}
+}
 @media print{.sidebar,.btn,.drop{display:none!important}body{margin-left:0}}
 </style>
 </head>

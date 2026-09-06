@@ -1,86 +1,93 @@
 /* ============================================================================
-   TREND SPOTTER — SENDING THE RAIL SOMEWHERE REAL
+   TREND SPOTTER — MAKING THE RAIL DO THE WORK, IN PLACE
    ============================================================================
    trends.html is a bundled React app with its own sidebar and its own hash
-   router, and four of the six things in that sidebar went nowhere. Scripts,
-   Thumbnails, Editor and Publish each opened a placeholder: a title, one line
-   of description, and a badge reading STAGED.
+   router, and four of the six things in that sidebar went nowhere: Scripts,
+   Thumbnails, Editor and Publish each opened a placeholder with a badge
+   reading STAGED.
 
-   NovaClip already has all four. The Editor is editor.html and has been for
-   months; Publish is publish.html, which plans the edit, writes the metadata
-   and makes a 1280x720 thumbnail; the AI page has the Video director and the
-   Thumbnail lab on it. So the rail was advertising features as unbuilt while
-   the reader was two clicks from every one of them.
+   The first version of this file pointed those rail items at the pages that
+   already do the job — Scripts at ai.html, Thumbnails at publish.html, Studio
+   at analytics.html. That fixed "the feature does not exist" and introduced a
+   worse problem: every one of them left this app entirely and landed on a
+   full site page with the main sidebar. Clicking Studio inside the Studio
+   threw you out of it.
 
-   WHY THIS IS A SEPARATE FILE
+   So the ones that CAN work here now work here. Scripts, Thumbnails and Studio
+   render as panels inside this app's own content area, beside its rail, and
+   the hash never leaves #/. Nothing navigates.
 
-   The router, the sidebar and those placeholder screens all live inside a
-   minified bundle. Editing that is a change that survives exactly until the
-   next time the bundle is rebuilt, and it is unreadable while it lasts. This
-   sits outside and does three things the bundle cannot argue with:
+   HOW A PANEL SURVIVES REACT
 
-     1. Points the four dead rail items at the pages that do the job.
-     2. Adds Studio, which was missing entirely — the one page in this set
-        that answers "did any of this work".
-     3. Catches anybody arriving on a staged route from a bookmark or a link
-        and sends them to the real page instead of the placeholder.
+   The shell is  .nc-app > .nc-sidebar + main.nc-main > .nc-page  and React
+   owns .nc-page. A panel injected INTO .nc-page would be wiped on the next
+   render. So the panel is appended to main.nc-main as a SIBLING of .nc-page,
+   and the two are shown and hidden against each other. React re-renders its
+   own subtree as much as it likes and never touches this one.
 
-   It re-applies on every render, because React rebuilds the rail whenever the
-   route changes and would otherwise put the dead links straight back.
+   WHAT STILL LEAVES, AND WHY THAT IS RIGHT
+
+   Hype Lab is a full tool: a file picker, frame decoding, a canvas preview and
+   a recorder. Embedding that here would be a second copy of a page that
+   already exists. It stays a link, like the Editor and Publish did before they
+   were taken out of this rail for being a second navigation for the whole
+   site.
+
+   The Studio panel is a snapshot rather than the whole dashboard, and it says
+   so: the charts on analytics.html need a YouTube OAuth grant and the
+   Analytics API, which belong to that page. What can honestly be shown from
+   what this device already knows is shown, and the rest is one button away.
    ========================================================================== */
 (function () {
   'use strict';
   if (window.NC_TRENDS_NAV) return;
 
-  /* Route -> the page that actually does it. Video Ideas is deliberately
-     absent: that one is not a placeholder, it is a real screen inside this
-     app, and sending it elsewhere would break something that works. */
-  var REAL = {
-    '/scripts':    { href: 'ai.html',      why: 'Write it with the Video director on the AI page' },
-    '/thumbnails': { href: 'publish.html', why: 'Make one from your clip — 1280x720, the size YouTube asks for' },
-    /* Editor and Publish are still redirected but no longer listed — see
-       DROP below. Somebody with #/editor bookmarked should still land on the
-       editor rather than on a placeholder. */
-    '/editor':     { href: 'editor.html',  why: 'Cut, grade, mix and export' },
-    '/publish':    { href: 'publish.html', why: 'Plan the edit, write the words, pick a time' }
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+
+  /* ==========================================================================
+     THE RAIL
+     ========================================================================== */
+
+  /* Routes this file now owns and renders in place. The app's router does not
+     know them; it will render whatever it renders into .nc-page, and .nc-page
+     is hidden while one of these is showing, so it does not matter. */
+  var PANELS = {
+    '/scripts':    { label: 'Scripts',
+                     icon: 'M4 3h11l5 5v13H4zM15 3v5h5M8 13h8M8 17h5',
+                     why: 'Turn a trend into a script, here' },
+    '/thumbnails': { label: 'Thumbnails',
+                     icon: 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6',
+                     why: 'Make a 1280x720 thumbnail, here' },
+    '/studio':     { label: 'Studio',
+                     icon: 'M3 3v18h18M7 16v-5M12 16V8M17 16v-3',
+                     why: 'How the videos you made from these trends are doing' }
   };
 
-  /* Taken out of this rail entirely. They are in the main site sidebar under
-     Create, two rows from here, and listing them again made this rail look
-     like a second navigation for the whole site rather than what it is: the
-     Trend Spotter's own steps. The routes above still work for anyone
-     arriving on one. */
+  /* Rail items that genuinely open a full page, because the tool is a page. */
+  var LINKS = {
+    hype: { label: 'Hype Lab', href: 'hype.html',
+            icon: 'M13 2 4 14h7l-1 8 9-12h-7z',
+            why: 'Find the seconds where your finished edit loses people, and fill them' }
+  };
+
+  /* Old hrefs in the bundle, and where each should now point. Editor and
+     Publish are not in the rail — they are in the main sidebar two rows away —
+     but somebody with #/editor bookmarked should still land on the editor
+     rather than on a placeholder. */
+  var REWRITE = {
+    '/scripts':    '#/scripts',
+    '/thumbnails': '#/thumbnails'
+  };
+  var LEAVE = { '/editor': 'editor.html', '/publish': 'publish.html' };
   var DROP = ['/editor', '/publish'];
 
-  /* Added rather than redirected: neither of these exists in this rail at all.
-     Studio is the page that closes the loop — the trends you scanned here turn
-     into videos, and Studio is where you find out whether they worked. Hype Lab
-     sits before it, because it is the step between finishing a cut and posting
-     it: it measures where the finished edit loses attention and puts something
-     there.
+  function railItem(href) { return $('.nc-sidebar a[href="' + href + '"]'); }
 
-     A bar chart and a bolt, both drawn in the app's own icon idiom — 24x24, no
-     fill, 2px round stroke — because everything else in this rail is drawn that
-     way and one odd icon is more noticeable than a missing one. */
-  var ADD = [
-    { key: 'hype', label: 'Hype Lab', href: 'hype.html',
-      why: 'Find the seconds where your finished edit loses people, and fill them',
-      icon: 'M13 2 4 14h7l-1 8 9-12h-7z' },
-    { key: 'studio', label: 'Studio', href: 'analytics.html',
-      why: 'How the videos you made from these trends are doing',
-      icon: 'M3 3v18h18M7 16v-5M12 16V8M17 16v-3' }
-  ];
-
-  function railFor(href) {
-    var a = document.querySelector('.nc-sidebar a[href="#' + href + '"]');
-    return a || null;
-  }
-
-  /* The row is cloned from a sibling so the layout, the classes and the
-     hover behaviour are the app's rather than a guess at them. Only the icon
-     path and the label are replaced. */
-  function addItem(nav, spec) {
-    if (!nav || nav.querySelector('[data-nc-add="' + spec.key + '"]')) return;
+  /* A row cloned from a sibling so the layout, classes and hover behaviour are
+     the app's rather than a guess at them. Only the icon path and the label
+     are replaced. */
+  function addItem(nav, key, spec, href) {
+    if (!nav || nav.querySelector('[data-nc-add="' + key + '"]')) return;
     /* The LAST item, not the first. The first is "Back to NovaClip", whose
        icon is a back arrow — cloning that gave Studio an arrow pointing off
        the page, which is the one thing it does not do. */
@@ -88,79 +95,468 @@
     var model = models[models.length - 1];
     if (!model) return;
     var a = model.cloneNode(true);
-    a.setAttribute('data-nc-add', spec.key);
+    a.setAttribute('data-nc-add', key);
     a.className = 'nc-nav-item ';
-    a.href = spec.href;
+    a.href = href;
     a.title = spec.why;
     a.removeAttribute('aria-current');
     var svg = a.querySelector('svg');
     if (svg) {
-      /* One path replaces however many the cloned icon had. */
       while (svg.firstChild) svg.removeChild(svg.firstChild);
       var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', spec.icon);
       svg.appendChild(path);
     }
-    /* Replace only the label, so the icon and the layout stay the app's. */
     var label = [].slice.call(a.childNodes).filter(function (n) {
       return n.nodeType === 1 && n.tagName !== 'svg' && !n.querySelector('svg');
     }).pop();
     if (label) label.textContent = spec.label;
     else a.textContent = spec.label;
-    /* Appended in ADD order, after whatever is already last. This rail is a
-       pipeline — trend, idea, script, thumbnail — and these two are what
-       happens after it: make the finished cut hold, then find out whether it
-       worked. Putting either at the top read as a second "Back to NovaClip"
-       and broke the order the rest of the list is in. */
     var items = nav.querySelectorAll('.nc-nav-item');
     var last = items[items.length - 1];
     if (last && last.parentNode) last.parentNode.insertBefore(a, last.nextSibling);
     else nav.appendChild(a);
   }
 
-  function fix() {
-    var side = document.querySelector('.nc-sidebar');
+  function fixRail() {
+    var side = $('.nc-sidebar');
     if (!side) return;
 
-    Object.keys(REAL).forEach(function (route) {
-      var a = railFor(route);
+    /* Point the app's own dead rows at the panels below. */
+    Object.keys(REWRITE).forEach(function (route) {
+      var a = railItem('#' + route);
       if (!a) return;
-      if (DROP.indexOf(route) >= 0) { a.remove(); return; }
-      var to = REAL[route];
-      a.href = to.href;
-      a.title = to.why;
-      /* The app's router listens for hashchange, not for clicks, so changing
-         the href is enough — there is no handler to remove. The active-state
-         class goes because none of these are this app's routes any more. */
+      a.href = REWRITE[route];
+      a.title = (PANELS[route] || {}).why || '';
       a.classList.remove('nc-nav-item-active');
     });
 
+    /* Take the two that belong to the main sidebar out of this one. */
+    DROP.forEach(function (route) {
+      var a = railItem('#' + route);
+      if (a) a.remove();
+    });
+
     var nav = side.querySelector('nav') || side;
-    ADD.forEach(function (spec) { addItem(nav, spec); });
+    addItem(nav, 'hype', LINKS.hype, LINKS.hype.href);
+    addItem(nav, 'studio', PANELS['/studio'], '#/studio');
+    markActive();
   }
 
-  /* Somebody with #/publish bookmarked, or following an old link, still lands
-     on the placeholder. Sent on to the real page rather than shown a badge
-     saying the feature does not exist yet. */
-  function catchStaged() {
-    var h = (location.hash || '').replace(/^#/, '');
-    var to = REAL[h];
-    if (to) location.replace(to.href);
+  function markActive() {
+    var h = hash();
+    var side = $('.nc-sidebar');
+    if (!side) return;
+    side.querySelectorAll('.nc-nav-item').forEach(function (a) {
+      var href = a.getAttribute('href') || '';
+      if (href.charAt(0) !== '#') return;
+      var mine = PANELS[href.slice(1)];
+      if (!mine) return;
+      if (href.slice(1) === h) a.classList.add('nc-nav-item-active');
+      else a.classList.remove('nc-nav-item-active');
+    });
+  }
+
+  /* ==========================================================================
+     THE PANEL HOST
+     ========================================================================== */
+  function hash() { return (location.hash || '').replace(/^#/, ''); }
+
+  var STYLE_ID = 'nc-x-style';
+  function styles() {
+    if (document.getElementById(STYLE_ID)) return;
+    var s = document.createElement('style');
+    s.id = STYLE_ID;
+    s.textContent = [
+      '.ncx{padding:28px 30px 70px;max-width:940px}',
+      '.ncx h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin:0 0 6px}',
+      '.ncx .lede{opacity:.72;margin:0 0 22px;line-height:1.6;max-width:70ch}',
+      '.ncx .card{border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:16px;',
+      '  padding:18px;background:color-mix(in srgb,currentColor 4%,transparent);margin-bottom:16px}',
+      '.ncx label{display:block;font-size:.8rem;opacity:.7;margin:12px 0 5px}',
+      /* A fixed dark fill is wrong half the time: this app follows the site
+         theme, and rgba(0,0,0,.28) on the light theme is a grey box with dark
+         text in it. Tinted from the current text colour instead, so it is a
+         subtle wash on either. */
+      '.ncx input,.ncx select,.ncx textarea{width:100%;background:color-mix(in srgb,currentColor 8%,transparent);',
+      '  color:inherit;border:1px solid color-mix(in srgb,currentColor 26%,transparent);',
+      '  border-radius:10px;padding:10px 12px;font:inherit;font-size:.93rem}',
+      '.ncx input::placeholder,.ncx textarea::placeholder{color:inherit;opacity:.45}',
+      '.ncx textarea{min-height:170px;resize:vertical;line-height:1.6}',
+      '.ncx input:focus,.ncx select:focus,.ncx textarea:focus{outline:none;border-color:#22d3ee}',
+      '.ncx .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}',
+      '.ncx button{border:1px solid color-mix(in srgb,currentColor 24%,transparent);',
+      '  background:color-mix(in srgb,currentColor 8%,transparent);color:inherit;',
+      '  border-radius:11px;padding:10px 16px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}',
+      '.ncx button:hover:not(:disabled){border-color:#22d3ee}',
+      '.ncx button:disabled{opacity:.45;cursor:not-allowed}',
+      '.ncx button.go{background:linear-gradient(110deg,#7c5cff,#22d3ee);border:0;color:#06121a;font-weight:800}',
+      '.ncx .say{margin-top:12px;font-size:.9rem;border:1px solid color-mix(in srgb,currentColor 22%,transparent);',
+      '  border-radius:11px;padding:10px 13px;line-height:1.55}',
+      '.ncx .say.no{border-color:rgba(255,90,90,.55);background:rgba(255,90,90,.08)}',
+      '.ncx .say.ok{border-color:rgba(34,211,238,.5);background:rgba(34,211,238,.07)}',
+      '.ncx .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}',
+      '@media(max-width:820px){.ncx .two{grid-template-columns:1fr}.ncx{padding:20px 16px 60px}}',
+      '.ncx canvas{width:100%;border-radius:12px;display:block;background:#000}',
+      '.ncx .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:6px}',
+      '.ncx .fact{border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:12px;',
+      '  padding:11px 13px;background:color-mix(in srgb,currentColor 4%,transparent)}',
+      '.ncx .fact b{display:block;font-size:1.25rem;font-weight:800}',
+      '.ncx .fact span{opacity:.62;font-size:.74rem}'
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  function host() {
+    var main = $('main.nc-main');
+    if (!main) return null;
+    var box = main.querySelector('#nc-x-panel');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'nc-x-panel';
+      box.className = 'ncx';
+      box.style.display = 'none';
+      main.appendChild(box);
+    }
+    return box;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function say(el, kind, html) {
+    if (!el) return;
+    el.className = 'say' + (kind ? ' ' + kind : '');
+    el.innerHTML = html || '';
+    el.style.display = html ? '' : 'none';
+  }
+
+  /* ==========================================================================
+     SCRIPTS
+     ========================================================================== */
+  function scriptsPanel(box) {
+    if (box.dataset.view === 'scripts') return;
+    box.dataset.view = 'scripts';
+    box.innerHTML =
+      '<h1>Scripts</h1>' +
+      '<p class="lede">Turn a trend into something you can actually read out. It writes a hook, ' +
+      'the middle and an ending — short, because a short video is what this is for.</p>' +
+      '<div class="card">' +
+        '<label for="ncxTopic">What is the video about</label>' +
+        '<input id="ncxTopic" type="text" maxlength="120" placeholder="the trend, or your own idea">' +
+        '<div class="two">' +
+          '<div><label for="ncxLen">How long</label><select id="ncxLen">' +
+            '<option value="15">15 seconds</option><option value="30" selected>30 seconds</option>' +
+            '<option value="60">60 seconds</option></select></div>' +
+          '<div><label for="ncxTone">How it sounds</label><select id="ncxTone">' +
+            '<option>Straight to the point</option><option>Funny</option>' +
+            '<option>Storytime</option><option>Explainer</option></select></div>' +
+        '</div>' +
+        '<div class="row"><button class="go" id="ncxWrite">Write it</button>' +
+          '<button id="ncxCopy" disabled>Copy</button></div>' +
+        '<div class="say" id="ncxSay" style="display:none"></div>' +
+        '<label for="ncxOut" style="margin-top:16px">The script</label>' +
+        '<textarea id="ncxOut" placeholder="It appears here. Edit it — it is a first draft, not a script."></textarea>' +
+      '</div>';
+
+    var topic = $('#ncxTopic', box), out = $('#ncxOut', box), sayEl = $('#ncxSay', box);
+    var write = $('#ncxWrite', box), copy = $('#ncxCopy', box);
+
+    /* If the reader came from a trend, use it. The app puts the trend it is
+       showing in the URL on its own routes; this reads the last one seen. */
+    try {
+      var seed = sessionStorage.getItem('nc_trend_seed');
+      if (seed && !topic.value) topic.value = seed;
+    } catch (e) {}
+
+    out.addEventListener('input', function () { copy.disabled = !out.value.trim(); });
+
+    copy.addEventListener('click', function () {
+      if (!out.value.trim()) return;
+      try {
+        navigator.clipboard.writeText(out.value);
+        say(sayEl, 'ok', 'Copied.');
+      } catch (e) { out.select(); }
+    });
+
+    write.addEventListener('click', async function () {
+      var t = topic.value.trim();
+      if (!t) return say(sayEl, 'no', 'Say what the video is about first.');
+      if (typeof window.ncAsk !== 'function') {
+        return say(sayEl, 'no', 'The AI helper did not load on this page.');
+      }
+      write.disabled = true;
+      say(sayEl, '', 'Writing…');
+      var secs = $('#ncxLen', box).value;
+      var tone = $('#ncxTone', box).value;
+      try {
+        var answer = await window.ncAsk(
+          'Write a script for a ' + secs + '-second short video for a teenage creator.\n' +
+          'Subject: ' + t + '\nTone: ' + tone + '\n\n' +
+          'Give it as plain text with three labelled parts — HOOK, MIDDLE, END. ' +
+          'The hook is the first two seconds and has to earn the rest. ' +
+          'Write words a 15-year-old would actually say out loud, no stage directions, ' +
+          'no hashtags, no emoji, and do not promise anything the video cannot show. ' +
+          'Keep it to what fits in ' + secs + ' seconds when read at a normal pace.');
+        out.value = String(answer || '').trim();
+        copy.disabled = !out.value;
+        say(sayEl, out.value ? 'ok' : 'no',
+          out.value ? 'First draft. Change anything — it is yours.' : 'The AI sent nothing back.');
+      } catch (err) {
+        say(sayEl, 'no', esc((err && err.message) || String(err)));
+      }
+      write.disabled = false;
+    });
+  }
+
+  /* ==========================================================================
+     THUMBNAILS
+     ==========================================================================
+     1280x720 because that is the size YouTube asks for, drawn on a canvas
+     here. No upload, no model, no network — which is why it works when the AI
+     does not. */
+  function thumbPanel(box) {
+    if (box.dataset.view === 'thumbnails') return;
+    box.dataset.view = 'thumbnails';
+    box.innerHTML =
+      '<h1>Thumbnails</h1>' +
+      '<p class="lede">1280&times;720, the size YouTube asks for. Drawn on this device — ' +
+      'nothing is uploaded and nothing is generated by a model, so it works offline.</p>' +
+      '<div class="card">' +
+        '<div class="two">' +
+          '<div>' +
+            '<label for="ncxTitle">Big words</label>' +
+            '<input id="ncxTitle" type="text" maxlength="40" value="POV: it worked" placeholder="six words or fewer">' +
+            '<label for="ncxSub">Small words (optional)</label>' +
+            '<input id="ncxSub" type="text" maxlength="46" placeholder="the bit underneath">' +
+            '<label for="ncxLook">Look</label>' +
+            '<select id="ncxLook">' +
+              '<option value="0">Cyan on black</option>' +
+              '<option value="1">Hot pink</option>' +
+              '<option value="2">Lime on charcoal</option>' +
+              '<option value="3">Violet gradient</option>' +
+            '</select>' +
+            '<label for="ncxShot">Your own picture (optional)</label>' +
+            '<input id="ncxShot" type="file" accept="image/*">' +
+            '<div class="row"><button class="go" id="ncxSave">Save the PNG</button></div>' +
+            '<div class="say" id="ncxSay2" style="display:none"></div>' +
+          '</div>' +
+          '<div><label>Preview</label><canvas id="ncxCanvas" width="1280" height="720"></canvas></div>' +
+        '</div>' +
+      '</div>';
+
+    var c = $('#ncxCanvas', box), ctx = c.getContext('2d');
+    var title = $('#ncxTitle', box), sub = $('#ncxSub', box), look = $('#ncxLook', box);
+    var shot = $('#ncxShot', box), sayEl = $('#ncxSay2', box);
+    var photo = null;
+
+    var LOOKS = [
+      { bg: '#05070E', ink: '#00E5FF', sub: '#9fb3c8' },
+      { bg: '#12030B', ink: '#FF3D9A', sub: '#e6b9cd' },
+      { bg: '#0E0E0E', ink: '#B6FF4A', sub: '#b8c9a8' },
+      { bg: '#0B0620', ink: '#C4B5FD', sub: '#a99fd6' }
+    ];
+
+    function draw() {
+      var L = LOOKS[+look.value] || LOOKS[0];
+      ctx.fillStyle = L.bg;
+      ctx.fillRect(0, 0, 1280, 720);
+
+      if (photo) {
+        /* Cover, then darken, so the words stay readable over any picture. */
+        var r = Math.max(1280 / photo.width, 720 / photo.height);
+        var w = photo.width * r, h = photo.height * r;
+        ctx.drawImage(photo, (1280 - w) / 2, (720 - h) / 2, w, h);
+        var g = ctx.createLinearGradient(0, 0, 0, 720);
+        g.addColorStop(0, 'rgba(0,0,0,.35)');
+        g.addColorStop(1, 'rgba(0,0,0,.78)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 1280, 720);
+      } else {
+        var g2 = ctx.createRadialGradient(1050, 150, 0, 1050, 150, 900);
+        g2.addColorStop(0, L.ink + '33');
+        g2.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g2;
+        ctx.fillRect(0, 0, 1280, 720);
+      }
+
+      var words = title.value.trim() || ' ';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      /* Shrink to fit rather than overflow: a thumbnail with the last word
+         missing is worse than one set a little smaller. */
+      var size = 132;
+      var lines;
+      do {
+        ctx.font = '800 ' + size + 'px "Plus Jakarta Sans", Segoe UI, system-ui, sans-serif';
+        lines = wrap(ctx, words, 1080);
+        size -= 6;
+      } while ((lines.length * size * 1.12 > 430 || lines.length > 3) && size > 44);
+
+      var y = 700 - (sub.value.trim() ? 84 : 40) - lines.length * size * 1.12;
+      lines.forEach(function (ln, i) {
+        var ly = y + i * size * 1.12;
+        ctx.lineWidth = Math.max(6, size * 0.13);
+        ctx.strokeStyle = 'rgba(0,0,0,.75)';
+        ctx.lineJoin = 'round';
+        ctx.strokeText(ln, 90, ly);
+        ctx.fillStyle = i === 0 ? L.ink : '#ffffff';
+        ctx.fillText(ln, 90, ly);
+      });
+
+      if (sub.value.trim()) {
+        ctx.font = '600 46px "Plus Jakarta Sans", Segoe UI, system-ui, sans-serif';
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = 'rgba(0,0,0,.7)';
+        ctx.strokeText(sub.value.trim(), 90, 640);
+        ctx.fillStyle = L.sub;
+        ctx.fillText(sub.value.trim(), 90, 640);
+      }
+    }
+
+    function wrap(c2, text, max) {
+      var w = String(text).split(/\s+/), out = [], line = '';
+      for (var i = 0; i < w.length; i++) {
+        var t = line ? line + ' ' + w[i] : w[i];
+        if (c2.measureText(t).width > max && line) { out.push(line); line = w[i]; }
+        else line = t;
+      }
+      if (line) out.push(line);
+      return out;
+    }
+
+    [title, sub, look].forEach(function (el) {
+      el.addEventListener('input', draw);
+      el.addEventListener('change', draw);
+    });
+
+    shot.addEventListener('change', function () {
+      var f = shot.files && shot.files[0];
+      if (!f) { photo = null; return draw(); }
+      var img = new Image();
+      img.onload = function () { photo = img; draw(); };
+      img.onerror = function () { say(sayEl, 'no', 'That image could not be read.'); };
+      img.src = URL.createObjectURL(f);
+    });
+
+    $('#ncxSave', box).addEventListener('click', function () {
+      try {
+        c.toBlob(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = 'novaclip-thumbnail.png';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 20000);
+          say(sayEl, 'ok', 'Saved at 1280&times;720.');
+        }, 'image/png');
+      } catch (e) {
+        say(sayEl, 'no', 'The browser would not export the canvas.');
+      }
+    });
+
+    draw();
+  }
+
+  /* ==========================================================================
+     STUDIO — a snapshot, honestly labelled
+     ========================================================================== */
+  function studioPanel(box) {
+    if (box.dataset.view === 'studio') return;
+    box.dataset.view = 'studio';
+
+    var channel = '', dates = [];
+    try {
+      var yt = JSON.parse(localStorage.getItem('nc_yt') || '{}') || {};
+      channel = yt.channel || '';
+    } catch (e) {}
+    try { dates = JSON.parse(localStorage.getItem('nc_hist') || '[]') || []; } catch (e) {}
+
+    var cadence = '—';
+    if (dates.length > 2) {
+      var gaps = [];
+      var sorted = dates.slice().sort(function (a, b) { return b - a; });
+      for (var i = 0; i < sorted.length - 1; i++) gaps.push((sorted[i] - sorted[i + 1]) / 86400000);
+      gaps.sort(function (a, b) { return a - b; });
+      var mid = gaps[Math.floor(gaps.length / 2)];
+      if (isFinite(mid)) cadence = mid < 1.5 ? 'about daily' : ('every ' + Math.round(mid) + ' days');
+    }
+    var last = dates.length ? new Date(Math.max.apply(null, dates)) : null;
+    var sinceLast = last ? Math.round((Date.now() - last.getTime()) / 86400000) : null;
+
+    box.innerHTML =
+      '<h1>Studio</h1>' +
+      '<p class="lede">What this device already knows about your channel. The charts — watch time, ' +
+      'retention, where viewers come from — need a YouTube sign-in and live on the full Studio page.</p>' +
+      '<div class="card">' +
+        '<div class="facts">' +
+          '<div class="fact"><b>' + esc(channel || '—') + '</b><span>Connected channel</span></div>' +
+          '<div class="fact"><b>' + (dates.length || '—') + '</b><span>Uploads it has seen</span></div>' +
+          '<div class="fact"><b>' + esc(cadence) + '</b><span>Your usual gap</span></div>' +
+          '<div class="fact"><b>' + (sinceLast == null ? '—' : sinceLast + 'd') + '</b><span>Since the last one</span></div>' +
+        '</div>' +
+        '<div class="say" style="margin-top:16px">' +
+          (channel
+            ? 'Measured from the upload dates this device stored the last time Studio ran. ' +
+              'Nothing here was fetched just now.'
+            : '<b>No channel connected on this device yet.</b> Open the full Studio and sign in ' +
+              'with Google once; after that this panel fills in.') +
+        '</div>' +
+        '<div class="row">' +
+          '<a href="analytics.html"><button class="go">Open the full Studio</button></a>' +
+          '<a href="hype.html"><button>Hype Lab</button></a>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ==========================================================================
+     THE ROUTER
+     ========================================================================== */
+  function route() {
+    var h = hash();
+
+    /* Somebody with an old bookmark for a route that is now a real page. */
+    if (LEAVE[h]) { location.replace(LEAVE[h]); return; }
+
+    var main = $('main.nc-main');
+    if (!main) return;
+    var page = main.querySelector('.nc-page');
+    var box = host();
+    if (!box) return;
+
+    var mine = PANELS[h];
+    if (mine) {
+      styles();
+      if (page) page.style.display = 'none';
+      box.style.display = '';
+      if (h === '/scripts') scriptsPanel(box);
+      else if (h === '/thumbnails') thumbPanel(box);
+      else studioPanel(box);
+      /* A panel opened from halfway down the trends list should start at the
+         top of itself, not wherever the last screen was scrolled to. */
+      try { main.scrollTop = 0; window.scrollTo(0, 0); } catch (e) {}
+    } else {
+      box.style.display = 'none';
+      box.dataset.view = '';
+      if (page) page.style.display = '';
+    }
+    markActive();
   }
 
   function boot() {
-    catchStaged();
-    fix();
+    fixRail();
+    route();
     /* React rebuilds the rail on every route change and would put the dead
-       hrefs back. Cheap to re-apply; the guard inside addItem keeps it from
-       adding a second copy of anything in ADD. */
+       hrefs back. Cheap to re-apply; the guards inside addItem and the panel
+       renderers keep it from duplicating anything. The panel itself is outside
+       React's subtree, so this never fights it. */
     try {
-      new MutationObserver(fix).observe(document.body, { childList: true, subtree: true });
+      new MutationObserver(function () { fixRail(); }).observe(document.body, { childList: true, subtree: true });
     } catch (e) {}
-    window.addEventListener('hashchange', catchStaged);
+    window.addEventListener('hashchange', route);
   }
 
-  window.NC_TRENDS_NAV = { fix: fix, real: REAL };
+  window.NC_TRENDS_NAV = { fixRail: fixRail, route: route, panels: PANELS };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

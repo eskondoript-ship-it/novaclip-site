@@ -79,7 +79,12 @@
    so without the bump a returning visitor keeps the old pair — headings still
    in the serif that was removed, and a Studio whose new tab points at a panel
    its cached script does not know how to fill. */
-const CACHE = 'novaclip-v10';
+/* v11: trends-nav.js gained the in-app Scripts, Thumbnails and Studio panels,
+   and hype.html gained the sidebar layout it was missing. Both are cached
+   shell files. Without the bump a returning visitor keeps a rail whose items
+   still navigate out of the app, and a Hype Lab whose content sits 872px below
+   the fold. */
+const CACHE = 'novaclip-v11';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
