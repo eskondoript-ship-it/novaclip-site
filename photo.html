@@ -824,7 +824,10 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
 
   function paintRail() {
     $('rail').innerHTML = TOOLS.map(function (t, i) {
-      return (i === 3 || i === 7 || i === 10 ? '<hr>' : '') +
+      /* 12 is where photo-fx.js's tools start. Without a rule there they run
+         straight on from the pan hand and read as one long undifferentiated
+         column. */
+      return (i === 3 || i === 7 || i === 10 || i === 12 ? '<hr>' : '') +
         '<button type="button" data-tool="' + t[0] + '" title="' + t[1] + '" class="' +
         (t[0] === tool ? 'on' : '') + '"><svg viewBox="0 0 24 24"><path d="' + t[2] + '"/></svg></button>';
     }).join('');
@@ -863,6 +866,12 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
     var l = active();
     view.setPointerCapture(e.pointerId);
 
+    /* A tool registered by photo-fx.js gets first refusal. Its handler owns the
+       whole gesture — returning a drag object here routes the matching move and
+       up events back to it below. */
+    var ext = EXT.tools[tool];
+    if (ext && ext.down) { drag = ext.down(p, e) || null; return; }
+
     if (tool === 'pan') { drag = { mode: 'pan', sx: e.clientX, sy: e.clientY }; view.style.cursor = 'grabbing'; return; }
     if (tool === 'pick') { pickColour(p); return; }
     if (tool === 'select' || tool === 'crop') {
@@ -892,6 +901,10 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
   view.addEventListener('pointermove', function (e) {
     if (!drag || !loaded) return;
     var p = atImage(e);
+
+    if (drag.ext && EXT.tools[drag.ext] && EXT.tools[drag.ext].move) {
+      EXT.tools[drag.ext].move(p, e, drag); return;
+    }
 
     if (drag.mode === 'pan') {
       panX += e.clientX - drag.sx; panY += e.clientY - drag.sy;
@@ -941,6 +954,10 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
 
   view.addEventListener('pointerup', function (e) {
     if (!drag) return;
+    if (drag.ext && EXT.tools[drag.ext] && EXT.tools[drag.ext].up) {
+      EXT.tools[drag.ext].up(atImage(e), e, drag);
+      drag = null; paintDock(); return;
+    }
     if (drag.mode === 'shape' && shapePreview) { drawShape(shapePreview); shapePreview = null; render(); }
     if (drag.mode === 'pan') view.style.cursor = 'grab';
     if (drag.mode === 'paint' || drag.mode === 'clone' || drag.mode === 'move') scheduleSave();
@@ -1744,8 +1761,16 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
       '<kbd>[</kbd> <kbd>]</kbd> brush size · <kbd>Space</kbd>+drag pans · scroll zooms · <kbd>Esc</kbd> clears the selection</p>' +
       '</div></div>';
 
+    /* Sections registered by photo-fx.js. They go here, after Filters and
+       Image, so the panel a returning user knows keeps its order and the new
+       material is appended rather than shuffled into the middle of it. */
+    EXT.sections.forEach(function (s) {
+      try { html += s.html(active(), tool) || ''; } catch (e) {}
+    });
+
     d.innerHTML = html;
     wireDock();
+    EXT.sections.forEach(function (s) { try { if (s.wire) s.wire(active(), tool); } catch (e) {} });
     paintLayers();
     paintHistogram();
   }
@@ -1991,9 +2016,81 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
   $('redo').addEventListener('click', redo);
   addEventListener('resize', function () { if (loaded) fitZoom(); });
 
+  /* ==========================================================================
+     THE EXTENSION POINT
+     ==========================================================================
+     Everything above is the editor this page has always been. photo-fx.js adds
+     the rest of the darkroom on top of it — the effects library, levels and
+     curves, and the tools that need their own pointer gesture.
+
+     It is a separate file rather than more of this one for a plain reason:
+     this page was already two thousand lines, and an editor holding somebody's
+     unsaved picture is the worst place to find out that a new twirl filter has
+     a typo in it. photo-fx.js is loaded after this script, adds itself to the
+     three registries below, and if it fails to load at all the editor is
+     exactly what it was before — every base tool still works.
+
+     What is exposed is the smallest set that the additions genuinely need, and
+     nothing that would let an extension corrupt the document behind the
+     undo stack's back: push() is here, so anything destructive is undoable.
+     ========================================================================== */
+  var EXT = { tools: {}, sections: [] };
+
+  window.NC_PHOTO = {
+    /* live registries — add to these, then call repaint() */
+    FILTERS: FILTERS,
+    TOOLS: TOOLS,
+    tools: EXT.tools,
+    sections: EXT.sections,
+
+    /* the document, and the pieces needed to change it safely */
+    doc: function () { return doc; },
+    active: active,
+    ctxOf: ctxOf,
+    region: region,
+    sel: function () { return sel; },
+    setSel: function (s) { sel = s; drawOverlay(); },
+    makeCanvas: makeCanvas,
+    push: push,
+    touch: touch,
+    render: render,
+    /* A new layer holding the given canvas, made active. Used by the effects
+       that produce a second image rather than changing one in place. */
+    addLayerFrom: function (canvas, name) {
+      var l = newLayer(name || 'Layer');
+      l.canvas.getContext('2d').drawImage(canvas, 0, 0);
+      doc.layers.push(l);
+      doc.active = doc.layers.length - 1;
+      touch(l); render();
+      return l;
+    },
+
+    /* the three pixel loops the effects are written in terms of */
+    pointFilter: pointFilter,
+    convolve: convolve,
+    pixelate: pixelate,
+
+    /* UI */
+    brush: function () { return brush; },
+    tool: function () { return tool; },
+    setTool: setTool,
+    repaint: function () { paintRail(); paintDock(); },
+    toast: toast,
+    esc: esc
+  };
+
   paintRail(); paintDock(); syncBar();
   loadDoc();
+
+  /* Announced after loadDoc so an extension that wants to touch the document
+     on arrival has one to touch. */
+  try { dispatchEvent(new CustomEvent('nc-photo-ready')); } catch (e) {}
 })();
 </script>
+<!-- The rest of the darkroom: the effects library, levels and curves, and the
+     five tools that need their own gesture. It loads AFTER the editor above,
+     because it registers itself through the window.NC_PHOTO that script
+     creates. Deferred or missing, the editor is exactly what it was. -->
+<script src='photo-fx.js'></script>
 </body>
 </html>

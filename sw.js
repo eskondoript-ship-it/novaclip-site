@@ -96,7 +96,10 @@
    than most: the old copy is the one that drops a score silently, so a
    returning visitor would keep the exact bug this fixes — and would keep it on
    all four game pages, since they share this one file. */
-const CACHE = 'novaclip-v14';
+/* v15 adds photo-fx.js — the photo editor's effects library, levels and curves,
+   and its five new tools. New file in the shell, so the cache has to be retired
+   for it to be fetched at all. */
+const CACHE = 'novaclip-v15';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -123,6 +126,12 @@ const SHELL = [
      both offline-capable without them, but both are much less useful. */
   '/stickers.js',
   '/studio-kit.js',
+  /* The photo editor's effects library and its five extra tools. Cached beside
+     the scripts above for the same reason grade.js is: every effect in it is
+     arithmetic on a canvas already in memory, so it genuinely works on a train
+     — and photo.html without it is a visibly smaller editor rather than a
+     broken one, which is the worse failure to debug. */
+  '/photo-fx.js',
   /* The photo picker itself is cached even though the photographs it fetches
      are not and cannot be. That is the point: offline, the button is still
      there and says in words that it needs the network and that Stickers does
