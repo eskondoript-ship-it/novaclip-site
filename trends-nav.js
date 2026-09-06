@@ -13,9 +13,17 @@
    full site page with the main sidebar. Clicking Studio inside the Studio
    threw you out of it.
 
-   So the ones that CAN work here now work here. Scripts, Thumbnails and Studio
-   render as panels inside this app's own content area, beside its rail, and
-   the hash never leaves #/. Nothing navigates.
+   So the ones that CAN work here now work here. Video Ideas, Scripts,
+   Thumbnails and Studio render as panels inside this app's own content area,
+   beside its rail, and the hash never leaves #/. Nothing navigates.
+
+   AN EARLIER NOTE IN THIS FILE WAS WRONG ABOUT VIDEO IDEAS
+
+   It said #/ideas was "not a placeholder, it is a real screen inside this
+   app", and left it alone on that basis. It is not. The screen reads "Idea
+   generation lives inside Trend Spotter" over a single button that sends you
+   back to the trends list — a signpost pointing at the room you are standing
+   in. It is a panel now like the rest.
 
    HOW A PANEL SURVIVES REACT
 
@@ -56,6 +64,9 @@
      know them; it will render whatever it renders into .nc-page, and .nc-page
      is hidden while one of these is showing, so it does not matter. */
   var PANELS = {
+    '/ideas':      { label: 'Video Ideas',
+                     icon: 'M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z',
+                     why: 'Turn a trend into titles, hooks and formats' },
     '/scripts':    { label: 'Scripts',
                      icon: 'M4 3h11l5 5v13H4zM15 3v5h5M8 13h8M8 17h5',
                      why: 'Turn a trend into a script, here' },
@@ -204,6 +215,11 @@
       '.ncx .frame{border:1px solid color-mix(in srgb,currentColor 18%,transparent);',
       '  border-radius:16px;overflow:hidden;height:calc(100vh - 190px);min-height:560px}',
       '.ncx .frame iframe{width:100%;height:100%;border:0;display:block}',
+      '.ncx .idea{padding:14px 16px}',
+      '.ncx .idea .ttl{font-weight:800;font-size:1.02rem;line-height:1.3}',
+      '.ncx .idea .hook{opacity:.8;margin-top:5px;font-style:italic;line-height:1.5}',
+      '.ncx .idea .shape{opacity:.6;margin-top:5px;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}',
+      '.ncx .idea .row{margin-top:10px}',
       '.ncx .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:6px}',
       '.ncx .fact{border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:12px;',
       '  padding:11px 13px;background:color-mix(in srgb,currentColor 4%,transparent)}',
@@ -236,6 +252,113 @@
     el.className = 'say' + (kind ? ' ' + kind : '');
     el.innerHTML = html || '';
     el.style.display = html ? '' : 'none';
+  }
+
+  /* ==========================================================================
+     VIDEO IDEAS
+     ==========================================================================
+     Six at a time, each with a title, the hook that has to earn the first two
+     seconds, and the shape of the video. Six because three is not enough to
+     choose from and a dozen is a list nobody reads to the end of.
+
+     Every idea carries a button through to Scripts with the title already in
+     it. That is the whole reason this panel is worth having over a chat box:
+     the rail is a pipeline — trend, idea, script, thumbnail — and an idea you
+     have to retype into the next step is an idea most people drop.
+     ========================================================================== */
+  function ideasPanel(box) {
+    if (box.dataset.view === 'ideas') return;
+    box.dataset.view = 'ideas';
+    box.innerHTML =
+      '<h1>Video Ideas</h1>' +
+      '<p class="lede">Six ideas from one subject, each with the hook it needs. Take any of them ' +
+      'straight through to Scripts with one press.</p>' +
+      '<div class="card">' +
+        '<label for="ncxSeed">What is it about</label>' +
+        '<input id="ncxSeed" type="text" maxlength="120" placeholder="a trend, your channel, or anything">' +
+        '<div class="two">' +
+          '<div><label for="ncxShape">Shape</label><select id="ncxShape">' +
+            '<option>Any</option><option>POV</option><option>Talking to camera</option>' +
+            '<option>List</option><option>Tutorial</option><option>Reaction</option>' +
+          '</select></div>' +
+          '<div><label for="ncxAud">Who it is for</label><select id="ncxAud">' +
+            '<option>People who already follow me</option>' +
+            '<option>People who have never seen me</option>' +
+          '</select></div>' +
+        '</div>' +
+        '<div class="row"><button class="go" id="ncxIdeaGo">Give me six</button></div>' +
+        '<div class="say" id="ncxIdeaSay" style="display:none"></div>' +
+      '</div>' +
+      '<div id="ncxIdeaList"></div>';
+
+    var seed = $('#ncxSeed', box), sayEl = $('#ncxIdeaSay', box), list = $('#ncxIdeaList', box);
+
+    try {
+      var s0 = sessionStorage.getItem('nc_trend_seed');
+      if (s0 && !seed.value) seed.value = s0;
+    } catch (e) {}
+
+    $('#ncxIdeaGo', box).addEventListener('click', async function () {
+      var t = seed.value.trim();
+      if (!t) return say(sayEl, 'no', 'Say what it is about first.');
+      if (typeof window.ncAsk !== 'function') {
+        return say(sayEl, 'no', 'The AI helper did not load on this page.');
+      }
+      var btn = this;
+      btn.disabled = true;
+      say(sayEl, '', 'Thinking…');
+      list.innerHTML = '';
+      try {
+        var raw = await window.ncAsk(
+          'Give six short-video ideas for a teenage creator.\n' +
+          'Subject: ' + t + '\n' +
+          'Shape: ' + $('#ncxShape', box).value + '\n' +
+          'Audience: ' + $('#ncxAud', box).value + '\n\n' +
+          'Answer with ONE line of JSON and nothing else:\n' +
+          '{"ideas":[{"title":"<max 8 words>","hook":"<the first line said out loud, max 12 words>",' +
+          '"shape":"<3 or 4 words on how it is filmed>"}]}\n\n' +
+          'Plain language a 15-year-old would actually use. No hashtags, no emoji, no ALL CAPS, ' +
+          'and nothing that promises something the video cannot show.');
+        var m = String(raw || '').match(/\{[\s\S]*\}/);
+        if (!m) throw new Error('The AI answered in a shape this panel could not read.');
+        var ideas = (JSON.parse(m[0]) || {}).ideas || [];
+        if (!ideas.length) throw new Error('The AI sent no ideas back.');
+        list.innerHTML = ideas.slice(0, 6).map(function (it, i) {
+          return '<div class="card idea">' +
+            '<div class="ttl">' + esc(it.title || '') + '</div>' +
+            '<div class="hook">&ldquo;' + esc(it.hook || '') + '&rdquo;</div>' +
+            '<div class="shape">' + esc(it.shape || '') + '</div>' +
+            '<div class="row">' +
+              '<button data-w="' + i + '">Write the script</button>' +
+              '<button data-c="' + i + '">Copy</button>' +
+            '</div></div>';
+        }).join('');
+
+        list.querySelectorAll('[data-w]').forEach(function (b2) {
+          b2.addEventListener('click', function () {
+            var it = ideas[+b2.dataset.w] || {};
+            /* Hand the title to Scripts and go there. Session storage rather
+               than a variable because the Scripts panel reads its seed on
+               build, and this survives a reload of the app. */
+            try { sessionStorage.setItem('nc_trend_seed', it.title || ''); } catch (e) {}
+            var box2 = host();
+            if (box2) box2.dataset.view = '';   /* force Scripts to rebuild with the new seed */
+            location.hash = '/scripts';
+          });
+        });
+        list.querySelectorAll('[data-c]').forEach(function (b3) {
+          b3.addEventListener('click', function () {
+            var it = ideas[+b3.dataset.c] || {};
+            var text = (it.title || '') + '\n' + (it.hook || '') + '\n' + (it.shape || '');
+            try { navigator.clipboard.writeText(text); say(sayEl, 'ok', 'Copied.'); } catch (e) {}
+          });
+        });
+        say(sayEl, 'ok', 'Six ideas. None of them is an instruction — pick one and change it.');
+      } catch (err) {
+        say(sayEl, 'no', esc((err && err.message) || String(err)));
+      }
+      btn.disabled = false;
+    });
   }
 
   /* ==========================================================================
@@ -560,7 +683,8 @@
       styles();
       if (page) page.style.display = 'none';
       box.style.display = '';
-      if (h === '/scripts') scriptsPanel(box);
+      if (h === '/ideas') ideasPanel(box);
+      else if (h === '/scripts') scriptsPanel(box);
       else if (h === '/thumbnails') thumbPanel(box);
       else if (h === '/hype') hypePanel(box);
       else studioPanel(box);

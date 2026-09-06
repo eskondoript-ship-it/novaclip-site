@@ -88,7 +88,10 @@
    gained its embed mode and trends-nav.js gained the panel that holds it, and
    both are cached shell files — a returning visitor on v11 would get a rail
    that still navigates away from the app. */
-const CACHE = 'novaclip-v12';
+/* v13: Video Ideas became a panel too, so the whole Trend Spotter rail is now
+   in-app. trends-nav.js is a cached shell file and the old copy still shows the
+   signpost screen. */
+const CACHE = 'novaclip-v13';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
