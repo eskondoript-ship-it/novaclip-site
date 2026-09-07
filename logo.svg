@@ -3,13 +3,14 @@
        edit that, not this, or the three sites drift apart. -->
   <defs>
     <radialGradient id="novaclip-halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#00BCC5" stop-opacity="0.45"/>
-      <stop offset="55%" stop-color="#00BCC5" stop-opacity="0.13"/>
-      <stop offset="100%" stop-color="#00BCC5" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#7C5CFF" stop-opacity="0.45"/>
+      <stop offset="55%" stop-color="#7C5CFF" stop-opacity="0.13"/>
+      <stop offset="100%" stop-color="#7C5CFF" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="novaclip-body" x1="0.15" y1="0" x2="0.85" y2="1">
-      <stop offset="0%" stop-color="#2AD7D7"/>
-      <stop offset="100%" stop-color="#00BCC5"/>
+      <stop offset="0%" stop-color="#00F0FF"/>
+      <stop offset="50%" stop-color="#7C5CFF"/>
+      <stop offset="100%" stop-color="#FF2E97"/>
     </linearGradient>
     <mask id="novaclip-cut">
       <rect width="64" height="64" fill="#fff"/>
@@ -22,16 +23,16 @@
 
   <!-- the stars still travelling -->
   <g>
-    <path d="M57.1 40.6 Q57.1 43.2 59.7 43.2 Q57.1 43.2 57.1 45.8 Q57.1 43.2 54.5 43.2 Q57.1 43.2 57.1 40.6 Z" fill="#00BCC5" opacity="0.75"/>
-    <path d="M23.5 57.8 Q23.5 59.7 25.4 59.7 Q23.5 59.7 23.5 61.6 Q23.5 59.7 21.6 59.7 Q23.5 59.7 23.5 57.8 Z" fill="#00BCC5" opacity="0.75"/>
-    <path d="M6.1 35.2 Q6.1 37.5 8.4 37.5 Q6.1 37.5 6.1 39.8 Q6.1 37.5 3.8 37.5 Q6.1 37.5 6.1 35.2 Z" fill="#00BCC5" opacity="0.75"/>
-    <path d="M23.7 2.7 Q23.7 4.7 25.7 4.7 Q23.7 4.7 23.7 6.7 Q23.7 4.7 21.7 4.7 Q23.7 4.7 23.7 2.7 Z" fill="#00BCC5" opacity="0.75"/>
-    <path d="M49.4 11.1 Q49.4 12.7 51.0 12.7 Q49.4 12.7 49.4 14.3 Q49.4 12.7 47.8 12.7 Q49.4 12.7 49.4 11.1 Z" fill="#00BCC5" opacity="0.75"/>
+    <path d="M57.1 40.6 Q57.1 43.2 59.7 43.2 Q57.1 43.2 57.1 45.8 Q57.1 43.2 54.5 43.2 Q57.1 43.2 57.1 40.6 Z" fill="#FF2E97" opacity="0.75"/>
+    <path d="M23.5 57.8 Q23.5 59.7 25.4 59.7 Q23.5 59.7 23.5 61.6 Q23.5 59.7 21.6 59.7 Q23.5 59.7 23.5 57.8 Z" fill="#FF2E97" opacity="0.75"/>
+    <path d="M6.1 35.2 Q6.1 37.5 8.4 37.5 Q6.1 37.5 6.1 39.8 Q6.1 37.5 3.8 37.5 Q6.1 37.5 6.1 35.2 Z" fill="#FF2E97" opacity="0.75"/>
+    <path d="M23.7 2.7 Q23.7 4.7 25.7 4.7 Q23.7 4.7 23.7 6.7 Q23.7 4.7 21.7 4.7 Q23.7 4.7 23.7 2.7 Z" fill="#FF2E97" opacity="0.75"/>
+    <path d="M49.4 11.1 Q49.4 12.7 51.0 12.7 Q49.4 12.7 49.4 14.3 Q49.4 12.7 47.8 12.7 Q49.4 12.7 49.4 11.1 Z" fill="#FF2E97" opacity="0.75"/>
   </g>
 
   <!-- the crown of rays and the core: the part that works alone at 16 pixels -->
   <g mask="url(#novaclip-cut)">
     <path d="M40.90 28.67 L62.50 32.00 L40.90 35.33 Z M41.32 33.85 L50.11 40.48 L39.39 37.97 Z M40.77 35.65 L54.27 52.84 L36.22 40.51 Z M37.21 39.94 L38.64 50.86 L32.92 41.46 Z M35.71 40.74 L33.33 62.47 L29.06 41.03 Z M30.38 41.36 L23.96 50.31 L26.21 39.53 Z M28.52 40.84 L11.59 54.67 L23.57 36.39 Z M24.15 37.35 L13.25 38.97 L22.56 33.08 Z M23.10 35.33 L1.50 32.00 L23.10 28.67 Z M22.68 30.15 L13.89 23.52 L24.61 26.03 Z M23.23 28.35 L9.73 11.16 L27.78 23.49 Z M26.79 24.06 L25.36 13.14 L31.08 22.54 Z M28.29 23.26 L30.67 1.53 L34.94 22.97 Z M33.62 22.64 L40.04 13.69 L37.79 24.47 Z M35.48 23.16 L52.41 9.33 L40.43 27.61 Z M39.85 26.65 L50.75 25.03 L41.44 30.92 Z" fill="url(#novaclip-body)"/>
-    <circle cx="32" cy="32" r="9.5" fill="#EAFEFF"/>
+    <circle cx="32" cy="32" r="9.5" fill="#F2FBFF"/>
   </g>
 </svg>

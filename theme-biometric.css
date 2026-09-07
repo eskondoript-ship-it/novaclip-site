@@ -815,3 +815,145 @@ body.bio .sidebar #ncfoot .ncfi {
   color: #021;
   box-shadow: 0 4px 16px rgba(16, 185, 129, .28);
 }
+
+/* ============================================================================
+   THE SAME DESIGN, ON A LIGHT PAGE
+   ============================================================================
+   Same fault the TeenVerse skin had: biometrics.html stayed at #020617 while
+   the rail around it went white. Surfaces, greys and the rail are restated
+   here; the instrument-panel character is not a colour and is untouched.
+
+   The emerald ramp is the interesting part. #34d399 on white is 1.9:1 — fine
+   for a three-pixel status bar, useless for a word — so it darkens as it moves
+   from decoration to text: em4 stays the faintest tint, em becomes the readout
+   and em3 is what a label is set in. The glow drops to a shadow, because a
+   bloom on white reads as a printing fault rather than as a light.
+   ============================================================================ */
+html[data-theme="light"] .bio,
+html[data-theme="light"] body.bio {
+  --bio-bg:     #F5F7FB;   /* was #020617 */
+  --bio-panel:  #FFFFFF;   /* was #0f172a */
+  --bio-panel2: #EEF2F8;   /* was #1e293b */
+  --bio-line:   #DFE5EE;
+  --bio-line2:  #C6CFDC;
+  --bio-line3:  #A5B0C0;
+  --bio-txt:    #0B0E16;   /* was #e2e8f0 */
+  --bio-txt2:   #232B3A;
+  --bio-dim:    #556073;
+  --bio-dim2:   #6B7688;
+  --bio-dim3:   #8894A6;
+  --bio-em:     #0A7F57;   /* dark enough to be read, not just seen */
+  --bio-em2:    #0B8A5F;
+  --bio-em3:    #076B4A;   /* emerald as text */
+  --bio-em4:    #D3F3E6;   /* emerald as the faintest tint */
+  --bio-rose:   #C43552;
+  --bio-rose2:  #B02341;
+  --bio-cyan:   #00778C;
+  --bio-indigo: #4B54C4;
+  --bio-amber:  #9A5B00;
+  --bio-glow:   0 1px 3px rgba(16, 24, 44, .12);
+}
+
+/* body.bio sets its colour as a literal #f1f5f9. */
+html[data-theme="light"] body.bio { color: #0B0E16; }
+
+/* THE SHARED RAIL, in light — the same variables the dark block sets above. */
+html[data-theme="light"] body.bio {
+  --nc-rail1: #FFFFFF; --nc-rail2: #F7F9FD; --nc-rail3: #EFF3FA;
+  --nc-railline: #DFE5EE; --nc-railglow: rgba(11,138,95,.10);
+  --nc-navlink: #2B3448; --nc-navon: #FFFFFF; --nc-navhead: #6B7690;
+  --nc-navhoverbg: rgba(16,24,44,.05);
+  --nc-navonbg: linear-gradient(90deg, #0B8A5F, #0B8A5F);
+  --nc-navonline: #076B4A;
+  --nc-navicohover: #0B8A5F; --nc-navicoon: #FFFFFF;
+  --nc-coinbg: linear-gradient(135deg, rgba(11,138,95,.14), rgba(0,119,140,.10));
+  --nc-cardbg: #FFFFFF;
+  --nc-bar-bg: rgba(255,255,255,.86);
+  --nc-line: #DFE5EE; --nc-line2: #C6CFDC;
+  --nc-bg: #F5F7FB; --nc-bg2: #FFFFFF;
+  --nc-text: #0B0E16; --nc-dim: #59637A;
+  --nc-cyan: #0B8A5F;
+}
+
+/* THE SURFACES AND THE WHITE TEXT, GENERATED FROM THE RULES ABOVE.
+   This skin is built from six dark tints — the page, the panel, a raised
+   panel, the hover, and the two status washes. Each is mapped to its light
+   counterpart at the SAME alpha, so every panel keeps the depth it was
+   drawn with instead of flattening into one sheet of white.
+   Generated rather than typed: thirty-four surfaces is too many to keep in
+   step by hand, and the one that gets forgotten is the one somebody finds. */
+html[data-theme="light"] .bs-panel { background: rgba(255, 255, 255, .6); }
+html[data-theme="light"] .bs-inset { background: rgba(238, 242, 248, .6); }
+html[data-theme="light"] .bs-btn-ghost { background: rgba(255, 255, 255,.8); }
+html[data-theme="light"] .bs-btn-danger:hover:not(:disabled) { background: rgba(253, 222, 228,.4); }
+html[data-theme="light"] .bs-head { background: rgba(238, 242, 248,.9); }
+html[data-theme="light"] .bs-clock { background: rgba(255, 255, 255,.8); }
+html[data-theme="light"] .bs-vaultchip { background: rgba(255, 255, 255,.8); }
+html[data-theme="light"] .bs-toast.success { background: rgba(211, 243, 230,.7); }
+html[data-theme="light"] .bs-toast.error { background: rgba(253, 222, 228,.7); }
+html[data-theme="light"] .bs-toast.info { background: rgba(255, 255, 255,.9); }
+html[data-theme="light"] .bs-tile { background: rgba(255, 255, 255,.6); }
+html[data-theme="light"] .bs-tab { background: rgba(238, 242, 248,.6); }
+html[data-theme="light"] .bs-sensor-glow { background: rgba(230, 235, 242,.4); }
+html[data-theme="light"] .bs-glass { background: rgba(255, 255, 255,.9); }
+html[data-theme="light"] .bs-glass:hover { background: rgba(248, 250, 253,.95); }
+html[data-theme="light"] .bs-glass.ok { background: rgba(211, 243, 230,.4); }
+html[data-theme="light"] .bs-glass.bad { background: rgba(253, 222, 228,.4); }
+html[data-theme="light"] .bs-tpl .row { background: rgba(238, 242, 248,.5); }
+html[data-theme="light"] .bs-tpl .row[aria-selected=true] { background: rgba(211, 243, 230,.3); }
+html[data-theme="light"] .bs-metric { background: rgba(238, 242, 248,.6); }
+html[data-theme="light"] .bs-diag { background: rgba(238, 242, 248,.4); }
+html[data-theme="light"] .bs-diag.ok { background: rgba(211, 243, 230,.3); }
+html[data-theme="light"] .bs-diag.bad { background: rgba(253, 222, 228,.3); }
+html[data-theme="light"] .bs-pcard { background: rgba(238, 242, 248,.6); }
+html[data-theme="light"] .bs-empty { background: rgba(238, 242, 248,.4); }
+html[data-theme="light"] .bs-vault-locked { background: rgba(238, 242, 248,.9); }
+html[data-theme="light"] .bs-item { background: rgba(238, 242, 248,.7); }
+html[data-theme="light"] .bs-item .val { background: rgba(255, 255, 255,.9); }
+html[data-theme="light"] .bs-pill { background: rgba(238, 242, 248,.6); }
+html[data-theme="light"] .bs-log { background: rgba(238, 242, 248,.7); }
+html[data-theme="light"] .bs-modal { background: rgba(238, 242, 248,.8); }
+html[data-theme="light"] .bs-switch { background: rgba(238, 242, 248,.6); }
+html[data-theme="light"] .bs-foot { background: rgba(238, 242, 248,.8); }
+html[data-theme="light"] body.bio .sidebar select { background: rgba(255, 255, 255,.8); }
+
+/* White text on those surfaces, now that they are light. */
+html[data-theme="light"] .bs-btn-ghost:hover:not(:disabled),
+html[data-theme="light"] .bs-brand h1,
+html[data-theme="light"] .bs-toast .x:hover,
+html[data-theme="light"] .bs-tile .v,
+html[data-theme="light"] .bs-tab[aria-selected=true],
+html[data-theme="light"] .bs-tpl .row .n,
+html[data-theme="light"] .bs-metric .v.small b,
+html[data-theme="light"] .bs-profiles h2,
+html[data-theme="light"] .bs-pcard h3,
+html[data-theme="light"] .bs-vault-locked h3,
+html[data-theme="light"] .bs-search input,
+html[data-theme="light"] .bs-log .nm b,
+html[data-theme="light"] .bs-modal .hd h3,
+html[data-theme="light"] .bs-modal .hd button:hover,
+html[data-theme="light"] .bs-field input, html[data-theme="light"] .bs-field select, html[data-theme="light"] .bs-field textarea {
+  color: #0B0E16;
+}
+
+/* THE PALE TEXT COLOURS WRITTEN AS LITERALS.
+
+   Fourteen rules set a light emerald, mint or rose directly rather than through
+   a variable, which is correct on #020617 and unreadable on white — the worst
+   of them measured 1.4:1. Each keeps its hue and its job (green means good, rose
+   means bad, indigo is the odd metric out) and simply gets dark enough to read.
+   The two that sit on a coloured toast keep a light tint, because there the
+   background moved with them. */
+html[data-theme="light"] body.bio ::selection        { color: #04382A; }
+html[data-theme="light"] .bs-brand .sub .b           { color: #076B4A; }
+html[data-theme="light"] .bs-vaultchip.open          { color: #076B4A; }
+html[data-theme="light"] .bs-vaultchip .hint         { color: #0A7F57; }
+html[data-theme="light"] .bs-toast.success           { color: #04382A; }
+html[data-theme="light"] .bs-toast.error             { color: #6B1024; }
+html[data-theme="light"] .bs-tile .v.indigo          { color: #3B44B8; }
+html[data-theme="light"] .bs-tab[aria-selected="true"] .subl { color: #076B4A; }
+html[data-theme="light"] .bs-tpl .row[aria-selected="true"]  { color: #04382A; }
+html[data-theme="light"] .bs-diag.ok                 { color: #076B4A; }
+html[data-theme="light"] .bs-diag.bad                { color: #8E1B33; }
+html[data-theme="light"] .bs-pill[aria-pressed="true"] { color: #076B4A; }
+html[data-theme="light"] .bs-foot .ok                { color: #076B4A; }

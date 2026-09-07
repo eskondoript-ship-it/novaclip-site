@@ -102,7 +102,12 @@
 /* v16 adds media-probe.js. New file in the shell, and the editor asks for it
    before its own bundle — a returning visitor served the v15 cache would get an
    editor.html that requests a script the cache has never heard of. */
-const CACHE = 'novaclip-v16';
+/* v17: the logo was redrawn in the site's own colours, both skins gained a
+   light mode, and theme-bridge.js is new. logo.svg, the two theme stylesheets
+   and the bridge are all cached shell files — without the bump a returning
+   visitor keeps the teal mark and a black page inside a white rail, which is
+   the exact pair of things this release fixes. */
+const CACHE = 'novaclip-v17';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -192,6 +197,10 @@ const SHELL = [
      wrong rather than merely plain. 50KB for both, once. */
   '/theme-teenverse.css',
   '/theme-biometric.css',
+  /* Keeps an embedded app's own theme picker from stealing the attribute the
+     site selects its palette with. typing.html loads it before its bundle, so
+     a cached page without it is a page where light mode does not work. */
+  '/theme-bridge.js',
   '/fonts/plus-jakarta-sans-latin-wght-normal.woff2',
   '/fonts/space-grotesk-latin-wght-normal.woff2',
   '/manifest.json',

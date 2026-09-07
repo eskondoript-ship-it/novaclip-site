@@ -28,10 +28,24 @@ const BRANDS = {
   novaclip: {
     file: '/home/user/novaclip-site/logo.svg',
     label: 'NovaClip',
-    hot: '#EAFEFF',      // the core, near white
-    core: '#2AD7D7',     // the burst body
-    edge: '#00BCC5',     // the burst tips and ring
-    halo: '#00BCC5',
+    /* REDRAWN IN THE SITE'S OWN COLOURS.
+
+       The mark used to be teal — #2AD7D7 into #00BCC5 — and that teal appears
+       nowhere else on NovaClip. The site's palette is defined once in nova.js
+       and it is cyan into violet into pink: --nc-cyan #00F0FF, --nc-violet
+       #7C5CFF, --nc-pink #FF2E97. So the logo was the one thing on the page
+       that did not belong to the page, which is the wrong way round for a
+       logo.
+
+       These are those three tokens, by value. They are written out rather than
+       read from nova.js because an SVG cannot see a CSS variable — but they
+       are the same numbers, and if the palette moves they should be moved here
+       in the same commit. */
+    hot: '#F2FBFF',      // the core, near white
+    core: '#00F0FF',     // --nc-cyan   : the burst where it leaves the core
+    mid: '#7C5CFF',      // --nc-violet : the turn
+    edge: '#FF2E97',     // --nc-pink   : the tips, and the debris
+    halo: '#7C5CFF',     // the violet reads on white and on black alike
     /* NovaClip keeps its play triangle, cut out of the core rather than laid
        on top, so the shape still says "video" in one flat colour. */
     cue: 'play'
@@ -137,7 +151,8 @@ function favicon(b) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="32" height="32" role="img" aria-label="${b.label}">
   <defs>
     <linearGradient id="${id}" x1="0.15" y1="0" x2="0.85" y2="1">
-      <stop offset="0%" stop-color="${b.core}"/>
+      <stop offset="0%" stop-color="${b.core}"/>${b.mid ? `
+      <stop offset="50%" stop-color="${b.mid}"/>` : ''}
       <stop offset="100%" stop-color="${b.edge}"/>
     </linearGradient>
   </defs>
@@ -159,7 +174,8 @@ function svg(b, size = 64) {
       <stop offset="100%" stop-color="${b.halo}" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="${id}-body" x1="0.15" y1="0" x2="0.85" y2="1">
-      <stop offset="0%" stop-color="${b.core}"/>
+      <stop offset="0%" stop-color="${b.core}"/>${b.mid ? `
+      <stop offset="50%" stop-color="${b.mid}"/>` : ''}
       <stop offset="100%" stop-color="${b.edge}"/>
     </linearGradient>
     ${b.cue === 'play' ? `<mask id="${id}-cut">
@@ -185,7 +201,20 @@ function svg(b, size = 64) {
 `;
 }
 
+/* The three brands live in three repositories and only one of them is checked
+   out at a time. Writing into a repo that is not here would silently create an
+   empty tree outside this one, so a missing parent is a skip and says so —
+   the alternative is a logo that looks written and is not anywhere. */
+function repoRoot(file) {
+  const m = file.match(/^(\/home\/user\/[^/]+)\//);
+  return m ? m[1] : path.dirname(file);
+}
+
 for (const [name, b] of Object.entries(BRANDS)) {
+  if (!fs.existsSync(repoRoot(b.file))) {
+    console.log(`${b.label.padEnd(13)} -- skipped, ${repoRoot(b.file)} is not checked out here`);
+    continue;
+  }
   fs.mkdirSync(path.dirname(b.file), { recursive: true });
   fs.writeFileSync(b.file, svg(b));
   console.log(`${b.label.padEnd(13)} -> ${b.file}`);
