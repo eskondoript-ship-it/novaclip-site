@@ -5088,9 +5088,15 @@ window.addEventListener('DOMContentLoaded', () => {
     d.style.cssText = 'margin-bottom:14px;';
     d.innerHTML =
       '<label data-t="vibe" style="display:block;font-size:0.78rem;opacity:0.6;margin-bottom:6px;">' + tr('vibe') + '</label>' +
-      '<div id="genzToggle" style="display:flex;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:10px;overflow:hidden;cursor:pointer;font-size:0.8rem;font-weight:700;">' +
-      '<div data-v="0" data-t="vibe_normal" style="flex:1;text-align:center;padding:8px 4px;transition:.2s;' + (!on ? 'background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a;' : 'color:#7E8AA6;') + '">' + tr('vibe_normal') + '</div>' +
-      '<div data-v="1" data-t="vibe_genz" style="flex:1;text-align:center;padding:8px 4px;transition:.2s;' + (on ? 'background:linear-gradient(90deg,#F72585,#7209B7);color:#fff;' : 'color:#7E8AA6;') + '">' + tr('vibe_genz') + '</div>' +
+      /* The track and the unselected half read from the palette rather than
+         from three literals. They were rgba(255,255,255,...) on a white-ish
+         bar and #7E8AA6 text at 1.78:1 in light mode — the half you are being
+         asked to click was the half you could not read. The fallbacks are the
+         values that were here, so dark mode is unchanged to the pixel; light
+         mode gets --nc-dim #59637A, which is 5.9:1. */
+      '<div id="genzToggle" style="display:flex;background:var(--nc-card,rgba(255,255,255,0.05));border:1px solid var(--nc-line2,rgba(255,255,255,0.15));border-radius:10px;overflow:hidden;cursor:pointer;font-size:0.8rem;font-weight:700;">' +
+      '<div data-v="0" data-t="vibe_normal" style="flex:1;text-align:center;padding:8px 4px;transition:.2s;' + (!on ? 'background:linear-gradient(90deg,var(--nc-cyan,#00F0FF),var(--nc-blue,#4CC9F0));color:#04121a;' : 'color:var(--nc-dim,#7E8AA6);') + '">' + tr('vibe_normal') + '</div>' +
+      '<div data-v="1" data-t="vibe_genz" style="flex:1;text-align:center;padding:8px 4px;transition:.2s;' + (on ? 'background:linear-gradient(90deg,var(--nc-mag,#F72585),var(--nc-violet2,#7209B7));color:#fff;' : 'color:var(--nc-dim,#7E8AA6);') + '">' + tr('vibe_genz') + '</div>' +
       '</div>';
     wrap.insertBefore(d, wrap.firstChild);
     d.querySelectorAll('[data-v]').forEach(b => {

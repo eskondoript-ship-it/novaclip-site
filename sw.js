@@ -107,7 +107,11 @@
    and the bridge are all cached shell files — without the bump a returning
    visitor keeps the teal mark and a black page inside a white rail, which is
    the exact pair of things this release fixes. */
-const CACHE = 'novaclip-v17';
+/* v18: the Gen Z toggle in the top bar took its colours from three literals and
+   was unreadable in light mode — 1.78:1 on the half you are being asked to
+   click. It reads the palette now. nova.js is a cached shell file, so without
+   the bump a returning visitor keeps the unreadable one on every page. */
+const CACHE = 'novaclip-v18';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
