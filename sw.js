@@ -131,7 +131,11 @@
    chores — the install page builds a ZIP of just the extension and the shield
    announces its own ID, so nothing is copied by hand. shield.html and
    parent.html are both cached, and shield.html also gains Nova. */
-const CACHE = 'novaclip-v23';
+/* v24: the AI Editor page's plan is now carried out on the timeline instead of
+   printed as a list to work through by hand. Two new shell files, and both
+   editor.html and publish.html reference them — a returning visitor on v23
+   would get the pages and no files to answer with. */
+const CACHE = 'novaclip-v24';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -192,6 +196,8 @@ const SHELL = [
      which is what makes it worth caching: a help button that needs the network
      is missing at exactly the moment somebody is stuck. */
   '/nova-guide.js',
+  '/ai-edit.js',
+  '/ai-edit-panel.js',
   /* Sends the Trend Spotter's rail to the real pages. Without it that rail
      offers four features this site already has as though they were unbuilt. */
   '/trends-nav.js',

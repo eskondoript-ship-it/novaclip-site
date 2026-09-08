@@ -319,6 +319,9 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
 <!-- The 'how do I use this page' button beside the Nova pill. Loads after
      jarvis.js because it borrows the pill that file builds. -->
 <script src='nova-guide.js' defer></script>
+<!-- Only for stash(): this page hands the plan over, the Editor carries it
+     out. Not deferred, because the plan button reads window.NC_AI_EDIT. -->
+<script src='ai-edit.js'></script>
 <script>
 /* ============================================================================
    PUBLISH
@@ -494,7 +497,26 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
         'landscape' : 'vertical (Shorts)') + '. It is about: ' + about + '\n\n' +
       'Answer with ONE line of JSON, nothing else:\n' +
       '{"ok":true,"steps":[{"at":"0:00","do":"<what to do>","why":"<one short reason>",' +
-      '"tool":"<the exact tool name from the list>"}]}\n' +
+      '"tool":"<the exact tool name from the list>","args":{}}]}\n' +
+      /* args is what turned this page from advice into editing. The nine tools
+         below can be carried out on the timeline without a person, but only if
+         the step says what to set — "zoom in on the striker" is not a number.
+         Anything outside the schema is ignored rather than trusted, and a step
+         with no args at all still works: ai-edit.js reads what it can out of
+         the sentence. */
+      'Fill "args" with the settings for that tool, using ONLY these shapes — they are ' +
+      'carried out automatically, so be specific:\n' +
+      '- text and titles / captions: {"text":"THE EXACT WORDS","seconds":3}\n' +
+      '- zoom and reposition a clip: {"scale":1.4,"x":0.2,"y":-0.1}  (x and y are -1 to 1)\n' +
+      '- speed up or slow down: {"rate":0.5}\n' +
+      '- crossfade, wipe, slide and zoom transitions: {"type":"fade|dissolve|wipe|slide|zoom","at":"in|out","seconds":0.5}\n' +
+      '- colour: {"brightness":10,"contrast":15,"saturation":20,"temperature":-5}  (each -100 to 100)\n' +
+      '- filters: {"effect":"nightVision","amount":60}  (effect is one exact name: nightVision, ' +
+      'hologram, glitch, vignette, bloom, vintage, filmGrain, scanlines, neon, dreamy, thermal, sepia, grayscale)\n' +
+      '- volume per clip and fade in / out: {"volume":0.6,"fadeIn":0.5,"fadeOut":0.5}\n' +
+      '- split at the playhead: {}\n' +
+      'For music, sound effects, stickers, the Remove tool, the Animate tool, cutting and ' +
+      'reordering, leave "args" as {} — those are chosen by the person, not by you.\n' +
       'Between 4 and 8 steps, in time order, each at a real timestamp inside the clip. ' +
       'The first step must be about the opening five seconds, because that is what decides ' +
       'whether anyone stays.\n' +
@@ -526,8 +548,25 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
       '<div class="pstep"><div class="t">' + esc(s.at || '') + '</div><div class="d">' +
       esc(s.do) + (s.why ? '<i>' + esc(s.why) + '</i>' : '') +
       (s.tool ? '<div class="tool">' + esc(s.tool) + '</div>' : '') + '</div></div>').join('');
+    /* The plan used to end here, as a list for the person to carry out by hand.
+       It is handed to the editor instead, which does the parts that can be done
+       from a description and says which ones need them. */
+    var auto = 0;
+    if (window.NC_AI_EDIT) {
+      auto = steps.filter(s => window.NC_AI_EDIT.tools.indexOf(String(s.tool || '').toLowerCase().trim()) >= 0).length;
+      window.NC_AI_EDIT.stash(steps, about);
+      $('planOut').insertAdjacentHTML('beforeend',
+        '<div class="pstep" style="border-color:rgba(124,92,255,.45)"><div class="t">→</div><div class="d">' +
+        '<a class="go" style="display:inline-block;text-decoration:none" href="editor.html">' +
+        'Do it for me in the Editor</a>' +
+        '<i>' + (auto ? auto + ' of these ' + steps.length + ' can be applied to the timeline automatically. ' +
+          'The rest need you to choose a sound or point at something, and the Editor will say which.'
+        : 'Every step in this plan needs a choice only you can make — the Editor will open the right tab for each.') +
+        '</i></div></div>');
+    }
     say('planSay', 'yes', steps.length + ' steps',
-      'Open the Editor and work down the list.' +
+      (auto ? 'Press "Do it for me in the Editor" and ' + auto + ' of them are applied for you.'
+            : 'Open the Editor and work down the list.') +
       (dropped ? '  (' + dropped + ' step' + (dropped > 1 ? 's' : '') +
        ' dropped for naming a tool this editor does not have.)' : ''));
     if (window.addPts) addPts(5);
