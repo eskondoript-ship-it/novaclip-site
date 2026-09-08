@@ -94,6 +94,19 @@
   }
 
   var CSS =
+    /* TWO BOARDS SIDE BY SIDE. A game with two boards is asking one question
+       twice — fastest single against median, accuracy against points — and the
+       comparison only works if both are on screen at once. Stacked, the second
+       one is below the fold and may as well not be there.
+       Flex with a 300px basis: they sit in a row wherever there is room for
+       two, and drop under each other on a phone without a media query. */
+    '.ncbd-pair{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;' +
+      'margin:18px auto 0;max-width:1060px}' +
+    /* 260, not 300. reaction.html's .wrap is 640px wide, so its inner width is
+       about 609 — two 300px items plus the 16px gap wanted 616 and wrapped by
+       seven pixels, which looked exactly like the flex rule not working. */
+    '.ncbd-pair>div{flex:1 1 260px;min-width:0;margin:0}' +
+    '.ncbd-pair .ncbd{margin:0;max-width:none}' +
     '.ncbd{margin:18px auto 0;max-width:520px;border-radius:16px;overflow:hidden;' +
       'background:var(--nc-bg2,rgba(255,255,255,.04));' +
       'border:1px solid var(--nc-line,rgba(255,255,255,.1));' +
@@ -394,7 +407,10 @@
   /* ---- the public bits --------------------------------------------------- */
   var boards = {};
 
-  function mount(game, target) {
+  /* `title` names the board in its own header. It was always possible to have
+     two boards on a page and never possible to tell them apart: the header said
+     "Leaderboard" on both, and this.head was assigned and then never used. */
+  function mount(game, target, title) {
     styles();
     var el = typeof target === 'string' ? document.querySelector(target) : target;
     if (!el) {
@@ -402,6 +418,7 @@
       document.body.appendChild(el);
     }
     var b = new Board(game, el);
+    if (title && b.head) b.head.textContent = title;
     boards[game] = b;
     b.start();
     return b;

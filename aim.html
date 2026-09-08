@@ -263,20 +263,25 @@ if (savedBest) document.getElementById('best').textContent = 'Your best so far: 
   if (window.NC_EMBED === undefined && /[?&]embed=1/.test(location.search)) return;
   function go() {
     var main = document.querySelector('.wrap') || document.querySelector('main') || document.body;
-    var h1 = document.createElement('div');
-    main.appendChild(h1);
-    NC_BOARD.mount('aim', h1);
 
-    var lbl = document.createElement('p');
-    lbl.style.cssText = 'margin:26px 0 -6px;color:var(--nc-dim,#7E8AA6);font-size:.86rem;line-height:1.6';
-    lbl.textContent = 'And the one for the misses: hits as a share of every shot you took. ' +
-      'Rounds of fewer than ten shots do not count — one lucky hit is not 100% accurate, ' +
-      'it is one lucky hit.';
-    main.appendChild(lbl);
+    /* Side by side: points reward speed and small targets, accuracy asks the
+       opposite question, and seeing somebody high on one and low on the other
+       is the whole point of having both. */
+    var pair = document.createElement('div');
+    pair.className = 'ncbd-pair';
+    main.appendChild(pair);
 
-    var h2 = document.createElement('div');
-    main.appendChild(h2);
-    NC_BOARD.mount('aimaccuracy', h2);
+    var h1 = document.createElement('div'); pair.appendChild(h1);
+    var h2 = document.createElement('div'); pair.appendChild(h2);
+    NC_BOARD.mount('aim', h1, 'Points');
+    NC_BOARD.mount('aimaccuracy', h2, 'Accuracy');
+
+    var note = document.createElement('p');
+    note.style.cssText = 'max-width:1060px;margin:12px auto 0;color:var(--nc-dim,#7E8AA6);' +
+      'font-size:.84rem;line-height:1.6;text-align:center';
+    note.textContent = 'Rounds of fewer than ten shots do not reach the accuracy board — ' +
+      'one lucky hit is not 100% accurate, it is one lucky hit.';
+    main.appendChild(note);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
   else go();

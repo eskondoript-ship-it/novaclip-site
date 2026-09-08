@@ -299,22 +299,20 @@ if (savedBest) document.getElementById('best').textContent = 'Your best so far: 
   if (window.NC_EMBED === undefined && /[?&]embed=1/.test(location.search)) return;
   function go() {
     var main = document.querySelector('.wrap') || document.querySelector('main') || document.body;
-    /* Median first: it is the one the page argues for, and the one Progress
-       keeps. The best-of board is underneath, labelled as the other question
-       rather than as a better answer to the same one. */
-    var h1 = document.createElement('div');
-    main.appendChild(h1);
-    NC_BOARD.mount('reaction', h1);
 
-    var lbl = document.createElement('p');
-    lbl.style.cssText = 'margin:26px 0 -6px;color:var(--nc-dim,#7E8AA6);font-size:.86rem;line-height:1.6';
-    lbl.textContent = 'And the fastest single go of the five — the same five presses, ' +
-      'asking how fast you can be rather than how fast you are.';
-    main.appendChild(lbl);
+    /* Side by side, because the two boards are the same five presses asked two
+       different questions — the median is how fast you ARE, the best of the
+       five is how fast you CAN be. Stacked, the second is below the fold and
+       the comparison never happens. Each carries its own name; both saying
+       "Leaderboard" would be worse than one board. */
+    var pair = document.createElement('div');
+    pair.className = 'ncbd-pair';
+    main.appendChild(pair);
 
-    var h2 = document.createElement('div');
-    main.appendChild(h2);
-    NC_BOARD.mount('reactionbest', h2);
+    var h1 = document.createElement('div'); pair.appendChild(h1);
+    var h2 = document.createElement('div'); pair.appendChild(h2);
+    NC_BOARD.mount('reaction', h1, 'Median of five');
+    NC_BOARD.mount('reactionbest', h2, 'Fastest single go');
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
   else go();

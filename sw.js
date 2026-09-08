@@ -153,7 +153,12 @@
    always counted and never posted. reaction.html, aim.html and leaderboard.js
    are all cached, and leaderboard.js carries the message that explains a board
    the deployed worker has not heard of yet. */
-const CACHE = 'novaclip-v27';
+/* v28: the two new boards sit beside their originals instead of under them —
+   a game with two boards is asking one question twice, and stacked the second
+   one is below the fold. Both boards also carry their own name now; the header
+   said "Leaderboard" on both, which side by side is worse than one board.
+   leaderboard.js, reaction.html and aim.html are all cached. */
+const CACHE = 'novaclip-v28';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
