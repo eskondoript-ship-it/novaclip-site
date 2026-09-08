@@ -1348,52 +1348,295 @@ document.getElementById('savecardbtn').onclick = () => {
 };
 document.getElementById('removecard').onclick = () => { localStorage.removeItem('nc_card'); localStorage.removeItem('nc_plan'); renderSavedCard(); renderPlans(); };
 
-// Harassment scanner — uses the YouTube token saved by Studio (nc_yt)
-const BAD = ['hate you','kill yourself','kys','ugly','stupid','idiot','loser','trash','garbage','nobody likes','die','fat','dumb','worst','cringe af','shut up','freak','pathetic','worthless','go away'];
+/* ============================================================================
+   COMMENT SAFETY SCANNER
+
+   A real comment was posted on the connected channel and this reported
+   "Scanned 0 recent comments — nothing harmful found." Three separate faults,
+   and the last one is the serious one.
+
+   1. IT READ NOTHING AND SAID SO IN A SENTENCE THAT MEANS THE OPPOSITE.
+      Every per-video request was wrapped in `.catch(() => null)` and then
+      `if (!cm || !cm.items) continue;`. yt() never looked at r.ok either, so an
+      error body — comments disabled, quota exhausted, a scope the token does
+      not carry — has no .items and was skipped in silence, indistinguishable
+      from a video nobody has commented on. Zero comments read then printed the
+      same green all-clear as a clean scan. A safety tool that cannot tell "I
+      looked and it is fine" from "I could not look" is worse than no tool: it
+      is a parent being told everything is fine on no evidence. The two
+      outcomes are now different sentences, failures are named, and nothing
+      read is never an all-clear.
+
+   2. IT LOOKED IN TOO FEW PLACES. Five most recent uploads, top-level comments
+      only, published only. A reply was invisible; a comment on the sixth video
+      was invisible; and a comment YouTube's own filter held for review — which
+      is where abuse most often lands — was invisible. It now asks for the whole
+      channel's comments in one call, walks replies, and looks in the held and
+      likely-spam queues too, falling back to the per-video walk if the
+      channel-wide call is refused.
+
+   3. THE MATCHER WAS TWENTY SUBSTRINGS. Substrings, so "soldier" contained
+      "die" and "father" contained "fat" — false alarms on a page whose whole
+      job is to be believed. And one flat tier, so anything not on the list was
+      silence. It is word-boundary matched now, in three tiers, because "very
+      bad edit" is not harassment and calling it harassment would be its own
+      kind of wrong: a parent should see it as someone being unkind about the
+      work, which is a different sentence from someone attacking the child. */
+
+/* Tiers, worst first. Phrases rather than bare words wherever a bare word has
+   an innocent use. */
+const BAD = {
+  abuse: ['kill yourself', 'kys', 'you should die', 'go die', 'hang yourself', 'end yourself',
+          'nobody loves you', 'nobody likes you', 'no one likes you', 'everyone hates you',
+          'i hate you', 'hate you', 'worthless', 'waste of oxygen', 'waste of space',
+          'i will find you', 'watch your back', 'i know where you live', 'kill you'],
+  insult: ['ugly', 'stupid', 'stoopid', 'idiot', 'moron', 'loser', 'dumb', 'dumbass', 'freak', 'pathetic',
+           'retard', 'fatty', 'fat kid', 'so fat', 'creep', 'weirdo', 'shut up', 'stfu',
+           'go away', 'nobody asked', 'who asked', 'cry about it',
+           'you suck', 'you are trash', 'youre trash', 'ur trash', 'you are garbage'],
+  negative: ['bad edit', 'bad video', 'bad content', 'very bad', 'so bad', 'really bad',
+             'terrible', 'awful', 'horrible', 'worst', 'boring', 'cringe', 'cringy', 'cringey',
+             'unwatchable', 'waste of time', 'trash', 'garbage', 'flop', 'sucks', 'not good',
+             'poor quality', 'quit youtube', 'give up', 'stop making videos', 'delete this']
+};
+const TIER = {
+  abuse:    { label: 'Harassment', colour: '#FF2E97' },
+  insult:   { label: 'Personal insult', colour: '#FFB443' },
+  negative: { label: 'Unkind about the work — not harassment', colour: '#8FB2FF' },
+  held:     { label: 'YouTube held this for review', colour: '#FFB443' }
+};
+
+/* Squeezing runs of a letter catches "uglyyyy" and "kiiiill yourself" without a
+   second list; both sides are squeezed so the words still line up. */
+function ncSqueeze(s) { return s.replace(/(.)\1+/g, '$1'); }
+function ncNormalise(html) {
+  return String(html || '')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"').replace(/&#0?39;/gi, "'").replace(/&amp;/gi, '&')
+    .toLowerCase()
+    .replace(/[0@$]/g, c => ({ '0': 'o', '@': 'a', '$': 's' })[c])
+    .replace(/[^a-z\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+const NC_RX = (function () {
+  const out = {};
+  for (const tier in BAD) {
+    out[tier] = BAD[tier].map(w => ({
+      word: w,
+      /* No \b on purpose: the capture groups let ncNegated() see where the hit
+         started, and the surrounding non-letter is the same guarantee. */
+      rx: new RegExp('(^|[^a-z])(' + ncSqueeze(w).replace(/\s+/g, '[^a-z]+') + ')($|[^a-z])')
+    }));
+  }
+  return out;
+})();
+/* "not bad" and "never boring" mean the opposite of the word they contain. */
+function ncNegated(text, at) { return /\b(not|no|isnt|aint|never|nothing)\s+(\w+\s+){0,2}$/.test(text.slice(0, at)); }
+/* "k y s" and "s t u p i d" are how a word gets past a word list. A run of
+   three or more lone letters is not English, so joining them up costs nothing
+   and closes the trick. Both forms are checked, because joining also has to not
+   break "a b c" appearing innocently — if it does, the un-joined form still
+   answers. */
+function ncDeletter(s) { return s.replace(/\b(?:[a-z] ){2,}[a-z]\b/g, m => m.replace(/ /g, '')); }
+function ncClassify(html) {
+  const plain = ncNormalise(html);
+  const forms = [ncSqueeze(plain), ncSqueeze(ncDeletter(plain))];
+  for (const tier of ['abuse', 'insult', 'negative']) {
+    for (const e of NC_RX[tier]) {
+      for (const f of forms) {
+        const m = f.match(e.rx);
+        if (m && !ncNegated(f, m.index + m[1].length)) return { tier: tier, word: e.word };
+      }
+    }
+  }
+  return null;
+}
+function ncEsc(t) {
+  return String(t == null ? '' : t).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
 function tokenOK() { try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; } catch (e) {} return null; }
-async function yt(url, tok) { const r = await fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + tok } }); return r.json(); }
+/* Throws with YouTube's own reason attached, so a failure can be reported as
+   the thing that happened rather than as a shrug. */
+async function yt(url, tok) {
+  const r = await fetch('https://www.googleapis.com/youtube/v3/' + url, { headers: { Authorization: 'Bearer ' + tok } });
+  let d = {};
+  try { d = await r.json(); } catch (e) {}
+  if (!r.ok || d.error) {
+    const first = (d.error && d.error.errors && d.error.errors[0]) || {};
+    const e = new Error(first.reason || (d.error && d.error.message) || ('HTTP ' + r.status));
+    e.code = (d.error && d.error.code) || r.status;
+    e.reason = first.reason || '';
+    throw e;
+  }
+  return d;
+}
+/* Plain English for the handful of reasons a parent can actually act on. */
+function ncWhy(e) {
+  const r = (e && e.reason) || '', m = (e && e.message) || '';
+  if (/commentsDisabled/i.test(r)) return 'comments are turned off there';
+  if (/quotaExceeded|dailyLimitExceeded|rateLimitExceeded/i.test(r)) return 'YouTube’s daily API quota for this project is used up (it resets at midnight Pacific)';
+  if (/insufficientPermissions|forbidden|authError|accessNotConfigured/i.test(r) || e.code === 401 || e.code === 403)
+    return 'YouTube refused the connection — reconnect in Studio';
+  if (/videoNotFound|playlistNotFound/i.test(r)) return 'the video is private or has been removed';
+  return m || 'unknown error';
+}
+/* Up to 400 comments per queue: more than a family channel has, and bounded
+   enough not to burn the day's quota on one that has more. */
+async function ncThreads(tok, query) {
+  let items = [], page = '';
+  for (let i = 0; i < 4; i++) {
+    const d = await yt('commentThreads?part=snippet,replies&maxResults=100&order=time&' + query +
+                       (page ? '&pageToken=' + page : ''), tok);
+    items = items.concat(d.items || []);
+    page = d.nextPageToken || '';
+    if (!page) break;
+  }
+  return items;
+}
 
 document.getElementById('scanBtn').onclick = async () => {
   const out = document.getElementById('scanout');
   const tok = tokenOK();
   if (!tok) { out.innerHTML = '<div class="flag">No active YouTube connection. Ask your kid to open <a href="analytics.html">Studio</a> and connect YouTube first (the connection stays active about an hour).</div>'; return; }
   out.innerHTML = 'Scanning…';
-  try {
-    const ch = await yt('channels?part=contentDetails,snippet&mine=true', tok);
-    if (!ch.items || !ch.items.length) { out.innerHTML = 'Could not read the channel.'; return; }
-    const uploads = ch.items[0].contentDetails.relatedPlaylists.uploads;
-    const pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=5', tok);
-    if (!pl.items || !pl.items.length) { out.innerHTML = '<span class="ok">No uploads found — nothing to scan.</span>'; return; }
-    let flags = [], checked = 0;
-    for (const it of pl.items) {
-      const vid = it.contentDetails.videoId;
-      const cm = await yt('commentThreads?part=snippet&videoId=' + vid + '&maxResults=25&order=time', tok).catch(() => null);
-      if (!cm || !cm.items) continue;
-      cm.items.forEach(c => {
-        checked++;
-        const s = c.snippet.topLevelComment.snippet;
-        const txt = (s.textDisplay || '').toLowerCase().replace(/<[^>]+>/g, '');
-        if (BAD.some(w => txt.includes(w))) {
-          flags.push({ author: s.authorDisplayName, text: s.textDisplay.replace(/<[^>]+>/g, '').slice(0, 160), vid, cid: c.id });
-        }
+
+  const notes = [];                 // what went wrong, named rather than swallowed
+  const seen = Object.create(null); // the same comment arrives from more than one queue
+  let read = 0, flags = [], noUploads = false;
+  /* Moderation-queue refusals are held back rather than printed: the read-only
+     scope many channels connect with cannot see those queues, and three amber
+     lines on every otherwise-successful scan would train a parent to ignore the
+     amber lines that matter. They are shown when the scan came up empty, which
+     is when "a queue went unchecked" is the answer rather than noise. */
+  const queueNotes = [];
+
+  function take(thread, held) {
+    const parts = [thread.snippet && thread.snippet.topLevelComment]
+      .concat((thread.replies && thread.replies.comments) || []).filter(Boolean);
+    for (const c of parts) {
+      if (seen[c.id]) continue;
+      seen[c.id] = 1;
+      read++;
+      const s = c.snippet || {};
+      const hit = ncClassify(s.textDisplay);
+      /* Held and likely-spam comments are surfaced whether or not a word
+         matches: YouTube's own filter already decided they were worth a second
+         look, and that is the judgement a parent wants to see. */
+      if (!hit && !held) continue;
+      flags.push({
+        tier: hit ? hit.tier : 'held',
+        author: s.authorDisplayName || 'someone',
+        text: ncNormalise(s.textDisplay).slice(0, 200) || '(no text)',
+        vid: s.videoId || (thread.snippet && thread.snippet.videoId) || '',
+        cid: c.id
       });
     }
-    /* The count and when, and deliberately nothing else. A badge needs a
-       number; keeping the harassment itself in local storage would mean the
-       child's abuse sitting on the family computer indefinitely, readable by
-       anyone who opens the console, for no gain the parent asked for. */
-    pdScanSave(flags.length, checked);
-    if (!flags.length) { out.innerHTML = '<span class="ok">Scanned ' + checked + ' recent comments — nothing harmful found.</span>'; return; }
-    const email = document.getElementById('parentEmail').value || '';
-    out.innerHTML = '<b style="color:#FF2E97">' + flags.length + ' flagged comment(s) of ' + checked + ' scanned:</b>' + flags.map(f => {
-      const mailto = 'mailto:' + email + '?subject=' + encodeURIComponent('NovaClip alert: harmful comment on your kid\u0027s video') + '&body=' + encodeURIComponent('Flagged comment by ' + f.author + ':\n\n"' + f.text + '"\n\nVideo: https://www.youtube.com/watch?v=' + f.vid);
-      return '<div class="flag"><span class="who">' + f.author.replace(/</g,'&lt;') + ':</span> ' + f.text.replace(/</g,'&lt;') +
-        '<div class="actions"><a target="_blank" href="https://www.youtube.com/watch?v=' + f.vid + '&lc=' + f.cid + '">Report to YouTube</a>' +
-        '<a href="' + mailto + '">Email me this</a></div></div>';
-    }).join('');
-  } catch (e) {
-    out.innerHTML = '<div class="flag">Scan failed — the YouTube connection may have expired. Reconnect in <a href="analytics.html">Studio</a>.</div>';
   }
+
+  try {
+    const ch = await yt('channels?part=id,contentDetails,snippet&mine=true', tok);
+    if (!ch.items || !ch.items.length) {
+      out.innerHTML = '<div class="flag">Could not read the channel — the connected Google account may not have a YouTube channel on it.</div>';
+      return;
+    }
+    const chId = ch.items[0].id;
+    const uploads = ch.items[0].contentDetails.relatedPlaylists.uploads;
+
+    /* The whole channel in one call: every video, not only the newest five. */
+    let wide = false;
+    try {
+      (await ncThreads(tok, 'allThreadsRelatedToChannelId=' + chId)).forEach(t => take(t, false));
+      wide = true;
+    } catch (e) {
+      notes.push('Could not read the channel’s comments in one pass (' + ncWhy(e) + ') — checked recent videos one at a time instead.');
+    }
+
+    /* Where abuse usually ends up. YouTube's filter takes it out of the public
+       list, which is a large part of why the old scanner saw nothing. */
+    for (const q of ['heldForReview', 'likelySpam']) {
+      try {
+        (await ncThreads(tok, 'allThreadsRelatedToChannelId=' + chId + '&moderationStatus=' + q)).forEach(t => take(t, true));
+      } catch (e) {
+        queueNotes.push('The "' + q + '" queue could not be checked — ' + ncWhy(e) + '.');
+      }
+    }
+
+    if (!wide) {
+      let pl = null;
+      try { pl = await yt('playlistItems?part=contentDetails&playlistId=' + uploads + '&maxResults=25', tok); }
+      catch (e) { notes.push('Could not list the uploads — ' + ncWhy(e) + '.'); }
+      if (pl && pl.items && pl.items.length) {
+        for (const it of pl.items) {
+          const vid = it.contentDetails.videoId;
+          try { (await ncThreads(tok, 'videoId=' + vid)).forEach(t => take(t, false)); }
+          catch (e) { notes.push('Video ' + vid + ': ' + ncWhy(e) + '.'); }
+        }
+      } else if (pl) {
+        /* Not an early return any more. Arriving here with the channel-wide
+           pass already refused, this used to print "No uploads found" and drop
+           every reason on the floor — which is how a scan that was refused three
+           times in a row came out looking like an empty channel. */
+        noUploads = true;
+      }
+    }
+  } catch (e) {
+    out.innerHTML = '<div class="flag"><b>Scan failed.</b> ' + ncEsc(ncWhy(e)) +
+      '. Reconnect in <a href="analytics.html">Studio</a> if that keeps happening.</div>';
+    return;
+  }
+
+  /* The count and when, and deliberately nothing else. A badge needs a
+     number; keeping the harassment itself in local storage would mean the
+     child's abuse sitting on the family computer indefinitely, readable by
+     anyone who opens the console, for no gain the parent asked for. */
+  pdScanSave(flags.length, read);
+
+  const shown = notes.concat(read ? [] : queueNotes);
+  const noteHtml = shown.length
+    ? '<div class="notice" style="border-left-color:#FFB443">' + shown.map(ncEsc).join('<br>') + '</div>'
+    : '';
+
+  /* NOT an all-clear. Nothing was read, so nothing is known. */
+  if (!read) {
+    if (noUploads && !notes.length) {
+      out.innerHTML = '<span class="ok">No uploads found — nothing to scan.</span>' + noteHtml;
+      return;
+    }
+    out.innerHTML = '<div class="flag"><b>No comments could be read, so nothing has been checked.</b> ' +
+      'That is not the same as finding nothing. Usually it means the videos have no comments yet, ' +
+      'comments are turned off on them, or the YouTube connection needs remaking in ' +
+      '<a href="analytics.html">Studio</a>.</div>' + noteHtml;
+    return;
+  }
+  if (!flags.length) {
+    out.innerHTML = '<span class="ok">Scanned ' + read + ' comment' + (read === 1 ? '' : 's') +
+      ' — nothing flagged.</span>' + noteHtml;
+    return;
+  }
+
+  const rank = { abuse: 0, insult: 1, held: 2, negative: 3 };
+  flags.sort((a, b) => rank[a.tier] - rank[b.tier]);
+  const worst = TIER[flags[0].tier];
+  const email = document.getElementById('parentEmail').value || '';
+  out.innerHTML = '<b style="color:' + worst.colour + '">' + flags.length + ' of ' + read +
+    ' comment' + (read === 1 ? '' : 's') + ' flagged:</b>' + flags.map(f => {
+    const t = TIER[f.tier];
+    const mailto = 'mailto:' + encodeURIComponent(email) +
+      '?subject=' + encodeURIComponent('NovaClip alert: flagged comment on your kid\u0027s video') +
+      '&body=' + encodeURIComponent(t.label + ' — comment by ' + f.author + ':\n\n"' + f.text +
+      '"\n\nVideo: https://www.youtube.com/watch?v=' + f.vid);
+    return '<div class="flag" style="border-color:' + t.colour + '80">' +
+      '<div style="color:' + t.colour + '; font-size:.76rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px">' + t.label + '</div>' +
+      '<span class="who">' + ncEsc(f.author) + ':</span> ' + ncEsc(f.text) +
+      '<div class="actions">' +
+      (f.vid ? '<a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + encodeURIComponent(f.vid) + '&lc=' + encodeURIComponent(f.cid) + '">Report to YouTube</a>' : '') +
+      '<a href="' + mailto + '">Email me this</a></div></div>';
+  }).join('') + noteHtml;
 };
 
 /* ============================================================================
