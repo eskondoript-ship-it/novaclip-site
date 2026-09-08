@@ -123,7 +123,11 @@
    "nothing harmful found" over the top of it. parent.html is a cached shell
    file, so without the bump a returning parent keeps a scanner that reports an
    all-clear it has no evidence for — which is the whole reason to bump. */
-const CACHE = 'novaclip-v21';
+/* v22: the scanner's diagnostics said the connection was refused, and the
+   reason was the scope — youtube.readonly reads the channel but is refused on
+   every comment endpoint. analytics.html now asks for youtube.force-ssl too and
+   parent.html names that as the cause. Both are cached shell files. */
+const CACHE = 'novaclip-v22';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

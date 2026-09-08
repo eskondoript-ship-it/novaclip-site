@@ -1478,12 +1478,19 @@ async function yt(url, tok) {
 /* Plain English for the handful of reasons a parent can actually act on. */
 function ncWhy(e) {
   const r = (e && e.reason) || '', m = (e && e.message) || '';
-  if (/commentsDisabled/i.test(r)) return 'comments are turned off there';
-  if (/quotaExceeded|dailyLimitExceeded|rateLimitExceeded/i.test(r)) return 'YouTube’s daily API quota for this project is used up (it resets at midnight Pacific)';
-  if (/insufficientPermissions|forbidden|authError|accessNotConfigured/i.test(r) || e.code === 401 || e.code === 403)
-    return 'YouTube refused the connection — reconnect in Studio';
-  if (/videoNotFound|playlistNotFound/i.test(r)) return 'the video is private or has been removed';
-  return m || 'unknown error';
+  const raw = r ? ' [' + r + ']' : (e && e.code ? ' [HTTP ' + e.code + ']' : '');
+  if (/commentsDisabled/i.test(r)) return 'comments are turned off there' + raw;
+  if (/quotaExceeded|dailyLimitExceeded|rateLimitExceeded/i.test(r)) return 'YouTube’s daily API quota for this project is used up (it resets at midnight Pacific)' + raw;
+  /* The one that actually bit. youtube.readonly reads the channel and the
+     uploads but is refused on every comment endpoint, so the scan came back
+     with a live connection and nothing read. Saying "reconnect" alone was no
+     help: reconnecting on the old scope list produced the identical failure.
+     It has to say what the reconnect is for. */
+  if (/insufficientPermissions|insufficientScope|forbidden|authError/i.test(r) || e.code === 401 || e.code === 403)
+    return 'this YouTube connection does not include permission to read comments — open Studio, sign out and connect again, and tick the extra box' + raw;
+  if (/accessNotConfigured/i.test(r)) return 'the YouTube Data API is not enabled for this Google Cloud project' + raw;
+  if (/videoNotFound|playlistNotFound/i.test(r)) return 'the video is private or has been removed' + raw;
+  return (m || 'unknown error') + raw;
 }
 /* Up to 400 comments per queue: more than a family channel has, and bounded
    enough not to burn the day's quota on one that has more. */
@@ -1607,10 +1614,19 @@ document.getElementById('scanBtn').onclick = async () => {
       out.innerHTML = '<span class="ok">No uploads found — nothing to scan.</span>' + noteHtml;
       return;
     }
+    /* A permission refusal has one fix and it is not the generic one, so it
+       gets its own sentence rather than being buried in a list of maybes. */
+    const scope = shown.some(n => /permission to read comments/.test(n));
     out.innerHTML = '<div class="flag"><b>No comments could be read, so nothing has been checked.</b> ' +
-      'That is not the same as finding nothing. Usually it means the videos have no comments yet, ' +
-      'comments are turned off on them, or the YouTube connection needs remaking in ' +
-      '<a href="analytics.html">Studio</a>.</div>' + noteHtml;
+      'That is not the same as finding nothing. ' +
+      (scope
+        ? 'The connection to YouTube can see the channel and its videos but is not allowed to read comments — ' +
+          'it was made before comment scanning existed. Open <a href="analytics.html">Studio</a>, press ' +
+          '<b>Sign out</b> next to the channel name, then connect again and accept the extra permission. ' +
+          'One reconnect fixes it for good.'
+        : 'Usually it means the videos have no comments yet, comments are turned off on them, or the ' +
+          'YouTube connection needs remaking in <a href="analytics.html">Studio</a>.') +
+      '</div>' + noteHtml;
     return;
   }
   if (!flags.length) {

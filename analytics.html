@@ -1928,6 +1928,25 @@ function ytProvider() {
      the revenue panel handles being refused and says so. */
   provider.addScope('https://www.googleapis.com/auth/yt-analytics.readonly');
   provider.addScope('https://www.googleapis.com/auth/yt-analytics-monetary.readonly');
+  /* COMMENTS ARE NOT COVERED BY youtube.readonly.
+     The Family Dashboard's comment safety scanner could read the channel and
+     list the uploads on the scopes above, and was then refused on every single
+     commentThreads call — which is what "Scanned 0 comments" was. Under OAuth
+     the comment endpoints only accept youtube.force-ssl; there is no narrower
+     comment-reading scope on offer, and the moderation queues where abuse
+     actually lands need it too.
+
+     Be clear about the cost, because it is real: force-ssl is a write scope, so
+     Google's consent screen will now say "manage your YouTube account". NovaClip
+     only ever reads with it — nothing in this repo posts, edits, deletes or
+     moderates a comment, and the scanner deliberately hands moderation back to
+     YouTube's own reporting flow rather than acting on the account itself.
+
+     Anyone already connected is on a token issued before this line existed, so
+     the scanner keeps failing until they reconnect. ncReconnect() below drops
+     the stored token precisely so the consent screen reappears rather than the
+     old grant being waved through. */
+  provider.addScope('https://www.googleapis.com/auth/youtube.force-ssl');
   return provider;
 }
 
