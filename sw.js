@@ -127,7 +127,11 @@
    reason was the scope — youtube.readonly reads the channel but is refused on
    every comment endpoint. analytics.html now asks for youtube.force-ssl too and
    parent.html names that as the cause. Both are cached shell files. */
-const CACHE = 'novaclip-v22';
+/* v23: getting the Family Shield stops asking a parent to do a developer's
+   chores — the install page builds a ZIP of just the extension and the shield
+   announces its own ID, so nothing is copied by hand. shield.html and
+   parent.html are both cached, and shield.html also gains Nova. */
+const CACHE = 'novaclip-v23';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

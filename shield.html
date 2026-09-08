@@ -120,6 +120,36 @@ input[type=text] { width: 100%; padding: 12px 14px; border-radius: 12px; font: i
 .notice b { color: var(--nc-text,#EAF2FF); }
 .ok { color: #6EE7A8; font-size: .88rem; margin-top: 10px; min-height: 20px; }
 .bad { color: #FF6B8A; }
+
+/* A parent should be able to tell at a glance whether the thing is on. This
+   strip is the page's answer to "did that work?", and it updates itself the
+   moment the extension announces itself — no button, no reload. */
+.status { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 14px;
+          margin-bottom: 22px; font-size: .93rem; font-weight: 600;
+          border: 1px solid var(--nc-line2,rgba(255,255,255,.12)); background: var(--nc-card,rgba(255,255,255,.04)); }
+.status .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nc-dim,#8b93a7); flex: none; }
+.status.on { border-color: rgba(110,231,168,.5); background: rgba(110,231,168,.09); }
+.status.on .dot { background: #6EE7A8; box-shadow: 0 0 10px #6EE7A8; }
+.status small { display: block; font-weight: 400; color: var(--nc-dim,#8b93a7); margin-top: 2px; }
+
+/* The step number, so the order is visible without counting headings. */
+.card h3 .n { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
+              border-radius: 50%; font-size: .82rem; margin-right: 9px; flex: none;
+              background: var(--nc-violet,#7C5CFF); color: #fff; }
+.card h3 { display: flex; align-items: center; }
+.card h3 .done { background: #2E9E6B; }
+
+/* chrome://extensions cannot be a link — Chrome refuses to navigate to it from
+   a page — so the next best thing is putting it on the clipboard for them. */
+.copyrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 4px; }
+.copybtn { padding: 7px 13px; border-radius: 9px; cursor: pointer; font: inherit; font-size: .82rem;
+           font-weight: 600; color: var(--nc-text,#EAF2FF); background: rgba(255,255,255,.07);
+           border: 1px solid var(--nc-line2,rgba(255,255,255,.16)); }
+.copybtn:hover { background: rgba(255,255,255,.12); }
+details { margin-top: 14px; }
+summary { cursor: pointer; font-size: .86rem; color: var(--nc-dim,#8b93a7); }
+summary:hover { color: var(--nc-cyan,#00F0FF); }
+.hint { color: var(--nc-dim,#8b93a7); font-size: .84rem; margin-top: 8px; line-height: 1.55; }
 </style>
 </head>
 <body>
@@ -135,54 +165,82 @@ input[type=text] { width: 100%; padding: 12px 14px; border-radius: 12px; font: i
   <a class='backlnk' href='parent.html'>← Back to the Family Dashboard</a>
   <h1><span class='g'>Install the Family Shield</span></h1>
   <p class='sub'>The dashboard decides the rules. This extension is the part that enforces them — a web
-  page cannot block anything on youtube.com, only something running inside the browser can. It takes
-  about two minutes and it is free.</p>
+  page cannot block anything on youtube.com, only something running inside the browser can. Two steps,
+  about two minutes, and it is free. You will not need to copy any codes.</p>
 
-  <div class='card'>
-    <h3>1. Get the files</h3>
-    <p>The shield is not on the Chrome Web Store yet, so it installs unpacked — the same way any
-    extension is tested before it is listed.</p>
-    <div class='btns'>
-      <a class='btn' href='https://github.com/eskondoript-ship-it/novaclip-site/archive/refs/heads/main.zip'>Download the ZIP</a>
-      <a class='btn alt' href='https://github.com/eskondoript-ship-it/novaclip-site/tree/main/extension'>Browse the folder</a>
-    </div>
-    <p style='margin-top:14px'>Unzip it. The folder you want is the one called <code>extension</code>
-    inside — not the whole download.</p>
+  <div class='status' id='shieldStatus'>
+    <span class='dot'></span>
+    <span id='statusText'>Looking for the shield…<small>This updates on its own — leave the page open while you install.</small></span>
   </div>
 
   <div class='card'>
-    <h3>2. Load it into Chrome</h3>
+    <h3><span class='n' id='n1'>1</span>Download the shield</h3>
+    <p>One folder, about 40&nbsp;KB. It is not on the Chrome Web Store yet, so it installs the way
+    extensions are installed before they are listed — nothing unusual, and nothing to pay.</p>
+    <div class='btns'>
+      <button class='btn' id='dl'>Download the shield</button>
+    </div>
+    <div class='ok' id='dlout'></div>
+    <p class='hint'>You get a file called <code>novaclip-family-shield.zip</code>. Unzip it — most
+    computers do that when you double-click — and you are left with one folder called
+    <b>novaclip-family-shield</b>. That folder is the whole thing; there is nothing to find inside it.</p>
+    <details>
+      <summary>The download did not work / I would rather get it from GitHub</summary>
+      <div class='btns'>
+        <a class='btn alt' href='https://github.com/eskondoript-ship-it/novaclip-site/archive/refs/heads/main.zip'>Download the whole site as a ZIP</a>
+        <a class='btn alt' href='https://github.com/eskondoript-ship-it/novaclip-site/tree/main/extension'>Browse the files</a>
+      </div>
+      <p class='hint'>Going this way you get the entire site, and the folder you want is the one
+      called <code>extension</code> inside it — not the whole download. That extra step is exactly
+      what the button above exists to remove.</p>
+    </details>
+  </div>
+
+  <div class='card'>
+    <h3><span class='n' id='n2'>2</span>Add it to your browser</h3>
     <ol>
-      <li>Open <code>chrome://extensions</code> — paste that into the address bar, it will not open
-        from a link.</li>
-      <li>Turn on <b>Developer mode</b>, top right.</li>
-      <li>Click <b>Load unpacked</b> and choose the <code>extension</code> folder.</li>
-      <li>The shield appears in the list with an ID under its name — a long string of letters.
-        Copy it.</li>
+      <li>Open the extensions page. It cannot be opened from a link — Chrome does not allow it — so
+        copy the address and paste it into the address bar:
+        <div class='copyrow'>
+          <code id='extUrl'>chrome://extensions</code>
+          <button class='copybtn' data-copy='#extUrl'>Copy</button>
+          <button class='copybtn' id='browserPick'>Not Chrome?</button>
+        </div>
+      </li>
+      <li>Turn on <b>Developer mode</b> — the switch in the top right corner.</li>
+      <li>Click <b>Load unpacked</b>, and choose the <b>novaclip-family-shield</b> folder you unzipped.</li>
     </ol>
-    <div class='notice'>Edge and Brave work the same way; the address is
+    <p class='hint'>That is it. The shield tells this page it has arrived, and the strip at the top of
+    this page turns green by itself — you do not have to copy the ID Chrome shows, or come back and
+    paste anything.</p>
+    <div class='notice'>Edge and Brave work exactly the same way, with
       <code>edge://extensions</code> or <code>brave://extensions</code>. Firefox and Safari use a
       different extension format and are not supported yet.</div>
   </div>
 
   <div class='card'>
-    <h3>3. Pair it with this dashboard</h3>
-    <p>Paste the ID here. This is what lets the dashboard send your rules to the shield — without it
-    the shield runs the default 10-to-13 settings and ignores anything you choose.</p>
-    <div style='margin-top:14px'>
-      <input type='text' id='extid' placeholder='e.g. bfnaelmomeimhlpmgjnjophhpkkoljpa' spellcheck='false'>
-    </div>
-    <div class='btns'>
-      <button class='btn' id='pair'>Pair the shield</button>
-      <button class='btn alt' id='unpair'>Forget it</button>
-    </div>
+    <h3><span class='n' id='n3'>3</span>Pairing — nothing to do</h3>
+    <p id='pairText'>The shield introduces itself to this page as soon as it is installed, and the
+    dashboard remembers it from then on. This step used to ask you to copy a 32-character code out of
+    Chrome; it does not any more.</p>
     <div class='ok' id='out'></div>
-    <div class='notice'>This used to ask you to run a line of JavaScript in the browser console. It
-      does the same thing, without asking a parent to open a developer tool.</div>
+    <details id='manualPair'>
+      <summary>Pair it by hand instead</summary>
+      <p class='hint'>Only needed if the automatic pairing cannot happen — for example if you are
+      reading this on a different computer from the one the shield is installed on. On the Chrome
+      extensions page, the shield's ID is the long string of letters under its name.</p>
+      <div style='margin-top:12px'>
+        <input type='text' id='extid' placeholder='e.g. bfnaelmomeimhlpmgjnjophhpkkoljpa' spellcheck='false'>
+      </div>
+      <div class='btns'>
+        <button class='btn' id='pair'>Pair the shield</button>
+        <button class='btn alt' id='unpair'>Forget it</button>
+      </div>
+    </details>
   </div>
 
   <div class='card'>
-    <h3>4. Set your rules</h3>
+    <h3><span class='n'>4</span>Set your rules</h3>
     <p>Back on the Family Dashboard, unlock with your PIN, choose the age profile and the categories,
     then press <b>Save and send to the shield</b>. Do that after every change — the shield only hears
     about rules you send it.</p>
@@ -204,46 +262,231 @@ input[type=text] { width: 100%; padding: 12px 14px; border-radius: 12px; font: i
 </div>
 
 <script>
-/* The ID is stored under the same key parent.html reads, so pairing here is
-   pairing there. Chrome extension IDs are 32 characters, a-p — checking the
-   shape before saving turns "the shield is not responding" into "that is not
-   an extension ID", which is a much shorter conversation. */
+/* Installing the shield used to be six steps, two of which were a developer's
+   chores handed to a parent: dig the extension folder out of a ZIP of the whole
+   website, and copy a 32-character ID out of Chrome's extensions screen without
+   catching the surrounding text. Both are gone.
+ *
+ *   - the download button builds a ZIP of just the extension, here in the page,
+ *     so unzipping leaves one folder and there is nothing to find inside it
+ *   - extension/announce.js tells this page the ID itself, so pairing happens
+ *     on its own and the strip at the top goes green while the parent watches
+ *
+ * The manual paste is still here, behind a fold, because someone reading this
+ * on a different computer from the one they are installing on cannot be told
+ * the ID by an extension that is not running next to them. */
 (function () {
+  var KEY = 'nc_shield_id';
   var input = document.getElementById('extid');
   var out = document.getElementById('out');
-  var KEY = 'nc_shield_id';
+  var strip = document.getElementById('shieldStatus');
+  var stripText = document.getElementById('statusText');
 
   function show(msg, bad) {
     out.textContent = msg;
     out.className = 'ok' + (bad ? ' bad' : '');
   }
+  function saved() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
 
-  try {
-    var cur = localStorage.getItem(KEY) || '';
-    if (cur) { input.value = cur; show('Paired with ' + cur + '.'); }
-  } catch (e) {}
+  /* ---- the status strip, which is the whole point of the page ------------ */
+  function paint() {
+    var id = saved();
+    if (id) {
+      strip.className = 'status on';
+      stripText.innerHTML = 'The Family Shield is installed and paired.' +
+        '<small>Rules you set on the dashboard are sent straight to it. ID ' + id.slice(0, 8) + '…</small>';
+      document.getElementById('n1').className = 'n done';
+      document.getElementById('n2').className = 'n done';
+      document.getElementById('n3').className = 'n done';
+    } else {
+      strip.className = 'status';
+      stripText.innerHTML = 'The shield is not installed yet.' +
+        '<small>This strip turns green on its own the moment it is — leave the page open while you install.</small>';
+    }
+  }
+  function pairWith(id, how) {
+    if (!/^[a-p]{32}$/.test(id)) return false;
+    if (saved() === id) { paint(); return true; }
+    try { localStorage.setItem(KEY, id); } catch (e) {
+      show('This browser is not letting the page save anything, so pairing cannot be remembered.', true);
+      return false;
+    }
+    paint();
+    show(how === 'auto'
+      ? 'Found it and paired automatically — nothing else to do here.'
+      : 'Paired. Open the Family Dashboard and press Save and send to the shield.');
+    return true;
+  }
 
+  /* ---- the shield announcing itself -------------------------------------- */
+  /* Both channels, because they fail in different situations: the attribute is
+     already there for a page that loads after the extension, the message is for
+     a page that was open before it was installed. */
+  function fromAttr() {
+    var id = document.documentElement.getAttribute('data-nc-shield');
+    if (id) pairWith(String(id).toLowerCase(), 'auto');
+  }
+  window.addEventListener('message', function (e) {
+    if (e.source !== window) return;
+    var d = e.data;
+    if (d && d.source === 'novaclip-family-shield' && d.id) pairWith(String(d.id).toLowerCase(), 'auto');
+  }, false);
+  function probe() { try { window.postMessage({ source: 'novaclip-shield-probe' }, location.origin); } catch (e) {} }
+
+  paint();
+  fromAttr();
+  probe();
+  /* Installing happens in another tab and takes a minute or two, so the page
+     keeps asking rather than answering once and going quiet. Slow and bounded:
+     every 2 seconds for five minutes, then it stops rather than spinning
+     forever on a page somebody left open. */
+  var tries = 0;
+  var poll = setInterval(function () {
+    if (saved() || ++tries > 150) { clearInterval(poll); return; }
+    fromAttr(); probe();
+  }, 2000);
+  /* Coming back to the tab after installing is the common case; ask straight
+     away rather than waiting out the rest of the interval. */
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) { fromAttr(); probe(); } });
+
+  /* ---- manual pairing, still here for the other-computer case ------------- */
+  if (saved()) input.value = saved();
   document.getElementById('pair').onclick = function () {
     var v = (input.value || '').trim().toLowerCase();
-    if (!/^[a-p]{32}$/.test(v)) {
+    if (!pairWith(v, 'manual') && !/^[a-p]{32}$/.test(v)) {
       show('That does not look like an extension ID — they are 32 letters, a to p, with no spaces.', true);
-      return;
     }
-    try { localStorage.setItem(KEY, v); } catch (e) {
-      show('This browser is not letting the page save anything, so pairing cannot be remembered.', true);
-      return;
-    }
-    show('Paired. Open the Family Dashboard and press Save and send to the shield.');
   };
-
   document.getElementById('unpair').onclick = function () {
     try { localStorage.removeItem(KEY); } catch (e) {}
     input.value = '';
+    paint();
     show('Forgotten. The shield keeps whatever rules it already had until you pair again.');
+  };
+
+  /* ---- copy buttons ------------------------------------------------------ */
+  document.querySelectorAll('.copybtn[data-copy]').forEach(function (b) {
+    b.onclick = function () {
+      var el = document.querySelector(b.getAttribute('data-copy'));
+      var text = el.textContent;
+      var done = function () { var old = b.textContent; b.textContent = 'Copied'; setTimeout(function () { b.textContent = old; }, 1400); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback(text, done); });
+      } else { fallback(text, done); }
+    };
+  });
+  /* Clipboard access is refused outright in some managed browsers, which is a
+     silent failure otherwise — select the text so it can still be copied. */
+  function fallback(text, done) {
+    var t = document.createElement('textarea');
+    t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(t);
+  }
+  var browsers = ['chrome://extensions', 'edge://extensions', 'brave://extensions'], bi = 0;
+  document.getElementById('browserPick').onclick = function () {
+    bi = (bi + 1) % browsers.length;
+    document.getElementById('extUrl').textContent = browsers[bi];
+    this.textContent = bi === 0 ? 'Not Chrome?' : browsers[bi].split(':')[0].replace(/^./, function (c) { return c.toUpperCase(); });
+  };
+
+  /* ---- the download ------------------------------------------------------ */
+  /* A ZIP of the extension folder, built here rather than committed as a binary
+     — a checked-in archive is a copy that goes stale the first time anything in
+     extension/ changes, and it would have to be rebuilt by hand every release.
+     Store method, no compression: 40KB of source does not need it, and it means
+     no library, no CDN, and about sixty lines. */
+  var FILES = [
+    /* Must match the contents of extension/. A missing file here produces an
+       extension Chrome refuses to load, so the download refuses to build at all
+       rather than handing over a broken folder. */
+    'manifest.json', 'background.js', 'block.css', 'block.js',
+    'family-filter.js', 'options.html', 'options.js', 'announce.js', 'README.md'
+  ];
+  var CRC = (function () {
+    var t = [], c;
+    for (var n = 0; n < 256; n++) {
+      c = n;
+      for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(b) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zip(files) {
+    var parts = [], central = [], offset = 0, enc = new TextEncoder();
+    files.forEach(function (f) {
+      var name = enc.encode(f.name), crc = crc32(f.data), len = f.data.length;
+      var lh = new Uint8Array(30 + name.length), v = new DataView(lh.buffer);
+      v.setUint32(0, 0x04034b50, true); v.setUint16(4, 20, true); v.setUint16(6, 0, true);
+      v.setUint16(8, 0, true);                       /* stored, not deflated */
+      v.setUint16(10, 0, true); v.setUint16(12, 0x21, true);   /* 1980-01-01 */
+      v.setUint32(14, crc, true); v.setUint32(18, len, true); v.setUint32(22, len, true);
+      v.setUint16(26, name.length, true); v.setUint16(28, 0, true);
+      lh.set(name, 30);
+      parts.push(lh, f.data);
+
+      var cd = new Uint8Array(46 + name.length), w = new DataView(cd.buffer);
+      w.setUint32(0, 0x02014b50, true); w.setUint16(4, 20, true); w.setUint16(6, 20, true);
+      w.setUint16(8, 0, true); w.setUint16(10, 0, true);
+      w.setUint16(12, 0, true); w.setUint16(14, 0x21, true);
+      w.setUint32(16, crc, true); w.setUint32(20, len, true); w.setUint32(24, len, true);
+      w.setUint16(28, name.length, true);
+      w.setUint32(38, 0, true); w.setUint32(42, offset, true);
+      cd.set(name, 46);
+      central.push(cd);
+      offset += lh.length + len;
+    });
+    var cdSize = central.reduce(function (n, c) { return n + c.length; }, 0);
+    var end = new Uint8Array(22), e = new DataView(end.buffer);
+    e.setUint32(0, 0x06054b50, true);
+    e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+    e.setUint32(12, cdSize, true); e.setUint32(16, offset, true);
+    return new Blob(parts.concat(central, [end]), { type: 'application/zip' });
+  }
+
+  var dl = document.getElementById('dl'), dlout = document.getElementById('dlout');
+  dl.onclick = async function () {
+    dl.disabled = true;
+    var was = dl.textContent;
+    dl.textContent = 'Packing…';
+    dlout.className = 'ok';
+    dlout.textContent = '';
+    try {
+      var files = await Promise.all(FILES.map(async function (n) {
+        var r = await fetch('extension/' + n, { cache: 'no-store' });
+        if (!r.ok) throw new Error(n + ' (' + r.status + ')');
+        /* One folder inside the archive, so unzipping gives the parent exactly
+           one thing to point Chrome at. */
+        return { name: 'novaclip-family-shield/' + n, data: new Uint8Array(await r.arrayBuffer()) };
+      }));
+      var url = URL.createObjectURL(zip(files));
+      var a = document.createElement('a');
+      a.href = url; a.download = 'novaclip-family-shield.zip';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+      dlout.textContent = 'Downloaded. Unzip it, then follow step 2.';
+    } catch (err) {
+      dlout.className = 'ok bad';
+      dlout.textContent = 'Could not build the download (' + err.message + '). Use the GitHub link under "The download did not work" instead.';
+    }
+    dl.disabled = false;
+    dl.textContent = was;
   };
 })();
 </script>
 <!-- The rail, the language picker and the header all come from here. -->
 <script src='nova.js'></script>
+<!-- Nova was on every other page and missing from this one, which is the page a
+     parent is most likely to be stuck on. jarvis.js builds the pill; nova-guide
+     borrows it for the "?" button and already had a written guide for this page
+     waiting with no button to open it. -->
+<script src='jarvis.js' defer></script>
+<script src='nova-guide.js' defer></script>
 </body>
 </html>

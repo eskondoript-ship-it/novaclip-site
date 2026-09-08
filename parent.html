@@ -1671,6 +1671,29 @@ var FKEY = 'nc_family_settings';
 var EXT_ID = localStorage.getItem('nc_shield_id') || '';
 var fSettings = null;
 
+/* The shield announces itself on novaclip.org (extension/announce.js), so a
+   parent who installs it never copies its ID anywhere. This dashboard picks the
+   announcement up the same way shield.html does — a parent who installs the
+   extension and then comes straight here, rather than back to the install page,
+   should not find it saying "not installed". */
+(function () {
+  function adopt(id) {
+    id = String(id || '').toLowerCase();
+    if (!/^[a-p]{32}$/.test(id) || EXT_ID === id) return;
+    EXT_ID = id;
+    try { localStorage.setItem('nc_shield_id', id); } catch (e) {}
+    if (typeof fShieldNote === 'function') fShieldNote();
+    if (typeof pdShieldState === 'function') pdShieldState();
+  }
+  window.addEventListener('message', function (e) {
+    if (e.source !== window) return;
+    var d = e.data;
+    if (d && d.source === 'novaclip-family-shield' && d.id) adopt(d.id);
+  }, false);
+  adopt(document.documentElement.getAttribute('data-nc-shield'));
+  try { window.postMessage({ source: 'novaclip-shield-probe' }, location.origin); } catch (e) {}
+})();
+
 function fLoad() {
   try {
     var raw = JSON.parse(localStorage.getItem(FKEY) || 'null');
@@ -1787,7 +1810,16 @@ function fInit() {
     fRender();
   };
 
+  fShieldNote();
+}
+
+/* Named, because the shield can now arrive while this page is already open —
+   it announces itself the moment it is installed — and the line that says
+   whether it is there has to be redrawn when that happens rather than only
+   once at start-up. */
+function fShieldNote() {
   var note = document.getElementById('shieldState');
+  if (!note) return;
   note.innerHTML = EXT_ID
     ? 'Shield paired. Press <b>Save and send to the shield</b> after any change.'
     : '<b>The browser shield is not installed.</b> These rules are stored here, but a web page cannot ' +
