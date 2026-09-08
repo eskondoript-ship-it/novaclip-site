@@ -251,7 +251,13 @@ function finish() {
   resultEl.classList.add('on');
   againBtn.style.display = 'inline-block';
 
+  /* Two boards, two questions. The median is "how fast are you" and is still
+     the number Progress records. The best of the five is "how fast can you
+     be" — more variance, and worth its own table because it is the one people
+     actually want to compare. Neither can be farmed by hammering the pad: a
+     press before green voids that go rather than scoring as a fast one. */
   try { if (window.NC_BOARD) NC_BOARD.submit('reaction', mid); } catch (e) {}
+  try { if (window.NC_BOARD) NC_BOARD.submit('reactionbest', best); } catch (e) {}
 
   let prior = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
   if (!prior || mid < prior) {
@@ -292,10 +298,23 @@ if (savedBest) document.getElementById('best').textContent = 'Your best so far: 
 (function () {
   if (window.NC_EMBED === undefined && /[?&]embed=1/.test(location.search)) return;
   function go() {
-    var host = document.createElement('div');
     var main = document.querySelector('.wrap') || document.querySelector('main') || document.body;
-    main.appendChild(host);
-    NC_BOARD.mount('reaction', host);
+    /* Median first: it is the one the page argues for, and the one Progress
+       keeps. The best-of board is underneath, labelled as the other question
+       rather than as a better answer to the same one. */
+    var h1 = document.createElement('div');
+    main.appendChild(h1);
+    NC_BOARD.mount('reaction', h1);
+
+    var lbl = document.createElement('p');
+    lbl.style.cssText = 'margin:26px 0 -6px;color:var(--nc-dim,#7E8AA6);font-size:.86rem;line-height:1.6';
+    lbl.textContent = 'And the fastest single go of the five — the same five presses, ' +
+      'asking how fast you can be rather than how fast you are.';
+    main.appendChild(lbl);
+
+    var h2 = document.createElement('div');
+    main.appendChild(h2);
+    NC_BOARD.mount('reactionbest', h2);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
   else go();

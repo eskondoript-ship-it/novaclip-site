@@ -659,11 +659,30 @@ export default {
        playing all afternoon owns the whole table.
        ==================================================================== */
     if (path === '/scores') {
+      /* Keys are letters only, because cleanGame() below strips everything
+         else — "reaction_best" would arrive as "reactionbest" and quietly not
+         match a key spelled with the underscore. */
       const GAMES = {
-        typing:   { dir: 'high', max: 400,    label: 'WPM' },
-        flap:     { dir: 'high', max: 100000, label: 'score' },
-        reaction: { dir: 'low',  max: 5000,   label: 'ms' },
-        aim:      { dir: 'high', max: 10000,  label: 'points' }
+        typing:       { dir: 'high', max: 400,    label: 'WPM' },
+        flap:         { dir: 'high', max: 100000, label: 'score' },
+        reaction:     { dir: 'low',  max: 5000,   label: 'ms' },
+        aim:          { dir: 'high', max: 10000,  label: 'points' },
+        /* TWO SECOND BOARDS, MEASURING THE OTHER THING EACH GAME KNOWS.
+
+           reactionbest is the fastest single go of the five, where `reaction`
+           is the median. They are different questions — "how fast can you be"
+           against "how fast are you" — and the median is still the one that
+           goes to Progress. Pressing before green voids the go, so the best-of
+           board cannot be farmed by hammering; it is luckier than the median,
+           not cheatable.
+
+           aimaccuracy is hits as a percentage of shots, which the target game
+           has always counted and never posted. It needs a floor: one shot,
+           one hit, 100% would otherwise top the table for ever. The floor is
+           enforced on the client where the shot count lives, and the range
+           here is 0-100 so nothing outside a percentage can be stored. */
+        reactionbest: { dir: 'low',  max: 5000,   label: 'ms' },
+        aimaccuracy:  { dir: 'high', max: 100,    label: '% accurate' }
       };
       const cleanGame = (v) => {
         const g = String(v || '').toLowerCase().replace(/[^a-z]/g, '');

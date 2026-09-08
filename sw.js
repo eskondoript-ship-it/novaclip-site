@@ -148,7 +148,12 @@
    IndexedDB, the result plays as soon as it lands, and the finished edit is
    handed over ready to post. publish.html and the two ai-edit files are all
    cached. */
-const CACHE = 'novaclip-v26';
+/* v27: two more boards. Reaction gains the fastest single go beside the
+   median, and the target game gains accuracy beside points — a number it has
+   always counted and never posted. reaction.html, aim.html and leaderboard.js
+   are all cached, and leaderboard.js carries the message that explains a board
+   the deployed worker has not heard of yet. */
+const CACHE = 'novaclip-v27';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

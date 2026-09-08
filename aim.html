@@ -205,6 +205,20 @@ function stop() {
 
   try { if (window.NC_BOARD) NC_BOARD.submit('aim', score); } catch (e) {}
 
+  /* THE SECOND BOARD: ACCURACY, WHICH THIS GAME HAS ALWAYS COUNTED AND NEVER
+     POSTED. Points reward speed and small targets; accuracy asks the opposite
+     question — how much of what you did was on purpose.
+
+     It needs a floor or it is not a board. One shot, one hit, 100%, top of the
+     table for ever, and nobody can ever beat it because nobody can exceed 100.
+     Ten shots is the smallest number where the percentage means anything, and
+     a round below it simply does not post rather than posting a number that
+     would have to be explained away. */
+  var MIN_SHOTS = 10;
+  if (shots >= MIN_SHOTS) {
+    try { if (window.NC_BOARD) NC_BOARD.submit('aimaccuracy', acc); } catch (e) {}
+  }
+
   let prior = parseInt(localStorage.getItem(BEST_KEY) || '0', 10);
   if (score > prior) {
     localStorage.setItem(BEST_KEY, String(score));
@@ -248,10 +262,21 @@ if (savedBest) document.getElementById('best').textContent = 'Your best so far: 
 (function () {
   if (window.NC_EMBED === undefined && /[?&]embed=1/.test(location.search)) return;
   function go() {
-    var host = document.createElement('div');
     var main = document.querySelector('.wrap') || document.querySelector('main') || document.body;
-    main.appendChild(host);
-    NC_BOARD.mount('aim', host);
+    var h1 = document.createElement('div');
+    main.appendChild(h1);
+    NC_BOARD.mount('aim', h1);
+
+    var lbl = document.createElement('p');
+    lbl.style.cssText = 'margin:26px 0 -6px;color:var(--nc-dim,#7E8AA6);font-size:.86rem;line-height:1.6';
+    lbl.textContent = 'And the one for the misses: hits as a share of every shot you took. ' +
+      'Rounds of fewer than ten shots do not count — one lucky hit is not 100% accurate, ' +
+      'it is one lucky hit.';
+    main.appendChild(lbl);
+
+    var h2 = document.createElement('div');
+    main.appendChild(h2);
+    NC_BOARD.mount('aimaccuracy', h2);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
   else go();

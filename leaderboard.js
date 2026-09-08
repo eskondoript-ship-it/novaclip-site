@@ -301,6 +301,7 @@
        -------------------------------------------------------------------- */
     var base = s.replace(/\/$/, '');
     var where = ' <small>Trying <code>' + esc(base) + '</code>.</small>';
+    var game = this.game;          // `this` is gone inside the fetch callbacks
 
     return fetch(base + '/scores?game=' + encodeURIComponent(this.game),
                  { cache: 'no-store' })
@@ -318,6 +319,16 @@
             if (r.status >= 500) {
               throw new Error('The leaderboard worker is running but failed (HTTP ' + r.status +
                 '). The usual cause is a missing <code>DB</code> KV binding.');
+            }
+            /* The board exists here and not on the worker yet. This happens
+               every time a game gains a board: GAMES lives on the server so a
+               client cannot invent its own, which is right — but it means the
+               page is correct and the deployment is behind, and "HTTP 400" is
+               not a sentence anybody can act on. */
+            if (r.status === 400 && out && /unknown game/i.test(out.error || '')) {
+              throw new Error('This board is newer than the worker. <code>' + esc(game) +
+                '</code> is not in the <code>GAMES</code> list of the deployed ' +
+                '<code>leaderboard-worker.js</code> — redeploy it and the board fills in.');
             }
             throw new Error('The leaderboard server answered HTTP ' + r.status + '.');
           }
