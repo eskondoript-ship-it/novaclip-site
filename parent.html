@@ -642,6 +642,35 @@ function lockState() { try { return JSON.parse(localStorage.getItem('nc_pin_lock
 function setLock(s) { localStorage.setItem('nc_pin_lock', JSON.stringify(s)); }
 function isSetUp() { return !!localStorage.getItem('nc_parent_pin_h'); }
 
+/* THE PARENT EMAIL, KEPT.
+
+   It was written to nc_parent_email once, on "Send confirmation code", and then
+   never read by anything — not by this page, not by any other. So:
+
+     - typing the email and reloading (or following the "Get the browser shield"
+       link, which is a step in this very flow, and coming back) emptied the box
+       and threw the code away, because CONF_CODE only ever lived in a variable
+     - the alert email lower down was a second, separate box for the same
+       address, saved nowhere at all — retyped for every scan
+
+   One key now, read and written at both ends, plus the half-finished
+   confirmation surviving a reload for twenty minutes. Nothing about the demo
+   code changes: it is already printed on screen, so keeping it beside the email
+   it was issued for gives away nothing that was not already visible. */
+const PEND = 'nc_parent_setup_pending';
+const PEND_MS = 20 * 60 * 1000;
+
+function parentEmailSaved() { try { return localStorage.getItem('nc_parent_email') || ''; } catch (e) { return ''; } }
+function saveParentEmail(v) { try { localStorage.setItem('nc_parent_email', v); } catch (e) {} }
+function pending() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PEND) || 'null');
+    if (p && p.code && Date.now() - p.at < PEND_MS) return p;
+  } catch (e) {}
+  return null;
+}
+function clearPending() { try { localStorage.removeItem(PEND); } catch (e) {} }
+
 // on load, adjust UI for setup vs returning
 window.addEventListener('DOMContentLoaded', () => {
   const setUp = isSetUp();
@@ -656,6 +685,18 @@ window.addEventListener('DOMContentLoaded', () => {
   } else {
     // first-time — must confirm parent email code first
     document.getElementById('setuponly').style.display = 'block';
+    // Put back whatever was typed last time, and the code that goes with it.
+    const saved = parentEmailSaved();
+    if (saved) document.getElementById('parentSetupEmail').value = saved;
+    const p = pending();
+    if (p && p.email === saved) {
+      CONF_CODE = p.code;
+      document.getElementById('codebox').style.display = 'block';
+      // the MutationObserver above un-hides the box when it gets content
+      document.getElementById('pinmsg').innerHTML =
+        '(Demo) Your confirmation code is still <b style="color:#00F0FF">' + p.code +
+        '</b> — in the real product this is emailed to the parent, not shown here.';
+    }
   }
 });
 
@@ -697,7 +738,8 @@ document.getElementById('sendcodebtn').onclick = async () => {
   }
 
   CONF_CODE = String(Math.floor(100000 + Math.random()*900000));
-  localStorage.setItem('nc_parent_email', email);
+  saveParentEmail(email);
+  try { localStorage.setItem(PEND, JSON.stringify({ email: email, code: CONF_CODE, at: Date.now() })); } catch (e) {}
   document.getElementById('codebox').style.display = 'block';
   // DEMO: show the code on screen. In production this is emailed and never shown.
   msg.innerHTML = '(Demo) Your confirmation code is <b style="color:#00F0FF">' + CONF_CODE + '</b> — in the real product this is emailed to the parent, not shown here.';
@@ -749,6 +791,7 @@ document.getElementById('pinbtn').onclick = async () => {
     localStorage.setItem('nc_seca_h', await hashAns(a));
     localStorage.setItem('nc_kid_age', String(age));
     localStorage.removeItem('nc_parent_pin');
+    clearPending();   // setup is done; the one-time code has no further use
     setLock({ fails: 0, until: 0 });
     msg.textContent = '';
     unlock();
@@ -792,6 +835,18 @@ document.getElementById('resetbtn').onclick = async () => {
 };
 function unlock() {
   gate.style.display = 'none'; dash.style.display = 'block';
+  /* The alert email is the same parent address that was confirmed at setup, so
+     it starts filled in rather than blank, and anything typed over it is kept.
+     Before this it was a box that forgot itself the moment the page reloaded,
+     and the scanner's "Email me this" link had nowhere to go. */
+  const alertBox = document.getElementById('parentEmail');
+  if (alertBox) {
+    if (!alertBox.value) alertBox.value = parentEmailSaved();
+    alertBox.addEventListener('change', () => {
+      const v = alertBox.value.trim().toLowerCase();
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { alertBox.value = v; saveParentEmail(v); }
+    });
+  }
   /* The big gradient headline is the locked page's identity — it is all there
      is above the PIN box. Once the dashboard opens, its own sticky header says
      "Family Dashboard" too, and the two sat 200px apart saying the same thing

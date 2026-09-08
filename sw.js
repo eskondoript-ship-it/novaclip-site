@@ -114,7 +114,12 @@
 /* v19 adds nova-guide.js. New file in the shell, and twenty-two pages now ask
    for it — a returning visitor on v18 would get the pages that reference it and
    no file to answer with, which is a help button that does nothing. */
-const CACHE = 'novaclip-v19';
+/* v20: shield.html had the rail markup and none of the rail's CSS, so the rail
+   laid out in normal flow and pushed the page 872px down — a blank screen with a
+   rail on it. Both that page and parent.html carry the fix in their own markup,
+   and both are cached, so without the bump a returning visitor keeps the blank
+   page and the parent email that forgets itself. */
+const CACHE = 'novaclip-v20';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

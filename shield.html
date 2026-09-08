@@ -75,6 +75,21 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 body { background: var(--nc-bg,#05060A); color: var(--nc-text,#EAF2FF); min-height: 100vh; }
 a { color: var(--nc-cyan,#00F0FF); text-decoration: none; }
 a:hover { text-decoration: underline; }
+/* THE RAIL. This page had the .sidebar markup and none of its CSS, so the rail
+   laid out as an ordinary block — full width, 820px tall once nova.js filled it
+   with links — and shoved the whole page down to y=872 on an 800px screen. It
+   read as a blank page with a rail on it, because that is exactly what was above
+   the fold. nova.js sizes the rail and offsets the body; what is here is the
+   shell's own looks plus a fallback width for the moment before nova.js runs.
+   Same block as pricing.html, in this page's own tokens so it follows the theme. */
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: var(--nc-rail,200px); z-index: 998;
+  background: var(--nc-card,rgba(12,12,16,.85)); backdrop-filter: blur(20px);
+  display: flex; flex-direction: column; padding: 20px 0; gap: 4px;
+  border-right: 1px solid var(--nc-line2,rgba(255,255,255,.06)); overflow-y: auto; }
+.sidebar .themewrap { margin-top: auto; padding: 16px 20px; }
+.sidebar .themewrap label { display: block; font-size: .78rem; opacity: .6; margin-bottom: 6px; }
+.sidebar select { width: 100%; font-size: .95rem; background: rgba(255,255,255,.05); color: inherit;
+  border: 1px solid var(--nc-line2,rgba(255,255,255,.15)); border-radius: 10px; padding: 9px; }
 .wrap { max-width: 860px; margin: 0 auto; padding: 56px 24px 100px; }
 .backlnk { display: inline-block; margin-bottom: 22px; font-size: .9rem; color: var(--nc-dim,#8b93a7); }
 h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
