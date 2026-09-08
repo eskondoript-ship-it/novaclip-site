@@ -15,7 +15,11 @@ const T = {
   nav_learn: { en:"Learn", zh:"学习", hi:"सीखें", es:"Aprender", ar:"تعلّم", fr:"Apprendre", bn:"শিখুন", pt:"Aprender", ru:"Учиться", ur:"سیکھیں", id:"Belajar", de:"Lernen", ja:"学ぶ", tr:"Öğren", ko:"배우기", fa:"یادگیری", uk:"Навчатися", it:"Impara", pl:"Ucz się", vi:"Học" },
   nav_you: { en:"You", zh:"你", hi:"आप", es:"Tú", ar:"أنت", fr:"Toi", bn:"তুমি", pt:"Tu", ru:"Ты", ur:"آپ", id:"Kamu", de:"Du", ja:"あなた", tr:"Sen", ko:"당신", fa:"شما", uk:"Ти", it:"Tu", pl:"Ty", vi:"Bạn" },
   life: { en:"NovaLife", zh:"NovaLife", hi:"NovaLife", es:"NovaLife", ar:"NovaLife", fr:"NovaLife", bn:"NovaLife", pt:"NovaLife", ru:"NovaLife", ur:"NovaLife", id:"NovaLife", de:"NovaLife", ja:"NovaLife", tr:"NovaLife", ko:"NovaLife", fa:"NovaLife", uk:"NovaLife", it:"NovaLife", pl:"NovaLife", vi:"NovaLife" },
-  publish: { en:"Publish", zh:"发布", hi:"प्रकाशित करें", es:"Publicar", ar:"نشر", fr:"Publier", bn:"প্রকাশ করুন", pt:"Publicar", ru:"Опубликовать", ur:"شائع کریں", id:"Terbitkan", de:"Veröffentlichen", ja:"公開", tr:"Yayınla", ko:"게시", fa:"انتشار", uk:"Опублікувати", it:"Pubblica", pl:"Opublikuj", vi:"Xuất bản" },
+  /* The page was called Publish and never published anything — it plans the
+     edit, now carries it out, writes the words and holds a reminder. "AI
+     Editor" is what it does. Every language is renamed with it; leaving the
+     table alone would rename the page in English only. */
+  publish: { en:"AI Editor", zh:"AI 编辑器", hi:"AI एडिटर", es:"Editor IA", ar:"محرر الذكاء الاصطناعي", fr:"Éditeur IA", bn:"AI এডিটর", pt:"Editor IA", ru:"ИИ-редактор", ur:"AI ایڈیٹر", id:"Editor AI", de:"KI-Editor", ja:"AIエディタ", tr:"AI Düzenleyici", ko:"AI 편집기", fa:"ویرایشگر هوش مصنوعی", uk:"ШІ-редактор", it:"Editor IA", pl:"Edytor AI", vi:"Trình sửa AI" },
   socials: { en:"Socials", zh:"社交", hi:"सोशल", es:"Redes", ar:"التواصل", fr:"Réseaux", bn:"সোশ্যাল", pt:"Redes sociais", ru:"Соцсети", ur:"سوشلز", id:"Media sosial", de:"Social Media", ja:"SNS", tr:"Sosyal medya", ko:"소셜", fa:"شبکه‌های اجتماعی", uk:"Соцмережі", it:"Social", pl:"Sociale", vi:"Mạng xã hội" },
   eyebrow: { en:"For teen creators · 13–18", zh:"面向青少年创作者 · 13–18", hi:"किशोर क्रिएटर्स के लिए · 13–18", es:"Para creadores adolescentes · 13–18", ar:"لصناع المحتوى المراهقين · 13–18", fr:"Pour les jeunes créateurs · 13–18", bn:"কিশোর নির্মাতাদের জন্য · 13–18", pt:"Para criadores adolescentes · 13–18", ru:"Для юных авторов · 13–18", ur:"نوجوان تخلیق کاروں کے لیے · 13–18", id:"Untuk kreator remaja · 13–18", de:"Für junge Creator · 13–18", ja:"10代のクリエイター向け · 13–18", tr:"Genç içerik üreticileri için · 13–18", ko:"청소년 크리에이터를 위해 · 13–18", fa:"برای سازندگان نوجوان · 13–18", uk:"Для юних авторів · 13–18", it:"Per giovani creator · 13–18", pl:"Dla młodych twórców · 13–18", vi:"Cho nhà sáng tạo trẻ · 13–18" },
   startchannel: { en:"Start your channel →", zh:"开启你的频道 →", hi:"अपना चैनल शुरू करें →", es:"Inicia tu canal →", ar:"ابدأ قناتك →", fr:"Lance ta chaîne →", bn:"আপনার চ্যানেল শুরু করুন →", pt:"Começa o teu canal →", ru:"Начни свой канал →", ur:"اپنا چینل شروع کریں →", id:"Mulai channel-mu →", de:"Starte deinen Kanal →", ja:"チャンネルを始めよう →", tr:"Kanalını başlat →", ko:"채널을 시작하세요 →", fa:"کانالت را شروع کن →", uk:"Почни свій канал →", it:"Avvia il tuo canale →", pl:"Załóż swój kanał →", vi:"Bắt đầu kênh của bạn →" },
@@ -3279,7 +3283,7 @@ const NC_NAV = [
      their own Learn group instead of pretending to be creation tools. */
   { name: 'Create', key: 'nav_create', icon: 'editor', items: [
       ['editor.html', 'Editor', 'editor', 'editor'],
-      ['publish.html', 'Publish', 'publish', 'publish'],
+      ['publish.html', 'AI Editor', 'publish', 'publish'],
       ['studio-ai.html', 'AI', 'ai', 'ai']] },
   { name: 'Learn', key: 'nav_learn', icon: 'life', items: [
       ['game.html', 'Games', 'games', 'games']] },

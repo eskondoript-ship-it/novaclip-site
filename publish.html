@@ -67,7 +67,7 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050505">
-<title>Publish — NovaClip</title>
+<title>AI Editor — NovaClip</title>
 <meta name='description' content='Drop in a clip and NovaClip plans the edit with the tools it actually has, writes the title, description and tags if you want it to, and holds it until the time you choose.'>
 <link rel='icon' href='logo.svg' type='image/svg+xml'>
 <style>
@@ -318,6 +318,9 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
 <script src='jarvis.js' defer></script>
 <!-- The 'how do I use this page' button beside the Nova pill. Loads after
      jarvis.js because it borrows the pill that file builds. -->
+<!-- Nova as a character, drawn in SVG. nova-guide.js uses her for the
+     scanning animation; loaded before it so she is there when it runs. -->
+<script src='nova-mascot.js' defer></script>
 <script src='nova-guide.js' defer></script>
 <!-- Only for stash(): this page hands the plan over, the Editor carries it
      out. Not deferred, because the plan button reads window.NC_AI_EDIT. -->

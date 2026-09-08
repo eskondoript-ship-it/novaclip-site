@@ -72,7 +72,7 @@
       tip: 'Nothing you drop in here is uploaded. The editing happens in your browser, which is why it works with the wifi off.'
     },
     'publish.html': {
-      title: 'Publish',
+      title: 'AI Editor',
       what: 'Everything a video needs before it goes out, and a score for it.',
       steps: [
         'Answer the questions in order — the later steps stay locked until the earlier ones are answered, on purpose.',
@@ -316,41 +316,34 @@
     '@media (max-width:760px){.ncg-btn{left:auto;right:100%;margin-left:0;margin-right:9px}}',
 
     /* STACKING, decided once.
-         99990 backdrop · 99991 rings · 99992 the flying pill · 99993 the scan
-         band, which has to be ABOVE the pill or it sweeps behind an opaque
-         gradient and is invisible · 99994 the answer. All of it under the voice
-         sheet's 99997, so that still wins if it is ever opened over the top. */
+         99990 backdrop · 99991 rings · 99992 Nova herself · 99994 the answer.
+       All of it under the voice sheet's 99997, so that still wins if it is ever
+       opened over the top. The scan band that used to sit at 99993 is gone: the
+       sweep is drawn inside the mascot's own SVG now, so there is nothing left
+       to slide between her and the rings. */
     '.ncg-back{position:fixed;inset:0;z-index:99990;background:radial-gradient(circle at 50% 34%,rgba(10,16,34,.72),rgba(3,5,12,.92));',
       'backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);opacity:0;transition:opacity .3s;pointer-events:none}',
     '.ncg-back.on{opacity:1;pointer-events:auto}',
 
-    /* The flight. left/top are animated, so they have to be transitionable —
-       the pill's own rule only transitions transform and box-shadow. */
-    '.jr-pill.ncg-fly{transition:left .55s cubic-bezier(.22,.9,.25,1.06),top .55s cubic-bezier(.22,.9,.25,1.06),transform .55s cubic-bezier(.22,.9,.25,1.06)!important;z-index:99992!important;pointer-events:none}',
-    '.jr-pill.ncg-fly:hover{transform:var(--ncg-t)!important}',
-    /* nova.js hides the floating pill whenever a modal is open —
-         body.nc-modal-open .jr-pill{opacity:0}
-       which is right everywhere except here. The answer card declares itself
-       aria-modal="true" (it is one, and screen readers need to know), so that
-       rule fired and faded out the very thing the reader had just watched fly
-       to the middle of the screen. Three classes to their two, so this wins on
-       specificity without !important doing the arguing. */
-    'body.nc-modal-open .jr-pill.ncg-fly{opacity:1;pointer-events:none}',
-
-    /* The scan: a band sweeping down the pill, and rings leaving the orb. */
-    '.ncg-scan{position:fixed;z-index:99993;pointer-events:none;border-radius:999px;overflow:hidden;opacity:0;transition:opacity .2s}',
-    '.ncg-scan.on{opacity:1}',
-    '.ncg-scan i{position:absolute;left:-10%;width:120%;height:34%;',
-      'background:linear-gradient(180deg,transparent,rgba(0,229,255,.85),rgba(182,255,60,.5),transparent);',
-      'filter:blur(1px);animation:ncgSweep 1s linear infinite}',
-    '@keyframes ncgSweep{0%{top:-40%}100%{top:104%}}',
+    /* NOVA HERSELF, instead of the pill.
+       What used to happen here was that the assistant BAR — the grey pill that
+       says NOVA · SAY "HEY NOVA" — was picked up and flown into the middle of
+       the screen with a band sweeping over it. It read as a piece of toolbar
+       being inspected, because that is what it was. The mascot does the
+       scanning now and the pill is left exactly where the reader put it, which
+       also deletes the whole save-the-inline-styles-and-put-them-back dance
+       that flying somebody else's element required. */
+    '.ncg-nova{position:fixed;z-index:99992;pointer-events:none;opacity:0;',
+      'transition:left .5s cubic-bezier(.22,.9,.25,1.06),top .5s cubic-bezier(.22,.9,.25,1.06),',
+      'transform .5s cubic-bezier(.22,.9,.25,1.06),opacity .3s}',
+    '.ncg-nova.on{opacity:1}',
     '.ncg-ring{position:fixed;z-index:99991;pointer-events:none;border-radius:50%;',
       'border:2px solid rgba(0,229,255,.55);opacity:0;animation:ncgRing 1.5s ease-out infinite}',
     '@keyframes ncgRing{0%{transform:scale(.5);opacity:.75}100%{transform:scale(2.6);opacity:0}}',
 
     /* Not vertically centred: `top` is set at runtime from where Nova actually
        landed, so the answer always sits UNDER her rather than on top of her.
-       She flew to the middle to be looked at; covering her with the answer
+       She came to the middle to be looked at; covering her with the answer
        would undo the whole gesture. */
     '.ncg-card{position:fixed;z-index:99994;left:50%;transform:translateX(-50%) scale(.94);',
       'width:min(620px,92vw);overflow:auto;opacity:0;pointer-events:none;',
@@ -386,13 +379,12 @@
       'color:#7DE3FF;text-shadow:0 0 12px rgba(0,229,255,.7);opacity:0;transition:opacity .25s}',
     '.ncg-status.on{opacity:1}',
     '@media (prefers-reduced-motion:reduce){',
-      '.jr-pill.ncg-fly{transition:none!important}',
-      '.ncg-scan i,.ncg-ring{animation:none}',
+      '.ncg-nova{transition:opacity .2s}',
+      '.ncg-ring{animation:none}',
       '.ncg-card{transition:opacity .2s}}'
   ].join('');
 
-  var back, card, scan, status, rings = [], saved = null, homeRect = null,
-      open = false, timers = [];
+  var back, card, nova, status, rings = [], open = false, timers = [];
 
   function el(tag, cls) { var d = document.createElement(tag); if (cls) d.className = cls; return d; }
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
@@ -407,8 +399,11 @@
     back.addEventListener('click', close);
     document.body.appendChild(back);
 
-    scan = el('div', 'ncg-scan'); scan.innerHTML = '<i></i>';
-    document.body.appendChild(scan);
+    /* nova-mascot.js draws her. If it did not load, the guide still works —
+       there is simply no character, rather than a broken layout. */
+    nova = el('div', 'ncg-nova');
+    if (window.NC_MASCOT) nova.appendChild(window.NC_MASCOT.el(156));
+    document.body.appendChild(nova);
 
     status = el('div', 'ncg-status');
     document.body.appendChild(status);
@@ -433,14 +428,10 @@
     addEventListener('resize', function () { if (open) close(); });
   }
 
-  /* Put the scan band and the rings exactly over wherever the pill is now. */
-  function placeOver(pill) {
-    var r = pill.getBoundingClientRect();
-    scan.style.left = r.left + 'px';
-    scan.style.top = r.top + 'px';
-    scan.style.width = r.width + 'px';
-    scan.style.height = r.height + 'px';
-    var cx = r.left + r.width / 2, cy = r.top + r.height / 2, d = Math.max(r.width, r.height);
+  /* Ring the mascot where she actually is, and put the caption under her. */
+  function placeOver() {
+    var r = nova.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2, d = Math.max(r.width, r.height) * 0.92;
     rings.forEach(function (ring) {
       ring.style.display = 'block';
       ring.style.width = d + 'px';
@@ -448,7 +439,7 @@
       ring.style.left = (cx - d / 2) + 'px';
       ring.style.top = (cy - d / 2) + 'px';
     });
-    status.style.top = (r.top + r.height + 18) + 'px';
+    status.style.top = (r.top + r.height + 6) + 'px';
   }
 
   function render(g) {
@@ -480,40 +471,44 @@
     open = true;
     clearTimers();
 
-    /* Record every inline value before touching any of them. The pill's
-       position may have been dragged and remembered, and it has to go back
-       exactly there — restored, not recomputed. */
+    /* SHE FLIES, THE PILL STAYS.
+
+       This used to pick the assistant pill up, animate its left/top into the
+       middle of the screen, and put every inline style back on the way out —
+       a fiddly dance around somebody else's element, and what arrived in the
+       middle of the screen was a toolbar. Nova comes instead. The pill is
+       never touched, so there is nothing to restore and nothing to get wrong
+       if the reader had dragged it somewhere. */
     var r = pill.getBoundingClientRect();
-    saved = { left: pill.style.left, top: pill.style.top, right: pill.style.right,
-              bottom: pill.style.bottom, transform: pill.style.transform,
-              zIndex: pill.style.zIndex };
-    homeRect = { left: r.left, top: r.top };
+    var w = nova.offsetWidth || 156, h = nova.offsetHeight || 162;
 
     back.classList.add('on');
 
-    /* Pin it where it visually is, so the flight has a start point. */
-    pill.style.left = r.left + 'px';
-    pill.style.top = r.top + 'px';
-    pill.style.right = 'auto';
-    pill.style.bottom = 'auto';
-    pill.style.transform = 'none';
-    void pill.offsetWidth;                       // commit before transitioning
+    /* Start small, over the pill, so she reads as coming FROM the assistant
+       rather than appearing out of nowhere. */
+    nova.style.left = (r.left + r.width / 2 - w / 2) + 'px';
+    nova.style.top = (r.top + r.height / 2 - h / 2) + 'px';
+    nova.style.transform = 'scale(.35)';
+    void nova.offsetWidth;                       // commit before transitioning
 
-    pill.classList.add('ncg-fly');
-    var cx = Math.max(8, (innerWidth - r.width) / 2);
-    var cy = Math.max(14, innerHeight * 0.15 - r.height / 2);
-    pill.style.setProperty('--ncg-t', 'scale(1.45)');
-    pill.style.left = cx + 'px';
-    pill.style.top = cy + 'px';
-    pill.style.transform = 'scale(1.45)';
+    nova.classList.add('on');
+    nova.style.left = ((innerWidth - w) / 2) + 'px';
+    /* Below the pill, not on it. A fixed fraction of the viewport put her on
+       top of the assistant bar on every page whose pill sits at the top —
+       she was half hidden behind the thing she was supposed to have come
+       from. Clear of it, or 15% down, whichever is lower. */
+    var top = Math.max(innerHeight * 0.15, r.bottom + 18);
+    /* ...but never so low that the answer card has nowhere to go. */
+    nova.style.top = Math.min(top, Math.max(12, innerHeight * 0.3)) + 'px';
+    nova.style.transform = 'scale(1)';
 
-    var fly = reduced ? 0 : 560;
+    var fly = reduced ? 0 : 520;
     var scanMs = reduced ? 0 : 1450;
 
     later(function () {
-      placeOver(pill);
+      placeOver();
       if (!reduced) {
-        scan.classList.add('on');
+        if (window.NC_MASCOT) window.NC_MASCOT.scan(nova.firstChild, true);
         rings.forEach(function (x) { x.style.display = 'block'; });
       }
       status.textContent = 'reading this page…';
@@ -521,12 +516,12 @@
     }, fly);
 
     later(function () {
-      scan.classList.remove('on');
+      if (window.NC_MASCOT) window.NC_MASCOT.scan(nova.firstChild, false);
       rings.forEach(function (x) { x.style.display = 'none'; });
       status.classList.remove('on');
       render(guideFor());
-      var pr = pill.getBoundingClientRect();
-      var top = Math.round(pr.bottom + 26);
+      var nr = nova.getBoundingClientRect();
+      var top = Math.round(nr.bottom + 18);
       card.style.top = top + 'px';
       card.style.maxHeight = Math.max(180, innerHeight - top - 22) + 'px';
       card.classList.add('on');
@@ -541,37 +536,21 @@
     clearTimers();
     var pill = document.getElementById(PILL);
     card.classList.remove('on');
-    scan.classList.remove('on');
     status.classList.remove('on');
     rings.forEach(function (x) { x.style.display = 'none'; });
     back.classList.remove('on');
+    if (window.NC_MASCOT && nova.firstChild) window.NC_MASCOT.scan(nova.firstChild, false);
 
-    if (!pill || !saved) { saved = null; return; }
-
-    /* Fly home, then hand the inline styles back exactly as they were found.
-
-       Two cases, and the difference matters. If the pill had an inline left/top
-       it had been DRAGGED there and must land on those coordinates. If it did
-       not, it was sitting wherever the stylesheet puts it — so the flight home
-       aims at the rect recorded on the way in, and the restore then clears the
-       inline values so the stylesheet takes it back over. Either way the reader
-       finds their assistant where they left it. */
-    var home = saved;
-    pill.style.transform = 'none';
-    pill.style.left = home.left || (homeRect.left + 'px');
-    pill.style.top = home.top || (homeRect.top + 'px');
-
-    later(function () {
-      pill.classList.remove('ncg-fly');
-      pill.style.left = home.left;
-      pill.style.top = home.top;
-      pill.style.right = home.right;
-      pill.style.bottom = home.bottom;
-      pill.style.transform = home.transform;
-      pill.style.zIndex = home.zIndex;
-      pill.style.removeProperty('--ncg-t');
-      saved = null;
-    }, reduced ? 0 : 500);
+    /* Back to the pill she came from, then out. Nothing to restore — the pill
+       was never moved. */
+    if (pill) {
+      var r = pill.getBoundingClientRect();
+      var w = nova.offsetWidth || 156, h = nova.offsetHeight || 162;
+      nova.style.left = (r.left + r.width / 2 - w / 2) + 'px';
+      nova.style.top = (r.top + r.height / 2 - h / 2) + 'px';
+      nova.style.transform = 'scale(.35)';
+    }
+    nova.classList.remove('on');
   }
 
   /* ---- the button --------------------------------------------------------

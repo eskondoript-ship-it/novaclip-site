@@ -135,7 +135,13 @@
    printed as a list to work through by hand. Two new shell files, and both
    editor.html and publish.html reference them — a returning visitor on v23
    would get the pages and no files to answer with. */
-const CACHE = 'novaclip-v24';
+/* v25: Nova is a character now. The guide's scan used to fly the assistant
+   PILL into the middle of the screen; nova-mascot.js draws her instead, and the
+   pill is left where the reader put it. The Publish page is the AI Editor —
+   renamed in the rail, the tab title, the guide and all twenty languages.
+   New shell file, twenty-three pages reference it, and nova.js carries the
+   rename, so a returning visitor on v24 would get the old name and no mascot. */
+const CACHE = 'novaclip-v25';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -196,6 +202,7 @@ const SHELL = [
      which is what makes it worth caching: a help button that needs the network
      is missing at exactly the moment somebody is stuck. */
   '/nova-guide.js',
+  '/nova-mascot.js',
   '/ai-edit.js',
   '/ai-edit-panel.js',
   /* Sends the Trend Spotter's rail to the real pages. Without it that rail
