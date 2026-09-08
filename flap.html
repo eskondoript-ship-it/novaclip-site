@@ -421,6 +421,9 @@ canvas{display:block;width:100vw;height:100vh}
 <script src='nova.js'></script>
 <script src='biometric.js' defer></script>
 <script src='jarvis.js' defer></script>
+<!-- The 'how do I use this page' button beside the Nova pill. Loads after
+     jarvis.js because it borrows the pill that file builds. -->
+<script src='nova-guide.js' defer></script>
 <script src='leaderboard.js'></script>
 <script>
 /* The live board. Mounted after the game's own markup so it lands at the

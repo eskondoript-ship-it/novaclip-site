@@ -111,7 +111,10 @@
    was unreadable in light mode — 1.78:1 on the half you are being asked to
    click. It reads the palette now. nova.js is a cached shell file, so without
    the bump a returning visitor keeps the unreadable one on every page. */
-const CACHE = 'novaclip-v18';
+/* v19 adds nova-guide.js. New file in the shell, and twenty-two pages now ask
+   for it — a returning visitor on v18 would get the pages that reference it and
+   no file to answer with, which is a help button that does nothing. */
+const CACHE = 'novaclip-v19';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -167,6 +170,11 @@ const SHELL = [
   /* Checks a dropped clip for fast flashing and blank footage. Pure
      arithmetic on frames already in memory, so it works offline. */
   '/moderate.js',
+  /* The "how do I use this page" button beside the Nova pill, and the steps it
+     shows. The steps are written into the file rather than asked of the model,
+     which is what makes it worth caching: a help button that needs the network
+     is missing at exactly the moment somebody is stuck. */
+  '/nova-guide.js',
   /* Sends the Trend Spotter's rail to the real pages. Without it that rail
      offers four features this site already has as though they were unbuilt. */
   '/trends-nav.js',
