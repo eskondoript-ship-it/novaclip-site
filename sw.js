@@ -141,7 +141,14 @@
    renamed in the rail, the tab title, the guide and all twenty languages.
    New shell file, twenty-three pages reference it, and nova.js carries the
    rename, so a returning visitor on v24 would get the old name and no mascot. */
-const CACHE = 'novaclip-v25';
+/* v26: the AI Editor did not edit, because the CLIP never crossed. The plan
+   went from one page to the other and the video stayed behind as a local
+   variable, so the timeline was empty and the panel said "import your clip
+   first" — a feature that appeared to do nothing. The clip now travels in
+   IndexedDB, the result plays as soon as it lands, and the finished edit is
+   handed over ready to post. publish.html and the two ai-edit files are all
+   cached. */
+const CACHE = 'novaclip-v26';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

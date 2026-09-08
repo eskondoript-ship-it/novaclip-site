@@ -557,7 +557,15 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     var auto = 0;
     if (window.NC_AI_EDIT) {
       auto = steps.filter(s => window.NC_AI_EDIT.tools.indexOf(String(s.tool || '').toLowerCase().trim()) >= 0).length;
-      window.NC_AI_EDIT.stash(steps, about);
+      /* The clip goes with the plan. Without it the Editor opens on an empty
+         timeline and the whole feature reads as doing nothing — which is
+         exactly how it read. The title, description and tags go too, so the
+         finished edit arrives ready to post. */
+      window.NC_AI_EDIT.stash(steps, about, file, {
+        title: $('title').value.trim(),
+        description: $('desc').value,
+        tags: tags.slice()
+      });
       $('planOut').insertAdjacentHTML('beforeend',
         '<div class="pstep" style="border-color:rgba(124,92,255,.45)"><div class="t">→</div><div class="d">' +
         '<a class="go" style="display:inline-block;text-decoration:none" href="editor.html">' +

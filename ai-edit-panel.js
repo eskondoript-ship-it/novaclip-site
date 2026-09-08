@@ -87,13 +87,35 @@
   function run() {
     var out = window.NC_AI_EDIT.apply(plan.steps);
     if (out.err === 'empty') {
-      card('<h4>Import your clip first <button class="x">&times;</button></h4>' +
-        '<p>The timeline is empty, so there is nothing to edit yet. Bring your video in, then press ' +
-        'this again — the plan is kept for an hour.</p>' +
-        '<div class="row"><button id="ncaeGo">Try again</button>' +
-        '<button class="alt" id="ncaeNo">Close</button></div>');
-      document.getElementById('ncaeGo').onclick = run;
-      document.getElementById('ncaeNo').onclick = close;
+      /* The clip travels with the plan now, so an empty timeline usually means
+         it has not been put on yet rather than that there is nothing to put.
+         Fetch it and try again, once. Only if there is genuinely no clip does
+         this become a question for the reader. */
+      card('<h4>Bringing your clip in… <button class="x">&times;</button></h4>' +
+           '<p>Putting the video on the timeline, then applying the plan.</p>');
+      window.NC_AI_EDIT.getClip().then(function (file) {
+        if (!file) {
+          card('<h4>No clip came across <button class="x">&times;</button></h4>' +
+            '<p>The timeline is empty and no video was handed over with the plan. Import your ' +
+            'video here, then press this again — the plan is kept for an hour.</p>' +
+            '<div class="row"><button id="ncaeGo">Try again</button>' +
+            '<button class="alt" id="ncaeNo">Close</button></div>');
+          document.getElementById('ncaeGo').onclick = run;
+          document.getElementById('ncaeNo').onclick = close;
+          return;
+        }
+        window.NC_AI_EDIT.importClip(file).then(function (ok) {
+          if (!ok) {
+            card('<h4>The clip would not load <button class="x">&times;</button></h4>' +
+              '<p>The video came across but the editor could not open it. Import it by hand and ' +
+              'press this again.</p><div class="row"><button id="ncaeGo">Try again</button></div>');
+            document.getElementById('ncaeGo').onclick = run;
+            return;
+          }
+          window.NC_AI_EDIT.dropClip();
+          setTimeout(run, 250);
+        });
+      });
       return;
     }
     if (out.err) {
@@ -101,6 +123,14 @@
       return;
     }
     snapshot = out.before;
+    /* SHOW THE RESULT. Applying an edit and leaving the playhead wherever it
+       was means the reader has to go and find what changed. Rewind and play:
+       the answer to "did it work" should be the video, not a list. */
+    try {
+      var st0 = window.__ncStore.getState();
+      st0.setPlayhead(0);
+      setTimeout(function () { try { window.__ncStore.getState().setPlaying(true); } catch (e) {} }, 150);
+    } catch (e) {}
     var did = out.results.filter(function (r) { return r.done; }).length;
     var yours = out.results.filter(function (r) { return r.yours; }).length;
     var failed = out.results.length - did - yours;
@@ -117,9 +147,12 @@
           '<i>' + esc(r.msg) + '</i></span></li>';
       }).join('') + '</ul>' +
       '<div class="row">' +
+      (did ? '<button id="ncaePost">Finish and post it</button>' : '') +
       (did ? '<button class="alt" id="ncaeUndo">Undo all of it</button>' : '') +
-      '<button id="ncaeDone">Done</button></div>'
+      '<button class="alt" id="ncaeDone">Done</button></div>'
     );
+    var pb = document.getElementById('ncaePost');
+    if (pb) pb.onclick = postStep;
     var u = document.getElementById('ncaeUndo');
     /* One button that puts the timeline back exactly as it was. The store's own
        undo would take one press per step, which is a poor answer to "I do not
@@ -132,6 +165,98 @@
         document.getElementById('ncaeDone').onclick = function () { window.NC_AI_EDIT.clear(); close(); };
       }
     };
+    document.getElementById('ncaeDone').onclick = function () { window.NC_AI_EDIT.clear(); close(); };
+  }
+
+  /* ---- FINISH AND POST --------------------------------------------------
+     What was missing at the end: the edit was applied and then the reader was
+     on their own. This is the hand-off, and it is deliberately a hand-off
+     rather than a claim to publish. NovaClip does not upload for anybody — the
+     AI Editor page says so and means it — so what this does is the three
+     things it honestly can: export the finished video, put the title,
+     description and tags one press from the clipboard, and open the upload
+     page of whichever platform they are posting to.
+
+     Anything more would need the person's YouTube or TikTok account
+     credentials, which is a very different product and a much worse promise. */
+  var TARGETS = [
+    { name: 'YouTube',   url: 'https://www.youtube.com/upload',
+      note: 'Shorts and normal videos both go through here.' },
+    { name: 'TikTok',    url: 'https://www.tiktok.com/upload',
+      note: 'Desktop upload; the caption is the title plus tags.' },
+    { name: 'Instagram', url: 'https://www.instagram.com/',
+      note: 'Reels are posted from the + button.' }
+  ];
+
+  function copyBtn(id, text) {
+    var b = document.getElementById(id);
+    if (!b) return;
+    b.onclick = function () {
+      var done = function () {
+        var was = b.textContent; b.textContent = 'Copied';
+        setTimeout(function () { b.textContent = was; }, 1400);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () {});
+      }
+    };
+  }
+
+  function postStep() {
+    var m = (plan && plan.meta) || {};
+    var tags = (m.tags || []).join(', ');
+    var caption = [m.title || '', tags ? tags.split(', ').map(function (t) { return '#' + t.replace(/\s+/g, ''); }).join(' ') : '']
+      .filter(Boolean).join('\n\n');
+
+    card(
+      '<h4>Ready to post <button class="x">&times;</button></h4>' +
+      '<p>The edit is on the timeline. Export it, then open wherever it is going — the words are ' +
+      'a press away. <b style="color:#EAF2FF">NovaClip does not upload for you</b>, and it is not ' +
+      'going to start by asking for your account.</p>' +
+      '<div class="row"><button id="ncaeExport">Export the video</button></div>' +
+      (m.title ? '<ul>' +
+        '<li><span><i>TITLE</i>' + esc(m.title) + '</span></li>' +
+        (m.description ? '<li><span><i>DESCRIPTION</i>' + esc(String(m.description).slice(0, 180)) +
+          (String(m.description).length > 180 ? '…' : '') + '</span></li>' : '') +
+        (tags ? '<li><span><i>TAGS</i>' + esc(tags) + '</span></li>' : '') +
+      '</ul>' +
+      '<div class="row">' +
+        '<button class="alt" id="ncaeCopyT">Copy title</button>' +
+        (m.description ? '<button class="alt" id="ncaeCopyD">Copy description</button>' : '') +
+        (tags ? '<button class="alt" id="ncaeCopyC">Copy caption + tags</button>' : '') +
+      '</div>'
+        : '<p>No title or tags came across — write them on the AI Editor page and they will arrive here.</p>') +
+      '<ul>' + TARGETS.map(function (t) {
+        return '<li><span><a href="' + t.url + '" target="_blank" rel="noopener" ' +
+          'style="color:#00F0FF;font-weight:700;text-decoration:none">' + t.name + ' &#8599;</a>' +
+          '<i>' + t.note + '</i></span></li>';
+      }).join('') + '</ul>' +
+      '<div class="row"><button class="alt" id="ncaeBack">Back</button>' +
+      '<button class="alt" id="ncaeDone">Done</button></div>'
+    );
+
+    copyBtn('ncaeCopyT', m.title || '');
+    copyBtn('ncaeCopyD', m.description || '');
+    copyBtn('ncaeCopyC', caption);
+
+    /* The editor's own Export button, pressed for them. Driving the app's real
+       control rather than reimplementing an exporter means the export settings,
+       the progress UI and the file it produces are all exactly the ones the
+       editor already makes. */
+    var ex = document.getElementById('ncaeExport');
+    if (ex) ex.onclick = function () {
+      var btn = null;
+      document.querySelectorAll('button').forEach(function (b) {
+        if (!btn && (b.textContent || '').trim() === 'Export') btn = b;
+      });
+      if (btn) { close(); btn.click(); }
+      else {
+        ex.textContent = 'Export is in the top bar';
+        ex.disabled = true;
+      }
+    };
+    var back = document.getElementById('ncaeBack');
+    if (back) back.onclick = run;
     document.getElementById('ncaeDone').onclick = function () { window.NC_AI_EDIT.clear(); close(); };
   }
 

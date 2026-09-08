@@ -40,12 +40,103 @@
 
   var KEY = 'nc_ai_edit_plan';
 
+  /* ---- THE CLIP ITSELF ---------------------------------------------------
+     The reason "the AI editor doesn't edit". The plan crossed from the AI
+     Editor page to the Editor and the VIDEO DID NOT: `file` was a local
+     variable on the other page, so the timeline was empty when the plan
+     arrived and the panel quite correctly said "import your clip first" —
+     which reads as a feature that does nothing.
+
+     A File cannot go in localStorage, so it goes in IndexedDB, which stores
+     Blobs directly. One database, one store, one record, cleared as soon as it
+     has been used: this is a hand-off between two pages, not a library. */
+  var DB = 'novaclip-handoff', STORE = 'clip';
+
+  function idb() {
+    return new Promise(function (ok, no) {
+      if (!window.indexedDB) return no(new Error('no IndexedDB'));
+      var r = indexedDB.open(DB, 1);
+      r.onupgradeneeded = function () {
+        if (!r.result.objectStoreNames.contains(STORE)) r.result.createObjectStore(STORE);
+      };
+      r.onsuccess = function () { ok(r.result); };
+      r.onerror = function () { no(r.error); };
+    });
+  }
+  function putClip(file) {
+    return idb().then(function (db) {
+      return new Promise(function (ok, no) {
+        var tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(file, 'video');
+        tx.oncomplete = function () { db.close(); ok(true); };
+        tx.onerror = function () { db.close(); no(tx.error); };
+      });
+    });
+  }
+  function getClip() {
+    return idb().then(function (db) {
+      return new Promise(function (ok) {
+        var tx = db.transaction(STORE, 'readonly');
+        var req = tx.objectStore(STORE).get('video');
+        req.onsuccess = function () { db.close(); ok(req.result || null); };
+        req.onerror = function () { db.close(); ok(null); };
+      });
+    }).catch(function () { return null; });
+  }
+  function dropClip() {
+    return idb().then(function (db) {
+      var tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete('video');
+      tx.oncomplete = function () { db.close(); };
+    }).catch(function () {});
+  }
+
+  /* Put the clip on the timeline exactly as an import would: an asset, then a
+     clip made from it, through the store's own two actions. */
+  function importClip(file) {
+    return new Promise(function (done) {
+      var url = URL.createObjectURL(file);
+      var v = document.createElement('video');
+      v.preload = 'metadata';
+      var settled = false;
+      function go(dur, w, h) {
+        if (settled) return; settled = true;
+        var s = store();
+        if (!s) return done(false);
+        var st = s.getState();
+        var track = st.tracks.filter(function (t) { return t.kind === 'video'; })[0];
+        if (!track) return done(false);
+        var id = 'asset_handoff_' + Date.now();
+        st.addAssets([{ id: id, name: file.name || 'clip.mp4', kind: 'video', url: url,
+                        duration: dur, width: w, height: h, thumbnail: '', createdAt: Date.now() }]);
+        s.getState().addClipFromAsset(id, track.id, 0);
+        done(true);
+      }
+      v.onloadedmetadata = function () {
+        /* A WebM with no duration header reports Infinity; the editor's own
+           probe handles that and so does this. */
+        var d = v.duration;
+        go(isFinite(d) && d > 0 ? d : 15, v.videoWidth || 1920, v.videoHeight || 1080);
+      };
+      v.onerror = function () { go(15, 1920, 1080); };
+      setTimeout(function () { go(15, 1920, 1080); }, 6000);
+      v.src = url;
+    });
+  }
+
   /* ---- the plan, handed from one page to the other ---------------------- */
-  function stash(plan, about) {
+  /* meta is the title, description and tags the AI Editor page wrote — carried
+     so the finished edit can be handed over ready to post rather than sending
+     somebody back to another tab to copy three fields. */
+  function stash(plan, about, file, meta) {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ steps: plan, about: about || '', at: Date.now() }));
-      return true;
+      localStorage.setItem(KEY, JSON.stringify({
+        steps: plan, about: about || '', meta: meta || null,
+        clip: file ? { name: file.name, size: file.size } : null, at: Date.now()
+      }));
     } catch (e) { return false; }
+    if (file) { try { putClip(file); } catch (e) {} }
+    return true;
   }
   function pending() {
     try {
@@ -282,6 +373,7 @@
   window.NC_AI_EDIT = {
     stash: stash, pending: pending, clear: clearPending,
     apply: apply, restore: restore,
+    getClip: getClip, dropClip: dropClip, importClip: importClip,
     tools: Object.keys(DO), needsYou: Object.keys(HANDS),
     _secs: secs, _effectKey: effectKey       /* for the tests */
   };
