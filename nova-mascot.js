@@ -126,7 +126,11 @@
         '</g>' +
 
         /* antenna */
-        '<path d="M50 18 L50 8" stroke="url(#' + g + ')" stroke-width="3" stroke-linecap="round"/>' +
+        /* Flat colour, not the gradient. A perfectly vertical line has a
+           zero-width bounding box, and an objectBoundingBox gradient across
+           zero width paints nothing — the stalk simply did not render, leaving
+           the spark floating unattached above her head. */
+        '<path d="M50 19 L50 8" stroke="var(--ncm-mid)" stroke-width="3" stroke-linecap="round"/>' +
         '<circle class="ncm-spark" cx="50" cy="6" r="3.4" fill="var(--ncm-hot)"/>' +
 
         /* body */
