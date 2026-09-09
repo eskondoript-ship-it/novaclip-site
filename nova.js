@@ -1539,7 +1539,7 @@ function ncBuildBar() {
        nova.js is what puts these on the page, so nova.js is what should take
        them off it. Every page gets a printable version for free, and a new
        piece of furniture added later only has to be hidden once. */
-    '@media print{#ncbar,#ncgear,#ncpts,#ncCorner,#ncst,#nctoast,#nccookie,' +
+    '@media print{#ncbar,#ncgear,#ncpts,#ncst,#nctoast,#nccookie,' +
       '.nca,.sidebar,.nc-sidebar{display:none !important}' +
       'body{padding-top:0 !important}}';
   document.head.appendChild(css);
@@ -1688,8 +1688,7 @@ function ncBuildBar() {
 function ncBuildThemeSwitch() {
   if (NC_EMBED) return;
   if (document.getElementById('nc-themerow')) return;
-  const host = document.querySelector('.themewrap') ||
-    (typeof ncCornerBox === 'function' ? ncCornerBox() : null);
+  const host = document.querySelector('.themewrap');
   if (!host) return;
 
   const wrap = document.createElement('div');
@@ -1949,55 +1948,17 @@ function ncCountUp() {
    first plan card, hiding its "Start free trial" button and its last bullet.
    Both now live in one box that stays collapsed behind a small button, so the
    page underneath is never obscured. Returns the body the controls go into. */
-function ncCornerBox() {
-  let box = document.getElementById('ncCorner');
-  if (box) return box.querySelector('.nccbody');
+/* THE FLOATING CORNER BOX IS GONE.
+   It was a globe pinned to the bottom-left of every page, opening a panel with
+   the theme, the vibe and the language in it. That panel was built when those
+   three had nowhere else to live — before the top bar was on every page. Since
+   the bar arrived it has been a SECOND copy of controls already at the top of
+   the screen, and in the editor it sat over the tool rail, in the one corner
+   that page cannot spare.
 
-  const st = document.createElement('style');
-  st.textContent =
-    '#ncCorner{position:fixed;left:14px;bottom:14px;z-index:99994;display:flex;' +
-      'flex-direction:column-reverse;align-items:flex-start;gap:8px}' +
-    '#ncCorner .nccbtn{width:38px;height:38px;display:grid;place-items:center;cursor:pointer;' +
-      'border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(12,14,20,.92);' +
-      'color:#EAF2FF;box-shadow:0 8px 26px rgba(0,0,0,.45);padding:0}' +
-    '#ncCorner .nccbtn:hover{border-color:rgba(0,240,255,.55)}' +
-    '#ncCorner .nccbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;' +
-      'stroke-width:2;stroke-linecap:round}' +
-    '#ncCorner .nccbody{width:190px;border-radius:12px;padding:10px 12px;' +
-      'background:rgba(10,12,20,.92);backdrop-filter:blur(8px);' +
-      'border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 26px rgba(0,0,0,.45)}' +
-    '#ncCorner .nccbody[hidden]{display:none}' +
-    '#ncCorner .nccbody select{width:100%;padding:8px 10px;border-radius:10px;' +
-      'border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);' +
-      'color:#EAF2FF;font:600 13px inherit;cursor:pointer}' +
-    /* Above the nav strip, on the pages that have one. The editor does not,
-       and there the 74px lifted this straight onto the preview toolbar. */
-    '@media (max-width:760px){body:has(.sidebar) #ncCorner{bottom:74px}}';
-  document.head.appendChild(st);
-
-  box = document.createElement('div');
-  box.id = 'ncCorner';
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'nccbtn';
-  btn.setAttribute('aria-expanded', 'false');
-  btn.setAttribute('aria-controls', 'ncCornerBody');
-  btn.setAttribute('aria-label', tr('vibe') + ' / ' + (LANGS[lang()] || 'Language'));
-  btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/>' +
-    '<path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg>';
-  const body = document.createElement('div');
-  body.className = 'nccbody themewrap';
-  body.id = 'ncCornerBody';
-  body.hidden = true;
-  box.append(btn, body);
-  document.body.appendChild(box);
-
-  const setOpen = o => { body.hidden = !o; btn.setAttribute('aria-expanded', String(o)); };
-  btn.addEventListener('click', e => { e.stopPropagation(); setOpen(body.hidden); });
-  document.addEventListener('click', e => { if (!box.contains(e.target)) setOpen(false); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
-  return body;
-}
+   The three things that used to fall back to it now do not mount when there is
+   no .themewrap, which happens only inside an embedded frame — and there the
+   host page is already wearing all three. */
 
 /* The floating corner picker for pages that were never given one — editor,
    trends, parent and pricing have no #langpick, so without this there was no
@@ -2023,7 +1984,9 @@ function ncEnsureLangPick() {
     bar.appendChild(w);
     return;
   }
-  ncCornerBox().appendChild(pick);
+  /* No bar on this page means it is embedded in another one, and the host is
+     already wearing the language picker. Nothing to do, rather than a second
+     copy floating in a corner. */
 }
 
 /* ===== PHRASE LAYER — for UI that was never given data-t keys =====
@@ -5677,11 +5640,26 @@ window.addEventListener('DOMContentLoaded', () => {
   // toggle switch, injected into every sidebar
   window.ncBuildGenZToggle = function () {
     if (document.getElementById('genzwrap')) return;
-    /* Not every page has a sidebar — pricing, the editor and the family page do
-       not — and on those the switch simply never appeared, so the mode was
-       unreachable from half the site. Fall back to a small floating control in
-       the corner rather than skipping the page. */
-    let wrap = document.querySelector('.themewrap') || ncCornerBox();
+    /* THE BAR MAY NOT BE BUILT YET, AND THAT IS A RACE, NOT AN ABSENCE.
+       This runs from its own DOMContentLoaded handler and ncBuildBar() runs
+       from another one — on the editor this one won, found no .themewrap, and
+       used to answer by creating the floating corner button. That is WHY there
+       was a globe in the corner of the editor and not on most other pages.
+
+       Removing the fallback without removing the race just moved the fault:
+       the Vibe toggle stopped appearing at all. So it waits for the bar
+       instead, briefly and with an end to it — a page genuinely without a bar
+       is an embedded frame, and the host already has the control. */
+    let wrap = document.querySelector('.themewrap');
+    if (!wrap) {
+      if (window.NC_EMBED) return;
+      var tries = 0;
+      (function later() {
+        if (document.querySelector('.themewrap')) return window.ncBuildGenZToggle();
+        if (++tries < 40) setTimeout(later, 50);       // two seconds, then give up
+      })();
+      return;
+    }
     const on = ncGenZ();
     const d = document.createElement('div');
     d.id = 'genzwrap';

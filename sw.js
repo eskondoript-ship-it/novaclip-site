@@ -166,6 +166,14 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v37: the editor exports vertical. Its resolution list was four landscape
+   sizes, so a Short could be previewed at 9:16 and then only saved as a 16:9
+   file with the phone footage boxed in the middle of it — Vertical 9:16,
+   Vertical HD, Square and Portrait 4:5 are in the Export dialog now.
+   The floating globe in the bottom-left corner is gone with them: it opened a
+   second copy of the theme, vibe and language controls that the top bar has
+   carried on every page for a while, and on the editor it sat over the tool
+   rail. editor.html and nova.js both changed and both are cached. */
 /* v36: NovaTools is personalised, and it gained three tools. A "Picked for
    you" strip at the top takes its four from the category — Art gets the new
    drawing board first, Tech the developer set — and disappears entirely for
@@ -225,7 +233,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v36';
+const CACHE = 'novaclip-v37';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
