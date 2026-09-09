@@ -38,7 +38,7 @@
 
      WHAT THE EXTRA FIELDS ARE FOR
 
-     `hint` is the line under the name in the picker. The other two are what
+     `hint` is the line under the name in the picker. The other three are what
      make the answer worth asking for, rather than a preference stored and
      never read again:
 
@@ -47,40 +47,52 @@
        seed   the query Trend Spotter starts on, so an empty search box is not
               the first thing a creator meets on the page that is supposed to
               tell them what to make
+       vibe   two colours the whole site is then lit with, so choosing is
+              something you can SEE happen rather than a setting you have to
+              take on trust
 
-     A written-in category has neither, and that is fine and deliberate: it
-     still reaches every AI prompt through aiNote() below, which is the part
-     that does the most work. Inventing shortcuts for "speedcubing" from a
-     table would mean guessing, and a wrong shortcut is worse than a general
-     one. */
+     A written-in category has no chips and no seed of its own, and that is
+     deliberate: inventing shortcuts for "speedcubing" from a table would mean
+     guessing, and a wrong shortcut is worse than a general one. It does get
+     colours — see vibeOf() — because the one answer that no list could hold is
+     the last one that should look like the site ignored it. */
   var PRESETS = [
     { id: 'gaming',    label: 'Gaming',              hint: 'Clips, reviews, let’s plays',
       seed: 'gaming',
-      chips: [['editor', 'Edit a gameplay clip'], ['trends', 'What is trending'], ['hype', 'Find the boring bit']] },
+      chips: [['editor', 'Edit a gameplay clip'], ['trends', 'What is trending'], ['hype', 'Find the boring bit']],
+      vibe: ['#7C5CFF', '#00E5FF'] },
     { id: 'music',     label: 'Music',               hint: 'Covers, production, performance',
       seed: 'music covers and production',
-      chips: [['editor', 'Cut a music video'], ['trends', 'Trending sounds'], ['ai', 'Write my description']] },
+      chips: [['editor', 'Cut a music video'], ['trends', 'Trending sounds'], ['ai', 'Write my description']],
+      vibe: ['#FF2E97', '#A855F7'] },
     { id: 'sport',     label: 'Sport',               hint: 'Highlights, training, football',
       seed: 'sport highlights',
-      chips: [['editor', 'Cut a highlight'], ['trends', 'Trending in sport'], ['hype', 'Find the flat seconds']] },
+      chips: [['editor', 'Cut a highlight'], ['trends', 'Trending in sport'], ['hype', 'Find the flat seconds']],
+      vibe: ['#22C55E', '#A3E635'] },
     { id: 'irl',       label: 'Vlogs and everyday',  hint: 'Days, trips, life',
       seed: 'day in the life vlogs',
-      chips: [['editor', 'Edit a vlog'], ['trends', 'Vlog ideas'], ['aiedit', 'Get it ready to post']] },
+      chips: [['editor', 'Edit a vlog'], ['trends', 'Vlog ideas'], ['aiedit', 'Get it ready to post']],
+      vibe: ['#FB923C', '#FB7185'] },
     { id: 'learning',  label: 'Learning and school', hint: 'Revision, explainers, study',
       seed: 'study and revision explainers',
-      chips: [['ai', 'Ask a tutor'], ['trends', 'Explainer ideas'], ['editor', 'Edit a study video']] },
+      chips: [['ai', 'Ask a tutor'], ['trends', 'Explainer ideas'], ['editor', 'Edit a study video']],
+      vibe: ['#3B82F6', '#22D3EE'] },
     { id: 'art',       label: 'Art and making',      hint: 'Drawing, crafts, builds',
       seed: 'art and craft process videos',
-      chips: [['photo', 'Edit a photo of my work'], ['editor', 'Edit a process video'], ['trends', 'Art trends']] },
+      chips: [['photo', 'Edit a photo of my work'], ['editor', 'Edit a process video'], ['trends', 'Art trends']],
+      vibe: ['#F97316', '#EC4899'] },
     { id: 'food',      label: 'Food',                hint: 'Cooking, baking, eating',
       seed: 'cooking and baking',
-      chips: [['editor', 'Edit a recipe video'], ['photo', 'Edit a food photo'], ['trends', 'Food trends']] },
+      chips: [['editor', 'Edit a recipe video'], ['photo', 'Edit a food photo'], ['trends', 'Food trends']],
+      vibe: ['#F59E0B', '#EF4444'] },
     { id: 'comedy',    label: 'Comedy and sketches', hint: 'Bits, skits, edits',
       seed: 'comedy sketches and skits',
-      chips: [['editor', 'Cut a sketch'], ['hype', 'Find the dead air'], ['trends', 'Comedy trends']] },
+      chips: [['editor', 'Cut a sketch'], ['hype', 'Find the dead air'], ['trends', 'Comedy trends']],
+      vibe: ['#FACC15', '#FF4D9D'] },
     { id: 'tech',      label: 'Tech',                hint: 'Phones, PCs, coding',
       seed: 'phones, PCs and coding',
-      chips: [['editor', 'Edit a review'], ['trends', 'Tech trends'], ['ai', 'Write a spec rundown']] }
+      chips: [['editor', 'Edit a review'], ['trends', 'Tech trends'], ['ai', 'Write a spec rundown']],
+      vibe: ['#06B6D4', '#6366F1'] }
   ];
 
   /* The three offered when there is no category, or when the answer was
@@ -165,6 +177,37 @@
     return (p && p.chips) ? p.chips : DEFAULT_CHIPS;
   }
 
+  /* THE COLOURS THE SITE WEARS FOR THIS CATEGORY.
+     Two of them, used as a pair of soft washes behind everything — see
+     ncCategoryVibe() in nova.js for how they are painted. Chosen so that each
+     one reads as a different room without any of them stopping white text
+     being readable on the dark base or dark text on the light one, which is
+     why they are all mid-saturation rather than neon.
+
+     A WRITTEN-IN CATEGORY GETS ITS OWN COLOURS TOO, and this is the part
+     worth explaining. Falling back to the default violet would mean the nine
+     presets change the site and everybody else's answer does nothing — the
+     written-in box is the one that takes the answers no list could hold, so it
+     is the last place to be treated as a lesser answer. The hue comes from a
+     hash of the string, so "Warhammer painting" is the same green every time,
+     on every device, with no table to maintain. Saturation and lightness are
+     fixed at values that are known to work on both themes; only the hue moves,
+     and the second colour sits 40 degrees around the wheel from the first so
+     the pair always has a relationship rather than being two random colours. */
+  function hueOf(str) {
+    var h = 0, i;
+    for (i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+    return h;
+  }
+  function vibeOf(v) {
+    v = v || get();
+    if (!v) return null;
+    var p = presetOf(v);
+    if (p && p.vibe) return p.vibe;
+    var h = hueOf(String(v).toLowerCase());
+    return ['hsl(' + h + ' 72% 58%)', 'hsl(' + ((h + 40) % 360) + ' 78% 62%)'];
+  }
+
   /* What Trend Spotter should start on. A written-in category is used as
      typed: "Warhammer painting" is a better search than anything a nine-row
      table could have mapped it to. */
@@ -179,7 +222,7 @@
     KEY: KEY, PRESETS: PRESETS,
     get: get, set: set, clear: clear,
     asked: asked, markAsked: markAsked, labelOf: labelOf,
-    presetOf: presetOf, aiNote: aiNote, chips: chips, seed: seed
+    presetOf: presetOf, aiNote: aiNote, chips: chips, seed: seed, vibeOf: vibeOf
   };
 
   /* A bare global beside the object, for the same reason nova.js exports

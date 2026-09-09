@@ -166,6 +166,13 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v31: the front page's globe is gone and NovaClip's own mark turns there
+   instead — nova-logo3d.js is a new shell file, index.html changed to load it,
+   and nova-globe.js is deleted, so a cache still holding it would serve a page
+   asking for a file that no longer exists. The category also lights the whole
+   site now: nova.js tints the background family from it, so every page has to
+   come back for the new copy or the choice shows on some pages and not others.
+   categories.js carries the colours. */
 /* v30: two buttons, a category that does something, and BioSentinel back.
    The bar gained a switch that puts the rail away and an "Ask Nova" button
    that reopens the card, so nova.js is the reason for the bump on its own.
@@ -176,7 +183,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v30';
+const CACHE = 'novaclip-v31';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -237,6 +244,11 @@ const SHELL = [
      hundred bytes of markup she costs less cached than the one PNG she
      replaced. */
   '/nova-mascot.js',
+  /* The mark that turns on the front page. Cached because index.html is
+     cached: the hero without it is a hero with an empty right-hand half, and
+     unlike the globe it replaced there is nothing for it to fetch, so offline
+     it is exactly as good as online. */
+  '/nova-logo3d.js',
   /* The question asked three seconds in, and the category behind it. Both are
      cached because both work with no network at all: nova-ask.js matches what
      was typed against a table in its own file and only falls back to the model

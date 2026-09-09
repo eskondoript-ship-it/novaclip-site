@@ -652,8 +652,140 @@ function ncApplyTheme(pref) {
      canvas behind the page, which CSS variables cannot reach. */
   r.style.colorScheme = t;
   ncPaintSkin(p);            // no-op, and removes any sheet, for light/dark/system
+  ncCategoryVibe();          // and the wash the chosen category lights it with
   return t;
 }
+
+/* ============================================================================
+   THE VIBE — THE SITE WEARS THE CATEGORY
+   ============================================================================
+   Choosing a category used to be an act of faith: it changed the shortcuts on
+   the Ask card, the Trend Spotter's first search and eight AI prompts, and not
+   one of those is visible at the moment you choose. So the site now LOOKS
+   different, immediately, and keeps looking different on every page. Gaming is
+   violet and cyan, Food is amber and red, Sport is green — and a written-in
+   category gets its own colours derived from what was typed, so the answer
+   nobody's list could hold is not the one the site ignores.
+
+   A WASH, NOT A REPAINT
+
+   Two large, soft radial gradients pinned behind everything, and nothing else.
+   It is deliberately not a palette change:
+
+     - The palette is the reader's to set. Light, dark and the twelve cyber
+       skins are an explicit choice made in the top bar, and a category is not
+       a licence to overrule it. This layer sits behind both and works with
+       either.
+     - Contrast is a promise. Repainting --nc-cyan and --nc-pink per category
+       would put every button, link and focus ring at the mercy of nine colour
+       pairs, and one of them would eventually be unreadable somewhere. A wash
+       at 14% behind the content cannot do that to anything.
+
+   IT STANDS DOWN FOR A CYBER SKIN. Those twelve already commit the background
+   to one strong colour; a food wash over Matrix Terminal is two designs
+   arguing. Somebody who picked a skin has said what they want the site to look
+   like, and that answer wins.
+
+   Painted from ncApplyTheme so it survives a theme change, and re-painted on
+   the nc-category event so choosing on categories.html is something you watch
+   happen rather than something you have to navigate away to see.
+   ============================================================================ */
+function ncCategoryVibe() {
+  const C = window.NC_CATEGORY;
+  let tag = document.getElementById('nc-vibe-css');
+  const skinOn = !!document.documentElement.getAttribute('data-skin');
+  const v = (C && C.vibeOf) ? C.vibeOf() : null;
+
+  if (!v || skinOn) {
+    if (tag) tag.remove();
+    document.documentElement.style.removeProperty('--nc-cat-a');
+    document.documentElement.style.removeProperty('--nc-cat-b');
+    return null;
+  }
+
+  /* Published as variables as well as used below, so a page that wants to
+     pick the vibe up in its own artwork can, without reading localStorage or
+     knowing the table. */
+  document.documentElement.style.setProperty('--nc-cat-a', v[0]);
+  document.documentElement.style.setProperty('--nc-cat-b', v[1]);
+
+  if (!tag) {
+    tag = document.createElement('style');
+    tag.id = 'nc-vibe-css';
+  }
+  /* LAST IN <head>, EVERY TIME. appendChild on a node that is already in the
+     document MOVES it, which is what is wanted here: the base palette sheet is
+     injected after ncApplyTheme runs, and at equal specificity the later sheet
+     wins — so a vibe written first was overruled on the light theme and the
+     page came back plain white. Measured: Food on light gave #F5F7FB, the
+     untinted value. */
+  document.head.appendChild(tag);
+  /* TWO PARTS, AND THE FIRST IS THE ONE THAT ACTUALLY SHOWS.
+
+     A fixed wash behind the page was the whole of this at first, and it was
+     nearly invisible: index.html paints its own body background, its own hero
+     aura and a canvas over the top, so a layer at z-index:-1 was underneath
+     three opaque things. Measured on the Food category, where the page still
+     came up violet.
+
+     So the background family is tinted instead — the same mechanism the twelve
+     cyber skins use, and the reason every page follows without knowing this
+     exists. index.html's own --void is `var(--nc-bg, ...)`, so it comes along;
+     so does every panel, card and bar on the site.
+
+     ONLY the backgrounds. Not --nc-cyan, --nc-pink or --nc-text, which are
+     what buttons, links and body copy are drawn in — nine colour pairs let
+     loose on those would eventually put unreadable text somewhere, and a
+     category is not worth that. color-mix at 14% moves the hue and leaves the
+     lightness where the palette put it, so dark stays dark and light stays
+     light and every contrast ratio on the site is the one it was checked at.
+
+     The wash stays as the second part, for the glow. */
+  tag.textContent =
+    /* The doubled attribute — [data-theme="dark"][data-theme] — is not a typo.
+       It matches exactly what the single one matches and scores one selector
+       higher, which makes this rule beat the base palette REGARDLESS of which
+       sheet the browser sees last. Ordering was the first attempt and it lost:
+       nova.js appends six more stylesheets after ncApplyTheme runs, so the
+       light theme came back untinted at #F5F7FB. Specificity is the thing that
+       does not depend on when a file happens to load. */
+    'html[data-theme="dark"][data-theme]{' +
+      '--nc-bg:color-mix(in srgb,var(--nc-cat-a) 13%,#05070E);' +
+      '--nc-bg2:color-mix(in srgb,var(--nc-cat-a) 11%,#0C1220);' +
+      '--nc-bg3:color-mix(in srgb,var(--nc-cat-b) 10%,#080A11);' +
+      '--nc-bar-bg:color-mix(in srgb,var(--nc-cat-a) 10%,rgba(10,13,24,.72));' +
+      /* The rail is drawn from its own three, or it would stay the one part of
+         the screen the category did not reach. */
+      '--nc-rail1:color-mix(in srgb,var(--nc-cat-a) 14%,#0E1220);' +
+      '--nc-rail2:color-mix(in srgb,var(--nc-cat-a) 12%,#0A0D18);' +
+      '--nc-rail3:color-mix(in srgb,var(--nc-cat-b) 11%,#080B14);' +
+    '}' +
+    /* Lighter touch on white. The same 13% that reads as a tinted room on the
+       dark base reads as a stain on a white page, so it is halved. */
+    'html[data-theme="light"][data-theme]{' +
+      '--nc-bg:color-mix(in srgb,var(--nc-cat-a) 7%,#F5F7FB);' +
+      '--nc-bg2:color-mix(in srgb,var(--nc-cat-a) 4%,#FFFFFF);' +
+      '--nc-bg3:color-mix(in srgb,var(--nc-cat-b) 7%,#EAEEF6);' +
+      '--nc-bar-bg:color-mix(in srgb,var(--nc-cat-a) 5%,rgba(255,255,255,.78));' +
+      '--nc-rail1:color-mix(in srgb,var(--nc-cat-a) 6%,#FFFFFF);' +
+      '--nc-rail2:color-mix(in srgb,var(--nc-cat-a) 8%,#F7F9FD);' +
+      '--nc-rail3:color-mix(in srgb,var(--nc-cat-b) 8%,#EFF3FA);' +
+    '}' +
+    /* A fixed pseudo-element on <html> rather than a background on <body>:
+       body is scrolled, and a gradient that scrolls with a long page ends
+       somewhere down it. z-index:-1 puts it behind every page's own content
+       without any page needing a stacking context of its own. */
+    'html::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;' +
+      'background:' +
+        'radial-gradient(58% 46% at 12% 0%,var(--nc-cat-a) 0%,transparent 68%),' +
+        'radial-gradient(52% 44% at 92% 100%,var(--nc-cat-b) 0%,transparent 66%);' +
+      'opacity:.16;transition:opacity .5s ease}' +
+    'html[data-theme="light"][data-theme]::before{opacity:.10}' +
+    '@media (prefers-reduced-motion:reduce){html::before{transition:none}}';
+  return v;
+}
+window.ncCategoryVibe = ncCategoryVibe;
+addEventListener('nc-category', function () { ncCategoryVibe(); });
 
 function ncSetTheme(pref) {
   try { localStorage.setItem(NC_THEME_KEY, pref); } catch (e) {}
