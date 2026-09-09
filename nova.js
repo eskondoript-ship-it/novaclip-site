@@ -775,7 +775,51 @@ function ncCategoryVibe() {
        body is scrolled, and a gradient that scrolls with a long page ends
        somewhere down it. z-index:-1 puts it behind every page's own content
        without any page needing a stacking context of its own. */
-    'html::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;' +
+    /* ==================================================================
+       WHY THESE ARE NOT AT z-index:-1 ANY MORE
+       ==================================================================
+       They were, and on the one page that matters most they were invisible.
+       A layer at -1 sits behind its own element's background — and every page
+       here paints an opaque body: index.html has `body{background:var(--void)}`
+       and --void is var(--nc-bg). So the wash, the photograph and the drawn
+       scene were all underneath it. It happened to show on pricing.html, which
+       is what was tested, and not on the home page, which is what was looked
+       at. Reported as "it's still the same", and it was.
+
+       The fix is a stack rather than a hole: --nc-bg moves onto <html>, the
+       body goes transparent, the layers sit at z-index 0, and the body's own
+       content is lifted to 1 above them. Nothing on any page has to know.
+       ================================================================== */
+    'html[data-theme][data-theme]{background-color:var(--nc-bg)}' +
+    'html[data-theme][data-theme] body{background-color:transparent}' +
+    /* position:relative is what makes the z-index take. Body is static by
+       default and a z-index on a static box is ignored. */
+    'html[data-theme][data-theme] body{position:relative;z-index:1}' +
+    /* ==================================================================
+       THE PAGES' OWN DECORATION FOLLOWS THE CATEGORY TOO
+       ==================================================================
+       Seven pages float three big blurred orbs behind their content —
+       violet, magenta and cyan, fixed. On the home page they are 460px
+       across at 42% opacity, which makes them the loudest thing on the
+       screen by some distance. Tinting the page background underneath them
+       and leaving them purple meant Food turned the site warm everywhere
+       except the part anybody was actually looking at.
+
+       One rule here rather than an edit in each of the seven: they all use
+       the same .orb.a/.b/.c names, this beats their own selectors on
+       specificity without !important, and it is only ever injected when a
+       category is set — so with none, or with a cyber skin, every page keeps
+       exactly the colours it shipped with.
+       ================================================================== */
+    'html[data-theme][data-theme] .orb.a{background:var(--nc-cat-a)}' +
+    'html[data-theme][data-theme] .orb.b{background:var(--nc-cat-b)}' +
+    'html[data-theme][data-theme] .orb.c{background:var(--nc-cat-a)}' +
+    /* index.html's hero aura and its cursor glow are both a fixed cyan. */
+    'html[data-theme][data-theme] .hero::after{background:radial-gradient(circle at 50% 50%,' +
+      'color-mix(in srgb,var(--nc-cat-b) 55%,transparent),transparent 42%)}' +
+    'html[data-theme][data-theme] #mouseglow{background:radial-gradient(circle,' +
+      'color-mix(in srgb,var(--nc-cat-a) 30%,transparent),transparent 65%)}' +
+    'html::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;' +
       'background:' +
         'radial-gradient(58% 46% at 12% 0%,var(--nc-cat-a) 0%,transparent 68%),' +
         'radial-gradient(52% 44% at 92% 100%,var(--nc-cat-b) 0%,transparent 66%);' +
@@ -788,7 +832,7 @@ function ncCategoryVibe() {
        every page's content. It is empty until ncCategoryPhoto() finds a file
        for this category and sets --nc-cat-img — see there for why it is a
        probe rather than a plain url(). */
-    'html::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;' +
+    'html::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;' +
       'background-image:var(--nc-cat-img,none);background-size:cover;' +
       'background-position:center;opacity:var(--nc-cat-img-o,0);' +
       /* Blurred and desaturated on purpose. A photograph at full strength
@@ -805,6 +849,10 @@ function ncCategoryVibe() {
     /* The scrim. Without it the headline sits on whatever the photo happens to
        be at that pixel, which is different on every screen size — the one
        thing a background image must never be allowed to decide. */
+    /* The scrim moved off body::before and onto a rule that sits with the
+       other two layers. On body it was inside the lifted stacking context, so
+       it would have been drawn OVER the page's text rather than under it — a
+       grey veil across every word. */
     'html[data-theme="dark"][data-theme] body::before{content:"";position:fixed;inset:0;' +
       'z-index:-1;pointer-events:none;background:linear-gradient(180deg,' +
       'color-mix(in srgb,var(--nc-bg) 78%,transparent) 0%,' +

@@ -166,6 +166,16 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v34: the backgrounds were invisible on the home page, which is the page
+   they were reported invisible on. The wash, the photo and the drawn scene all
+   sat at z-index:-1, which is BEHIND the element's own background — and every
+   page paints an opaque body (index.html's --void is var(--nc-bg)). They are a
+   stack now: --nc-bg on <html>, the body transparent and lifted above them.
+   The three big blurred orbs seven pages float behind their content also
+   follow the category, because at 460px and 42% opacity they were the loudest
+   thing on the screen and they were still violet on a Food page. nova.js is
+   the only file that changed and it is cached, so the bump is what delivers
+   any of it. */
 /* v33: every category has a real background now, not only a colour. Nine
    scenes are composed in category-scene.js and handed over as data URIs — a
    new shell file, loaded by 33 pages, so a cache without it is 33 pages asking
@@ -196,7 +206,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v33';
+const CACHE = 'novaclip-v34';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
