@@ -166,6 +166,16 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v35: three things, and the first is a fix. A category with no photograph
+   recorded "no photo" in sessionStorage for the whole visit, and sessionStorage
+   survives a reload — so adding the nine files changed nothing until the tab
+   was closed, which is exactly how it was reported. A miss now carries a
+   timestamp and is retried after two minutes.
+   A neutral "Classic" category joins the nine: it is the plain NovaClip look,
+   with no tint, no scene and nothing said to the AI about a channel.
+   And nova-guide.js is back — the written walkthrough for twenty-four pages,
+   on a "?" in the top bar rather than on the deleted Jarvis pill. New shell
+   file, 29 pages reference it. */
 /* v34: the backgrounds were invisible on the home page, which is the page
    they were reported invisible on. The wash, the photo and the drawn scene all
    sat at z-index:-1, which is BEHIND the element's own background — and every
@@ -206,7 +216,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v34';
+const CACHE = 'novaclip-v35';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -278,6 +288,10 @@ const SHELL = [
      when nothing matches, and categories.js is a list and a localStorage key.
      Offline, the card still opens and still takes you to the right page. */
   '/nova-ask.js',
+  /* The written page walkthroughs. Cached for the reason they are written
+     down rather than asked of a model: a help button that needs the network
+     is missing at exactly the moment somebody is stuck. */
+  '/nova-guide.js',
   '/categories.js',
   /* The nine drawn backgrounds. Cached because they are the floor under every
      category: a page served offline without this file is a page with the

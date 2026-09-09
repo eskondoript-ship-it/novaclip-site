@@ -938,17 +938,32 @@ function ncCategoryPhoto() {
   var known = null;
   try { known = sessionStorage.getItem(NC_PHOTO_KEY + ':' + p.id); } catch (e) {}
 
-  /* The remembered answer is the winning FILENAME, not a yes/no, so a second
-     page in the same visit does not have to walk the list again. '0' is the
-     recorded no. */
-  if (known === '0') { clear(); return; }
+  /* THE REMEMBERED "NO" EXPIRES. THE REMEMBERED "YES" DOES NOT.
+     This is the bug that made adding the photographs look like it had done
+     nothing. A found filename is cached for the visit, which is right — the
+     file is not going to move. A miss was cached the same way, which is
+     wrong: somebody who opened the site before the files existed had '0'
+     written into sessionStorage, and sessionStorage survives a reload,
+     including a hard one. Only closing the tab cleared it. So the photos went
+     up, the page was reloaded, and it kept saying there were none.
+
+     A miss now carries the time it was recorded and is retried after two
+     minutes. Long enough that a page load does not re-ask four times; short
+     enough that "I just added the file" and "the site can see it" are the
+     same minute. */
+  if (known && known.indexOf('miss:') === 0) {
+    var when = parseInt(known.slice(5), 10) || 0;
+    if (Date.now() - when < 120000) { scene(); return; }
+    known = null;                                     /* stale — look again */
+  }
+  if (known === '0') { known = null; }                /* written by the old code */
   if (known) { url = known; apply(); return; }
 
   tryExt(0);
 
   function tryExt(i) {
     if (i >= EXT.length) {
-      try { sessionStorage.setItem(NC_PHOTO_KEY + ':' + p.id, '0'); } catch (e) {}
+      try { sessionStorage.setItem(NC_PHOTO_KEY + ':' + p.id, 'miss:' + Date.now()); } catch (e) {}
       scene();                              /* drawn, since there is no photo */
       return;
     }
@@ -1490,6 +1505,16 @@ function ncBuildBar() {
        still say it in full. */
     '@media (max-width:560px){#ncaskbtn{padding:0;width:36px;justify-content:center}' +
       '#ncaskbtn span{display:none}}' +
+    /* The "?" beside it, in the same shape as the rail switch so the bar's
+       three icons read as one set. margin-left:0 because Ask Nova has already
+       taken the free space with its auto. */
+    '#ncguidebtn{margin-left:0;display:flex;align-items:center;justify-content:center;' +
+      'width:36px;height:36px;flex:0 0 auto;padding:0;border-radius:10px;cursor:pointer;' +
+      'font:inherit;font-size:1rem;font-weight:800;line-height:1;' +
+      'color:var(--nc-text,inherit);' +
+      'background:var(--nc-card,rgba(255,255,255,.05));' +
+      'border:1px solid var(--nc-line2,rgba(255,255,255,.15))}' +
+    '#ncguidebtn:hover{border-color:var(--nc-cyan,#00E5FF)}' +
     /* The seventy lines that stood here placed the Jarvis pill in the bar's
        reserved gap, across four width bands, and docked its sheet under the
        bar. Every selector in them read `.jr-pill` or `.jr-sheet`, and both
@@ -1614,6 +1639,28 @@ function ncBuildBar() {
     else toast('The assistant has not loaded on this page.');
   });
   bar.appendChild(askBtn);
+
+  /* HOW DO I USE THIS PAGE?
+     nova-guide.js has a written walkthrough for twenty-four pages — local,
+     instant, and working with the network off, which is the whole reason the
+     steps are written down rather than asked of a model. It used to hang off
+     the Jarvis pill; that file is deleted, so the button lives here now,
+     beside the assistant it hands off to.
+
+     Built even when nova-guide.js is missing, and says so if pressed. A "?"
+     that silently does nothing is worse than no "?" at all. */
+  const guideBtn = document.createElement('button');
+  guideBtn.id = 'ncguidebtn';
+  guideBtn.type = 'button';
+  guideBtn.textContent = '?';
+  guideBtn.title = 'How do I use this page?';
+  guideBtn.setAttribute('aria-label', 'How do I use this page?');
+  guideBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (window.ncGuide && window.ncGuide.show) window.ncGuide.show();
+    else toast('The page guide has not loaded on this page.');
+  });
+  bar.appendChild(guideBtn);
 
   document.body.insertBefore(bar, document.body.firstChild);
 

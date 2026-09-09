@@ -57,6 +57,19 @@
      colours — see vibeOf() — because the one answer that no list could hold is
      the last one that should look like the site ignored it. */
   var PRESETS = [
+    /* THE WAY OUT, AND IT IS FIRST BECAUSE IT IS AN ANSWER LIKE THE OTHERS.
+       Everything below repaints the site — its background, its colours, the
+       shortcuts on the Ask card. Some people will not want that, and until now
+       the only way to refuse was to skip the question and be treated as
+       somebody who never answered it. Classic is a real choice with a real
+       consequence: the site stays exactly as it was designed, and the AI still
+       gets told nothing about a channel it knows nothing about.
+
+       `neutral` is what the rest of this file checks. It has no vibe, so
+       vibeOf() returns null and the whole background layer stands down. */
+    { id: 'classic',   label: 'Classic',             hint: 'The plain NovaClip look, no theme',
+      neutral: true,
+      chips: [['editor', 'Edit a video'], ['trends', 'Find an idea'], ['games', 'Play something']] },
     { id: 'gaming',    label: 'Gaming',              hint: 'Clips, reviews, let’s plays',
       seed: 'gaming',
       chips: [['editor', 'Edit a gameplay clip'], ['trends', 'What is trending'], ['hype', 'Find the boring bit']],
@@ -165,6 +178,11 @@
   function aiNote() {
     var v = get();
     if (!v) return '';
+    /* Classic is "no category", said deliberately rather than by not
+       answering. Telling a model the creator makes Classic content would be
+       telling it something untrue. */
+    var p = presetOf(v);
+    if (p && p.neutral) return '';
     return ' The creator makes ' + labelOf(v) + ' content; tailor examples, ' +
            'topics and references to that where it fits. ';
   }
@@ -203,6 +221,9 @@
     v = v || get();
     if (!v) return null;
     var p = presetOf(v);
+    /* Classic. No colours means no tint, no scene and no photograph — every
+       one of those reads this and stands down when it comes back null. */
+    if (p && p.neutral) return null;
     if (p && p.vibe) return p.vibe;
     var h = hueOf(String(v).toLowerCase());
     return ['hsl(' + h + ' 72% 58%)', 'hsl(' + ((h + 40) % 360) + ' 78% 62%)'];
@@ -215,6 +236,7 @@
     var v = get();
     if (!v) return '';
     var p = presetOf(v);
+    if (p && p.neutral) return '';       /* nothing to seed a search with */
     return p ? p.seed : v;
   }
 
