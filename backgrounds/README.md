@@ -4,9 +4,29 @@ Drop a photograph in here and the category it is named after gains a real
 background across the whole site. Nothing else has to change — no code, no
 list to update. The file is looked for once per visit and remembered.
 
+## The quick way: fetch all nine
+
+```
+node backgrounds/fetch.mjs
+```
+
+Node 18+, no packages to install. It searches Openverse for CC0 photographs —
+the licence that allows commercial use and needs no attribution — and saves one
+per category. `--dry-run` shows what it would take without taking it,
+`--force` replaces files already here, and naming categories
+(`node backgrounds/fetch.mjs food gaming`) does just those.
+
+It was written in a session behind a proxy that answers 403 to every image
+host, so it could not be run end to end before being committed. Its failure
+paths were exercised, which is why it checks that what came back is actually an
+image and large enough to be a photograph, and writes nothing when it is not.
+If a category comes back empty it says so and carries on with the rest — fill
+that one in by hand from the table below.
+
 ## The nine filenames
 
-Exactly these, lower case, `.jpg`:
+Exactly these, lower case. `.jpg`, `.jpeg`, `.png` and `.webp` all work — the
+site tries them in that order, so save whatever you have:
 
 | File               | Category on the site |
 | ------------------ | -------------------- |
