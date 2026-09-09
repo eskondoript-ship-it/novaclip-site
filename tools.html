@@ -226,6 +226,15 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
   <p class='note' id='countline' style='margin:2px 2px 14px'>
     <b id='toolcount'>0</b> tools, all of them running in this tab.
   </p>
+  <!-- Filled by the block at the end of this file when a category is set,
+       and left empty otherwise — so a reader who chose Classic, or who has
+       not answered, sees the page exactly as it has always been. -->
+  <section id='foryou' style='display:none'>
+    <h2 id='foryouTitle' style='font-size:1.05rem;font-weight:800;margin:2px 2px 4px'></h2>
+    <p class='note' id='foryouSub' style='margin:0 2px 12px'></p>
+    <div class='grid' id='foryouGrid'></div>
+    <hr style='border:0;border-top:1px solid var(--nc-line,rgba(255,255,255,.1));margin:24px 0 20px'>
+  </section>
   <div class='grid' id='grid'></div>
   <p class='empty' id='empty' style='display:none'>Nothing matches that.</p>
 </div>
@@ -242,6 +251,13 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
 
 <script src='tools-data.js'></script>
 <script src='tools-extra.js'></script>
+<!-- BEFORE the block below, not after it. The "Picked for you" strip reads
+     window.NC_CATEGORY, and with this tag at the foot of the file that object
+     did not exist yet — the strip returned on its first line and the page
+     looked exactly as it always had. Third time this ordering has bitten in
+     this repo; the rule is that categories.js goes above any inline script
+     that reads it. -->
+<script src='categories.js'></script>
 <script>
 /* ---------------------------------------------------------------------------
    THE CATALOGUE
@@ -251,10 +267,25 @@ textarea:focus, .field input:focus { border-color: var(--cyan); }
    NovaClip assistant, which has a backend and a key of its own.
    --------------------------------------------------------------------------- */
 const TOOLS = [
+  /* THE TWO BIG ONES, WHICH WERE NOT IN HERE AT ALL.
+     NovaTools listed fifty-four small utilities and about ten thousand
+     generated ones, and neither the video editor nor the AI editor — the two
+     largest tools on the site — was among them. Somebody searching "edit"
+     here found a find-and-replace.
+
+     They are pages rather than panels, so `go` sends the reader to them
+     instead of opening a sheet. open() checks for it before it looks for an
+     implementation, which is what keeps every other tool unchanged. */
+  { id:'editor', cat:'video', name:'Video editor', go:'editor.html',
+    desc:'The full timeline — cut, trim, text, colour, sound and export. Opens as its own page.' },
+  { id:'aieditor', cat:'video', name:'AI Editor', go:'publish.html',
+    desc:'Drop a clip in and it plans the edit, applies it, and writes the title, description and tags.' },
   { id:'soundboard', cat:'audio', name:'Sound effects board',
     desc:'97 effects, every one generated in your browser. Play them, or save any as a WAV.' },
   { id:'cleanup', cat:'images', name:'Remove something from a photo',
     desc:'Paint over what you want gone and the surrounding texture is grown in over it.' },
+  { id:'draw', cat:'images', name:'Drawing board',
+    desc:'Draw with a brush, a pen or a marker, then animate what you drew or save it as a PNG.' },
   { id:'animate-drawing', cat:'images', name:'Animate a drawing',
     desc:'Photograph a character you drew, drop a skeleton on it, and it walks, waves or dances.' },
   { id:'word-counter', cat:'text', name:'Word counter',
@@ -2111,6 +2142,154 @@ IMPL['cleanup'] = {
    The trade is a fair one: you place nine points once, by dragging, and in
    exchange nothing is uploaded, there is no queue, and it runs offline.
    =========================================================================== */
+/* THE DRAWING BOARD.
+   Asked for by name, and it fills a real gap: "Animate a drawing" has always
+   wanted a drawing photographed on paper, which means a reader needs paper, a
+   dark pen and a camera before the site can do anything for them. Now they can
+   draw one here and animate it in the next click.
+
+   Everything is a 2D canvas and nothing leaves the browser. Undo is a stack of
+   ImageData rather than a list of strokes: strokes are cheaper to keep, but
+   replaying them has to reproduce every brush exactly, and a bitmap cannot
+   drift from what is on screen. Twenty deep, which is about 25MB at this
+   canvas size and is the trade being made on purpose. */
+IMPL['draw'] = {
+  html:
+    '<div class="field"><label>Brush</label>' +
+      '<div class="btns" id="dwTools" style="flex-wrap:wrap">' +
+        '<button class="alt on" data-t="pen">Pen</button>' +
+        '<button class="alt" data-t="marker">Marker</button>' +
+        '<button class="alt" data-t="pencil">Pencil</button>' +
+        '<button class="alt" data-t="eraser">Eraser</button>' +
+      '</div></div>' +
+    '<div class="field"><label>Colour and size</label>' +
+      '<div class="btns" style="align-items:center;flex-wrap:wrap">' +
+        '<input type="color" id="dwCol" value="#111827" ' +
+          'style="width:52px;height:38px;padding:2px;border-radius:10px;cursor:pointer">' +
+        '<span id="dwSwatches" style="display:flex;gap:6px;flex-wrap:wrap"></span>' +
+        '<input type="range" id="dwSize" min="1" max="60" value="6" style="flex:1 1 140px;min-width:120px">' +
+        '<span class="note" id="dwSizeN" style="min-width:44px">6 px</span>' +
+      '</div></div>' +
+    '<canvas id="dwC" width="1000" height="700" ' +
+      'style="width:100%;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair;' +
+      'border:1px solid rgba(0,0,0,.18)"></canvas>' +
+    '<div class="btns" style="flex-wrap:wrap">' +
+      '<button class="alt" id="dwUndo">Undo</button>' +
+      '<button class="alt" id="dwClear">Clear</button>' +
+      '<button class="go" id="dwSave">Save as PNG</button>' +
+      '<button class="alt" id="dwAnim">Animate this</button>' +
+    '</div>' + outBox +
+    '<p class="note">Nothing is uploaded &mdash; the drawing stays in this browser. ' +
+    '<b>Animate this</b> hands it straight to Animate a drawing, so you do not need ' +
+    'paper, a pen and a camera to try that one.</p>',
+  wire() {
+    const cv = $('dwC'), ctx = cv.getContext('2d', { willReadFrequently: true });
+    let tool = 'pen', size = 6, col = '#111827', drawing = false, last = null;
+    const undo = [];
+
+    /* White, not transparent. A PNG with an alpha background looks right here
+       and then appears as a black rectangle wherever it is pasted. */
+    function blank() {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+    }
+    blank();
+
+    function push() {
+      try {
+        undo.push(ctx.getImageData(0, 0, cv.width, cv.height));
+        if (undo.length > 20) undo.shift();
+      } catch (e) { /* a tainted canvas cannot happen here, but never throw */ }
+    }
+
+    const SW = ['#111827', '#EF4444', '#F59E0B', '#22C55E', '#3B82F6', '#7C5CFF', '#EC4899', '#FFFFFF'];
+    $('dwSwatches').innerHTML = SW.map(c =>
+      '<button class="alt" data-c="' + c + '" title="' + c + '" style="width:26px;height:26px;padding:0;' +
+      'border-radius:8px;background:' + c + '"></button>').join('');
+    $('dwSwatches').querySelectorAll('button').forEach(b => b.onclick = () => {
+      col = b.dataset.c; $('dwCol').value = col;
+    });
+
+    $('dwTools').querySelectorAll('button').forEach(b => b.onclick = () => {
+      $('dwTools').querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      tool = b.dataset.t;
+    });
+    $('dwCol').oninput = e => { col = e.target.value; };
+    $('dwSize').oninput = e => { size = +e.target.value; $('dwSizeN').textContent = size + ' px'; };
+
+    /* The canvas is 1000x700 and displayed at whatever width it fits in, so a
+       pointer position has to be scaled or every stroke lands offset from the
+       cursor by the difference. */
+    function at(e) {
+      const r = cv.getBoundingClientRect();
+      return [(e.clientX - r.left) * (cv.width / r.width),
+              (e.clientY - r.top) * (cv.height / r.height)];
+    }
+
+    function styleFor() {
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+      if (tool === 'eraser') { ctx.strokeStyle = '#fff'; ctx.lineWidth = size * 2.2; return; }
+      ctx.strokeStyle = col;
+      if (tool === 'marker') { ctx.globalAlpha = 0.35; ctx.lineWidth = size * 2.6; return; }
+      if (tool === 'pencil') { ctx.globalAlpha = 0.75; ctx.lineWidth = Math.max(1, size * 0.6); return; }
+      ctx.lineWidth = size;                                     // pen
+    }
+
+    cv.addEventListener('pointerdown', e => {
+      cv.setPointerCapture(e.pointerId);
+      push();
+      drawing = true;
+      last = at(e);
+      /* A tap with no drag should still leave a mark. */
+      styleFor();
+      ctx.beginPath();
+      ctx.moveTo(last[0], last[1]);
+      ctx.lineTo(last[0] + 0.01, last[1]);
+      ctx.stroke();
+    });
+    cv.addEventListener('pointermove', e => {
+      if (!drawing) return;
+      const p = at(e);
+      styleFor();
+      ctx.beginPath();
+      ctx.moveTo(last[0], last[1]);
+      ctx.lineTo(p[0], p[1]);
+      ctx.stroke();
+      last = p;
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev =>
+      cv.addEventListener(ev, () => { drawing = false; ctx.globalAlpha = 1; }));
+
+    $('dwUndo').onclick = () => {
+      const d = undo.pop();
+      if (!d) return setOut('Nothing to undo yet.');
+      ctx.putImageData(d, 0, 0);
+      setOut('');
+    };
+    $('dwClear').onclick = () => { push(); blank(); setOut('Cleared. Undo brings it back.'); };
+
+    $('dwSave').onclick = () => {
+      const a = document.createElement('a');
+      a.download = 'novaclip-drawing.png';
+      a.href = cv.toDataURL('image/png');
+      a.click();
+      setOut('Saved as novaclip-drawing.png.');
+    };
+
+    /* The hand-off. The drawing goes on the window rather than through a file
+       input, because there is no File to make and faking one would be work for
+       nothing. Animate a drawing checks for it when it wires up. */
+    $('dwAnim').onclick = () => {
+      window.__ncDrawing = cv.toDataURL('image/png');
+      if (typeof open === 'function') open('animate-drawing');
+    };
+  }
+};
+
 IMPL['animate-drawing'] = {
   html: imgPick() +
     '<div style="position:relative;display:inline-block;max-width:100%">' +
@@ -2142,7 +2321,7 @@ IMPL['animate-drawing'] = {
       };
     }
 
-    onImg(i => {
+    function load(i, note) {
       img = i;
       const s = Math.min(1, 620 / Math.max(i.naturalWidth, i.naturalHeight));
       cv.width = Math.round(i.naturalWidth * s);
@@ -2150,8 +2329,22 @@ IMPL['animate-drawing'] = {
       cut = lift(i, cv.width, cv.height);
       J = defaults(cv.width, cv.height);
       draw(0);
-      setOut('Drag the dots onto your character, then press Play.');
-    });
+      setOut(note || 'Drag the dots onto your character, then press Play.');
+    }
+    onImg(i => load(i));
+
+    /* HANDED OVER FROM THE DRAWING BOARD.
+       Its "Animate this" button leaves a data URL here and opens this tool.
+       Taken once and cleared, so coming back later starts empty rather than
+       reloading a drawing somebody has moved on from — and the file picker
+       above still works exactly as it did for a photograph of real paper. */
+    if (window.__ncDrawing) {
+      const d = window.__ncDrawing;
+      window.__ncDrawing = null;
+      const di = new Image();
+      di.onload = () => load(di, 'Your drawing is in. Drag the dots onto it, then press Play.');
+      di.src = d;
+    }
 
     /* --- lift the drawing off the paper ---
        The page is the most common colour in the border of the photograph, so
@@ -2563,6 +2756,10 @@ function setMeta(t) {
 function open(id, fromUrl) {
   const t = ALL.find(x => x.id === id);
   if (!t) return;
+  /* A tool that is a page of its own. Checked before the history push so the
+     back button returns to the tools list rather than to a URL that opens a
+     sheet with nothing in it. */
+  if (t.go) { location.href = t.go; return; }
   if (!fromUrl) history.pushState({ t: id }, '', toolUrl(id));
   setMeta(t);
   const impl = t.ai ? aiTool(t) : implFor(t.id);
@@ -2583,6 +2780,46 @@ addEventListener('popstate', () => {
   if (id && TOOLS.some(x => x.id === id)) open(id, true); else close(true);
 });
 $('sClose').onclick = close;
+
+/* ---------------------------------------------------------------------------
+   PICKED FOR YOU
+   ---------------------------------------------------------------------------
+   Four tools at the top, chosen by the category. Ten thousand tools behind one
+   search box is a catalogue, not a workshop, and the same four sat at the head
+   of it for everybody — somebody who draws was scrolling past a JSON formatter
+   to reach the drawing board.
+
+   The list lives in categories.js beside the rest of what a category decides,
+   so adding a category is one edit rather than two files that drift.
+
+   IT DISAPPEARS RATHER THAN EMPTYING. No category, a written-in one, or
+   Classic — the section is display:none and the page is the page it has always
+   been. Ids that do not resolve are dropped, so a typo costs a shortcut rather
+   than drawing a card that opens nothing.
+   --------------------------------------------------------------------------- */
+(function forYou() {
+  const C = window.NC_CATEGORY;
+  const sec = $('foryou');
+  if (!C || !sec || !C.tools) return;
+
+  function paint() {
+    const ids = C.tools() || [];
+    const picks = ids.map(id => ALL.find(t => t.id === id)).filter(Boolean);
+    if (!picks.length) { sec.style.display = 'none'; return; }
+    $('foryouTitle').textContent = 'Picked for ' + C.labelOf();
+    $('foryouSub').textContent =
+      'Because that is what you said you make. Everything else is below, and ' +
+      'you can change your category any time from Categories.';
+    $('foryouGrid').innerHTML = picks.map(card).join('');
+    $('foryouGrid').querySelectorAll('.tool').forEach(b => { b.onclick = () => open(b.dataset.id); });
+    sec.style.display = '';
+  }
+  paint();
+  /* Changing it on categories.html is a navigation, but the storage event
+     fires in any other tab that has this page open. */
+  addEventListener('nc-category', paint);
+  addEventListener('storage', paint);
+})();
 $('sheet').onclick = e => { if (e.target === $('sheet')) close(); };
 document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
@@ -2729,6 +2966,7 @@ const UNIT_TABLES = {
 /* The shortlist. Deliberately mixed across categories, because it also decides
    what the All tab opens on. */
 const HEAD = [
+  'editor', 'aieditor', 'draw',
   'word-counter', 'soundboard', 'cleanup', 'animate-drawing', 'sz-youtube-thumbnail', 'img-compress', 'password', 'json-formatter',
   'case-converter', 'lim-youtube-title', 'img-resize', 'percentage', 'base64',
   'tx-hashtag-extractor', 'sz-instagram-story', 'color', 'find-replace', 'hash',
@@ -2808,7 +3046,6 @@ window.ncSitemap = function (base) {
 
 </script>
 <script src='category-scene.js'></script>
-<script src='categories.js'></script>
 <script src='nova.js'></script>
 <script src='nova-ask.js' defer></script>
 <script src='nova-mascot.js' defer></script>

@@ -166,6 +166,15 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v36: NovaTools is personalised, and it gained three tools. A "Picked for
+   you" strip at the top takes its four from the category — Art gets the new
+   drawing board first, Tech the developer set — and disappears entirely for
+   Classic or no category. The drawing board is new and hands what you drew
+   straight to Animate a drawing, which until now needed paper, a dark pen and
+   a camera before it could do anything. The video editor and the AI Editor are
+   in the catalogue at last: the two largest tools on the site were the two not
+   listed on the tools page. tools.html and categories.js both changed and both
+   are cached. */
 /* v35: three things, and the first is a fix. A category with no photograph
    recorded "no photo" in sessionStorage for the whole visit, and sessionStorage
    survives a reload — so adding the nine files changed nothing until the tab
@@ -216,7 +225,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v35';
+const CACHE = 'novaclip-v36';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

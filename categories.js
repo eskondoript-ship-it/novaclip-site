@@ -73,41 +73,64 @@
     { id: 'gaming',    label: 'Gaming',              hint: 'Clips, reviews, let’s plays',
       seed: 'gaming',
       chips: [['editor', 'Edit a gameplay clip'], ['trends', 'What is trending'], ['hype', 'Find the boring bit']],
-      vibe: ['#7C5CFF', '#00E5FF'] },
+      vibe: ['#7C5CFF', '#00E5FF'],
+      tools: ['sz-youtube-thumbnail', 'chapters', 'soundboard', 'img-compress'] },
     { id: 'music',     label: 'Music',               hint: 'Covers, production, performance',
       seed: 'music covers and production',
       chips: [['editor', 'Cut a music video'], ['trends', 'Trending sounds'], ['ai', 'Write my description']],
-      vibe: ['#FF2E97', '#A855F7'] },
+      vibe: ['#FF2E97', '#A855F7'],
+      tools: ['soundboard', 'lim-youtube-description', 'tx-hashtag-extractor', 'sz-instagram-square-post'] },
     { id: 'sport',     label: 'Sport',               hint: 'Highlights, training, football',
       seed: 'sport highlights',
       chips: [['editor', 'Cut a highlight'], ['trends', 'Trending in sport'], ['hype', 'Find the flat seconds']],
-      vibe: ['#22C55E', '#A3E635'] },
+      vibe: ['#22C55E', '#A3E635'],
+      tools: ['chapters', 'sz-youtube-thumbnail', 'calc-engagement-rate-by-reach', 'img-resize'] },
     { id: 'irl',       label: 'Vlogs and everyday',  hint: 'Days, trips, life',
       seed: 'day in the life vlogs',
       chips: [['editor', 'Edit a vlog'], ['trends', 'Vlog ideas'], ['aiedit', 'Get it ready to post']],
-      vibe: ['#FB923C', '#FB7185'] },
+      vibe: ['#FB923C', '#FB7185'],
+      tools: ['sz-instagram-story', 'cleanup', 'chapters', 'lim-instagram-caption'] },
     { id: 'learning',  label: 'Learning and school', hint: 'Revision, explainers, study',
       seed: 'study and revision explainers',
       chips: [['ai', 'Ask a tutor'], ['trends', 'Explainer ideas'], ['editor', 'Edit a study video']],
-      vibe: ['#3B82F6', '#22D3EE'] },
+      vibe: ['#3B82F6', '#22D3EE'],
+      tools: ['word-counter', 'markdown', 'text-cleaner', 'chapters'] },
     { id: 'art',       label: 'Art and making',      hint: 'Drawing, crafts, builds',
       seed: 'art and craft process videos',
       chips: [['photo', 'Edit a photo of my work'], ['editor', 'Edit a process video'], ['trends', 'Art trends']],
-      vibe: ['#F97316', '#EC4899'] },
+      vibe: ['#F97316', '#EC4899'],
+      tools: ['draw', 'animate-drawing', 'palette', 'cleanup'] },
     { id: 'food',      label: 'Food',                hint: 'Cooking, baking, eating',
       seed: 'cooking and baking',
       chips: [['editor', 'Edit a recipe video'], ['photo', 'Edit a food photo'], ['trends', 'Food trends']],
-      vibe: ['#F59E0B', '#EF4444'] },
+      vibe: ['#F59E0B', '#EF4444'],
+      tools: ['sz-instagram-square-post', 'img-resize', 'lim-instagram-caption', 'palette'] },
     { id: 'comedy',    label: 'Comedy and sketches', hint: 'Bits, skits, edits',
       seed: 'comedy sketches and skits',
       chips: [['editor', 'Cut a sketch'], ['hype', 'Find the dead air'], ['trends', 'Comedy trends']],
-      vibe: ['#FACC15', '#FF4D9D'] },
+      vibe: ['#FACC15', '#FF4D9D'],
+      tools: ['tx-thread-splitter', 'soundboard', 'sz-tiktok-video-cover', 'chapters'] },
     { id: 'tech',      label: 'Tech',                hint: 'Phones, PCs, coding',
       seed: 'phones, PCs and coding',
       chips: [['editor', 'Edit a review'], ['trends', 'Tech trends'], ['ai', 'Write a spec rundown']],
-      vibe: ['#06B6D4', '#6366F1'] }
+      vibe: ['#06B6D4', '#6366F1'],
+      tools: ['json-formatter', 'regex', 'base64', 'markdown'] }
   ];
 
+  /* THE TOOLS EACH CATEGORY IS OFFERED FIRST.
+     NovaTools has 54 hand-built tools and about ten thousand generated ones,
+     and the same four sat at the top of that list for everybody. Somebody who
+     draws was scrolling past a JSON formatter to find the drawing board.
+
+     Four each, chosen for what that person actually opens rather than for what
+     is nearest in the catalogue — Art gets the drawing board and the animator
+     it feeds, Tech gets the developer set, Learning gets the writing ones.
+     Classic has none on purpose: it is the answer that means "leave the site
+     as it is", and reordering the tools page would be doing something with it.
+
+     Every id here is a real tool in tools.html. tools.html drops any it cannot
+     find rather than drawing a card that opens nothing, so a typo costs a
+     shortcut rather than a broken page. */
   /* The three offered when there is no category, or when the answer was
      written in and there is nothing to look up. The general case, said
      generally. */
@@ -195,6 +218,13 @@
     return (p && p.chips) ? p.chips : DEFAULT_CHIPS;
   }
 
+  /* The four tool ids to put at the top of NovaTools, or [] for a category
+     with none — Classic, and anything written in. */
+  function tools() {
+    var p = presetOf();
+    return (p && p.tools) ? p.tools : [];
+  }
+
   /* THE COLOURS THE SITE WEARS FOR THIS CATEGORY.
      Two of them, used as a pair of soft washes behind everything — see
      ncCategoryVibe() in nova.js for how they are painted. Chosen so that each
@@ -244,7 +274,8 @@
     KEY: KEY, PRESETS: PRESETS,
     get: get, set: set, clear: clear,
     asked: asked, markAsked: markAsked, labelOf: labelOf,
-    presetOf: presetOf, aiNote: aiNote, chips: chips, seed: seed, vibeOf: vibeOf
+    presetOf: presetOf, aiNote: aiNote, chips: chips, seed: seed, vibeOf: vibeOf,
+    tools: tools
   };
 
   /* A bare global beside the object, for the same reason nova.js exports
