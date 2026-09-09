@@ -166,6 +166,13 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v32: Trend Spotter became Studio in the rail, and the page behind that name
+   grew the Editor and the AI Editor as panels of its own. trends-nav.js is the
+   file that changed and it is cached, so without the bump a returning visitor
+   gets a rail with two rows that redirect away instead of two panels that open
+   in place. nova.js also gained the per-category background photo layer —
+   nothing ships in backgrounds/, and a category with no file there keeps its
+   colours, so this bump costs nothing to anybody who adds none. */
 /* v31: the front page's globe is gone and NovaClip's own mark turns there
    instead — nova-logo3d.js is a new shell file, index.html changed to load it,
    and nova-globe.js is deleted, so a cache still holding it would serve a page
@@ -183,7 +190,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v31';
+const CACHE = 'novaclip-v32';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

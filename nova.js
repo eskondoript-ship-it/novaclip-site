@@ -781,11 +781,122 @@ function ncCategoryVibe() {
         'radial-gradient(52% 44% at 92% 100%,var(--nc-cat-b) 0%,transparent 66%);' +
       'opacity:.16;transition:opacity .5s ease}' +
     'html[data-theme="light"][data-theme]::before{opacity:.10}' +
-    '@media (prefers-reduced-motion:reduce){html::before{transition:none}}';
+    '@media (prefers-reduced-motion:reduce){html::before{transition:none}}' +
+
+    /* THE PHOTOGRAPH, WHEN THERE IS ONE.
+       html::after is a second fixed layer above the wash and still behind
+       every page's content. It is empty until ncCategoryPhoto() finds a file
+       for this category and sets --nc-cat-img — see there for why it is a
+       probe rather than a plain url(). */
+    'html::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;' +
+      'background-image:var(--nc-cat-img,none);background-size:cover;' +
+      'background-position:center;opacity:var(--nc-cat-img-o,0);' +
+      /* Blurred and desaturated on purpose. A photograph at full strength
+         behind a page of text is a page you cannot read — this has to be a
+         room the site is standing in, not a picture the site is written on
+         top of. The scrim below does the rest. */
+      'filter:blur(6px) saturate(.85);transform:scale(1.06);' +
+      'transition:opacity .6s ease}' +
+    /* The scrim. Without it the headline sits on whatever the photo happens to
+       be at that pixel, which is different on every screen size — the one
+       thing a background image must never be allowed to decide. */
+    'html[data-theme="dark"][data-theme] body::before{content:"";position:fixed;inset:0;' +
+      'z-index:-1;pointer-events:none;background:linear-gradient(180deg,' +
+      'color-mix(in srgb,var(--nc-bg) 78%,transparent) 0%,' +
+      'color-mix(in srgb,var(--nc-bg) 90%,transparent) 100%);' +
+      'opacity:var(--nc-cat-img-o,0);transition:opacity .6s ease}' +
+    'html[data-theme="light"][data-theme] body::before{content:"";position:fixed;inset:0;' +
+      'z-index:-1;pointer-events:none;background:linear-gradient(180deg,' +
+      'color-mix(in srgb,var(--nc-bg) 84%,transparent) 0%,' +
+      'color-mix(in srgb,var(--nc-bg) 93%,transparent) 100%);' +
+      'opacity:var(--nc-cat-img-o,0);transition:opacity .6s ease}';
+
+  ncCategoryPhoto();
   return v;
 }
 window.ncCategoryVibe = ncCategoryVibe;
 addEventListener('nc-category', function () { ncCategoryVibe(); });
+
+/* ============================================================================
+   AND A PHOTOGRAPH BEHIND IT, IF ONE HAS BEEN ADDED
+   ============================================================================
+   Asked for directly: choose cooking, get a kitchen behind the site. The
+   colours above do that with no files at all, and this puts a real photograph
+   behind them when there is one to use.
+
+   THE FILES ARE NOT IN THIS REPO, AND THAT IS THE POINT OF THE PROBE
+
+   A photograph is a licensing decision and a 200KB decision, and neither is
+   one this file should make on somebody's behalf. So nothing is bundled.
+   Instead each category looks for its own file at a fixed path:
+
+       backgrounds/gaming.jpg      backgrounds/food.jpg
+       backgrounds/music.jpg       backgrounds/comedy.jpg
+       backgrounds/sport.jpg       backgrounds/tech.jpg
+       backgrounds/irl.jpg         backgrounds/learning.jpg
+       backgrounds/art.jpg
+
+   Drop a file in and that category gains a background on the next load. Drop
+   none in and every category still has its colours, and nothing 404s in a way
+   a reader can see. Adding one is adding a file, not editing any code.
+
+   IT IS AN Image() AND NOT A url() IN THE STYLESHEET, and the difference is
+   how OFTEN the miss costs anything. Either way the first look for a file that
+   is not there is a 404 — that is unavoidable and it is expected until a file
+   is added. A url() in the stylesheet repeats it on every page load, forever.
+   The probe asks once, writes the answer to sessionStorage, and every page
+   after that in the same visit reads the answer instead of asking again. It
+   also means the custom property is only ever set for a file that actually
+   decoded, so a corrupt or half-uploaded image leaves the colours alone rather
+   than showing a broken layer.
+
+   A WRITTEN-IN CATEGORY IS NEVER PROBED. "Warhammer painting" would be
+   backgrounds/warhammer%20painting.jpg, which is a guess at a filename rather
+   than a lookup — and a guessed URL built from something a person typed is not
+   a request worth making. Those keep their generated colours.
+   ============================================================================ */
+var NC_PHOTO_KEY = 'nc_cat_photo';        // sessionStorage: id -> '1' or '0'
+
+function ncCategoryPhoto() {
+  var C = window.NC_CATEGORY;
+  var root = document.documentElement;
+  var clear = function () {
+    root.style.removeProperty('--nc-cat-img');
+    root.style.removeProperty('--nc-cat-img-o');
+  };
+  if (!C || !C.presetOf || root.getAttribute('data-skin')) { clear(); return; }
+
+  var p = C.presetOf();
+  if (!p) { clear(); return; }                    /* written in — colours only */
+
+  var url = 'backgrounds/' + p.id + '.jpg';
+  var known = null;
+  try { known = sessionStorage.getItem(NC_PHOTO_KEY + ':' + p.id); } catch (e) {}
+
+  if (known === '0') { clear(); return; }
+  if (known === '1') { apply(); return; }
+
+  var probe = new Image();
+  probe.onload = function () {
+    try { sessionStorage.setItem(NC_PHOTO_KEY + ':' + p.id, '1'); } catch (e) {}
+    apply();
+  };
+  probe.onerror = function () {
+    try { sessionStorage.setItem(NC_PHOTO_KEY + ':' + p.id, '0'); } catch (e) {}
+    clear();
+  };
+  probe.src = url;
+
+  function apply() {
+    root.style.setProperty('--nc-cat-img', 'url("' + url + '")');
+    /* Dark carries a photograph better than white does: the same image at the
+       same strength on a light page fights the text rather than sitting under
+       it. */
+    var light = root.getAttribute('data-theme') === 'light';
+    root.style.setProperty('--nc-cat-img-o', light ? '.28' : '.42');
+  }
+}
+window.ncCategoryPhoto = ncCategoryPhoto;
 
 function ncSetTheme(pref) {
   try { localStorage.setItem(NC_THEME_KEY, pref); } catch (e) {}
@@ -3277,8 +3388,18 @@ const NC_NAV = [
      the video, and Studio is where you find out whether it worked. Studio now
      lives at the end of the Trend Spotter's own rail, in the flow it belongs
      to, so this group is the single door to all of it. */
+  /* CALLED STUDIO IN THE RAIL, AND NOWHERE ELSE.
+     The page is still Trend Spotter — its own heading, its own rail, its own
+     name inside itself, all unchanged. What changed is that the page now
+     carries the Editor and the AI Editor as well as the research tools, and
+     "Trend Spotter" stopped describing the door once the room behind it held
+     everything you make. Studio does.
+
+     tr('studio') already exists in twenty languages and already means exactly
+     this, so this is a different key, not a rewritten one — nothing that says
+     "Trend Spotter" today stops saying it. */
   { name: 'Channel', key: 'nav_channel', icon: 'analytics', items: [
-      ['trends.html', 'Trend Spotter', 'trends', 'trends']] },
+      ['trends.html', 'Studio', 'studio', 'trends']] },
   /* Everything you make lives in Create: the editor, publishing and the AI
      toolkit. Games and NovaLife are for learning and play, so they sit in
      their own Learn group instead of pretending to be creation tools. */

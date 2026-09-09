@@ -70,6 +70,18 @@
      know them; it will render whatever it renders into .nc-page, and .nc-page
      is hidden while one of these is showing, so it does not matter. */
   var PANELS = {
+    /* THE EDITOR AND THE AI EDITOR LIVE HERE NOW.
+       They were the two entries in LEAVE below — routes that redirected out of
+       this page to a full-screen tool — which meant the research and the
+       making were two different places and the trip between them lost the page
+       you were on. First in the list because they are what somebody comes to
+       do; the four research panels are what they came to decide. */
+    '/editor':     { label: 'Editor',
+                     icon: 'M4 6h16M4 12h10M4 18h7M17 11l4 4-4 4v-8z',
+                     why: 'Cut, trim and finish a video, here' },
+    '/publish':    { label: 'AI Editor',
+                     icon: 'M12 3v4M12 17v4M3 12h4M17 12h4M7.5 7.5l2.5 2.5M14 14l2.5 2.5M16.5 7.5L14 10M10 14l-2.5 2.5',
+                     why: 'It plans the edit, applies it, and gets it ready to post' },
     '/ideas':      { label: 'Video Ideas',
                      icon: 'M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z',
                      why: 'Turn a trend into titles, hooks and formats' },
@@ -87,16 +99,25 @@
                      why: 'Find the seconds where your finished edit loses people, and fill them' }
   };
 
-  /* Old hrefs in the bundle, and where each should now point. Editor and
-     Publish are not in the rail — they are in the main sidebar two rows away —
-     but somebody with #/editor bookmarked should still land on the editor
-     rather than on a placeholder. */
+  /* Old hrefs in the bundle, and where each should now point. All four are
+     panels in this file now, so all four are rewritten to a hash rather than
+     to another page.
+
+     LEAVE is empty and stays declared. It is the escape hatch for a route that
+     becomes a real page again later, and an empty object costs nothing next to
+     the router below having to grow an `if` back when that happens. */
   var REWRITE = {
     '/scripts':    '#/scripts',
-    '/thumbnails': '#/thumbnails'
+    '/thumbnails': '#/thumbnails',
+    '/editor':     '#/editor',
+    '/publish':    '#/publish'
   };
-  var LEAVE = { '/editor': 'editor.html', '/publish': 'publish.html' };
-  var DROP = ['/editor', '/publish'];
+  var LEAVE = {};
+  /* Nothing is dropped from the app's own rail any more: the two rows it
+     already had for Editor and Publish now point at panels that exist, so
+     removing them would be taking away a working link and adding an identical
+     one back two lines later. */
+  var DROP = [];
 
   function railItem(href) { return $('.nc-sidebar a[href="' + href + '"]'); }
 
@@ -139,12 +160,36 @@
     var side = $('.nc-sidebar');
     if (!side) return;
 
-    /* Point the app's own dead rows at the panels below. */
+    /* Point the app's own dead rows at the panels below, and give them the
+       names the rest of the site uses. The bundle's row said "Publish", which
+       is what that tool was called before it started doing the editing — the
+       main sidebar, the Ask card and this file's own panel all say "AI
+       Editor", and one row saying something else is a fourth name for a thing
+       that already has enough. */
     Object.keys(REWRITE).forEach(function (route) {
       var a = railItem('#' + route);
       if (!a) return;
-      a.href = REWRITE[route];
-      a.title = (PANELS[route] || {}).why || '';
+      /* Same reason as the label below: an attribute written to the value it
+         already holds still fires the observer. */
+      var want = REWRITE[route];
+      if (a.getAttribute('href') !== want) a.href = want;
+      var spec = PANELS[route] || {};
+      var why = spec.why || '';
+      if (a.getAttribute('title') !== why) a.title = why;
+      /* ONLY IF IT DIFFERS. fixRail() is called from a MutationObserver on
+         the whole body — React rebuilds this rail on every route change and
+         the observer is what puts these links back. Writing textContent
+         unconditionally replaces the text node even when the string is
+         identical, which IS a mutation, which called fixRail again: a loop
+         that pinned a core and never let the page finish loading. Measured as
+         trends.html taking over 110 seconds to reach DOMContentLoaded, from
+         4 seconds before. */
+      if (spec.label) {
+        var lab = [].slice.call(a.childNodes).filter(function (n) {
+          return n.nodeType === 1 && n.tagName !== 'svg' && !n.querySelector('svg');
+        }).pop();
+        if (lab && lab.textContent !== spec.label) lab.textContent = spec.label;
+      }
       a.classList.remove('nc-nav-item-active');
     });
 
@@ -221,6 +266,13 @@
       '.ncx .frame{border:1px solid color-mix(in srgb,currentColor 18%,transparent);',
       '  border-radius:16px;overflow:hidden;height:calc(100vh - 190px);min-height:560px}',
       '.ncx .frame iframe{width:100%;height:100%;border:0;display:block}',
+      /* The editor is a three-column application, not a form. At the shared
+         height its timeline sat below the fold inside its own frame, which is
+         a scrollbar inside a scrollbar — the thing this layout exists to
+         avoid. It gets the window instead, less only the page header. */
+      '.ncx .frame.tall{height:calc(100vh - 120px);min-height:640px}',
+      '.ncx .foot{margin-top:10px;font-size:.84rem;opacity:.65}',
+      '.ncx .foot a{text-decoration:underline}',
       '.ncx .idea{padding:14px 16px}',
       '.ncx .idea .ttl{font-weight:800;font-size:1.02rem;line-height:1.3}',
       '.ncx .idea .hook{opacity:.8;margin-top:5px;font-style:italic;line-height:1.5}',
@@ -678,6 +730,36 @@
         'allow="camera; microphone; clipboard-write"></iframe></div>';
   }
 
+  /* Both tools, in a frame, exactly the way Hype Lab already sits here. The
+     ?embed=1 is what makes it work: nova.js reads it and stands the rail, the
+     top bar and the coin badge down, so what arrives inside the frame is the
+     tool and none of the chrome this page is already wearing. */
+  function editorPanel(box) {
+    if (box.dataset.view === 'editor') return;
+    box.dataset.view = 'editor';
+    box.innerHTML =
+      '<h1>Editor</h1>' +
+      '<p class="lede">The full timeline — cut, trim, text, colour, sound and export. ' +
+      'Nothing is uploaded: the footage stays in this browser.</p>' +
+      '<div class="frame tall"><iframe id="ncxEditor" title="Editor" ' +
+        'src="editor.html?embed=1" loading="lazy" ' +
+        'allow="camera; microphone; clipboard-write"></iframe></div>' +
+      '<p class="foot">Short of room? <a href="editor.html">Open the Editor on its own page</a>.</p>';
+  }
+
+  function aiEditPanel(box) {
+    if (box.dataset.view === 'publish') return;
+    box.dataset.view = 'publish';
+    box.innerHTML =
+      '<h1>AI Editor</h1>' +
+      '<p class="lede">Drop in a clip and it plans the edit, applies it, and writes the title, ' +
+      'description and tags — ready to post to YouTube, TikTok or Shorts.</p>' +
+      '<div class="frame tall"><iframe id="ncxPublish" title="AI Editor" ' +
+        'src="publish.html?embed=1" loading="lazy" ' +
+        'allow="camera; microphone; clipboard-write"></iframe></div>' +
+      '<p class="foot">Short of room? <a href="publish.html">Open the AI Editor on its own page</a>.</p>';
+  }
+
   /* ==========================================================================
      THE ROUTER
      ========================================================================== */
@@ -702,6 +784,8 @@
       else if (h === '/scripts') scriptsPanel(box);
       else if (h === '/thumbnails') thumbPanel(box);
       else if (h === '/hype') hypePanel(box);
+      else if (h === '/editor') editorPanel(box);
+      else if (h === '/publish') aiEditPanel(box);
       else studioPanel(box);
       /* A panel opened from halfway down the trends list should start at the
          top of itself, not wherever the last screen was scrolled to. */
