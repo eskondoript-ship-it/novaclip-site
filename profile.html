@@ -223,6 +223,43 @@ code { font-family:var(--pt-mono); font-size:.88em; background:var(--pt-panel2);
 a { color:var(--pt-text); }
 .hide { display:none !important; }
 .rule { height:1px; background:var(--pt-line); margin:18px 0; }
+
+/* THE DEVICE LOCK PANEL.
+   A <details> rather than a tab strip, because there is one thing behind it
+   and a strip of one tab is a heading wearing a costume. */
+#lockWrap { margin-top:14px; }
+#lockWrap > summary {
+  cursor:pointer; list-style:none; display:inline-flex; align-items:center; gap:8px;
+  padding:10px 15px; border-radius:11px; font-size:.86rem; font-weight:650;
+  background:var(--pt-panel2); border:1px solid var(--pt-line); color:var(--pt-text);
+}
+#lockWrap > summary::-webkit-details-marker { display:none; }
+#lockWrap > summary::before { content:'▸'; font-size:.8em; opacity:.7; }
+#lockWrap[open] > summary::before { content:'▾'; }
+#lockWrap > summary:hover { border-color:var(--pt-dim); }
+
+/* THIS ONE CARD IS WIDER THAN THE COLUMN, ON PURPOSE.
+   The rest of Profile is a 560px reading column — a name, a password, two
+   buttons — and 560px is right for all of it. BioSentinel is not a form: it
+   is a panel with a tile grid, a scrolling strip of five modalities and a
+   live readout, drawn against a 760px breakpoint of its own. Inside 520px of
+   card it was folding into its narrow layout on a 1440px monitor, which is
+   the panel apologising for a constraint the screen does not have.
+
+   So it grows to 880px where there is room, centred on the column it breaks
+   out of. Capped against the viewport rather than the column so it can never
+   be the reason the page scrolls sideways. */
+#lockBox { width:min(880px, 100vw - 36px); max-width:none;
+           margin-left:50%; transform:translateX(-50%); }
+@media (max-width:600px) { #lockBox { width:auto; margin-left:0; transform:none; } }
+
+/* 760px is BioSentinel's own single-column breakpoint. Below it the panel
+   lays itself out for a narrow screen and needs the height instead, which is
+   why the two are different numbers rather than one guess. */
+.lockframe { margin-top:13px; border-radius:14px; overflow:hidden;
+             border:1px solid var(--pt-line); background:#080b14; }
+.lockframe iframe { display:block; width:100%; height:900px; border:0; }
+@media (max-width:760px) { .lockframe iframe { height:1240px; } }
 </style>
 </head>
 <body>
@@ -272,6 +309,54 @@ a { color:var(--pt-text); }
 
     <p class='note'>Your recovery code is the other way in. Keep it somewhere —
        it is what gets you back if you forget the password.</p>
+  </div>
+
+  <!-- DEVICE LOCK ----------------------------------------------------------
+       BioSentinel lives here now, and not in the rail.
+
+       It was its own top-level page, which put "biometrics" beside "Games" and
+       "Socials" as though it were somewhere you go rather than a setting you
+       turn on once. It is a lock on this account on this device, and the place
+       people look for a lock is the page with their name and their password on
+       it. So this is where it is, and the rail is one row shorter.
+
+       OUTSIDE #inBox, deliberately. The lock is on this browser, not on an
+       account — somebody who has never signed in can still set one, and
+       hiding it until they do would hide it from exactly the person most
+       likely to be sharing a machine. It sits under the account card either
+       way.
+
+       The page itself is unchanged and still reachable at /biometrics.html —
+       people have it bookmarked, and its own design is built for a full
+       window. This embeds it with ?embed=1, which is the same thing Games,
+       Socials and NovaClip AI already do to put an existing page inside
+       another: nova.js sees the flag and stands its rail, its top bar and its
+       coin badge down, so what is left is the panel and nothing else. -->
+  <div class='card' id='lockBox'>
+    <div class='hrow'>
+      <h2 style='font-size:1.12rem'>Lock this device</h2>
+      <span class='chip'>Optional</span>
+    </div>
+    <p class='sub'>Face, fingerprint, voice, typing rhythm or a passkey — whichever
+       this device actually has. Everything is measured and stored in this browser;
+       nothing is uploaded, and no scan ever leaves the machine.</p>
+
+    <!-- Collapsed by default. It is a large panel and most people set it up
+         once and never open it again; loading it on every visit to Profile
+         would make the page slower for everybody to serve the few. <details>
+         does the whole job with no script, and the iframe below is not
+         fetched until it is opened. -->
+    <details id='lockWrap'>
+      <summary>Set up or change the lock</summary>
+      <div class='lockframe'>
+        <iframe id='lockFrame' title='BioSentinel — device lock'
+                loading='lazy' src='biometrics.html?embed=1'></iframe>
+      </div>
+    </details>
+
+    <p class='note'>Forgotten which device you set this up on? The lock only
+       exists on the browser it was enrolled in — signing in somewhere else is
+       unaffected by it, and your recovery code still works.</p>
   </div>
 
   <!-- SIGNED OUT ----------------------------------------------------------- -->

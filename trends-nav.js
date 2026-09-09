@@ -56,6 +56,12 @@
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
 
+  /* What this creator makes, from categories.js. '' when nothing is set, so a
+     prompt is never padded with a sentence that says nothing. */
+  function catNote() {
+    return (typeof window.ncCategoryNote === 'function') ? window.ncCategoryNote() : '';
+  }
+
   /* ==========================================================================
      THE RAIL
      ========================================================================== */
@@ -297,6 +303,15 @@
       var s0 = sessionStorage.getItem('nc_trend_seed');
       if (s0 && !seed.value) seed.value = s0;
     } catch (e) {}
+    /* Failing that, what they told the site they make. An empty box on the
+       page whose whole job is telling somebody what to film is the page
+       asking THEM the question they came here to have answered — and the
+       answer was already on the device. A seed from a previous search still
+       wins, because that is a more recent statement of intent than a category
+       chosen once. */
+    if (!seed.value && window.NC_CATEGORY && window.NC_CATEGORY.seed) {
+      seed.value = window.NC_CATEGORY.seed();
+    }
 
     $('#ncxIdeaGo', box).addEventListener('click', async function () {
       var t = seed.value.trim();
@@ -310,7 +325,7 @@
       list.innerHTML = '';
       try {
         var raw = await window.ncAsk(
-          'Give six short-video ideas for a teenage creator.\n' +
+          'Give six short-video ideas for a teenage creator.' + catNote() + '\n' +
           'Subject: ' + t + '\n' +
           'Shape: ' + $('#ncxShape', box).value + '\n' +
           'Audience: ' + $('#ncxAud', box).value + '\n\n' +

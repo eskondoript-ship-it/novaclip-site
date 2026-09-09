@@ -160,14 +160,23 @@
    leaderboard.js, reaction.html and aim.html are all cached. */
 /* v29: the rail and the assistants. Progress left the rail (its two halves now
    live on pricing.html and the new history.html), History and Categories
-   joined it, and biometrics is gone entirely — nine files deleted, so an old
-   cache holding biometrics.html or jarvis.js would still serve pages that no
-   longer exist. This bump is what retires them. Two assistants were replaced
-   by one: the n8n chat widget and the Nova voice pill are both removed, and
-   nova-ask.js asks a single typed question three seconds in. categories.js is
-   the one copy of the category list, shared by the first-run dialog and
-   categories.html. */
-const CACHE = 'novaclip-v29';
+   joined it, and jarvis.js and nova-guide.js are deleted — an old cache
+   holding either would still serve pages that no longer exist, and this bump
+   is what retires them. Two assistants were replaced by one: the n8n chat
+   widget and the Nova voice pill are both removed, and nova-ask.js asks a
+   single typed question three seconds in. categories.js is the one copy of
+   the category list, shared by the first-run dialog and categories.html. */
+/* v30: two buttons, a category that does something, and BioSentinel back.
+   The bar gained a switch that puts the rail away and an "Ask Nova" button
+   that reopens the card, so nova.js is the reason for the bump on its own.
+   The category now steers the Ask card's shortcuts, Trend Spotter's first
+   search and the AI prompts on ai.html, publish.html and trends-nav.js —
+   every one of those is a cached file that would otherwise be served from
+   v29 without the wiring. And biometrics.html is back, set up from inside
+   profile.html rather than from the rail: the six files it needs are in the
+   shell again, and profile.html has to be re-fetched or the frame that loads
+   it does not exist. */
+const CACHE = 'novaclip-v30';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -263,6 +272,22 @@ const SHELL = [
      wifi off on purpose. */
   '/study.html',
   '/rhythm.js',
+  /* BIOSENTINEL, back in the shell.
+     It is set up from a frame inside profile.html now rather than from its own
+     row in the rail, which changes where it is reached from and nothing about
+     what it needs. guard.js is the one that matters most here: nova.js injects
+     it into every page, so a cache that has the pages and not the lock is a
+     cache where a locked device opens straight up. */
+  '/biometrics.html',
+  '/biometric.js',
+  '/biosentinel.js',
+  '/passkey.js',
+  '/locker.js',
+  '/guard.js',
+  '/theme-biometric.css',
+  /* The page the frame lives on. Cached because a shell holding biometrics
+     without the page that opens it is a lock with no keyhole. */
+  '/profile.html',
   '/leaderboard.js',
   '/tools-data.js',
   '/tools-extra.js',

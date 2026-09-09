@@ -490,6 +490,18 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
     'to ask them first, and if they mention being hurt, bullied or unsafe, tell them to talk to a trusted ' +
     'adult and stop the lesson there. ';
 
+  /* The one thing the tutors never knew and always needed. categories.js
+     stores what this creator actually makes; every prompt that gives advice
+     about THEIR channel gets it, the same way persona() already appends
+     langInstruction(). Answers '' when nothing is set, so an unset category
+     costs a prompt nothing.
+
+     Not added to the clip extractor or the thumbnail image prompt: the first
+     reads a transcript and the category tells it nothing the transcript does
+     not, and the second draws a picture — a stray sentence about food in a
+     gaming thumbnail is a worse thumbnail, not a personalised one. */
+  const catNote = () => (typeof ncCategoryNote === 'function') ? ncCategoryNote() : '';
+
   function proDepth() {
     return (typeof ncProHas === 'function' && ncProHas('tools'))
       ? { words: 400, extra: 'Take your time. Show your reasoning, give a worked example, and add one thing they have not thought of. ' }
@@ -497,7 +509,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   }
   const genz = () => (typeof ncGenZ === 'function') ? ncGenZ() : true;
   function persona() {
-    return PERSONAS[$('subject').value] + METHOD + (genz() ? SLANG : PLAIN) + proDepth().extra +
+    return PERSONAS[$('subject').value] + METHOD + catNote() + (genz() ? SLANG : PLAIN) + proDepth().extra +
            (typeof langInstruction === 'function' ? langInstruction() : '');
   }
   function paintVibe() { $('vibe').textContent = genz() ? 'Gen Z 🔥' : 'Plain English'; }
@@ -540,7 +552,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
     $('dirBtn').disabled = true; $('dirOut').innerHTML = '';
     busy('dirSay', true, 'Writing the shot list.');
     const r = await ncAsk(
-      'You are NovaClip AI Video Director, planning a video for a creator aged 13-18. ' + METHOD +
+      'You are NovaClip AI Video Director, planning a video for a creator aged 13-18. ' + METHOD + catNote() +
       '\nPlatform: ' + $('platform').value + '\nIdea: "' + idea + '"\n\n' +
       'Reply with ONE JSON object and nothing else:\n' +
       '{"viralTitle":"short high-CTR title that the video actually delivers",' +
@@ -616,7 +628,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
     $('titleBtn').disabled = true; $('titleOut').innerHTML = '';
     busy('titleSay', true);
     const r = await ncAsk(
-      'Score these YouTube titles for a creator aged 13-18. The video is: ' +
+      'Score these YouTube titles for a creator aged 13-18.' + catNote() + ' The video is: ' +
       ($('tAbout').value.trim() || 'not described') + '\n\nTitles:\n' +
       list.map((t, i) => (i + 1) + '. ' + t).join('\n') + '\n\n' +
       'Reply with ONE JSON object and nothing else:\n' +
@@ -647,7 +659,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
     $('seoBtn').disabled = true; $('seoOut').innerHTML = '';
     busy('seoSay', true);
     const r = await ncAsk(
-      'Write YouTube SEO for a creator aged 13-18. The video: ' + about + '\n\n' +
+      'Write YouTube SEO for a creator aged 13-18.' + catNote() + ' The video: ' + about + '\n\n' +
       'Reply with ONE JSON object and nothing else:\n' +
       '{"description":"two short paragraphs; the FIRST LINE has to work alone because that is all ' +
       'anyone reads before pressing more",' +

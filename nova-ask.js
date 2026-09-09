@@ -11,6 +11,21 @@
  * top right and asks what they want to do today. They TYPE it. It reads the
  * answer and goes there.
  *
+ * AND THERE IS A BUTTON FOR IT
+ *
+ * "Ask Nova", at the right-hand end of the top bar, built by nova.js and
+ * calling open() here. The three-second card is one moment, and somebody who
+ * was reading something else when it arrived had no way back to it — which
+ * made the one assistant on the site available only by luck. The button is
+ * the way back, on every page, at any time.
+ *
+ * ONCE PER VISIT MEANS ONCE PER ARRIVAL, NOT ONCE PER PAGE
+ *
+ * sessionStorage is exactly that lifetime: a new tab, or coming back after
+ * closing the site, asks again; walking from Home to the Editor does not. A
+ * card that reopened on every navigation would be the n8n widget with extra
+ * steps, and the button covers every case in between.
+ *
  * WHY TYPED AND NOT SPOKEN
  *
  * Asked for directly, and right: a microphone permission prompt three seconds
@@ -196,8 +211,10 @@
     }
     say('Thinking…');
     var ids = GO.map(function (g) { return g.id; }).join(', ');
+    var note = (typeof window.ncCategoryNote === 'function') ? window.ncCategoryNote() : '';
     var prompt =
       'A teenager on the NovaClip site typed: "' + String(text).slice(0, 200) + '"\n' +
+      (note ? note.trim() + '\n' : '') +
       'Which ONE of these pages should they be taken to?\n' + ids + '\n' +
       'Answer with the single id and nothing else. If none of them genuinely fits ' +
       'what they asked for, answer exactly: no';
@@ -230,6 +247,38 @@
     askAI(text);
   }
 
+  /* THE THREE SHORTCUTS, FROM WHAT THEY SAID THEY MAKE.
+     They were fixed at "Edit a video / Find an idea / Play something", which
+     is the right general answer and the wrong one for anybody who has
+     actually told us what they do — somebody who makes cooking videos was
+     being offered a gameplay shortcut on every visit. categories.js owns the
+     table; this only draws it, and falls back to the same three as before
+     when nothing is set or the answer was written in.
+
+     Escaped, because a written-in category can reach these labels and any
+     string a person typed is a string that can contain a bracket. */
+  function esc(t) {
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function chipHTML() {
+    var rows = (window.NC_CATEGORY && window.NC_CATEGORY.chips)
+      ? window.NC_CATEGORY.chips()
+      : [['editor', 'Edit a video'], ['trends', 'Find an idea'], ['games', 'Play something']];
+    var out = '';
+    for (var i = 0; i < rows.length; i++) {
+      /* Only ids this file can actually reach get drawn. A chip that goes
+         nowhere is worse than one chip fewer. */
+      for (var j = 0; j < GO.length; j++) {
+        if (GO[j].id === rows[i][0]) {
+          out += '<button data-go="' + esc(rows[i][0]) + '">' + esc(rows[i][1]) + '</button>';
+          break;
+        }
+      }
+    }
+    return out;
+  }
+
   function open() {
     if (el) return;
     markSeen();          /* claimed by the document that actually shows it */
@@ -251,11 +300,7 @@
         '<button class="go" id="ncaGo">Go</button>' +
       '</div>' +
       '<div class="nca-said" id="ncaSaid"></div>' +
-      '<div class="nca-chips">' +
-        '<button data-go="editor">Edit a video</button>' +
-        '<button data-go="trends">Find an idea</button>' +
-        '<button data-go="games">Play something</button>' +
-      '</div>';
+      '<div class="nca-chips">' + chipHTML() + '</div>';
     document.body.appendChild(el);
 
     /* The same Nova the guide used. She is the only piece of the old assistant

@@ -658,6 +658,12 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     e.target.value = '';
     drawTags();
   });
+  /* What this creator makes, from categories.js, appended to the prompts that
+     give advice about their channel. Empty when nothing is set. The edit plan
+     itself is deliberately left alone: it reads the footage, and what a clip
+     needs at second four is not a matter of taste about the channel. */
+  const catNote = () => (typeof ncCategoryNote === 'function') ? ncCategoryNote() : '';
+
 
   $('metaBtn').onclick = async () => {
     const about = $('about').value.trim();
@@ -666,7 +672,7 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     $('metaBtn').disabled = true;
     say('metaSay', 'wait', 'Writing…', '');
     const r = await window.ncAsk(
-      'Write YouTube metadata for a video by a creator aged 13-18. The video is about: ' + about +
+      'Write YouTube metadata for a video by a creator aged 13-18.' + catNote() + ' The video is about: ' + about +
       '\nIt is ' + fmt(dur) + ' long and ' + ($('vid').videoWidth >= $('vid').videoHeight ? 'landscape' : 'vertical') + '.\n' +
       'Answer with ONE line of JSON and nothing else:\n' +
       '{"title":"<under 70 characters, says what the video IS, no clickbait that the video does not pay off>",' +
@@ -755,7 +761,7 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     if (typeof window.ncAsk !== 'function') return say('thumbSay', 'no', 'The AI is not loaded', '');
     say('thumbSay', 'wait', 'Thinking…', '');
     const r = await window.ncAsk(
-      'Give ONE line of thumbnail text for a video about: ' + about +
+      'Give ONE line of thumbnail text for a video about: ' + about + '.' + catNote() +
       '. Under 20 characters, upper case, no quotes, no emoji, no full stop. ' +
       'It has to be readable at the size of a postage stamp, so short beats clever. ' +
       'Reply with the words only.', { maxTokens: 60, temperature: 0.9 });
@@ -824,7 +830,7 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     if (typeof window.ncAsk !== 'function') return say('schedSay', 'no', 'The AI is not loaded', '');
     say('schedSay', 'wait', 'Thinking…', '');
     const r = await window.ncAsk(
-      'A creator aged 13-18 asks when to post this video: ' + ($('about').value.trim() || $('title').value.trim() || 'a video') +
+      'A creator aged 13-18 asks when to post this video: ' + ($('about').value.trim() || $('title').value.trim() || 'a video') + '.' + catNote() +
       '. Answer in under 45 words. Give one specific day and time window and the reason. ' +
       'Be honest that posting time matters far less than the first five seconds of the video, ' +
       'and say so in one clause. No invented statistics.',

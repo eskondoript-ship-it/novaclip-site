@@ -182,6 +182,11 @@ const T = {
 
   quests: { en:"Rewards", zh:"奖励", hi:"रिवॉर्ड्स", es:"Recompensas", ar:"الجوائز", fr:"Récompenses", bn:"পুরস্কার", pt:"Recompensas", ru:"Награды", ur:"انعامات", id:"Hadiah", de:"Belohnungen", ja:"リワード", tr:"Ödüller", ko:"보상", fa:"جوایز", uk:"Нагороди", it:"Ricompense", pl:"Nagrody", vi:"Phần thưởng" },
   achievements: { en:"Achievements", zh:"成就", hi:"उपलब्धियाँ", es:"Logros", ar:"الإنجازات", fr:"Succès", bn:"অর্জন", pt:"Conquistas", ru:"Достижения", ur:"کامیابیاں", id:"Pencapaian", de:"Erfolge", ja:"実績", tr:"Başarılar", ko:"업적", fa:"دستاوردها", uk:"Досягнення", it:"Obiettivi", pl:"Osiągnięcia", vi:"Thành tựu" },
+  /* The label on the bar's Ask button. tr() returns an empty string for a key
+     it has never heard of, so a button labelled from a missing key is a blank
+     button — which is why this is here rather than left in English. */
+  ui_pick_cat: { en:"Pick a category", zh:"选择分类", hi:"श्रेणी चुनें", es:"Elige una categoría", ar:"اختر فئة", fr:"Choisir une catégorie", bn:"বিভাগ বাছুন", pt:"Escolhe uma categoria", ru:"Выбери категорию", ur:"زمرہ منتخب کریں", id:"Pilih kategori", de:"Kategorie wählen", ja:"カテゴリを選ぶ", tr:"Bir kategori seç", ko:"카테고리 선택", fa:"یک دسته انتخاب کن", uk:"Обери категорію", it:"Scegli una categoria", pl:"Wybierz kategorię", vi:"Chọn danh mục" },
+  asknova: { en:"Ask Nova", zh:"问 Nova", hi:"Nova से पूछें", es:"Pregunta a Nova", ar:"اسأل نوفا", fr:"Demander à Nova", bn:"Nova-কে জিজ্ঞাসা", pt:"Pergunte à Nova", ru:"Спросить Nova", ur:"Nova سے پوچھیں", id:"Tanya Nova", de:"Nova fragen", ja:"Novaに聞く", tr:"Nova'ya sor", ko:"Nova에게 묻기", fa:"از Nova بپرس", uk:"Запитати Nova", it:"Chiedi a Nova", pl:"Zapytaj Nova", vi:"Hỏi Nova" },
   categories: { en:"Categories", zh:"分类", hi:"श्रेणियाँ", es:"Categorías", ar:"الفئات", fr:"Catégories", bn:"বিভাগ", pt:"Categorias", ru:"Категории", ur:"زمرے", id:"Kategori", de:"Kategorien", ja:"カテゴリ", tr:"Kategoriler", ko:"카테고리", fa:"دسته‌ها", uk:"Категорії", it:"Categorie", pl:"Kategorie", vi:"Danh mục" },
   history: { en:"History", zh:"历史", hi:"इतिहास", es:"Historial", ar:"السجل", fr:"Historique", bn:"ইতিহাস", pt:"Histórico", ru:"История", ur:"تاریخ", id:"Riwayat", de:"Verlauf", ja:"履歴", tr:"Geçmiş", ko:"기록", fa:"تاریخچه", uk:"Історія", it:"Cronologia", pl:"Historia", vi:"Lịch sử" },
   ask: { en:"Ask", zh:"提问", hi:"पूछें", es:"Preguntar", ar:"اسأل", fr:"Demander", bn:"জিজ্ঞাসা", pt:"Perguntar", ru:"Спросить", ur:"پوچھیں", id:"Tanya", de:"Fragen", ja:"質問", tr:"Sor", ko:"질문", fa:"بپرس", uk:"Запитати", it:"Chiedi", pl:"Zapytaj", vi:"Hỏi" },
@@ -858,6 +863,43 @@ const NC_THEME_ICONS = {
    ============================================================================ */
 const NC_BAR_H = 52;
 
+/* ============================================================================
+   THE RAIL'S OWN SWITCH
+   ============================================================================
+   Read and applied at the top of this file rather than inside ncBuildBar,
+   because ncBuildBar runs on DOMContentLoaded and this has to be on the
+   element BEFORE the first paint or a reader who has put the rail away sees it
+   flash in and slide out again on every single navigation. nova.js is a
+   parser-blocking script at the end of <body>, so a class set here lands
+   before the page is drawn.
+
+   The state is one flag on this device. It is not an account setting and does
+   not sync: "I want more room on this screen" is about the screen, and a
+   reader on a laptop and a reader on a big monitor want different answers.
+   ============================================================================ */
+var NC_RAIL_KEY = 'nc_rail_off';
+
+function ncRailHidden() {
+  try { return localStorage.getItem(NC_RAIL_KEY) === '1'; } catch (e) { return false; }
+}
+function ncApplyRail(off) {
+  document.documentElement.classList.toggle('nc-rail-off', !!off);
+  var b = document.getElementById('ncrail');
+  if (b) {
+    b.setAttribute('aria-pressed', off ? 'true' : 'false');
+    b.setAttribute('aria-label', off ? 'Show the sidebar' : 'Hide the sidebar');
+    b.title = off ? 'Show the sidebar' : 'Hide the sidebar';
+  }
+}
+function ncToggleRail() {
+  var off = !ncRailHidden();
+  try { localStorage.setItem(NC_RAIL_KEY, off ? '1' : '0'); } catch (e) {}
+  ncApplyRail(off);
+}
+window.ncToggleRail = ncToggleRail;
+/* Immediately, at parse time — see above. */
+if (ncRailHidden()) document.documentElement.classList.add('nc-rail-off');
+
 function ncBuildBar() {
   if (NC_EMBED) return null;                       // pages embedded in a tab host
   let bar = document.getElementById('ncbar');
@@ -1053,6 +1095,45 @@ function ncBuildBar() {
     '@media (min-width:1024px){#ncgear{display:none}}' +
     /* The sidebar copy would be a second set of the same three controls. */
     '.sidebar .themewrap{display:none !important}' +
+
+    /* THE TWO BUTTONS THE BAR GAINED.
+       Both are square-ish chrome in the same shape as the gear, so the bar
+       reads as one row of controls rather than three different ideas. */
+    '#ncrail{display:flex;align-items:center;justify-content:center;' +
+      'width:36px;height:36px;flex:0 0 auto;padding:0;border-radius:10px;' +
+      'cursor:pointer;color:var(--nc-text,inherit);' +
+      'background:var(--nc-card,rgba(255,255,255,.05));' +
+      'border:1px solid var(--nc-line2,rgba(255,255,255,.15))}' +
+    '#ncrail svg{width:18px;height:18px;display:block}' +
+    '#ncrail:hover{border-color:var(--nc-cyan,#00E5FF)}' +
+    /* Pressed means the rail is away. The filled state says which way round
+       it is without needing the tooltip, because the icon itself is the same
+       shape either way. */
+    '#ncrail[aria-pressed="true"]{background:var(--nc-cyan,#00F0FF);color:#04121a;' +
+      'border-color:transparent}' +
+    /* Below 761px the rail IS the navigation, so the switch that removes it
+       is not offered. */
+    '@media (max-width:760px){#ncrail{display:none}}' +
+
+    /* Ask Nova sits at the far right of the flat bar, under the corner the
+       card opens in. margin-left:auto rather than a spacer element, so it
+       still lands right when the controls collapse into the phone sheet and
+       the row is only this and the two icons. */
+    '#ncaskbtn{margin-left:auto;display:flex;align-items:center;gap:7px;' +
+      'flex:0 0 auto;height:36px;padding:0 13px;border-radius:99px;cursor:pointer;' +
+      'font:inherit;font-size:.78rem;font-weight:700;letter-spacing:.01em;' +
+      'color:var(--nc-text,inherit);' +
+      'background:var(--nc-card,rgba(255,255,255,.05));' +
+      'border:1px solid var(--nc-line2,rgba(255,255,255,.15))}' +
+    '#ncaskbtn svg{width:16px;height:16px;display:block;flex:0 0 auto;' +
+      'color:var(--nc-cyan,#00E5FF)}' +
+    '#ncaskbtn:hover{border-color:var(--nc-cyan,#00E5FF)}' +
+    /* The words go before the bar does. Under about 560px the row is the two
+       icons and this, and "Ask Nova" is the first thing that can be spared —
+       the speech bubble is not ambiguous, and the tooltip and aria-label both
+       still say it in full. */
+    '@media (max-width:560px){#ncaskbtn{padding:0;width:36px;justify-content:center}' +
+      '#ncaskbtn span{display:none}}' +
     /* The seventy lines that stood here placed the Jarvis pill in the bar's
        reserved gap, across four width bands, and docked its sheet under the
        bar. Every selector in them read `.jr-pill` or `.jr-sheet`, and both
@@ -1087,6 +1168,23 @@ function ncBuildBar() {
   const inner = document.createElement('div');
   inner.className = 'themewrap';              // what the two builders look for
   bar.appendChild(inner);
+
+  /* PUT THE RAIL AWAY, BRING IT BACK.
+     First in the bar, because the bar's left edge IS the rail's right edge on
+     a desktop — the button sits exactly where the thing it controls stops.
+     Hidden below 761px by the stylesheet above: down there the rail is the
+     bottom strip and it is the only navigation there is. */
+  const railBtn = document.createElement('button');
+  railBtn.id = 'ncrail';
+  railBtn.type = 'button';
+  railBtn.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<rect x="3" y="4" width="18" height="16" rx="2"></rect>' +
+    '<path d="M9 4v16"></path>' +
+    '</svg>';
+  railBtn.addEventListener('click', function (e) { e.stopPropagation(); ncToggleRail(); });
+  bar.insertBefore(railBtn, inner);
 
   /* THE ONE BUTTON THE PHONE SHEET HANGS OFF.
      Built on every screen and hidden by CSS above 760px, rather than built
@@ -1131,6 +1229,35 @@ function ncBuildBar() {
     gear.setAttribute('aria-expanded', 'false');
     gear.focus();
   });
+
+  /* ASK NOVA, ON PURPOSE.
+     The card still arrives on its own three seconds into a visit, but that is
+     one moment and a reader who was reading something else at the time had no
+     way back to it. This is that way back, and it is at the RIGHT end of the
+     bar because that is where the card opens — a button on one side of the
+     screen opening a panel on the other is a small puzzle nobody should have
+     to solve.
+
+     It resolves NC_ASK at click time rather than holding a reference: this
+     file is a plain script and nova-ask.js is deferred, so nova-ask.js has not
+     run yet when this button is built. If for any reason it never arrives, the
+     button says so instead of doing nothing. */
+  const askBtn = document.createElement('button');
+  askBtn.id = 'ncaskbtn';
+  askBtn.type = 'button';
+  askBtn.title = 'Ask Nova what to do';
+  askBtn.setAttribute('aria-label', 'Ask Nova what to do');
+  askBtn.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"></path>' +
+    '</svg><span data-t="asknova">Ask Nova</span>';
+  askBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (window.NC_ASK && window.NC_ASK.open) window.NC_ASK.open();
+    else toast('The assistant has not loaded on this page.');
+  });
+  bar.appendChild(askBtn);
 
   document.body.insertBefore(bar, document.body.firstChild);
 
@@ -1592,10 +1719,12 @@ const SKILLS = {
      have existed. Found by listing every logSkill() call on the site and
      comparing it against this table, which is a check worth repeating any
      time a new one is added. */
-  /* `biometric` is gone with BioSentinel. logSkill() silently ignores an id
-     that is not here, so the removal is safe — but leaving the row in would
-     have put a task on the certificate list that nothing on the site can
-     complete, which is the exact fault the Arena row had. */
+  /* Back, and completable again. The row was pulled when BioSentinel was
+     deleted — a certificate task nothing on the site can finish is the exact
+     fault the old Arena row had. The lock is set up from the Profile page now
+     rather than from its own place in the rail, but it is the same call from
+     the same file, so the task can be finished exactly as before. */
+  biometric:  { icon:'', label:'Set up face, voice or a passkey on this device' },
   community:  { icon:'', label:'Join in on the community page' },
   editing:    { icon:'', label:'Publish or animate something you made' },
   reaction:   { icon:'', label:'Finish a set of five in Reaction' },
@@ -1800,7 +1929,14 @@ ncFit.textContent =
    literally the same width as the page it is being matched to. The old
    232 truncated "Trend Spotter" and the profile name once the foot cards
    put an avatar in front of the text. */
-":root { --nc-rail: clamp(176px, 14vw, 248px); }" +
+/* Split in two so the rail can be put away without losing its own width.
+   --nc-rail-w is how WIDE the rail is; --nc-rail is how much room the page
+   leaves FOR it. They are the same number until somebody hides it, and then
+   the second goes to zero while the first stays — a rail collapsed to 0px
+   wide has nothing to slide off the edge, so it would blink out instead of
+   leaving. Everything that offsets for the rail reads --nc-rail and needs no
+   further change; only .sidebar itself reads --nc-rail-w. */
+":root { --nc-rail-w: clamp(176px, 14vw, 248px); --nc-rail: var(--nc-rail-w); }" +
 "@media (min-width: 761px) {" +
   /* Only pages that actually HAVE a rail get pushed over by it. editor.html,
      game.html, trends.html, parent.html and pricing.html have no .sidebar —
@@ -1816,7 +1952,7 @@ ncFit.textContent =
   /* and its own 40px inner padding becomes the same ~60px every other
      page uses, rather than 40 on top of a 210 that is now doubled */
   ".main { padding-left: clamp(20px, 3.4vw, 64px); }" +
-  ".sidebar { width: var(--nc-rail); }" +
+  ".sidebar { width: var(--nc-rail-w); }" +
   /* The brand and the first nav rows sat 20px of page padding plus a further
      margin below the rail's own top edge, which put the logo a thumb's width
      from the top on every page. The rail is the site's top edge now — the
@@ -1868,6 +2004,33 @@ ncFit.textContent =
   "html[dir=rtl] .nc-sidebar { left:auto; right:0; border-right:0; " +
     "border-left:1px solid var(--nc-border,rgba(255,255,255,.08)); }" +
   "html[dir=rtl] body.nova .nc-app { padding-left:0; padding-right:var(--nc-sidebar,248px); }" +
+
+  /* ---------------------------------------------------------------------
+     PUTTING THE RAIL AWAY
+     ---------------------------------------------------------------------
+     Asked for, and it costs one variable. Everything on this site that makes
+     room for the rail — the body margin, .content/.shell/.main, and the top
+     bar's left edge — reads --nc-rail, so setting it to zero reclaims all of
+     that in one line and nothing else has to know.
+
+     The rail then slides out rather than vanishing, which is the difference
+     between "I put that away" and "where did my navigation go".
+
+     DESKTOP ONLY, deliberately. Below 761px every page turns the rail into
+     the strip along the bottom, and that strip is the whole of the
+     navigation on a phone — a button that removes it would leave a reader
+     with no way to anywhere. The button hides itself down there too. */
+  "html.nc-rail-off { --nc-rail: 0px; }" +
+  ".sidebar { transition: transform .26s cubic-bezier(.2,.9,.3,1.1); }" +
+  "html.nc-rail-off .sidebar { transform: translateX(-101%); pointer-events: none; }" +
+  "html.nc-rail-off[dir=rtl] .sidebar { transform: translateX(101%); }" +
+  /* Trend Spotter's own rail is a different element with its own width
+     variable, and it does not clip its contents — collapsed to 0px wide its
+     buttons would still be drawn, stacked over the page. It is taken out
+     rather than slid out. */
+  "html.nc-rail-off { --nc-sidebar: 0px; }" +
+  "html.nc-rail-off .nc-sidebar { display: none; }" +
+  "@media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }" +
 
 "}" +
 
@@ -2745,11 +2908,50 @@ function ncProfile() {
       (channel ? channel.replace(/[<>&]/g, '') : 'Creator') + '</i></span>';
   }
 
+  /* WHAT THEY SAID THEY MAKE, WHERE THEY CAN SEE IT.
+     The category steers the Ask card's shortcuts, Trend Spotter's first
+     search and every AI prompt on the site, so a reader getting answers bent
+     towards Gaming deserves to be able to see WHY, in one glance, and change
+     it in one click. Hidden state that quietly changes the answers is the
+     thing to avoid here — it is the difference between a site that knows you
+     and a site that is behaving strangely.
+
+     It also gives somebody who skipped the first-run question a standing
+     offer rather than a dialog they have to be shown twice. */
+  const cat = document.createElement('a');
+  cat.id = 'nccat';
+  cat.href = 'categories.html';
+
+  function paintCat() {
+    const C = window.NC_CATEGORY;
+    const has = C && C.get();
+    cat.innerHTML =
+      '<span class="ncfi">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/>' +
+        '<rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/>' +
+        '</svg></span>' +
+      '<span class="ncfb"><b>' +
+        (has ? String(C.labelOf()).replace(/[<>&]/g, '') : tr('ui_pick_cat')) +
+      '</b><i>' + tr('categories') + '</i></span>';
+  }
+
   paintCoins();
   paint();
-  foot.append(coins, box);
+  paintCat();
+  foot.append(cat, coins, box);
   sb.appendChild(foot);
   box.onclick = openProfile;
+  /* categories.js fires this when the answer changes, including from the
+     first-run dialog — so the rail is right without a reload. */
+  addEventListener('nc-category', paintCat);
+  addEventListener('storage', paintCat);
+  /* And the welcome's first step fires this. The rail is built before the
+     dialog opens, so without it the card still said "Set your name" to
+     somebody who had just typed theirs in. */
+  addEventListener('nc-name', paint);
+  addEventListener('storage', paint);
   /* Points change while the page is open — a game finishing, a quest paying
      out. The badge in the top bar already listens for this. */
   addEventListener('storage', paintCoins);
@@ -3096,7 +3298,7 @@ function ncNav() {
           'align-self:stretch;justify-content:center;z-index:2;' +
           'background:var(--nc-rail1,rgba(10,13,24,.96));' +
           'box-shadow:-10px 0 12px -8px var(--nc-shadow,rgba(0,0,0,.6))}' +
-        '.sidebar #ncfoot a#nccoins{display:none}' +
+        '.sidebar #ncfoot a#nccoins,.sidebar #ncfoot a#nccat{display:none}' +
         '.sidebar #ncfoot button#ncprof{width:auto;flex:0 0 auto;' +
         'margin:0 0 0 4px;padding:5px;border-radius:12px;white-space:nowrap}' +
         '.sidebar #ncfoot #ncprof .ncfb{display:none}' +
@@ -3181,13 +3383,13 @@ function ncNav() {
          two products.
          ------------------------------------------------------------------ */
       '.sidebar #ncfoot{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding:12px 2px 4px}',
-      '.sidebar #ncfoot #nccoins,.sidebar #ncfoot #ncprof{display:flex;align-items:center;gap:12px;',
+      '.sidebar #ncfoot #nccat,.sidebar #ncfoot #nccoins,.sidebar #ncfoot #ncprof{display:flex;align-items:center;gap:12px;',
       'width:100%;margin:0;padding:12px 14px;border-radius:18px;text-align:left;cursor:pointer;',
       'border:1px solid var(--nc-railline,rgba(255,255,255,.08));color:inherit;font:inherit;',
       'text-decoration:none;transition:background .15s,border-color .15s,transform .12s}',
       '.sidebar #ncfoot #nccoins{background:var(--nc-coinbg,linear-gradient(135deg,rgba(167,139,250,.12),rgba(244,114,182,.08)))}',
-      '.sidebar #ncfoot #ncprof{background:var(--nc-cardbg,rgba(255,255,255,.03))}',
-      '.sidebar #ncfoot #nccoins:hover,.sidebar #ncfoot #ncprof:hover{border-color:var(--nc-navonline,rgba(167,139,250,.28))}',
+      '.sidebar #ncfoot #ncprof,.sidebar #ncfoot #nccat{background:var(--nc-cardbg,rgba(255,255,255,.03))}',
+      '.sidebar #ncfoot #nccat:hover,.sidebar #ncfoot #nccoins:hover,.sidebar #ncfoot #ncprof:hover{border-color:var(--nc-navonline,rgba(167,139,250,.28))}',
       '.sidebar #ncfoot #nccoins:active,.sidebar #ncfoot #ncprof:active{transform:scale(.985)}',
       '.sidebar #ncfoot #nccoins:focus-visible,.sidebar #ncfoot #ncprof:focus-visible{outline:2px solid #00E5FF;outline-offset:2px}',
       /* the gradient tile the coin icon sits in */
@@ -4041,6 +4243,9 @@ window.addEventListener('DOMContentLoaded', () => {
      each of them mounts into the first .themewrap it finds, and the bar has to
      exist by then or they mount into the sidebar and the bar comes up empty. */
   ncBuildBar();
+  /* The class is already on <html> from parse time; this is only the button
+     catching up with it, now that there is a button. */
+  ncApplyRail(ncRailHidden());
   ncEnsureLangPick();
   ncBuildThemeSwitch();
   ncReveal();
@@ -4443,22 +4648,63 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     WHAT ARE YOU MAKING?
+     THE WELCOME — YOUR NAME, THEN WHAT YOU MAKE
      ==========================================================================
-     Asked once, on the first visit, and never again — the answer is what the
-     Trend Spotter, the idea generator and the AI tutors have all been guessing
-     at until now.
+     Two questions, once, on the first visit, on a night sky. Both answers are
+     read all over the site afterwards: the name is what the rail, the profile
+     card and the certificates use, and the category is what the Trend Spotter,
+     the idea generator and every AI tutor were guessing at until now.
 
-     IT IS LAST IN THE QUEUE ON PURPOSE. The age gate is a legal question and
-     the sign-up gate is an account question; both must be answered before a
-     preference is worth collecting, and three dialogs stacked on one screen is
-     nobody's first visit. Each of the two above returns early if it is showing
-     something, so this only ever appears on a clear screen.
+     WHY THE NAME COMES FIRST
 
-     SKIPPING IS AN ANSWER. Somebody who closes it is not asked again — the
-     skip is recorded separately from the choice, so "has not chosen" and "has
-     not been asked" stay different things, and Categories in the rail is
-     always there for anyone who changes their mind. */
+     Asked for in that order, and it is the right order anyway. "What do you
+     make?" from a site that does not know who you are is a form. The same
+     question after it has your name is a conversation, and the second question
+     is the one whose answer is actually hard to give — so the easy one goes
+     first and the reader is already answering by the time it arrives.
+
+     IT IS LAST IN THE QUEUE OF GATES ON PURPOSE. The age gate is a legal
+     question and the sign-up gate is an account question; both must be
+     answered before a preference is worth collecting, and three dialogs
+     stacked on one screen is nobody's first visit. Each of the two above
+     returns early if it is showing something, so this only ever appears on a
+     clear screen.
+
+     SKIPPING IS AN ANSWER, ON BOTH STEPS. Somebody who closes it is not asked
+     again — the skip is recorded separately from the choice, so "has not
+     chosen" and "has not been asked" stay different things. The name can be
+     set later from the profile card at the foot of the rail, and the category
+     from Categories, which is a row in that same rail.
+
+     WHY THE SKY IS DRAWN RATHER THAN FETCHED
+
+     It is a first visit, which is the one page load with nothing in the cache;
+     a background image would be the largest thing on the screen and the last
+     thing to arrive, so the welcome would appear on a flat colour and then
+     change under the reader. Two elements and a long box-shadow cost about a
+     kilobyte of generated CSS, paint with the first frame, and scale to any
+     screen without a second file. The positions come from a seeded generator
+     so the sky is the same sky on every visit rather than reshuffling.
+     ========================================================================== */
+
+  /* A small deterministic generator. Math.random() would redraw the sky on
+     every page load, which on a site somebody navigates around is a background
+     that will not sit still. */
+  function ncStars(count, seed, spread, minPx, maxPx, colours) {
+    var out = [], i, x, y, sz, c;
+    for (i = 0; i < count; i++) {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      x = (seed / 4294967296) * spread;
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      y = (seed / 4294967296) * spread;
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      sz = minPx + (seed / 4294967296) * (maxPx - minPx);
+      c = colours[i % colours.length];
+      out.push(x.toFixed(0) + 'px ' + y.toFixed(0) + 'px 0 ' + (sz / 2).toFixed(2) + 'px ' + c);
+    }
+    return out.join(',');
+  }
+
   function ncCategoryGate() {
     if (window.NC_EMBED) return;
     if (NC_SIGNUP_SKIP.test(location.pathname)) return;
@@ -4472,60 +4718,201 @@ window.addEventListener('DOMContentLoaded', () => {
     o.id = 'ncCatGate';
     o.setAttribute('role', 'dialog');
     o.setAttribute('aria-modal', 'true');
-    o.setAttribute('aria-label', 'What do you make?');
+    o.setAttribute('aria-label', 'Welcome to NovaClip');
     o.innerHTML =
+      '<div class="nccg-sky" aria-hidden="true"><i class="s1"></i><i class="s2"></i><i class="s3"></i></div>' +
       '<div class="nccg-box">' +
-        '<h2>What do you make?</h2>' +
-        '<p>So the trends, the ideas and the tutors are about your thing and not somebody else\'s. ' +
-        'You can change it any time from <b>Categories</b>.</p>' +
-        '<div class="nccg-grid" id="ncCatGrid"></div>' +
-        '<label class="nccg-lbl" for="ncCatOwn">Not on the list? Write it — anything at all</label>' +
-        '<div class="nccg-row">' +
-          '<input type="text" id="ncCatOwn" maxlength="40" spellcheck="false" ' +
-                 'placeholder="Warhammer painting, speedcubing, baking…">' +
-          '<button class="nccg-save" id="ncCatSave">Save</button>' +
+        '<div class="nccg-sky in" aria-hidden="true"><i class="s1"></i><i class="s2"></i><i class="s3"></i></div>' +
+        '<div class="nccg-in">' +
+          '<div class="nccg-face" id="ncCatFace" aria-hidden="true"></div>' +
+
+          /* STEP ONE */
+          '<div class="nccg-step" id="ncCatStep1">' +
+            '<span class="nccg-of">Step 1 of 2</span>' +
+            '<h2>First — what should we call you?</h2>' +
+            '<p>It goes on your profile, your certificates and the top of the rail. ' +
+            'It stays on this device unless you make an account.</p>' +
+            '<div class="nccg-row">' +
+              '<input type="text" id="ncCatName" maxlength="20" autocomplete="nickname" ' +
+                     'spellcheck="false" placeholder="Your name or a handle">' +
+              '<button class="nccg-save" id="ncCatNameGo">Continue</button>' +
+            '</div>' +
+            '<button class="nccg-skip" id="ncCatNameSkip">Skip this</button>' +
+          '</div>' +
+
+          /* STEP TWO */
+          '<div class="nccg-step" id="ncCatStep2" hidden>' +
+            '<span class="nccg-of">Step 2 of 2</span>' +
+            '<h2 id="ncCatH2">And what do you make?</h2>' +
+            '<p>So the trends, the ideas and the tutors are about your thing and not ' +
+            'somebody else\'s. You can change it any time from <b>Categories</b>.</p>' +
+            '<div class="nccg-grid" id="ncCatGrid"></div>' +
+            '<label class="nccg-lbl" for="ncCatOwn">Not on the list? Write it — anything at all</label>' +
+            '<div class="nccg-row">' +
+              '<input type="text" id="ncCatOwn" maxlength="40" spellcheck="false" ' +
+                     'placeholder="Warhammer painting, speedcubing, baking…">' +
+              '<button class="nccg-save" id="ncCatSave">Save</button>' +
+            '</div>' +
+            '<button class="nccg-skip" id="ncCatSkip">Skip for now</button>' +
+          '</div>' +
         '</div>' +
-        '<button class="nccg-skip" id="ncCatSkip">Skip for now</button>' +
       '</div>';
     document.body.appendChild(o);
 
+    /* Three layers: a lot of faint dust, fewer mid stars, and a handful of
+       bright blue-white ones. That is what the night sky in the reference
+       actually is, and one uniform layer reads as noise instead. */
+    /* Counts measured against the reference rather than picked: at 160 dust
+       the sky read as a dark panel with a few specks on it, which is a
+       gradient, not a night sky. The spread is 2600 so a 2560-wide monitor is
+       covered corner to corner — stars generated outside the viewport cost
+       nothing to skip and are what stops the pattern ending in a visible
+       edge on a wide screen. */
+    var DUST = ncStars(620, 20260909, 2600, 0.9, 1.5, ['rgba(198,216,255,.5)', 'rgba(168,190,240,.36)', 'rgba(214,228,255,.6)']);
+    var MID  = ncStars(150, 777331,   2600, 1.6, 2.3, ['rgba(226,238,255,.82)', 'rgba(150,196,255,.76)']);
+    var BRIG = ncStars(30,  4242424,  2600, 2.5, 3.4, ['#DCEBFF', '#7FB4FF']);
+
     var st = document.createElement('style');
+    st.id = 'ncCatGateCss';
     st.textContent =
-      '#ncCatGate{position:fixed;inset:0;z-index:99988;display:flex;align-items:center;justify-content:center;' +
-        'padding:18px;background:rgba(4,6,14,.72);backdrop-filter:blur(6px)}' +
-      '#ncCatGate .nccg-box{width:min(560px,100%);max-height:88vh;overflow:auto;border-radius:20px;padding:24px;' +
-        /* Opaque, for the same reason the ask card is: --nc-card2 is a 6%
-           overlay in both themes, so this dialog was showing the blurred page
-           through its own text. */
-        'background:var(--nc-bg2,#0C1220);color:var(--nc-text,#EAF2FF);' +
-        'border:1px solid var(--nc-line2,rgba(124,92,255,.4));box-shadow:0 30px 90px rgba(0,0,0,.6);' +
-        'font:14px/1.6 "Segoe UI",system-ui,sans-serif}' +
-      '#ncCatGate h2{margin:0 0 6px;font-size:1.25rem}' +
-      '#ncCatGate p{margin:0 0 16px;color:var(--nc-dim,#8b93a7);font-size:.9rem}' +
-      '#ncCatGate .nccg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,100%),1fr));' +
+      /* 99993, not 99988. The rail is 99990, so at 99988 the phone's bottom
+         navigation strip was drawn straight through the welcome — a modal
+         with the site's own navigation sitting on top of it. Above the rail
+         and below the age gate (99998) and the suspension screens (99999),
+         which both outrank a preference and must stay that way. */
+      '#ncCatGate{position:fixed;inset:0;z-index:99993;display:flex;align-items:center;' +
+        'justify-content:center;padding:18px;overflow:auto;' +
+        /* The sky itself, not a wash over the page. A first visit has nothing
+           behind it worth showing through. */
+        'background:radial-gradient(120% 90% at 50% 0%,#0B1740 0%,#050B24 45%,#01030E 100%)}' +
+      /* Both skies — the full screen and the one inside the card — are the same
+         three elements. One box-shadow list, drawn twice. */
+      '#ncCatGate .nccg-sky{position:absolute;inset:0;overflow:hidden;pointer-events:none}' +
+      '#ncCatGate .nccg-sky i{position:absolute;top:0;left:0;width:1px;height:1px;border-radius:50%;' +
+        'display:block}' +
+      '#ncCatGate .nccg-sky i.s1{box-shadow:' + DUST + '}' +
+      '#ncCatGate .nccg-sky i.s2{box-shadow:' + MID + '}' +
+      '#ncCatGate .nccg-sky i.s3{box-shadow:' + BRIG + '}' +
+      /* The card's own sky is offset so it is a different patch of the same
+         sky rather than the identical one showing through twice. */
+      '#ncCatGate .nccg-sky.in i{transform:translate(-380px,-260px)}' +
+      /* Slow, and only where motion is welcome. A twinkling background behind
+         a form somebody is typing into is a distraction, so it is a drift of a
+         few pixels over a minute rather than a flicker. */
+      '@media (prefers-reduced-motion:no-preference){' +
+        '#ncCatGate .nccg-sky i.s1{animation:ncdrift 90s linear infinite}' +
+        '#ncCatGate .nccg-sky i.s3{animation:ncdrift 140s linear infinite reverse}}' +
+      '@keyframes ncdrift{from{translate:0 0}to{translate:34px 22px}}' +
+
+      '#ncCatGate .nccg-box{position:relative;width:min(620px,100%);max-height:92vh;overflow:auto;' +
+        'border-radius:26px;isolation:isolate;' +
+        'background:radial-gradient(120% 100% at 30% 0%,#12224F 0%,#0A1234 40%,#050A1E 100%);' +
+        'border:1px solid rgba(140,178,255,.34);' +
+        'box-shadow:0 40px 120px rgba(0,0,0,.7),0 0 0 1px rgba(10,18,44,.9) inset,' +
+        '0 0 60px -20px rgba(90,150,255,.45);' +
+        'color:#EAF2FF;font:14px/1.6 "Segoe UI",system-ui,sans-serif}' +
+      '#ncCatGate .nccg-in{position:relative;z-index:1;padding:26px 26px 24px}' +
+
+      /* The circle in the corner: Nova, in a ring, on the sky. */
+      '#ncCatGate .nccg-face{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;' +
+        'margin-bottom:16px;background:radial-gradient(circle at 34% 30%,#1B2E67,#070E28);' +
+        'border:1px solid rgba(150,190,255,.45);' +
+        'box-shadow:0 0 26px -6px rgba(96,158,255,.6),0 0 0 6px rgba(90,150,255,.07)}' +
+      '#ncCatGate .nccg-face svg{display:block}' +
+
+      '#ncCatGate .nccg-of{display:block;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;' +
+        'font-weight:800;color:#7FB4FF;margin-bottom:8px}' +
+      '#ncCatGate h2{margin:0 0 7px;font-size:1.38rem;line-height:1.25;letter-spacing:-.01em;color:#F2F7FF}' +
+      '#ncCatGate p{margin:0 0 18px;color:#9FB0D4;font-size:.9rem}' +
+      '#ncCatGate p b{color:#DCE8FF}' +
+
+      '#ncCatGate .nccg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr));' +
         'gap:8px;margin-bottom:18px}' +
-      '#ncCatGate .nccg-grid button{text-align:left;padding:11px 13px;border-radius:13px;cursor:pointer;font:inherit;' +
-        'border:1px solid var(--nc-line,rgba(255,255,255,.13));background:var(--nc-card,rgba(255,255,255,.04));' +
-        'color:var(--nc-text,#EAF2FF);transition:.14s}' +
-      '#ncCatGate .nccg-grid button:hover{border-color:var(--nc-cyan,#00E5FF);background:rgba(0,229,255,.09)}' +
+      '#ncCatGate .nccg-grid button{text-align:left;padding:11px 13px;border-radius:14px;cursor:pointer;' +
+        'font:inherit;border:1px solid rgba(140,178,255,.22);background:rgba(120,160,255,.07);' +
+        'color:#EAF2FF;transition:.14s}' +
+      '#ncCatGate .nccg-grid button:hover{border-color:#7FB4FF;background:rgba(127,180,255,.16);' +
+        'transform:translateY(-1px)}' +
       '#ncCatGate .nccg-grid b{display:block;font-size:.92rem;font-weight:650}' +
-      '#ncCatGate .nccg-grid span{font-size:.76rem;color:var(--nc-dim,#8b93a7)}' +
-      '#ncCatGate .nccg-lbl{display:block;font-size:.83rem;color:var(--nc-dim,#8b93a7);margin-bottom:7px}' +
+      '#ncCatGate .nccg-grid span{font-size:.76rem;color:#9FB0D4}' +
+
+      '#ncCatGate .nccg-lbl{display:block;font-size:.83rem;color:#9FB0D4;margin-bottom:7px}' +
       '#ncCatGate .nccg-row{display:flex;gap:8px;flex-wrap:wrap}' +
-      '#ncCatGate .nccg-row input{flex:1 1 200px;min-width:0;padding:11px 13px;border-radius:12px;font:inherit;' +
-        /* Theme tokens, not a fixed black wash — on the light theme the wash
-           made a dark grey box in the middle of a white dialog. */
-        'background:var(--nc-card,rgba(0,0,0,.3));color:var(--nc-text,#EAF2FF);' +
-        'border:1px solid var(--nc-line,rgba(255,255,255,.16))}' +
-      '#ncCatGate .nccg-save{padding:11px 20px;border-radius:12px;border:0;cursor:pointer;font:inherit;' +
+      '#ncCatGate .nccg-row input{flex:1 1 200px;min-width:0;padding:12px 14px;border-radius:13px;font:inherit;' +
+        'font-size:.95rem;background:rgba(6,12,32,.75);color:#EAF2FF;' +
+        'border:1px solid rgba(140,178,255,.28)}' +
+      '#ncCatGate .nccg-row input::placeholder{color:#6F82AC}' +
+      '#ncCatGate .nccg-row input:focus{outline:none;border-color:#7FB4FF;' +
+        'box-shadow:0 0 0 3px rgba(127,180,255,.16)}' +
+      '#ncCatGate .nccg-save{padding:12px 22px;border-radius:13px;border:0;cursor:pointer;font:inherit;' +
         'font-weight:700;color:#04121a;' +
-        'background:linear-gradient(110deg,var(--nc-violet,#7C5CFF),var(--nc-cyan,#00E5FF) 55%,var(--nc-pink,#FF2E97))}' +
+        'background:linear-gradient(110deg,#7FB4FF,#8FE3FF 55%,#C9B3FF)}' +
+      '#ncCatGate .nccg-save:hover{filter:brightness(1.07)}' +
       '#ncCatGate .nccg-skip{margin-top:14px;background:none;border:0;cursor:pointer;font:inherit;' +
-        'font-size:.83rem;color:var(--nc-dim,#8b93a7);text-decoration:underline;padding:0}';
+        'font-size:.83rem;color:#8296BE;text-decoration:underline;padding:6px 0}' +
+      '#ncCatGate .nccg-skip:hover{color:#DCE8FF}' +
+      '@media (max-width:520px){#ncCatGate .nccg-in{padding:20px 18px 18px}' +
+        '#ncCatGate h2{font-size:1.18rem}}';
     document.head.appendChild(st);
 
-    function done() { try { C.markAsked(); } catch (e) {} o.remove(); }
+    /* Nova, if she loaded. The ring is drawn either way — an empty circle on
+       the sky still reads as deliberate, where a collapsed one does not. */
+    try {
+      if (window.NC_MASCOT) document.getElementById('ncCatFace').appendChild(window.NC_MASCOT.el(40));
+    } catch (e) {}
 
+    function done() {
+      try { C.markAsked(); } catch (e) {}
+      o.remove();
+      var css = document.getElementById('ncCatGateCss');
+      if (css) css.remove();
+    }
+
+    /* ---- step one: the name ---------------------------------------------- */
+    var step1 = document.getElementById('ncCatStep1');
+    var step2 = document.getElementById('ncCatStep2');
+    var nameIn = document.getElementById('ncCatName');
+
+    /* Already have one — from an account, or a previous visit that set it
+       before this dialog existed. Asking again for something we know is the
+       fastest way to look like nothing was saved. */
+    try { if (ncName()) nameIn.value = ncName(); } catch (e) {}
+
+    function toStep2() {
+      step1.hidden = true;
+      step2.hidden = false;
+      var n = '';
+      try { n = ncName(); } catch (e) {}
+      /* Their name in the second question, which is the whole reason for
+         asking it first. */
+      if (n) {
+        document.getElementById('ncCatH2').textContent =
+          'Nice to meet you, ' + n + '. What do you make?';
+      }
+      try { document.getElementById('ncCatOwn').focus({ preventScroll: true }); } catch (e) {}
+    }
+
+    function saveName() {
+      /* Same rules the profile sheet uses: control characters out, angle
+         brackets out — this string is written into the rail as markup. */
+      var v = String(nameIn.value || '').replace(/[\x00-\x1f<>&]/g, '').trim().slice(0, 20);
+      if (v) {
+        try {
+          localStorage.setItem('nc_name', v);
+          /* The rail's profile card is already on screen and reads this. */
+          window.dispatchEvent(new CustomEvent('nc-name', { detail: v }));
+        } catch (e) {}
+      }
+      toStep2();
+    }
+
+    document.getElementById('ncCatNameGo').onclick = saveName;
+    document.getElementById('ncCatNameSkip').onclick = toStep2;
+    nameIn.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') saveName();
+    });
+
+    /* ---- step two: the category ------------------------------------------ */
     var grid = document.getElementById('ncCatGrid');
     C.PRESETS.forEach(function (p) {
       var b = document.createElement('button');
@@ -4545,6 +4932,8 @@ window.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter') document.getElementById('ncCatSave').click();
     });
     document.getElementById('ncCatSkip').onclick = done;
+
+    try { nameIn.focus({ preventScroll: true }); } catch (e) {}
   }
 
   /* ==========================================================================
@@ -4727,21 +5116,34 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   window.ncSignupGate = ncSignupGate;
 
-  /* THE IDENTITY GATE IS GONE.
-     ncGuardBoot() used to inject guard.js into every page, which read four
-     localStorage keys and drew a device lock if one of them held an enrolment.
-     guard.js, passkey.js, locker.js, biosentinel.js and biometrics.html were
-     all deleted with the rest of BioSentinel, so this injector was left asking
-     every page to fetch a file that no longer exists — a 404 on all thirty-two
-     of them, and a service worker that could not install because the file was
-     still in its shell list.
+  /* THE IDENTITY GATE.
+     Loaded from here rather than from a script tag on each page, for the same
+     reason the age gate lives here: a lock that one page forgets to carry is
+     not a lock. BioSentinel is set up from the Profile page now instead of
+     from its own row in the rail, but where it is CONFIGURED and where it has
+     to be ENFORCED are two different questions — the answer to the second is
+     still "everywhere".
 
-     Nothing replaces it. A face scan was never the thing standing between a
-     teenager's account and somebody else: the account lives behind the sign-in
-     in ncSignupGate(), and that is where it belongs. */
+     It is fetched on every page and does nothing on almost all of them: the
+     first thing guard.js does is read four localStorage keys, and if none of
+     them holds an enrolment it returns without drawing anything. Somebody who
+     has never asked for a lock never meets one, and is never asked to set one
+     up either.
 
-  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); ncAgeBoot(); });
-  if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); }
+     Not inside the frame on Profile, though. That frame is biometrics.html
+     itself under ?embed=1, and a lock drawn over the page you set the lock up
+     on is a door that shuts while you are still fitting it. */
+  function ncGuardBoot() {
+    if (NC_EMBED) return;
+    if (document.getElementById('nc-guard-js')) return;
+    var s = document.createElement('script');
+    s.id = 'nc-guard-js';
+    s.src = 'guard.js';
+    document.head.appendChild(s);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); ncAgeBoot(); ncGuardBoot(); });
+  if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); ncGuardBoot(); }
 })();
 
 /* ============================================================
