@@ -166,6 +166,12 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v33: every category has a real background now, not only a colour. Nine
+   scenes are composed in category-scene.js and handed over as data URIs — a
+   new shell file, loaded by 33 pages, so a cache without it is 33 pages asking
+   for a script that is not there. nova.js falls back to it when backgrounds/
+   holds no photograph for that category, and it now probes png, jpeg and webp
+   as well as jpg, which is what somebody dropping a file in actually has. */
 /* v32: Trend Spotter became Studio in the rail, and the page behind that name
    grew the Editor and the AI Editor as panels of its own. trends-nav.js is the
    file that changed and it is cached, so without the bump a returning visitor
@@ -190,7 +196,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v32';
+const CACHE = 'novaclip-v33';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -263,6 +269,11 @@ const SHELL = [
      Offline, the card still opens and still takes you to the right page. */
   '/nova-ask.js',
   '/categories.js',
+  /* The nine drawn backgrounds. Cached because they are the floor under every
+     category: a page served offline without this file is a page with the
+     colours and no scene, which is a visibly different site from the one that
+     was there a minute ago. */
+  '/category-scene.js',
   /* The two pages the rail gained. History reads what is already stored on the
      device, so it is fully useful offline; Categories is the page that lets
      somebody change the answer they gave on their first visit, and it needs

@@ -794,8 +794,13 @@ function ncCategoryVibe() {
       /* Blurred and desaturated on purpose. A photograph at full strength
          behind a page of text is a page you cannot read — this has to be a
          room the site is standing in, not a picture the site is written on
-         top of. The scrim below does the rest. */
-      'filter:blur(6px) saturate(.85);transform:scale(1.06);' +
+         top of. The scrim below does the rest.
+
+         The amount is a variable because the two things that land here are not
+         alike: a photograph carries detail that has to be taken away, and a
+         drawn scene is already nothing but large shapes, so blurring it as
+         hard only makes it muddy. */
+      'filter:blur(var(--nc-cat-blur,6px)) saturate(.85);transform:scale(1.06);' +
       'transition:opacity .6s ease}' +
     /* The scrim. Without it the headline sits on whatever the photo happens to
        be at that pixel, which is different on every screen size — the one
@@ -863,40 +868,100 @@ function ncCategoryPhoto() {
   var clear = function () {
     root.style.removeProperty('--nc-cat-img');
     root.style.removeProperty('--nc-cat-img-o');
+    root.style.removeProperty('--nc-cat-blur');
   };
   if (!C || !C.presetOf || root.getAttribute('data-skin')) { clear(); return; }
 
   var p = C.presetOf();
-  if (!p) { clear(); return; }                    /* written in — colours only */
+  if (!p) { scene(); return; }   /* written in: no file to look for, still a scene */
 
-  var url = 'backgrounds/' + p.id + '.jpg';
+  /* FOUR EXTENSIONS, TRIED IN ORDER, AND THIS IS NOT A NICETY.
+     The first version of this looked for .jpg and only .jpg. Somebody saving a
+     photograph off their phone or out of a chat gets a .png or a .webp far
+     more often than a .jpg — they would have dropped the file into the folder,
+     seen nothing happen, and had nothing at all to tell them why. A silent
+     no-op with a correct-looking file sitting right there is the worst failure
+     this feature could have.
+
+     jpg first because it is the right format for a photograph and the one the
+     README asks for; the other three are for the file somebody actually has. */
+  var EXT = ['jpg', 'jpeg', 'png', 'webp'];
+  var url = '';
   var known = null;
   try { known = sessionStorage.getItem(NC_PHOTO_KEY + ':' + p.id); } catch (e) {}
 
+  /* The remembered answer is the winning FILENAME, not a yes/no, so a second
+     page in the same visit does not have to walk the list again. '0' is the
+     recorded no. */
   if (known === '0') { clear(); return; }
-  if (known === '1') { apply(); return; }
+  if (known) { url = known; apply(); return; }
 
-  var probe = new Image();
-  probe.onload = function () {
-    try { sessionStorage.setItem(NC_PHOTO_KEY + ':' + p.id, '1'); } catch (e) {}
-    apply();
-  };
-  probe.onerror = function () {
-    try { sessionStorage.setItem(NC_PHOTO_KEY + ':' + p.id, '0'); } catch (e) {}
-    clear();
-  };
-  probe.src = url;
+  tryExt(0);
+
+  function tryExt(i) {
+    if (i >= EXT.length) {
+      try { sessionStorage.setItem(NC_PHOTO_KEY + ':' + p.id, '0'); } catch (e) {}
+      scene();                              /* drawn, since there is no photo */
+      return;
+    }
+    var candidate = 'backgrounds/' + p.id + '.' + EXT[i];
+    var probe = new Image();
+    probe.onload = function () {
+      url = candidate;
+      try { sessionStorage.setItem(NC_PHOTO_KEY + ':' + p.id, candidate); } catch (e) {}
+      apply();
+    };
+    probe.onerror = function () { tryExt(i + 1); };
+    probe.src = candidate;
+  }
+
+  /* THE FLOOR: A SCENE DRAWN HERE, WHEN THERE IS NO PHOTOGRAPH.
+     Every category has a background now, not only the ones somebody has found
+     a picture for — which was the whole complaint about the colour-only
+     version. category-scene.js composes it; this only places it. Less blur
+     than a photograph gets, because it is already large shapes and nothing
+     else, and a touch stronger, because a drawn scene at a photograph's
+     opacity reads as a smudge rather than a place. */
+  function scene() {
+    var S = window.NC_SCENE;
+    var cols = (C.vibeOf ? C.vibeOf() : null);
+    if (!S || !cols) { clear(); return; }
+    var id = p ? p.id : 'own';
+    root.style.setProperty('--nc-cat-img', 'url("' + S.svg(id, cols[0], cols[1]) + '")');
+    root.style.setProperty('--nc-cat-blur', '2px');
+    var lightS = root.getAttribute('data-theme') === 'light';
+    /* .44 on light, not .34. Measured from a screenshot: at .34 the Food scene
+       was a faint smudge in one corner of a white page — present in the
+       stylesheet and absent to a reader, which is the version of this feature
+       that is not worth having. Dark carries it at .5 because the shapes are
+       lighter than the ground they sit on; on white they are darker than it,
+       and darker-on-white needs more of itself to register. */
+    root.style.setProperty('--nc-cat-img-o', lightS ? '.44' : '.5');
+    try { window.dispatchEvent(new CustomEvent('nc-cat-photo', { detail: 'scene:' + id })); } catch (e) {}
+  }
 
   function apply() {
     root.style.setProperty('--nc-cat-img', 'url("' + url + '")');
+    root.style.setProperty('--nc-cat-blur', '6px');
     /* Dark carries a photograph better than white does: the same image at the
        same strength on a light page fights the text rather than sitting under
        it. */
     var light = root.getAttribute('data-theme') === 'light';
     root.style.setProperty('--nc-cat-img-o', light ? '.28' : '.42');
+    /* So a page can say out loud that it found one — categories.html does. */
+    try { window.dispatchEvent(new CustomEvent('nc-cat-photo', { detail: url })); } catch (e) {}
   }
 }
 window.ncCategoryPhoto = ncCategoryPhoto;
+
+/* Which file, if any, is behind the site right now. categories.html asks so it
+   can tell somebody their drop worked — the alternative is dropping a file in a
+   folder and having to take on trust that it landed. */
+window.ncCategoryPhotoUrl = function () {
+  var v = document.documentElement.style.getPropertyValue('--nc-cat-img') || '';
+  var m = v.match(/url\("([^"]+)"\)/);
+  return m ? m[1] : '';
+};
 
 function ncSetTheme(pref) {
   try { localStorage.setItem(NC_THEME_KEY, pref); } catch (e) {}

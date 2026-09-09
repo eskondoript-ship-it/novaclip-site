@@ -221,6 +221,11 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
   <div class='card wide' style='margin-top:6px'>
     <h2>Your category</h2>
     <div class='hint' id='catNow'>Not set yet.</div>
+    <!-- Whether a background photograph was found for this category. Somebody
+         who drops a file into backgrounds/ otherwise has no way to know it
+         landed except by staring at the page and deciding whether it looks
+         different — and it is meant to be subtle, so that is not a test. -->
+    <div class='hint bgnote' id='catBg'></div>
     <div class='body'>
       <div id='catGrid' class='catgrid'></div>
 
@@ -244,6 +249,7 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
 .catopt.on{border-color:var(--nc-cyan,#00E5FF);background:rgba(0,229,255,.10)}
 .catopt b{display:block;font-size:.98rem;font-weight:650;margin-bottom:2px}
 .catopt span{font-size:.82rem;color:var(--nc-dim,#7E8AA6)}
+.bgnote{margin-top:6px;font-size:.78rem;opacity:.72;line-height:1.5}
 .ownlbl{display:block;font-size:.86rem;color:var(--nc-dim,#7E8AA6);margin-bottom:7px}
 .ownrow{display:flex;gap:9px;flex-wrap:wrap}
 .ownrow input{flex:1 1 240px;min-width:0;padding:12px 14px;border-radius:12px;font:inherit;font-size:.95rem;
@@ -257,6 +263,7 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
      from NC_CATEGORY — the nine buttons, what is currently chosen, and the
      save — so a categories.js that loads afterwards leaves the block below
      returning on its first line and the page blank and unsaveable. -->
+<script src='category-scene.js'></script>
 <script src='categories.js'></script>
 <script>
 /* The list, the key and the read/write all live in categories.js, so this page
@@ -277,9 +284,32 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
   var said = document.getElementById('catSaid');
   var now  = document.getElementById('catNow');
 
+  function paintBg() {
+    var bg = document.getElementById('catBg');
+    if (!bg) return;
+    var cur = C.get();
+    var preset = C.PRESETS.some(function (p) { return p.id === cur; });
+    if (!cur) { bg.textContent = ''; return; }
+    if (!preset) {
+      bg.textContent = 'Written-in categories use their own colours. Background ' +
+                       'photographs are looked up by filename, and there is no ' +
+                       'file to look up for one you typed.';
+      return;
+    }
+    var url = (typeof ncCategoryPhotoUrl === 'function') ? ncCategoryPhotoUrl() : '';
+    bg.textContent = url
+      ? 'Background photo: ' + url + ' — in use.'
+      : 'No background photo for this one. Drop an image at backgrounds/' + cur +
+        '.jpg (png, jpeg and webp work too) and reload.';
+  }
+  /* The probe is asynchronous, so the answer can arrive after this page has
+     already drawn itself once. */
+  addEventListener('nc-cat-photo', paintBg);
+
   function paint() {
     var cur = C.get();
     now.textContent = cur ? 'Right now: ' + C.labelOf(cur) : 'Not set yet.';
+    paintBg();
     [].forEach.call(grid.children, function (b) {
       b.classList.toggle('on', b.getAttribute('data-id') === cur);
     });
