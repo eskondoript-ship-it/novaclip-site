@@ -349,13 +349,7 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
 .sidebar select{width:100%;font-size:.95rem;background:rgba(255,255,255,.05);color:inherit;
   border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px}
 </style>
-<script src='jarvis.js' defer></script>
-<!-- The 'how do I use this page' button beside the Nova pill. Loads after
-     jarvis.js because it borrows the pill that file builds. -->
-<!-- Nova as a character, drawn in SVG. nova-guide.js uses her for the
-     scanning animation; loaded before it so she is there when it runs. -->
 <script src='nova-mascot.js' defer></script>
-<script src='nova-guide.js' defer></script>
 </head>
 <body>
 <!-- The rail every other page has. nova.js fills it and drives its width from
@@ -1834,6 +1828,8 @@ function fShieldNote() {
 <!-- The rail, the language picker and the points badge all come from here.
      This page never had it, which is why its sidebar was an empty column. -->
 <script src='family-filter.js'></script>
+<script src='categories.js'></script>
 <script src='nova.js'></script>
+<script src='nova-ask.js' defer></script>
 </body>
 </html>

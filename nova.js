@@ -86,8 +86,6 @@ const T = {
   analytics_sub: { en:"Deep charts comparing your channel to your closest rivals.", zh:"将你的频道与最接近的对手进行深入图表对比。", hi:"अपने चैनल की तुलना करीबी प्रतिद्वंद्वियों से करें।", es:"Gráficos detallados comparando tu canal con tus rivales más cercanos.", ar:"رسوم بيانية معمّقة تقارن قناتك بأقرب منافسيك.", fr:"Des graphiques détaillés comparant ta chaîne à tes rivaux les plus proches.", bn:"আপনার চ্যানেলকে নিকটতম প্রতিদ্বন্দ্বীদের সাথে তুলনা করুন।", pt:"Gráficos detalhados a comparar o teu canal com os rivais mais próximos.", ru:"Подробные графики сравнения твоего канала с ближайшими соперниками.", ur:"اپنے چینل کا قریبی حریفوں سے تفصیلی موازنہ۔", id:"Grafik mendalam membandingkan kanalmu dengan rival terdekat.", de:"Detaillierte Diagramme, die deinen Kanal mit den nächsten Rivalen vergleichen.", ja:"あなたのチャンネルを最接近のライバルと比較する詳細なグラフ。", tr:"Kanalını en yakın rakiplerinle karşılaştıran ayrıntılı grafikler.", ko:"내 채널을 가장 가까운 라이벌과 비교하는 심층 차트.", fa:"نمودارهای عمیق برای مقایسه کانال شما با نزدیک‌ترین رقبا.", uk:"Детальні графіки порівняння твого каналу з найближчими суперниками.", it:"Grafici dettagliati che confrontano il tuo canale con i rivali più vicini.", pl:"Szczegółowe wykresy porównujące Twój kanał z najbliższymi rywalami.", vi:"Biểu đồ chi tiết so sánh kênh của bạn với đối thủ gần nhất." },
   analytics_hint: { en:"Connect your channel to load your analytics.", zh:"连接你的频道以加载分析数据。", hi:"अपना चैनल कनेक्ट करें।", es:"Conecta tu canal para cargar tus analíticas.", ar:"اربط قناتك لتحميل التحليلات.", fr:"Connecte ta chaîne pour charger tes analyses.", bn:"অ্যানালিটিক্স লোড করতে চ্যানেল সংযুক্ত করুন।", pt:"Liga o teu canal para carregar as análises.", ru:"Подключи канал, чтобы загрузить аналитику.", ur:"تجزیات لوڈ کرنے کے لیے چینل جوڑیں۔", id:"Hubungkan kanalmu untuk memuat analitik.", de:"Verbinde deinen Kanal, um die Analysen zu laden.", ja:"分析を読み込むにはチャンネルを接続してください。", tr:"Analizleri yüklemek için kanalını bağla.", ko:"분석을 불러오려면 채널을 연결하세요.", fa:"برای بارگذاری تحلیل‌ها کانالت را وصل کن.", uk:"Підключи канал, щоб завантажити аналітику.", it:"Collega il tuo canale per caricare le analisi.", pl:"Połącz kanał, aby wczytać analitykę.", vi:"Kết nối kênh để tải phân tích." },
   studio_sub: { en:"Connect your channel and scout the competition.", zh:"连接频道，侦察竞争对手。", hi:"अपना चैनल कनेक्ट करें और प्रतियोगिता देखें।", es:"Conecta tu canal y explora la competencia.", ar:"اربط قناتك واستكشف المنافسة.", fr:"Connecte ta chaîne et observe la concurrence.", bn:"চ্যানেল যুক্ত করুন ও প্রতিযোগিতা দেখুন।", pt:"Liga o teu canal e observa a concorrência.", ru:"Подключи канал и изучи конкурентов.", ur:"اپنا چینل جوڑیں اور مقابلہ دیکھیں۔", id:"Hubungkan kanal dan intai pesaing.", de:"Verbinde deinen Kanal und beobachte die Konkurrenz.", ja:"チャンネルを接続して競合を偵察。", tr:"Kanalını bağla ve rakipleri incele.", ko:"채널을 연결하고 경쟁자를 살펴보세요.", fa:"کانالت را وصل کن و رقبا را بررسی کن.", uk:"Підключи канал і вивчай конкурентів.", it:"Collega il canale e studia la concorrenza.", pl:"Połącz kanał i obserwuj konkurencję.", vi:"Kết nối kênh và do thám đối thủ." },
-  sysonline: { en:"Jarvis · systems online", zh:"贾维斯 · 系统在线", hi:"Jarvis · सिस्टम ऑनलाइन", es:"Jarvis · sistemas en línea", ar:"جارفيس · الأنظمة متصلة", fr:"Jarvis · systèmes en ligne", bn:"জারভিস · সিস্টেম অনলাইন", pt:"Jarvis · sistemas online", ru:"Джарвис · системы в сети", ur:"جارویس · سسٹم آن لائن", id:"Jarvis · sistem online", de:"Jarvis · Systeme online", ja:"ジャービス · システムオンライン", tr:"Jarvis · sistemler çevrimiçi", ko:"자비스 · 시스템 온라인", fa:"جارویس · سامانه آنلاین", uk:"Джарвіс · системи онлайн", it:"Jarvis · sistemi online", pl:"Jarvis · systemy online", vi:"Jarvis · hệ thống trực tuyến" },
-  controldeck: { en:"// Control deck", zh:"// 控制台", hi:"// कंट्रोल डेक", es:"// Panel de control", ar:"// لوحة التحكم", fr:"// Pupitre de commande", bn:"// কন্ট্রোল ডেক", pt:"// Painel de controle", ru:"// Панель управления", ur:"// کنٹرول ڈیک", id:"// Dasbor kendali", de:"// Kontrollzentrum", ja:"// コントロールデッキ", tr:"// Kontrol masası", ko:"// 컨트롤 데크", fa:"// عرشه کنترل", uk:"// Панель керування", it:"// Pannello di controllo", pl:"// Pokład kontrolny", vi:"// Bảng điều khiển" },
   t_duel_d: { en:"Challenge a channel within 20k subs and win NovaCoins.", zh:"挑战2万订阅内的频道并赢积分。", hi:"20k सब्स के भीतर चैनल को चुनौती दें।", es:"Reta a un canal en 20k subs y gana puntos.", ar:"تحدَّ قناة ضمن 20 ألف مشترك واربح نقاطًا.", fr:"Défie une chaîne à 20k abonnés et gagne des points.", bn:"২০ হাজার সাবের চ্যানেলকে চ্যালেঞ্জ করুন।", pt:"Desafia um canal até 20k subs e ganha pontos.", ru:"Брось вызов каналу в пределах 20 тыс. и получи очки.", ur:"20 ہزار سبس کے چینل کو چیلنج کریں۔", id:"Tantang kanal dalam 20k subs, menangkan poin.", de:"Fordere einen Kanal bis 20k Abos heraus.", ja:"2万登録以内のチャンネルに挑戦してポイント獲得。", tr:"20k abone içindeki kanala meydan oku.", ko:"2만 구독 이내 채널에 도전해 포인트 획득.", fa:"کانالی تا ۲۰ هزار مشترک را به چالش بکش.", uk:"Кинь виклик каналу в межах 20 тис. і вигравай бали.", it:"Sfida un canale entro 20k iscritti e vinci punti.", pl:"Rzuć wyzwanie kanałowi do 20 tys. subów.", vi:"Thách đấu kênh trong 20k sub và thắng điểm." },
   t_trend_d: { en:"See what is blowing up on YouTube right now.", zh:"看看 YouTube 上正在爆火的内容。", hi:"देखें YouTube पर अभी क्या वायरल है।", es:"Mira qué está explotando en YouTube ahora.", ar:"شاهد ما ينتشر على يوتيوب الآن.", fr:"Vois ce qui explose sur YouTube maintenant.", bn:"এখন YouTube-এ কী ভাইরাল দেখুন।", pt:"Vê o que está a bombar no YouTube agora.", ru:"Смотри, что взрывается на YouTube сейчас.", ur:"دیکھیں یوٹیوب پر ابھی کیا وائرل ہے۔", id:"Lihat apa yang viral di YouTube sekarang.", de:"Sieh, was gerade auf YouTube explodiert.", ja:"今YouTubeでバズっているものを見る。", tr:"Şu an YouTube'da patlayanı gör.", ko:"지금 유튜브에서 뜨는 것을 확인하세요.", fa:"ببین الان چه چیزی در یوتیوب می‌ترکد.", uk:"Дивись, що зараз вибухає на YouTube.", it:"Guarda cosa sta esplodendo su YouTube ora.", pl:"Zobacz, co teraz podbija YouTube.", vi:"Xem gì đang bùng nổ trên YouTube." },
   t_analytics: { en:"Full analytics", zh:"完整分析", hi:"पूर्ण एनालिटिक्स", es:"Analíticas completas", ar:"تحليلات كاملة", fr:"Analyse complète", bn:"সম্পূর্ণ অ্যানালিটিক্স", pt:"Análises completas", ru:"Полная аналитика", ur:"مکمل تجزیات", id:"Analitik lengkap", de:"Volle Analysen", ja:"完全な分析", tr:"Tam analiz", ko:"전체 분석", fa:"تحلیل کامل", uk:"Повна аналітика", it:"Analisi complete", pl:"Pełna analityka", vi:"Phân tích đầy đủ" },
@@ -174,7 +172,6 @@ const T = {
   duel_vs: { en:"VS", zh:"对战", hi:"बनाम", es:"VS", ar:"ضد", fr:"VS", bn:"বনাম", pt:"VS", ru:"ПРОТИВ", ur:"مقابل", id:"VS", de:"GEGEN", ja:"VS", tr:"VS", ko:"VS", fa:"در برابر", uk:"ПРОТИ", it:"VS", pl:"KONTRA", vi:"ĐẤU" },
   duel_rival: { en:"RIVAL", zh:"对手", hi:"प्रतिद्वंद्वी", es:"RIVAL", ar:"المنافس", fr:"RIVAL", bn:"প্রতিদ্বন্দ্বী", pt:"RIVAL", ru:"СОПЕРНИК", ur:"حریف", id:"LAWAN", de:"RIVALE", ja:"ライバル", tr:"RAKİP", ko:"라이벌", fa:"رقیب", uk:"СУПЕРНИК", it:"RIVALE", pl:"RYWAL", vi:"ĐỐI THỦ" },
   photo: { en:"Photo", zh:"图片", hi:"फ़ोटो", es:"Foto", ar:"صورة", fr:"Photo", bn:"ছবি", pt:"Foto", ru:"Фото", ur:"تصویر", id:"Foto", de:"Foto", ja:"写真", tr:"Fotoğraf", ko:"사진", fa:"عکس", uk:"Фото", it:"Foto", pl:"Zdjęcie", vi:"Ảnh" },
-  biometrics: { en:"Biometrics", zh:"生物识别", hi:"बायोमेट्रिक्स", es:"Biometría", ar:"القياسات الحيوية", fr:"Biométrie", bn:"বায়োমেট্রিক্স", pt:"Biometria", ru:"Биометрия", ur:"بایومیٹرکس", id:"Biometrik", de:"Biometrie", ja:"生体認証", tr:"Biyometri", ko:"생체 인식", fa:"زیست‌سنجی", uk:"Біометрія", it:"Biometria", pl:"Biometria", vi:"Sinh trắc học" },
   theme: { en:"Theme", zh:"主题", hi:"थीम", es:"Tema", ar:"المظهر", fr:"Thème", bn:"থিম", pt:"Tema", ru:"Тема", ur:"تھیم", id:"Tema", de:"Design", ja:"テーマ", tr:"Tema", ko:"테마", fa:"پوسته", uk:"Тема", it:"Tema", pl:"Motyw", vi:"Giao diện" },
   theme_light: { en:"Light", zh:"浅色", hi:"लाइट", es:"Claro", ar:"فاتح", fr:"Clair", bn:"লাইট", pt:"Claro", ru:"Светлая", ur:"لائٹ", id:"Terang", de:"Hell", ja:"ライト", tr:"Açık", ko:"라이트", fa:"روشن", uk:"Світла", it:"Chiaro", pl:"Jasny", vi:"Sáng" },
   theme_dark: { en:"Dark", zh:"深色", hi:"डार्क", es:"Oscuro", ar:"داكن", fr:"Sombre", bn:"ডার্ক", pt:"Escuro", ru:"Тёмная", ur:"ڈارک", id:"Gelap", de:"Dunkel", ja:"ダーク", tr:"Koyu", ko:"다크", fa:"تیره", uk:"Темна", it:"Scuro", pl:"Ciemny", vi:"Tối" },
@@ -185,6 +182,7 @@ const T = {
 
   quests: { en:"Rewards", zh:"奖励", hi:"रिवॉर्ड्स", es:"Recompensas", ar:"الجوائز", fr:"Récompenses", bn:"পুরস্কার", pt:"Recompensas", ru:"Награды", ur:"انعامات", id:"Hadiah", de:"Belohnungen", ja:"リワード", tr:"Ödüller", ko:"보상", fa:"جوایز", uk:"Нагороди", it:"Ricompense", pl:"Nagrody", vi:"Phần thưởng" },
   achievements: { en:"Achievements", zh:"成就", hi:"उपलब्धियाँ", es:"Logros", ar:"الإنجازات", fr:"Succès", bn:"অর্জন", pt:"Conquistas", ru:"Достижения", ur:"کامیابیاں", id:"Pencapaian", de:"Erfolge", ja:"実績", tr:"Başarılar", ko:"업적", fa:"دستاوردها", uk:"Досягнення", it:"Obiettivi", pl:"Osiągnięcia", vi:"Thành tựu" },
+  categories: { en:"Categories", zh:"分类", hi:"श्रेणियाँ", es:"Categorías", ar:"الفئات", fr:"Catégories", bn:"বিভাগ", pt:"Categorias", ru:"Категории", ur:"زمرے", id:"Kategori", de:"Kategorien", ja:"カテゴリ", tr:"Kategoriler", ko:"카테고리", fa:"دسته‌ها", uk:"Категорії", it:"Categorie", pl:"Kategorie", vi:"Danh mục" },
   history: { en:"History", zh:"历史", hi:"इतिहास", es:"Historial", ar:"السجل", fr:"Historique", bn:"ইতিহাস", pt:"Histórico", ru:"История", ur:"تاریخ", id:"Riwayat", de:"Verlauf", ja:"履歴", tr:"Geçmiş", ko:"기록", fa:"تاریخچه", uk:"Історія", it:"Cronologia", pl:"Historia", vi:"Lịch sử" },
   ask: { en:"Ask", zh:"提问", hi:"पूछें", es:"Preguntar", ar:"اسأل", fr:"Demander", bn:"জিজ্ঞাসা", pt:"Perguntar", ru:"Спросить", ur:"پوچھیں", id:"Tanya", de:"Fragen", ja:"質問", tr:"Sor", ko:"질문", fa:"بپرس", uk:"Запитати", it:"Chiedi", pl:"Zapytaj", vi:"Hỏi" },
   thumb: { en:"Thumbnail", zh:"缩略图", hi:"थंबनेल", es:"Miniatura", ar:"صورة مصغرة", fr:"Miniature", bn:"থাম্বনেইল", pt:"Thumbnail", ru:"Превью", ur:"تھمب نیل", id:"Thumbnail", de:"Thumbnail", ja:"サムネイル", tr:"Küçük resim", ko:"썸네일", fa:"تصویر بندانگشتی", uk:"Прев’ю", it:"Miniatura", pl:"Miniatura", vi:"Ảnh thu nhỏ" },
@@ -1055,77 +1053,14 @@ function ncBuildBar() {
     '@media (min-width:1024px){#ncgear{display:none}}' +
     /* The sidebar copy would be a second set of the same three controls. */
     '.sidebar .themewrap{display:none !important}' +
-    /* JARVIS MOVES INTO THE BAR.
-       The pill is fixed at top:14px in the centre of the viewport with a
-       z-index of 99995, so it does not care what is under it — and centred at
-       the top of the page is exactly where every page puts something. It was
-       over the Language control here, and it has already been over the
-       editor's Export button and its Simple/Complex toggle. Pushing it down
-       just moved the collision onto the editor's transport controls.
-
-       The bar has a permanent gap between the controls and the coins badge, on
-       every page, so the pill goes there: still fixed, still always visible,
-       and now in a strip that is reserved rather than borrowed. Its three
-       transform states have to be restated because the centring translate they
-       were built on is gone.
-
-       NOT with !important, and NOT using `right`. The pill is draggable now,
-       and a drag writes style.left/style.top straight onto the element — an
-       !important rule here would outrank those and the orb would refuse to
-       move. `html body` outranks jarvis.js's own `.jr-pill` while still losing
-       to an inline style, which is exactly the order wanted: this places it,
-       and the reader gets the final say. `right` is avoided for the same
-       reason — a dragged pill has an inline `left`, and left+right together on
-       an auto-width box stretches it across the gap. */
-    /* Wrapped in a min-width for the same reason as the band below it. This
-       rule and jarvis.js's phone dock both read `html body .jr-pill`, and
-       this stylesheet is appended when the bar is built — after jarvis has
-       booted on most pages, so at equal specificity this one won and put the
-       pill back at top:8px on a 390px screen, on top of the page's heading.
-       There is no gap beside the controls to slide into down there anyway:
-       the controls have moved into a sheet and the bar is a gear and a
-       badge. */
-    '@media (min-width:1024px){' +
-      'html body .jr-pill{top:8px;left:calc(100% - 176px);transform:translateX(-100%)}' +
-      'html body .jr-pill:hover{transform:translateX(-100%) translateY(-1px)}' +
-      'html body .jr-pill.hidden{transform:translateX(-100%) translateY(-8px)}}' +
-    /* Not enough room beside the controls: it goes back to the centre, below
-       the bar, where the page has not started yet.
-
-       Three bands, because two were not enough once the controls grew — the
-       twelve cyber-theme swatches became one 157px dropdown that sits IN the
-       row rather than under it. Measured left-to-right: the controls end at
-       roughly 0.094*width + 839, the full pill starts at width - 484, and the
-       pill without its status line starts at width - 334.
-
-         1501px and up   full pill in the bar, as designed
-         1360 - 1500px   pill in the bar with its status line hidden — 150px of
-                         its 308, and the coloured state dot already says most
-                         of what that line said
-         1359px and down below the bar, centred
-
-       The 1360 edge is measured, not rounded: the shortened pill is 205px, so
-       it starts at width - 381, and the language picker ends at about
-       0.094 * width + 839. Those cross at 1355.
-
-       At 1366 — the commonest laptop — the full pill ran 83px over the language
-       picker, and at 1440 it still clipped by 19px. Dropping the status line
-       clears both. Below 1300 nothing fits and it goes under the bar. */
-    '@media (min-width:1360px) and (max-width:1500px){html body .jr-pill #jr-status{display:none}}' +
-    /* The lower bound is new. Below 761px jarvis.js docks the pill in the
-       bottom-right corner as a round button, and this rule sets `top`,
-       `left` and `transform` — the three properties that dock is made of.
-       Both selectors read `html body .jr-pill`, so which one won came down
-       to which stylesheet was appended last, and that is decided by whether
-       nova.js built its bar before jarvis.js booted. Scoping this to the
-       widths it was written for means the two rules never both apply and
-       the order stops mattering. */
-    '@media (min-width:1024px) and (max-width:1359px){' +
-      'html body .jr-pill{top:calc(' + (NC_BAR_H + 8) + 'px + var(--nc-strip-h,0px));' +
-      'left:50%;transform:translateX(-50%)}' +
-      'html body .jr-pill:hover{transform:translateX(-50%) translateY(-1px)}' +
-      'html body .jr-pill.hidden{transform:translateX(-50%) translateY(-8px)}}' +
-    'html body .jr-sheet{top:' + (NC_BAR_H + 6) + 'px}' +
+    /* The seventy lines that stood here placed the Jarvis pill in the bar's
+       reserved gap, across four width bands, and docked its sheet under the
+       bar. Every selector in them read `.jr-pill` or `.jr-sheet`, and both
+       elements were built by jarvis.js — which is deleted. Rules that can
+       never match are still parsed and still shipped on every page, and the
+       comments around them described a collision with a file no longer here,
+       which is worse than the bytes: the next person to read this would go
+       looking for it. The bar keeps the gap; nothing sits in it now. */
     /* The coins badge and the Pro badge are already at the far right of the
        strip's height, so they read as part of the bar rather than fighting it —
        they only need centring against it. */
@@ -1143,7 +1078,7 @@ function ncBuildBar() {
        them off it. Every page gets a printable version for free, and a new
        piece of furniture added later only has to be hidden once. */
     '@media print{#ncbar,#ncgear,#ncpts,#ncCorner,#ncst,#nctoast,#nccookie,' +
-      '.jr-pill,.jr-sheet,.sidebar,.nc-sidebar{display:none !important}' +
+      '.nca,.sidebar,.nc-sidebar{display:none !important}' +
       'body{padding-top:0 !important}}';
   document.head.appendChild(css);
 
@@ -1657,7 +1592,10 @@ const SKILLS = {
      have existed. Found by listing every logSkill() call on the site and
      comparing it against this table, which is a check worth repeating any
      time a new one is added. */
-  biometric:  { icon:'', label:'Set up face, voice or a passkey on this device' },
+  /* `biometric` is gone with BioSentinel. logSkill() silently ignores an id
+     that is not here, so the removal is safe — but leaving the row in would
+     have put a task on the certificate list that nothing on the site can
+     complete, which is the exact fault the Arena row had. */
   community:  { icon:'', label:'Join in on the community page' },
   editing:    { icon:'', label:'Publish or animate something you made' },
   reaction:   { icon:'', label:'Finish a set of five in Reaction' },
@@ -1965,18 +1903,10 @@ ncFit.textContent =
    dock is made of — so in Farsi on a phone the orb went back to the middle
    of the page heading. The dock is mirrored just below instead, which is one
    line rather than three. */
-"@media (min-width:1024px) {" +
-  "html[dir=rtl] body .jr-pill { left:176px; transform:none; }" +
-  "html[dir=rtl] body .jr-pill:hover { transform:translateY(-1px); }" +
-  "html[dir=rtl] body .jr-pill.hidden { transform:translateY(-8px); } }" +
-"@media (min-width:1024px) and (max-width:1359px) {" +
-  "html[dir=rtl] body .jr-pill { left:50%; transform:translateX(-50%); }" +
-  "html[dir=rtl] body .jr-pill:hover { transform:translateX(-50%) translateY(-1px); }" +
-  "html[dir=rtl] body .jr-pill.hidden { transform:translateX(-50%) translateY(-8px); } }" +
-/* The corner the orb docks in is the one your thumb is not reading past, so
-   it mirrors with the text. */
-"@media (max-width:1023px) {" +
-  "html[dir=rtl] body .jr-pill { right:auto; left:12px; } }" +
+/* The pill these mirrored is gone with jarvis.js, so the rules are too. The
+   card that took its place mirrors in one line, below. */
+"html[dir=rtl] .nca { right:auto; left:18px; }" +
+"@media (max-width:760px) { html[dir=rtl] .nca { left:10px; right:10px; } }" +
 
 /* ---------------------------------------------------------------------------
    ENGLISH SENTENCES INSIDE AN RTL PAGE
@@ -2481,278 +2411,15 @@ function ncBrand() {
 }
 
 
-/* ============================================================================
-   THE MINI AI  —  n8n chat widget, site-wide
-   ============================================================================
-   A floating assistant on every page, backed by an n8n workflow. Loaded from
-   here rather than pasted into nine files, and it brings three things the bare
-   two-line embed does not:
+/* THE MINI AI IS GONE.
+   The n8n chat widget used to float on every page, bottom right. It is
+   removed along with the Nova pill: two assistants on one page, neither of
+   which was asked for, both of which had to be dismissed. What replaces both
+   is nova-ask.js — one prompt, once, three seconds in, that takes you where
+   you asked to go. See that file for what it does instead.
 
-   IT COUNTS AS AN AI CHAT. parent.html reads nc_history to show a parent how
-   much AI their child used, and ai.html has always written to it. A second
-   assistant that skipped it would have left the Family Dashboard reporting "No
-   AI chats yet" while a conversation was happening — a hole in the oversight
-   this site sells, opened by accident.
-
-   IT KEEPS THE 16+ PROMISE. The age gate tells 16 to 18 year olds that their
-   chats are no longer logged for their parent. So for them the transcript is
-   not written. The skill credit still is: that is the learner's own progress,
-   not surveillance, and it is what certificates are counted from.
-
-   IT SPEAKS THE SITE'S LANGUAGE. The chosen language rides along in metadata,
-   so the workflow can answer in Persian to someone reading the site in Persian
-   rather than defaulting to English.
-
-   Hooked by wrapping fetch rather than by watching the DOM: the widget POSTs
-   to the webhook and reads the reply, so that one call is the whole
-   conversation. Reading it from the rendered bubbles would break the first
-   time the package changed a class name.
-   ============================================================================ */
-const NC_AI_WEBHOOK = 'https://amirkondori.app.n8n.cloud/webhook/8777d9a6-8942-47f5-9b57-63f94f37a840/chat';
-
-function ncRecordAIChat(q, a) {
-  if (!q) return;
-  try {
-    // certificates count the reps whatever the age — that is the learner's own record
-    if (typeof logSkill === 'function') logSkill('ai_ask');
-    if (typeof ncControlsRelaxed === 'function' && ncControlsRelaxed()) return;  // 16+: no transcript
-    saveHist('NovaClip Assistant', String(q).slice(0, 300), String(a || '').slice(0, 300));
-  } catch (e) {}
-}
-
-
-/* ---- WHAT THE ASSISTANT KNOWS ABOUT YOUR CHANNEL ----
-   Without this the assistant is a generic YouTube chatbot: it answers "how do I
-   get more views" the same way for someone with 40 subscribers and someone with
-   40,000, and it cannot tell you whether a video did well because it has never
-   seen one of yours.
-
-   So the connected channel rides along with every message. Not at createChat
-   time — metadata there is captured once, and a session that starts before you
-   connect would stay ignorant for its whole life. It is merged into the request
-   body in the fetch hook instead, so it is current on every send and it starts
-   working the moment you connect in Studio, mid-conversation.
-
-   Cached for 30 minutes because the YouTube API has a daily quota and a chat is
-   many messages. Refreshed in the background, never blocking the widget.
-
-   When there is no connection this sends { connected: false } rather than
-   nothing: the workflow can then say "connect your channel in Studio" instead of
-   guessing at numbers it does not have — the failure mode being avoided is an
-   assistant that invents a subscriber count. */
-const NC_SNAP_TTL = 30 * 60 * 1000;
-
-function ncYTToken() {
-  try { const s = JSON.parse(localStorage.getItem('nc_yt') || 'null'); if (s && s.exp > Date.now()) return s.t; }
-  catch (e) {}
-  return null;
-}
-
-function ncCachedSnap() {
-  try {
-    const c = JSON.parse(localStorage.getItem('nc_ytsnap') || 'null');
-    if (c && c.at && Date.now() - c.at < NC_SNAP_TTL) return c.data;
-  } catch (e) {}
-  return null;
-}
-
-async function ncChannelSnapshot(force) {
-  const tok = ncYTToken();
-  if (!tok) return { connected: false, why: 'no channel connected in Studio yet' };
-  if (!force) { const c = ncCachedSnap(); if (c) return c; }
-
-  const api = (u) => fetch('https://www.googleapis.com/youtube/v3/' + u, { headers: { Authorization: 'Bearer ' + tok } }).then(r => r.json());
-  try {
-    const ch = await api('channels?part=statistics,snippet,contentDetails&mine=true');
-    const me = ch.items && ch.items[0];
-    if (!me) return { connected: false, why: (ch.error && ch.error.message) || 'YouTube returned no channel' };
-
-    const st = me.statistics || {}, sn = me.snippet || {};
-    const data = {
-      connected: true,
-      title: sn.title || '',
-      handle: (sn.customUrl || ''),
-      description: (sn.description || '').slice(0, 300),
-      created: (sn.publishedAt || '').slice(0, 10),
-      subscribers: +st.subscriberCount || 0,
-      totalViews: +st.viewCount || 0,
-      videoCount: +st.videoCount || 0,
-      recent: []
-    };
-
-    /* Recent uploads matter more than the totals: "is this one doing well" is
-       the question people actually ask, and it needs something to compare to. */
-    const up = me.contentDetails && me.contentDetails.relatedPlaylists && me.contentDetails.relatedPlaylists.uploads;
-    if (up) {
-      const pl = await api('playlistItems?part=contentDetails&playlistId=' + up + '&maxResults=10');
-      const ids = (pl.items || []).map(i => i.contentDetails.videoId).filter(Boolean).join(',');
-      if (ids) {
-        const vs = await api('videos?part=statistics,snippet&id=' + ids);
-        data.recent = (vs.items || []).map(v => ({
-          title: (v.snippet && v.snippet.title) || '',
-          published: ((v.snippet && v.snippet.publishedAt) || '').slice(0, 10),
-          views: +(v.statistics && v.statistics.viewCount) || 0,
-          likes: +(v.statistics && v.statistics.likeCount) || 0,
-          comments: +(v.statistics && v.statistics.commentCount) || 0
-        }));
-        // the median, so the workflow can say "above your usual" without doing stats
-        const vv = data.recent.map(r => r.views).sort((a, b) => a - b);
-        if (vv.length) data.medianViews = vv[Math.floor(vv.length / 2)];
-      }
-    }
-    localStorage.setItem('nc_ytsnap', JSON.stringify({ at: Date.now(), data: data }));
-    return data;
-  } catch (e) {
-    return { connected: false, why: 'could not reach YouTube' };
-  }
-}
-
-function ncWatchAIChat() {
-  if (window.__ncAIWrapped || typeof window.fetch !== 'function') return;
-  window.__ncAIWrapped = true;
-  const orig = window.fetch;
-  window.fetch = function (input, init) {
-    let url = '';
-    try { url = typeof input === 'string' ? input : (input && input.url) || ''; } catch (e) {}
-    const mine = url.indexOf(NC_AI_WEBHOOK) === 0;
-    let asked = '';
-    if (mine && init && typeof init.body === 'string') {
-      try { asked = (JSON.parse(init.body) || {}).chatInput || ''; } catch (e) {}
-    }
-    /* The channel goes out WITH the question. Building the body here rather
-       than at init is what lets it be current on every message. */
-    if (mine && asked) {
-      const self = this;
-      return ncChannelSnapshot().then(function (chan) {
-        let body = init.body;
-        try {
-          const j = JSON.parse(init.body);
-          j.channel = chan;
-          body = JSON.stringify(j);
-        } catch (e) {}
-        return orig.call(self, input, Object.assign({}, init, { body: body }));
-      }).then(function (res) {
-        try {
-          res.clone().json()
-            .then(function (j) { ncRecordAIChat(asked, (j && (j.output || j.text || j.message)) || ''); })
-            .catch(function () { ncRecordAIChat(asked, ''); });
-        } catch (e) { ncRecordAIChat(asked, ''); }
-        return res;
-      });
-    }
-
-    const p = orig.apply(this, arguments);
-    if (!mine || !asked) return p;
-    /* clone before reading — a Response body can only be consumed once, and the
-       widget still needs it to draw the reply */
-    return p.then(function (res) {
-      try {
-        res.clone().json()
-          .then(function (j) { ncRecordAIChat(asked, (j && (j.output || j.text || j.message)) || ''); })
-          .catch(function () { ncRecordAIChat(asked, ''); });
-      } catch (e) { ncRecordAIChat(asked, ''); }
-      return res;
-    });
-  };
-}
-
-/* THE CHAT WIDGET IS NOT WORTH A SLOW PAGE.
-
-   ncMiniAI() pulls about a megabyte of somebody else's JavaScript, plus its
-   stylesheet, from a CDN — and it was called the instant nova.js ran, on every
-   page. Measured on pricing.html those two requests were the slowest things on
-   the page by a distance: 568ms for the stylesheet and 405ms for the bundle,
-   against 13ms for nova.js itself. A page full of prices sat there competing
-   with a chat bubble nobody had asked for yet.
-
-   Nothing about it needs to be there at first paint. It loads on whichever
-   comes first: the browser going idle, the first sign of a person doing
-   anything, or six seconds. So it is ready by the time a hand moves towards
-   it, and it is never in the way of the page arriving. */
-function ncChatWhenIdle() {
-  let started = false;
-  const go = function () {
-    if (started) return;
-    started = true;
-    ncMiniAI();
-  };
-  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (e) {
-    addEventListener(e, go, { once: true, passive: true });
-  });
-  if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 6000 });
-  else setTimeout(go, 3000);
-}
-
-function ncMiniAI() {
-  if (document.getElementById('ncChatCss')) return;
-  ncWatchAIChat();
-
-  const css = document.createElement('link');
-  css.id = 'ncChatCss'; css.rel = 'stylesheet';
-  css.href = 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css';
-  document.head.appendChild(css);
-
-  /* The widget ships light and square. These pull it into the site's palette
-     and lift it clear of the corners the points badge and the language box
-     already occupy. */
-  const st = document.createElement('style');
-  st.textContent =
-    ':root {' +
-    '  --chat--color-primary: #7209B7; --chat--color-primary-shade-50: #5d0796;' +
-    '  --chat--color-secondary: #00F0FF; --chat--color-white: #EAF2FF;' +
-    '  --chat--color-dark: #05060A; --chat--color-light: #0B0E16;' +
-    '  --chat--color-typing: #7E8AA6;' +
-    '  --chat--toggle--background: linear-gradient(135deg,#FF2E97,#7209B7,#00F0FF);' +
-    '  --chat--toggle--size: 56px;' +
-    '  --chat--window--width: 380px; --chat--window--height: 560px;' +
-    '  --chat--border-radius: 14px;' +
-    '  --chat--header--background: #0B0E16; --chat--header--color: #EAF2FF;' +
-    '  --chat--message--bot--background: rgba(255,255,255,0.05);' +
-    '  --chat--message--bot--color: #EAF2FF;' +
-    '  --chat--message--user--background: #7209B7; --chat--message--user--color: #fff;' +
-    '  --chat--textarea--height: 54px;' +
-    '}' +
-    '#n8n-chat .chat-window-toggle { box-shadow: 0 8px 30px rgba(114,9,183,0.5); }' +
-    /* bottom-right is where the editor keeps the points badge, so sit above it */
-    '#n8n-chat { position: fixed; right: 18px; bottom: 92px; z-index: 996; }' +
-    /* nothing floats over a match in progress */
-    'body.ncplaying #n8n-chat { display: none !important; }' +
-    '@media (max-width: 520px) { :root { --chat--window--width: 100vw; } }';
-  document.head.appendChild(st);
-
-  const host = document.createElement('div');
-  host.id = 'n8n-chat';
-  document.body.appendChild(host);
-
-  const L = (typeof lang === 'function' && lang()) || 'en';
-  import('https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js')
-    .then(function (m) {
-      m.createChat({
-        webhookUrl: NC_AI_WEBHOOK,
-        target: '#n8n-chat',
-        mode: 'window',
-        showWelcomeScreen: false,
-        loadPreviousSession: true,
-        /* the workflow gets to know who it is talking to, so it can answer in
-           the right language and pitch it at the right age */
-        metadata: { language: L, languageName: (LANGS[L] || 'English'), age: (typeof ncAge === 'function' ? ncAge() : 0), site: 'novaclip' },
-        initialMessages: [tr('ai_hi') || 'Hey! Ask me anything about growing your channel.'],
-        i18n: { en: {
-          title: 'NovaClip Assistant',
-          subtitle: tr('ai_sub') || 'Ask about titles, thumbnails, ideas — anything.',
-          footer: '',
-          getStarted: tr('ai_start') || 'New chat',
-          inputPlaceholder: tr('ai_ph') || 'Ask NovaClip anything…'
-        } }
-      });
-    })
-    .catch(function (e) {
-      /* Loaded from a CDN, so a blocked network or an offline device means no
-         widget. Say so in the console rather than leaving a dead corner. */
-      console.warn('NovaClip mini AI could not load (CDN unreachable?)', e);
-      const h = document.getElementById('n8n-chat'); if (h) h.remove();
-    });
-}
+   nc_history is still written by ai.html, so the Family Dashboard's count of
+   AI chats is unaffected by this removal. */
 
 
 /* ============================================================================
@@ -3290,11 +2957,20 @@ const NC_NAV = [
   { items: [['socials.html', 'Socials', 'socials', 'gift']] },
   { name: 'You', key: 'nav_you', icon: 'progress', items: [
       /* First in the group, because it is the one somebody arrives looking
-         for. The icon is the sign-in one Biometrics uses — they are two ways
-         into the same account, so they should not look like separate ideas. */
+         for. */
       ['profile.html', 'Profile', 'profile', 'signin'],
-      ['progress.html', 'Progress', 'progress', 'progress'], ['parent.html', 'Family', 'family', 'family'],
-      ['biometrics.html', 'Biometrics', 'biometrics', 'signin'],
+      /* History replaces Progress here. Progress was a page of four panels and
+         only one of them answered a question anybody arrives with — "what have
+         I actually been asking?". The certificate reps moved to Pricing, beside
+         the certificates they are the price of; the history got its own page.
+         Biometrics is gone entirely. */
+      ['history.html', 'History', 'history', 'progress'],
+      /* The category is asked for once, on the first visit. Somebody who
+         picked "gaming" at thirteen and is making music at fifteen needs a way
+         back to that question, and a first-run dialog they can never reopen is
+         a decision taken away from them. */
+      ['categories.html', 'Categories', 'categories', 'trends'],
+      ['parent.html', 'Family', 'family', 'family'],
       ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
 ];
 
@@ -4176,8 +3852,10 @@ window.ncUseLocal = function (on) {
   return ncActiveProvider();
 };
 window.ncActiveProvider = ncActiveProvider; window.ncDefaultModel = ncDefaultModel;
-/* The worker's address, exported for the same consumers that use ncAsk —
-   jarvis.js reads it to reach the /tts endpoint for its voice. */
+/* The worker's address, exported for the same consumers that use ncAsk:
+   hype.js, moderate.js and nova-globe.js all reach it through this. jarvis.js
+   used it too, for the /tts endpoint its voice spoke through; that file and
+   that voice are gone, the other three are not. */
 window.NC_AI_WORKER_URL = NC_AI_WORKER;
 
 /* ============================================================================
@@ -4342,15 +4020,19 @@ window.addEventListener('DOMContentLoaded', () => {
   ncEditorTools();
   /* Not inside an iframe. Games, Socials and AI are hosts that put existing
      pages behind tabs, so nova.js runs once in the host and again in each
-     frame — which meant two chat widgets stacked on top of each other, and a
-     screen-time clock counting every minute twice. The rail already stands
-     down under ?embed=1; these are the two that did not. */
-  if (!NC_EMBED) {
-    ncScreenTime();
-    ncChatWhenIdle();
-  }
-  // warm the channel cache in the background so message one already has it
-  if (ncYTToken()) setTimeout(function () { ncChannelSnapshot(); }, 1200);
+     frame — which meant a screen-time clock counting every minute twice. The
+     rail already stands down under ?embed=1; this one did not.
+
+     ncChatWhenIdle() used to sit here too and opened the n8n chat widget after
+     a stretch of no clicks. Both it and the widget are gone; nova-ask.js asks
+     once, three seconds in, and does its own ?embed=1 check. */
+  if (!NC_EMBED) ncScreenTime();
+  /* The channel cache used to be warmed here so the chat widget's first
+     message already had the numbers in hand. ncYTToken() and
+     ncChannelSnapshot() both belonged to that widget and went with it, and
+     nothing else on the site called either — analytics.html reads the channel
+     through its own sign-in. Warming a cache for a reader that no longer
+     exists is one API call per page load for nobody. */
   const badge = document.createElement('div'); badge.id = 'ncpts'; badge.textContent = '🪙 ' + getPts(); document.body.appendChild(badge);
   const t = document.createElement('div'); t.id = 'nctoast'; document.body.appendChild(t);
   const lpick = document.getElementById('langpick');
@@ -4757,6 +4439,112 @@ window.addEventListener('DOMContentLoaded', () => {
     if (NC_AGE_EXEMPT.test(location.pathname)) return;
     if (window.ncAgeGate) ncAgeGate();
     ncSignupGate();
+    ncCategoryGate();
+  }
+
+  /* ==========================================================================
+     WHAT ARE YOU MAKING?
+     ==========================================================================
+     Asked once, on the first visit, and never again — the answer is what the
+     Trend Spotter, the idea generator and the AI tutors have all been guessing
+     at until now.
+
+     IT IS LAST IN THE QUEUE ON PURPOSE. The age gate is a legal question and
+     the sign-up gate is an account question; both must be answered before a
+     preference is worth collecting, and three dialogs stacked on one screen is
+     nobody's first visit. Each of the two above returns early if it is showing
+     something, so this only ever appears on a clear screen.
+
+     SKIPPING IS AN ANSWER. Somebody who closes it is not asked again — the
+     skip is recorded separately from the choice, so "has not chosen" and "has
+     not been asked" stay different things, and Categories in the rail is
+     always there for anyone who changes their mind. */
+  function ncCategoryGate() {
+    if (window.NC_EMBED) return;
+    if (NC_SIGNUP_SKIP.test(location.pathname)) return;
+    var C = window.NC_CATEGORY;
+    if (!C || C.asked()) return;
+    /* Do not pile onto whatever the two gates above have already put up. */
+    if (document.getElementById('ncAgeGate') || document.getElementById('ncSignup')) return;
+    if (ncAge() < NC_MIN_AGE) return;
+
+    var o = document.createElement('div');
+    o.id = 'ncCatGate';
+    o.setAttribute('role', 'dialog');
+    o.setAttribute('aria-modal', 'true');
+    o.setAttribute('aria-label', 'What do you make?');
+    o.innerHTML =
+      '<div class="nccg-box">' +
+        '<h2>What do you make?</h2>' +
+        '<p>So the trends, the ideas and the tutors are about your thing and not somebody else\'s. ' +
+        'You can change it any time from <b>Categories</b>.</p>' +
+        '<div class="nccg-grid" id="ncCatGrid"></div>' +
+        '<label class="nccg-lbl" for="ncCatOwn">Not on the list? Write it — anything at all</label>' +
+        '<div class="nccg-row">' +
+          '<input type="text" id="ncCatOwn" maxlength="40" spellcheck="false" ' +
+                 'placeholder="Warhammer painting, speedcubing, baking…">' +
+          '<button class="nccg-save" id="ncCatSave">Save</button>' +
+        '</div>' +
+        '<button class="nccg-skip" id="ncCatSkip">Skip for now</button>' +
+      '</div>';
+    document.body.appendChild(o);
+
+    var st = document.createElement('style');
+    st.textContent =
+      '#ncCatGate{position:fixed;inset:0;z-index:99988;display:flex;align-items:center;justify-content:center;' +
+        'padding:18px;background:rgba(4,6,14,.72);backdrop-filter:blur(6px)}' +
+      '#ncCatGate .nccg-box{width:min(560px,100%);max-height:88vh;overflow:auto;border-radius:20px;padding:24px;' +
+        /* Opaque, for the same reason the ask card is: --nc-card2 is a 6%
+           overlay in both themes, so this dialog was showing the blurred page
+           through its own text. */
+        'background:var(--nc-bg2,#0C1220);color:var(--nc-text,#EAF2FF);' +
+        'border:1px solid var(--nc-line2,rgba(124,92,255,.4));box-shadow:0 30px 90px rgba(0,0,0,.6);' +
+        'font:14px/1.6 "Segoe UI",system-ui,sans-serif}' +
+      '#ncCatGate h2{margin:0 0 6px;font-size:1.25rem}' +
+      '#ncCatGate p{margin:0 0 16px;color:var(--nc-dim,#8b93a7);font-size:.9rem}' +
+      '#ncCatGate .nccg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,100%),1fr));' +
+        'gap:8px;margin-bottom:18px}' +
+      '#ncCatGate .nccg-grid button{text-align:left;padding:11px 13px;border-radius:13px;cursor:pointer;font:inherit;' +
+        'border:1px solid var(--nc-line,rgba(255,255,255,.13));background:var(--nc-card,rgba(255,255,255,.04));' +
+        'color:var(--nc-text,#EAF2FF);transition:.14s}' +
+      '#ncCatGate .nccg-grid button:hover{border-color:var(--nc-cyan,#00E5FF);background:rgba(0,229,255,.09)}' +
+      '#ncCatGate .nccg-grid b{display:block;font-size:.92rem;font-weight:650}' +
+      '#ncCatGate .nccg-grid span{font-size:.76rem;color:var(--nc-dim,#8b93a7)}' +
+      '#ncCatGate .nccg-lbl{display:block;font-size:.83rem;color:var(--nc-dim,#8b93a7);margin-bottom:7px}' +
+      '#ncCatGate .nccg-row{display:flex;gap:8px;flex-wrap:wrap}' +
+      '#ncCatGate .nccg-row input{flex:1 1 200px;min-width:0;padding:11px 13px;border-radius:12px;font:inherit;' +
+        /* Theme tokens, not a fixed black wash — on the light theme the wash
+           made a dark grey box in the middle of a white dialog. */
+        'background:var(--nc-card,rgba(0,0,0,.3));color:var(--nc-text,#EAF2FF);' +
+        'border:1px solid var(--nc-line,rgba(255,255,255,.16))}' +
+      '#ncCatGate .nccg-save{padding:11px 20px;border-radius:12px;border:0;cursor:pointer;font:inherit;' +
+        'font-weight:700;color:#04121a;' +
+        'background:linear-gradient(110deg,var(--nc-violet,#7C5CFF),var(--nc-cyan,#00E5FF) 55%,var(--nc-pink,#FF2E97))}' +
+      '#ncCatGate .nccg-skip{margin-top:14px;background:none;border:0;cursor:pointer;font:inherit;' +
+        'font-size:.83rem;color:var(--nc-dim,#8b93a7);text-decoration:underline;padding:0}';
+    document.head.appendChild(st);
+
+    function done() { try { C.markAsked(); } catch (e) {} o.remove(); }
+
+    var grid = document.getElementById('ncCatGrid');
+    C.PRESETS.forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = '<b></b><span></span>';
+      b.querySelector('b').textContent = p.label;
+      b.querySelector('span').textContent = p.hint;
+      b.onclick = function () { C.set(p.id); done(); };
+      grid.appendChild(b);
+    });
+    document.getElementById('ncCatSave').onclick = function () {
+      var v = document.getElementById('ncCatOwn').value.trim();
+      if (!v) return;
+      C.set(v); done();
+    };
+    document.getElementById('ncCatOwn').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') document.getElementById('ncCatSave').click();
+    });
+    document.getElementById('ncCatSkip').onclick = done;
   }
 
   /* ==========================================================================
@@ -4939,27 +4727,21 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   window.ncSignupGate = ncSignupGate;
 
-  /* THE IDENTITY GATE.
-     Loaded from here rather than from a script tag on each page, for the same
-     reason the age gate lives here: twenty-nine pages, and a lock that one of
-     them forgets to carry is not a lock.
+  /* THE IDENTITY GATE IS GONE.
+     ncGuardBoot() used to inject guard.js into every page, which read four
+     localStorage keys and drew a device lock if one of them held an enrolment.
+     guard.js, passkey.js, locker.js, biosentinel.js and biometrics.html were
+     all deleted with the rest of BioSentinel, so this injector was left asking
+     every page to fetch a file that no longer exists — a 404 on all thirty-two
+     of them, and a service worker that could not install because the file was
+     still in its shell list.
 
-     It is fetched on every page but it does nothing on most of them — the
-     first thing guard.js does is read four localStorage keys, and if none of
-     them holds an enrolment it returns without drawing anything. Somebody who
-     has never asked for a lock never meets one, and never gets asked to set
-     one up either. */
-  function ncGuardBoot() {
-    if (NC_EMBED) return;
-    if (document.getElementById('nc-guard-js')) return;
-    var s = document.createElement('script');
-    s.id = 'nc-guard-js';
-    s.src = 'guard.js';
-    document.head.appendChild(s);
-  }
+     Nothing replaces it. A face scan was never the thing standing between a
+     teenager's account and somebody else: the account lives behind the sign-in
+     in ncSignupGate(), and that is where it belongs. */
 
-  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); ncAgeBoot(); ncGuardBoot(); });
-  if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); ncGuardBoot(); }
+  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); ncAgeBoot(); });
+  if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); }
 })();
 
 /* ============================================================
@@ -4972,7 +4754,6 @@ window.addEventListener('DOMContentLoaded', () => {
     home:'Home', studio:'Studio', analytics:'Stats', trends:'Studio',
     editor:'Editor', sniper:'Games', ai:'NovaClip AI',
     studio_h:'NovaClip Studio', studio_sub:'link ur channel n scope the competition',
-    sysonline:'jarvis · all systems up', controldeck:'// control deck',
     analytics_h:'Stats', analytics_sub:'ur numbers vs the ops — no cap',
     analytics_hint:'link ur channel to pull the stats.',
     t_duel:'1v1 a channel', t_duel_d:'run it with a channel within 20k subs n bag points.',
@@ -5350,7 +5131,7 @@ function ncModalWatch() {
     st.id = 'ncmodalcss';
     st.textContent =
       'body.nc-modal-open #ncpairtabs.float,' +
-      'body.nc-modal-open .jr-pill{opacity:0;pointer-events:none;transition:opacity .15s}';
+      'body.nc-modal-open .nca{opacity:0;pointer-events:none;transition:opacity .15s}';
     document.head.appendChild(st);
   }
 

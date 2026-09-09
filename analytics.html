@@ -2020,14 +2020,9 @@ getRedirectResult(auth).then(r => { if (r) afterSignIn(r); }).catch(e => note(ex
      channel through NX.refresh(), so the order relative to nova.js does not
      matter, but it must come after the page script that defines yta(). -->
 <script src='studio-nexus.js'></script>
+<script src='categories.js'></script>
 <script src='nova.js'></script>
-<script src='biometric.js' defer></script>
-<script src='jarvis.js' defer></script>
-<!-- The 'how do I use this page' button beside the Nova pill. Loads after
-     jarvis.js because it borrows the pill that file builds. -->
-<!-- Nova as a character, drawn in SVG. nova-guide.js uses her for the
-     scanning animation; loaded before it so she is there when it runs. -->
+<script src='nova-ask.js' defer></script>
 <script src='nova-mascot.js' defer></script>
-<script src='nova-guide.js' defer></script>
 </body>
 </html>

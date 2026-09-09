@@ -158,7 +158,16 @@
    one is below the fold. Both boards also carry their own name now; the header
    said "Leaderboard" on both, which side by side is worse than one board.
    leaderboard.js, reaction.html and aim.html are all cached. */
-const CACHE = 'novaclip-v28';
+/* v29: the rail and the assistants. Progress left the rail (its two halves now
+   live on pricing.html and the new history.html), History and Categories
+   joined it, and biometrics is gone entirely — nine files deleted, so an old
+   cache holding biometrics.html or jarvis.js would still serve pages that no
+   longer exist. This bump is what retires them. Two assistants were replaced
+   by one: the n8n chat widget and the Nova voice pill are both removed, and
+   nova-ask.js asks a single typed question three seconds in. categories.js is
+   the one copy of the category list, shared by the first-run dialog and
+   categories.html. */
+const CACHE = 'novaclip-v29';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -214,12 +223,24 @@ const SHELL = [
   /* Checks a dropped clip for fast flashing and blank footage. Pure
      arithmetic on frames already in memory, so it works offline. */
   '/moderate.js',
-  /* The "how do I use this page" button beside the Nova pill, and the steps it
-     shows. The steps are written into the file rather than asked of the model,
-     which is what makes it worth caching: a help button that needs the network
-     is missing at exactly the moment somebody is stuck. */
-  '/nova-guide.js',
+  /* Nova herself, drawn in SVG rather than fetched as an image. She is the
+     face on the scanner and on the question nova-ask.js asks, and at a few
+     hundred bytes of markup she costs less cached than the one PNG she
+     replaced. */
   '/nova-mascot.js',
+  /* The question asked three seconds in, and the category behind it. Both are
+     cached because both work with no network at all: nova-ask.js matches what
+     was typed against a table in its own file and only falls back to the model
+     when nothing matches, and categories.js is a list and a localStorage key.
+     Offline, the card still opens and still takes you to the right page. */
+  '/nova-ask.js',
+  '/categories.js',
+  /* The two pages the rail gained. History reads what is already stored on the
+     device, so it is fully useful offline; Categories is the page that lets
+     somebody change the answer they gave on their first visit, and it needs
+     nothing but the file above. */
+  '/history.html',
+  '/categories.html',
   '/ai-edit.js',
   '/ai-edit-panel.js',
   /* Sends the Trend Spotter's rail to the real pages. Without it that rail
@@ -241,21 +262,15 @@ const SHELL = [
   /* The focus timer is the one page here most likely to be opened with the
      wifi off on purpose. */
   '/study.html',
-  '/passkey.js',
-  '/locker.js',
   '/rhythm.js',
   '/leaderboard.js',
   '/tools-data.js',
   '/tools-extra.js',
   '/teenverse.js',
-  /* The lock: every page fetches it, so it has to be there offline too. */
-  '/guard.js',
-  '/biosentinel.js',
   /* The two skins, and the faces they are set in. Without the woff2 files the
      first offline visit falls back to the system sans and the page looks
      wrong rather than merely plain. 50KB for both, once. */
   '/theme-teenverse.css',
-  '/theme-biometric.css',
   /* Keeps an embedded app's own theme picker from stealing the attribute the
      site selects its palette with. typing.html loads it before its bundle, so
      a cached page without it is a page where light mode does not work. */

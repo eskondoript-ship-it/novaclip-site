@@ -401,6 +401,7 @@ html[data-device="phone-s"] .btsave { display: none; }
         <li data-t='f15'>Shareable on socials & CVs</li>
         <li data-t='f16'>Verified badge on your profile</li>
       </ul>
+      <div class="certtasks" data-tier="Basic Certificate"></div>
       <button class='cta' data-t='cta_basic'>Get Basic</button>
     </div>
 
@@ -413,6 +414,7 @@ html[data-device="phone-s"] .btsave { display: none; }
         <li data-t='f18'>Portfolio review by a mentor</li>
         <li data-t='f19'>Gold verified badge</li>
       </ul>
+      <div class="certtasks" data-tier="Advanced Certificate"></div>
       <button class='cta' data-t='cta_adv'>Get Advanced</button>
     </div>
 
@@ -422,11 +424,12 @@ html[data-device="phone-s"] .btsave { display: none; }
       <div class='price' data-eur='99.99' data-usd='109.99' data-gbp='89.99' data-cny='799' data-chf='99.90' data-inr='7999' data-bdt='10999'><small class='per once' data-t='peronce'> one-time</small></div>
       <ul>
         <li data-t='f20'>Everything in Advanced</li>
-        <li><b data-t='f14b'>Earned, not bought</b> <span data-t='f14m'>— issues at 1500 NovaCoins once you have exported 25 videos, run 20 scans and topped the Arena board 3 times</span></li>
+        <li><b data-t='f14b'>Earned, not bought</b> <span data-t='f14m'>— issues at 1500 NovaCoins once you have exported 25 videos, run 20 scans and saved 15 ideas</span></li>
         <li data-t='f21'>Featured creator showcase</li>
         <li data-t='f22'>Priority support & 1:1 session</li>
         <li data-t='f23'>Platinum verified badge</li>
       </ul>
+      <div class="certtasks" data-tier="Master Certificate"></div>
       <button class='cta' data-t='cta_master'>Get Master</button>
     </div>
   </div>
@@ -1222,14 +1225,82 @@ else initCheckout();
   </div>
 </div>
 
+<script>
+/* THE TASKS, ON THE PAGE THAT ASKS FOR THE MONEY.
+   ==============================================
+   These used to live on the Progress page, which is the wrong place for them:
+   the moment somebody wants to know what a certificate costs them in WORK is
+   the moment they are looking at what it costs them in money. A price beside
+   the words "earned, not bought" and no list of what earning it involves is
+   an assertion; the list is the evidence.
+
+   It is rendered from certProgress() in nova.js — the same function that
+   decides whether a certificate is actually issued — so this can never drift
+   from the real requirement. A hand-written list here would have gone stale
+   the day the Arena was removed, which is exactly what happened to the line
+   of prose above it. */
+(function () {
+  function paint() {
+    if (typeof certProgress !== 'function') return;
+    document.querySelectorAll('.certtasks').forEach(function (host) {
+      var p = certProgress(host.getAttribute('data-tier'));
+      if (!p) return;
+      var done = p.total - p.missing.length;
+
+      /* Everything still to do, plus how far along each one is. A bare "3 of 7"
+         tells somebody they are behind; the rows tell them what to go and do. */
+      var rows = p.missing.map(function (m) {
+        var have = Math.min(m.have, m.need);
+        return '<li><span class="ct-l">' + esc(m.label) + '</span>' +
+               '<span class="ct-n">' + have + '<i>/' + m.need + '</i></span></li>';
+      }).join('');
+
+      host.innerHTML =
+        '<div class="ct-head">' +
+          '<b>' + (p.missing.length ? 'What earns it' : 'You have earned this') + '</b>' +
+          '<span>' + done + ' of ' + p.total + '</span>' +
+        '</div>' +
+        '<div class="ct-bar"><i style="width:' + p.pct + '%"></i></div>' +
+        (rows ? '<ul class="ct-list">' + rows + '</ul>'
+              : '<p class="ct-done">Everything on the list is done. Buying it issues it.</p>');
+    });
+  }
+  function esc(t) {
+    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+      return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+    });
+  }
+  /* nova.js defines certProgress and may land after this file, so wait for it
+     rather than assuming a load order. */
+  var tries = 0;
+  var t = setInterval(function () {
+    if (typeof certProgress === 'function') { clearInterval(t); paint(); }
+    else if (++tries > 40) clearInterval(t);
+  }, 120);
+  window.onSkillLogged = paint;
+})();
+</script>
+<style>
+.certtasks{margin:14px 0 4px;text-align:left}
+.ct-head{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
+.ct-head b{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--nc-text,#E8EEFF)}
+.ct-head span{margin-left:auto;font-size:.76rem;color:var(--nc-dim2,#8A97B4);
+  font-variant-numeric:tabular-nums}
+.ct-bar{height:4px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}
+.ct-bar i{display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--nc-violet,#7C5CFF),var(--nc-cyan2,#00E5FF))}
+.ct-list{list-style:none;margin:10px 0 0;padding:0}
+.ct-list li{display:flex;align-items:baseline;gap:10px;padding:4px 0;font-size:.83rem;
+  color:var(--nc-dim2,#8A97B4);line-height:1.45}
+.ct-l{flex:1;min-width:0}
+.ct-n{flex:none;font-variant-numeric:tabular-nums;color:var(--nc-text,#E8EEFF);font-weight:650}
+.ct-n i{font-style:normal;color:var(--nc-dim2,#8A97B4);font-weight:400}
+.ct-done{margin:9px 0 0;font-size:.83rem;color:#B6FF4A;line-height:1.5}
+</style>
+<script src='categories.js'></script>
 <script src='nova.js'></script>
-<script src='biometric.js' defer></script>
-<script src='jarvis.js' defer></script>
-<!-- The 'how do I use this page' button beside the Nova pill. Loads after
-     jarvis.js because it borrows the pill that file builds. -->
-<!-- Nova as a character, drawn in SVG. nova-guide.js uses her for the
-     scanning animation; loaded before it so she is there when it runs. -->
+<script src='nova-ask.js' defer></script>
 <script src='nova-mascot.js' defer></script>
-<script src='nova-guide.js' defer></script>
 </body>
 </html>

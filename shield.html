@@ -481,15 +481,12 @@ summary:hover { color: var(--nc-cyan,#00F0FF); }
 })();
 </script>
 <!-- The rail, the language picker and the header all come from here. -->
+<script src='categories.js'></script>
 <script src='nova.js'></script>
-<!-- Nova was on every other page and missing from this one, which is the page a
-     parent is most likely to be stuck on. jarvis.js builds the pill; nova-guide
-     borrows it for the "?" button and already had a written guide for this page
-     waiting with no button to open it. -->
-<script src='jarvis.js' defer></script>
-<!-- Nova as a character, drawn in SVG. nova-guide.js uses her for the
-     scanning animation; loaded before it so she is there when it runs. -->
+<script src='nova-ask.js' defer></script>
+<!-- Nova's face, on the page a parent is most likely to be stuck on. She used
+     to arrive here through jarvis.js and nova-guide.js; both are deleted and
+     she is drawn straight from this file now. -->
 <script src='nova-mascot.js' defer></script>
-<script src='nova-guide.js' defer></script>
 </body>
 </html>

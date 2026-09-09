@@ -377,13 +377,11 @@ fn distance(a: Point, b: Point) -> f64 {
           padding-bottom: 6px;
         }
         body:has(.sidebar) { padding-bottom: 142px !important; }
-        /* Nova's orb docks at bottom:74px, which is now exactly where this
-           bar is — it was sitting on the Profile button. Above both.
-           !important because jarvis.js appends its stylesheet at runtime,
-           after this one, with the same `html body .jr-pill` selector — so
-           at equal specificity source order handed it the win and the orb
-           stayed on Profile. */
-        html body .jr-pill { bottom: calc(142px + env(safe-area-inset-bottom, 0px)) !important; }
+        /* A rule lifting Nova's orb clear of this bar used to sit here. The
+           orb was `.jr-pill`, built by jarvis.js, which is deleted — the
+           selector cannot match anything now. The card that replaced it is
+           pinned to the TOP of the screen, so it never reaches this bar and
+           needs no rule at all. */
       }
     </style>
 <style>
@@ -433,15 +431,10 @@ fn distance(a: Point, b: Point) -> f64 {
     </div>
 
     <div id="root"></div>
+    <script src="categories.js"></script>
     <script src="nova.js"></script>
-<script src='biometric.js' defer></script>
-<script src='jarvis.js' defer></script>
-<!-- The 'how do I use this page' button beside the Nova pill. Loads after
-     jarvis.js because it borrows the pill that file builds. -->
-<!-- Nova as a character, drawn in SVG. nova-guide.js uses her for the
-     scanning animation; loaded before it so she is there when it runs. -->
+    <script src="nova-ask.js" defer></script>
 <script src='nova-mascot.js' defer></script>
-<script src='nova-guide.js' defer></script>
   <script src='leaderboard.js'></script>
 <script>
 /* ============================================================================

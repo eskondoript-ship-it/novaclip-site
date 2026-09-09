@@ -67,7 +67,7 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050505">
-<title>NovaClip — Your progress</title>
+<title>Categories — NovaClip</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
 body { background: var(--nc-bg,#060608); color: var(--nc-text,#f4f4f6); }
@@ -214,98 +214,110 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
 <div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
 
 <div class='wrap'>
-  <h1><span class='grad' data-t='prog_h'>Your progress</span></h1>
-  <p class='sub'>Your points, the rewards they unlock, and the milestones you have passed.</p>
+  <h1><span class='grad' data-t='categories'>Categories</span></h1>
+  <p class='sub'>What are you making? The Trend Spotter, the idea generator and the AI tutors all
+  answer better when they know. Pick one, or write your own — and change it whenever you like.</p>
 
-  <div class='xpcard'>
-    <div class='xptop'>
-      <span class='lbl' data-t='xp_progress'>YOUR PROGRESS</span>
-      <span class='val' id='ptsbig'>0</span>
-    </div>
-    <div class='xpbar'><i id='ptsfill'></i></div>
-    <div class='xpnext' id='ptsnext'></div>
-  </div>
+  <div class='card wide' style='margin-top:6px'>
+    <h2>Your category</h2>
+    <div class='hint' id='catNow'>Not set yet.</div>
+    <div class='body'>
+      <div id='catGrid' class='catgrid'></div>
 
-  <div class='grid'>
-    <div class='card'>
-      <h2 data-t='quests'>Rewards</h2>
-      <div class='hint' data-t='prog_rewards_d'>Free NovaClip Pro time, unlocked by points.</div>
-      <div class='body' id='questlist'></div>
-    </div>
-
-    <div class='card'>
-      <h2 data-t='achievements'>Achievements</h2>
-      <div class='hint' data-t='prog_ach_d'>Milestones you have passed.</div>
-      <div class='body' id='achlist'></div>
-    </div>
-
-    <!-- The certificate reps moved to pricing.html and the AI history to
-         history.html. Both were on this page because it was the page that
-         existed, not because they belonged together: the reps are the price of
-         a certificate and belong beside its price tag, and the history is the
-         one thing on this page somebody arrives specifically looking for. -->
-    <div class='card wide'>
-      <h2>Certificates</h2>
-      <div class='hint'>What each certificate takes, and how far along you are, now lives beside what each one costs.</div>
-      <div class='body'><p style='line-height:1.7'><a href='pricing.html'>See the certificates and their requirements →</a></p></div>
-    </div>
-
-    <div class='card wide'>
-      <h2 data-t='history'>History</h2>
-      <div class='hint' data-t='prog_hist_d'>Your recent questions to the AI tutors.</div>
-      <div class='body'><p style='line-height:1.7'><a href='history.html'>Open your history →</a></p></div>
+      <label for='catOwn' class='ownlbl'>Or write your own — anything at all</label>
+      <div class='ownrow'>
+        <input type='text' id='catOwn' maxlength='40' spellcheck='false'
+               placeholder='Warhammer painting, speedcubing, Moroccan cooking…'>
+        <button class='catbtn' id='catSave'>Save</button>
+      </div>
+      <div class='ok' id='catSaid'></div>
     </div>
   </div>
 </div>
 
-<script>
-// nova.js fills #questlist, #achlist and #histlist through refreshPanels().
-// This page adds the points headline and the certificate skill ledger on top.
-function renderProgress() {
-  const pts = (typeof getPts === 'function') ? getPts() : 0;
-  const big = document.getElementById('ptsbig');
-  if (big) big.textContent = pts.toLocaleString();
+<style>
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(210px,100%),1fr));gap:10px;margin-bottom:20px}
+.catopt{text-align:left;padding:13px 15px;border-radius:14px;cursor:pointer;font:inherit;
+  border:1px solid var(--nc-line2,rgba(255,255,255,.12));background:var(--nc-card,rgba(255,255,255,.03));
+  color:var(--nc-text,#EAF2FF);transition:.15s}
+.catopt:hover{border-color:var(--nc-cyan,#00E5FF);transform:translateY(-1px)}
+.catopt.on{border-color:var(--nc-cyan,#00E5FF);background:rgba(0,229,255,.10)}
+.catopt b{display:block;font-size:.98rem;font-weight:650;margin-bottom:2px}
+.catopt span{font-size:.82rem;color:var(--nc-dim,#7E8AA6)}
+.ownlbl{display:block;font-size:.86rem;color:var(--nc-dim,#7E8AA6);margin-bottom:7px}
+.ownrow{display:flex;gap:9px;flex-wrap:wrap}
+.ownrow input{flex:1 1 240px;min-width:0;padding:12px 14px;border-radius:12px;font:inherit;font-size:.95rem;
+  background:rgba(0,0,0,.28);color:var(--nc-text,#EAF2FF);border:1px solid var(--nc-line2,rgba(255,255,255,.15))}
+.catbtn{padding:12px 22px;border-radius:12px;border:0;cursor:pointer;font:inherit;font-weight:700;
+  color:#04121a;background:linear-gradient(110deg,var(--nc-violet,#7C5CFF),var(--nc-cyan,#00E5FF) 55%,var(--nc-pink,#FF2E97))}
+.ok{color:#6EE7A8;font-size:.88rem;margin-top:11px;min-height:20px}
+</style>
 
-  // fill the bar against the next unreached quest
-  let next = null;
-  if (typeof QUESTS !== 'undefined') {
-    for (const [need, name] of QUESTS) { if (pts < need) { next = [need, name]; break; } }
-  }
-  const fill = document.getElementById('ptsfill'), note = document.getElementById('ptsnext');
-  if (fill && note) {
-    if (next) {
-      fill.style.width = Math.max(2, Math.min(100, pts / next[0] * 100)) + '%';
-      note.textContent = tr('ui_coins_to').replace('{n}', next[0] - pts).replace('{goal}', qName(next[1]));
-    } else {
-      fill.style.width = '100%';
-      note.textContent = tr('ui_every_reward');
-    }
-  }
-
-  const sl = document.getElementById('skilllist');
-  if (sl && typeof SKILLS !== 'undefined' && typeof skillCount === 'function') {
-    // the highest requirement across all tiers is the bar each skill is measured against
-    const need = {};
-    if (typeof CERT_REQS !== 'undefined') {
-      for (const tier in CERT_REQS) {
-        const rs = CERT_REQS[tier].skills || {};
-        for (const id in rs) need[id] = Math.max(need[id] || 0, rs[id]);
-      }
-    }
-    sl.innerHTML = Object.keys(SKILLS).map(id => {
-      const got = skillCount(id), want = need[id] || 1, done = got >= want;
-      const pct = Math.min(100, Math.round(got / want * 100));
-      return '<div class="skrow' + (done ? ' on' : '') + '"><span class="dot"></span>' +
-        '<span class="nm">' + SKILLS[id].icon + ' ' + qName(SKILLS[id].label) + '</span>' +
-        '<span class="ct">' + got + ' / ' + want + '</span>' +
-        '<span class="skbar"><i style="width:' + pct + '%"></i></span></div>';
-    }).join('');
-  }
-}
-window.addEventListener('DOMContentLoaded', () => { renderProgress(); setTimeout(renderProgress, 80); });
-window.onSkillLogged = renderProgress;
-</script>
+<!-- Before the script below, not after it. Everything on this page is drawn
+     from NC_CATEGORY — the nine buttons, what is currently chosen, and the
+     save — so a categories.js that loads afterwards leaves the block below
+     returning on its first line and the page blank and unsaveable. -->
 <script src='categories.js'></script>
+<script>
+/* The list, the key and the read/write all live in categories.js, so this page
+   and the first-run dialog can never offer different options. */
+(function () {
+  var C = window.NC_CATEGORY;
+  if (!C) {
+    /* Says so rather than showing an empty page: a grid that renders nothing
+       looks like a category list with no categories in it. */
+    var n = document.getElementById('catNow');
+    if (n) n.textContent = 'categories.js did not load, so this page cannot ' +
+                           'show or save a category. Reload, and if it stays ' +
+                           'this way the file is missing from the server.';
+    return;
+  }
+  var grid = document.getElementById('catGrid');
+  var own  = document.getElementById('catOwn');
+  var said = document.getElementById('catSaid');
+  var now  = document.getElementById('catNow');
+
+  function paint() {
+    var cur = C.get();
+    now.textContent = cur ? 'Right now: ' + C.labelOf(cur) : 'Not set yet.';
+    [].forEach.call(grid.children, function (b) {
+      b.classList.toggle('on', b.getAttribute('data-id') === cur);
+    });
+    /* A written-in answer belongs back in the box it was written in, so it can
+       be edited rather than retyped from scratch. */
+    var preset = C.PRESETS.some(function (p) { return p.id === cur; });
+    if (cur && !preset && own.value !== cur) own.value = cur;
+  }
+
+  C.PRESETS.forEach(function (p) {
+    var b = document.createElement('button');
+    b.className = 'catopt';
+    b.type = 'button';
+    b.setAttribute('data-id', p.id);
+    b.innerHTML = '<b></b><span></span>';
+    b.querySelector('b').textContent = p.label;
+    b.querySelector('span').textContent = p.hint;
+    b.onclick = function () {
+      C.set(p.id); C.markAsked();
+      said.textContent = 'Saved — ' + p.label + '.';
+      paint();
+    };
+    grid.appendChild(b);
+  });
+
+  document.getElementById('catSave').onclick = function () {
+    var v = own.value.trim();
+    if (!v) { said.textContent = 'Type something first, or pick one above.'; return; }
+    if (C.set(v)) { C.markAsked(); said.textContent = 'Saved — ' + v + '.'; paint(); }
+    else { said.textContent = 'This browser is not letting the page save anything.'; }
+  };
+  own.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') document.getElementById('catSave').click();
+  });
+
+  paint();
+})();
+</script>
 <script src='nova.js'></script>
 <script src='nova-ask.js' defer></script>
 <script src='nova-mascot.js' defer></script>

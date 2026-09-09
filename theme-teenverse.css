@@ -737,26 +737,12 @@ body.tv .sidebar select {
 }
 body.tv .tv-nav { top: var(--nc-bar-h, 0px); }
 
-/* THE NOVA PILL SAT ON TOP OF THE NAVBAR.
-   jarvis.js parks its floating pill at --nc-bar-h + 12px, which is exactly
-   where this page's sticky navbar starts. Hit-testing the centre of every
-   control found jr-wake and jr-speak taking the clicks meant for the first
-   two nav links at 1024, 1180 and 1280 — invisibly, because the pill is
-   drawn above them and looks like it belongs to the top bar.
-
-   The pill moves below the navbar here rather than the navbar moving, because
-   the navbar is the page and the pill is a visitor. 64px is the navbar's
-   height; the 12px is jarvis.js's own offset kept.
-
-   Desktop only. Below 761px jarvis.js docks the pill in the bottom-right
-   corner instead, and that dock is made of `top:auto` plus a `bottom` — so
-   this !important top pinned it back up into the page, where it landed on
-   the search row. A fixed box given both a top and a bottom uses the top,
-   which is why it looked like the dock had simply been ignored. There is no
-   navbar to avoid down here anyway: below 1024px it is a burger. */
-@media (min-width: 761px) {
-  body.tv .jr-pill { top: calc(var(--nc-bar-h, 0px) + 64px + 12px) !important; }
-}
+/* A rule moving the Nova pill below this page's sticky navbar used to sit
+   here — the pill was fixed at the navbar's own top edge and was silently
+   taking the clicks meant for the first two nav links. It was `.jr-pill`,
+   built by jarvis.js, and both are deleted. The card that replaced it is
+   pinned in the top-right corner, clear of the navbar, and takes no clicks
+   that are not its own. */
 
 /* --nc-navon is the text ON the green active pill AND the text IN the rail's
    foot cards. Black is right for the pill and unreadable on the cards. */

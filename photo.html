@@ -109,12 +109,13 @@ body{background:var(--ink);color:var(--txt);
      every other page positions the same way. */
   padding-right:112px}
 .bar .name{font-weight:800;letter-spacing:-.02em;font-size:1.05rem}
-.bar .sp{flex:1;min-width:390px}
-/* jarvis.js pins its pill at `position:fixed;top:14px;left:50%` — the middle of
-   the viewport, over this bar. The spacer above reserves that middle so the
-   toolbar buttons sit either side of it instead of underneath it. Below the
-   wrap point the bar goes multi-row and the reservation stops mattering. */
-@media (max-width:900px){.bar .sp{min-width:0}}
+/* The 390px minimum this spacer used to carry reserved the middle of the bar
+   for the Jarvis pill, which was fixed at left:50% and would otherwise have
+   landed on the toolbar buttons. jarvis.js is deleted and nothing is pinned
+   there now, so the reservation only pushed the toolbar apart for no reason —
+   it wrapped the bar onto two rows on a 1280px screen. A plain spacer is what
+   it was always meant to be. */
+.bar .sp{flex:1}
 /* THE SHELL NEVER LEARNED THAT THE RAIL MOVES.
    `left:var(--nc-rail)` and `top:0;bottom:0` describe a screen with a tall
    rail down the side. Below 761px nova.js turns that rail into a strip along
@@ -281,19 +282,14 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
   </div>
 </div>
 
+<script src='categories.js'></script>
 <script src='nova.js'></script>
+<script src='nova-ask.js' defer></script>
 <!-- The sticker library and the effect previews. stickers.js holds the art,
      studio-kit.js the picker and the thumbnails; the second needs the first. -->
 <script src='stickers.js' defer></script>
 <script src='studio-kit.js' defer></script>
-<script src='biometric.js' defer></script>
-<script src='jarvis.js' defer></script>
-<!-- The 'how do I use this page' button beside the Nova pill. Loads after
-     jarvis.js because it borrows the pill that file builds. -->
-<!-- Nova as a character, drawn in SVG. nova-guide.js uses her for the
-     scanning animation; loaded before it so she is there when it runs. -->
 <script src='nova-mascot.js' defer></script>
-<script src='nova-guide.js' defer></script>
 <script>
 /* ============================================================================
    NovaClip Photo — a layered image editor

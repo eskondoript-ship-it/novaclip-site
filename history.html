@@ -67,7 +67,7 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050505">
-<title>NovaClip — Your progress</title>
+<title>History — NovaClip</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, sans-serif; }
 body { background: var(--nc-bg,#060608); color: var(--nc-text,#f4f4f6); }
@@ -214,96 +214,41 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
 <div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
 
 <div class='wrap'>
-  <h1><span class='grad' data-t='prog_h'>Your progress</span></h1>
-  <p class='sub'>Your points, the rewards they unlock, and the milestones you have passed.</p>
-
-  <div class='xpcard'>
-    <div class='xptop'>
-      <span class='lbl' data-t='xp_progress'>YOUR PROGRESS</span>
-      <span class='val' id='ptsbig'>0</span>
-    </div>
-    <div class='xpbar'><i id='ptsfill'></i></div>
-    <div class='xpnext' id='ptsnext'></div>
-  </div>
+  <h1><span class='grad' data-t='history'>History</span></h1>
+  <p class='sub' data-t='hist_sub'>Every question you have put to a NovaClip AI tutor, newest first. It is kept on this device and nowhere else — clearing your browser data clears it.</p>
 
   <div class='grid'>
-    <div class='card'>
-      <h2 data-t='quests'>Rewards</h2>
-      <div class='hint' data-t='prog_rewards_d'>Free NovaClip Pro time, unlocked by points.</div>
-      <div class='body' id='questlist'></div>
-    </div>
-
-    <div class='card'>
-      <h2 data-t='achievements'>Achievements</h2>
-      <div class='hint' data-t='prog_ach_d'>Milestones you have passed.</div>
-      <div class='body' id='achlist'></div>
-    </div>
-
-    <!-- The certificate reps moved to pricing.html and the AI history to
-         history.html. Both were on this page because it was the page that
-         existed, not because they belonged together: the reps are the price of
-         a certificate and belong beside its price tag, and the history is the
-         one thing on this page somebody arrives specifically looking for. -->
     <div class='card wide'>
-      <h2>Certificates</h2>
-      <div class='hint'>What each certificate takes, and how far along you are, now lives beside what each one costs.</div>
-      <div class='body'><p style='line-height:1.7'><a href='pricing.html'>See the certificates and their requirements →</a></p></div>
-    </div>
-
-    <div class='card wide'>
-      <h2 data-t='history'>History</h2>
+      <h2 data-t='history'>Your questions</h2>
       <div class='hint' data-t='prog_hist_d'>Your recent questions to the AI tutors.</div>
-      <div class='body'><p style='line-height:1.7'><a href='history.html'>Open your history →</a></p></div>
+      <div class='body' id='histlist'></div>
     </div>
   </div>
 </div>
 
 <script>
-// nova.js fills #questlist, #achlist and #histlist through refreshPanels().
-// This page adds the points headline and the certificate skill ledger on top.
-function renderProgress() {
-  const pts = (typeof getPts === 'function') ? getPts() : 0;
-  const big = document.getElementById('ptsbig');
-  if (big) big.textContent = pts.toLocaleString();
+/* nova.js fills #histlist through refreshPanels(), the same call the Progress
+   page used to rely on — this page is only the frame around it.
 
-  // fill the bar against the next unreached quest
-  let next = null;
-  if (typeof QUESTS !== 'undefined') {
-    for (const [need, name] of QUESTS) { if (pts < need) { next = [need, name]; break; } }
-  }
-  const fill = document.getElementById('ptsfill'), note = document.getElementById('ptsnext');
-  if (fill && note) {
-    if (next) {
-      fill.style.width = Math.max(2, Math.min(100, pts / next[0] * 100)) + '%';
-      note.textContent = tr('ui_coins_to').replace('{n}', next[0] - pts).replace('{goal}', qName(next[1]));
-    } else {
-      fill.style.width = '100%';
-      note.textContent = tr('ui_every_reward');
-    }
-  }
+   WHY IT IS ITS OWN PAGE. Progress was four panels, and the history was the
+   only one answering a question somebody actually arrives with: "what did I
+   ask?". Buried under rewards and achievements it was the last thing on the
+   page; on its own it is the whole page. */
+window.addEventListener('DOMContentLoaded', function () {
+  if (typeof refreshPanels === 'function') refreshPanels();
+  setTimeout(function () { if (typeof refreshPanels === 'function') refreshPanels(); }, 90);
 
-  const sl = document.getElementById('skilllist');
-  if (sl && typeof SKILLS !== 'undefined' && typeof skillCount === 'function') {
-    // the highest requirement across all tiers is the bar each skill is measured against
-    const need = {};
-    if (typeof CERT_REQS !== 'undefined') {
-      for (const tier in CERT_REQS) {
-        const rs = CERT_REQS[tier].skills || {};
-        for (const id in rs) need[id] = Math.max(need[id] || 0, rs[id]);
-      }
+  /* An empty history is a normal state, not a broken page, and it should say
+     what to do rather than showing a blank card. */
+  setTimeout(function () {
+    var el = document.getElementById('histlist');
+    if (el && !el.textContent.trim()) {
+      el.innerHTML = '<p style="color:var(--nc-dim,#7E8AA6);line-height:1.7">' +
+        'Nothing yet. Ask one of the AI tutors something on ' +
+        '<a href="ai.html">NovaClip AI</a> and it will appear here.</p>';
     }
-    sl.innerHTML = Object.keys(SKILLS).map(id => {
-      const got = skillCount(id), want = need[id] || 1, done = got >= want;
-      const pct = Math.min(100, Math.round(got / want * 100));
-      return '<div class="skrow' + (done ? ' on' : '') + '"><span class="dot"></span>' +
-        '<span class="nm">' + SKILLS[id].icon + ' ' + qName(SKILLS[id].label) + '</span>' +
-        '<span class="ct">' + got + ' / ' + want + '</span>' +
-        '<span class="skbar"><i style="width:' + pct + '%"></i></span></div>';
-    }).join('');
-  }
-}
-window.addEventListener('DOMContentLoaded', () => { renderProgress(); setTimeout(renderProgress, 80); });
-window.onSkillLogged = renderProgress;
+  }, 260);
+});
 </script>
 <script src='categories.js'></script>
 <script src='nova.js'></script>

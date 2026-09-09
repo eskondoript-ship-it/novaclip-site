@@ -1928,7 +1928,9 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
     })();
     </script>
 
+    <script src="categories.js"></script>
     <script src="nova.js"></script>
+    <script src="nova-ask.js" defer></script>
 <!-- The sticker library and the effect previews. stickers.js holds the art,
      studio-kit.js the picker and the thumbnails; the second needs the first. -->
 <script src='stickers.js' defer></script>
@@ -1947,14 +1949,7 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      and one deliberately-unreliable colour check that says so on screen. All
      of it in this tab — nothing is uploaded and nothing is blocked. -->
 <script src='moderate.js' defer></script>
-<script src='biometric.js' defer></script>
-<script src='jarvis.js' defer></script>
-<!-- The 'how do I use this page' button beside the Nova pill. Loads after
-     jarvis.js because it borrows the pill that file builds. -->
-<!-- Nova as a character, drawn in SVG. nova-guide.js uses her for the
-     scanning animation; loaded before it so she is there when it runs. -->
 <script src='nova-mascot.js' defer></script>
-<script src='nova-guide.js' defer></script>
 <!-- The AI Editor page plans an edit; these two carry it out on the timeline.
      ai-edit.js is the mapping from a plan to the store's own actions and knows
      nothing about the UI; ai-edit-panel.js is the card that offers to run it.
