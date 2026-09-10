@@ -166,6 +166,22 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v41: the Editor and the AI Editor left the main site rail and open full
+   screen inside Studio instead — fixed, edge to edge, over the rail, with a
+   34px strip carrying the way back. Photo took their place in the rail, since
+   the Editor entry was its only route into the site. nova.js and trends-nav.js
+   are both cached shell files and both changed, so without the bump a
+   returning visitor gets one of them from the network and the other from the
+   cache: a rail with no Editor in it and a Studio that still opens the tool
+   into a 940px column, or the reverse.
+
+   Three more in nova.js, all found by the width sweep once it was pointed at
+   the eight pages it had never been given: aim.html, flap.html, reaction.html
+   and offline.html had no link off them at all, so a page with no way out now
+   gets one in the top bar (offline.html carries its own, since it does not
+   load nova.js); a bare `button { width:100% }` on report.html was reaching
+   into that bar and shoving the "?" off the edge; and the Editor/Photo tabs no
+   longer float over the tool when it is embedded. */
 /* v40: nova-instructions.js — a walkthrough for the five pages that need one
    (editor, AI editor, Studio, photo, tools). It opens once per tool and then
    only from the "?" in the top bar, and Next waits two seconds on each step:
@@ -255,7 +271,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v40';
+const CACHE = 'novaclip-v41';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

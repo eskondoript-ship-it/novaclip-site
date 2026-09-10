@@ -13,7 +13,19 @@ const PAGES = ['index.html', 'tools.html', 'socials.html', 'biometrics.html', 'e
   /* The two documents. They are plain text pages and unlikely to break, but
      they are also the two most likely to be read on a phone by a parent who
      has never opened the site before. */
-  'privacy.html', 'terms.html', 'profile.html'];
+  'privacy.html', 'terms.html', 'profile.html',
+  /* THE EIGHT THAT NOTHING WAS CHECKING.
+     Every one of these is a page a reader can land on, and none of them was in
+     this list — so the sweep has been reporting "all clean" while missing a
+     fifth of the site. categories.html and history.html are the newest and the
+     reason this was noticed: both are in the rail, and neither had ever been
+     measured at any width.
+
+     offline.html is here too. It looks like an internal fallback, but it is
+     the page somebody sees when their train goes into a tunnel, which is the
+     worst possible moment for it to be broken on a phone. */
+  'categories.html', 'history.html', 'aim.html', 'flap.html', 'reaction.html',
+  'report.html', 'pay-return.html', 'offline.html'];
 
 const SIZES = [
   { w: 360, h: 640, m: true,  label: 'phone-s' },
@@ -113,6 +125,27 @@ for (const s of SIZES) {
          heading as covered — by the thing deliberately covering it. The sheet
          has its own test. */
       localStorage.setItem('nc_username', 'sweeper');
+      /* THE SAME TRAP, A THIRD TIME.
+         The first-run category dialog is a full-screen overlay like the age
+         gate and the sign-up sheet, and it arrived after this list was
+         written. The run that caught it reported 190 findings across 27 pages
+         and 7 widths, and all but three of them were `covered by
+         div#ncCatGate` — the sweep measuring the dialog it had opened itself.
+         A sweep that reports everything reports nothing.
+
+         Both keys, not just the answer: ncCategoryGate() opens whenever the
+         question has not been ASKED, so setting only nc_category still shows
+         the dialog. */
+      localStorage.setItem('nc_category', 'gaming');
+      localStorage.setItem('nc_category_asked', '1');
+      /* And the three-second "what do you want to do today?" card, for the
+         same reason — it is a panel over the page on a timer. */
+      sessionStorage.setItem('nc_ask_seen', '1');
+      /* The walkthroughs, all five. Each is a modal on first arrival at a
+         tool, and editor.html, publish.html, trends.html, photo.html and
+         tools.html are all in PAGES. They have their own test. */
+      localStorage.setItem('nc_howto_done', JSON.stringify(
+        ['editor.html', 'publish.html', 'trends.html', 'photo.html', 'tools.html']));
     } catch (e) {}
   });
   /* The font host is unreachable from this sandbox, and every page now asks

@@ -36,7 +36,20 @@
 (function () {
   'use strict';
   if (window.NC_HOWTO) return;
-  if (location.search.indexOf('embed=1') !== -1) return;   /* the host explains */
+
+  /* IT RUNS INSIDE THE FRAME TOO, AND IT HAS TO.
+     This used to bail out on ?embed=1, on the reasoning that the host page
+     explains what it is showing. That stopped being true the moment the
+     Editor and the AI Editor left the site rail: nearly everybody now meets
+     them inside Studio, in a frame, and the Studio walkthrough can say "the
+     Editor is in this rail" but not what the scissors do. Bailing out there
+     would mean the two most complicated tools on the site are the two with no
+     instructions.
+
+     The frame is the whole window for both of them, so a walkthrough drawn
+     inside it looks exactly like one drawn on the page. And the "seen" list is
+     keyed on the filename either way, so it still opens once per tool, not
+     once per way in. */
 
   var GATE = 2000;               /* how long a step must be up before Next works */
   var SEEN = 'nc_howto_done';    /* localStorage: which tools have been walked */
@@ -74,7 +87,7 @@
         ['Keep the good ones', 'Press <b>Save it</b> on an idea. Your shortlist is on this device and shows at the top of that panel next time.'],
         ['Turn it into words', '<b>Scripts</b> writes a hook, a middle and an end. Download it, or send it straight to the AI Editor.'],
         ['Make the picture', '<b>Thumbnails</b> draws a real 1280×720 PNG on this machine. No model, no upload — it works with the wifi off.'],
-        ['Cut it here', '<b>Editor</b> and <b>AI Editor</b> are in this rail now, so the whole run happens on one page.']
+        ['Cut it here', '<b>Editor</b> and <b>AI Editor</b> live in this rail now — they have left the main sidebar, because this is the one door to them. Both open to the whole screen; the strip along the top brings you back.']
       ]
     },
     'photo.html': {
@@ -241,7 +254,6 @@
      all take the screen before this, and stacking a fifth thing on top of them
      is nobody's first visit. */
   function boot() {
-    if (window.NC_EMBED) return;
     if (!plan() || done(key())) return;
     setTimeout(function () {
       if (document.getElementById('ncAgeGate') || document.getElementById('ncSignup') ||

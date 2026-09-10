@@ -54,6 +54,9 @@
   button{margin-top:22px;min-height:44px;padding:12px 26px;border:0;border-radius:999px;
          background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:1rem;cursor:pointer}
   button:hover{background:var(--accent-hover)}
+  .out{margin-top:18px;font-size:.92rem}
+  .out a{color:inherit;opacity:.75;text-underline-offset:3px}
+  .out a:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -64,6 +67,11 @@
     <p>Pages you have already opened still work. Anything you were working on is
        saved on this device and will be there when you are back.</p>
     <button type='button' onclick='location.reload()'>Try again</button>
+    <!-- The way off. This page had no link on it at all, which made the one
+         page a reader reaches by accident the one page with no way forward —
+         and the home page is very likely in the cache, so it usually works
+         even from here. -->
+    <p class='out'><a href='/index.html'>Go to the home page</a></p>
   </div>
 </body>
 </html>

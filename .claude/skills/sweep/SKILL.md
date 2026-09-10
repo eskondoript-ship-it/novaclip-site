@@ -5,7 +5,7 @@ description: Run the responsive regression sweep over every page of NovaClip at 
 
 # The sweep
 
-`scratchpad/width-sweep.mjs` opens all 26 pages at 7 widths and reports four
+`scratchpad/width-sweep.mjs` opens all 35 pages at 7 widths and reports four
 things per page: content bleeding sideways, a control whose box is entirely off
 screen, a page with no visible link off it, and the first heading being covered
 by something. It also collects page errors.
@@ -72,13 +72,29 @@ believe the screenshot and check whether the bug predates your change:
 Two things in the sweep's own setup exist because leaving them out produced
 false results, and they should stay:
 
-- It seeds `nc_user_age`, `nc_consent` and `nc_username`. Without them the age
-  gate, the cookie banner and the first-run sign-up sheet each cover the page
-  and every heading reports as covered — by the thing deliberately covering it.
+- It seeds `nc_user_age`, `nc_consent`, `nc_username`, `nc_category`,
+  `nc_category_asked`, `nc_ask_seen` and `nc_howto_done`. Every one of these
+  turns off something that covers the page on a first visit: the age gate, the
+  cookie banner, the sign-up sheet, the category dialog, the three-second "what
+  do you want to do today?" card, and the five tool walkthroughs. Without them
+  every heading reports as covered — by the thing deliberately covering it.
+
+  **This list goes stale, and a stale list is worse than no list.** The run that
+  caught it reported 190 findings across 27 pages and 7 widths, and all but
+  three were `covered by div#ncCatGate`: the sweep measuring a dialog it had
+  opened itself, on every page, while the three real bugs sat in the noise.
+  When you add a first-run overlay anywhere on the site, add its key here in
+  the same commit. Both keys where there are two — `ncCategoryGate()` opens on
+  the question not having been *asked*, so `nc_category` alone is not enough.
 - It aborts `fonts.googleapis.com` and `fonts.gstatic.com`. The font host is
   unreachable from this sandbox, and left alone every navigation spends its
   timeout on a TLS handshake that cannot succeed. That measures the network,
   not the layout, and on a loaded machine it takes the whole run down.
 
 When you add a page to the site, add it to `PAGES` in the sweep in the same
-commit. A page that is not in the list is a page nothing checks.
+commit. A page that is not in the list is a page nothing checks — and that is
+not hypothetical. Eight pages were missing from `PAGES` for months, and four of
+them (`aim.html`, `flap.html`, `reaction.html`, `offline.html`) turned out to
+have no link off them at all, at any width. Three games and the offline
+fallback, each a dead end, each invisible to the one check built to find dead
+ends. The sweep only ever reported "all clean" about the pages it knew.

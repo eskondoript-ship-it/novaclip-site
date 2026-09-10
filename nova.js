@@ -1302,6 +1302,24 @@ function ncBuildBar() {
       'background:var(--nc-bar-bg,rgba(10,13,24,.72));' +
       'border-bottom:1px solid var(--nc-line2,rgba(255,255,255,.08));' +
       'backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4)}' +
+    /* THE BAR IS NOT PART OF THE PAGE'S FORM.
+       report.html styles its own submit control with a bare `button { width:
+       100%; margin-top:22px }`, and a bare element selector reaches anything
+       this file puts on that page. "Ask Nova" came out 738px wide on an 844px
+       screen and shoved the "?" clean off the right-hand edge — at every
+       width, on the one page whose whole purpose is reporting a problem.
+
+       flex:0 0 auto did not save it: with flex-basis auto the basis IS the
+       width, so width:100% still won.
+
+       Margins are reset for the whole bar, since nothing in it sets one
+       vertically and a page's `margin-top:22px` would drop a control through
+       the bar's floor. Width is NOT: #ncrail and #ncguidebtn each declare
+       36px, and a blanket `#ncbar button{width:auto}` outranks a plain
+       `#ncrail{...}` and shrank both to the width of their own glyph. Only
+       #ncaskbtn has no width of its own, so only #ncaskbtn is given one —
+       just below, in its own rule, where it cannot reach anything else. */
+    '#ncbar button,#ncbar>a{max-width:none;margin-top:0;margin-bottom:0}' +
     'html[data-theme="light"] #ncbar{--nc-bar-bg:rgba(255,255,255,.78)}' +
     /* Sits beside the rail, not under it — but only where there IS a rail.
        The editor, trends and the family page have no .sidebar, and offsetting
@@ -1490,7 +1508,10 @@ function ncBuildBar() {
        card opens in. margin-left:auto rather than a spacer element, so it
        still lands right when the controls collapse into the phone sheet and
        the row is only this and the two icons. */
-    '#ncaskbtn{margin-left:auto;display:flex;align-items:center;gap:7px;' +
+    /* width:auto is load-bearing — see the bar rule above. Without it a page
+       with a bare `button { width:100% }` makes this control as wide as the
+       screen and pushes the "?" off the edge. */
+    '#ncaskbtn{margin-left:auto;display:flex;align-items:center;gap:7px;width:auto;' +
       'flex:0 0 auto;height:36px;padding:0 13px;border-radius:99px;cursor:pointer;' +
       'font:inherit;font-size:.78rem;font-weight:700;letter-spacing:.01em;' +
       'color:var(--nc-text,inherit);' +
@@ -1688,7 +1709,63 @@ function ncBuildBar() {
   const stray = document.getElementById('ncLangPick');
   if (stray && !bar.contains(stray)) inner.appendChild(stray.parentElement || stray);
 
+  ncEscapeHatch(bar);
+
   return inner;
+}
+
+/* ============================================================================
+   A WAY OFF EVERY PAGE
+   ============================================================================
+   aim.html, flap.html and reaction.html had no link on them. Not a small rail,
+   not a hidden one — zero anchors to another page, at every width. The only
+   way out of the target game was the browser's back button, and on an
+   installed PWA there is no browser back button. They went unnoticed because
+   none of the three was in the width sweep's page list, so the check that
+   exists precisely to catch this had never once looked at them.
+
+   Fixing three pages by hand would leave the fourth to be found the same way,
+   so the rule lives here instead: if a page has no visible link to another
+   page of this site, it gets one. Pages with a rail, a back link or a footer
+   already pass and are not touched — the test is the same one the sweep runs.
+
+   Deliberately not on a timer and not repeated. A page that fills itself in
+   later (the games do) never REMOVES its links, and re-running this on a
+   MutationObserver is how fixRail() once fed itself into a 110-second load. */
+function ncEscapeHatch(bar) {
+  if (NC_EMBED) return;
+  if (document.querySelector('.sidebar, .nc-sidebar')) return;   /* has a rail */
+
+  const wayOut = [...document.querySelectorAll('a[href]')].some(a => {
+    const href = a.getAttribute('href') || '';
+    if (!/\.html(\?|#|$)/.test(href) || /^https?:/.test(href)) return false;
+    const r = a.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    const cs = getComputedStyle(a);
+    return cs.visibility !== 'hidden' && cs.display !== 'none';
+  });
+  if (wayOut) return;
+
+  const out = document.createElement('a');
+  out.id = 'ncwayout';
+  out.href = 'index.html';
+  out.innerHTML =
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M15 18l-6-6 6-6"/></svg><span>NovaClip</span>';
+  out.title = 'Back to NovaClip';
+  const css = document.createElement('style');
+  css.textContent =
+    '#ncwayout{display:flex;align-items:center;gap:5px;text-decoration:none;color:inherit;' +
+      'font:700 .84rem/1 system-ui,sans-serif;padding:8px 11px;border-radius:10px;' +
+      'border:1px solid var(--nc-line,rgba(255,255,255,.16));flex:0 0 auto;min-height:36px}' +
+    '#ncwayout:hover{border-color:var(--nc-cyan,#00E5FF)}' +
+    /* On the narrowest phone the bar is already carrying a settings button and
+       a coin badge; the word goes and the chevron stays, because a control
+       that has fallen off the side is the bug this is fixing. */
+    '@media (max-width:400px){#ncwayout span{display:none}#ncwayout{padding:8px}}';
+  document.head.appendChild(css);
+  bar.insertBefore(out, bar.firstChild);
 }
 
 function ncBuildThemeSwitch() {
@@ -3529,12 +3606,19 @@ const NC_NAV = [
      "Trend Spotter" today stops saying it. */
   { name: 'Channel', key: 'nav_channel', icon: 'analytics', items: [
       ['trends.html', 'Studio', 'studio', 'trends']] },
-  /* Everything you make lives in Create: the editor, publishing and the AI
-     toolkit. Games and NovaLife are for learning and play, so they sit in
-     their own Learn group instead of pretending to be creation tools. */
+  /* THE EDITOR AND THE AI EDITOR ARE NOT HERE ANY MORE.
+     They live inside Studio, full screen, and having them in this rail as
+     well meant two doors to one room — press one and you get the tool with
+     the research three clicks away, press the other and you get both. Studio
+     above is the single door now, and both tools open to the whole screen
+     once you are through it.
+
+     Photo stays. It is the other half of the Editor/Photo pair (ncPairTabs
+     below), and its only route into the site was through the Editor entry
+     that just left — remove both and the photo editor is a page nothing
+     links to. */
   { name: 'Create', key: 'nav_create', icon: 'editor', items: [
-      ['editor.html', 'Editor', 'editor', 'editor'],
-      ['publish.html', 'AI Editor', 'publish', 'publish'],
+      ['photo.html', 'Photo', 'photo', 'editor'],
       ['studio-ai.html', 'AI', 'ai', 'ai']] },
   { name: 'Learn', key: 'nav_learn', icon: 'life', items: [
       ['game.html', 'Games', 'games', 'games']] },
@@ -5832,6 +5916,13 @@ const NC_PAIRS = [
 ];
 
 function ncPairTabs() {
+  /* NOT INSIDE A FRAME. Embedded in Studio, this floated the Editor/Photo
+     switch over the editor's own Simple/Complex toggle — two controls in the
+     same 40px of the tool's title bar — and its Photo tab pointed at the full
+     photo.html, rail and all, inside a frame the size of a panel. The host
+     page has a rail; a second one drawn on top of the tool is not navigation.
+     Photo is its own entry in the site rail now, so nothing is lost. */
+  if (NC_EMBED) return;
   const here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
   const pair = NC_PAIRS.find(p => p.tabs.some(t => t[0].split('#')[0] === here));
   if (!pair || document.getElementById('ncpairtabs')) return;

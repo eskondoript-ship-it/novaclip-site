@@ -122,10 +122,13 @@
        making were two different places and the trip between them lost the page
        you were on. First in the list because they are what somebody comes to
        do; the four research panels are what they came to decide. */
-    '/editor':     { label: 'Editor',
+    /* full:true — these two get the whole screen. See FULL SCREEN in styles().
+       They are the only entries with it, because they are the only two that
+       are applications rather than forms. */
+    '/editor':     { label: 'Editor', full: true,
                      icon: 'M4 6h16M4 12h10M4 18h7M17 11l4 4-4 4v-8z',
                      why: 'Cut, trim and finish a video, here' },
-    '/publish':    { label: 'AI Editor',
+    '/publish':    { label: 'AI Editor', full: true,
                      icon: 'M12 3v4M12 17v4M3 12h4M17 12h4M7.5 7.5l2.5 2.5M14 14l2.5 2.5M16.5 7.5L14 10M10 14l-2.5 2.5',
                      why: 'It plans the edit, applies it, and gets it ready to post' },
     '/ideas':      { label: 'Video Ideas',
@@ -319,6 +322,55 @@
          a scrollbar inside a scrollbar — the thing this layout exists to
          avoid. It gets the window instead, less only the page header. */
       '.ncx .frame.tall{height:calc(100vh - 120px);min-height:640px}',
+
+      /* ------------------------------------------------------------------
+         FULL SCREEN, FOR THE TWO THAT ARE APPLICATIONS
+
+         The Editor is a three-column application with a timeline along the
+         bottom. Inside .ncx it was getting a 940px column with 30px of
+         padding on a 1440px screen — a media library, a preview and a
+         timeline in roughly half the window, with the rest of the window
+         showing the page behind it. The panel that is meant to hold the tool
+         was the thing making the tool unusable.
+
+         So these two leave the column entirely: fixed, edge to edge, over the
+         rail and the page. Everything else in this file stays a document in a
+         column, because everything else in this file is a form.
+
+         inset:0 and not top:52px. nova.js's #ncbar is offset to the right of
+         the rail (`body:has(.nc-sidebar) #ncbar{left:var(--nc-sidebar)}`), so
+         leaving a 52px gap for it would have left the rail's logo block
+         floating in the top-left corner over the tool — a piece of a rail
+         that no longer goes anywhere. The whole viewport, or none of it. */
+      'html.nc-x-full{overflow:hidden}',
+      'html.nc-x-full .ncx{position:fixed;inset:0;',
+      '  z-index:99990;max-width:none;padding:0;margin:0;display:flex;flex-direction:column;',
+      '  background:var(--nc-bg,#0a0d16)}',
+      /* The heading and the lede described the panel. Full screen, the tool
+         describes itself — it has its own title bar on screen. */
+      'html.nc-x-full .ncx h1,html.nc-x-full .ncx .lede,html.nc-x-full .ncx .foot{display:none}',
+      'html.nc-x-full .ncx .frame,html.nc-x-full .ncx .frame.tall{flex:1 1 auto;height:auto;',
+      '  min-height:0;border:0;border-radius:0}',
+
+      /* THE WAY BACK. A full-screen tool that covers the rail needs its own
+         exit, or the only way out is the browser's back button — and somebody
+         who arrived here by clicking Editor in the rail has no reason to
+         expect that. Escape works too; this is the visible half. */
+      '.ncx .exitbar{display:none}',
+      'html.nc-x-full .ncx .exitbar{display:flex;align-items:center;gap:10px;flex:0 0 auto;',
+      '  padding:0 12px;height:34px;font-size:.82rem;',
+      '  border-bottom:1px solid color-mix(in srgb,currentColor 16%,transparent);',
+      '  background:color-mix(in srgb,currentColor 5%,transparent)}',
+      '.ncx .exitbar button{border:0;background:none;color:inherit;font:inherit;font-weight:700;',
+      '  cursor:pointer;padding:5px 9px;border-radius:8px;display:flex;align-items:center;gap:6px}',
+      '.ncx .exitbar button:hover{background:color-mix(in srgb,currentColor 12%,transparent)}',
+      '.ncx .exitbar .who{opacity:.6;font-weight:600}',
+      '.ncx .exitbar .out{margin-left:auto;opacity:.6;font-weight:600;text-decoration:underline}',
+      /* On a phone the site bar is the same 52px but the tools need every row
+         they can get, so the strip tightens rather than disappearing — losing
+         it would leave no way back at the width where back matters most. */
+      '@media(max-width:760px){html.nc-x-full .ncx .exitbar{height:30px;font-size:.76rem}}',
+
       '.ncx .foot{margin-top:10px;font-size:.84rem;opacity:.65}',
       '.ncx .foot a{text-decoration:underline}',
       '.ncx .idea{padding:14px 16px}',
@@ -942,10 +994,47 @@
      ?embed=1 is what makes it work: nova.js reads it and stands the rail, the
      top bar and the coin badge down, so what arrives inside the frame is the
      tool and none of the chrome this page is already wearing. */
+  /* The 34px strip along the top of a full-screen tool. Built here rather than
+     in CSS because it carries the tool's name and its own-page link, and it is
+     the only way back to the rail once the rail is covered. */
+  function exitBar(name, page) {
+    return '<div class="exitbar">' +
+      '<button type="button" class="ncxBack">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M15 18l-6-6 6-6"/></svg>Studio home</button>' +
+      '<span class="who">' + name + '</span>' +
+      '<a class="out" href="' + page + '">Open on its own page</a>' +
+    '</div>';
+  }
+
+  /* Leaving a full-screen tool, always to the same place: this page's own home,
+     with the rail back.
+
+     Not history.back(). The first version did that, on the reasoning that the
+     browser's back button and this one should agree — and it was wrong in the
+     obvious case. Go Editor, then AI Editor, then press it: back is #/editor,
+     which is full screen too, so the button that says "leave full screen"
+     left you in full screen. A fixed destination cannot do that.
+
+     Not '#/studio' either, despite the label: in this rail Studio is the
+     analytics panel. '#/' is the page the site rail means when it says
+     Studio. */
+  function leaveFull() {
+    if (!document.documentElement.classList.contains('nc-x-full')) return;
+    location.hash = '#/';
+  }
+
+  function wireExit(box) {
+    var b = box.querySelector('.ncxBack');
+    if (b) b.onclick = leaveFull;
+  }
+
   function editorPanel(box) {
     if (box.dataset.view === 'editor') return;
     box.dataset.view = 'editor';
     box.innerHTML =
+      exitBar('Editor', 'editor.html') +
       '<h1>Editor</h1>' +
       '<p class="lede">The full timeline — cut, trim, text, colour, sound and export. ' +
       'Nothing is uploaded: the footage stays in this browser.</p>' +
@@ -953,12 +1042,14 @@
         'src="editor.html?embed=1" loading="lazy" ' +
         'allow="camera; microphone; clipboard-write"></iframe></div>' +
       '<p class="foot">Short of room? <a href="editor.html">Open the Editor on its own page</a>.</p>';
+    wireExit(box);
   }
 
   function aiEditPanel(box) {
     if (box.dataset.view === 'publish') return;
     box.dataset.view = 'publish';
     box.innerHTML =
+      exitBar('AI Editor', 'publish.html') +
       '<h1>AI Editor</h1>' +
       '<p class="lede">Drop in a clip and it plans the edit, applies it, and writes the title, ' +
       'description and tags — ready to post to YouTube, TikTok or Shorts.</p>' +
@@ -966,6 +1057,7 @@
         'src="publish.html?embed=1" loading="lazy" ' +
         'allow="camera; microphone; clipboard-write"></iframe></div>' +
       '<p class="foot">Short of room? <a href="publish.html">Open the AI Editor on its own page</a>.</p>';
+    wireExit(box);
   }
 
   /* ==========================================================================
@@ -992,6 +1084,10 @@
          sat on screen underneath the real panel. A class on the root survives
          any number of re-renders below it, and the stylesheet does the hiding. */
       document.documentElement.classList.add('nc-x-open');
+      /* The Editor and the AI Editor take the whole viewport; the four
+         research panels stay a document in a column. Toggled rather than only
+         added, so leaving one of them gives the rail and the page back. */
+      document.documentElement.classList.toggle('nc-x-full', !!mine.full);
       if (page) page.style.display = 'none';
       box.style.display = '';
       if (h === '/ideas') ideasPanel(box);
@@ -1012,6 +1108,7 @@
          panel keeps its state, while switching to a different one still
          rebuilds, because the marker no longer matches. */
       document.documentElement.classList.remove('nc-x-open');
+      document.documentElement.classList.remove('nc-x-full');
       box.style.display = 'none';
       if (page) page.style.display = '';
     }
@@ -1048,6 +1145,14 @@
     window.addEventListener('hashchange', route);
     window.addEventListener('popstate', route);
     window.addEventListener('nc-route', route);
+
+    /* Escape leaves a full-screen tool — but only while the focus is on this
+       page. A keypress inside the iframe belongs to the iframe and never
+       reaches here, and the Editor uses Escape itself, so this cannot be the
+       only way out. It is the shortcut; the button in the strip is the way. */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') leaveFull();
+    });
 
     /* Wrapping rather than replacing: the original is still called with the
        same arguments and its return value handed back, so React's router
