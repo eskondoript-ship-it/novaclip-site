@@ -166,6 +166,15 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v42: the five per-page walkthroughs are one site tour. Four screens about
+   what NovaClip is, shown once on a first visit rather than a new modal every
+   time somebody arrives somewhere new, and set in type you can actually read —
+   32px headline, 19px copy, up from 20 and 13. Two shell files carry it:
+   nova-instructions.js is rewritten, and nova.js loads it now, so the five
+   pages that used to carry their own <script> tag no longer do. Without the
+   bump a returning visitor gets the old pages from the cache asking for a file
+   whose contents changed underneath them, and the tour either never appears or
+   appears five times. */
 /* v41: the Editor and the AI Editor left the main site rail and open full
    screen inside Studio instead — fixed, edge to edge, over the rail, with a
    34px strip carrying the way back. Photo took their place in the rail, since
@@ -271,7 +280,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v41';
+const CACHE = 'novaclip-v42';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

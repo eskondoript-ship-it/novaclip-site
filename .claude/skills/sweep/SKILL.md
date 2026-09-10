@@ -73,10 +73,10 @@ Two things in the sweep's own setup exist because leaving them out produced
 false results, and they should stay:
 
 - It seeds `nc_user_age`, `nc_consent`, `nc_username`, `nc_category`,
-  `nc_category_asked`, `nc_ask_seen` and `nc_howto_done`. Every one of these
+  `nc_category_asked`, `nc_ask_seen` and `nc_tour_done`. Every one of these
   turns off something that covers the page on a first visit: the age gate, the
   cookie banner, the sign-up sheet, the category dialog, the three-second "what
-  do you want to do today?" card, and the five tool walkthroughs. Without them
+  do you want to do today?" card, and the site tour. Without them
   every heading reports as covered — by the thing deliberately covering it.
 
   **This list goes stale, and a stale list is worse than no list.** The run that
@@ -86,6 +86,9 @@ false results, and they should stay:
   When you add a first-run overlay anywhere on the site, add its key here in
   the same commit. Both keys where there are two — `ncCategoryGate()` opens on
   the question not having been *asked*, so `nc_category` alone is not enough.
+  **Renaming a key counts as adding one.** The tour's flag moved from
+  `nc_howto_done` to `nc_tour_done` when it stopped being per-page, and a seed
+  list still naming the old key is a seed list that no longer seeds anything.
 - It aborts `fonts.googleapis.com` and `fonts.gstatic.com`. The font host is
   unreachable from this sandbox, and left alone every navigation spends its
   timeout on a TLS handshake that cannot succeed. That measures the network,

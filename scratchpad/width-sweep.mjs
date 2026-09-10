@@ -141,9 +141,15 @@ for (const s of SIZES) {
       /* And the three-second "what do you want to do today?" card, for the
          same reason — it is a panel over the page on a timer. */
       sessionStorage.setItem('nc_ask_seen', '1');
-      /* The walkthroughs, all five. Each is a modal on first arrival at a
-         tool, and editor.html, publish.html, trends.html, photo.html and
-         tools.html are all in PAGES. They have their own test. */
+      /* The site tour. One modal, on the first page of a first visit, so
+         without this it covers whichever page the sweep happens to open —
+         which is all of them, because each gets a fresh context.
+
+         It was five per-page walkthroughs under 'nc_howto_done' until the tour
+         replaced them; the old key is left set as well, because a returning
+         visitor's browser still has it and a stale seed costs nothing next to
+         another 190-finding run. */
+      localStorage.setItem('nc_tour_done', '1');
       localStorage.setItem('nc_howto_done', JSON.stringify(
         ['editor.html', 'publish.html', 'trends.html', 'photo.html', 'tools.html']));
     } catch (e) {}

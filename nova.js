@@ -1678,14 +1678,17 @@ function ncBuildBar() {
   guideBtn.setAttribute('aria-label', 'How do I use this page?');
   guideBtn.addEventListener('click', function (e) {
     e.stopPropagation();
-    /* Five pages have a step-by-step walkthrough of their own (the editor, the
-       AI editor, Studio, the photo editor, the tools shelf). Where one exists
-       it is the better answer to "how do I use this page?" — it is about the
-       controls actually on screen — so it goes first, and nova-guide.js keeps
-       the other nineteen pages. */
-    if (window.NC_HOWTO && window.NC_HOWTO.has() && window.NC_HOWTO.open(true)) return;
-    if (window.ncGuide && window.ncGuide.show) window.ncGuide.show();
-    else toast('The page guide has not loaded on this page.');
+    /* The button asks "how do I use THIS PAGE?", so nova-guide.js answers it —
+       it has the written detail for twenty-four pages. The site tour in
+       nova-instructions.js answers a different question, "what is this site?",
+       and it shows itself once on a first visit.
+
+       The tour is the fallback rather than the first choice, so that a page
+       nova-guide.js has never heard of still has something behind the "?"
+       instead of a toast apologising. */
+    if (window.ncGuide && window.ncGuide.show) { window.ncGuide.show(); return; }
+    if (window.NC_HOWTO && window.NC_HOWTO.open(true)) return;
+    toast('The page guide has not loaded on this page.');
   });
   bar.appendChild(guideBtn);
 
@@ -1712,6 +1715,34 @@ function ncBuildBar() {
   ncEscapeHatch(bar);
 
   return inner;
+}
+
+/* ============================================================================
+   THE SITE TOUR
+   ============================================================================
+   nova-instructions.js is four screens explaining what NovaClip is, shown once
+   on a first visit. It used to be five separate per-page walkthroughs, each
+   loaded by its own <script> tag on its own page, which meant a newcomer met a
+   new modal every time they arrived somewhere and never got told what the site
+   was for.
+
+   Loaded from here rather than from a tag on every page. It is one tour for
+   the whole site and nova.js is the one file every page already has, so the
+   alternative was thirty-five identical script tags and a thirty-sixth page
+   shipping one day without one. It also keeps the hand-deploy honest: this
+   file and that file go together, and nothing else has to.
+
+   Failing to load is not an error worth reporting. The tour is orientation, so
+   a visitor who never sees it has missed a nicety, not a feature — and the "?"
+   falls back to nova-guide.js either way. */
+function ncLoadTour() {
+  if (NC_EMBED) return;
+  if (window.NC_HOWTO || document.getElementById('nc-tour-js')) return;
+  const s = document.createElement('script');
+  s.id = 'nc-tour-js';
+  s.src = 'nova-instructions.js';
+  s.defer = true;
+  document.head.appendChild(s);
 }
 
 /* ============================================================================
@@ -4709,6 +4740,7 @@ window.addEventListener('DOMContentLoaded', () => {
      each of them mounts into the first .themewrap it finds, and the bar has to
      exist by then or they mount into the sidebar and the bar comes up empty. */
   ncBuildBar();
+  ncLoadTour();
   /* The class is already on <html> from parse time; this is only the button
      catching up with it, now that there is a button. */
   ncApplyRail(ncRailHidden());
