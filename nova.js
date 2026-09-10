@@ -1657,6 +1657,12 @@ function ncBuildBar() {
   guideBtn.setAttribute('aria-label', 'How do I use this page?');
   guideBtn.addEventListener('click', function (e) {
     e.stopPropagation();
+    /* Five pages have a step-by-step walkthrough of their own (the editor, the
+       AI editor, Studio, the photo editor, the tools shelf). Where one exists
+       it is the better answer to "how do I use this page?" — it is about the
+       controls actually on screen — so it goes first, and nova-guide.js keeps
+       the other nineteen pages. */
+    if (window.NC_HOWTO && window.NC_HOWTO.has() && window.NC_HOWTO.open(true)) return;
     if (window.ncGuide && window.ncGuide.show) window.ncGuide.show();
     else toast('The page guide has not loaded on this page.');
   });

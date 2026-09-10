@@ -166,6 +166,13 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v40: nova-instructions.js — a walkthrough for the five pages that need one
+   (editor, AI editor, Studio, photo, tools). It opens once per tool and then
+   only from the "?" in the top bar, and Next waits two seconds on each step:
+   press it inside that window and the walkthrough restarts from step one and
+   says why. Escape always closes, so it is a pace, not a cage. Also in v40:
+   the Ideas and Scripts panels were printing "[object Object]" because ncAsk
+   returns { text, err, ... } and both read it as a string. */
 /* v39: the Studio panels were unreachable by clicking, which is the only way
    anybody reaches them. The app's rail routes with history.pushState, and
    pushState does not fire hashchange — so this file's router never ran on a
@@ -248,7 +255,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v39';
+const CACHE = 'novaclip-v40';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -324,6 +331,10 @@ const SHELL = [
      down rather than asked of a model: a help button that needs the network
      is missing at exactly the moment somebody is stuck. */
   '/nova-guide.js',
+  /* The five step-by-step walkthroughs, for the same reason and one more: the
+     editor and the photo editor both work with the network off, so their
+     instructions have to as well. */
+  '/nova-instructions.js',
   '/categories.js',
   /* The nine drawn backgrounds. Cached because they are the floor under every
      category: a page served offline without this file is a page with the

@@ -484,7 +484,17 @@
           '"shape":"<3 or 4 words on how it is filmed>"}]}\n\n' +
           'Plain language a 15-year-old would actually use. No hashtags, no emoji, no ALL CAPS, ' +
           'and nothing that promises something the video cannot show.');
-        var m = String(raw || '').match(/\{[\s\S]*\}/);
+        /* ncAsk RESOLVES TO AN OBJECT, NOT A STRING.
+           It answers { text, image, sources, err, cut, finish } — every other
+           caller on the site reads r.err then r.text, and these two panels
+           were the only ones treating the whole object as the answer. Ideas
+           ran String({...}) through a JSON match that could never hit, so it
+           always said "the AI answered in a shape this panel could not read";
+           Scripts printed [object Object] into the box. Both had been broken
+           since they were written, which is what "they're just text" was. */
+        if (raw && raw.err) throw new Error(raw.err);
+        var body = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
+        var m = body.match(/\{[\s\S]*\}/);
         if (!m) throw new Error('The AI answered in a shape this panel could not read.');
         var ideas = (JSON.parse(m[0]) || {}).ideas || [];
         if (!ideas.length) throw new Error('The AI sent no ideas back.');
@@ -676,7 +686,10 @@
           'Write words a 15-year-old would actually say out loud, no stage directions, ' +
           'no hashtags, no emoji, and do not promise anything the video cannot show. ' +
           'Keep it to what fits in ' + secs + ' seconds when read at a normal pace.');
-        out.value = String(answer || '').trim();
+        /* Same object, same rule — see the note in the ideas panel above. */
+        if (answer && answer.err) throw new Error(answer.err);
+        out.value = ((answer && typeof answer === 'object') ? (answer.text || '')
+                                                           : String(answer || '')).trim();
         copy.disabled = !out.value;
         if (dlBtn) dlBtn.disabled = !out.value;
         if (aiBtn) aiBtn.disabled = !out.value;
