@@ -166,6 +166,18 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v44: privacy.html rewritten to match v43's deletions. It still described
+   face, voice and click-rhythm sign-in, and the voice commands that went with
+   them — a policy claiming to collect biometrics the site no longer has is a
+   promise broken in the safest possible direction, but it is still wrong, and
+   it is the first document any partner or regulator reads. There is a
+   "Biometrics: removed" section now saying what went, why, and what happens to
+   data already enrolled on somebody's browser; the camera and microphone
+   section covers only the editor, the selfie studio and the voice changer; and
+   the analytics section states plainly that ad personalisation is denied.
+
+   Cached page, and the one page where a stale copy is a legal problem rather
+   than a cosmetic one. */
 /* v43: three changes, and two of them delete things.
 
    Biometrics are gone from the site. biometrics.html, biometric.js,
@@ -303,7 +315,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v43';
+const CACHE = 'novaclip-v44';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
