@@ -166,6 +166,14 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v38: the Studio panels hand you something now instead of printing text and
+   stopping. Ideas save to a shortlist that is drawn at the top of that panel
+   and downloads as a file, and each one can go straight to Scripts or to the
+   thumbnail maker with its title already in the box. Scripts downloads as a
+   named .txt and hands the subject and the hook to the AI Editor, which used
+   to ask for them again. Saving an idea also logs idea_save — a certificate
+   task worth 5 towards Advanced and 15 towards Master that nothing on the site
+   had ever written. trends-nav.js and publish.html both changed, both cached. */
 /* v37: the editor exports vertical. Its resolution list was four landscape
    sizes, so a Short could be previewed at 9:16 and then only saved as a 16:9
    file with the phone footage boxed in the middle of it — Vertical 9:16,
@@ -233,7 +241,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v37';
+const CACHE = 'novaclip-v38';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

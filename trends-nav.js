@@ -56,6 +56,52 @@
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
 
+  /* SOMETHING TO TAKE AWAY, not something to read.
+     Every panel here ended at text on a page with a Copy button beside it,
+     which is a draft you lose the moment you navigate. These three are what
+     turn an answer into a thing: a file on the disk, an entry in a list that
+     is still there tomorrow, and a hand-off into the tool that uses it. */
+  function download(name, text, mime) {
+    try {
+      var b = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+      var u = URL.createObjectURL(b);
+      var a = document.createElement('a');
+      a.href = u; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* THE SHORTLIST, WHICH DID NOT EXIST.
+     nc_ideas is in nova.js's list of keys to wipe on a reset, and `idea_save`
+     is a certificate task worth 5 towards Advanced and 15 towards Master — but
+     nothing on the site had ever written either. A task nobody can complete is
+     the exact fault the old biometrics row had. Saving an idea does both now,
+     and pays the points, so the row on the certificate list is reachable. */
+  var IDEAS_KEY = 'nc_ideas';
+  function savedIdeas() {
+    try { return JSON.parse(localStorage.getItem(IDEAS_KEY) || '[]') || []; }
+    catch (e) { return []; }
+  }
+  function saveIdea(it) {
+    var all = savedIdeas();
+    /* Same title twice is the same idea. Saving it again should feel like
+       nothing happened, not like it worked. */
+    if (all.some(function (x) { return x.title === it.title; })) return false;
+    all.unshift({ title: it.title || '', hook: it.hook || '', shape: it.shape || '',
+                  at: Date.now() });
+    try { localStorage.setItem(IDEAS_KEY, JSON.stringify(all.slice(0, 60))); }
+    catch (e) { return false; }
+    try { if (typeof window.logSkill === 'function') window.logSkill('idea_save'); } catch (e) {}
+    try { if (typeof window.addPts === 'function') window.addPts(3); } catch (e) {}
+    return true;
+  }
+  function dropIdea(title) {
+    var all = savedIdeas().filter(function (x) { return x.title !== title; });
+    try { localStorage.setItem(IDEAS_KEY, JSON.stringify(all)); } catch (e) {}
+  }
+
   /* What this creator makes, from categories.js. '' when nothing is set, so a
      prompt is never padded with a sentence that says nothing. */
   function catNote() {
@@ -347,9 +393,59 @@
         '<div class="row"><button class="go" id="ncxIdeaGo">Give me six</button></div>' +
         '<div class="say" id="ncxIdeaSay" style="display:none"></div>' +
       '</div>' +
+      '<div id="ncxSaved"></div>' +
       '<div id="ncxIdeaList"></div>';
 
     var seed = $('#ncxSeed', box), sayEl = $('#ncxIdeaSay', box), list = $('#ncxIdeaList', box);
+
+    /* THE SHORTLIST, ON SCREEN. Saving into a store nobody can see is the same
+       as not saving — this is what makes "Save it" a thing that happened
+       rather than a button that went grey. Drawn before the six new ones so
+       what you kept is the first thing on the page. */
+    function paintSaved() {
+      var wrap = $('#ncxSaved', box);
+      if (!wrap) return;
+      var all = savedIdeas();
+      if (!all.length) { wrap.innerHTML = ''; return; }
+      wrap.innerHTML =
+        '<h2 style="font-size:1rem;font-weight:800;margin:18px 2px 8px">' +
+          'Your shortlist (' + all.length + ')</h2>' +
+        all.map(function (it) {
+          return '<div class="card idea">' +
+            '<div class="ttl">' + esc(it.title) + '</div>' +
+            (it.hook ? '<div class="hook">&ldquo;' + esc(it.hook) + '&rdquo;</div>' : '') +
+            '<div class="row">' +
+              '<button data-sw="' + esc(it.title) + '">Write the script</button>' +
+              '<button data-sx="' + esc(it.title) + '">Remove</button>' +
+            '</div></div>';
+        }).join('') +
+        '<div class="row" style="margin:4px 2px 18px">' +
+          '<button id="ncxSavedDl">Download the shortlist</button>' +
+        '</div>';
+
+      wrap.querySelectorAll('[data-sw]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          try { sessionStorage.setItem('nc_trend_seed', b.dataset.sw); } catch (e) {}
+          var bx = host();
+          if (bx) bx.dataset.view = '';
+          location.hash = '/scripts';
+        });
+      });
+      wrap.querySelectorAll('[data-sx]').forEach(function (b) {
+        b.addEventListener('click', function () { dropIdea(b.dataset.sx); paintSaved(); });
+      });
+      var d = $('#ncxSavedDl', box);
+      if (d) d.addEventListener('click', function () {
+        var body = 'NovaClip shortlist — ' + new Date().toLocaleString() + '\n\n' +
+          savedIdeas().map(function (it, n) {
+            return (n + 1) + '. ' + it.title + (it.hook ? '\n   Hook: ' + it.hook : '') + '\n';
+          }).join('\n');
+        var ok = download('novaclip-shortlist.txt', body);
+        say(sayEl, ok ? 'ok' : 'no',
+            ok ? 'Saved as novaclip-shortlist.txt.' : 'This browser would not allow the download.');
+      });
+    }
+    paintSaved();
 
     try {
       var s0 = sessionStorage.getItem('nc_trend_seed');
@@ -396,10 +492,17 @@
             '<div class="hook">&ldquo;' + esc(it.hook || '') + '&rdquo;</div>' +
             '<div class="shape">' + esc(it.shape || '') + '</div>' +
             '<div class="row">' +
+              '<button data-s="' + i + '">Save it</button>' +
               '<button data-w="' + i + '">Write the script</button>' +
+              '<button data-t="' + i + '">Make a thumbnail</button>' +
               '<button data-c="' + i + '">Copy</button>' +
             '</div></div>';
-        }).join('');
+        }).join('') +
+        /* One file with all six in it, so the answer survives closing the tab
+           whether or not any single idea was worth saving. */
+        '<div class="row" style="margin-top:12px">' +
+          '<button class="go" id="ncxIdeaDl">Download all six</button>' +
+        '</div>';
 
         list.querySelectorAll('[data-w]').forEach(function (b2) {
           b2.addEventListener('click', function () {
@@ -419,6 +522,47 @@
             var text = (it.title || '') + '\n' + (it.hook || '') + '\n' + (it.shape || '');
             try { navigator.clipboard.writeText(text); say(sayEl, 'ok', 'Copied.'); } catch (e) {}
           });
+        });
+
+        /* SAVE. The shortlist is on this device and shows at the top of this
+           panel next time, and it is what the certificate task counts. */
+        list.querySelectorAll('[data-s]').forEach(function (b4) {
+          b4.addEventListener('click', function () {
+            var it = ideas[+b4.dataset.s] || {};
+            if (saveIdea(it)) {
+              b4.textContent = 'Saved';
+              b4.disabled = true;
+              say(sayEl, 'ok', 'Saved to your shortlist. It counts towards a certificate.');
+              paintSaved();
+            } else {
+              say(sayEl, 'ok', 'That one is already on your shortlist.');
+            }
+          });
+        });
+
+        /* Straight to the thumbnail maker with the title already in it. */
+        list.querySelectorAll('[data-t]').forEach(function (b5) {
+          b5.addEventListener('click', function () {
+            var it = ideas[+b5.dataset.t] || {};
+            try { sessionStorage.setItem('nc_thumb_text', it.title || ''); } catch (e) {}
+            var box3 = host();
+            if (box3) box3.dataset.view = '';
+            location.hash = '/thumbnails';
+          });
+        });
+
+        var dl = $('#ncxIdeaDl', box);
+        if (dl) dl.addEventListener('click', function () {
+          var body = 'Six video ideas — ' + t + '\n' +
+            new Date().toLocaleString() + '\n\n' +
+            ideas.slice(0, 6).map(function (it, n) {
+              return (n + 1) + '. ' + (it.title || '') + '\n' +
+                     '   Hook:  ' + (it.hook || '') + '\n' +
+                     '   Shape: ' + (it.shape || '') + '\n';
+            }).join('\n');
+          var ok = download('novaclip-ideas.txt', body);
+          say(sayEl, ok ? 'ok' : 'no',
+              ok ? 'Saved as novaclip-ideas.txt.' : 'This browser would not allow the download.');
         });
         say(sayEl, 'ok', 'Six ideas. None of them is an instruction — pick one and change it.');
       } catch (err) {
@@ -450,7 +594,12 @@
             '<option>Storytime</option><option>Explainer</option></select></div>' +
         '</div>' +
         '<div class="row"><button class="go" id="ncxWrite">Write it</button>' +
-          '<button id="ncxCopy" disabled>Copy</button></div>' +
+          '<button id="ncxCopy" disabled>Copy</button>' +
+          /* A file and a hand-off, so the draft outlives the tab. Both start
+             disabled: offering "Download" before there is anything to download
+             is a button that lies about being ready. */
+          '<button id="ncxDl" disabled>Download .txt</button>' +
+          '<button id="ncxToAi" disabled>Send to the AI Editor</button></div>' +
         '<div class="say" id="ncxSay" style="display:none"></div>' +
         '<label for="ncxOut" style="margin-top:16px">The script</label>' +
         '<textarea id="ncxOut" placeholder="It appears here. Edit it — it is a first draft, not a script."></textarea>' +
@@ -458,6 +607,36 @@
 
     var topic = $('#ncxTopic', box), out = $('#ncxOut', box), sayEl = $('#ncxSay', box);
     var write = $('#ncxWrite', box), copy = $('#ncxCopy', box);
+    var dlBtn = $('#ncxDl', box), aiBtn = $('#ncxToAi', box);
+
+    if (dlBtn) dlBtn.addEventListener('click', function () {
+      var text = (out.value || '').trim();
+      if (!text) return;
+      var name = (topic.value || 'script').trim().toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'script';
+      var ok = download('novaclip-' + name + '.txt',
+        (topic.value || '') + '\n' + new Date().toLocaleString() + '\n\n' + text);
+      say(sayEl, ok ? 'ok' : 'no',
+          ok ? 'Saved as novaclip-' + name + '.txt.' : 'This browser would not allow the download.');
+    });
+
+    /* THE SCRIPT IS WHAT THE AI EDITOR ASKS FOR ANYWAY.
+       publish.html's first question is "what is the video about", and somebody
+       who has just written a script has already answered it — retyping it is
+       the site forgetting what it just told you. The hook line is the strongest
+       one-sentence summary in the script, so that is what travels. */
+    if (aiBtn) aiBtn.addEventListener('click', function () {
+      var text = (out.value || '').trim();
+      if (!text) return;
+      var about = (topic.value || '').trim();
+      var hook = (text.match(/HOOK[:\s-]*([^\n]+)/i) || [])[1];
+      try {
+        sessionStorage.setItem('nc_publish_about',
+          (about ? about + ' — ' : '') + (hook || text.slice(0, 160)).trim());
+        sessionStorage.setItem('nc_publish_script', text);
+      } catch (e) {}
+      location.href = 'publish.html';
+    });
 
     /* If the reader came from a trend, use it. The app puts the trend it is
        showing in the URL on its own routes; this reads the last one seen. */
@@ -497,6 +676,8 @@
           'Keep it to what fits in ' + secs + ' seconds when read at a normal pace.');
         out.value = String(answer || '').trim();
         copy.disabled = !out.value;
+        if (dlBtn) dlBtn.disabled = !out.value;
+        if (aiBtn) aiBtn.disabled = !out.value;
         say(sayEl, out.value ? 'ok' : 'no',
           out.value ? 'First draft. Change anything — it is yours.' : 'The AI sent nothing back.');
       } catch (err) {
@@ -546,6 +727,18 @@
     var title = $('#ncxTitle', box), sub = $('#ncxSub', box), look = $('#ncxLook', box);
     var shot = $('#ncxShot', box), sayEl = $('#ncxSay2', box);
     var photo = null;
+
+    /* HANDED OVER FROM AN IDEA. "Make a thumbnail" on the Ideas panel leaves
+       the title here and comes to this route, so the words are already in the
+       box rather than being retyped from the card two screens back. Taken once
+       and cleared, so opening Thumbnails on its own later starts clean. */
+    try {
+      var seeded = sessionStorage.getItem('nc_thumb_text');
+      if (seeded) {
+        sessionStorage.removeItem('nc_thumb_text');
+        title.value = seeded.slice(0, 40);
+      }
+    } catch (e) {}
 
     var LOOKS = [
       { bg: '#05070E', ink: '#00E5FF', sub: '#9fb3c8' },

@@ -666,6 +666,27 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
      needs at second four is not a matter of taste about the channel. */
   const catNote = () => (typeof ncCategoryNote === 'function') ? ncCategoryNote() : '';
 
+  /* ARRIVING FROM THE SCRIPTS PANEL.
+     Its "Send to the AI Editor" leaves the subject and the full script here.
+     This page's first question is "what is the video about", and somebody who
+     has just written a script has already answered it — asking again is the
+     site forgetting what it was told a second ago. Read once and cleared, so
+     opening this page later starts empty. */
+  (function fromScripts() {
+    try {
+      const about = sessionStorage.getItem('nc_publish_about');
+      const script = sessionStorage.getItem('nc_publish_script');
+      if (!about && !script) return;
+      sessionStorage.removeItem('nc_publish_about');
+      sessionStorage.removeItem('nc_publish_script');
+      const box = $('about');
+      if (box && about && !box.value.trim()) box.value = about;
+      /* The script itself is kept for the metadata step, which writes a
+         description — it is the best source this page will ever get for one. */
+      if (script) window.__ncScript = script;
+    } catch (e) {}
+  })();
+
 
   $('metaBtn').onclick = async () => {
     const about = $('about').value.trim();
