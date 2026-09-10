@@ -312,6 +312,8 @@
       '.ncx .frame{border:1px solid color-mix(in srgb,currentColor 18%,transparent);',
       '  border-radius:16px;overflow:hidden;height:calc(100vh - 190px);min-height:560px}',
       '.ncx .frame iframe{width:100%;height:100%;border:0;display:block}',
+      /* See route(): this is what actually keeps the app's placeholder down. */
+      'html.nc-x-open .nc-page{display:none !important}',
       /* The editor is a three-column application, not a form. At the shared
          height its timeline sat below the fold inside its own frame, which is
          a scrollbar inside a scrollbar — the thing this layout exists to
@@ -971,6 +973,12 @@
     var mine = PANELS[h];
     if (mine) {
       styles();
+      /* A CLASS ON <html>, NOT AN INLINE STYLE ON .nc-page.
+         React re-renders .nc-page after pushState, which threw away an inline
+         display:none — so on the first click the app's own "STAGED" placeholder
+         sat on screen underneath the real panel. A class on the root survives
+         any number of re-renders below it, and the stylesheet does the hiding. */
+      document.documentElement.classList.add('nc-x-open');
       if (page) page.style.display = 'none';
       box.style.display = '';
       if (h === '/ideas') ideasPanel(box);
@@ -990,6 +998,7 @@
          in and analysed. Leaving the view marked means returning to the same
          panel keeps its state, while switching to a different one still
          rebuilds, because the marker no longer matches. */
+      document.documentElement.classList.remove('nc-x-open');
       box.style.display = 'none';
       if (page) page.style.display = '';
     }
@@ -1006,7 +1015,41 @@
     try {
       new MutationObserver(function () { fixRail(); }).observe(document.body, { childList: true, subtree: true });
     } catch (e) {}
+    /* HASHCHANGE IS NOT ENOUGH, AND THAT IS WHY NONE OF THIS EVER APPEARED.
+       The app's rail routes with history.pushState. pushState does NOT fire a
+       hashchange event — the URL says #/scripts, and nothing is told. So this
+       router never ran on a click, .nc-page kept its own placeholder up, and
+       every panel in this file was unreachable except by typing the URL.
+
+       It looked like it worked while it was being built because the hand-offs
+       in here assign location.hash directly, and THAT does fire hashchange.
+       The one path nobody exercised was the one every reader uses.
+
+       Three listeners, because there are three ways the route can change:
+         hashchange   a direct assignment, including this file's own hand-offs
+         popstate     back and forward
+         nc-route     pushState and replaceState, wrapped just below
+       route() is cheap and idempotent — each panel returns immediately when
+       its view is already mounted — so hearing the same change twice costs
+       nothing and missing it costs everything. */
     window.addEventListener('hashchange', route);
+    window.addEventListener('popstate', route);
+    window.addEventListener('nc-route', route);
+
+    /* Wrapping rather than replacing: the original is still called with the
+       same arguments and its return value handed back, so React's router
+       behaves exactly as it did and only gains a notification. */
+    ['pushState', 'replaceState'].forEach(function (fn) {
+      var orig = history[fn];
+      if (typeof orig !== 'function' || orig.__ncWrapped) return;
+      var wrapped = function () {
+        var r = orig.apply(this, arguments);
+        try { window.dispatchEvent(new Event('nc-route')); } catch (e) {}
+        return r;
+      };
+      wrapped.__ncWrapped = true;
+      history[fn] = wrapped;
+    });
   }
 
   window.NC_TRENDS_NAV = { fixRail: fixRail, route: route, panels: PANELS };

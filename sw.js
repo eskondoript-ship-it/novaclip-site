@@ -166,6 +166,13 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v39: the Studio panels were unreachable by clicking, which is the only way
+   anybody reaches them. The app's rail routes with history.pushState, and
+   pushState does not fire hashchange — so this file's router never ran on a
+   click and the app's own "STAGED" placeholder stayed up. It listens for
+   popstate and for a wrapped pushState now, and hides that placeholder with a
+   class on <html> rather than an inline style React throws away on its next
+   render. trends-nav.js is the file, and it is cached. */
 /* v38: the Studio panels hand you something now instead of printing text and
    stopping. Ideas save to a shortlist that is drawn at the top of that panel
    and downloads as a file, and each one can go straight to Scripts or to the
@@ -241,7 +248,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v38';
+const CACHE = 'novaclip-v39';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
