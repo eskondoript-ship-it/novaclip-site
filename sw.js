@@ -166,6 +166,18 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v45: terms.html, for the same reason privacy.html changed in v44. Section 3
+   still offered face sign-in, voice sign-in and the click rhythm as ways to
+   unlock the device, and section 5's consent rule was written around face and
+   voice features that no longer exist. Both now describe the passkey and the
+   camera, microphone and voice changer that are actually there.
+
+   Section 2 also gained the part it was missing: it said thirteen and cited
+   COPPA, which is the US line. In the EU each country sets its own age for
+   agreeing to a service like this, from 13 to 16 — so a fourteen-year-old in
+   Germany was being told they could agree on their own when their own law says
+   a parent has to. Governing law here is England and Wales, and the site is
+   read across the EU, so that sentence had to be there. */
 /* v44: privacy.html rewritten to match v43's deletions. It still described
    face, voice and click-rhythm sign-in, and the voice commands that went with
    them — a policy claiming to collect biometrics the site no longer has is a
@@ -315,7 +327,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v44';
+const CACHE = 'novaclip-v45';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
