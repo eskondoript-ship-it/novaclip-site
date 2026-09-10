@@ -1712,9 +1712,170 @@ function ncBuildBar() {
   const stray = document.getElementById('ncLangPick');
   if (stray && !bar.contains(stray)) inner.appendChild(stray.parentElement || stray);
 
+  ncBuildBurger(bar);
   ncEscapeHatch(bar);
 
   return inner;
+}
+
+/* ============================================================================
+   THE PHONE MENU
+   ============================================================================
+   On a phone the rail stops being a rail. It used to become a 64px strip
+   docked along the bottom, holding all fourteen links behind a sideways
+   scroll — which meant the navigation was a thing you had to swipe through to
+   read, on the device where swiping past something is how you lose it. It also
+   ate 74px of every page forever to show four icons at a time.
+
+   So below 760px there is no strip. There is a button, and behind the button
+   there are six things:
+
+     Studio · Socials · Games · Family · Pricing · Profile
+
+   Six, not fourteen. A phone menu that needs scrolling has the same problem
+   the strip had. These are the six somebody actually opens; everything else on
+   the site is reachable from inside them, and the full rail is still there the
+   moment the screen is wide enough to hold it.
+
+   The list is hrefs rather than a second copy of the labels: the entries are
+   looked up in NC_NAV, so the wording, the icon and the twenty translations
+   stay in one place. Rename Studio there and it renames here. */
+const NC_PHONE_NAV = [
+  'trends.html', 'socials.html', 'game.html',
+  'parent.html', 'pricing.html', 'profile.html'
+];
+
+function ncPhoneItems() {
+  const flat = [];
+  NC_NAV.forEach(g => (g.items || []).forEach(i => flat.push(i)));
+  /* Mapped in the order written above, not the order of the rail — this is a
+     shortlist with its own priorities, and Profile belongs at the end of it
+     rather than buried in the middle where NC_NAV keeps it. */
+  return NC_PHONE_NAV
+    .map(href => flat.find(i => i[0] === href))
+    .filter(Boolean);
+}
+
+function ncBuildBurger(bar) {
+  if (NC_EMBED) return;
+  if (document.getElementById('ncburger')) return;
+
+  const css = document.createElement('style');
+  css.id = 'ncburger-css';
+  css.textContent =
+    /* The button is the only part that lives in the bar. */
+    '#ncburger{display:none;align-items:center;justify-content:center;flex:0 0 auto;' +
+      'width:40px;height:40px;padding:0;border-radius:11px;cursor:pointer;' +
+      'background:none;color:var(--nc-text,#EAF2FF);' +
+      'border:1px solid var(--nc-line2,rgba(255,255,255,.16))}' +
+    '#ncburger span{display:block;width:19px;height:2px;border-radius:2px;background:currentColor;' +
+      'box-shadow:0 -6px 0 currentColor,0 6px 0 currentColor}' +
+
+    '@media (max-width:760px){' +
+      '#ncburger{display:flex}' +
+      /* NO STRIP. The geometry rules further up this file set the rail to
+         display:flex !important on a phone, so this needs both the !important
+         and the extra specificity of `html body` to actually win — same
+         importance and same specificity would come down to source order, and
+         source order between two injected stylesheets is not something worth
+         depending on. */
+      'html body .sidebar{display:none !important}' +
+      /* And the 74px that was reserved for it goes back to the page. */
+      'html body:has(.sidebar){padding-bottom:0 !important}' +
+    '}' +
+
+    /* ---- the sheet ---------------------------------------------------- */
+    '#ncsheet{position:fixed;inset:0;z-index:99994;display:flex;flex-direction:column;' +
+      'background:var(--nc-bg,#0A0D18);color:var(--nc-text,#EAF2FF);' +
+      'padding:0 20px env(safe-area-inset-bottom,18px);overflow-y:auto}' +
+    '#ncsheet[hidden]{display:none}' +
+    '#ncsheet .nsh{display:flex;align-items:center;justify-content:space-between;' +
+      'height:' + NC_BAR_H + 'px;flex:0 0 auto}' +
+    '#ncsheet .nsh b{font:800 1rem/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;' +
+      'color:var(--nc-cyan,#00E5FF)}' +
+    '#ncsheet .nsx{width:40px;height:40px;border-radius:11px;cursor:pointer;font-size:22px;line-height:1;' +
+      'background:none;color:inherit;border:1px solid var(--nc-line2,rgba(255,255,255,.16))}' +
+    '#ncsheet nav{display:flex;flex-direction:column;justify-content:center;flex:1 1 auto;' +
+      'gap:2px;padding:8px 0 24px}' +
+    '#ncsheet a{display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;' +
+      'padding:15px 6px;border-radius:14px;' +
+      'font:700 1.6rem/1.15 system-ui,sans-serif;letter-spacing:-.02em}' +
+    '#ncsheet a .nci{width:23px;height:23px;flex:0 0 auto;opacity:.75}' +
+    '#ncsheet a.on{color:var(--nc-cyan,#00E5FF)}' +
+    '#ncsheet a.on .nci{opacity:1}' +
+    '#ncsheet a:active{background:var(--nc-card,rgba(255,255,255,.06))}' +
+    /* A short phone with the browser chrome up has about 500px of room. Six
+       rows at 1.6rem plus the header just fits; below that the type steps
+       down rather than the last row falling off the bottom. */
+    '@media (max-height:620px){#ncsheet a{font-size:1.3rem;padding:12px 6px}}' +
+    '@media (prefers-reduced-motion:no-preference){' +
+      '#ncsheet nav a{animation:ncsIn .26s ease backwards}' +
+      '@keyframes ncsIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}}';
+  document.head.appendChild(css);
+
+  const btn = document.createElement('button');
+  btn.id = 'ncburger';
+  btn.type = 'button';
+  btn.title = 'Menu';
+  btn.setAttribute('aria-label', 'Menu');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.innerHTML = '<span></span>';
+  bar.appendChild(btn);
+
+  let sheet = null;
+
+  function close() {
+    if (!sheet) return;
+    sheet.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+    try { document.documentElement.style.overflow = ''; } catch (e) {}
+    btn.focus();
+  }
+
+  function open() {
+    const here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    if (!sheet) {
+      sheet = document.createElement('div');
+      sheet.id = 'ncsheet';
+      sheet.setAttribute('role', 'dialog');
+      sheet.setAttribute('aria-modal', 'true');
+      sheet.setAttribute('aria-label', 'Menu');
+      document.body.appendChild(sheet);
+    }
+    sheet.innerHTML =
+      '<div class="nsh"><b>NovaClip</b>' +
+        '<button type="button" class="nsx" aria-label="Close menu">&times;</button></div>' +
+      '<nav>' +
+        ncPhoneItems().map(([href, label, key, icon], i) => {
+          const on = href.toLowerCase() === here;
+          return '<a href="' + href + '"' + (on ? ' class="on" aria-current="page"' : '') +
+                 ' style="animation-delay:' + (i * 32) + 'ms">' + ncIcon(icon) +
+                 '<span class="nct"' + (key ? ' data-t="' + key + '"' : '') + '>' + label + '</span></a>';
+        }).join('') +
+      '</nav>';
+    sheet.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    /* The sheet covers the page; letting the page keep scrolling underneath it
+       is how you close a menu and find yourself somewhere else. */
+    try { document.documentElement.style.overflow = 'hidden'; } catch (e) {}
+    sheet.querySelector('.nsx').onclick = close;
+    const first = sheet.querySelector('nav a');
+    if (first) first.focus();
+    if (typeof applyLangText === 'function') { try { applyLangText(); } catch (e) {} }
+  }
+
+  btn.onclick = function (e) {
+    e.stopPropagation();
+    (sheet && !sheet.hidden) ? close() : open();
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && sheet && !sheet.hidden) close();
+  });
+  /* Back to a wide screen with the sheet still up would leave a full-screen
+     panel over a page that has its rail back. */
+  addEventListener('resize', function () {
+    if (innerWidth > 760 && sheet && !sheet.hidden) close();
+  }, { passive: true });
 }
 
 /* ============================================================================
@@ -2199,12 +2360,14 @@ const SKILLS = {
      have existed. Found by listing every logSkill() call on the site and
      comparing it against this table, which is a check worth repeating any
      time a new one is added. */
-  /* Back, and completable again. The row was pulled when BioSentinel was
-     deleted — a certificate task nothing on the site can finish is the exact
-     fault the old Arena row had. The lock is set up from the Profile page now
-     rather than from its own place in the rail, but it is the same call from
-     the same file, so the task can be finished exactly as before. */
-  biometric:  { icon:'', label:'Set up face, voice or a passkey on this device' },
+  /* Still completable, and now honest about what it is. Face and voice are
+     gone from the site — Article 9 data under GDPR, on a site for children —
+     so this asks for the passkey, which is what was actually securing anything
+     and is not biometric data at all: the key lives in the device's secure
+     hardware and nothing biometric reaches this site. The id stays 'biometric'
+     because it is already in people's saved progress and renaming it would
+     reset the row to 0 for everyone who has finished it. */
+  biometric:  { icon:'', label:'Lock this device with a passkey, from Profile' },
   community:  { icon:'', label:'Join in on the community page' },
   editing:    { icon:'', label:'Publish or animate something you made' },
   reaction:   { icon:'', label:'Finish a set of five in Reaction' },
@@ -3590,6 +3753,15 @@ function ncProfile() {
    active state. These inherit currentColor, so one rule lights the whole row. */
 const NC_ICONS = {
   home:      'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10',
+  /* TWO THAT WERE FALLING BACK TO THE HOUSE.
+     ncIcon() returns NC_ICONS.home for any name it does not have, and 'signin'
+     was never a key here — so the Profile link in the rail has been drawing a
+     house this whole time. Nobody noticed at 19px in a fourteen-item rail. The
+     phone menu is six rows of 26px type, where a house next to the word
+     Profile is the first thing you see. Socials was pointed at the gift box,
+     which is a real icon and the wrong one. */
+  profile:   'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+  socials:   'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.6 13.5l6.8 4M15.4 6.5l-6.8 4',
   studio:    'M3 5h13v14H3zM19 8l3-2v12l-3-2z',
   analytics: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
   editor:    'M3 6h18M3 12h18M3 18h11M17 15l4 3-4 3z',
@@ -3653,11 +3825,11 @@ const NC_NAV = [
       ['studio-ai.html', 'AI', 'ai', 'ai']] },
   { name: 'Learn', key: 'nav_learn', icon: 'life', items: [
       ['game.html', 'Games', 'games', 'games']] },
-  { items: [['socials.html', 'Socials', 'socials', 'gift']] },
+  { items: [['socials.html', 'Socials', 'socials', 'socials']] },
   { name: 'You', key: 'nav_you', icon: 'progress', items: [
       /* First in the group, because it is the one somebody arrives looking
          for. */
-      ['profile.html', 'Profile', 'profile', 'signin'],
+      ['profile.html', 'Profile', 'profile', 'profile'],
       /* History replaces Progress here. Progress was a page of four panels and
          only one of them answered a question anybody arrives with — "what have
          I actually been asking?". The certificate reps moved to Pricing, beside

@@ -53,7 +53,18 @@ if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</scri
   } catch (e) {}
 
   gtag('js', new Date());
-  gtag('config', 'G-QN1QE08F2K');
+  /* Analytics only, never advertising signals.
+     The consent defaults above already deny ad_storage, ad_user_data and
+     ad_personalization, so this is belt and braces — but these two flags are
+     what a privacy audit actually greps for, and they turn off the paths that
+     let a GA4 property feed Google's advertising profiles. This site is read by
+     13-18 year olds; profiling them for ads is banned outright by the EU's
+     Digital Services Act, and NovaTools' ad units are contextual-only for the
+     same reason. */
+  gtag('config', 'G-QN1QE08F2K', {
+    allow_google_signals: false,
+    allow_ad_personalization_signals: false
+  });
 </script>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <link rel="manifest" href="/manifest.json">

@@ -62,9 +62,11 @@ window.NT = {
       sidebar: '',
       inArticle: ''
     },
-    /* Auto ads let Google place units wherever it likes, including over a tool
-       someone is using. Leave this off. The named slots above are placed where
-       they cannot interrupt anything. */
+    /* Auto ads are ignored by nt.js — the key is left here only so that setting
+       it true does not look like it worked. Google places and targets those
+       units itself, which cannot be constrained per-slot, and this site is read
+       by teenagers. The named slots above sit where they cannot interrupt
+       anything and carry the contextual-only flags. */
     autoAds: false
   },
 
@@ -125,6 +127,19 @@ window.NT = {
 (function () {
   var client = window.NT && window.NT.adsense && window.NT.adsense.client;
   if (!client) return;
+
+  /* CONTEXTUAL ONLY, AND SET BEFORE THE LOADER — not after.
+     AdSense reads these when a unit is filled, and the loader below starts
+     fetching the moment it is appended. Setting them afterwards is a race this
+     would sometimes lose, silently, and a silently personalised ad served to a
+     fifteen-year-old is the one failure here that actually matters. nt.js sets
+     the same four again on every push; duplicating them is free. */
+  window.adsbygoogle = window.adsbygoogle || [];
+  window.adsbygoogle.requestNonPersonalizedAds = 1;
+  window.adsbygoogle.tagForChildDirectedTreatment = 1;
+  window.adsbygoogle.tagForUnderAgeOfConsent = 1;
+  window.adsbygoogle.restrictDataProcessing = 1;
+
   var s = document.createElement('script');
   s.async = true;
   s.crossOrigin = 'anonymous';

@@ -208,16 +208,6 @@
       ],
       tip: 'This is the part the operating system’s own controls cannot do: they block whole apps, this blocks content inside them.'
     },
-    'biometrics.html': {
-      title: 'Biometrics',
-      what: 'Sign in by face, voice, click rhythm or a passkey.',
-      steps: [
-        'Pick a method and enrol it. Follow the reader on screen.',
-        'Enrol a second method as a backup before you rely on the first.',
-        'A passkey is the strongest of them and the one your device already knows how to protect.'
-      ],
-      tip: 'None of this leaves your machine. The face and voice profiles are stored on the device and never uploaded — that is why it works offline.'
-    },
     'progress.html': {
       title: 'Progress',
       what: 'Points, streaks, skills and certificates in one place.',

@@ -286,10 +286,20 @@
           'data-ad-client': client,
           'data-ad-slot': unit,
           'data-ad-format': slot.dataset.format || 'auto',
-          'data-full-width-responsive': 'true'
+          'data-full-width-responsive': 'true',
+          /* CONTEXTUAL ONLY — SEE contextualOnly() BELOW.
+             Per-unit as well as page-level, because a page-level flag set after
+             a unit has already been pushed does not retroactively apply to it.
+             Both are cheap; being wrong once is not. */
+          'data-tag-for-child-directed-treatment': '1',
+          'data-tag-for-under-age-of-consent': '1',
+          'data-restrict-data-processing': '1'
         });
         slot.appendChild(ins);
-        try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
+        try {
+          contextualOnly();
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {}
       } else if (adPreview) {
         slot.classList.add('preview');
         slot.appendChild(el('div', { class: 'adbox' },
@@ -303,6 +313,7 @@
        looks for it. This is the fallback for a page that somehow loaded nt.js
        without it — never a second copy, which would double every request. */
     if (!window.__ntAdsLoader) {
+      contextualOnly();
       var s = el('script', {
         async: '', crossorigin: 'anonymous',
         src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(client)
@@ -310,10 +321,48 @@
       document.head.appendChild(s);
       window.__ntAdsLoader = true;
     }
-    if (C.adsense.autoAds) {
-      document.head.appendChild(el('script', null,
-        '(adsbygoogle=window.adsbygoogle||[]).push({google_ad_client:"' + client + '",enable_page_level_ads:true});'));
-    }
+    /* AUTO ADS ARE REFUSED, NOT CONFIGURED.
+       C.adsense.autoAds used to switch this on. It is ignored now. Auto ads let
+       Google place and target units wherever it likes, which cannot be
+       constrained per-slot the way the named units above are — and this site is
+       read by children, where "wherever it likes" is not a setting anyone should
+       be able to flip by editing one line of config. */
+  }
+
+  /* ---------------------------------------------------------------------------
+     CONTEXTUAL ONLY
+     ---------------------------------------------------------------------------
+     Ads here are matched to the PAGE, never to the person reading it.
+
+     This is not a preference. NovaTools sits beside NovaClip, whose audience is
+     13-18, and the rules are not subtle about it: the EU's Digital Services Act
+     bans advertising targeted at minors using profiling outright, and COPPA
+     requires verified parental consent before an under-13 can be profiled at
+     all. Contextual advertising — matched to what the page is about — is
+     untouched by either, and pays perfectly well on a site of small tools where
+     the page topic IS the intent.
+
+     Three flags, set before the first push because AdSense reads them when the
+     unit is filled and a flag arriving afterwards is a flag that did nothing:
+
+       requestNonPersonalizedAds   no behavioural profile used to pick the ad
+       TFCD                        treat every request as child-directed
+       TFUA                        treat every reader as under the age of consent
+
+     Written as a function called from both paths rather than a config key,
+     because a config key is something a future edit can turn off by accident and
+     this must not be turn-off-able.
+
+     Worth re-reading against Google's current AdSense documentation before you
+     paste in a publisher ID — these parameter names are stable but they are
+     Google's to change, and the cost of one of them being silently ignored is
+     the exact thing this function exists to prevent. */
+  function contextualOnly() {
+    window.adsbygoogle = window.adsbygoogle || [];
+    window.adsbygoogle.requestNonPersonalizedAds = 1;
+    window.adsbygoogle.tagForChildDirectedTreatment = 1;
+    window.adsbygoogle.tagForUnderAgeOfConsent = 1;
+    window.adsbygoogle.restrictDataProcessing = 1;
   }
 
   /* ---------------------------------------------------------------------------

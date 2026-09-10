@@ -6,7 +6,11 @@ import pw from '/opt/node22/lib/node_modules/playwright/index.js';
 const { chromium } = pw;
 
 const BASE = 'http://localhost:8099';
-const PAGES = ['index.html', 'tools.html', 'socials.html', 'biometrics.html', 'editor.html',
+/* biometrics.html is not here because it no longer exists — the face and voice
+   modules were deleted (Article 9 data, on a site for children). The sweep is
+   what caught the stale entry: a deleted page 404s, and a 404 has no links on
+   it, so it reported as TRAPPED at all seven widths. */
+const PAGES = ['index.html', 'tools.html', 'socials.html', 'editor.html',
   'pricing.html', 'game.html', 'analytics.html', 'study.html', 'photo.html',
   'community.html', 'typing.html', 'parent.html', 'trends.html', 'ai.html', 'progress.html', 'shield.html', 'pro.html', 'app.html', 'gift.html', 'coder.html', 'publish.html', 'studio-ai.html',
   'hype.html',

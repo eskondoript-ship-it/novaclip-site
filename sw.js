@@ -166,6 +166,29 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v43: three changes, and two of them delete things.
+
+   Biometrics are gone from the site. biometrics.html, biometric.js,
+   biosentinel.js, rhythm.js and theme-biometric.css are deleted — a face
+   descriptor or a voiceprint used to recognise somebody is Article 9 "special
+   category" data under GDPR whatever machine it sits on, and this site's users
+   are children. The passkey stays and is not the same thing: the private key
+   is made inside the device's secure hardware and nothing biometric reaches
+   this site. guard.js and profile.html both changed with it, and the shell
+   drops five files.
+
+   Ads are contextual only, structurally. novatools/nt.js and nt-config.js set
+   requestNonPersonalizedAds, TFCD, TFUA and restricted data processing before
+   the loader and again on every unit, and auto ads are refused rather than
+   configured. All 31 pages also tell GA4 allow_google_signals:false and
+   allow_ad_personalization_signals:false.
+
+   And on a phone the rail is a menu. The 64px bottom strip that held fourteen
+   links behind a sideways scroll is gone; below 760px there is a button in the
+   bar and six items behind it — Studio, Socials, Games, Family, Pricing,
+   Profile. That is a nova.js change, which every page loads, so a returning
+   visitor served the old copy from cache gets the strip back on a page whose
+   body no longer reserves room for it. */
 /* v42: the five per-page walkthroughs are one site tour. Four screens about
    what NovaClip is, shown once on a first visit rather than a new modal every
    time somebody arrives somewhere new, and set in type you can actually read —
@@ -280,7 +303,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v42';
+const CACHE = 'novaclip-v43';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -393,22 +416,20 @@ const SHELL = [
   /* The focus timer is the one page here most likely to be opened with the
      wifi off on purpose. */
   '/study.html',
-  '/rhythm.js',
-  /* BIOSENTINEL, back in the shell.
-     It is set up from a frame inside profile.html now rather than from its own
-     row in the rail, which changes where it is reached from and nothing about
-     what it needs. guard.js is the one that matters most here: nova.js injects
-     it into every page, so a cache that has the pages and not the lock is a
-     cache where a locked device opens straight up. */
-  '/biometrics.html',
-  '/biometric.js',
-  '/biosentinel.js',
+  /* THE DEVICE LOCK, DOWN TO ITS TWO REAL PARTS.
+     biometrics.html, biometric.js, biosentinel.js, rhythm.js and
+     theme-biometric.css are deleted — face descriptors and voiceprints are
+     Article 9 data under GDPR and this site's users are children.
+
+     What is left is not biometric data at all: a passkey's private key is made
+     inside the device's secure hardware and never leaves it. guard.js matters
+     most here, because nova.js injects it into every page — a cache holding the
+     pages but not the lock is a cache where a locked device opens straight up. */
   '/passkey.js',
   '/locker.js',
   '/guard.js',
-  '/theme-biometric.css',
-  /* The page the frame lives on. Cached because a shell holding biometrics
-     without the page that opens it is a lock with no keyhole. */
+  /* Where the lock is set up. A shell with the lock and not the page that
+     configures it is a lock with no keyhole. */
   '/profile.html',
   '/leaderboard.js',
   '/tools-data.js',

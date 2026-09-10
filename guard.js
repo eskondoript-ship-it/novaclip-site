@@ -58,29 +58,34 @@
   var PASS = 'nc_gate_ok';        // sessionStorage: proved, for this session
   var EXEMPT = /(^|\/)(privacy|report|offline)\.html$/i;
 
-  /* Straight out of storage, NOT through NC_PASSKEY / NC_RHYTHM.
-     Those modules are script tags on biometrics.html and nowhere else, so
-     asking them would have meant the gate correctly locking that one page and
-     silently letting every other page through — the exact opposite of a lock.
-     The keys are read here and the modules are fetched only when somebody
-     actually picks a method to prove themselves with. */
+  /* Read straight out of storage, NOT through NC_PASSKEY. That module is a
+     script tag on the Profile page and nowhere else, so asking it would have
+     meant the gate correctly locking that one page and silently letting every
+     other page through — the exact opposite of a lock. The key list is read
+     here, and passkey.js is fetched only once somebody actually presses the
+     button to prove themselves. */
   function ls(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key) || 'null') || fallback; }
     catch (e) { return fallback; }
   }
 
+  /* ONE WAY IN, AND IT IS THE ONLY ONE THAT WAS EVER REAL.
+     Face, voice and click-rhythm are gone from the whole site. Under GDPR a
+     face descriptor or a voiceprint used to recognise a person is Article 9
+     "special category" data — the strictest tier there is — and NovaClip's
+     users are children, which is the strictest case of that. Keeping a fun
+     demo of it was not worth what it cost to hold legally.
+
+     The passkey stays, and it is not the same thing. The private key is made
+     inside the device's own secure hardware and never leaves it; the
+     fingerprint or face that unlocks it is checked BY THE PHONE, and nothing
+     biometric ever reaches this site. That distinction is the whole reason
+     passkeys exist, and it is why regulators point at them as the good
+     pattern rather than the risky one. */
   function enrolled() {
     var out = [];
     var keys = ls('nc_passkeys', []);
     if (Array.isArray(keys) && keys.length) out.push('passkey');
-
-    var profs = ls('nc_bio_profiles', []);
-    if (Array.isArray(profs)) {
-      if (profs.some(function (p) { return p && p.face; })) out.push('face');
-      if (profs.some(function (p) { return p && p.voice; })) out.push('voice');
-    }
-
-    if (ls('nc_click_rhythm', null)) out.push('rhythm');
     return out;
   }
 
@@ -176,10 +181,7 @@
   };
 
   var LABEL = {
-    passkey: ['Use your fingerprint or face', IC.key],
-    face:    ['Look at the camera', IC.face],
-    rhythm:  ['Do your click pattern', IC.pulse],
-    voice:   ['Say your passphrase', IC.mic]
+    passkey: ['Use your fingerprint or face', IC.key]
   };
 
   var el = null, fails = 0, methods = [];
@@ -286,18 +288,11 @@
     setTimeout(function () { if (el) { var keep = msg; menu(); say(keep, 'bad'); } }, 1600);
   }
 
-  /* ---- the four ways in -------------------------------------------------- */
-  function run(m) {
+  /* ---- the way in -------------------------------------------------------- */
+  function run() {
     say('Loading…');
-    var mod = m === 'passkey' ? ['passkey.js', 'NC_PASSKEY']
-            : m === 'rhythm'  ? ['rhythm.js', 'NC_RHYTHM']
-            : ['biometric.js', 'ncBiometric'];
-    need(mod[0], mod[1]).then(function () {
-      if (m === 'passkey') return byPasskey();
-      if (m === 'rhythm') return byRhythm();
-      return byBio(m);
-    }).catch(function (e) {
-      fail(e.message + ' — try another method.');
+    need('passkey.js', 'NC_PASSKEY').then(byPasskey).catch(function (e) {
+      fail(e.message);
     });
   }
 
@@ -312,134 +307,20 @@
     });
   }
 
-  function byRhythm() {
-    var RH = window.NC_RHYTHM;
-    var wait = RH.cooling();
-    if (wait > 0) return fail('Too many wrong tries. Wait ' + Math.ceil(wait / 1000) + ' seconds.');
-
-    var want = RH.info().clicks, rec = RH.newRecorder();
-    el.innerHTML =
-      "<div class='gb'>" +
-        "<div class='gr'>" + IC.pulse + '</div>' +
-        '<h2>Your click pattern</h2>' +
-        '<p>All ' + want + ' clicks, the way you normally do it. It checks itself on the last one.</p>' +
-        "<p class='gmsg'></p>" +
-        "<div class='gdots'></div>" +
-        "<div class='gpad'>" +
-          "<button type='button' data-z='L'>LEFT</button>" +
-          "<button type='button' data-z='R'>RIGHT</button>" +
-        '</div>' +
-        "<button type='button' class='gback'>Use something else</button>" +
-      '</div>';
-
-    var dots = el.querySelector('.gdots');
-    function paint() {
-      var s = '';
-      for (var i = 0; i < want; i++) s += '<i' + (i < rec.length() ? " class='on'" : '') + '></i>';
-      dots.innerHTML = s;
-    }
-    paint();
-
-    [].forEach.call(el.querySelectorAll('.gpad button'), function (b) {
-      var z = b.getAttribute('data-z');
-      b.addEventListener('pointerdown', function (e) {
-        e.preventDefault();
-        if (!rec.press(z)) return;
-        b.classList.add('down');
-        if (e.pointerId != null && b.setPointerCapture) {
-          try { b.setPointerCapture(e.pointerId); } catch (x) {}
-        }
-      });
-      b.addEventListener('pointerup', function (e) {
-        e.preventDefault();
-        if (!rec.held()) return;
-        rec.release();
-        b.classList.remove('down');
-        paint();
-        if (rec.length() >= want) check();
-      });
-      b.addEventListener('pointercancel', function () { rec.cancel(); b.classList.remove('down'); });
-      /* Holding Space has a duration; a click event does not. */
-      b.addEventListener('keydown', function (e) {
-        if (e.key !== ' ' && e.key !== 'Enter') return;
-        e.preventDefault();
-        if (e.repeat || !rec.press(z)) return;
-        b.classList.add('down');
-      });
-      b.addEventListener('keyup', function (e) {
-        if (e.key !== ' ' && e.key !== 'Enter') return;
-        e.preventDefault();
-        if (!rec.held()) return;
-        rec.release(); b.classList.remove('down'); paint();
-        if (rec.length() >= want) check();
-      });
-      b.addEventListener('click', function (e) { e.preventDefault(); });
-    });
-
-    el.querySelector('.gback').onclick = menu;
-
-    function check() {
-      var r = RH.verify(rec.sample());
-      if (r.ok) {
-        say('That is you — ' + r.pct + '% match.', 'good');
-        return setTimeout(function () { done('click rhythm · ' + r.pct + '%'); }, 500);
-      }
-      fail(r.why === 'COOLING'
-        ? 'Too many wrong tries. Wait ' + Math.ceil(r.wait / 1000) + ' seconds.'
-        : r.why === 'SEQ' ? 'That was a different left-and-right order.'
-        : r.why === 'TEMPO' ? 'Right pattern, wrong speed.'
-        : 'Not close enough — ' + r.pct + '% match.');
-    }
-  }
-
-  /* Face and voice live in biometric.js, which owns the camera, the model and
-     its own panel. Rather than a second copy of any of that, the gate opens
-     that panel and waits for the event it fires on a successful match. */
-  function byBio(kind) {
-    if (!window.ncBiometric) return fail('The face and voice module has not loaded on this page.');
-    say('Opening the ' + (kind === 'face' ? 'camera' : 'microphone') + '…');
-
-    var settled = false;
-    function ok(e) {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      say('That is you.', 'good');
-      setTimeout(function () {
-        done(kind + (e && e.detail && e.detail.name ? ' · ' + e.detail.name : ''));
-      }, 450);
-    }
-    function cleanup() {
-      document.removeEventListener('nc:bio-signin', ok);
-      clearTimeout(timer);
-    }
-    document.addEventListener('nc:bio-signin', ok);
-
-    /* If the panel is closed without a match, nothing fires. Ninety seconds
-       and the gate takes itself back rather than sitting on a message about
-       a camera that is no longer on. */
-    var timer = setTimeout(function () {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      if (el) { menu(); say('That did not finish. Try again, or use another method.', 'bad'); }
-    }, 90000);
-
-    try { window.ncBiometric.signIn(); }
-    catch (e) { settled = true; cleanup(); fail('The panel would not open.'); }
-  }
-
   /* ---- the way out ------------------------------------------------------- */
   function escapeHatch() {
     if (!confirm('Remove the lock from this browser?\n\n' +
-                 'This deletes your face and voice profiles, your passkey handle and your click ' +
-                 'pattern — and the Locker with them, because its key came from the passkey.\n\n' +
+                 'This deletes your passkey handle — and the Locker with it, because its key came ' +
+                 'from the passkey.\n\n' +
                  'There is no copy anywhere. This cannot be undone.')) return;
     try { if (window.NC_PASSKEY) window.NC_PASSKEY.forget(); } catch (e) {}
-    try { if (window.NC_RHYTHM) window.NC_RHYTHM.forget(); } catch (e) {}
     try { if (window.NC_LOCKER) window.NC_LOCKER.destroy(); } catch (e) {}
-    try { localStorage.removeItem('nc_bio_profiles'); } catch (e) {}
-    try { localStorage.removeItem('nc_bio_session'); } catch (e) {}
+    /* Left over on browsers that enrolled a face, a voice or a click pattern
+       before those were removed. Clearing them here means the data goes on the
+       next visit rather than sitting in localStorage forever. */
+    ['nc_bio_profiles', 'nc_bio_session', 'nc_click_rhythm'].forEach(function (k) {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
     done('lock removed');
   }
 
