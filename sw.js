@@ -166,6 +166,26 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v46: the phone UI, rebuilt. Measured on a 390px screen before touching
+   anything, and what it found was five controls in a 52px bar, two stacked
+   headers on the pages that bring their own, the points total shown twice with
+   the copies disagreeing, three decorative cards floating over the hero text,
+   and body copy set at 12.8px on the tools shelf.
+
+   The bar is three things now — wordmark, coins, menu. Settings, Ask Nova and
+   the page guide moved into the menu sheet, where they have their names beside
+   them instead of being three unlabelled icons in a row. The coin badge is
+   repositioned rather than duplicated, because addPts() finds it by id and a
+   second copy would go stale. Second headers and the floating decoration are
+   hidden below 760px, body text has a 15px floor, and the secondary text token
+   moved away from the middle grey that vanished over the lighter half of the
+   hero gradients.
+
+   All of it lives in nova.js, which every page loads — the alternative was the
+   same fix pasted into thirty-four pages and forgotten on the thirty-fifth. So
+   a returning visitor served the old nova.js from cache gets the old phone UI
+   back wholesale, which is the reason for this bump. trends.html changed too:
+   a "NovaClipP" typo in its hero badge. */
 /* v45: terms.html, for the same reason privacy.html changed in v44. Section 3
    still offered face sign-in, voice sign-in and the click rhythm as ways to
    unlock the device, and section 5's consent rule was written around face and
@@ -327,7 +347,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v45';
+const CACHE = 'novaclip-v46';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

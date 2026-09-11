@@ -1713,9 +1713,168 @@ function ncBuildBar() {
   if (stray && !bar.contains(stray)) inner.appendChild(stray.parentElement || stray);
 
   ncBuildBurger(bar);
+  ncPhoneUI(bar);
   ncEscapeHatch(bar);
 
   return inner;
+}
+
+/* ============================================================================
+   THE PHONE LAYER
+   ============================================================================
+   Everything below 760px, in one place, because the alternative is the same
+   fix pasted into thirty-four pages and forgotten on the thirty-fifth.
+
+   WHAT WAS ACTUALLY WRONG, MEASURED ON A 390px SCREEN
+
+   Five controls in the top bar — settings, ask, help, menu, coins — on a strip
+   narrow enough that the coin pill and the menu button had 17px between them.
+
+   Two bars, not one, on the pages that bring their own header. Studio stacked
+   nova.js's 52px bar on top of its own 60px one and then showed the points
+   total twice, with the two copies disagreeing: 100 in its header, 0 in the
+   badge. Socials did the same with its toolbar.
+
+   Decoration landing on words. index.html floats three YouTube cards over the
+   hero; on a phone one sits on the eyebrow text and another hangs 18px off the
+   right-hand edge. They are positioned for a 1440px canvas and nothing told
+   them the canvas had moved.
+
+   Pages five to eleven screens long, because the line height, the section
+   padding and the card spacing are all tuned for a desktop column.
+
+   WHAT THIS DOES ABOUT IT
+
+   Three things in the bar, not five: the wordmark, the coins, the menu. The
+   settings, ask and help buttons move into the menu sheet, where there is room
+   to label them — an icon nobody can name is not a control, and "?" next to
+   "gear" next to "speech bubble" was three unlabelled icons in a row.
+
+   One coin total. The badge is repositioned rather than duplicated, because
+   addPts() and the sync both find it by id and a second copy would go stale.
+
+   No decorative overlay on a phone, and no second header.
+   ============================================================================ */
+function ncPhoneUI(bar) {
+  if (NC_EMBED) return;
+  if (document.getElementById('ncphone-css')) return;
+
+  /* The wordmark. The left third of the bar was empty on a phone once the
+     gear moved out, and an empty third at the top of every page is where the
+     name of the site belongs.
+
+     CALLED ncbarbrand, NOT ncbrand, AND THAT MATTERS.
+     ncBrand() further down this file already owns #ncbrand — the logo and
+     wordmark at the top of the sidebar. Using the same id here meant the guard
+     found the sidebar's copy, decided the job was done, and never built this
+     one; the bar came up with no wordmark on every page that has a sidebar,
+     and worked on Studio only because Studio has no .sidebar for ncBrand() to
+     fill. A distinct id is the whole fix. */
+  if (!document.getElementById('ncbarbrand')) {
+    const b = document.createElement('a');
+    b.id = 'ncbarbrand';
+    b.href = 'index.html';
+    b.textContent = 'NovaClip';
+    bar.insertBefore(b, bar.firstChild);
+  }
+
+  const css = document.createElement('style');
+  css.id = 'ncphone-css';
+  css.textContent =
+    '#ncbarbrand{display:none;text-decoration:none;font:800 1.02rem/1 system-ui,sans-serif;' +
+      'letter-spacing:-.02em;color:var(--nc-text,#EAF2FF);flex:0 0 auto;padding:6px 2px}' +
+
+    '@media (max-width:760px){' +
+
+      /* ---- 1. THE BAR: THREE THINGS ---------------------------------- */
+      '#ncbarbrand{display:block}' +
+      '#ncbar{padding:0 12px !important;gap:10px}' +
+      /* Moved into the sheet, where they get words next to them. */
+      '#ncbar #ncgear,#ncbar #ncaskbtn,#ncbar #ncguidebtn{display:none !important}' +
+      /* The wordmark takes the slack so coins and menu sit hard right. */
+      '#ncbarbrand{margin-right:auto}' +
+
+      /* ---- 2. ONE COIN TOTAL, ALWAYS IN THE SAME PLACE --------------- */
+      /* html body raises this over the per-page rules that were moving the
+         badge around — Studio had it pinned to the bottom-right corner, on top
+         of the page, while its own header showed a different number. */
+      /* Kept fixed, not made static: the badge is a child of <body>, so
+         position:static drops it into the page flow rather than into the bar
+         and it disappears off the top of the document. Pinned into the bar's
+         row instead — left of the menu button, clear of the wordmark. */
+      'html body #ncpts{position:fixed !important;top:' + Math.round((NC_BAR_H - 34) / 2) + 'px !important;' +
+        'right:62px !important;left:auto !important;bottom:auto !important;' +
+        'margin:0 !important;padding:7px 12px !important;height:34px !important;' +
+        'display:flex !important;align-items:center;box-sizing:border-box;' +
+        'font-size:.86rem !important;box-shadow:none !important;' +
+        'border-radius:99px !important;white-space:nowrap;z-index:991}' +
+
+      /* ---- 3. NO SECOND HEADER -------------------------------------- */
+      /* Every one of these is a page's own top bar carrying a logo, a menu
+         button and a points total that the site bar two pixels above it is
+         already showing. Their real controls are reachable from the menu. */
+      'html body .nc-topbar{display:none !important}' +
+
+      /* ---- 4. DECORATION STAYS OFF THE WORDS ------------------------- */
+      /* Positioned for a wide canvas, and there is no sane phone position for
+         a thing whose whole job is to float in the margin — on 390px there is
+         no margin. The orbs and the starfield stay: they sit behind the text
+         at z-index 0 or below and cannot collide with it. */
+      'html body .ytfloat{display:none !important}' +
+
+      /* ---- 5. READABLE, AND SHORTER --------------------------------- */
+      /* The body copy was set at desktop line-height on a column a third as
+         wide, which is what made a page of four paragraphs three screens long.
+         Floors rather than fixed sizes, so a page that already chose something
+         sensible keeps it. */
+      /* A 15px floor. Measured, not guessed: the tools shelf was setting body
+         copy at 0.8rem, which is 12.8px — the smallest text on the site, on the
+         smallest screen, describing what each of ten thousand tools does.
+         max(15px,1em) lifts anything that shrank below the floor and leaves
+         anything already at or above it alone. */
+      /* !important, deliberately. A bare `p` selector loses to any page rule
+         with a class in it, and the tools shelf has exactly that — which is
+         why the first attempt at this floor changed the colour and left the
+         size at 12.8px. A minimum readable size on a phone is not something
+         an individual page gets to undercut. */
+      'p,li{font-size:max(15px,1em) !important;line-height:1.5}' +
+
+      /* Secondary text was #7E8AA6 everywhere. That holds up over the dark part
+         of a page and collapses over the light middle of the hero gradients,
+         which is exactly where the home page puts its explanatory copy. Lifted
+         on the dark theme, darkened on the light one — the same token, moved
+         away from the middle in whichever direction the background is. */
+      ':root:not([data-theme="light"]){--nc-dim:#A7B2CC}' +
+      ':root[data-theme="light"]{--nc-dim:#4A5568}' +
+
+      'section,header{padding-top:min(6vh,44px);padding-bottom:min(6vh,44px)}' +
+
+      /* ---- 6. NOTHING RUNS OFF THE RIGHT ----------------------------- */
+      /* Chip rows are the usual culprit: a row of filters laid out for a wide
+         screen puts its last chip past the edge, where it cannot be reached
+         because the page itself does not scroll sideways. */
+      'html body .chips,html body .filters,html body .tabs,html body .pills{' +
+        'flex-wrap:wrap}' +
+
+    '}';
+  document.head.appendChild(css);
+
+  /* The three controls the bar gave up, rebuilt in the sheet. They click the
+     originals rather than reimplementing them, so there is still exactly one
+     copy of what each button does. */
+  window.NC_PHONE_EXTRAS = [
+    ['ncgear', 'Settings', 'M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z' +
+      'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33' +
+      ' 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33' +
+      'l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09' +
+      'A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6' +
+      'h.09A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06' +
+      'a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09' +
+      'a1.65 1.65 0 0 0-1.51 1z'],
+    ['ncaskbtn', 'Ask Nova', 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7' +
+      'a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z'],
+    ['ncguidebtn', 'How this works', 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01']
+  ];
 }
 
 /* ============================================================================
@@ -1807,7 +1966,17 @@ function ncBuildBurger(bar) {
     /* A short phone with the browser chrome up has about 500px of room. Six
        rows at 1.6rem plus the header just fits; below that the type steps
        down rather than the last row falling off the bottom. */
-    '@media (max-height:620px){#ncsheet a{font-size:1.3rem;padding:12px 6px}}' +
+    /* The secondary row. Quieter than the six destinations above it:
+       these are settings, not places you are going. */
+    '#ncsheet .nsx2{display:flex;flex-wrap:wrap;gap:8px;flex:0 0 auto;padding:14px 0 22px;' +
+      'border-top:1px solid var(--nc-line,rgba(255,255,255,.14))}' +
+    '#ncsheet .nsx2 button{display:flex;align-items:center;gap:9px;cursor:pointer;' +
+      'padding:11px 15px;border-radius:12px;font:600 .98rem/1 system-ui,sans-serif;' +
+      'background:var(--nc-card,rgba(255,255,255,.06));color:inherit;' +
+      'border:1px solid var(--nc-line,rgba(255,255,255,.14))}' +
+    '#ncsheet .nsx2 svg{width:17px;height:17px;flex:0 0 auto;opacity:.75}' +
+    '@media (max-height:620px){#ncsheet a{font-size:1.3rem;padding:12px 6px}' +
+      '#ncsheet .nsx2 button{padding:9px 12px;font-size:.9rem}}' +
     '@media (prefers-reduced-motion:no-preference){' +
       '#ncsheet nav a{animation:ncsIn .26s ease backwards}' +
       '@keyframes ncsIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}}';
@@ -1852,13 +2021,38 @@ function ncBuildBurger(bar) {
                  ' style="animation-delay:' + (i * 32) + 'ms">' + ncIcon(icon) +
                  '<span class="nct"' + (key ? ' data-t="' + key + '"' : '') + '>' + label + '</span></a>';
         }).join('') +
-      '</nav>';
+      '</nav>' +
+      /* THE THREE THE BAR GAVE UP.
+         Settings, Ask Nova and the page guide were three unlabelled icons in a
+         row at the top of a 390px screen. Down here they have their names next
+         to them, which is the only reason a phone user knows what any of them
+         is. Rendered only where the original button exists, so a page without
+         a guide does not advertise one. */
+      '<div class="nsx2">' +
+        (window.NC_PHONE_EXTRAS || []).filter(function (x) { return document.getElementById(x[0]); })
+          .map(function (x) {
+            return '<button type="button" data-proxy="' + x[0] + '">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+              'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + x[2] + '"/></svg>' +
+              x[1] + '</button>';
+          }).join('') +
+      '</div>';
     sheet.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
     /* The sheet covers the page; letting the page keep scrolling underneath it
        is how you close a menu and find yourself somewhere else. */
     try { document.documentElement.style.overflow = 'hidden'; } catch (e) {}
     sheet.querySelector('.nsx').onclick = close;
+    /* Close first, then press the real control — several of them open a panel
+       of their own, and opening one underneath a full-screen menu is the same
+       as it not working. */
+    [].forEach.call(sheet.querySelectorAll('[data-proxy]'), function (b) {
+      b.onclick = function () {
+        const target = document.getElementById(b.getAttribute('data-proxy'));
+        close();
+        if (target) setTimeout(function () { target.click(); }, 60);
+      };
+    });
     const first = sheet.querySelector('nav a');
     if (first) first.focus();
     if (typeof applyLangText === 'function') { try { applyLangText(); } catch (e) {} }
