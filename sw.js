@@ -186,6 +186,29 @@
    one anybody hits was the only silent one. It speaks now.
 
    index.html, nova.js and publish.html are all cached. */
+/* v51: the Photo editor is the third tool in Studio.
+
+   The Editor and the AI Editor already opened full screen inside trends.html;
+   Photo was still a trip out to its own page, which is the wrong shape for the
+   one tool you reach for in the middle of an edit — the thumbnail is a frame of
+   the video. Same treatment: a panel, a rail row next to the other two, and the
+   whole viewport once it is open.
+
+   Two things came out of building it, both older than this change:
+
+   Embedded, the frame's own shell went on reserving room for furniture that is
+   not drawn inside a frame — the rail on the left, and under 761px the top bar
+   and the phone strip as well. A rail-wide empty column, and 126px of nothing
+   above and below in a narrow frame. nova.js's embed stylesheet hid .sidebar
+   but never zeroed what the shell was offset by.
+
+   And a link straight to a panel — trends.html#/editor, a bookmark, a reload
+   with a tool open — never opened it. The router runs once at boot, before
+   React has mounted the element it needs, and nothing changes the hash
+   afterwards, so no event ever ran it again. Clicking the rail always worked,
+   which is why it was never noticed.
+
+   nova.js, trends-nav.js. Both cached. */
 /* v50: the parent dashboard's "Report to YouTube" link landed you on the
    video, not on a report form, and that is the most it could ever have done.
    YouTube publishes no URL that opens the report box for a comment — &lc=
@@ -422,7 +445,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v50';
+const CACHE = 'novaclip-v51';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

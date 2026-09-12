@@ -5079,7 +5079,19 @@ window.addEventListener('DOMContentLoaded', () => {
     const st = document.createElement('style');
     st.textContent = '.sidebar,#ncpts,#nctoast{display:none!important}' +
                      'body{margin-left:0!important;padding-bottom:0!important}' +
-                     '.content{margin-left:0!important}';
+                     '.content{margin-left:0!important}' +
+                     /* .shell, not only .content. photo.html's shell is
+                        position:fixed at `left:var(--nc-rail)` and, under
+                        761px, `top:52px;bottom:74px` — room reserved for the
+                        rail, the top bar and the phone strip. None of those
+                        three is drawn inside a frame, so embedded it left a
+                        rail-wide empty column down the left and, in a narrow
+                        frame, 126px of nothing above and below the tool.
+                        Hiding .sidebar was never enough on its own; the space
+                        it was offset by has to go too. Inert on game.html and
+                        studio-ai.html, whose shells are in ordinary flow. */
+                     '.shell{left:0!important;top:0!important;bottom:0!important;' +
+                       'margin-left:0!important}';
     document.head.appendChild(st);
   }
   dedupeChrome();

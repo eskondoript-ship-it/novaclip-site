@@ -131,6 +131,15 @@
     '/publish':    { label: 'AI Editor', full: true,
                      icon: 'M12 3v4M12 17v4M3 12h4M17 12h4M7.5 7.5l2.5 2.5M14 14l2.5 2.5M16.5 7.5L14 10M10 14l-2.5 2.5',
                      why: 'It plans the edit, applies it, and gets it ready to post' },
+    /* The third application, and it belongs with the other two. The thumbnail
+       is made from a frame of the video, in the same sitting as the cut — and
+       until now that meant leaving Studio for photo.html, losing the trend you
+       were working from. Same treatment as the Editor and the AI Editor:
+       full:true, because it is a tool with its own rail, dock and canvas and a
+       940px column is not where you retouch an image. */
+    '/photo':      { label: 'Photo', full: true,
+                     icon: 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6M8.5 9.5a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4z',
+                     why: 'Crop, retouch and export a still — the same tool as photo.html' },
     '/ideas':      { label: 'Video Ideas',
                      icon: 'M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z',
                      why: 'Turn a trend into titles, hooks and formats' },
@@ -173,7 +182,13 @@
   /* A row cloned from a sibling so the layout, classes and hover behaviour are
      the app's rather than a guess at them. Only the icon path and the label
      are replaced. */
-  function addItem(nav, key, spec, href) {
+  /* `after` is optional and names the row this one should follow. Without it a
+     new row lands at the end of the rail, which is right for Hype Lab and
+     Studio — they are where you go when the making is done. It is wrong for
+     Photo: it is the third of the three tools, and dropping it below the
+     research panels would have put two thirds of "make the thing" at the top
+     of the rail and the last third at the bottom. */
+  function addItem(nav, key, spec, href, after) {
     if (!nav || nav.querySelector('[data-nc-add="' + key + '"]')) return;
     /* The LAST item, not the first. The first is "Back to NovaClip", whose
        icon is a back arrow — cloning that gave Studio an arrow pointing off
@@ -199,9 +214,12 @@
     }).pop();
     if (label) label.textContent = spec.label;
     else a.textContent = spec.label;
-    var items = nav.querySelectorAll('.nc-nav-item');
-    var last = items[items.length - 1];
-    if (last && last.parentNode) last.parentNode.insertBefore(a, last.nextSibling);
+    var anchor = (after && after.parentNode) ? after : null;
+    if (!anchor) {
+      var items = nav.querySelectorAll('.nc-nav-item');
+      anchor = items[items.length - 1];
+    }
+    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(a, anchor.nextSibling);
     else nav.appendChild(a);
   }
 
@@ -249,6 +267,13 @@
     });
 
     var nav = side.querySelector('nav') || side;
+    /* Straight after the AI Editor when that row is there, so the three tools
+       read as one block: Editor, AI Editor, Photo. The bundle owns those two
+       rows, and REWRITE above has just pointed them at panels, so by here they
+       are findable. If the bundle ever stops shipping them, the fallback puts
+       Photo at the end rather than nowhere. */
+    addItem(nav, 'photo', PANELS['/photo'], '#/photo',
+            railItem('#/publish') || railItem('#/editor'));
     addItem(nav, 'hype', PANELS['/hype'], '#/hype');
     addItem(nav, 'studio', PANELS['/studio'], '#/studio');
     markActive();
@@ -369,7 +394,16 @@
       /* On a phone the site bar is the same 52px but the tools need every row
          they can get, so the strip tightens rather than disappearing — losing
          it would leave no way back at the width where back matters most. */
-      '@media(max-width:760px){html.nc-x-full .ncx .exitbar{height:30px;font-size:.76rem}}',
+      /* min-height, not height. A fixed 30px with align-items:center clips its
+         own contents the moment anything inside is taller than the box — and
+         something is, whenever the browser inflates text on a narrow screen:
+         the "Studio home" button measured 40px in a 30px strip and the link on
+         the right had its top row cut off by the edge of the screen. A minimum
+         keeps the strip as tight as it was in the ordinary case and lets it
+         grow the few pixels it needs in the other one. */
+      '@media(max-width:760px){html.nc-x-full .ncx .exitbar{height:auto;min-height:30px;',
+      '  padding:3px 10px;font-size:.76rem}',
+      '  html.nc-x-full .ncx .exitbar button{padding:3px 8px}}',
 
       '.ncx .foot{margin-top:10px;font-size:.84rem;opacity:.65}',
       '.ncx .foot a{text-decoration:underline}',
@@ -1060,6 +1094,22 @@
     wireExit(box);
   }
 
+  function photoPanel(box) {
+    if (box.dataset.view === 'photo') return;
+    box.dataset.view = 'photo';
+    box.innerHTML =
+      exitBar('Photo', 'photo.html') +
+      '<h1>Photo</h1>' +
+      '<p class="lede">Crop, retouch, add text and export a still — thumbnails, covers, ' +
+      'anything that is a picture rather than a cut. Nothing is uploaded: the image stays ' +
+      'in this browser.</p>' +
+      '<div class="frame tall"><iframe id="ncxPhoto" title="Photo editor" ' +
+        'src="photo.html?embed=1" loading="lazy" ' +
+        'allow="camera; clipboard-write"></iframe></div>' +
+      '<p class="foot">Short of room? <a href="photo.html">Open the Photo editor on its own page</a>.</p>';
+    wireExit(box);
+  }
+
   /* ==========================================================================
      THE ROUTER
      ========================================================================== */
@@ -1096,6 +1146,7 @@
       else if (h === '/hype') hypePanel(box);
       else if (h === '/editor') editorPanel(box);
       else if (h === '/publish') aiEditPanel(box);
+      else if (h === '/photo') photoPanel(box);
       else studioPanel(box);
       /* A panel opened from halfway down the trends list should start at the
          top of itself, not wherever the last screen was scrolled to. */
@@ -1123,7 +1174,23 @@
        renderers keep it from duplicating anything. The panel itself is outside
        React's subtree, so this never fights it. */
     try {
-      new MutationObserver(function () { fixRail(); }).observe(document.body, { childList: true, subtree: true });
+      new MutationObserver(function () {
+        fixRail();
+        /* AND route(), FOR THE ONE CASE boot() CANNOT HANDLE: arriving with a
+           panel already in the URL. A link to trends.html#/photo, a bookmark,
+           a reload while a tool is open — route() runs once in boot(), and at
+           that moment React has not mounted main.nc-main yet, so route()
+           returns at its first guard. Nothing changes the hash afterwards, so
+           no hashchange, no popstate, no nc-route: the panel never opened and
+           the app's own page sat there instead. Clicking the rail always
+           worked, which is why it went unnoticed — that path does fire.
+
+           Guarded on nc-x-open so this costs one call: the moment route()
+           mounts the panel the class is set and this stops asking. It is the
+           same guard that keeps the panel's own innerHTML — a mutation inside
+           body — from calling route() in a circle. */
+        if (PANELS[hash()] && !document.documentElement.classList.contains('nc-x-open')) route();
+      }).observe(document.body, { childList: true, subtree: true });
     } catch (e) {}
     /* HASHCHANGE IS NOT ENOUGH, AND THAT IS WHY NONE OF THIS EVER APPEARED.
        The app's rail routes with history.pushState. pushState does NOT fire a
