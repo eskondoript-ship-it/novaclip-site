@@ -166,6 +166,31 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v48: deleting media blanked the editor. Reproduced, and it is two lines.
+
+   The right-hand properties panel resolves the selected clip twice — once as
+   the id, once as the object:
+
+     n = selectedClipId
+     r = clips.find(c => c.id === selectedClipId)
+
+   and then gated its five tabs on `n` while passing `r` to them. Removing an
+   asset drops the clip that used it but left selectedClipId pointing at the
+   clip that no longer existed, so `n` stayed truthy, `r` became undefined, and
+   the Transform tab's `const i = e.transform` threw. No error boundary, so
+   React unmounted the entire application: root.children went to 0 and the page
+   was the background image and nothing else, which is exactly what was
+   reported. All five tabs had the same exposure.
+
+   Gated on `r` now — the object it actually hands down. And removeAsset and
+   removeTrack clear selectedClipId when the clip it points at is one of the
+   ones they just removed, which is the state bug underneath the crash.
+
+   Seven delete paths tested from a fresh page each: remove from the library by
+   button and by action, deleteClip, the Delete key, rippleDelete, removeTrack
+   holding the clip, and undo afterwards. All seven survive with no stale
+   selection. The five tabs still render 23, 18, 36, 8 and 12 controls with a
+   clip selected, and editing still writes through. */
 /* v47: the home page background on a phone. v46 lifted the secondary text
    colour and that helped, but the cause was underneath it: this page painted
    two complete sets of blurred orbs at once — .orb (three, opacity .42) and
@@ -368,7 +393,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v47';
+const CACHE = 'novaclip-v48';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
