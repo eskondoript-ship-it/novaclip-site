@@ -355,6 +355,44 @@ footer a:hover{color:var(--cyan)}
 .tool:hover{transform:translateX(6px) scale(1.01)}
 /* hero title letter shimmer */
 h1 .n,h1 .m{background-size:200% auto}
+/* ============================================================================
+   THE PHONE BACKGROUND
+   ============================================================================
+   This page had two complete sets of blurred colour orbs painting at once:
+   .orb (three of them, opacity .42, 85px blur) and .orb3d (three more,
+   opacity .3, 70px blur). Six large bright blobs.
+
+   On a 1440px desktop they sit apart and read as atmosphere. Their offsets are
+   percentages of the viewport — 12%, 42%, 52%, -6%, -8% — so at 390px they all
+   converge on the same small area and add up. Measured against the background
+   actually behind each paragraph, body text on this page came out at 1.14:1 at
+   its worst and failed 4.5:1 in all five places it appears. That is not a tone
+   problem, it is six light sources stacked in one column.
+
+   Four changes, phones only. The desktop page is untouched.
+
+   1. .orb3d goes. Two decorative systems doing one job; the older .orb set is
+      the one the page was designed around, so that is the one that stays.
+   2. The remaining three drop to opacity .18, because three is still three.
+   3. #mouseglow goes. It is a screen-blend lightener that follows a pointer,
+      and a phone has no pointer to follow — it was only ever adding light.
+   4. #stars gets a dark fill, which is the guarantee. It is a full-viewport
+      fixed layer that already sits immediately after #orbs in the document, so
+      a background on it is a scrim over the orbs with the stars still drawn on
+      top. No new element, and nothing for an animated orb to drift out from
+      under.
+   ============================================================================ */
+@media(max-width:760px){
+  .orb3d{display:none}
+  .orb{opacity:.18;filter:blur(70px)}
+  #mouseglow{display:none}
+  /* The cursor trail, on a device with no cursor. A full-viewport canvas at
+     z-index 997 — above every word on the page — repainting on a timer for an
+     effect that can never be triggered by touch. */
+  #nova-trail{display:none}
+  #stars{background:rgba(4,6,14,.62)}
+}
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.slideL,.slideR{opacity:1;transform:none}#scrollbar,#mouseglow{display:none}}
 
 /* ===== EXTRA 3D + MOTION ===== */

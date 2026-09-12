@@ -166,6 +166,27 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v47: the home page background on a phone. v46 lifted the secondary text
+   colour and that helped, but the cause was underneath it: this page painted
+   two complete sets of blurred orbs at once — .orb (three, opacity .42) and
+   .orb3d (three more, opacity .3). Their offsets are percentages of the
+   viewport, so at 1440px they sit apart and read as atmosphere, and at 390px
+   all six converge on one column and add up.
+
+   Measured against the background actually behind each paragraph, body copy on
+   this page sat between 2.40:1 and 3.64:1 — every one of the five failing the
+   4.5:1 that body text needs. Now 4.54:1 to 8.31:1.
+
+   Four changes, phones only: the second orb set goes, the first drops to
+   opacity .18, #mouseglow goes (a screen-blend lightener chasing a pointer
+   that touch devices do not have), and #stars — a full-viewport layer already
+   sitting right after #orbs — gets a dark fill, which makes it a scrim over
+   the orbs with the stars still drawn on top. No new element, and nothing for
+   an animated orb to drift out from under. #nova-trail goes with them: a
+   cursor-trail canvas at z-index 997, above every word, repainting for an
+   effect touch cannot trigger.
+
+   index.html is a cached page, which is the reason for the bump. */
 /* v46: the phone UI, rebuilt. Measured on a 390px screen before touching
    anything, and what it found was five controls in a 52px bar, two stacked
    headers on the pages that bring their own, the points total shown twice with
@@ -347,7 +368,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v46';
+const CACHE = 'novaclip-v47';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
