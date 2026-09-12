@@ -166,6 +166,26 @@
    widget and the Nova voice pill are both removed, and nova-ask.js asks a
    single typed question three seconds in. categories.js is the one copy of
    the category list, shared by the first-run dialog and categories.html. */
+/* v49: three things, all reported from the live site.
+
+   The 656px of nothing at the foot of the home page was not empty space — it
+   was the Creator Community section, 600px of heading, post form and comment
+   list, sitting after </footer> and outside the #main.content wrapper
+   altogether. Being down there it never qualified for the .reveal observer, so
+   it stayed at opacity 0 and read as a gap. Moved inside the column, above the
+   footer, where it was meant to be.
+
+   The rail said "categories" twice: a Categories row in the You group, and the
+   card in the foot that shows which category you are on. The row goes and the
+   card stays — the card is the better control because it answers the question
+   as well as changing it, and both pointed at the same page.
+
+   And publish.html's Plan button opened with a bare `if (!file) return`.
+   Pressing it with no clip in did nothing whatsoever — no message, no
+   movement. Every other guard in that handler says what is missing; the first
+   one anybody hits was the only silent one. It speaks now.
+
+   index.html, nova.js and publish.html are all cached. */
 /* v48: deleting media blanked the editor. Reproduced, and it is two lines.
 
    The right-hand properties panel resolves the selected clip twice — once as
@@ -393,7 +413,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v48';
+const CACHE = 'novaclip-v49';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

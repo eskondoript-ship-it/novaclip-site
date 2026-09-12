@@ -675,6 +675,31 @@ html[dir='rtl'] .ticker, html[dir='rtl'] .marquee { direction:ltr; }
   </div>
 </section>
 
+<!-- MOVED ABOVE THE FOOTER, AND OUT OF THE DEAD ZONE.
+     This sat after </footer> and, worse, outside the #main.content wrapper
+     entirely — so a 600px section carrying a working post form rendered
+     below the page's own footer and never showed, because .reveal only
+     fades a section in when the observer reaches it and nothing down there
+     ever qualified. It read as 656px of empty space at the end of the home
+     page. It is inside the content column now, where it was meant to be. -->
+<!-- COMMUNITY COMMENTS -->
+<div class='section reveal' id='community' style='padding:60px 0'>
+  <h2 class='sec-h' style='font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;margin-bottom:10px'>Creator <span class='g'>Community</span></h2>
+  <p class='lead' style='margin-bottom:20px'>Share wins, ask for feedback, hype each other up. Every post is checked automatically — bullying and swearing are blocked before they're ever posted.</p>
+
+  <div style='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:20px;max-width:760px'>
+    <input id='cName' type='text' maxlength='20' placeholder='Your creator name' style='width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:#0A0C14;color:#EAF2FF;margin-bottom:10px;font-size:0.95rem'>
+    <textarea id='cText' rows='3' maxlength='300' placeholder='Say something kind or useful…' style='width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:#0A0C14;color:#EAF2FF;font-size:0.95rem;resize:vertical'></textarea>
+    <div style='display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap'>
+      <button id='cPost' style='padding:12px 26px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a'>Post comment</button>
+      <span id='cMsg' style='font-size:0.85rem;color:#7E8AA6'></span>
+    </div>
+    <div class='notice' style='margin-top:14px;font-size:0.82rem;color:#7E8AA6;border-left:3px solid #B6FF3C;padding-left:12px'>Be kind. Harassment or swearing gives you a strike — <b>three strikes is a 7-day suspension</b>.</div>
+  </div>
+
+  <div id='cList' style='max-width:760px;margin-top:20px'></div>
+</div>
+
 <footer>
   <div data-t='builtby'>© 2026 NovaClip · Built by eskon</div>
   <div><a href='https://novaclip.streamlit.app' target='_blank' rel='noopener' data-t='footer'>Classic app</a></div>
@@ -824,23 +849,6 @@ const rio=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.tar
 document.querySelectorAll('.reward').forEach(r=>rio.observe(r));
 </script>
 
-<!-- COMMUNITY COMMENTS -->
-<div class='section reveal' id='community' style='padding:60px 0'>
-  <h2 class='sec-h' style='font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;margin-bottom:10px'>Creator <span class='g'>Community</span></h2>
-  <p class='lead' style='margin-bottom:20px'>Share wins, ask for feedback, hype each other up. Every post is checked automatically — bullying and swearing are blocked before they're ever posted.</p>
-
-  <div style='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:20px;max-width:760px'>
-    <input id='cName' type='text' maxlength='20' placeholder='Your creator name' style='width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:#0A0C14;color:#EAF2FF;margin-bottom:10px;font-size:0.95rem'>
-    <textarea id='cText' rows='3' maxlength='300' placeholder='Say something kind or useful…' style='width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:#0A0C14;color:#EAF2FF;font-size:0.95rem;resize:vertical'></textarea>
-    <div style='display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap'>
-      <button id='cPost' style='padding:12px 26px;border:none;border-radius:30px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a'>Post comment</button>
-      <span id='cMsg' style='font-size:0.85rem;color:#7E8AA6'></span>
-    </div>
-    <div class='notice' style='margin-top:14px;font-size:0.82rem;color:#7E8AA6;border-left:3px solid #B6FF3C;padding-left:12px'>Be kind. Harassment or swearing gives you a strike — <b>three strikes is a 7-day suspension</b>.</div>
-  </div>
-
-  <div id='cList' style='max-width:760px;margin-top:20px'></div>
-</div>
 
 <script>
 (function () {

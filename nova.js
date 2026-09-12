@@ -4030,11 +4030,15 @@ const NC_NAV = [
          the certificates they are the price of; the history got its own page.
          Biometrics is gone entirely. */
       ['history.html', 'History', 'history', 'progress'],
-      /* The category is asked for once, on the first visit. Somebody who
-         picked "gaming" at thirteen and is making music at fifteen needs a way
-         back to that question, and a first-run dialog they can never reopen is
-         a decision taken away from them. */
-      ['categories.html', 'Categories', 'categories', 'trends'],
+      /* NO 'Categories' ROW HERE.
+         The rail was saying the same word twice: this link, and the category
+         card down in the foot showing which one you are on. Two entries to one
+         page, three rows apart, one of them already displaying the answer.
+
+         The card stays and this goes, because the card is the better control —
+         it tells you the current category as well as changing it, which is the
+         question somebody actually has. #nccat, further up this file, and it
+         points at the same categories.html this row did, so nothing is lost. */
       ['parent.html', 'Family', 'family', 'family'],
       ['pricing.html', 'Pricing', 'pricing', 'pricing']] }
 ];

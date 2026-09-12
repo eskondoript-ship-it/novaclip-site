@@ -491,7 +491,12 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     say('planSay', 'yes', 'Yours', 'Skipped. Open the Editor when you are ready.'); };
 
   $('planBtn').onclick = async () => {
-    if (!file) return;
+    /* Was a bare `return`. Pressing Plan with no clip in did nothing at all —
+       no message, no movement, nothing to tell you what it wanted. Every other
+       guard below this one says what is missing; this one, the first one
+       anybody hits, was the only silent one. */
+    if (!file) return say('planSay', 'no', 'Add a clip first',
+      'Drop a video in at the top, or press the box to pick one.');
     const about = $('about').value.trim();
     if (!about) return say('planSay', 'no', 'Tell it what the video is', 'One sentence is enough.');
     if (typeof window.ncAsk !== 'function')
