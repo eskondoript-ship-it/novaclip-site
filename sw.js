@@ -186,6 +186,15 @@
    one anybody hits was the only silent one. It speaks now.
 
    index.html, nova.js and publish.html are all cached. */
+/* v50: the parent dashboard's "Report to YouTube" link landed you on the
+   video, not on a report form, and that is the most it could ever have done.
+   YouTube publishes no URL that opens the report box for a comment — &lc=
+   highlights the comment and stops there — so the promise was the bug, not
+   the link. It now says "Open on YouTube", and a line under it gives the two
+   taps that finish the job: ⋮ beside the comment, then Report. The paragraph
+   below the scanner said the same untrue thing and says this instead.
+
+   parent.html is cached. */
 /* v48: deleting media blanked the editor. Reproduced, and it is two lines.
 
    The right-hand properties panel resolves the selected clip twice — once as
@@ -413,7 +422,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v49';
+const CACHE = 'novaclip-v50';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

@@ -103,6 +103,7 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 .flag .who { color: var(--nc-pink,#FF2E97); font-weight: 700; }
 .flag .actions { margin-top: 6px; }
 .flag .actions a { margin-right: 14px; font-size: 0.82rem; }
+.flag .howto { margin-top: 5px; font-size: 0.78rem; line-height: 1.45; opacity: 0.78; }
 .ok { color: var(--nc-lime,#B6FF3C); }
 .notice { border-left: 3px solid var(--nc-cyan,#00F0FF); padding: 10px 14px; background: rgba(0,240,255,0.05); font-size: 0.85rem; color: var(--nc-dim,#b8bccb); border-radius: 0 10px 10px 0; margin-top: 10px; line-height: 1.6; }
 
@@ -582,7 +583,7 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
       <input type='email' id='parentEmail' placeholder='Parent alert email (used for the report draft)'>
       <button class='btn pink' id='scanBtn' data-t='par_scan_btn'>Scan latest comments</button>
       <div id='scanout' style='margin-top:12px'></div>
-      <div class='notice'>How reporting works: flagged comments appear here instantly for the parent. "Report to YouTube" opens YouTube's official reporting flow for that exact comment (YouTube doesn't allow apps to file reports directly — a human must confirm). "Email me this" opens a pre-written alert to your email so there's a record.</div>
+      <div class='notice'>How reporting works: flagged comments appear here instantly for the parent. "Open on YouTube" takes you to the video with that exact comment highlighted — from there, tap the ⋮ beside the comment and choose Report. YouTube has no link that opens the report box directly, so that last tap is yours to make. "Email me this" opens a pre-written alert to your email so there's a record.</div>
     </div>
 
     </section>
@@ -1659,8 +1660,17 @@ document.getElementById('scanBtn').onclick = async () => {
       '<div style="color:' + t.colour + '; font-size:.76rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px">' + t.label + '</div>' +
       '<span class="who">' + ncEsc(f.author) + ':</span> ' + ncEsc(f.text) +
       '<div class="actions">' +
-      (f.vid ? '<a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + encodeURIComponent(f.vid) + '&lc=' + encodeURIComponent(f.cid) + '">Report to YouTube</a>' : '') +
-      '<a href="' + mailto + '">Email me this</a></div></div>';
+      /* This link used to say "Report to YouTube", and it landed you on the
+         video instead — which read like a broken button. It was never able to
+         do more than this: YouTube publishes no URL that opens the report box
+         for a comment (&lc= highlights the comment, and that is the whole of
+         what is on offer), so the report itself is always a tap the parent
+         makes. The link now says where it goes, and the line under it says
+         what to do once you are there. */
+      (f.vid ? '<a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + encodeURIComponent(f.vid) + '&lc=' + encodeURIComponent(f.cid) + '">Open on YouTube</a>' : '') +
+      '<a href="' + mailto + '">Email me this</a></div>' +
+      (f.vid ? '<div class="howto">Opens the video with this comment highlighted. To report it: tap the <b>⋮</b> beside the comment → <b>Report</b>.</div>' : '') +
+      '</div>';
   }).join('') + noteHtml;
 };
 
