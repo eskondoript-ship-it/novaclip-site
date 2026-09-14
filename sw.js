@@ -186,6 +186,30 @@
    one anybody hits was the only silent one. It speaks now.
 
    index.html, nova.js and publish.html are all cached. */
+/* v56: the welcome asks who is holding the laptop, and a parent gets a
+   parent's instructions.
+
+   The site had one first visit, and it was a creator's: pick a name, pick what
+   kind of videos you make, then four screens about Studio and the editors. A
+   parent arriving to find out what this thing does to their child was asked to
+   choose a video category and then told where the timeline is.
+
+   So the welcome asks first — creator or parent, one screen, two buttons. A
+   creator gets the two questions it always asked, now steps 2 and 3. A parent
+   gets the four things to set up instead, in the order they have to happen —
+   PIN, screen time, content blocking and the shield, alert email — and a
+   button onto the Family Dashboard. The name and category questions are not
+   asked at all: they are a creator's questions, and asking a parent what kind
+   of videos they make is the site talking to the wrong person.
+
+   The tour behind it forks the same way. Four parent screens instead of the
+   four creator ones, and its last button opens Family rather than saying
+   "Start" and leaving them wherever they happened to be.
+
+   It changes what is SHOWN and never what is allowed: every row of the rail
+   is where it was, and a parent who wants the editor still has it.
+
+   nova.js and nova-instructions.js. Both cached. */
 /* v55: the Farsi layout was reserving the rail twice, and NovaCoins is
    translated.
 
@@ -543,7 +567,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v55';
+const CACHE = 'novaclip-v56';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

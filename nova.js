@@ -5570,6 +5570,32 @@ window.addEventListener('DOMContentLoaded', () => {
   window.ncControlsRelaxed = function () { return ncAge() >= 16; };
   window.ncAgeAllowed = function () { const a = ncAge(); return a >= NC_MIN_AGE; };
 
+  /* WHO IS HOLDING THE LAPTOP.
+     Asked once, in the welcome, and it is a different question from the age.
+     Age is the legal one — is this person old enough to be here. This one is
+     about what to show first, and the two answers want opposite things: a
+     creator wants the editor and the trends, a parent wants the dashboard,
+     the screen-time limits and the comment alerts, and neither is served by
+     being handed the other one's front page.
+
+     It changes what is SHOWN, never what is allowed. A parent who wants to
+     look at the editor still can, and every row of the rail is where it was —
+     nothing is hidden behind this answer, because a preference that locks
+     doors is not a preference. */
+  const NC_ROLE_KEY = 'nc_role';
+  window.ncRole = function () {
+    try {
+      const v = localStorage.getItem(NC_ROLE_KEY);
+      return (v === 'parent' || v === 'creator') ? v : '';
+    } catch (e) { return ''; }
+  };
+  window.ncSetRole = function (v) {
+    try {
+      if (v === 'parent' || v === 'creator') localStorage.setItem(NC_ROLE_KEY, v);
+      else localStorage.removeItem(NC_ROLE_KEY);
+    } catch (e) {}
+  };
+
   /* The screen an under-age visitor gets, every time, on every page.
 
      IT IS SEPARATE FROM THE QUESTION ON PURPOSE. The gate used to ask once,
@@ -5883,9 +5909,52 @@ window.addEventListener('DOMContentLoaded', () => {
         '<div class="nccg-in">' +
           '<div class="nccg-face" id="ncCatFace" aria-hidden="true"></div>' +
 
-          /* STEP ONE */
-          '<div class="nccg-step" id="ncCatStep1">' +
-            '<span class="nccg-of">Step 1 of 2</span>' +
+          /* STEP ONE — WHO IS THIS, which decides what the next screen is.
+             It goes first because the two answers want different sites, and
+             asking a parent to pick a video category before finding out they
+             are a parent is two wasted questions and a wrong first page. */
+          '<div class="nccg-step" id="ncCatStep0">' +
+            '<span class="nccg-of">Step 1 of 3</span>' +
+            '<h2>Who is using NovaClip?</h2>' +
+            '<p>It is built for teenage creators, and parents have their own side of it. ' +
+            'This only decides what you are shown first — nothing is hidden either way.</p>' +
+            '<div class="nccg-grid" id="ncRoleGrid">' +
+              '<button type="button" id="ncRoleCreator">' +
+                '<b>I am the creator</b><span>The editors, trends, tools and games</span></button>' +
+              '<button type="button" id="ncRoleParent">' +
+                '<b>I am a parent</b><span>Screen time, blocking, comment alerts</span></button>' +
+            '</div>' +
+          '</div>' +
+
+          /* THE PARENT BRANCH. Not the name and the category — those are a
+             creator's questions, and a parent answering "what do you make?"
+             is the site asking the wrong person. Four things to do, in the
+             order they have to be done in, and a button to the page that
+             does them. */
+          '<div class="nccg-step" id="ncCatStepP" hidden>' +
+            '<span class="nccg-of">For parents</span>' +
+            '<h2>Here is where to start</h2>' +
+            '<p>Everything for you is on one page — <b>Family</b> in the rail. ' +
+            'Four things, and they go in this order:</p>' +
+            '<ol class="nccg-steps">' +
+              '<li><b>Set a PIN.</b> It confirms it is you rather than your child, and it is ' +
+                'what keeps the dashboard shut afterwards. You will be asked for it every visit.</li>' +
+              '<li><b>Set the screen time.</b> A daily limit and quiet hours, different for each ' +
+                'day of the week if you want.</li>' +
+              '<li><b>Turn on content blocking.</b> Pick what is filtered, then install the ' +
+                'Family Shield extension so the same rules apply outside NovaClip too.</li>' +
+              '<li><b>Add your alert email.</b> The scanner reads the newest comments on your ' +
+                'child’s uploads and flags harassment to you, with a link to report it.</li>' +
+            '</ol>' +
+            '<div class="nccg-row">' +
+              '<button class="nccg-save" id="ncParentGo">Open the Family Dashboard</button>' +
+            '</div>' +
+            '<button class="nccg-skip" id="ncParentSkip">Look around the site first</button>' +
+          '</div>' +
+
+          /* STEP TWO */
+          '<div class="nccg-step" id="ncCatStep1" hidden>' +
+            '<span class="nccg-of">Step 2 of 3</span>' +
             '<h2>First — what should we call you?</h2>' +
             '<p>It goes on your profile, your certificates and the top of the rail. ' +
             'It stays on this device unless you make an account.</p>' +
@@ -5897,9 +5966,9 @@ window.addEventListener('DOMContentLoaded', () => {
             '<button class="nccg-skip" id="ncCatNameSkip">Skip this</button>' +
           '</div>' +
 
-          /* STEP TWO */
+          /* STEP THREE */
           '<div class="nccg-step" id="ncCatStep2" hidden>' +
-            '<span class="nccg-of">Step 2 of 2</span>' +
+            '<span class="nccg-of">Step 3 of 3</span>' +
             '<h2 id="ncCatH2">And what do you make?</h2>' +
             '<p>So the trends, the ideas and the tutors are about your thing and not ' +
             'somebody else\'s. You can change it any time from <b>Categories</b>.</p>' +
@@ -5994,6 +6063,18 @@ window.addEventListener('DOMContentLoaded', () => {
       '#ncCatGate .nccg-grid span{font-size:.76rem;color:#9FB0D4}' +
 
       '#ncCatGate .nccg-lbl{display:block;font-size:.83rem;color:#9FB0D4;margin-bottom:7px}' +
+      /* The parent screen's four steps. Numbered, because they are in an order
+         — the PIN has to exist before there is a dashboard to put limits in —
+         and a list of four bullets would say they were interchangeable. */
+      '#ncCatGate .nccg-steps{margin:0 0 18px;padding:0 0 0 22px;color:#9FB0D4;font-size:.9rem}' +
+      '#ncCatGate .nccg-steps li{margin:0 0 9px;line-height:1.55}' +
+      '#ncCatGate .nccg-steps li::marker{color:#7FB4FF;font-weight:800}' +
+      '#ncCatGate .nccg-steps b{color:#DCE8FF}' +
+      /* The two role buttons are the only place this grid holds exactly two
+         things, and at the category grid's 170px minimum they sat in a narrow
+         pair with a lot of empty card beside them. */
+      '#ncCatGate #ncRoleGrid{grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr))}' +
+      '#ncCatGate #ncRoleGrid button{padding:15px 16px}' +
       '#ncCatGate .nccg-row{display:flex;gap:8px;flex-wrap:wrap}' +
       '#ncCatGate .nccg-row input{flex:1 1 200px;min-width:0;padding:12px 14px;border-radius:13px;font:inherit;' +
         'font-size:.95rem;background:rgba(6,12,32,.75);color:#EAF2FF;' +
@@ -6025,10 +6106,32 @@ window.addEventListener('DOMContentLoaded', () => {
       if (css) css.remove();
     }
 
-    /* ---- step one: the name ---------------------------------------------- */
+    /* ---- step one: who is this -------------------------------------------- */
+    var step0 = document.getElementById('ncCatStep0');
+    var stepP = document.getElementById('ncCatStepP');
     var step1 = document.getElementById('ncCatStep1');
     var step2 = document.getElementById('ncCatStep2');
     var nameIn = document.getElementById('ncCatName');
+
+    document.getElementById('ncRoleCreator').onclick = function () {
+      window.ncSetRole('creator');
+      step0.hidden = true;
+      step1.hidden = false;
+      try { nameIn.focus({ preventScroll: true }); } catch (e) {}
+    };
+    document.getElementById('ncRoleParent').onclick = function () {
+      window.ncSetRole('parent');
+      step0.hidden = true;
+      stepP.hidden = false;
+    };
+    /* Both parent buttons close the welcome for good — the category question
+       is answered by not applying, and asking a parent next visit what kind of
+       videos they make would be the same wrong question a week later. */
+    document.getElementById('ncParentGo').onclick = function () {
+      done();
+      location.href = 'parent.html';
+    };
+    document.getElementById('ncParentSkip').onclick = done;
 
     /* Already have one — from an account, or a previous visit that set it
        before this dialog existed. Asking again for something we know is the
@@ -6090,7 +6193,11 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('ncCatSkip').onclick = done;
 
-    try { nameIn.focus({ preventScroll: true }); } catch (e) {}
+    /* The first screen is two buttons now, not a text box, so the focus goes
+       to the first of them. Focusing the name field here would have been
+       reaching into a screen that is still hidden — no error, and no focus
+       either, which is worse than none because it looks deliberate. */
+    try { document.getElementById('ncRoleCreator').focus({ preventScroll: true }); } catch (e) {}
   }
 
   /* ==========================================================================

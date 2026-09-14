@@ -53,7 +53,7 @@
      Four screens. One idea each, and short enough to read in the two seconds
      the gate asks for — a screen that cannot be read inside its own gate is
      the gate being unfair. */
-  var STEPS = [
+  var CREATOR_STEPS = [
     ['Everything is in Studio',
      'Ideas, scripts, thumbnails and both editors. One page, start to finish.'],
     ['Nothing is uploaded',
@@ -63,6 +63,33 @@
     ['It follows what you make',
      'Your category changes the site. Swap it any time in Categories.']
   ];
+
+  /* THE SAME FOUR SCREENS, FOR SOMEBODY WHO SAID THEY ARE A PARENT.
+     The welcome asks who is holding the laptop, and the two answers want
+     opposite tours. "Everything is in Studio" is true and useless to a parent:
+     they did not come to cut a video, they came to find out what this site
+     does to their child and what they can set. So they get the four things
+     that answer that, in the order they would do them. */
+  var PARENT_STEPS = [
+    ['Family is your page',
+     'Screen time, content blocking and comment alerts. One page, behind a PIN.'],
+    ['Set the PIN first',
+     'It confirms it is you rather than your child, and keeps the dashboard shut.'],
+    ['The shield works off this site',
+     'Install the extension and your blocking rules apply on the big sites too.'],
+    ['You get told about harassment',
+     'It scans the newest comments on their uploads and flags what it finds.']
+  ];
+
+  /* Read when the tour opens rather than when this file parses: the welcome
+     dialog is what sets the answer, and on a first visit it is still on screen
+     while this script is being read. */
+  function steps() {
+    var role = '';
+    try { role = (typeof window.ncRole === 'function') ? window.ncRole() : ''; } catch (e) {}
+    return role === 'parent' ? PARENT_STEPS : CREATOR_STEPS;
+  }
+  var STEPS = CREATOR_STEPS;
 
   function done() {
     try { return localStorage.getItem(SEEN) === '1'; } catch (e) { return false; }
@@ -172,7 +199,13 @@
 
     shownAt = Date.now();
     var btn = document.getElementById('ncwNext');
-    var label = last ? 'Start' : 'Next';
+    /* A parent finishes the tour on the page the tour was about, rather than
+       being told four things about Family and then left wherever they happened
+       to land. Not when they are already on it — a button that reloads the
+       page you are looking at is a button that appears to do nothing. */
+    var onFamily = /(^|\/)parent\.html$/i.test(location.pathname);
+    var toFamily = last && STEPS === PARENT_STEPS && !onFamily;
+    var label = last ? (toFamily ? 'Open Family' : 'Start') : 'Next';
 
     /* The countdown. The button stays PRESSABLE the whole time — pressing it
        early is how the rule gets explained, and a greyed-out control explains
@@ -198,7 +231,11 @@
                (restarts > 1 ? ' (' + restarts + ' times now.)' : ''));
         return;
       }
-      if (last) { markDone(); close(); return; }
+      if (last) {
+        markDone(); close();
+        if (toFamily) location.href = 'parent.html';
+        return;
+      }
       at++;
       render('');
     };
@@ -210,6 +247,7 @@
     if (!force && done()) return false;
     css();
     at = 0; restarts = 0;
+    STEPS = steps();          /* creator or parent, decided now */
     el = document.createElement('div');
     el.className = 'ncw-back';
     document.body.appendChild(el);
