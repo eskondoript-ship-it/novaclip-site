@@ -186,6 +186,61 @@
    one anybody hits was the only silent one. It speaks now.
 
    index.html, nova.js and publish.html are all cached. */
+/* v53: cyber themes work in light mode, and the RTL languages are finished.
+
+   The twelve cyber themes were dark themes by construction: nc_theme held
+   EITHER light/dark/system OR a skin id, so choosing Neo Cyberpunk overwrote
+   "light". Two keys now — nc_skin for which theme, nc_theme for which side —
+   and a skin paints both ways. On the light side the background is white
+   carrying a wash of the skin's primary, and the three neons are walked down
+   towards ink until each clears 4.5:1 on it; #00F0FF on white is 1.3:1, so
+   using them neat was never an option. Anybody whose nc_theme holds a skin id
+   is migrated on the first read and sees no change.
+
+   Two bugs found while building it: the skin sheet was appended before
+   nc-theme-css during parse, so on any RELOAD with a skin stored the base
+   palette won and the skin vanished (it worked from a click, which is why it
+   looked fine); and the pre-paint snippet in every page cached one background
+   for a theme that now has two sides.
+
+   Right-to-left: Persian, Arabic and Urdu readers got the page laid out
+   left-to-right and watched it flip when nova.js reached the end of <body>.
+   Direction is set in the same head snippet as the theme now, so the shape of
+   the page is right before the first frame. And the English left in it is
+   gone: the Games rail row (no translation key existed), the profile card's
+   "Creator", all six strings of the Ask card, its three shortcut chips, the
+   ten category names and the cyber theme picker's own label. Measured: four
+   English strings left on a Persian home page, now one, and that one is the
+   "Clip" of NovaClip.
+
+   The Creator Community block on the home page was a <div> where its
+   neighbours are <section>s, so it never got the 7vw side gutter they all
+   have and sat hard against the rail.
+
+   nova.js, nova-ask.js, categories.js, index.html and the head snippet in all
+   31 pages. All cached. */
+/* v52: the device lock is gone, and Photo has left the site rail.
+
+   The lock was a wall: enrol a passkey and every page asked the device to
+   confirm it was you before anything opened. It locked the owner out of his
+   own site. A WebAuthn prompt refuses for a dozen ordinary reasons — dismissed,
+   timed out, a wet finger, a browser in a state it does not like — and each one
+   drew the same wall with nothing behind it. The button that removed the lock
+   was on the Profile page, which was behind the wall. A lock whose only key is
+   inside the locked room is a trap.
+
+   guard.js, passkey.js and locker.js are deleted, along with the enrolment
+   controls on Profile and the precache entries that made sure the wall was the
+   one thing guaranteed to work offline. nova.js now clears what any of it left
+   in the browser — the passkey handle, the encrypted locker, and the face,
+   voice and click-rhythm records from before those were removed — on every
+   page load. Signing in is untouched; that is the account, on the server.
+
+   Photo is out of the site rail for the same reason the Editor and the AI
+   Editor left it: it lives in Studio now, so the row was a second door to one
+   room. photo.html still opens on its own.
+
+   nova.js, profile.html, privacy.html, terms.html. All cached. */
 /* v51: the Photo editor is the third tool in Studio.
 
    The Editor and the AI Editor already opened full screen inside trends.html;
@@ -445,7 +500,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v51';
+const CACHE = 'novaclip-v53';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -558,20 +613,19 @@ const SHELL = [
   /* The focus timer is the one page here most likely to be opened with the
      wifi off on purpose. */
   '/study.html',
-  /* THE DEVICE LOCK, DOWN TO ITS TWO REAL PARTS.
-     biometrics.html, biometric.js, biosentinel.js, rhythm.js and
-     theme-biometric.css are deleted — face descriptors and voiceprints are
-     Article 9 data under GDPR and this site's users are children.
+  /* NO DEVICE LOCK HERE ANY MORE.
+     guard.js, passkey.js and locker.js are deleted, along with the enrolment
+     controls on the Profile page — and biometrics.html, biometric.js,
+     biosentinel.js, rhythm.js and theme-biometric.css before them.
 
-     What is left is not biometric data at all: a passkey's private key is made
-     inside the device's secure hardware and never leaves it. guard.js matters
-     most here, because nova.js injects it into every page — a cache holding the
-     pages but not the lock is a cache where a locked device opens straight up. */
-  '/passkey.js',
-  '/locker.js',
-  '/guard.js',
-  /* Where the lock is set up. A shell with the lock and not the page that
-     configures it is a lock with no keyhole. */
+     The gate locked the owner out of his own site: a WebAuthn prompt refuses
+     for a dozen ordinary reasons, every one of them drew the same wall, and
+     the button that removed the lock was on the Profile page, behind the wall.
+     Precaching it made that worse, not better — the one file guaranteed to
+     still be there offline was the one holding the door shut.
+
+     Signing in is untouched. That is the account, on the server, and it never
+     went through any of this. */
   '/profile.html',
   '/leaderboard.js',
   '/tools-data.js',

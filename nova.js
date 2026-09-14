@@ -21,6 +21,59 @@ const T = {
      table alone would rename the page in English only. */
   publish: { en:"AI Editor", zh:"AI 编辑器", hi:"AI एडिटर", es:"Editor IA", ar:"محرر الذكاء الاصطناعي", fr:"Éditeur IA", bn:"AI এডিটর", pt:"Editor IA", ru:"ИИ-редактор", ur:"AI ایڈیٹر", id:"Editor AI", de:"KI-Editor", ja:"AIエディタ", tr:"AI Düzenleyici", ko:"AI 편집기", fa:"ویرایشگر هوش مصنوعی", uk:"ШІ-редактор", it:"Editor IA", pl:"Edytor AI", vi:"Trình sửa AI" },
   socials: { en:"Socials", zh:"社交", hi:"सोशल", es:"Redes", ar:"التواصل", fr:"Réseaux", bn:"সোশ্যাল", pt:"Redes sociais", ru:"Соцсети", ur:"سوشلز", id:"Media sosial", de:"Social Media", ja:"SNS", tr:"Sosyal medya", ko:"소셜", fa:"شبکه‌های اجتماعی", uk:"Соцмережі", it:"Social", pl:"Sociale", vi:"Mạng xã hội" },
+  /* MISSING, AND IT SHOWED. NC_NAV looks its labels up by these keys, and
+     'games' was never here — so nine rail entries translated and one sat in
+     English on every page in every language. */
+  games: { en:"Games", zh:"游戏", hi:"गेम्स", es:"Juegos", ar:"الألعاب", fr:"Jeux", bn:"গেমস", pt:"Jogos", ru:"Игры", ur:"گیمز", id:"Game", de:"Spiele", ja:"ゲーム", tr:"Oyunlar", ko:"게임", fa:"بازی‌ها", uk:"Ігри", it:"Giochi", pl:"Gry", vi:"Trò chơi" },
+  /* The second line of the profile card when no channel is connected. It was
+     the string 'Creator', written straight into the markup. */
+  ui_creator: { en:"Creator", zh:"创作者", hi:"क्रिएटर", es:"Creador", ar:"صانع محتوى", fr:"Créateur", bn:"ক্রিয়েটর", pt:"Criador", ru:"Автор", ur:"تخلیق کار", id:"Kreator", de:"Creator", ja:"クリエイター", tr:"Üretici", ko:"크리에이터", fa:"سازنده", uk:"Автор", it:"Creator", pl:"Twórca", vi:"Nhà sáng tạo" },
+  /* THE ASK CARD. Six strings, hard-coded in nova-ask.js, on the first thing
+     a returning reader sees three seconds into any page. */
+  ask_h: { en:"What would you like to do today?", zh:"今天想做点什么？", hi:"आज आप क्या करना चाहेंगे?", es:"¿Qué quieres hacer hoy?", ar:"ماذا تريد أن تفعل اليوم؟", fr:"Que veux-tu faire aujourd'hui ?", bn:"আজ কী করতে চান?", pt:"O que queres fazer hoje?", ru:"Чем займёмся сегодня?", ur:"آج آپ کیا کرنا چاہیں گے؟", id:"Mau melakukan apa hari ini?", de:"Was möchtest du heute machen?", ja:"今日は何をしますか？", tr:"Bugün ne yapmak istersin?", ko:"오늘은 무엇을 할까요?", fa:"امروز می‌خواهی چه کار کنی؟", uk:"Чим займемося сьогодні?", it:"Cosa vuoi fare oggi?", pl:"Co chcesz dziś zrobić?", vi:"Hôm nay bạn muốn làm gì?" },
+  ask_sub: { en:"Type it and I will take you there.", zh:"输入一下，我带你过去。", hi:"लिखिए, मैं आपको वहाँ ले चलता हूँ।", es:"Escríbelo y te llevo.", ar:"اكتبها وسآخذك إلى هناك.", fr:"Écris-le et je t'y emmène.", bn:"লিখুন, আমি নিয়ে যাচ্ছি।", pt:"Escreve e eu levo-te lá.", ru:"Напиши — и я отведу.", ur:"لکھیں، میں آپ کو وہاں لے جاتا ہوں۔", id:"Ketik saja, aku antar ke sana.", de:"Schreib es, ich bringe dich hin.", ja:"入力すれば、そこへ案内します。", tr:"Yaz, seni oraya götüreyim.", ko:"입력하면 그곳으로 데려다줄게요.", fa:"بنویس تا تو را ببرم آنجا.", uk:"Напиши — і я відведу.", it:"Scrivilo e ti ci porto.", pl:"Napisz, a cię tam zabiorę.", vi:"Gõ vào và tôi sẽ đưa bạn tới đó." },
+  ask_ph: { en:"I want to edit a video…", zh:"我想剪辑视频……", hi:"मुझे वीडियो एडिट करना है…", es:"Quiero editar un vídeo…", ar:"أريد تحرير مقطع…", fr:"Je veux monter une vidéo…", bn:"আমি ভিডিও এডিট করতে চাই…", pt:"Quero editar um vídeo…", ru:"Хочу смонтировать видео…", ur:"میں ویڈیو ایڈٹ کرنا چاہتا ہوں…", id:"Aku mau mengedit video…", de:"Ich will ein Video schneiden…", ja:"動画を編集したい…", tr:"Bir video düzenlemek istiyorum…", ko:"영상을 편집하고 싶어요…", fa:"می‌خواهم ویدیو تدوین کنم…", uk:"Хочу змонтувати відео…", it:"Voglio montare un video…", pl:"Chcę zmontować film…", vi:"Tôi muốn chỉnh sửa video…" },
+  ask_go: { en:"Go", zh:"前往", hi:"चलो", es:"Ir", ar:"انطلق", fr:"Aller", bn:"চলুন", pt:"Ir", ru:"Вперёд", ur:"چلیں", id:"Buka", de:"Los", ja:"移動", tr:"Git", ko:"이동", fa:"برو", uk:"Уперед", it:"Vai", pl:"Idź", vi:"Đi" },
+  ask_not_now: { en:"Not now", zh:"暂不", hi:"अभी नहीं", es:"Ahora no", ar:"ليس الآن", fr:"Pas maintenant", bn:"এখন নয়", pt:"Agora não", ru:"Не сейчас", ur:"ابھی نہیں", id:"Nanti saja", de:"Nicht jetzt", ja:"あとで", tr:"Şimdi değil", ko:"나중에", fa:"الان نه", uk:"Не зараз", it:"Non ora", pl:"Nie teraz", vi:"Để sau" },
+  ask_close: { en:"Close", zh:"关闭", hi:"बंद करें", es:"Cerrar", ar:"إغلاق", fr:"Fermer", bn:"বন্ধ", pt:"Fechar", ru:"Закрыть", ur:"بند کریں", id:"Tutup", de:"Schließen", ja:"閉じる", tr:"Kapat", ko:"닫기", fa:"بستن", uk:"Закрити", it:"Chiudi", pl:"Zamknij", vi:"Đóng" },
+  /* THE TEN CATEGORY NAMES, under ccat_ rather than cat_ — the Trend Spotter
+     already owns a cat_ block further down this table (cat_football,
+     cat_cricket, cat_pop…) and six of its ids are words these ten also use.
+     In one object literal the later key wins, so sharing the prefix would have
+     handed the rail card the Trend Spotter's wording silently. categories.js
+     owns the list; the words live here,
+     with every other word on the site, and labelOf() asks for them by id. A
+     category somebody typed in themselves is their own text and is handed back
+     exactly as typed — translating what a person wrote is not translation. */
+  ccat_classic: { en:"Classic", zh:"经典", hi:"क्लासिक", es:"Clásico", ar:"كلاسيكي", fr:"Classique", bn:"ক্লাসিক", pt:"Clássico", ru:"Классика", ur:"کلاسک", id:"Klasik", de:"Klassisch", ja:"クラシック", tr:"Klasik", ko:"클래식", fa:"کلاسیک", uk:"Класика", it:"Classico", pl:"Klasyczny", vi:"Cổ điển" },
+  ccat_gaming: { en:"Gaming", zh:"游戏", hi:"गेमिंग", es:"Videojuegos", ar:"الألعاب", fr:"Jeux vidéo", bn:"গেমিং", pt:"Jogos", ru:"Игры", ur:"گیمنگ", id:"Gaming", de:"Gaming", ja:"ゲーム", tr:"Oyun", ko:"게임", fa:"بازی", uk:"Ігри", it:"Gaming", pl:"Gaming", vi:"Game" },
+  ccat_music: { en:"Music", zh:"音乐", hi:"संगीत", es:"Música", ar:"الموسيقى", fr:"Musique", bn:"সংগীত", pt:"Música", ru:"Музыка", ur:"موسیقی", id:"Musik", de:"Musik", ja:"音楽", tr:"Müzik", ko:"음악", fa:"موسیقی", uk:"Музика", it:"Musica", pl:"Muzyka", vi:"Âm nhạc" },
+  ccat_sport: { en:"Sport", zh:"体育", hi:"खेल", es:"Deporte", ar:"الرياضة", fr:"Sport", bn:"খেলা", pt:"Desporto", ru:"Спорт", ur:"کھیل", id:"Olahraga", de:"Sport", ja:"スポーツ", tr:"Spor", ko:"스포츠", fa:"ورزش", uk:"Спорт", it:"Sport", pl:"Sport", vi:"Thể thao" },
+  ccat_irl: { en:"Vlogs and everyday", zh:"日常与 Vlog", hi:"व्लॉग और रोज़मर्रा", es:"Vlogs y día a día", ar:"فلوغات والحياة اليومية", fr:"Vlogs et quotidien", bn:"ভ্লগ ও দৈনন্দিন", pt:"Vlogs e dia a dia", ru:"Влоги и быт", ur:"ولاگ اور روزمرہ", id:"Vlog dan keseharian", de:"Vlogs und Alltag", ja:"日常とVlog", tr:"Vlog ve günlük hayat", ko:"브이로그와 일상", fa:"ولاگ و زندگی روزمره", uk:"Влоги та побут", it:"Vlog e quotidiano", pl:"Vlogi i codzienność", vi:"Vlog và đời thường" },
+  ccat_learning: { en:"Learning and school", zh:"学习与校园", hi:"पढ़ाई और स्कूल", es:"Estudios y escuela", ar:"التعلّم والمدرسة", fr:"Études et école", bn:"পড়াশোনা ও স্কুল", pt:"Estudos e escola", ru:"Учёба и школа", ur:"تعلیم اور اسکول", id:"Belajar dan sekolah", de:"Lernen und Schule", ja:"勉強と学校", tr:"Öğrenme ve okul", ko:"학습과 학교", fa:"یادگیری و مدرسه", uk:"Навчання і школа", it:"Studio e scuola", pl:"Nauka i szkoła", vi:"Học tập và trường lớp" },
+  ccat_art: { en:"Art and making", zh:"艺术与手作", hi:"कला और क्राफ्ट", es:"Arte y manualidades", ar:"الفن والصناعة اليدوية", fr:"Art et création", bn:"শিল্প ও নির্মাণ", pt:"Arte e criação", ru:"Искусство и рукоделие", ur:"فن اور دستکاری", id:"Seni dan kriya", de:"Kunst und Basteln", ja:"アートともの作り", tr:"Sanat ve el işi", ko:"예술과 만들기", fa:"هنر و ساخت", uk:"Мистецтво і рукоділля", it:"Arte e creazioni", pl:"Sztuka i tworzenie", vi:"Nghệ thuật và chế tác" },
+  ccat_food: { en:"Food", zh:"美食", hi:"खाना", es:"Comida", ar:"الطعام", fr:"Cuisine", bn:"খাবার", pt:"Comida", ru:"Еда", ur:"کھانا", id:"Makanan", de:"Essen", ja:"料理", tr:"Yemek", ko:"음식", fa:"غذا", uk:"Їжа", it:"Cibo", pl:"Jedzenie", vi:"Ẩm thực" },
+  ccat_comedy: { en:"Comedy and sketches", zh:"喜剧与短剧", hi:"कॉमेडी और स्केच", es:"Comedia y sketches", ar:"الكوميديا والإسكتشات", fr:"Humour et sketches", bn:"কমেডি ও স্কেচ", pt:"Comédia e sketches", ru:"Юмор и скетчи", ur:"کامیڈی اور اسکیچ", id:"Komedi dan sketsa", de:"Comedy und Sketche", ja:"コメディとコント", tr:"Komedi ve skeçler", ko:"코미디와 스케치", fa:"کمدی و اسکچ", uk:"Гумор і скетчі", it:"Commedia e sketch", pl:"Komedia i skecze", vi:"Hài và tiểu phẩm" },
+  ccat_tech: { en:"Tech", zh:"科技", hi:"टेक", es:"Tecnología", ar:"التقنية", fr:"Tech", bn:"টেক", pt:"Tecnologia", ru:"Технологии", ur:"ٹیک", id:"Teknologi", de:"Technik", ja:"テック", tr:"Teknoloji", ko:"테크", fa:"فناوری", uk:"Технології", it:"Tecnologia", pl:"Technologia", vi:"Công nghệ" },
+  /* THE ASK CARD CHIPS, BY DESTINATION RATHER THAN BY CATEGORY.
+     categories.js writes a specific chip for each category — "Edit a gameplay
+     clip", "Cut a music video", "Find the flat seconds" — thirty strings, and
+     every one of them was English on a Persian page. Thirty into twenty
+     languages is six hundred strings for three buttons, so these seven say
+     where the chip GOES instead, one per destination, and the specific English
+     wording is kept for English. A chip reading "Edit a video" in your own
+     language beats one reading "Edit a gameplay clip" in somebody elses. */
+  chip_editor: { en:"Edit a video", zh:"剪辑视频", hi:"वीडियो एडिट करें", es:"Editar un vídeo", ar:"حرّر مقطعًا", fr:"Monter une vidéo", bn:"ভিডিও এডিট করুন", pt:"Editar um vídeo", ru:"Смонтировать видео", ur:"ویڈیو ایڈٹ کریں", id:"Edit video", de:"Video schneiden", ja:"動画を編集", tr:"Video düzenle", ko:"영상 편집", fa:"تدوین ویدیو", uk:"Змонтувати відео", it:"Montare un video", pl:"Zmontuj film", vi:"Chỉnh sửa video" },
+  chip_trends: { en:"Find an idea", zh:"找灵感", hi:"आइडिया खोजें", es:"Buscar una idea", ar:"ابحث عن فكرة", fr:"Trouver une idée", bn:"আইডিয়া খুঁজুন", pt:"Encontrar uma ideia", ru:"Найти идею", ur:"آئیڈیا ڈھونڈیں", id:"Cari ide", de:"Idee finden", ja:"アイデアを探す", tr:"Fikir bul", ko:"아이디어 찾기", fa:"پیدا کردن ایده", uk:"Знайти ідею", it:"Trovare unidea", pl:"Znajdź pomysł", vi:"Tìm ý tưởng" },
+  chip_ai: { en:"Ask the AI", zh:"问问 AI", hi:"एआई से पूछें", es:"Preguntar a la IA", ar:"اسأل الذكاء الاصطناعي", fr:"Demander à IA", bn:"এআই-কে জিজ্ঞাসা করুন", pt:"Perguntar à IA", ru:"Спросить ИИ", ur:"اے آئی سے پوچھیں", id:"Tanya AI", de:"KI fragen", ja:"AIに聞く", tr:"YZye sor", ko:"AI에게 묻기", fa:"از هوش مصنوعی بپرس", uk:"Запитати ШІ", it:"Chiedere alla IA", pl:"Zapytaj AI", vi:"Hỏi AI" },
+  chip_hype: { en:"Find the slow bit", zh:"找出拖沓片段", hi:"सुस्त हिस्सा ढूँढें", es:"Encontrar la parte lenta", ar:"ابحث عن الجزء الممل", fr:"Trouver le passage mou", bn:"ধীর অংশটি খুঁজুন", pt:"Encontrar a parte lenta", ru:"Найти скучное место", ur:"سست حصہ تلاش کریں", id:"Cari bagian yang lambat", de:"Die zähe Stelle finden", ja:"間延びした所を探す", tr:"Yavaş kısmı bul", ko:"늘어지는 부분 찾기", fa:"پیدا کردن بخش کسل‌کننده", uk:"Знайти нудне місце", it:"Trovare il punto lento", pl:"Znajdź nudny fragment", vi:"Tìm đoạn chậm" },
+  chip_photo: { en:"Edit a photo", zh:"修图", hi:"फ़ोटो एडिट करें", es:"Editar una foto", ar:"حرّر صورة", fr:"Retoucher une photo", bn:"ছবি এডিট করুন", pt:"Editar uma foto", ru:"Обработать фото", ur:"تصویر ایڈٹ کریں", id:"Edit foto", de:"Foto bearbeiten", ja:"写真を編集", tr:"Fotoğraf düzenle", ko:"사진 편집", fa:"ویرایش عکس", uk:"Обробити фото", it:"Modificare una foto", pl:"Edytuj zdjęcie", vi:"Chỉnh sửa ảnh" },
+  chip_aiedit: { en:"Get it ready to post", zh:"准备发布", hi:"पोस्ट के लिए तैयार करें", es:"Dejarlo listo para publicar", ar:"جهّزه للنشر", fr:"Le préparer à publier", bn:"পোস্টের জন্য তৈরি করুন", pt:"Deixar pronto para publicar", ru:"Подготовить к публикации", ur:"پوسٹ کے لیے تیار کریں", id:"Siapkan untuk diunggah", de:"Zum Posten fertig machen", ja:"投稿できる状態にする", tr:"Paylaşıma hazırla", ko:"게시할 준비 하기", fa:"آماده‌سازی برای انتشار", uk:"Підготувати до публікації", it:"Prepararlo alla pubblicazione", pl:"Przygotuj do publikacji", vi:"Chuẩn bị để đăng" },
+  chip_games: { en:"Play something", zh:"玩点什么", hi:"कुछ खेलें", es:"Jugar a algo", ar:"العب شيئًا", fr:"Jouer à quelque chose", bn:"কিছু খেলুন", pt:"Jogar alguma coisa", ru:"Сыграть во что-нибудь", ur:"کچھ کھیلیں", id:"Main sesuatu", de:"Etwas spielen", ja:"何か遊ぶ", tr:"Bir şey oyna", ko:"뭔가 플레이하기", fa:"یک بازی کن", uk:"Зіграти у щось", it:"Giocare a qualcosa", pl:"Zagraj w coś", vi:"Chơi gì đó" },
+  /* The first option of the cyber theme picker, which sat in the top bar in
+     English on every page in every language. The twelve theme names below it
+     are left as they are: they are names, like NovaCoins. */
+  ui_skin_none: { en:"Cyber theme — none", zh:"赛博主题 — 无", hi:"साइबर थीम — कोई नहीं", es:"Tema cyber — ninguno", ar:"ثيم سايبر — بدون", fr:"Thème cyber — aucun", bn:"সাইবার থিম — কোনোটি নয়", pt:"Tema cyber — nenhum", ru:"Кибертема — нет", ur:"سائبر تھیم — کوئی نہیں", id:"Tema cyber — tidak ada", de:"Cyber-Theme — keines", ja:"サイバーテーマ — なし", tr:"Cyber tema — yok", ko:"사이버 테마 — 없음", fa:"پوسته سایبری — هیچ‌کدام", uk:"Кібертема — немає", it:"Tema cyber — nessuno", pl:"Motyw cyber — brak", vi:"Chủ đề cyber — không" },
   eyebrow: { en:"For teen creators · 13–18", zh:"面向青少年创作者 · 13–18", hi:"किशोर क्रिएटर्स के लिए · 13–18", es:"Para creadores adolescentes · 13–18", ar:"لصناع المحتوى المراهقين · 13–18", fr:"Pour les jeunes créateurs · 13–18", bn:"কিশোর নির্মাতাদের জন্য · 13–18", pt:"Para criadores adolescentes · 13–18", ru:"Для юных авторов · 13–18", ur:"نوجوان تخلیق کاروں کے لیے · 13–18", id:"Untuk kreator remaja · 13–18", de:"Für junge Creator · 13–18", ja:"10代のクリエイター向け · 13–18", tr:"Genç içerik üreticileri için · 13–18", ko:"청소년 크리에이터를 위해 · 13–18", fa:"برای سازندگان نوجوان · 13–18", uk:"Для юних авторів · 13–18", it:"Per giovani creator · 13–18", pl:"Dla młodych twórców · 13–18", vi:"Cho nhà sáng tạo trẻ · 13–18" },
   startchannel: { en:"Start your channel →", zh:"开启你的频道 →", hi:"अपना चैनल शुरू करें →", es:"Inicia tu canal →", ar:"ابدأ قناتك →", fr:"Lance ta chaîne →", bn:"আপনার চ্যানেল শুরু করুন →", pt:"Começa o teu canal →", ru:"Начни свой канал →", ur:"اپنا چینل شروع کریں →", id:"Mulai channel-mu →", de:"Starte deinen Kanal →", ja:"チャンネルを始めよう →", tr:"Kanalını başlat →", ko:"채널을 시작하세요 →", fa:"کانالت را شروع کن →", uk:"Почни свій канал →", it:"Avvia il tuo canale →", pl:"Załóż swój kanał →", vi:"Bắt đầu kênh của bạn →" },
   seerewards: { en:"See the rewards", zh:"查看奖励", hi:"रिवॉर्ड्स देखें", es:"Ver recompensas", ar:"شاهد الجوائز", fr:"Voir les récompenses", bn:"পুরস্কার দেখুন", pt:"Ver recompensas", ru:"Смотреть награды", ur:"انعامات دیکھیں", id:"Lihat hadiah", de:"Belohnungen ansehen", ja:"リワードを見る", tr:"Ödülleri gör", ko:"보상 보기", fa:"جوایز را ببین", uk:"Дивитись нагороди", it:"Vedi le ricompense", pl:"Zobacz nagrody", vi:"Xem phần thưởng" },
@@ -569,9 +622,81 @@ const NC_SKINS = [
   { id:'stealth',   name:'Ghost Titanium',     primary:'#38BDF8', secondary:'#94A3B8', accent:'#22D3EE', bg:'#08090B' }
 ];
 
-const NC_SKIN_KEY = 'nc_skin_bg';        // read by the pre-paint snippet in each head
+/* THREE KEYS, BECAUSE THE SKIN AND THE THEME ARE TWO QUESTIONS.
+   They used to be one: nc_theme held EITHER light/dark/system OR a skin id, so
+   picking Neo Cyberpunk overwrote "light" and every cyber theme was a dark
+   theme by construction. Somebody who reads on a white page had twelve themes
+   they could look at and none they could use.
+
+   nc_skin holds which cyber theme, nc_theme holds light/dark/system, and
+   neither touches the other. The two background caches are what the snippet in
+   each page's <head> paints before the first frame — one per side, because
+   which one is correct depends on a media query the snippet only evaluates at
+   load, and a skin in light mode flashing its dark background is the flicker
+   these caches exist to stop. */
+const NC_SKIN_KEY   = 'nc_skin_bg';      // the dark background, for the pre-paint snippet
+const NC_SKIN_KEY_L = 'nc_skin_bg_l';    // and the light one
+const NC_SKIN_ID    = 'nc_skin';         // which cyber theme, if any
 
 function ncSkin(id) { return NC_SKINS.find(s => s.id === id) || null; }
+
+/* Which cyber theme is on, and the one-way move off the old single key.
+   Anybody whose nc_theme still holds a skin id gets that skin kept and their
+   theme set to dark, which is exactly what they were looking at yesterday —
+   the migration changes nothing on screen, it only stops the two answers
+   sharing one box. */
+function ncSkinPref() {
+  try {
+    const id = localStorage.getItem(NC_SKIN_ID);
+    if (ncSkin(id)) return id;
+    const old = localStorage.getItem(NC_THEME_KEY);
+    if (ncSkin(old)) {
+      localStorage.setItem(NC_SKIN_ID, old);
+      localStorage.setItem(NC_THEME_KEY, 'dark');
+      return old;
+    }
+  } catch (e) {}
+  return '';
+}
+
+/* ---- colour arithmetic, so a skin is still six values ------------------- */
+function ncRGB(hex) {
+  let h = String(hex).replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const n = parseInt(h, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function ncHex(rgb) {
+  return '#' + rgb.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+}
+function ncMix(a, b, t) {
+  const A = ncRGB(a), B = ncRGB(b);
+  return ncHex([0, 1, 2].map(i => A[i] + (B[i] - A[i]) * t));
+}
+/* WCAG relative luminance, and the ratio built on it. Used rather than eyeballed
+   because the whole problem with a neon on white is that it looks fine to the
+   person who chose it. */
+function ncLum(hex) {
+  const c = ncRGB(hex).map(v => {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+function ncContrast(a, b) {
+  const x = ncLum(a), y = ncLum(b);
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+/* Walk a neon down towards ink until it clears 4.5:1 on the background it will
+   be read against. #00F0FF on white is 1.3:1 — which, as the light palette
+   below already says, is not a colour, it is a rumour. The hue survives; the
+   brightness is what gives way. The loop is bounded, and by the last step the
+   colour is nearly black, which passes on any light background. */
+function ncOnLight(hex, bg) {
+  let c = hex;
+  for (let i = 0; i < 24 && ncContrast(c, bg) < 4.5; i++) c = ncMix(c, '#05070E', 0.08);
+  return c;
+}
 
 /* Lift a hex colour towards white by a fraction. Panels, hairlines and hover
    states all come from the background this way, so a skin does not have to
@@ -585,35 +710,80 @@ function ncLift(hex, amount) {
 }
 
 /* Paint a skin by rewriting the palette variables. Removing the sheet is what
-   returns the site to plain light or dark. */
-function ncPaintSkin(id) {
+   returns the site to plain light or dark.
+
+   TWO PAINTS PER SKIN, NOT ONE.
+   A cyber theme is a set of hues, not a set of pixels: Neo Cyberpunk is cyan,
+   hot pink and yellow whether the page behind them is near-black or near-white.
+   So a skin now paints either way, and which one it paints is the theme's
+   answer rather than the skin's.
+
+   The dark side is what it always was — the skin's own background, panels
+   lifted off it, the three colours used neat, because a neon on near-black is
+   what a neon is for.
+
+   The light side cannot use any of that. #00F0FF on white is 1.3:1, and all
+   twelve skins are built from colours like it. So the background becomes white
+   carrying a light wash of the skin's primary — enough that Bloodmoon and
+   Matrix are visibly different pages — and the three colours are walked down
+   towards ink until each one clears 4.5:1 against it. The hue is the part that
+   carries the identity, and the hue is the part that survives. */
+function ncPaintSkin(id, theme) {
   const skin = ncSkin(id);
   let tag = document.getElementById('nc-skin-css');
   if (!skin) {
     if (tag) tag.remove();
-    try { localStorage.removeItem(NC_SKIN_KEY); } catch (e) {}
+    try { localStorage.removeItem(NC_SKIN_KEY); localStorage.removeItem(NC_SKIN_KEY_L); } catch (e) {}
     document.documentElement.removeAttribute('data-skin');
     return null;
   }
   if (!tag) {
     tag = document.createElement('style');
     tag.id = 'nc-skin-css';
-    document.head.appendChild(tag);
   }
+  /* APPENDED EVERY TIME, NOT ONLY WHEN IT IS NEW — appendChild on a node that
+     is already in the document MOVES it, and moving it to the end is the whole
+     point. The skin sheet and the base palette use the same selectors at the
+     same specificity, so the later one in <head> wins. On a fresh visit the
+     skin was painted from a click, landed after nc-theme-css, and worked; on a
+     reload with a skin already stored it was painted during parse, landed
+     BEFORE nc-theme-css, and lost every variable it set. A cyber theme that
+     only survives until you reload the page is not a theme. */
+  document.head.appendChild(tag);
+
+  const light = theme === 'light';
+  /* Computed on both sides every time, because both caches have to be written:
+     a reader on "Match my device" can cross between them overnight without
+     this code running in between. */
+  const bgL = ncMix('#F5F7FB', skin.primary, 0.07);
+  const bg  = light ? bgL : skin.bg;
+
   tag.textContent =
     ':root, html[data-theme="dark"], html[data-theme="light"]{' +
-      '--nc-bg:' + skin.bg + ';' +
-      '--nc-bg2:' + ncLift(skin.bg, 0.10) + ';' +
-      '--nc-bg3:' + ncLift(skin.bg, 0.05) + ';' +
-      '--nc-bar-bg:' + ncLift(skin.bg, 0.04) + ';' +
-      '--nc-text:#F2F7FF;--nc-dim:#8D9AB5;--nc-dim2:#9AA6BE;' +
-      '--nc-line:rgba(255,255,255,.10);--nc-line2:rgba(255,255,255,.18);' +
-      '--nc-cyan:' + skin.primary + ';--nc-cyan2:' + skin.primary + ';' +
-      '--nc-blue:' + skin.primary + ';' +
-      '--nc-pink:' + skin.secondary + ';--nc-mag:' + skin.secondary + ';' +
-      '--nc-violet:' + skin.secondary + ';--nc-violet2:' + skin.secondary + ';' +
-      '--nc-lime:' + skin.accent + ';--nc-amber:' + skin.accent + ';' +
+      '--nc-bg:' + bg + ';' +
+      (light
+        ? '--nc-bg2:' + ncMix('#FFFFFF', skin.primary, 0.03) + ';' +
+          '--nc-bg3:' + ncMix('#EAEEF6', skin.primary, 0.10) + ';' +
+          '--nc-bar-bg:' + ncMix('#FFFFFF', skin.primary, 0.05) + ';' +
+          '--nc-text:#0B0E16;--nc-dim:#59637A;--nc-dim2:#5D6880;' +
+          '--nc-line:rgba(16,24,44,.12);--nc-line2:rgba(16,24,44,.20);'
+        : '--nc-bg2:' + ncLift(skin.bg, 0.10) + ';' +
+          '--nc-bg3:' + ncLift(skin.bg, 0.05) + ';' +
+          '--nc-bar-bg:' + ncLift(skin.bg, 0.04) + ';' +
+          '--nc-text:#F2F7FF;--nc-dim:#8D9AB5;--nc-dim2:#9AA6BE;' +
+          '--nc-line:rgba(255,255,255,.10);--nc-line2:rgba(255,255,255,.18);') +
+      (function () {
+        const p = light ? ncOnLight(skin.primary, bgL) : skin.primary;
+        const s = light ? ncOnLight(skin.secondary, bgL) : skin.secondary;
+        const a = light ? ncOnLight(skin.accent, bgL) : skin.accent;
+        return '--nc-cyan:' + p + ';--nc-cyan2:' + p + ';' +
+               '--nc-blue:' + p + ';' +
+               '--nc-pink:' + s + ';--nc-mag:' + s + ';' +
+               '--nc-violet:' + s + ';--nc-violet2:' + s + ';' +
+               '--nc-lime:' + a + ';--nc-amber:' + a + ';';
+      })() +
     '}';
+  try { localStorage.setItem(NC_SKIN_KEY_L, bgL); } catch (e) {}
   document.documentElement.setAttribute('data-skin', skin.id);
   /* Stored so the snippet in each page's <head> can paint the background
      before the first frame. Without it a cyber skin flashes the default dark
@@ -624,11 +794,15 @@ function ncPaintSkin(id) {
 
 const NC_THEME_KEY = 'nc_theme';
 
+/* This key holds light, dark or system and nothing else now. A skin id read
+   here is somebody arriving from the old single-key world; ncSkinPref() moves
+   it across on its own first call, and until it does, dark is what they were
+   already looking at. */
 function ncThemePref() {
   try {
     const v = localStorage.getItem(NC_THEME_KEY);
     if (v === 'light' || v === 'dark' || v === 'system') return v;
-    if (ncSkin(v)) return v;              // one of the cyber skins
+    if (ncSkin(v)) { ncSkinPref(); return 'dark'; }
   } catch (e) {}
   return 'system';
 }
@@ -636,9 +810,6 @@ function ncThemePref() {
 function ncThemeResolved(pref) {
   const p = pref || ncThemePref();
   if (p === 'light' || p === 'dark') return p;
-  /* Every cyber skin is a dark skin: it repaints the palette but the base the
-     stylesheet reasons about is still dark. */
-  if (ncSkin(p)) return 'dark';
   try { return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch (e) { return 'dark'; }
 }
 
@@ -651,10 +822,30 @@ function ncApplyTheme(pref) {
   /* Tells the browser which way to paint form controls, scrollbars and the
      canvas behind the page, which CSS variables cannot reach. */
   r.style.colorScheme = t;
-  ncPaintSkin(p);            // no-op, and removes any sheet, for light/dark/system
+  /* The skin is asked for separately and painted for whichever side we
+     resolved to. Empty removes any sheet, which is what plain light or plain
+     dark looks like. */
+  ncPaintSkin(ncSkinPref(), t);
   ncCategoryVibe();          // and the wash the chosen category lights it with
   return t;
 }
+
+/* Choosing a cyber theme, or choosing none. It never touches nc_theme: pick
+   Bloodmoon in light mode and you stay in light mode, wearing Bloodmoon. */
+function ncSetSkin(id) {
+  try {
+    if (ncSkin(id)) localStorage.setItem(NC_SKIN_ID, id);
+    else localStorage.removeItem(NC_SKIN_ID);
+  } catch (e) {}
+  const r = document.documentElement;
+  r.classList.add('nc-theming');
+  const t = ncApplyTheme();
+  setTimeout(() => r.classList.remove('nc-theming'), 320);
+  try { if (typeof applyTheme === 'function') applyTheme('Dark'); } catch (e) {}
+  try { window.dispatchEvent(new CustomEvent('nc:theme', { detail: { pref: ncThemePref(), theme: t, skin: id || '' } })); } catch (e) {}
+}
+window.ncSetSkin = ncSetSkin;
+window.ncSkinPref = ncSkinPref;
 
 /* ============================================================================
    THE VIBE — THE SITE WEARS THE CATEGORY
@@ -1039,8 +1230,11 @@ function ncSetTheme(pref) {
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', String(on));
   });
+  /* The skin survives a theme change now, so this re-states what is selected
+     rather than clearing it — pressing Light with Bloodmoon on keeps Bloodmoon
+     in the list, because it kept Bloodmoon on the page. */
   const sel = document.getElementById('nc-skinpick');
-  if (sel) sel.value = ncSkin(pref) ? pref : '';
+  if (sel) sel.value = ncSkinPref();
   /* --bg and --box are mirrored from the palette, so they have to be taken
      again once the palette has moved. */
   try { if (typeof applyTheme === 'function') applyTheme('Dark'); } catch (e) {}
@@ -1199,6 +1393,11 @@ ncThemeStyle.textContent =
 ".nc-themebtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;" +
   "stroke-linecap:round;stroke-linejoin:round;}";
 document.head.appendChild(ncThemeStyle);
+/* And the skin goes back on top of it. ncApplyTheme() ran further up, before
+   this sheet existed, so anything it painted is now underneath the base
+   palette. One more pass puts the cyber theme back at the end of the head,
+   where it outranks what it is meant to override. No-op when no skin is on. */
+ncApplyTheme();
 
 /* The switch itself: sun, monitor, moon. Built wherever a page keeps its
    language box, which is the sidebar on most pages and the collapsed corner
@@ -2194,19 +2393,24 @@ function ncBuildThemeSwitch() {
      one dropdown and a wall of chips.
 
      The three icon buttons stay: light, auto and dark are the ones people
-     actually switch between, and they are one press rather than two. Choosing
-     a cyber theme from the list unselects them, and choosing one of them puts
-     the list back to "None". */
+     actually switch between, and they are one press rather than two. They and
+     this list are now two independent controls — the buttons say which side of
+     the site you are on, the list says which colours it wears, and neither
+     cancels the other. It used to: choosing a cyber theme wrote over "light",
+     so all twelve were dark themes whether or not you read on a white page. */
   const skinSel = document.createElement('select');
   skinSel.id = 'nc-skinpick';
   skinSel.setAttribute('aria-label', 'Cyber theme');
-  skinSel.innerHTML = '<option value="">Cyber theme — none</option>' +
+  const skinOn = ncSkinPref();
+  /* data-t on the option as well as tr() here, so switching language relabels
+     it in place rather than leaving the one English word in a Persian bar. */
+  skinSel.innerHTML = '<option value="" data-t="ui_skin_none">' + tr('ui_skin_none') + '</option>' +
     NC_SKINS.map(sk => '<option value="' + sk.id + '"' +
-      (sk.id === pref ? ' selected' : '') + '>' + sk.name + '</option>').join('');
+      (sk.id === skinOn ? ' selected' : '') + '>' + sk.name + '</option>').join('');
   skinSel.addEventListener('change', () => {
-    /* Back to plain dark when the list is set to none, rather than leaving the
-       last skin painted with nothing selected. */
-    ncSetTheme(skinSel.value || 'dark');
+    /* Off leaves the theme alone as well: none means plain light or plain
+       dark, whichever you were already on. */
+    ncSetSkin(skinSel.value);
   });
 
   if (!document.getElementById('nc-skinrow-css')) {
@@ -2554,14 +2758,15 @@ const SKILLS = {
      have existed. Found by listing every logSkill() call on the site and
      comparing it against this table, which is a check worth repeating any
      time a new one is added. */
-  /* Still completable, and now honest about what it is. Face and voice are
-     gone from the site — Article 9 data under GDPR, on a site for children —
-     so this asks for the passkey, which is what was actually securing anything
-     and is not biometric data at all: the key lives in the device's secure
-     hardware and nothing biometric reaches this site. The id stays 'biometric'
-     because it is already in people's saved progress and renaming it would
-     reset the row to 0 for everyone who has finished it. */
-  biometric:  { icon:'', label:'Lock this device with a passkey, from Profile' },
+  /* 'biometric' IS GONE FROM THIS TABLE, AND HAS TO BE.
+     It asked you to lock the device with a passkey, and the device lock is
+     deleted — there is no page left that could log it. A row nobody can ever
+     complete is worse than one row fewer: it sits in the list at 0 forever,
+     and the only instruction it gives points at a control that is not there.
+
+     Anybody who finished it keeps the NovaCoins it paid — those were added to
+     the balance at the time and are not recomputed from this table. What they
+     lose is the line in the list, which is the honest outcome. */
   community:  { icon:'', label:'Join in on the community page' },
   editing:    { icon:'', label:'Publish or animate something you made' },
   reaction:   { icon:'', label:'Finish a set of five in Reaction' },
@@ -3742,7 +3947,7 @@ function ncProfile() {
     } catch (e) {}
     box.innerHTML = face + '<span class="ncfb"><b>' +
       (ncName() ? ncName().replace(/[<>&]/g, '') : tr('ui_set_name')) + '</b><i>' +
-      (channel ? channel.replace(/[<>&]/g, '') : 'Creator') + '</i></span>';
+      (channel ? channel.replace(/[<>&]/g, '') : tr('ui_creator')) + '</i></span>';
   }
 
   /* WHAT THEY SAID THEY MAKE, WHERE THEY CAN SEE IT.
@@ -3769,9 +3974,14 @@ function ncProfile() {
         '<rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/>' +
         '<rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/>' +
         '</svg></span>' +
-      '<span class="ncfb"><b>' +
+      /* data-t on both lines, so switching language repaints the card without
+         a reload. The key is only put on the name when the category is one of
+         ours — a written-in one has no key, and stamping a made-up one would
+         leave the pass looking up a string that does not exist. */
+      '<span class="ncfb"><b' +
+        (has && C.presetOf && C.presetOf() ? ' data-t="ccat_' + C.get() + '"' : '') + '>' +
         (has ? String(C.labelOf()).replace(/[<>&]/g, '') : tr('ui_pick_cat')) +
-      '</b><i>' + tr('categories') + '</i></span>';
+      '</b><i data-t="categories">' + tr('categories') + '</i></span>';
   }
 
   paintCoins();
@@ -4010,12 +4220,12 @@ const NC_NAV = [
      above is the single door now, and both tools open to the whole screen
      once you are through it.
 
-     Photo stays. It is the other half of the Editor/Photo pair (ncPairTabs
-     below), and its only route into the site was through the Editor entry
-     that just left — remove both and the photo editor is a page nothing
-     links to. */
+     Photo has gone the same way, and for the same reason. It stayed behind
+     when the other two left only because nothing else linked to it; it is the
+     third tool inside Studio now, in the rail beside them, so this row was
+     the second door again. photo.html is still a page and still opens on its
+     own — the panel's own strip has the link. */
   { name: 'Create', key: 'nav_create', icon: 'editor', items: [
-      ['photo.html', 'Photo', 'photo', 'editor'],
       ['studio-ai.html', 'AI', 'ai', 'ai']] },
   { name: 'Learn', key: 'nav_learn', icon: 'life', items: [
       ['game.html', 'Games', 'games', 'games']] },
@@ -5996,34 +6206,51 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   window.ncSignupGate = ncSignupGate;
 
-  /* THE IDENTITY GATE.
-     Loaded from here rather than from a script tag on each page, for the same
-     reason the age gate lives here: a lock that one page forgets to carry is
-     not a lock. BioSentinel is set up from the Profile page now instead of
-     from its own row in the rail, but where it is CONFIGURED and where it has
-     to be ENFORCED are two different questions — the answer to the second is
-     still "everywhere".
+  /* THE IDENTITY GATE IS GONE, AND THIS CLEARS UP AFTER IT.
 
-     It is fetched on every page and does nothing on almost all of them: the
-     first thing guard.js does is read four localStorage keys, and if none of
-     them holds an enrolment it returns without drawing anything. Somebody who
-     has never asked for a lock never meets one, and is never asked to set one
-     up either.
+     What used to be here injected guard.js into every page, which drew a
+     full-screen "prove it is you" wall over the site whenever a passkey had
+     been enrolled in this browser. It is deleted — guard.js, passkey.js and
+     locker.js with it, and the enrolment controls on the Profile page.
 
-     Not inside the frame on Profile, though. That frame is biometrics.html
-     itself under ?embed=1, and a lock drawn over the page you set the lock up
-     on is a door that shuts while you are still fitting it. */
-  function ncGuardBoot() {
-    if (NC_EMBED) return;
-    if (document.getElementById('nc-guard-js')) return;
-    var s = document.createElement('script');
-    s.id = 'nc-guard-js';
-    s.src = 'guard.js';
-    document.head.appendChild(s);
+     Why it goes rather than getting another fix: it locked people out of
+     their own site. The device refuses a prompt for a dozen ordinary reasons
+     — the dialog was dismissed, it timed out, the finger was wet, the browser
+     was in a state WebAuthn does not like — and every one of them produced the
+     same wall with nothing behind it. There was a "remove the lock" button,
+     but it was on the Profile page, which is behind the wall. A lock whose
+     only key is inside the locked room is not a lock, it is a trap, and this
+     one caught the person who owns the site.
+
+     Nothing is lost that was protecting anything: it was JavaScript in a page,
+     and it said so itself. Signing in is unaffected — that is the account, on
+     the server, and it never went through this.
+
+     What is left to do is throw away what it stored. These keys are inert the
+     moment nothing reads them, but "inert" is not "gone", and a handle to a
+     credential is exactly the kind of leftover that should not sit in a
+     browser for years after the feature that made it.
+
+     Every page load, not once behind a flag. A flag would have meant storing a
+     key of my own to remember that I had deleted somebody else's, and leaving
+     anything that reappeared afterwards — a second tab mid-write, a restored
+     profile, a synced browser — sitting there forever because the flag said
+     the job was done. removeItem on a key that is not there costs nothing and
+     writes nothing. */
+  function ncForgetLock() {
+    try {
+      ['nc_passkeys', 'nc_locker',
+       /* Older still: the face descriptor, the voiceprint and the click
+          pattern, from before those were removed. Some browsers have been
+          carrying them since. */
+       'nc_bio_profiles', 'nc_bio_session', 'nc_click_rhythm']
+        .forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+      try { sessionStorage.removeItem('nc_gate_ok'); } catch (e) {}
+    } catch (e) {}
   }
 
-  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); ncAgeBoot(); ncGuardBoot(); });
-  if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); ncGuardBoot(); }
+  document.addEventListener('DOMContentLoaded', function () { ncCheckSuspension(); ncAgeBoot(); ncForgetLock(); });
+  if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); ncForgetLock(); }
 })();
 
 /* ============================================================

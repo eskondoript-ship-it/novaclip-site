@@ -163,9 +163,25 @@
 
   /* The label to show for a stored value: a preset's proper name, or whatever
      they typed, back exactly as they typed it. */
+  /* THROUGH tr() WHERE THERE IS ONE. The names live in nova.js's table as
+     cat_<id> along with every other word on the site, so the rail card stopped
+     saying "Tech" in the middle of a Persian page. The English label here is
+     the fallback for the moment before nova.js has loaded, and for a page that
+     does not carry it at all.
+
+     A category somebody typed in themselves falls through to the last line and
+     is returned exactly as typed. That is their own writing, not a string of
+     ours, and translating it would be putting words in their mouth. */
   function labelOf(v) {
     v = v || get();
-    for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].id === v) return PRESETS[i].label;
+    for (var i = 0; i < PRESETS.length; i++) {
+      if (PRESETS[i].id !== v) continue;
+      try {
+        var t = (typeof tr === 'function') ? tr('ccat_' + v) : '';
+        if (t) return t;
+      } catch (e) {}
+      return PRESETS[i].label;
+    }
     return v;
   }
 
@@ -206,7 +222,13 @@
        telling it something untrue. */
     var p = presetOf(v);
     if (p && p.neutral) return '';
-    return ' The creator makes ' + labelOf(v) + ' content; tailor examples, ' +
+    /* The ENGLISH label, deliberately, and not labelOf() — which now returns
+       the reader's language. This sentence is for the model, not the reader,
+       and the prompts it is glued onto are English. A written-in category is
+       still passed through as typed, because that is the only form of it
+       there is. */
+    var name = (p && p.label) || v;
+    return ' The creator makes ' + name + ' content; tailor examples, ' +
            'topics and references to that where it fits. ';
   }
 

@@ -3,14 +3,23 @@
 <head>
 <script>/* Theme before first paint, same as every other page. */
 (function(){try{var p=localStorage.getItem('nc_theme')||'system';
-var b=localStorage.getItem('nc_skin_bg');
-var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+var s=localStorage.getItem('nc_skin')||'';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var b=s?localStorage.getItem(t==='light'?'nc_skin_bg_l':'nc_skin_bg'):'';
 var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+/* The reading direction, here rather than from nova.js at the end of <body>.
+   Persian, Arabic and Urdu readers were served the whole page laid out
+   left-to-right, and it flipped once the script ran: the rail jumped from one
+   side to the other after they could already see it. The words still arrive
+   with nova.js, because that is where they live, but the shape of the page no
+   longer moves under them. */
+var L=localStorage.getItem('nc_lang')||'';
+if(L){r.lang=L;r.dir=(L==='ar'||L==='fa'||L==='ur')?'rtl':'ltr';}
 r.style.colorScheme=t;
 /* A cyber skin repaints the palette from nova.js, which runs at the end of
    <body>. Painting its background here, before the first frame, is what stops
    every navigation flashing the default dark first. */
-if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+if(b){r.style.background=b;r.setAttribute('data-skin',s);}}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <!-- Google Analytics 4 (gtag.js) — measurement ID G-QN1QE08F2K.
      In the head on every page, which is where Google's own snippet goes: it
@@ -206,13 +215,6 @@ a.back { margin-bottom:0; }
     <li>Your display name, avatar, username and language, if you set them</li>
     <li>Your progress: levels, streaks, coins, certificates and skill history</li>
     <li>Video editor projects and their settings</li>
-    <li>A passkey's public handle, if you set one up — an id, not the key itself,
-        which never leaves your device's secure hardware</li>
-    <li>Anything you put in the <strong>Locker</strong>, stored only as ciphertext.
-        It is encrypted with AES-GCM using a key made from your passkey (or from a
-        passphrase you choose), and that key is never written down anywhere. Delete
-        the passkey, or forget the passphrase, and what is in there cannot be read
-        again — by you, by us, or by anybody</li>
     <li>A list of sign-in attempts on this device, so you can see anything you do not
         recognise. It stays here and is never sent</li>
     <li>Parent settings: the screen-time limits, and a <strong>hashed</strong> parent PIN</li>
@@ -254,7 +256,7 @@ a.back { margin-bottom:0; }
      every tool here works without an account. What an account buys is your
      progress following you to another device.</p>
 
-  <h2>Biometrics: removed</h2>
+  <h2>Biometrics: removed. The device lock: removed too</h2>
   <p>NovaClip used to offer sign-in by <strong>face, by voice and by typing
      rhythm</strong>. All three have been <strong>removed from the site</strong>.</p>
   <p>They were built to be private and they were: the measurements were taken in the
@@ -265,18 +267,25 @@ a.back { margin-bottom:0; }
      stored, including on your own machine. NovaClip is used by people aged 13 to 18.
      Holding the most sensitive category of data about children, for a sign-in
      shortcut nobody needed, was not a fair trade.</p>
-  <p><strong>What happens to data already on your device.</strong> If you enrolled a
-     face, a voice or a click pattern before this change, those measurements are
-     deleted from your browser the next time you use the device lock — and you can
-     delete them now by clearing this site's data in your browser settings. There was
-     never a copy anywhere else, so there is nothing for us to delete at our end.</p>
+  <p><strong>The passkey lock has gone as well.</strong> For a while what was left
+     of this was a passkey lock on the browser: set one up, and the site asked your
+     device to confirm it was you before any page opened. The passkey itself was
+     never biometric data — the private key is made inside the device's own secure
+     hardware, your phone does the fingerprint check, and nothing of the sort ever
+     reached NovaClip. It was removed for a plainer reason: it locked people out.
+     A device refuses that prompt for a dozen ordinary reasons, and the button that
+     removed the lock was on the Profile page, which was behind the lock.</p>
 
-  <p><strong>The passkey stays, and it is not the same thing.</strong> A passkey's
-     private key is created inside your device's own secure hardware and never
-     leaves it. When your phone asks for your fingerprint to use it, <em>your phone</em>
-     does that check — no fingerprint, face scan or measurement of any kind reaches
-     NovaClip. All we hold is a public handle, which is useless on its own. That is
-     why passkeys are the sign-in method regulators point at as the safe one.</p>
+  <p><strong>What happens to data already on your device.</strong> If you enrolled a
+     face, a voice, a click pattern or a passkey before these changes, all of it —
+     the measurements, the passkey handle and the encrypted Locker it opened — is
+     deleted from your browser the first time you load a NovaClip page after this
+     update. You do not have to do anything, and you can clear this site's data in
+     your browser settings as well if you would rather not wait. There was never a
+     copy anywhere else, so there is nothing for us to delete at our end.</p>
+
+  <p>Signing in is unaffected by any of this. That is your account on the server,
+     with a password that never reaches it, and it never went through the lock.</p>
 
   <h2>Camera and microphone</h2>
   <p>NovaClip can use your camera and microphone for the video editor, the selfie

@@ -271,7 +271,21 @@
          nowhere is worse than one chip fewer. */
       for (var j = 0; j < GO.length; j++) {
         if (GO[j].id === rows[i][0]) {
-          out += '<button data-go="' + esc(rows[i][0]) + '">' + esc(rows[i][1]) + '</button>';
+          /* THE CATEGORY'S OWN WORDING IN ENGLISH, THE DESTINATION'S IN EVERY
+             OTHER LANGUAGE. categories.js writes a specific label per category
+             — "Cut a music video", "Find the flat seconds" — thirty strings,
+             all of them English, sitting on the one card a reader meets three
+             seconds into the page. Thirty into twenty languages is six hundred
+             strings for three buttons, so the table carries one per
+             destination instead and the specific English is kept for English.
+             data-t rides along, so switching language repaints the chips
+             rather than waiting for a reload. */
+          var key = 'chip_' + rows[i][0];
+          var word = '';
+          try { if (typeof tr === 'function' && lang && lang() !== 'en') word = tr(key) || ''; } catch (e) {}
+          out += '<button data-go="' + esc(rows[i][0]) + '"' +
+                 (word ? ' data-t="' + key + '"' : '') + '>' +
+                 esc(word || rows[i][1]) + '</button>';
           break;
         }
       }
@@ -286,18 +300,33 @@
     el = document.createElement('div');
     el.className = 'nca';
     el.setAttribute('role', 'dialog');
-    el.setAttribute('aria-label', 'What would you like to do?');
+    /* THROUGH tr(), NOT WRITTEN IN ENGLISH.
+       This card is the first thing a returning reader sees, three seconds into
+       any page — and every word of it was hard-coded, so a Persian or Arabic
+       reader got an English dialog over a Persian site. The keys live in
+       nova.js's table with everything else; the guard is for the case where
+       this file runs before nova.js has defined tr, which leaves English
+       rather than leaving blanks. */
+    var s = function (k, fallback) {
+      try { return (typeof tr === 'function' && tr(k)) || fallback; } catch (e) { return fallback; }
+    };
+    el.setAttribute('aria-label', s('ask_h', 'What would you like to do?'));
     el.innerHTML =
       '<div class="nca-top">' +
         '<div id="ncaFace"></div>' +
-        '<div class="nca-h">What would you like to do today?' +
-          '<small>Type it and I will take you there.</small></div>' +
-        '<button class="nca-x" id="ncaX" title="Not now" aria-label="Close">&times;</button>' +
+        /* The heading in a span of its own. data-t writes textContent for any
+           string without markup in it, so putting the key on .nca-h — which
+           holds the <small> as well — would delete the second line the first
+           time the language pass ran over it. */
+        '<div class="nca-h"><span data-t="ask_h">' + s('ask_h', 'What would you like to do today?') +
+          '</span><small data-t="ask_sub">' + s('ask_sub', 'Type it and I will take you there.') + '</small></div>' +
+        '<button class="nca-x" id="ncaX" title="' + s('ask_not_now', 'Not now') +
+          '" aria-label="' + s('ask_close', 'Close') + '">&times;</button>' +
       '</div>' +
       '<div class="nca-row">' +
         '<input type="text" id="ncaIn" autocomplete="off" spellcheck="false" ' +
-               'placeholder="I want to edit a video…">' +
-        '<button class="go" id="ncaGo">Go</button>' +
+               'data-tph="ask_ph" placeholder="' + s('ask_ph', 'I want to edit a video…') + '">' +
+        '<button class="go" id="ncaGo" data-t="ask_go">' + s('ask_go', 'Go') + '</button>' +
       '</div>' +
       '<div class="nca-said" id="ncaSaid"></div>' +
       '<div class="nca-chips">' + chipHTML() + '</div>';

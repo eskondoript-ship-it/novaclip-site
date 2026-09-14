@@ -6,14 +6,23 @@
    flash on every navigation for anyone using light mode. Six lines here cost
    nothing and remove it. Kept in sync with ncApplyTheme() in nova.js. */
 (function(){try{var p=localStorage.getItem('nc_theme')||'system';
-var b=localStorage.getItem('nc_skin_bg');
-var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+var s=localStorage.getItem('nc_skin')||'';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var b=s?localStorage.getItem(t==='light'?'nc_skin_bg_l':'nc_skin_bg'):'';
 var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+/* The reading direction, here rather than from nova.js at the end of <body>.
+   Persian, Arabic and Urdu readers were served the whole page laid out
+   left-to-right, and it flipped once the script ran: the rail jumped from one
+   side to the other after they could already see it. The words still arrive
+   with nova.js, because that is where they live, but the shape of the page no
+   longer moves under them. */
+var L=localStorage.getItem('nc_lang')||'';
+if(L){r.lang=L;r.dir=(L==='ar'||L==='fa'||L==='ur')?'rtl':'ltr';}
 r.style.colorScheme=t;
 /* A cyber skin repaints the palette from nova.js, which runs at the end of
    <body>. Painting its background here, before the first frame, is what stops
    every navigation flashing the default dark first. */
-if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+if(b){r.style.background=b;r.setAttribute('data-skin',s);}}catch(e){}})();</script>
 <script>/* EMBED MODE, BEFORE FIRST PAINT.
    nova.js already knows ?embed=1 and skips building the rail, the top bar and
    the points badge — but this page carries its own .sidebar markup and a

@@ -3,11 +3,20 @@
 <head>
 <script>/* Theme before first paint, same as every other page. */
 (function(){try{var p=localStorage.getItem('nc_theme')||'system';
-var b=localStorage.getItem('nc_skin_bg');
-var t=(p==='light'||p==='dark')?p:(b?'dark':(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+var s=localStorage.getItem('nc_skin')||'';
+var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var b=s?localStorage.getItem(t==='light'?'nc_skin_bg_l':'nc_skin_bg'):'';
 var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
+/* The reading direction, here rather than from nova.js at the end of <body>.
+   Persian, Arabic and Urdu readers were served the whole page laid out
+   left-to-right, and it flipped once the script ran: the rail jumped from one
+   side to the other after they could already see it. The words still arrive
+   with nova.js, because that is where they live, but the shape of the page no
+   longer moves under them. */
+var L=localStorage.getItem('nc_lang')||'';
+if(L){r.lang=L;r.dir=(L==='ar'||L==='fa'||L==='ur')?'rtl':'ltr';}
 r.style.colorScheme=t;
-if(b){r.style.background=b;r.setAttribute('data-skin',p);}}catch(e){}})();</script>
+if(b){r.style.background=b;r.setAttribute('data-skin',s);}}catch(e){}})();</script>
 <meta charset='UTF-8'>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-QN1QE08F2K"></script>
 <script>
@@ -235,52 +244,6 @@ a { color:var(--pt-text); }
 .hide { display:none !important; }
 .rule { height:1px; background:var(--pt-line); margin:18px 0; }
 
-/* THE DEVICE LOCK PANEL.
-   A <details> rather than a tab strip, because there is one thing behind it
-   and a strip of one tab is a heading wearing a costume. */
-#lockWrap { margin-top:14px; }
-#lockWrap > summary {
-  cursor:pointer; list-style:none; display:inline-flex; align-items:center; gap:8px;
-  padding:10px 15px; border-radius:11px; font-size:.86rem; font-weight:650;
-  background:var(--pt-panel2); border:1px solid var(--pt-line); color:var(--pt-text);
-}
-#lockWrap > summary::-webkit-details-marker { display:none; }
-#lockWrap > summary::before { content:'▸'; font-size:.8em; opacity:.7; }
-#lockWrap[open] > summary::before { content:'▾'; }
-#lockWrap > summary:hover { border-color:var(--pt-dim); }
-
-/* THIS ONE CARD IS WIDER THAN THE COLUMN, ON PURPOSE.
-   The rest of Profile is a 560px reading column — a name, a password, two
-   buttons — and 560px is right for all of it. BioSentinel is not a form: it
-   is a panel with a tile grid, a scrolling strip of five modalities and a
-   live readout, drawn against a 760px breakpoint of its own. Inside 520px of
-   card it was folding into its narrow layout on a 1440px monitor, which is
-   the panel apologising for a constraint the screen does not have.
-
-   So it grows to 880px where there is room, centred on the column it breaks
-   out of. Capped against the viewport rather than the column so it can never
-   be the reason the page scrolls sideways. */
-#lockBox { width:min(880px, 100vw - 36px); max-width:none;
-           margin-left:50%; transform:translateX(-50%); }
-@media (max-width:600px) { #lockBox { width:auto; margin-left:0; transform:none; } }
-
-/* 760px is BioSentinel's own single-column breakpoint. Below it the panel
-   lays itself out for a narrow screen and needs the height instead, which is
-   why the two are different numbers rather than one guess. */
-.lockpanel { margin-top:13px; border:1px solid var(--pt-line); border-radius:14px;
-  padding:16px; background:var(--pt-card2, rgba(255,255,255,.03)); }
-.lockstate { margin:0 0 12px; font-size:.94rem; line-height:1.5; }
-.lockrow { display:flex; gap:9px; flex-wrap:wrap; }
-.lockrow .btn { padding:10px 16px; border-radius:11px; font-size:.9rem; cursor:pointer;
-  border:1px solid var(--pt-line); background:var(--pt-accent, #7C5CFF); color:#0b1020;
-  font-weight:700; }
-.lockrow .btn.ghost { background:none; color:inherit; font-weight:600; }
-.lockrow .btn.danger { color:#ff7a90; border-color:rgba(255,122,144,.45); }
-.lockrow .btn:disabled { opacity:.45; cursor:not-allowed; }
-.lockmsg { margin:12px 0 0; font-size:.9rem; line-height:1.5; padding:10px 12px;
-  border-radius:11px; border:1px solid var(--pt-line); }
-.lockmsg.ok { border-color:rgba(60,200,150,.5); background:rgba(60,200,150,.1); }
-.lockmsg.bad { border-color:rgba(255,110,130,.5); background:rgba(255,110,130,.1); }
 </style>
 </head>
 <body>
@@ -330,66 +293,6 @@ a { color:var(--pt-text); }
 
     <p class='note'>Your recovery code is the other way in. Keep it somewhere —
        it is what gets you back if you forget the password.</p>
-  </div>
-
-  <!-- DEVICE LOCK ----------------------------------------------------------
-       BioSentinel lives here now, and not in the rail.
-
-       It was its own top-level page, which put "biometrics" beside "Games" and
-       "Socials" as though it were somewhere you go rather than a setting you
-       turn on once. It is a lock on this account on this device, and the place
-       people look for a lock is the page with their name and their password on
-       it. So this is where it is, and the rail is one row shorter.
-
-       OUTSIDE #inBox, deliberately. The lock is on this browser, not on an
-       account — somebody who has never signed in can still set one, and
-       hiding it until they do would hide it from exactly the person most
-       likely to be sharing a machine. It sits under the account card either
-       way.
-
-       It used to embed biometrics.html in an iframe. That page is deleted, so
-       the controls are inline here now — three buttons over passkey.js, which
-       is all that is left of the lock and all that was ever really securing
-       anything. -->
-  <div class='card' id='lockBox'>
-    <div class='hrow'>
-      <h2 style='font-size:1.12rem'>Lock this device</h2>
-      <span class='chip'>Optional</span>
-    </div>
-    <p class='sub'>Set a passkey and this browser asks for your fingerprint, your
-       face or your PIN before the site opens. <b>The check happens on the device,
-       not here.</b> NovaClip never sees, stores or sends anything biometric — it
-       only holds a public handle that is useless on its own.</p>
-
-    <!-- WHAT USED TO BE HERE, AND WHY IT IS NOT.
-         This was an iframe of biometrics.html: face matching through a 128-number
-         descriptor, a voiceprint, and a click-rhythm pattern. All of it ran in the
-         browser and none of it was ever uploaded, which made it honest — but under
-         GDPR a face or voice template used to recognise a person is Article 9
-         "special category" data whatever machine it sits on, and the people using
-         this site are children. That is the strictest case of the strictest tier,
-         carried for a feature nobody needed.
-
-         The passkey is the part that was always the real lock, and it is not
-         biometric data at all: the private key is generated inside the device's
-         secure hardware, the fingerprint is checked BY THE PHONE, and this site
-         receives none of it. -->
-    <details id='lockWrap'>
-      <summary>Set up or change the lock</summary>
-      <div class='lockpanel'>
-        <p class='lockstate' id='lockState'>Checking this device…</p>
-        <div class='lockrow'>
-          <button type='button' id='lockAdd' class='btn'>Add a passkey</button>
-          <button type='button' id='lockTest' class='btn ghost'>Test it</button>
-          <button type='button' id='lockDrop' class='btn ghost danger'>Remove the lock</button>
-        </div>
-        <p class='lockmsg' id='lockMsg' hidden></p>
-      </div>
-    </details>
-
-    <p class='note'>Forgotten which device you set this up on? The lock only
-       exists on the browser it was enrolled in — signing in somewhere else is
-       unaffected by it, and your recovery code still works.</p>
   </div>
 
   <!-- SIGNED OUT ----------------------------------------------------------- -->
@@ -516,9 +419,6 @@ a { color:var(--pt-text); }
 <script src='nova-guide.js' defer></script>
 <script src='account.js'></script>
 <script src='avatar.js'></script>
-<!-- The device lock. passkey.js is WebAuthn only — the face, voice and
-     click-rhythm modules that used to sit beside it are deleted. -->
-<script src='passkey.js'></script>
 <script>
 /* ============================================================================
    THE PAGE
@@ -818,94 +718,5 @@ getRedirectResult(auth).then(r => { if (r && r.user) useAccount(r.user); }).catc
 onAuthStateChanged(auth, u => { if (u) useAccount(u); });
 </script>
 
-<!-- ============================================================================
-     THE DEVICE LOCK
-     ============================================================================
-     Three buttons over passkey.js. No camera, no microphone, no stored template
-     — the device does the checking and hands back a signature.
-
-     Written defensively because every branch here is a real device: a browser
-     with no WebAuthn at all, a page served over plain http (WebAuthn needs a
-     secure context), a laptop with no reader, and somebody who cancels the
-     system prompt. Each of those says what happened rather than failing quietly,
-     because a security control that fails silently teaches people it is broken.
-     ========================================================================= -->
-<script>
-(function () {
-  var stateEl = document.getElementById('lockState');
-  var msgEl   = document.getElementById('lockMsg');
-  var addBtn  = document.getElementById('lockAdd');
-  var testBtn = document.getElementById('lockTest');
-  var dropBtn = document.getElementById('lockDrop');
-  if (!stateEl || !window.NC_PASSKEY) return;
-
-  var PK = window.NC_PASSKEY;
-
-  function say(text, kind) {
-    msgEl.textContent = text;
-    msgEl.className = 'lockmsg' + (kind ? ' ' + kind : '');
-    msgEl.hidden = false;
-  }
-  function quiet() { msgEl.hidden = true; }
-
-  function paint() {
-    var list = [];
-    try { list = PK.keys() || []; } catch (e) {}
-    var on = list.length > 0;
-    stateEl.textContent = on
-      ? 'This browser is locked. ' + list.length + ' passkey' + (list.length > 1 ? 's' : '') +
-        ' set up — the site will ask for it when you arrive.'
-      : 'No lock on this browser. Anyone who opens it goes straight in.';
-    testBtn.disabled = !on;
-    dropBtn.disabled = !on;
-    addBtn.textContent = on ? 'Add another passkey' : 'Add a passkey';
-  }
-
-  PK.available().then(function (a) {
-    if (!a.ok) {
-      addBtn.disabled = testBtn.disabled = dropBtn.disabled = true;
-      stateEl.textContent = a.why;
-      return;
-    }
-    paint();
-  }).catch(function () {
-    stateEl.textContent = 'Could not check whether this device supports passkeys.';
-  });
-
-  addBtn.onclick = function () {
-    quiet();
-    addBtn.disabled = true;
-    var name = '';
-    try { name = localStorage.getItem('nc_name') || ''; } catch (e) {}
-    PK.enrol(name || 'NovaClip user').then(function () {
-      say('Done. This browser will ask for it from now on.', 'ok');
-      paint();
-    }).catch(function (e) {
-      say(e.message || 'That did not finish.', 'bad');
-    }).then(function () { addBtn.disabled = false; });
-  };
-
-  testBtn.onclick = function () {
-    quiet();
-    testBtn.disabled = true;
-    PK.signIn().then(function (r) {
-      say('That is you' + (r && r.name ? ' — ' + r.name : '') + '. The lock works.', 'ok');
-    }).catch(function (e) {
-      say(e.message || 'That did not match.', 'bad');
-    }).then(function () { paint(); });
-  };
-
-  dropBtn.onclick = function () {
-    if (!confirm('Remove the lock from this browser?\n\n' +
-                 'This also destroys the Locker, because its key came from the passkey. ' +
-                 'There is no copy anywhere.')) return;
-    try { PK.forget(); } catch (e) {}
-    try { if (window.NC_LOCKER) window.NC_LOCKER.destroy(); } catch (e) {}
-    try { if (window.NC_GUARD) window.NC_GUARD.forget(); } catch (e) {}
-    say('Lock removed.', 'ok');
-    paint();
-  };
-})();
-</script>
 </body>
 </html>
