@@ -73,6 +73,13 @@ const T = {
   /* The first option of the cyber theme picker, which sat in the top bar in
      English on every page in every language. The twelve theme names below it
      are left as they are: they are names, like NovaCoins. */
+  /* NOVACOINS. Kept in English the last two times on the grounds that it is
+     the product naming its own thing, like the wordmark. Asked for anyway,
+     and the ask is reasonable: it is the label under a number somebody is
+     trying to read, not a logo. "Nova" stays — that half IS the name — and
+     the coin half is translated or transliterated into the script being
+     read, which is what every game currency does. */
+  ui_novacoins: { en:"NovaCoins", zh:"Nova 币", hi:"नोवाकॉइन्स", es:"NovaMonedas", ar:"عملات نوفا", fr:"NovaPièces", bn:"নোভাকয়েন", pt:"NovaMoedas", ru:"НоваМонеты", ur:"نووا کوائنز", id:"NovaKoin", de:"NovaMünzen", ja:"ノヴァコイン", tr:"NovaJeton", ko:"노바코인", fa:"نوواکوین", uk:"НоваМонети", it:"NovaMonete", pl:"NovaMonety", vi:"NovaXu" },
   ui_skin_none: { en:"Cyber theme — none", zh:"赛博主题 — 无", hi:"साइबर थीम — कोई नहीं", es:"Tema cyber — ninguno", ar:"ثيم سايبر — بدون", fr:"Thème cyber — aucun", bn:"সাইবার থিম — কোনোটি নয়", pt:"Tema cyber — nenhum", ru:"Кибертема — нет", ur:"سائبر تھیم — کوئی نہیں", id:"Tema cyber — tidak ada", de:"Cyber-Theme — keines", ja:"サイバーテーマ — なし", tr:"Cyber tema — yok", ko:"사이버 테마 — 없음", fa:"پوسته سایبری — هیچ‌کدام", uk:"Кібертема — немає", it:"Tema cyber — nessuno", pl:"Motyw cyber — brak", vi:"Chủ đề cyber — không" },
   /* THE TWELVE CYBER THEME NAMES.
      Left in English when the rest of the picker was translated, on the
@@ -1591,8 +1598,19 @@ function ncBuildBar() {
     '@media (min-width:761px){' +
       'body:has(#ncbar) .content,body:has(#ncbar) .shell,body:has(#ncbar) .main' +
         '{padding-top:' + NC_BAR_H + 'px}' +
+      /* A BORDER, NOT PADDING, ON THIS BRANCH.
+         These are the pages with no wrapper — Profile, Privacy, Terms, Report —
+         and every one of them sets its own top padding for the gap it wants
+         under its masthead. Writing padding-top here REPLACED that: Profile
+         asks for 34px and got exactly 52, the bar's height and not a pixel
+         more, so its title sat welded to the underside of the bar.
+
+         A transparent top border reserves the same 52px and leaves the page's
+         padding where it was, so the gap each page asked for is the gap it
+         gets. The border is invisible: the bar is opaque and sits over it, and
+         the body background paints under it by default. */
       'body:has(#ncbar):not(:has(.content)):not(:has(.shell)):not(:has(.main))' +
-        '{padding-top:' + NC_BAR_H + 'px}' +
+        '{border-top:' + NC_BAR_H + 'px solid transparent}' +
     '}' +
     /* On a phone the rail is a bottom strip and the bar is the full width.
 
@@ -3068,8 +3086,24 @@ ncFit.textContent =
   "html[dir=rtl] .sidebar::before { right:auto; left:-1px; }" +
   "html[dir=rtl] body:has(.sidebar) { margin-left:0; margin-right:var(--nc-rail); }" +
   "html[dir=rtl] .content, html[dir=rtl] .shell, html[dir=rtl] .main { margin-left:0; margin-right:var(--nc-rail); }" +
+  /* THE MIRROR OF THE LINE THAT STOPS THE OFFSET BEING APPLIED TWICE, WHICH
+     WAS MISSING — and it is why the site looked shoved to the left in Farsi.
+     Left-to-right has `body:has(.content){margin-left:0}` right under its body
+     rule, so a page that offsets a wrapper offsets it once. Right-to-left had
+     the body rule and the wrapper rule and nothing standing either of them
+     down, so index.html reserved the rail width twice: measured at 1440px, the
+     content stopped at 1037 with the rail starting at 1238 — two hundred pixels
+     of nothing down the side, and the whole page pushed off it. It is the same
+     bug the comment beside the LTR line describes, in the other direction. */
+  "html[dir=rtl] body:has(.content), html[dir=rtl] body:has(.shell), html[dir=rtl] body:has(.main)" +
+    " { margin-right: 0; }" +
   "html[dir=rtl] .main { padding-left:clamp(0px, 1.2vw, 22px); padding-right:clamp(20px, 3.4vw, 64px); }" +
-  "html[dir=rtl] .wrap { margin-left:auto; margin-right:clamp(24px, 3.6vw, 64px); }" +
+  /* .wrap IS A CENTRED COLUMN AND STAYS ONE. This used to pin it to the right
+     edge — margin-left:auto with a fixed right margin — so Profile, Privacy and
+     Terms sat hard against the side of the screen in Farsi instead of in the
+     middle where they sit in every other language. Mirroring a layout does not
+     mean mirroring the things that were symmetrical to begin with. */
+  "html[dir=rtl] .wrap { margin-left:auto; margin-right:auto; }" +
   /* Trend Spotter brings its own fixed rail and its own padding to clear it.
      Both were pinned left, so in Farsi that page had its navigation on one
      side and its reserved space on the other. */
@@ -3956,9 +3990,12 @@ function ncProfile() {
         'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
         '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 010 3.6h-3a1.8 1.8 0 000 3.6h4"/>' +
         '</svg></span>' +
-      /* "NovaCoins" is the product's own name for them and is not translated
-         anywhere else on the site, so it is not run through tr() here either. */
-      '<span class="ncfb"><b>' + getPts().toLocaleString() + '</b><i>NovaCoins</i></span>';
+      /* Translated now. It was left in English on the grounds that it is the
+         product's own name for them — but it is the label under a number
+         somebody is reading, not a logo, and it was the last English word in
+         the rail. data-t so a language switch repaints it without a reload. */
+      '<span class="ncfb"><b>' + getPts().toLocaleString() +
+      '</b><i data-t="ui_novacoins">' + tr('ui_novacoins') + '</i></span>';
   }
 
   function paint() {

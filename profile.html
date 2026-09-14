@@ -134,8 +134,11 @@ html[data-theme='light'] .amb { opacity:.5; }
 .mast .chip { font-family:var(--pt-mono); font-size:.6rem; text-transform:uppercase; letter-spacing:.16em;
               padding:3px 8px; border-radius:5px; color:var(--pt-dim);
               background:var(--pt-panel2); border:1px solid var(--pt-line); }
-.mast a.back { margin-left:auto; color:var(--pt-dim); text-decoration:none; font-size:.85rem; }
-.mast a.back:hover { color:var(--pt-text); }
+/* Its own row above the masthead now, not the tail of it — so no auto margin
+   pushing it to the far side of an otherwise empty line. */
+a.back { display:inline-block; margin-bottom:18px; color:var(--pt-dim);
+         text-decoration:none; font-size:.85rem; }
+a.back:hover { color:var(--pt-text); }
 
 /* ---- card ---- */
 .card { background:var(--pt-panel); border:1px solid var(--pt-line); border-radius:18px;
@@ -251,13 +254,22 @@ a { color:var(--pt-text); }
 
 <div class='wrap'>
 
+  <!-- THE WAY BACK, ON ITS OWN ROW.
+       It used to be the fourth thing in the masthead, pushed to the far right
+       by an auto margin — so the row read "✦ NovaClip [Profile] …two hundred
+       pixels of nothing… ← Back to the site", with the one control on the row
+       as far as possible from everything it sat beside. Privacy and Terms both
+       put this link on a line of its own above the title, and that is where a
+       way out belongs: first thing on the page, at the edge you start reading
+       from. -->
+  <a class='back' href='/index.html'>← Back to the site</a>
+
   <div class='mast'>
     <div class='mark'>✦</div>
     <div>
       <div class='nm nc-wordmark'>NovaClip</div>
     </div>
     <span class='chip'>Profile</span>
-    <a class='back' href='/index.html'>← Back to the site</a>
   </div>
 
   <!-- SIGNED IN ------------------------------------------------------------ -->

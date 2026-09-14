@@ -186,6 +186,34 @@
    one anybody hits was the only silent one. It speaks now.
 
    index.html, nova.js and publish.html are all cached. */
+/* v55: the Farsi layout was reserving the rail twice, and NovaCoins is
+   translated.
+
+   "The whole site goes to the left in Farsi" was not a matter of taste, it was
+   an arithmetic error. Left-to-right has a line that stands the body offset
+   down when a wrapper is doing the offsetting — `body:has(.content){margin-
+   left:0}` — and the right-to-left block never got its mirror. So index.html
+   reserved the rail width on the body AND on .content: measured at 1440px,
+   content stopped at 1037 with the rail starting at 1238, two hundred pixels
+   of nothing down the side and the page pushed off it. Now 0 to 1238, the
+   exact mirror of English.
+
+   .wrap was pinned to the right edge in RTL as well — margin-left:auto with a
+   fixed right margin — so Profile, Privacy and Terms sat against the side of
+   the screen instead of centred. It is a centred column in both directions;
+   mirroring a layout does not mean mirroring what was symmetrical already.
+
+   Profile sat welded to the bar because the rule reserving the bar's height
+   wrote padding-top on the body and REPLACED the 34px the page asks for. It
+   is a transparent top border now, which reserves the same height and leaves
+   each page's own padding alone. And its "Back to the site" link has its own
+   row above the masthead rather than being the fourth item on that row,
+   shoved to the far end by an auto margin.
+
+   NovaCoins is translated — Nova stays, the coin half goes into the script
+   being read. It was the last English word in the rail.
+
+   nova.js and profile.html. Both cached. */
 /* v54: the twelve cyber theme names are translated too.
 
    They were left in English last time on the reasoning that they are names
@@ -515,7 +543,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v54';
+const CACHE = 'novaclip-v55';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
