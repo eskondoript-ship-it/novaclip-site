@@ -74,6 +74,33 @@ const T = {
      English on every page in every language. The twelve theme names below it
      are left as they are: they are names, like NovaCoins. */
   ui_skin_none: { en:"Cyber theme — none", zh:"赛博主题 — 无", hi:"साइबर थीम — कोई नहीं", es:"Tema cyber — ninguno", ar:"ثيم سايبر — بدون", fr:"Thème cyber — aucun", bn:"সাইবার থিম — কোনোটি নয়", pt:"Tema cyber — nenhum", ru:"Кибертема — нет", ur:"سائبر تھیم — کوئی نہیں", id:"Tema cyber — tidak ada", de:"Cyber-Theme — keines", ja:"サイバーテーマ — なし", tr:"Cyber tema — yok", ko:"사이버 테마 — 없음", fa:"پوسته سایبری — هیچ‌کدام", uk:"Кібертема — немає", it:"Tema cyber — nessuno", pl:"Motyw cyber — brak", vi:"Chủ đề cyber — không" },
+  /* THE TWELVE CYBER THEME NAMES.
+     Left in English when the rest of the picker was translated, on the
+     reasoning that they are names like NovaCoins. They are not: NovaCoins is
+     the product calling its own thing something, and these are descriptions —
+     a void, a blood moon, a solar flare — which is why somebody reading the
+     list wants them in their own language.
+
+     The genre words stay recognisable rather than being forced into a native
+     equivalent that does not exist: cyberpunk, synthwave, vaporwave, matrix,
+     holo, xenon and titanium are loanwords nearly everywhere, transliterated
+     where the script changes. What gets translated is the half that means
+     something — Bloodmoon, Midnight, Ghost, Sunset, Void.
+
+     The English in NC_SKINS stays as the fallback, for the moment before this
+     table is reachable and for a language with no entry. */
+  skin_void: { en:"Void Cyber", zh:"虚空赛博", hi:"वॉइड साइबर", es:"Cyber Vacío", ar:"سايبر الفراغ", fr:"Cyber Néant", bn:"ভয়েড সাইবার", pt:"Cyber Vazio", ru:"Кибер-пустота", ur:"وائیڈ سائبر", id:"Cyber Hampa", de:"Cyber-Leere", ja:"ヴォイド・サイバー", tr:"Boşluk Cyber", ko:"보이드 사이버", fa:"سایبر تهی", uk:"Кібер-порожнеча", it:"Cyber Vuoto", pl:"Cyber Pustka", vi:"Cyber Hư Không" },
+  skin_cyberpunk: { en:"Neo Cyberpunk", zh:"新赛博朋克", hi:"नियो साइबरपंक", es:"Neo Cyberpunk", ar:"سايبربانك الجديد", fr:"Néo Cyberpunk", bn:"নিও সাইবারপাঙ্ক", pt:"Neo Cyberpunk", ru:"Нео-киберпанк", ur:"نیو سائبرپنک", id:"Neo Cyberpunk", de:"Neo-Cyberpunk", ja:"ネオ・サイバーパンク", tr:"Neo Cyberpunk", ko:"네오 사이버펑크", fa:"نئو سایبرپانک", uk:"Нео-кіберпанк", it:"Neo Cyberpunk", pl:"Neo Cyberpunk", vi:"Neo Cyberpunk" },
+  skin_synthwave: { en:"80s Synthwave", zh:"80年代合成波", hi:"80s सिंथवेव", es:"Synthwave de los 80", ar:"سينث ويف الثمانينات", fr:"Synthwave 80s", bn:"৮০-এর সিন্থওয়েভ", pt:"Synthwave anos 80", ru:"Синтвейв 80-х", ur:"80 کی دہائی کا سنتھ ویو", id:"Synthwave 80-an", de:"80er-Synthwave", ja:"80年代シンセウェイヴ", tr:"80ler Synthwave", ko:"80년대 신스웨이브", fa:"سینث‌ویو دهه ۸۰", uk:"Синтвейв 80-х", it:"Synthwave anni 80", pl:"Synthwave lat 80.", vi:"Synthwave thập niên 80" },
+  skin_matrix: { en:"Matrix Terminal", zh:"矩阵终端", hi:"मैट्रिक्स टर्मिनल", es:"Terminal Matrix", ar:"طرفية ماتريكس", fr:"Terminal Matrix", bn:"ম্যাট্রিক্স টার্মিনাল", pt:"Terminal Matrix", ru:"Терминал Матрицы", ur:"میٹرکس ٹرمینل", id:"Terminal Matrix", de:"Matrix-Terminal", ja:"マトリックス・ターミナル", tr:"Matrix Terminali", ko:"매트릭스 터미널", fa:"ترمینال ماتریکس", uk:"Термінал Матриці", it:"Terminale Matrix", pl:"Terminal Matrix", vi:"Terminal Matrix" },
+  skin_crimson: { en:"Bloodmoon Protocol", zh:"血月协议", hi:"ब्लडमून प्रोटोकॉल", es:"Protocolo Luna de Sangre", ar:"بروتوكول قمر الدم", fr:"Protocole Lune de Sang", bn:"ব্লাডমুন প্রোটোকল", pt:"Protocolo Lua de Sangue", ru:"Протокол «Кровавая луна»", ur:"بلڈ مون پروٹوکول", id:"Protokol Bulan Darah", de:"Blutmond-Protokoll", ja:"ブラッドムーン・プロトコル", tr:"Kanlı Ay Protokolü", ko:"블러드문 프로토콜", fa:"پروتکل ماه خونین", uk:"Протокол «Кривавий місяць»", it:"Protocollo Luna di Sangue", pl:"Protokół Krwawy Księżyc", vi:"Giao thức Trăng Máu" },
+  skin_glitch: { en:"Chromatic Holo", zh:"彩色全息", hi:"क्रोमैटिक होलो", es:"Holo Cromático", ar:"هولو لوني", fr:"Holo Chromatique", bn:"ক্রোমাটিক হোলো", pt:"Holo Cromático", ru:"Хроматический холо", ur:"کرومیٹک ہولو", id:"Holo Kromatik", de:"Chromatisches Holo", ja:"クロマティック・ホロ", tr:"Kromatik Holo", ko:"크로매틱 홀로", fa:"هولوی رنگین", uk:"Хроматичний холо", it:"Holo Cromatico", pl:"Chromatyczne Holo", vi:"Holo Sắc Màu" },
+  skin_midnight: { en:"Midnight Electric", zh:"午夜电光", hi:"मिडनाइट इलेक्ट्रिक", es:"Eléctrico Medianoche", ar:"كهرباء منتصف الليل", fr:"Électrique Minuit", bn:"মিডনাইট ইলেকট্রিক", pt:"Elétrico Meia-Noite", ru:"Полночный электрик", ur:"مڈنائٹ الیکٹرک", id:"Elektrik Tengah Malam", de:"Mitternachts-Elektrik", ja:"ミッドナイト・エレクトリック", tr:"Gece Yarısı Elektrik", ko:"미드나이트 일렉트릭", fa:"الکتریک نیمه‌شب", uk:"Опівнічний електрик", it:"Elettrico Mezzanotte", pl:"Elektryczna Północ", vi:"Điện Nửa Đêm" },
+  skin_sunset: { en:"Neon Sunset", zh:"霓虹日落", hi:"नियॉन सनसेट", es:"Atardecer Neón", ar:"غروب النيون", fr:"Coucher de Soleil Néon", bn:"নিয়ন সানসেট", pt:"Pôr do Sol Néon", ru:"Неоновый закат", ur:"نیون سن سیٹ", id:"Senja Neon", de:"Neon-Sonnenuntergang", ja:"ネオン・サンセット", tr:"Neon Gün Batımı", ko:"네온 선셋", fa:"غروب نئونی", uk:"Неоновий захід", it:"Tramonto Neon", pl:"Neonowy Zachód", vi:"Hoàng Hôn Neon" },
+  skin_solar: { en:"Solar Flare", zh:"太阳耀斑", hi:"सोलर फ्लेयर", es:"Llamarada Solar", ar:"توهج شمسي", fr:"Éruption Solaire", bn:"সোলার ফ্লেয়ার", pt:"Erupção Solar", ru:"Солнечная вспышка", ur:"شمسی شعلہ", id:"Suar Surya", de:"Sonneneruption", ja:"ソーラーフレア", tr:"Güneş Patlaması", ko:"솔라 플레어", fa:"شراره خورشیدی", uk:"Сонячний спалах", it:"Brillamento Solare", pl:"Rozbłysk Słoneczny", vi:"Bùng Nổ Mặt Trời" },
+  skin_vaporwave: { en:"Vaporwave Dream", zh:"蒸汽波之梦", hi:"वेपरवेव ड्रीम", es:"Sueño Vaporwave", ar:"حلم فيبورويف", fr:"Rêve Vaporwave", bn:"ভেপারওয়েভ ড্রিম", pt:"Sonho Vaporwave", ru:"Вейпорвейв-мечта", ur:"ویپر ویو ڈریم", id:"Mimpi Vaporwave", de:"Vaporwave-Traum", ja:"ヴェイパーウェイヴ・ドリーム", tr:"Vaporwave Rüyası", ko:"베이퍼웨이브 드림", fa:"رویای ویپورویو", uk:"Вейпорвейв-мрія", it:"Sogno Vaporwave", pl:"Sen Vaporwave", vi:"Giấc Mơ Vaporwave" },
+  skin_biopunk: { en:"Bio-Xenon", zh:"生物氙", hi:"बायो-ज़ेनॉन", es:"Bio-Xenón", ar:"بايو-زينون", fr:"Bio-Xénon", bn:"বায়ো-জেনন", pt:"Bio-Xénon", ru:"Био-ксенон", ur:"بائیو زینون", id:"Bio-Xenon", de:"Bio-Xenon", ja:"バイオ・キセノン", tr:"Biyo-Ksenon", ko:"바이오 제논", fa:"بایو-زنون", uk:"Біо-ксенон", it:"Bio-Xeno", pl:"Bio-Ksenon", vi:"Bio-Xenon" },
+  skin_stealth: { en:"Ghost Titanium", zh:"幽灵钛", hi:"घोस्ट टाइटेनियम", es:"Titanio Fantasma", ar:"تيتانيوم شبحي", fr:"Titane Fantôme", bn:"ঘোস্ট টাইটানিয়াম", pt:"Titânio Fantasma", ru:"Призрачный титан", ur:"گھوسٹ ٹائٹینیم", id:"Titanium Hantu", de:"Geister-Titan", ja:"ゴースト・チタン", tr:"Hayalet Titanyum", ko:"고스트 티타늄", fa:"تیتانیوم شبح", uk:"Примарний титан", it:"Titanio Fantasma", pl:"Duchowy Tytan", vi:"Titan Bóng Ma" },
   eyebrow: { en:"For teen creators · 13–18", zh:"面向青少年创作者 · 13–18", hi:"किशोर क्रिएटर्स के लिए · 13–18", es:"Para creadores adolescentes · 13–18", ar:"لصناع المحتوى المراهقين · 13–18", fr:"Pour les jeunes créateurs · 13–18", bn:"কিশোর নির্মাতাদের জন্য · 13–18", pt:"Para criadores adolescentes · 13–18", ru:"Для юных авторов · 13–18", ur:"نوجوان تخلیق کاروں کے لیے · 13–18", id:"Untuk kreator remaja · 13–18", de:"Für junge Creator · 13–18", ja:"10代のクリエイター向け · 13–18", tr:"Genç içerik üreticileri için · 13–18", ko:"청소년 크리에이터를 위해 · 13–18", fa:"برای سازندگان نوجوان · 13–18", uk:"Для юних авторів · 13–18", it:"Per giovani creator · 13–18", pl:"Dla młodych twórców · 13–18", vi:"Cho nhà sáng tạo trẻ · 13–18" },
   startchannel: { en:"Start your channel →", zh:"开启你的频道 →", hi:"अपना चैनल शुरू करें →", es:"Inicia tu canal →", ar:"ابدأ قناتك →", fr:"Lance ta chaîne →", bn:"আপনার চ্যানেল শুরু করুন →", pt:"Começa o teu canal →", ru:"Начни свой канал →", ur:"اپنا چینل شروع کریں →", id:"Mulai channel-mu →", de:"Starte deinen Kanal →", ja:"チャンネルを始めよう →", tr:"Kanalını başlat →", ko:"채널을 시작하세요 →", fa:"کانالت را شروع کن →", uk:"Почни свій канал →", it:"Avvia il tuo canale →", pl:"Załóż swój kanał →", vi:"Bắt đầu kênh của bạn →" },
   seerewards: { en:"See the rewards", zh:"查看奖励", hi:"रिवॉर्ड्स देखें", es:"Ver recompensas", ar:"شاهد الجوائز", fr:"Voir les récompenses", bn:"পুরস্কার দেখুন", pt:"Ver recompensas", ru:"Смотреть награды", ur:"انعامات دیکھیں", id:"Lihat hadiah", de:"Belohnungen ansehen", ja:"リワードを見る", tr:"Ödülleri gör", ko:"보상 보기", fa:"جوایز را ببین", uk:"Дивитись нагороди", it:"Vedi le ricompense", pl:"Zobacz nagrody", vi:"Xem phần thưởng" },
@@ -2400,13 +2427,16 @@ function ncBuildThemeSwitch() {
      so all twelve were dark themes whether or not you read on a white page. */
   const skinSel = document.createElement('select');
   skinSel.id = 'nc-skinpick';
-  skinSel.setAttribute('aria-label', 'Cyber theme');
+  skinSel.setAttribute('aria-label', tr('ui_skin_none'));
   const skinOn = ncSkinPref();
-  /* data-t on the option as well as tr() here, so switching language relabels
-     it in place rather than leaving the one English word in a Persian bar. */
+  /* data-t on every option, not only the first, so switching language relabels
+     the whole list in place. The names come from the table as skin_<id>; the
+     English in NC_SKINS is the fallback for a language with no entry, so a
+     missing translation shows the name rather than an empty row. */
   skinSel.innerHTML = '<option value="" data-t="ui_skin_none">' + tr('ui_skin_none') + '</option>' +
-    NC_SKINS.map(sk => '<option value="' + sk.id + '"' +
-      (sk.id === skinOn ? ' selected' : '') + '>' + sk.name + '</option>').join('');
+    NC_SKINS.map(sk => '<option value="' + sk.id + '" data-t="skin_' + sk.id + '"' +
+      (sk.id === skinOn ? ' selected' : '') + '>' + (tr('skin_' + sk.id) || sk.name) +
+      '</option>').join('');
   skinSel.addEventListener('change', () => {
     /* Off leaves the theme alone as well: none means plain light or plain
        dark, whichever you were already on. */

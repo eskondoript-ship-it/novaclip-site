@@ -186,6 +186,21 @@
    one anybody hits was the only silent one. It speaks now.
 
    index.html, nova.js and publish.html are all cached. */
+/* v54: the twelve cyber theme names are translated too.
+
+   They were left in English last time on the reasoning that they are names
+   like NovaCoins. They are not — NovaCoins is the product naming its own
+   thing, and these are descriptions: a void, a blood moon, a solar flare.
+   Somebody reading a list of twelve wants to know which is which.
+
+   The genre words stay recognisable rather than being forced into an
+   equivalent that does not exist — cyberpunk, synthwave, vaporwave, matrix,
+   holo, xenon, titanium are loanwords nearly everywhere, transliterated where
+   the script changes. What gets translated is the half that means something.
+   Every option carries data-t, so switching language relabels the whole list
+   in place, and the English in NC_SKINS is the fallback.
+
+   nova.js, and it is cached. */
 /* v53: cyber themes work in light mode, and the RTL languages are finished.
 
    The twelve cyber themes were dark themes by construction: nc_theme held
@@ -500,7 +515,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v53';
+const CACHE = 'novaclip-v54';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
