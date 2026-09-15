@@ -186,6 +186,31 @@
    one anybody hits was the only silent one. It speaks now.
 
    index.html, nova.js and publish.html are all cached. */
+/* v57: the layout no longer mirrors for Farsi, and the welcome is translated.
+
+   THE RAIL STAYS ON THE LEFT. dir=rtl on <html> mirrors the whole document —
+   rail to the other side, every flex row reversed, the timeline in the editor
+   running backwards — and that was not wanted. editor.html had already had to
+   cancel it locally with `#root{direction:ltr}` to stay usable, which is a
+   rule worth doubting when the biggest page on the site has to undo it.
+
+   So dir is now ltr in every language and a .nc-rtl class carries what Persian,
+   Arabic and Urdu actually need: `unicode-bidi: plaintext` on the text
+   elements, which was already there and doing the real work. Each paragraph,
+   heading and cell resolves its own direction from its own first letter and
+   aligns itself. The words read right to left; the furniture does not move.
+   Measured at 1440px, Farsi and English now report identical boxes on index
+   and profile. Fourteen mirror rules deleted.
+
+   And the welcome dialog is in twenty languages. It was the last thing on the
+   site written in English and the worst place for it — the first screen of a
+   first visit. Forty-one keys: the role question, the parent instructions, the
+   name and category steps, the ten category names and the ten lines under
+   them. The greeting with a name in it is a template with a {n}, filled in
+   when it is shown and its data-t dropped so the language pass cannot
+   overwrite the filled sentence with the template.
+
+   nova.js, index.html and the head snippet in all 31 pages. All cached. */
 /* v56: the welcome asks who is holding the laptop, and a parent gets a
    parent's instructions.
 
@@ -567,7 +592,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v56';
+const CACHE = 'novaclip-v57';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

@@ -79,6 +79,62 @@ const T = {
      trying to read, not a logo. "Nova" stays — that half IS the name — and
      the coin half is translated or transliterated into the script being
      read, which is what every game currency does. */
+  /* THE WELCOME DIALOG, IN TWENTY LANGUAGES.
+     It was the last thing on the site still written in English, and it was
+     the worst place for that: the first screen of a first visit, before
+     anybody has seen a word of the site they came for. Every other dialog
+     went through this table years ago; this one was built in a hurry and
+     never came back.
+
+     Keys are wel_*. The ones carrying <b> are looked up with innerHTML by
+     applyLangText, which is why the markup is inside the string rather than
+     around it. wel_cat_hi has a {n} for the reader’s own name and is
+     filled in at the moment it is shown. */
+  wel_aria: { en:"Welcome to NovaClip", zh:"欢迎来到 NovaClip", hi:"NovaClip में आपका स्वागत है", es:"Bienvenido a NovaClip", ar:"مرحبًا بك في NovaClip", fr:"Bienvenue sur NovaClip", bn:"NovaClip-এ স্বাগতম", pt:"Bem-vindo ao NovaClip", ru:"Добро пожаловать в NovaClip", ur:"NovaClip میں خوش آمدید", id:"Selamat datang di NovaClip", de:"Willkommen bei NovaClip", ja:"NovaClipへようこそ", tr:"NovaClip’e hoş geldin", ko:"NovaClip에 오신 것을 환영합니다", fa:"به NovaClip خوش آمدی", uk:"Ласкаво просимо до NovaClip", it:"Benvenuto su NovaClip", pl:"Witaj w NovaClip", vi:"Chào mừng đến NovaClip" },
+  wel_of1: { en:"Step 1 of 3", zh:"第 1 步，共 3 步", hi:"चरण 1 / 3", es:"Paso 1 de 3", ar:"الخطوة 1 من 3", fr:"Étape 1 sur 3", bn:"ধাপ ১ / ৩", pt:"Passo 1 de 3", ru:"Шаг 1 из 3", ur:"مرحلہ 1 از 3", id:"Langkah 1 dari 3", de:"Schritt 1 von 3", ja:"ステップ 1 / 3", tr:"Adım 1 / 3", ko:"1단계 / 3", fa:"مرحله ۱ از ۳", uk:"Крок 1 з 3", it:"Passo 1 di 3", pl:"Krok 1 z 3", vi:"Bước 1/3" },
+  wel_of2: { en:"Step 2 of 3", zh:"第 2 步，共 3 步", hi:"चरण 2 / 3", es:"Paso 2 de 3", ar:"الخطوة 2 من 3", fr:"Étape 2 sur 3", bn:"ধাপ ২ / ৩", pt:"Passo 2 de 3", ru:"Шаг 2 из 3", ur:"مرحلہ 2 از 3", id:"Langkah 2 dari 3", de:"Schritt 2 von 3", ja:"ステップ 2 / 3", tr:"Adım 2 / 3", ko:"2단계 / 3", fa:"مرحله ۲ از ۳", uk:"Крок 2 з 3", it:"Passo 2 di 3", pl:"Krok 2 z 3", vi:"Bước 2/3" },
+  wel_of3: { en:"Step 3 of 3", zh:"第 3 步，共 3 步", hi:"चरण 3 / 3", es:"Paso 3 de 3", ar:"الخطوة 3 من 3", fr:"Étape 3 sur 3", bn:"ধাপ ৩ / ৩", pt:"Passo 3 de 3", ru:"Шаг 3 из 3", ur:"مرحلہ 3 از 3", id:"Langkah 3 dari 3", de:"Schritt 3 von 3", ja:"ステップ 3 / 3", tr:"Adım 3 / 3", ko:"3단계 / 3", fa:"مرحله ۳ از ۳", uk:"Крок 3 з 3", it:"Passo 3 di 3", pl:"Krok 3 z 3", vi:"Bước 3/3" },
+  wel_of_par: { en:"For parents", zh:"给家长", hi:"अभिभावकों के लिए", es:"Para madres y padres", ar:"لأولياء الأمور", fr:"Pour les parents", bn:"অভিভাবকদের জন্য", pt:"Para pais e mães", ru:"Для родителей", ur:"والدین کے لیے", id:"Untuk orang tua", de:"Für Eltern", ja:"保護者の方へ", tr:"Ebeveynler için", ko:"보호자용", fa:"برای والدین", uk:"Для батьків", it:"Per i genitori", pl:"Dla rodziców", vi:"Dành cho phụ huynh" },
+  wel_role_h: { en:"Who is using NovaClip?", zh:"谁在使用 NovaClip？", hi:"NovaClip कौन इस्तेमाल कर रहा है?", es:"¿Quién va a usar NovaClip?", ar:"من الذي سيستخدم NovaClip؟", fr:"Qui utilise NovaClip ?", bn:"NovaClip কে ব্যবহার করছে?", pt:"Quem vai usar o NovaClip?", ru:"Кто пользуется NovaClip?", ur:"NovaClip کون استعمال کر رہا ہے؟", id:"Siapa yang memakai NovaClip?", de:"Wer benutzt NovaClip?", ja:"NovaClipを使うのはどなたですか？", tr:"NovaClip’i kim kullanıyor?", ko:"NovaClip을 누가 사용하나요?", fa:"چه کسی از NovaClip استفاده می‌کند؟", uk:"Хто користується NovaClip?", it:"Chi userà NovaClip?", pl:"Kto używa NovaClip?", vi:"Ai đang dùng NovaClip?" },
+  wel_role_p: { en:"It is built for teenage creators, and parents have their own side of it. This only decides what you are shown first — nothing is hidden either way.", zh:"它是为青少年创作者做的，家长有自己的那一面。这只决定你先看到什么——两边都不会隐藏任何东西。", hi:"यह किशोर क्रिएटर्स के लिए बना है, और अभिभावकों का अपना हिस्सा है। यह सिर्फ़ तय करता है कि आपको पहले क्या दिखे — कुछ भी छिपाया नहीं जाता।", es:"Está hecho para creadores adolescentes, y las madres y padres tienen su propio lado. Esto solo decide qué se te muestra primero: no se oculta nada en ningún caso.", ar:"صُمّم لصنّاع المحتوى المراهقين، ولأولياء الأمور جانبهم الخاص. هذا يحدد فقط ما تراه أولًا — ولا يُخفى شيء في الحالتين.", fr:"Il est fait pour les jeunes créateurs, et les parents ont leur propre côté. Cela décide seulement ce qu’on te montre en premier : rien n’est caché dans un cas comme dans l’autre.", bn:"এটি কিশোর নির্মাতাদের জন্য তৈরি, আর অভিভাবকদের নিজস্ব দিক আছে। এটি শুধু ঠিক করে আপনি প্রথমে কী দেখবেন — কিছুই লুকানো হয় না।", pt:"Foi feito para criadores adolescentes, e os pais têm o seu próprio lado. Isto só decide o que te é mostrado primeiro — nada fica escondido em qualquer dos casos.", ru:"Он сделан для юных авторов, а у родителей есть своя сторона. Это лишь решает, что вы увидите первым, — ничего не скрывается ни в одном случае.", ur:"یہ نوجوان تخلیق کاروں کے لیے بنا ہے، اور والدین کا اپنا حصہ ہے۔ یہ صرف طے کرتا ہے کہ آپ کو پہلے کیا دکھایا جائے — کچھ بھی چھپایا نہیں جاتا۔", id:"Dibuat untuk kreator remaja, dan orang tua punya sisinya sendiri. Ini hanya menentukan apa yang kamu lihat lebih dulu — tidak ada yang disembunyikan.", de:"Es ist für junge Creator gemacht, und Eltern haben ihre eigene Seite davon. Das entscheidet nur, was dir zuerst gezeigt wird — verborgen wird in keinem Fall etwas.", ja:"10代のクリエイターのために作られていて、保護者には保護者向けの画面があります。これは最初に何を表示するかを決めるだけで、どちらでも何かが隠されることはありません。", tr:"Genç içerik üreticileri için yapıldı, ebeveynlerin de kendi tarafı var. Bu yalnızca sana önce neyin gösterileceğini belirler — hiçbir şey gizlenmez.", ko:"10대 크리에이터를 위해 만들어졌고, 보호자에게는 보호자용 화면이 있습니다. 이 선택은 무엇을 먼저 보여줄지만 정할 뿐, 어느 쪽에서도 숨기는 것은 없습니다.", fa:"برای سازندگان نوجوان ساخته شده و والدین بخش خودشان را دارند. این فقط تعیین می‌کند اول چه چیزی به تو نشان داده شود — در هیچ حالتی چیزی پنهان نمی‌شود.", uk:"Він зроблений для юних авторів, а батьки мають свій бік. Це лише вирішує, що ви побачите першим, — нічого не приховується.", it:"È fatto per creator adolescenti, e i genitori hanno la loro parte. Questo decide solo cosa ti viene mostrato per primo: non viene nascosto nulla.", pl:"Powstał dla nastoletnich twórców, a rodzice mają swoją stronę. To tylko decyduje, co zobaczysz najpierw — nic nie jest ukrywane.", vi:"Được làm cho nhà sáng tạo tuổi teen, và phụ huynh có phần riêng. Điều này chỉ quyết định bạn thấy gì trước — không có gì bị giấu đi cả." },
+  wel_role_ct: { en:"I am the creator", zh:"我是创作者", hi:"मैं क्रिएटर हूँ", es:"Soy el creador", ar:"أنا صانع المحتوى", fr:"Je suis le créateur", bn:"আমি ক্রিয়েটর", pt:"Sou o criador", ru:"Я автор", ur:"میں تخلیق کار ہوں", id:"Saya kreatornya", de:"Ich bin der Creator", ja:"わたしがクリエイターです", tr:"Ben üreticiyim", ko:"제가 크리에이터예요", fa:"من سازنده‌ام", uk:"Я автор", it:"Sono il creator", pl:"Jestem twórcą", vi:"Tôi là nhà sáng tạo" },
+  wel_role_cs: { en:"The editors, trends, tools and games", zh:"编辑器、趋势、工具和游戏", hi:"एडिटर, ट्रेंड्स, टूल्स और गेम्स", es:"Los editores, tendencias, herramientas y juegos", ar:"المحرران والاتجاهات والأدوات والألعاب", fr:"Les éditeurs, les tendances, les outils et les jeux", bn:"এডিটর, ট্রেন্ড, টুল ও গেম", pt:"Os editores, tendências, ferramentas e jogos", ru:"Редакторы, тренды, инструменты и игры", ur:"ایڈیٹرز، ٹرینڈز، ٹولز اور گیمز", id:"Editor, tren, alat, dan game", de:"Die Editoren, Trends, Tools und Spiele", ja:"エディタ、トレンド、ツール、ゲーム", tr:"Düzenleyiciler, trendler, araçlar ve oyunlar", ko:"편집기, 트렌드, 도구, 게임", fa:"ویرایشگرها، ترندها، ابزارها و بازی‌ها", uk:"Редактори, тренди, інструменти та ігри", it:"Gli editor, le tendenze, gli strumenti e i giochi", pl:"Edytory, trendy, narzędzia i gry", vi:"Trình sửa, xu hướng, công cụ và trò chơi" },
+  wel_role_pt: { en:"I am a parent", zh:"我是家长", hi:"मैं अभिभावक हूँ", es:"Soy madre o padre", ar:"أنا وليّ أمر", fr:"Je suis un parent", bn:"আমি অভিভাবক", pt:"Sou pai ou mãe", ru:"Я родитель", ur:"میں والد/والدہ ہوں", id:"Saya orang tua", de:"Ich bin ein Elternteil", ja:"わたしは保護者です", tr:"Ben ebeveynim", ko:"저는 보호자예요", fa:"من والد هستم", uk:"Я з батьків", it:"Sono un genitore", pl:"Jestem rodzicem", vi:"Tôi là phụ huynh" },
+  wel_role_ps: { en:"Screen time, blocking, comment alerts", zh:"屏幕时间、内容拦截、评论提醒", hi:"स्क्रीन टाइम, ब्लॉकिंग, कमेंट अलर्ट", es:"Tiempo de pantalla, bloqueo, alertas de comentarios", ar:"وقت الشاشة والحجب وتنبيهات التعليقات", fr:"Temps d’écran, blocage, alertes de commentaires", bn:"স্ক্রিন টাইম, ব্লকিং, কমেন্ট অ্যালার্ট", pt:"Tempo de ecrã, bloqueio, alertas de comentários", ru:"Экранное время, блокировка, оповещения о комментариях", ur:"اسکرین ٹائم، بلاکنگ، کمنٹ الرٹس", id:"Waktu layar, pemblokiran, peringatan komentar", de:"Bildschirmzeit, Sperren, Kommentar-Warnungen", ja:"利用時間、ブロック、コメント通知", tr:"Ekran süresi, engelleme, yorum uyarıları", ko:"이용 시간, 차단, 댓글 알림", fa:"زمان استفاده، مسدودسازی، هشدار نظرها", uk:"Екранний час, блокування, сповіщення про коментарі", it:"Tempo di utilizzo, blocchi, avvisi sui commenti", pl:"Czas przed ekranem, blokowanie, alerty o komentarzach", vi:"Thời gian dùng, chặn nội dung, cảnh báo bình luận" },
+  wel_par_h: { en:"Here is where to start", zh:"从这里开始", hi:"शुरुआत यहाँ से करें", es:"Empieza por aquí", ar:"من هنا تبدأ", fr:"Commencez ici", bn:"এখান থেকেই শুরু করুন", pt:"Comece por aqui", ru:"Начните отсюда", ur:"یہاں سے شروع کریں", id:"Mulai dari sini", de:"Hier fangen Sie an", ja:"ここから始めてください", tr:"Buradan başlayın", ko:"여기서 시작하세요", fa:"از اینجا شروع کنید", uk:"Почніть звідси", it:"Si comincia da qui", pl:"Zacznij tutaj", vi:"Bắt đầu từ đây" },
+  wel_par_p: { en:"Everything for you is on one page — <b>Family</b> in the rail. Four things, and they go in this order:", zh:"给你的一切都在一个页面上——侧栏里的<b>家庭</b>。四件事，按这个顺序：", hi:"आपके लिए सब कुछ एक ही पेज पर है — साइडबार में <b>परिवार</b>। चार चीज़ें, इसी क्रम में:", es:"Todo lo tuyo está en una página — <b>Familia</b>, en la barra lateral. Cuatro cosas, y van en este orden:", ar:"كل ما يخصك في صفحة واحدة — <b>العائلة</b> في الشريط الجانبي. أربعة أشياء، بهذا الترتيب:", fr:"Tout ce qui vous concerne tient sur une page — <b>Famille</b>, dans la barre latérale. Quatre choses, dans cet ordre :", bn:"আপনার সবকিছু একটি পেজে — সাইডবারে <b>পরিবার</b>। চারটি কাজ, এই ক্রমে:", pt:"Tudo o que é seu está numa página — <b>Família</b>, na barra lateral. Quatro coisas, e por esta ordem:", ru:"Всё для вас на одной странице — <b>Семья</b> в боковой панели. Четыре пункта, именно в этом порядке:", ur:"آپ کے لیے سب کچھ ایک صفحے پر ہے — سائیڈبار میں <b>فیملی</b>۔ چار کام، اسی ترتیب سے:", id:"Semua untuk Anda ada di satu halaman — <b>Keluarga</b> di bilah samping. Empat hal, dengan urutan ini:", de:"Alles für Sie steht auf einer Seite — <b>Familie</b> in der Leiste. Vier Dinge, in dieser Reihenfolge:", ja:"保護者向けはすべて1ページにあります — サイドバーの<b>ファミリー</b>。次の順で4つです:", tr:"Sizin için her şey tek sayfada — kenar çubuğundaki <b>Aile</b>. Dört şey, bu sırayla:", ko:"보호자용은 한 페이지에 모두 있습니다 — 사이드바의 <b>가족</b>. 네 가지를, 이 순서대로:", fa:"همه‌چیزِ شما در یک صفحه است — <b>خانواده</b> در نوار کناری. چهار کار، به همین ترتیب:", uk:"Усе для вас на одній сторінці — <b>Сім’я</b> на бічній панелі. Чотири речі, саме в такому порядку:", it:"Tutto ciò che la riguarda è in una pagina — <b>Famiglia</b>, nella barra laterale. Quattro cose, in quest’ordine:", pl:"Wszystko dla Ciebie jest na jednej stronie — <b>Rodzina</b> na pasku bocznym. Cztery rzeczy, w tej kolejności:", vi:"Mọi thứ dành cho bạn nằm trên một trang — <b>Gia đình</b> ở thanh bên. Bốn việc, theo thứ tự này:" },
+  wel_par_1: { en:"<b>Set a PIN.</b> It confirms it is you rather than your child, and it is what keeps the dashboard shut afterwards. You will be asked for it every visit.", zh:"<b>设置 PIN 码。</b>它确认是你而不是孩子，之后也靠它把面板锁住。每次进入都会要求输入。", hi:"<b>एक PIN सेट करें।</b> यह पुष्टि करता है कि यह आप हैं, आपका बच्चा नहीं, और बाद में यही डैशबोर्ड बंद रखता है। हर बार यह पूछा जाएगा।", es:"<b>Pon un PIN.</b> Confirma que eres tú y no tu hijo, y es lo que mantiene el panel cerrado después. Te lo pedirá en cada visita.", ar:"<b>عيّن رمز PIN.</b> يؤكد أنك أنت لا طفلك، وهو ما يُبقي اللوحة مغلقة بعد ذلك. سيُطلب منك في كل زيارة.", fr:"<b>Définissez un code PIN.</b> Il confirme que c’est vous et non votre enfant, et c’est lui qui garde le tableau de bord fermé ensuite. Il est demandé à chaque visite.", bn:"<b>একটি পিন সেট করুন।</b> এটি নিশ্চিত করে যে এটি আপনি, আপনার সন্তান নয় — এবং এরপর এটিই ড্যাশবোর্ড বন্ধ রাখে। প্রতিবারই এটি চাওয়া হবে।", pt:"<b>Defina um PIN.</b> Confirma que é você e não o seu filho, e é o que mantém o painel fechado depois. Será pedido em todas as visitas.", ru:"<b>Задайте PIN.</b> Он подтверждает, что это вы, а не ребёнок, и именно он потом держит панель закрытой. Его будут спрашивать при каждом входе.", ur:"<b>ایک PIN مقرر کریں۔</b> یہ تصدیق کرتا ہے کہ یہ آپ ہیں، آپ کا بچہ نہیں، اور بعد میں یہی ڈیش بورڈ بند رکھتا ہے۔ ہر بار یہ پوچھا جائے گا۔", id:"<b>Buat PIN.</b> Ini memastikan yang masuk Anda, bukan anak Anda, dan itulah yang menjaga dasbor tetap tertutup. Akan diminta setiap kali.", de:"<b>Legen Sie eine PIN fest.</b> Sie bestätigt, dass Sie es sind und nicht Ihr Kind, und hält das Dashboard danach geschlossen. Sie wird bei jedem Besuch abgefragt.", ja:"<b>PINを設定します。</b>お子さんではなくご本人であることを確認し、以後ダッシュボードを閉じておくのもこれです。訪問のたびに入力を求められます。", tr:"<b>Bir PIN belirleyin.</b> Çocuğunuz değil siz olduğunuzu doğrular ve paneli sonrasında kapalı tutan şey budur. Her ziyarette istenir.", ko:"<b>PIN을 설정하세요.</b> 아이가 아니라 본인임을 확인하며, 이후 대시보드를 잠가 두는 것도 이것입니다. 방문할 때마다 묻습니다.", fa:"<b>یک PIN تعیین کنید.</b> تأیید می‌کند شما هستید نه فرزندتان، و بعد از آن هم همین داشبورد را بسته نگه می‌دارد. هر بار پرسیده می‌شود.", uk:"<b>Задайте PIN.</b> Він підтверджує, що це ви, а не дитина, і саме він далі тримає панель закритою. Його питатимуть щоразу.", it:"<b>Imposti un PIN.</b> Conferma che è lei e non suo figlio, ed è ciò che tiene chiusa la dashboard dopo. Viene chiesto a ogni visita.", pl:"<b>Ustaw PIN.</b> Potwierdza, że to Ty, a nie dziecko, i to on później trzyma panel zamknięty. Będzie pytany przy każdej wizycie.", vi:"<b>Đặt mã PIN.</b> Nó xác nhận đó là bạn chứ không phải con bạn, và sau đó chính nó giữ bảng điều khiển luôn khoá. Sẽ được hỏi mỗi lần vào." },
+  wel_par_2: { en:"<b>Set the screen time.</b> A daily limit and quiet hours, different for each day of the week if you want.", zh:"<b>设置屏幕时间。</b>每日上限和免打扰时段，可以每天都不一样。", hi:"<b>स्क्रीन टाइम सेट करें।</b> रोज़ की सीमा और शांत घंटे — चाहें तो हफ़्ते के हर दिन अलग।", es:"<b>Configura el tiempo de pantalla.</b> Un límite diario y horas de silencio, distintos para cada día de la semana si quieres.", ar:"<b>اضبط وقت الشاشة.</b> حد يومي وساعات هدوء، ومختلفة لكل يوم من الأسبوع إن أردت.", fr:"<b>Réglez le temps d’écran.</b> Une limite quotidienne et des heures calmes, différentes chaque jour de la semaine si vous voulez.", bn:"<b>স্ক্রিন টাইম ঠিক করুন।</b> দৈনিক সীমা ও নীরব সময় — চাইলে সপ্তাহের প্রতিদিন আলাদা।", pt:"<b>Defina o tempo de ecrã.</b> Um limite diário e horas de silêncio, diferentes para cada dia da semana se quiser.", ru:"<b>Настройте экранное время.</b> Дневной лимит и тихие часы, для каждого дня недели свои, если хотите.", ur:"<b>اسکرین ٹائم مقرر کریں۔</b> روزانہ کی حد اور خاموش اوقات — چاہیں تو ہفتے کے ہر دن کے لیے الگ۔", id:"<b>Atur waktu layar.</b> Batas harian dan jam tenang, bisa berbeda tiap hari dalam seminggu.", de:"<b>Stellen Sie die Bildschirmzeit ein.</b> Ein Tageslimit und Ruhezeiten, auf Wunsch für jeden Wochentag anders.", ja:"<b>利用時間を設定します。</b>1日の上限と静かな時間帯を、曜日ごとに変えることもできます。", tr:"<b>Ekran süresini ayarlayın.</b> Günlük sınır ve sessiz saatler; isterseniz haftanın her günü için farklı.", ko:"<b>이용 시간을 정하세요.</b> 하루 한도와 조용한 시간대를, 원하면 요일마다 다르게.", fa:"<b>زمان استفاده را تنظیم کنید.</b> سقف روزانه و ساعت‌های سکوت — اگر بخواهید برای هر روز هفته متفاوت.", uk:"<b>Налаштуйте екранний час.</b> Денний ліміт і тихі години, за бажанням різні для кожного дня тижня.", it:"<b>Imposti il tempo di utilizzo.</b> Un limite giornaliero e ore di silenzio, diversi per ogni giorno della settimana se vuole.", pl:"<b>Ustaw czas przed ekranem.</b> Dzienny limit i ciche godziny, jeśli chcesz inne dla każdego dnia tygodnia.", vi:"<b>Đặt thời gian dùng.</b> Giới hạn mỗi ngày và giờ yên tĩnh, khác nhau theo từng ngày trong tuần nếu bạn muốn." },
+  wel_par_3: { en:"<b>Turn on content blocking.</b> Pick what is filtered, then install the Family Shield extension so the same rules apply outside NovaClip too.", zh:"<b>打开内容拦截。</b>选择要过滤的内容，然后安装家庭防护扩展，让同样的规则在 NovaClip 之外也生效。", hi:"<b>कंटेंट ब्लॉकिंग चालू करें।</b> चुनें क्या फ़िल्टर हो, फिर Family Shield एक्सटेंशन इंस्टॉल करें ताकि वही नियम NovaClip के बाहर भी लगें।", es:"<b>Activa el bloqueo de contenido.</b> Elige qué se filtra y luego instala la extensión Family Shield para que las mismas reglas valgan fuera de NovaClip.", ar:"<b>فعّل حجب المحتوى.</b> اختر ما يُصفّى، ثم ثبّت إضافة Family Shield لتسري القواعد نفسها خارج NovaClip أيضًا.", fr:"<b>Activez le blocage de contenu.</b> Choisissez ce qui est filtré, puis installez l’extension Family Shield pour que les mêmes règles s’appliquent hors de NovaClip.", bn:"<b>কনটেন্ট ব্লকিং চালু করুন।</b> কী ফিল্টার হবে বেছে নিন, তারপর Family Shield এক্সটেনশন ইনস্টল করুন যাতে একই নিয়ম NovaClip-এর বাইরেও চলে।", pt:"<b>Ative o bloqueio de conteúdos.</b> Escolha o que é filtrado e instale a extensão Family Shield para as mesmas regras valerem fora do NovaClip.", ru:"<b>Включите блокировку контента.</b> Выберите, что фильтровать, затем установите расширение Family Shield, чтобы те же правила работали и вне NovaClip.", ur:"<b>مواد کی بلاکنگ آن کریں۔</b> منتخب کریں کیا فلٹر ہو، پھر Family Shield ایکسٹینشن انسٹال کریں تاکہ وہی اصول NovaClip کے باہر بھی لاگو ہوں۔", id:"<b>Nyalakan pemblokiran konten.</b> Pilih apa yang disaring, lalu pasang ekstensi Family Shield agar aturan yang sama berlaku di luar NovaClip.", de:"<b>Schalten Sie die Inhaltssperre ein.</b> Wählen Sie, was gefiltert wird, und installieren Sie die Family-Shield-Erweiterung, damit dieselben Regeln auch außerhalb von NovaClip gelten.", ja:"<b>コンテンツブロックを有効にします。</b>何をフィルタするか選び、Family Shield拡張機能を入れると、同じルールがNovaClipの外でも効きます。", tr:"<b>İçerik engellemeyi açın.</b> Neyin filtreleneceğini seçin, sonra Family Shield eklentisini kurun ki aynı kurallar NovaClip dışında da geçerli olsun.", ko:"<b>콘텐츠 차단을 켜세요.</b> 무엇을 거를지 고른 뒤 Family Shield 확장 프로그램을 설치하면 같은 규칙이 NovaClip 밖에서도 적용됩니다.", fa:"<b>مسدودسازی محتوا را روشن کنید.</b> انتخاب کنید چه چیزی فیلتر شود، سپس افزونه Family Shield را نصب کنید تا همان قواعد بیرون از NovaClip هم اعمال شود.", uk:"<b>Увімкніть блокування вмісту.</b> Оберіть, що фільтрувати, тоді встановіть розширення Family Shield, щоб ті самі правила діяли й поза NovaClip.", it:"<b>Attivi il blocco dei contenuti.</b> Scelga cosa filtrare, poi installi l’estensione Family Shield perché le stesse regole valgano anche fuori da NovaClip.", pl:"<b>Włącz blokowanie treści.</b> Wybierz, co ma być filtrowane, a potem zainstaluj rozszerzenie Family Shield, żeby te same reguły działały poza NovaClip.", vi:"<b>Bật chặn nội dung.</b> Chọn những gì cần lọc, rồi cài tiện ích Family Shield để cùng bộ quy tắc áp dụng cả ngoài NovaClip." },
+  wel_par_4: { en:"<b>Add your alert email.</b> The scanner reads the newest comments on your child’s uploads and flags harassment to you, with a link to report it.", zh:"<b>填上接收提醒的邮箱。</b>扫描器会读取孩子视频下最新的评论，发现骚扰就通知你，并附上举报链接。", hi:"<b>अलर्ट ईमेल जोड़ें।</b> स्कैनर आपके बच्चे के वीडियो पर नए कमेंट पढ़ता है और उत्पीड़न मिलने पर आपको बताता है, रिपोर्ट करने के लिंक के साथ।", es:"<b>Añade tu correo de avisos.</b> El escáner lee los comentarios más nuevos en los vídeos de tu hijo y te señala el acoso, con un enlace para denunciarlo.", ar:"<b>أضف بريد التنبيهات.</b> يقرأ الماسح أحدث التعليقات على مقاطع طفلك ويُبلغك بالمضايقات، مع رابط للإبلاغ عنها.", fr:"<b>Ajoutez votre e-mail d’alerte.</b> Le scanner lit les commentaires les plus récents sous les vidéos de votre enfant et vous signale le harcèlement, avec un lien pour le signaler.", bn:"<b>অ্যালার্ট ইমেইল যোগ করুন।</b> স্ক্যানার আপনার সন্তানের ভিডিওর নতুন মন্তব্য পড়ে এবং হয়রানি পেলে আপনাকে জানায়, রিপোর্ট করার লিংকসহ।", pt:"<b>Adicione o seu e-mail de alerta.</b> O scanner lê os comentários mais recentes nos vídeos do seu filho e assinala-lhe o assédio, com uma ligação para denunciar.", ru:"<b>Добавьте почту для оповещений.</b> Сканер читает свежие комментарии под видео ребёнка и сообщает вам о травле, со ссылкой на жалобу.", ur:"<b>الرٹ ای میل شامل کریں۔</b> اسکینر آپ کے بچے کی ویڈیوز پر نئے تبصرے پڑھتا ہے اور ہراسانی ملنے پر آپ کو اطلاع دیتا ہے، رپورٹ کے لنک کے ساتھ۔", id:"<b>Tambahkan email peringatan.</b> Pemindai membaca komentar terbaru di unggahan anak Anda dan menandai pelecehan untuk Anda, lengkap dengan tautan pelaporan.", de:"<b>Tragen Sie Ihre Warn-E-Mail ein.</b> Der Scanner liest die neuesten Kommentare unter den Videos Ihres Kindes und meldet Ihnen Belästigung, mit Link zum Melden.", ja:"<b>通知用のメールアドレスを登録します。</b>スキャナーがお子さんの動画の新しいコメントを読み、嫌がらせを見つけたら報告用リンク付きでお知らせします。", tr:"<b>Uyarı e-postanızı ekleyin.</b> Tarayıcı çocuğunuzun videolarındaki en yeni yorumları okur ve tacizi bildirim bağlantısıyla size bildirir.", ko:"<b>알림 이메일을 등록하세요.</b> 스캐너가 아이 영상의 최신 댓글을 읽고 괴롭힘을 신고 링크와 함께 알려 줍니다.", fa:"<b>ایمیل هشدار را وارد کنید.</b> اسکنر تازه‌ترین نظرهای ویدیوهای فرزندتان را می‌خواند و آزار را با لینک گزارش به شما اطلاع می‌دهد.", uk:"<b>Додайте пошту для сповіщень.</b> Сканер читає найновіші коментарі під відео дитини й повідомляє вам про цькування, з посиланням на скаргу.", it:"<b>Aggiunga la sua e-mail per gli avvisi.</b> Lo scanner legge i commenti più recenti sotto i video di suo figlio e le segnala le molestie, con un link per denunciarle.", pl:"<b>Dodaj e-mail do alertów.</b> Skaner czyta najnowsze komentarze pod filmami dziecka i zgłasza Ci nękanie, z linkiem do zgłoszenia.", vi:"<b>Thêm email nhận cảnh báo.</b> Trình quét đọc những bình luận mới nhất dưới video của con bạn và báo cho bạn khi có quấy rối, kèm liên kết để tố cáo." },
+  wel_par_go: { en:"Open the Family Dashboard", zh:"打开家庭面板", hi:"फ़ैमिली डैशबोर्ड खोलें", es:"Abrir el panel de familia", ar:"افتح لوحة العائلة", fr:"Ouvrir le tableau de bord Famille", bn:"ফ্যামিলি ড্যাশবোর্ড খুলুন", pt:"Abrir o painel de família", ru:"Открыть семейную панель", ur:"فیملی ڈیش بورڈ کھولیں", id:"Buka Dasbor Keluarga", de:"Familien-Dashboard öffnen", ja:"ファミリー画面を開く", tr:"Aile Panelini aç", ko:"가족 대시보드 열기", fa:"داشبورد خانواده را باز کن", uk:"Відкрити сімейну панель", it:"Apri la dashboard Famiglia", pl:"Otwórz panel rodzinny", vi:"Mở Bảng điều khiển Gia đình" },
+  wel_par_skip: { en:"Look around the site first", zh:"先四处看看", hi:"पहले साइट देख लें", es:"Primero echar un vistazo", ar:"ألقِ نظرة على الموقع أولًا", fr:"Faire d’abord le tour du site", bn:"আগে সাইটটা ঘুরে দেখি", pt:"Primeiro dar uma vista de olhos", ru:"Сначала осмотреться", ur:"پہلے سائٹ دیکھ لیں", id:"Lihat-lihat dulu", de:"Erst die Seite ansehen", ja:"まずサイトを見てみる", tr:"Önce siteye göz atayım", ko:"먼저 사이트를 둘러보기", fa:"اول سری به سایت بزنم", uk:"Спершу оглянутися", it:"Prima do un’occhiata al sito", pl:"Najpierw rozejrzę się", vi:"Xem qua trang trước đã" },
+  wel_name_h: { en:"First — what should we call you?", zh:"先问一句：怎么称呼你？", hi:"पहले — हम आपको क्या कहें?", es:"Primero: ¿cómo te llamamos?", ar:"أولًا — بماذا نناديك؟", fr:"D’abord : comment t’appelle-t-on ?", bn:"প্রথমে — আপনাকে কী নামে ডাকব?", pt:"Primeiro — como te chamamos?", ru:"Сначала — как к тебе обращаться?", ur:"پہلے — ہم آپ کو کیا کہیں؟", id:"Pertama — kami panggil kamu apa?", de:"Zuerst — wie sollen wir dich nennen?", ja:"まず、なんとお呼びしましょう？", tr:"Önce — sana nasıl hitap edelim?", ko:"먼저 — 어떻게 불러 드릴까요?", fa:"اول — تو را چه صدا کنیم؟", uk:"Спершу — як до тебе звертатися?", it:"Prima di tutto: come ti chiamiamo?", pl:"Najpierw — jak masz na imię?", vi:"Trước tiên — gọi bạn là gì?" },
+  wel_name_p: { en:"It goes on your profile, your certificates and the top of the rail. It stays on this device unless you make an account.", zh:"它会出现在你的资料、证书和侧栏顶部。除非你注册账号，否则只留在这台设备上。", hi:"यह आपकी प्रोफ़ाइल, सर्टिफिकेट और साइडबार के ऊपर दिखेगा। खाता बनाए बिना यह इसी डिवाइस पर रहता है।", es:"Aparece en tu perfil, en tus certificados y arriba en la barra lateral. Se queda en este dispositivo salvo que crees una cuenta.", ar:"يظهر في ملفك وشهاداتك وأعلى الشريط الجانبي. ويبقى على هذا الجهاز ما لم تُنشئ حسابًا.", fr:"Il apparaît sur ton profil, tes certificats et en haut de la barre latérale. Il reste sur cet appareil tant que tu ne crées pas de compte.", bn:"এটি আপনার প্রোফাইল, সার্টিফিকেট আর সাইডবারের উপরে দেখা যাবে। অ্যাকাউন্ট না করলে এটি এই ডিভাইসেই থাকে।", pt:"Aparece no teu perfil, nos teus certificados e no topo da barra lateral. Fica neste dispositivo a menos que cries uma conta.", ru:"Оно появится в профиле, на сертификатах и вверху боковой панели. Остаётся на этом устройстве, пока ты не заведёшь аккаунт.", ur:"یہ آپ کی پروفائل، سرٹیفکیٹس اور سائیڈبار کے اوپر نظر آئے گا۔ اکاؤنٹ بنائے بغیر یہ اسی ڈیوائس پر رہتا ہے۔", id:"Nama ini muncul di profil, sertifikat, dan bagian atas bilah samping. Tetap di perangkat ini kecuali kamu membuat akun.", de:"Er steht in deinem Profil, auf deinen Zertifikaten und oben in der Leiste. Er bleibt auf diesem Gerät, solange du kein Konto anlegst.", ja:"プロフィール、証明書、サイドバーの上部に表示されます。アカウントを作らない限り、この端末にとどまります。", tr:"Profilinde, sertifikalarında ve kenar çubuğunun üstünde görünür. Hesap açmadığın sürece bu cihazda kalır.", ko:"프로필, 수료증, 사이드바 맨 위에 표시됩니다. 계정을 만들지 않으면 이 기기에만 남습니다.", fa:"در پروفایل، گواهی‌ها و بالای نوار کناری دیده می‌شود. تا وقتی حساب نسازی روی همین دستگاه می‌ماند.", uk:"Воно буде в профілі, на сертифікатах і вгорі бічної панелі. Лишається на цьому пристрої, поки не створиш акаунт.", it:"Compare sul tuo profilo, sui certificati e in cima alla barra laterale. Resta su questo dispositivo finché non crei un account.", pl:"Pojawia się w profilu, na certyfikatach i u góry paska bocznego. Zostaje na tym urządzeniu, dopóki nie założysz konta.", vi:"Tên này hiện trên hồ sơ, chứng chỉ và đầu thanh bên. Nó ở lại thiết bị này trừ khi bạn tạo tài khoản." },
+  wel_name_ph: { en:"Your name or a handle", zh:"你的名字或昵称", hi:"आपका नाम या हैंडल", es:"Tu nombre o un alias", ar:"اسمك أو لقبك", fr:"Ton nom ou un pseudo", bn:"আপনার নাম বা হ্যান্ডেল", pt:"O teu nome ou um alias", ru:"Имя или никнейм", ur:"آپ کا نام یا ہینڈل", id:"Nama atau nama panggilan", de:"Dein Name oder ein Handle", ja:"名前かハンドル", tr:"Adın ya da bir rumuz", ko:"이름 또는 닉네임", fa:"نام یا نام مستعارت", uk:"Ім’я або нік", it:"Il tuo nome o un nickname", pl:"Imię lub pseudonim", vi:"Tên hoặc biệt danh" },
+  wel_cont: { en:"Continue", zh:"继续", hi:"आगे बढ़ें", es:"Continuar", ar:"متابعة", fr:"Continuer", bn:"চালিয়ে যান", pt:"Continuar", ru:"Продолжить", ur:"جاری رکھیں", id:"Lanjut", de:"Weiter", ja:"続ける", tr:"Devam", ko:"계속", fa:"ادامه", uk:"Продовжити", it:"Continua", pl:"Dalej", vi:"Tiếp tục" },
+  wel_skip1: { en:"Skip this", zh:"跳过", hi:"इसे छोड़ें", es:"Saltar esto", ar:"تخطَّ هذا", fr:"Passer", bn:"এটি এড়িয়ে যান", pt:"Saltar isto", ru:"Пропустить", ur:"یہ چھوڑ دیں", id:"Lewati ini", de:"Überspringen", ja:"スキップ", tr:"Bunu atla", ko:"건너뛰기", fa:"رد کن", uk:"Пропустити", it:"Salta", pl:"Pomiń", vi:"Bỏ qua" },
+  wel_cat_h: { en:"And what do you make?", zh:"那么，你做什么内容？", hi:"और आप क्या बनाते हैं?", es:"¿Y qué haces?", ar:"وماذا تصنع؟", fr:"Et tu fais quoi ?", bn:"আর আপনি কী বানান?", pt:"E o que é que fazes?", ru:"И что ты снимаешь?", ur:"اور آپ کیا بناتے ہیں؟", id:"Dan kamu bikin apa?", de:"Und was machst du?", ja:"そして、何を作っていますか？", tr:"Peki ne üretiyorsun?", ko:"그럼 어떤 걸 만드나요?", fa:"و چه چیزی می‌سازی؟", uk:"І що ти знімаєш?", it:"E tu cosa fai?", pl:"A co tworzysz?", vi:"Và bạn làm về gì?" },
+  wel_cat_hi: { en:"Nice to meet you, {n}. What do you make?", zh:"很高兴认识你，{n}。你做什么内容？", hi:"आपसे मिलकर अच्छा लगा, {n}। आप क्या बनाते हैं?", es:"Encantado, {n}. ¿Qué haces?", ar:"سعدنا بك يا {n}. ماذا تصنع؟", fr:"Enchanté, {n}. Tu fais quoi ?", bn:"আপনার সঙ্গে পরিচিত হয়ে ভালো লাগল, {n}। আপনি কী বানান?", pt:"Muito gosto, {n}. O que é que fazes?", ru:"Приятно познакомиться, {n}. Что ты снимаешь?", ur:"آپ سے مل کر اچھا لگا، {n}۔ آپ کیا بناتے ہیں؟", id:"Senang kenal kamu, {n}. Kamu bikin apa?", de:"Freut mich, {n}. Was machst du?", ja:"はじめまして、{n}さん。何を作っていますか？", tr:"Memnun oldum, {n}. Ne üretiyorsun?", ko:"반가워요, {n}님. 어떤 걸 만드나요?", fa:"از آشنایی‌ات خوشوقتم، {n}. چه چیزی می‌سازی؟", uk:"Приємно познайомитися, {n}. Що ти знімаєш?", it:"Piacere, {n}. Cosa fai?", pl:"Miło Cię poznać, {n}. Co tworzysz?", vi:"Rất vui được gặp bạn, {n}. Bạn làm về gì?" },
+  wel_cat_p: { en:"So the trends, the ideas and the tutors are about your thing and not somebody else’s. You can change it any time from <b>Categories</b>.", zh:"这样趋势、灵感和 AI 导师讲的就是你的东西，而不是别人的。随时可以在<b>分类</b>里改。", hi:"ताकि ट्रेंड्स, आइडिया और ट्यूटर आपकी चीज़ के बारे में हों, किसी और की नहीं। आप इसे कभी भी <b>श्रेणियाँ</b> से बदल सकते हैं।", es:"Así las tendencias, las ideas y los tutores van de lo tuyo y no de lo de otro. Puedes cambiarlo cuando quieras en <b>Categorías</b>.", ar:"حتى تكون الاتجاهات والأفكار والمدرّسون عن مجالك أنت لا مجال غيرك. يمكنك تغييره متى شئت من <b>الفئات</b>.", fr:"Comme ça les tendances, les idées et les tuteurs parlent de ce que tu fais, pas de ce que fait quelqu’un d’autre. Tu peux le changer quand tu veux dans <b>Catégories</b>.", bn:"যাতে ট্রেন্ড, আইডিয়া আর টিউটর আপনার বিষয় নিয়েই হয়, অন্য কারও নয়। যেকোনো সময় <b>বিভাগ</b> থেকে বদলাতে পারেন।", pt:"Assim as tendências, as ideias e os tutores são sobre o que tu fazes e não sobre outra coisa. Podes mudar quando quiseres em <b>Categorias</b>.", ru:"Чтобы тренды, идеи и наставники были про твоё, а не про чужое. Поменять можно в любой момент в <b>Категориях</b>.", ur:"تاکہ ٹرینڈز، آئیڈیاز اور ٹیوٹر آپ کے کام کے بارے میں ہوں، کسی اور کے نہیں۔ آپ اسے کبھی بھی <b>زمرے</b> سے بدل سکتے ہیں۔", id:"Supaya tren, ide, dan tutor membahas bidangmu, bukan bidang orang lain. Bisa diubah kapan saja di <b>Kategori</b>.", de:"Damit Trends, Ideen und Tutoren um dein Thema gehen und nicht um das von jemand anderem. Du kannst es jederzeit unter <b>Kategorien</b> ändern.", ja:"トレンドもアイデアもチューターも、他人のことではなくあなたのことになります。<b>カテゴリ</b>でいつでも変えられます。", tr:"Böylece trendler, fikirler ve eğitmenler başkasının değil senin işin hakkında olur. İstediğin zaman <b>Kategoriler</b>’den değiştirebilirsin.", ko:"트렌드와 아이디어, 튜터가 남의 분야가 아니라 당신의 분야를 다루도록요. 언제든 <b>카테고리</b>에서 바꿀 수 있습니다.", fa:"تا ترندها، ایده‌ها و مربی‌ها دربارهٔ کار تو باشند نه کار کس دیگر. هر وقت خواستی از <b>دسته‌ها</b> عوضش کن.", uk:"Щоб тренди, ідеї та наставники були про твоє, а не про чуже. Змінити можна будь-коли в <b>Категоріях</b>.", it:"Così le tendenze, le idee e i tutor parlano di quello che fai tu e non di altro. Puoi cambiarlo quando vuoi da <b>Categorie</b>.", pl:"Żeby trendy, pomysły i korepetytorzy dotyczyły Twojej działki, a nie cudzej. Możesz to zmienić w każdej chwili w <b>Kategoriach</b>.", vi:"Để xu hướng, ý tưởng và gia sư nói về thứ bạn làm chứ không phải của người khác. Đổi bất cứ lúc nào trong <b>Danh mục</b>." },
+  wel_cat_lbl: { en:"Not on the list? Write it — anything at all", zh:"不在列表里？直接写——什么都行", hi:"सूची में नहीं है? लिख दीजिए — कुछ भी", es:"¿No está en la lista? Escríbelo, lo que sea", ar:"ليس في القائمة؟ اكتبه — أيًّا كان", fr:"Pas dans la liste ? Écris-le — n’importe quoi", bn:"তালিকায় নেই? লিখে দিন — যা খুশি", pt:"Não está na lista? Escreve — seja o que for", ru:"Нет в списке? Напиши — что угодно", ur:"فہرست میں نہیں؟ لکھ دیں — کچھ بھی", id:"Tidak ada di daftar? Tulis saja — apa pun", de:"Nicht auf der Liste? Schreib es hin — irgendwas", ja:"リストにない？なんでも書いてください", tr:"Listede yok mu? Yaz gitsin — ne olursa", ko:"목록에 없나요? 무엇이든 적어 보세요", fa:"در فهرست نیست؟ بنویس — هرچه باشد", uk:"Немає в списку? Напиши — будь-що", it:"Non è in elenco? Scrivilo — qualunque cosa", pl:"Nie ma na liście? Wpisz — cokolwiek", vi:"Không có trong danh sách? Cứ viết ra — bất cứ thứ gì" },
+  wel_cat_ph: { en:"Warhammer painting, speedcubing, baking…", zh:"战锤上色、速拧魔方、烘焙……", hi:"वॉरहैमर पेंटिंग, स्पीडक्यूबिंग, बेकिंग…", es:"Pintar Warhammer, speedcubing, repostería…", ar:"تلوين وارهامر، حل المكعب بسرعة، الخَبز…", fr:"Peinture Warhammer, speedcubing, pâtisserie…", bn:"ওয়ারহ্যামার পেইন্টিং, স্পিডকিউবিং, বেকিং…", pt:"Pintar Warhammer, speedcubing, pastelaria…", ru:"Покраска Warhammer, спидкубинг, выпечка…", ur:"وارہیمر پینٹنگ، اسپیڈ کیوبنگ، بیکنگ…", id:"Mewarnai Warhammer, speedcubing, memanggang…", de:"Warhammer bemalen, Speedcubing, Backen…", ja:"ウォーハンマー塗装、スピードキューブ、お菓子作り…", tr:"Warhammer boyama, speedcubing, pastacılık…", ko:"워해머 도색, 스피드큐빙, 베이킹…", fa:"رنگ‌آمیزی وارهمر، اسپیدکیوبینگ، شیرینی‌پزی…", uk:"Фарбування Warhammer, спідкубінг, випічка…", it:"Pittura Warhammer, speedcubing, dolci…", pl:"Malowanie Warhammera, speedcubing, pieczenie…", vi:"Sơn Warhammer, speedcubing, làm bánh…" },
+  wel_save: { en:"Save", zh:"保存", hi:"सेव करें", es:"Guardar", ar:"حفظ", fr:"Enregistrer", bn:"সেভ করুন", pt:"Guardar", ru:"Сохранить", ur:"محفوظ کریں", id:"Simpan", de:"Speichern", ja:"保存", tr:"Kaydet", ko:"저장", fa:"ذخیره", uk:"Зберегти", it:"Salva", pl:"Zapisz", vi:"Lưu" },
+  wel_skip2: { en:"Skip for now", zh:"暂时跳过", hi:"अभी के लिए छोड़ें", es:"Saltar por ahora", ar:"تخطَّ الآن", fr:"Passer pour l’instant", bn:"আপাতত এড়িয়ে যান", pt:"Saltar por agora", ru:"Пока пропустить", ur:"ابھی چھوڑ دیں", id:"Lewati dulu", de:"Erst mal überspringen", ja:"今はスキップ", tr:"Şimdilik atla", ko:"지금은 건너뛰기", fa:"فعلاً رد کن", uk:"Поки пропустити", it:"Salta per ora", pl:"Na razie pomiń", vi:"Tạm bỏ qua" },
+  /* THE LINE UNDER EACH CATEGORY NAME, in the welcome’s third screen. The
+     names went through the table already as ccat_*; the hints under them did
+     not, so the last screen of the welcome was ten Persian headings over ten
+     English subtitles. Short by design — they are examples, not sentences. */
+  chint_classic: { en:"The plain NovaClip look, no theme", zh:"NovaClip 原本的样子，不加主题", hi:"सादा NovaClip रूप, कोई थीम नहीं", es:"El NovaClip de siempre, sin tema", ar:"مظهر NovaClip العادي بلا ثيم", fr:"Le NovaClip normal, sans thème", bn:"সাধারণ NovaClip চেহারা, থিম নেই", pt:"O NovaClip normal, sem tema", ru:"Обычный NovaClip, без темы", ur:"سادہ NovaClip شکل، کوئی تھیم نہیں", id:"Tampilan NovaClip biasa, tanpa tema", de:"Das schlichte NovaClip, ohne Theme", ja:"テーマなしの素のNovaClip", tr:"Sade NovaClip görünümü, tema yok", ko:"테마 없는 기본 NovaClip", fa:"ظاهر سادهٔ NovaClip، بدون پوسته", uk:"Звичайний NovaClip, без теми", it:"Il NovaClip normale, senza tema", pl:"Zwykły NovaClip, bez motywu", vi:"Giao diện NovaClip gốc, không chủ đề" },
+  chint_gaming: { en:"Clips, reviews, let’s plays", zh:"片段、评测、实况", hi:"क्लिप, रिव्यू, लेट्स प्ले", es:"Clips, análisis, gameplays", ar:"مقاطع ومراجعات وبثوث لعب", fr:"Clips, tests, let’s plays", bn:"ক্লিপ, রিভিউ, লেটস প্লে", pt:"Clipes, análises, gameplays", ru:"Клипы, обзоры, летсплеи", ur:"کلپس، ریویوز، لیٹس پلے", id:"Klip, ulasan, let’s play", de:"Clips, Tests, Let’s Plays", ja:"クリップ、レビュー、実況", tr:"Klipler, incelemeler, let’s play", ko:"클립, 리뷰, 실황", fa:"کلیپ، نقد، لتس‌پلی", uk:"Кліпи, огляди, летсплеї", it:"Clip, recensioni, let’s play", pl:"Klipy, recenzje, let’s playe", vi:"Clip, đánh giá, let’s play" },
+  chint_music: { en:"Covers, production, performance", zh:"翻唱、编曲、演出", hi:"कवर, प्रोडक्शन, परफ़ॉर्मेंस", es:"Versiones, producción, directos", ar:"إعادة غناء وإنتاج وأداء", fr:"Reprises, production, live", bn:"কভার, প্রোডাকশন, পারফরম্যান্স", pt:"Covers, produção, atuações", ru:"Каверы, продакшн, выступления", ur:"کورز، پروڈکشن، پرفارمنس", id:"Cover, produksi, penampilan", de:"Covers, Produktion, Auftritte", ja:"カバー、制作、演奏", tr:"Cover, prodüksiyon, performans", ko:"커버, 프로듀싱, 공연", fa:"کاور، تولید، اجرا", uk:"Кавери, продакшн, виступи", it:"Cover, produzione, live", pl:"Covery, produkcja, występy", vi:"Cover, sản xuất, biểu diễn" },
+  chint_sport: { en:"Highlights, training, football", zh:"集锦、训练、足球", hi:"हाइलाइट्स, ट्रेनिंग, फ़ुटबॉल", es:"Resúmenes, entrenamientos, fútbol", ar:"أبرز اللقطات والتدريب وكرة القدم", fr:"Résumés, entraînement, football", bn:"হাইলাইট, ট্রেনিং, ফুটবল", pt:"Melhores momentos, treino, futebol", ru:"Хайлайты, тренировки, футбол", ur:"ہائی لائٹس، ٹریننگ، فٹبال", id:"Cuplikan, latihan, sepak bola", de:"Highlights, Training, Fußball", ja:"ハイライト、練習、サッカー", tr:"Özetler, antrenman, futbol", ko:"하이라이트, 훈련, 축구", fa:"لحظه‌های برتر، تمرین، فوتبال", uk:"Хайлайти, тренування, футбол", it:"Highlights, allenamento, calcio", pl:"Skróty, treningi, piłka nożna", vi:"Pha hay, tập luyện, bóng đá" },
+  chint_irl: { en:"Days, trips, life", zh:"日常、出行、生活", hi:"दिन, सफ़र, ज़िंदगी", es:"Días, viajes, vida", ar:"يوميات ورحلات وحياة", fr:"Journées, voyages, vie", bn:"দিনযাপন, ভ্রমণ, জীবন", pt:"Dias, viagens, vida", ru:"Будни, поездки, жизнь", ur:"دن، سفر، زندگی", id:"Keseharian, jalan-jalan, hidup", de:"Tage, Reisen, Leben", ja:"日常、旅、暮らし", tr:"Günler, geziler, hayat", ko:"하루, 여행, 일상", fa:"روزها، سفر، زندگی", uk:"Будні, подорожі, життя", it:"Giornate, viaggi, vita", pl:"Dni, wyjazdy, życie", vi:"Ngày thường, chuyến đi, cuộc sống" },
+  chint_learning: { en:"Revision, explainers, study", zh:"复习、讲解、学习", hi:"रिवीज़न, समझाना, पढ़ाई", es:"Repaso, explicaciones, estudio", ar:"مراجعة وشرح ودراسة", fr:"Révisions, explications, études", bn:"রিভিশন, ব্যাখ্যা, পড়াশোনা", pt:"Revisão, explicações, estudo", ru:"Повторение, объяснения, учёба", ur:"دہرائی، وضاحت، پڑھائی", id:"Mengulang, penjelasan, belajar", de:"Wiederholen, Erklären, Lernen", ja:"復習、解説、勉強", tr:"Tekrar, anlatım, çalışma", ko:"복습, 설명, 공부", fa:"مرور، توضیح، درس", uk:"Повторення, пояснення, навчання", it:"Ripasso, spiegazioni, studio", pl:"Powtórki, wyjaśnienia, nauka", vi:"Ôn tập, giảng giải, học hành" },
+  chint_art: { en:"Drawing, crafts, builds", zh:"绘画、手作、搭建", hi:"ड्रॉइंग, क्राफ्ट, बिल्ड", es:"Dibujo, manualidades, construcciones", ar:"رسم وحِرف وبناء", fr:"Dessin, bricolage, constructions", bn:"আঁকা, হস্তশিল্প, বানানো", pt:"Desenho, artesanato, construções", ru:"Рисование, рукоделие, сборки", ur:"ڈرائنگ، دستکاری، بنانا", id:"Menggambar, kriya, rakitan", de:"Zeichnen, Basteln, Bauen", ja:"絵、手作り、制作", tr:"Çizim, el işi, yapımlar", ko:"그림, 공예, 제작", fa:"طراحی، کاردستی، ساخت", uk:"Малювання, рукоділля, збирання", it:"Disegno, artigianato, costruzioni", pl:"Rysunek, rękodzieło, budowanie", vi:"Vẽ, thủ công, chế tạo" },
+  chint_food: { en:"Cooking, baking, eating", zh:"做饭、烘焙、吃", hi:"खाना बनाना, बेकिंग, खाना", es:"Cocinar, repostería, comer", ar:"طبخ وخَبز وأكل", fr:"Cuisine, pâtisserie, dégustation", bn:"রান্না, বেকিং, খাওয়া", pt:"Cozinhar, pastelaria, comer", ru:"Готовка, выпечка, еда", ur:"کھانا پکانا، بیکنگ، کھانا", id:"Memasak, memanggang, makan", de:"Kochen, Backen, Essen", ja:"料理、お菓子作り、食べる", tr:"Yemek, pastacılık, yeme", ko:"요리, 베이킹, 먹방", fa:"آشپزی، شیرینی‌پزی، خوردن", uk:"Готування, випічка, їжа", it:"Cucina, dolci, mangiare", pl:"Gotowanie, pieczenie, jedzenie", vi:"Nấu ăn, làm bánh, ăn uống" },
+  chint_comedy: { en:"Bits, skits, edits", zh:"段子、短剧、剪辑", hi:"बिट्स, स्किट, एडिट", es:"Gags, sketches, edits", ar:"نِكات وإسكتشات ومونتاج", fr:"Vannes, sketches, montages", bn:"বিট, স্কিট, এডিট", pt:"Piadas, sketches, edits", ru:"Шутки, скетчи, эдиты", ur:"بٹس، اسکِٹس، ایڈٹس", id:"Lawakan, sketsa, editan", de:"Gags, Sketche, Edits", ja:"ネタ、コント、編集", tr:"Espriler, skeçler, editler", ko:"개그, 콩트, 편집물", fa:"جوک، اسکچ، ادیت", uk:"Жарти, скетчі, едити", it:"Gag, sketch, edit", pl:"Żarty, skecze, edity", vi:"Mảng miếng, tiểu phẩm, edit" },
+  chint_tech: { en:"Phones, PCs, coding", zh:"手机、电脑、编程", hi:"फ़ोन, पीसी, कोडिंग", es:"Móviles, PCs, programación", ar:"هواتف وحواسيب وبرمجة", fr:"Téléphones, PC, code", bn:"ফোন, পিসি, কোডিং", pt:"Telemóveis, PCs, programação", ru:"Телефоны, ПК, код", ur:"فونز، پی سی، کوڈنگ", id:"Ponsel, PC, coding", de:"Handys, PCs, Programmieren", ja:"スマホ、PC、プログラミング", tr:"Telefonlar, bilgisayarlar, kodlama", ko:"폰, PC, 코딩", fa:"موبایل، کامپیوتر، کدنویسی", uk:"Телефони, ПК, код", it:"Telefoni, PC, programmazione", pl:"Telefony, PC, programowanie", vi:"Điện thoại, PC, lập trình" },
   ui_novacoins: { en:"NovaCoins", zh:"Nova 币", hi:"नोवाकॉइन्स", es:"NovaMonedas", ar:"عملات نوفا", fr:"NovaPièces", bn:"নোভাকয়েন", pt:"NovaMoedas", ru:"НоваМонеты", ur:"نووا کوائنز", id:"NovaKoin", de:"NovaMünzen", ja:"ノヴァコイン", tr:"NovaJeton", ko:"노바코인", fa:"نوواکوین", uk:"НоваМонети", it:"NovaMonete", pl:"NovaMonety", vi:"NovaXu" },
   ui_skin_none: { en:"Cyber theme — none", zh:"赛博主题 — 无", hi:"साइबर थीम — कोई नहीं", es:"Tema cyber — ninguno", ar:"ثيم سايبر — بدون", fr:"Thème cyber — aucun", bn:"সাইবার থিম — কোনোটি নয়", pt:"Tema cyber — nenhum", ru:"Кибертема — нет", ur:"سائبر تھیم — کوئی نہیں", id:"Tema cyber — tidak ada", de:"Cyber-Theme — keines", ja:"サイバーテーマ — なし", tr:"Cyber tema — yok", ko:"사이버 테마 — 없음", fa:"پوسته سایبری — هیچ‌کدام", uk:"Кібертема — немає", it:"Tema cyber — nessuno", pl:"Motyw cyber — brak", vi:"Chủ đề cyber — không" },
   /* THE TWELVE CYBER THEME NAMES.
@@ -546,7 +602,19 @@ function tr(key) { return (T[key] && T[key][lang()]) || (T[key] && T[key].en) ||
 function langInstruction() { return ' Reply ONLY in this language: ' + (LANGS[lang()] || 'English') + '. '; }
 function applyLangText() {
   document.documentElement.lang = lang();
-  document.documentElement.dir = RTL.includes(lang()) ? 'rtl' : 'ltr';
+  /* ALWAYS ltr, AND A CLASS FOR THE REST.
+     dir=rtl on <html> mirrors the entire document — the rail to the other
+     side, every flex row reversed, the timeline in the editor running
+     backwards. That was asked to stop, twice, and the editor had already had
+     to cancel it locally to stay usable.
+
+     The class carries the part that was always the point: `unicode-bidi:
+     plaintext` on the text elements, so each block resolves its own direction
+     from its own first letter. Persian still reads right to left and still
+     right-aligns itself; the furniture around it stays where English leaves
+     it. */
+  document.documentElement.dir = 'ltr';
+  document.documentElement.classList.toggle('nc-rtl', RTL.includes(lang()));
   /* WRITE ONLY WHAT CHANGED.
      ncWatchLang() re-runs this pass whenever the DOM grows, and this pass
      writes innerHTML for any string carrying markup — the headline is one.
@@ -3078,38 +3146,27 @@ ncFit.textContent =
   ".sidebar a, .sidebar .navlink { font-size: clamp(13px, .62vw + 8.6px, 15px); }" +
   ".sidebar .themewrap { padding: 14px clamp(14px, 1.1vw, 20px) 22px; }" +
 
-  /* RTL: the rail sits on the right, everything that pushed for a left rail
-     mirrors. Scoped to desktop because the phone strip spans the whole width
-     and its left:0;right:0 must stay. */
-  "html[dir=rtl] .sidebar { left:auto; right:0; border-right:0; " +
-    "border-left:1px solid var(--nc-railline,rgba(255,255,255,.07)); }" +
-  "html[dir=rtl] .sidebar::before { right:auto; left:-1px; }" +
-  "html[dir=rtl] body:has(.sidebar) { margin-left:0; margin-right:var(--nc-rail); }" +
-  "html[dir=rtl] .content, html[dir=rtl] .shell, html[dir=rtl] .main { margin-left:0; margin-right:var(--nc-rail); }" +
-  /* THE MIRROR OF THE LINE THAT STOPS THE OFFSET BEING APPLIED TWICE, WHICH
-     WAS MISSING — and it is why the site looked shoved to the left in Farsi.
-     Left-to-right has `body:has(.content){margin-left:0}` right under its body
-     rule, so a page that offsets a wrapper offsets it once. Right-to-left had
-     the body rule and the wrapper rule and nothing standing either of them
-     down, so index.html reserved the rail width twice: measured at 1440px, the
-     content stopped at 1037 with the rail starting at 1238 — two hundred pixels
-     of nothing down the side, and the whole page pushed off it. It is the same
-     bug the comment beside the LTR line describes, in the other direction. */
-  "html[dir=rtl] body:has(.content), html[dir=rtl] body:has(.shell), html[dir=rtl] body:has(.main)" +
-    " { margin-right: 0; }" +
-  "html[dir=rtl] .main { padding-left:clamp(0px, 1.2vw, 22px); padding-right:clamp(20px, 3.4vw, 64px); }" +
-  /* .wrap IS A CENTRED COLUMN AND STAYS ONE. This used to pin it to the right
-     edge — margin-left:auto with a fixed right margin — so Profile, Privacy and
-     Terms sat hard against the side of the screen in Farsi instead of in the
-     middle where they sit in every other language. Mirroring a layout does not
-     mean mirroring the things that were symmetrical to begin with. */
-  "html[dir=rtl] .wrap { margin-left:auto; margin-right:auto; }" +
-  /* Trend Spotter brings its own fixed rail and its own padding to clear it.
-     Both were pinned left, so in Farsi that page had its navigation on one
-     side and its reserved space on the other. */
-  "html[dir=rtl] .nc-sidebar { left:auto; right:0; border-right:0; " +
-    "border-left:1px solid var(--nc-border,rgba(255,255,255,.08)); }" +
-  "html[dir=rtl] body.nova .nc-app { padding-left:0; padding-right:var(--nc-sidebar,248px); }" +
+  /* THE LAYOUT DOES NOT MIRROR ANY MORE, AND THAT IS THE WHOLE OF THIS BLOCK
+     NOW BEING EMPTY.
+     ---------------------------------------------------------------------
+     There used to be a dozen rules here that flipped the site for Persian,
+     Arabic and Urdu: rail to the right, body and wrapper margins to the other
+     side, the top bar, the coin badge and the Ask card all swapped, and
+     Trend Spotter's own rail with them. That is the textbook thing to do and
+     it was not wanted — asked for twice, in those words.
+
+     It was also never wholly true even before it was asked about. editor.html
+     had to opt out of it with `#root { direction: ltr }`, because mirroring a
+     workspace runs the timeline backwards and swaps every tool out from under
+     the hand that reached for it. A rule that the biggest page on the site has
+     to cancel is a rule worth doubting.
+
+     What replaces it is further down this file and is one line: the text
+     elements get `unicode-bidi: plaintext`, so every paragraph, heading and
+     cell resolves its OWN direction from its own first letter and aligns
+     itself accordingly. Persian reads right to left inside a page whose
+     furniture stays where it was in English. The words flip; the room does
+     not. */
 
   /* ---------------------------------------------------------------------
      PUTTING THE RAIL AWAY
@@ -3129,7 +3186,6 @@ ncFit.textContent =
   "html.nc-rail-off { --nc-rail: 0px; }" +
   ".sidebar { transition: transform .26s cubic-bezier(.2,.9,.3,1.1); }" +
   "html.nc-rail-off .sidebar { transform: translateX(-101%); pointer-events: none; }" +
-  "html.nc-rail-off[dir=rtl] .sidebar { transform: translateX(101%); }" +
   /* Trend Spotter's own rail is a different element with its own width
      variable, and it does not clip its contents — collapsed to 0px wide its
      buttons would still be drawn, stacked over the page. It is taken out
@@ -3156,13 +3212,6 @@ ncFit.textContent =
    inset-inline-start would follow the direction of whatever contains them and
    two of them are direct children of <body>.
    --------------------------------------------------------------------------- */
-"html[dir=rtl] #ncbar { padding: 0 14px 0 88px; }" +
-"@media (max-width:760px) { html[dir=rtl] #ncbar { padding: 0 10px 0 84px; } }" +
-"@media (min-width:761px) { html[dir=rtl] body:has(.sidebar) #ncbar { left:0; right:var(--nc-rail); } }" +
-"@media (min-width:901px) { html[dir=rtl] body:has(.nc-sidebar) #ncbar " +
-  "{ left:0; right:var(--nc-sidebar,248px); } }" +
-/* the badge moves to the far end of the bar, which in RTL is the left */
-"html[dir=rtl] #ncpts { right:auto; left:16px; }" +
 /* The pill parks in the gap beside the badge — mirrored, same 176px offset.
    The three width bands are about how much room the controls need, which does
    not change with direction, so they are restated rather than rethought.
@@ -3174,8 +3223,6 @@ ncFit.textContent =
    line rather than three. */
 /* The pill these mirrored is gone with jarvis.js, so the rules are too. The
    card that took its place mirrors in one line, below. */
-"html[dir=rtl] .nca { right:auto; left:18px; }" +
-"@media (max-width:760px) { html[dir=rtl] .nca { left:10px; right:10px; } }" +
 
 /* ---------------------------------------------------------------------------
    ENGLISH SENTENCES INSIDE AN RTL PAGE
@@ -3205,14 +3252,14 @@ ncFit.textContent =
    would have quietly left-aligned every centred caption in Farsi. It is also
    unnecessary — `start` is already the initial value, and under plaintext it
    resolves against each block's own detected direction on its own. */
-"html[dir=rtl] p, html[dir=rtl] li, html[dir=rtl] h1, html[dir=rtl] h2," +
-"html[dir=rtl] h3, html[dir=rtl] h4, html[dir=rtl] h5, html[dir=rtl] h6," +
-"html[dir=rtl] td, html[dir=rtl] th, html[dir=rtl] dd, html[dir=rtl] dt," +
-"html[dir=rtl] figcaption, html[dir=rtl] blockquote, html[dir=rtl] label," +
-"html[dir=rtl] small, html[dir=rtl] summary, html[dir=rtl] option," +
-"html[dir=rtl] span, html[dir=rtl] div, html[dir=rtl] b, html[dir=rtl] strong," +
-"html[dir=rtl] em, html[dir=rtl] i, html[dir=rtl] a, html[dir=rtl] button," +
-"html[dir=rtl] code, html[dir=rtl] output, html[dir=rtl] legend, html[dir=rtl] caption" +
+"html.nc-rtl p, html.nc-rtl li, html.nc-rtl h1, html.nc-rtl h2," +
+"html.nc-rtl h3, html.nc-rtl h4, html.nc-rtl h5, html.nc-rtl h6," +
+"html.nc-rtl td, html.nc-rtl th, html.nc-rtl dd, html.nc-rtl dt," +
+"html.nc-rtl figcaption, html.nc-rtl blockquote, html.nc-rtl label," +
+"html.nc-rtl small, html.nc-rtl summary, html.nc-rtl option," +
+"html.nc-rtl span, html.nc-rtl div, html.nc-rtl b, html.nc-rtl strong," +
+"html.nc-rtl em, html.nc-rtl i, html.nc-rtl a, html.nc-rtl button," +
+"html.nc-rtl code, html.nc-rtl output, html.nc-rtl legend, html.nc-rtl caption" +
 "{ unicode-bidi: plaintext; }" +
 
 /* Text that is comfortable on a 1280 laptop is small on a 2560 monitor, and
@@ -5901,7 +5948,7 @@ window.addEventListener('DOMContentLoaded', () => {
     o.id = 'ncCatGate';
     o.setAttribute('role', 'dialog');
     o.setAttribute('aria-modal', 'true');
-    o.setAttribute('aria-label', 'Welcome to NovaClip');
+    o.setAttribute('aria-label', tr('wel_aria'));
     o.innerHTML =
       '<div class="nccg-sky" aria-hidden="true"><i class="s1"></i><i class="s2"></i><i class="s3"></i></div>' +
       '<div class="nccg-box">' +
@@ -5914,15 +5961,16 @@ window.addEventListener('DOMContentLoaded', () => {
              asking a parent to pick a video category before finding out they
              are a parent is two wasted questions and a wrong first page. */
           '<div class="nccg-step" id="ncCatStep0">' +
-            '<span class="nccg-of">Step 1 of 3</span>' +
-            '<h2>Who is using NovaClip?</h2>' +
-            '<p>It is built for teenage creators, and parents have their own side of it. ' +
-            'This only decides what you are shown first — nothing is hidden either way.</p>' +
+            '<span class="nccg-of" data-t="wel_of1">' + tr('wel_of1') + '</span>' +
+            '<h2 data-t="wel_role_h">' + tr('wel_role_h') + '</h2>' +
+            '<p data-t="wel_role_p">' + tr('wel_role_p') + '</p>' +
             '<div class="nccg-grid" id="ncRoleGrid">' +
               '<button type="button" id="ncRoleCreator">' +
-                '<b>I am the creator</b><span>The editors, trends, tools and games</span></button>' +
+                '<b data-t="wel_role_ct">' + tr('wel_role_ct') + '</b>' +
+                '<span data-t="wel_role_cs">' + tr('wel_role_cs') + '</span></button>' +
               '<button type="button" id="ncRoleParent">' +
-                '<b>I am a parent</b><span>Screen time, blocking, comment alerts</span></button>' +
+                '<b data-t="wel_role_pt">' + tr('wel_role_pt') + '</b>' +
+                '<span data-t="wel_role_ps">' + tr('wel_role_ps') + '</span></button>' +
             '</div>' +
           '</div>' +
 
@@ -5932,54 +5980,47 @@ window.addEventListener('DOMContentLoaded', () => {
              order they have to be done in, and a button to the page that
              does them. */
           '<div class="nccg-step" id="ncCatStepP" hidden>' +
-            '<span class="nccg-of">For parents</span>' +
-            '<h2>Here is where to start</h2>' +
-            '<p>Everything for you is on one page — <b>Family</b> in the rail. ' +
-            'Four things, and they go in this order:</p>' +
+            '<span class="nccg-of" data-t="wel_of_par">' + tr('wel_of_par') + '</span>' +
+            '<h2 data-t="wel_par_h">' + tr('wel_par_h') + '</h2>' +
+            '<p data-t="wel_par_p">' + tr('wel_par_p') + '</p>' +
             '<ol class="nccg-steps">' +
-              '<li><b>Set a PIN.</b> It confirms it is you rather than your child, and it is ' +
-                'what keeps the dashboard shut afterwards. You will be asked for it every visit.</li>' +
-              '<li><b>Set the screen time.</b> A daily limit and quiet hours, different for each ' +
-                'day of the week if you want.</li>' +
-              '<li><b>Turn on content blocking.</b> Pick what is filtered, then install the ' +
-                'Family Shield extension so the same rules apply outside NovaClip too.</li>' +
-              '<li><b>Add your alert email.</b> The scanner reads the newest comments on your ' +
-                'child’s uploads and flags harassment to you, with a link to report it.</li>' +
+              '<li data-t="wel_par_1">' + tr('wel_par_1') + '</li>' +
+              '<li data-t="wel_par_2">' + tr('wel_par_2') + '</li>' +
+              '<li data-t="wel_par_3">' + tr('wel_par_3') + '</li>' +
+              '<li data-t="wel_par_4">' + tr('wel_par_4') + '</li>' +
             '</ol>' +
             '<div class="nccg-row">' +
-              '<button class="nccg-save" id="ncParentGo">Open the Family Dashboard</button>' +
+              '<button class="nccg-save" id="ncParentGo" data-t="wel_par_go">' + tr('wel_par_go') + '</button>' +
             '</div>' +
-            '<button class="nccg-skip" id="ncParentSkip">Look around the site first</button>' +
+            '<button class="nccg-skip" id="ncParentSkip" data-t="wel_par_skip">' + tr('wel_par_skip') + '</button>' +
           '</div>' +
 
           /* STEP TWO */
           '<div class="nccg-step" id="ncCatStep1" hidden>' +
-            '<span class="nccg-of">Step 2 of 3</span>' +
-            '<h2>First — what should we call you?</h2>' +
-            '<p>It goes on your profile, your certificates and the top of the rail. ' +
-            'It stays on this device unless you make an account.</p>' +
+            '<span class="nccg-of" data-t="wel_of2">' + tr('wel_of2') + '</span>' +
+            '<h2 data-t="wel_name_h">' + tr('wel_name_h') + '</h2>' +
+            '<p data-t="wel_name_p">' + tr('wel_name_p') + '</p>' +
             '<div class="nccg-row">' +
               '<input type="text" id="ncCatName" maxlength="20" autocomplete="nickname" ' +
-                     'spellcheck="false" placeholder="Your name or a handle">' +
-              '<button class="nccg-save" id="ncCatNameGo">Continue</button>' +
+                     'spellcheck="false" data-tph="wel_name_ph" placeholder="' + tr('wel_name_ph') + '">' +
+              '<button class="nccg-save" id="ncCatNameGo" data-t="wel_cont">' + tr('wel_cont') + '</button>' +
             '</div>' +
-            '<button class="nccg-skip" id="ncCatNameSkip">Skip this</button>' +
+            '<button class="nccg-skip" id="ncCatNameSkip" data-t="wel_skip1">' + tr('wel_skip1') + '</button>' +
           '</div>' +
 
           /* STEP THREE */
           '<div class="nccg-step" id="ncCatStep2" hidden>' +
-            '<span class="nccg-of">Step 3 of 3</span>' +
-            '<h2 id="ncCatH2">And what do you make?</h2>' +
-            '<p>So the trends, the ideas and the tutors are about your thing and not ' +
-            'somebody else\'s. You can change it any time from <b>Categories</b>.</p>' +
+            '<span class="nccg-of" data-t="wel_of3">' + tr('wel_of3') + '</span>' +
+            '<h2 id="ncCatH2" data-t="wel_cat_h">' + tr('wel_cat_h') + '</h2>' +
+            '<p data-t="wel_cat_p">' + tr('wel_cat_p') + '</p>' +
             '<div class="nccg-grid" id="ncCatGrid"></div>' +
-            '<label class="nccg-lbl" for="ncCatOwn">Not on the list? Write it — anything at all</label>' +
+            '<label class="nccg-lbl" for="ncCatOwn" data-t="wel_cat_lbl">' + tr('wel_cat_lbl') + '</label>' +
             '<div class="nccg-row">' +
               '<input type="text" id="ncCatOwn" maxlength="40" spellcheck="false" ' +
-                     'placeholder="Warhammer painting, speedcubing, baking…">' +
-              '<button class="nccg-save" id="ncCatSave">Save</button>' +
+                     'data-tph="wel_cat_ph" placeholder="' + tr('wel_cat_ph') + '">' +
+              '<button class="nccg-save" id="ncCatSave" data-t="wel_save">' + tr('wel_save') + '</button>' +
             '</div>' +
-            '<button class="nccg-skip" id="ncCatSkip">Skip for now</button>' +
+            '<button class="nccg-skip" id="ncCatSkip" data-t="wel_skip2">' + tr('wel_skip2') + '</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -6146,8 +6187,9 @@ window.addEventListener('DOMContentLoaded', () => {
       /* Their name in the second question, which is the whole reason for
          asking it first. */
       if (n) {
-        document.getElementById('ncCatH2').textContent =
-          'Nice to meet you, ' + n + '. What do you make?';
+        var h2 = document.getElementById('ncCatH2');
+        h2.textContent = tr('wel_cat_hi').replace('{n}', n);
+        h2.removeAttribute('data-t');
       }
       try { document.getElementById('ncCatOwn').focus({ preventScroll: true }); } catch (e) {}
     }
@@ -6177,9 +6219,17 @@ window.addEventListener('DOMContentLoaded', () => {
     C.PRESETS.forEach(function (p) {
       var b = document.createElement('button');
       b.type = 'button';
+      /* data-t on both halves and the translation used to fill them, so this
+         grid is not ten English subtitles under ten translated headings — and
+         so a language switch while the dialog is open repaints it. The names
+         come from the same ccat_ keys the rail card reads; the hints have
+         their own. categories.js keeps the English as the fallback. */
       b.innerHTML = '<b></b><span></span>';
-      b.querySelector('b').textContent = p.label;
-      b.querySelector('span').textContent = p.hint;
+      var bn = b.querySelector('b'), sp = b.querySelector('span');
+      bn.setAttribute('data-t', 'ccat_' + p.id);
+      sp.setAttribute('data-t', 'chint_' + p.id);
+      bn.textContent = tr('ccat_' + p.id) || p.label;
+      sp.textContent = tr('chint_' + p.id) || p.hint;
       b.onclick = function () { C.set(p.id); done(); };
       grid.appendChild(b);
     });

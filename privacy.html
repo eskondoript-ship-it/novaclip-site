@@ -7,14 +7,14 @@ var s=localStorage.getItem('nc_skin')||'';
 var t=(p==='light'||p==='dark')?p:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
 var b=s?localStorage.getItem(t==='light'?'nc_skin_bg_l':'nc_skin_bg'):'';
 var r=document.documentElement;r.setAttribute('data-theme',t);r.setAttribute('data-theme-pref',p);
-/* The reading direction, here rather than from nova.js at the end of <body>.
-   Persian, Arabic and Urdu readers were served the whole page laid out
-   left-to-right, and it flipped once the script ran: the rail jumped from one
-   side to the other after they could already see it. The words still arrive
-   with nova.js, because that is where they live, but the shape of the page no
-   longer moves under them. */
+/* The language, here rather than from nova.js at the end of <body>, so the
+   page is not re-shaped after it is already on screen. The LAYOUT never
+   mirrors — dir stays ltr in every language, and the rail stays on the left.
+   .nc-rtl carries what Persian, Arabic and Urdu actually need: nova.js gives
+   the text elements unicode-bidi:plaintext, so each block reads and aligns
+   itself right-to-left inside a page whose furniture has not moved. */
 var L=localStorage.getItem('nc_lang')||'';
-if(L){r.lang=L;r.dir=(L==='ar'||L==='fa'||L==='ur')?'rtl':'ltr';}
+if(L){r.lang=L;r.dir='ltr';if(L==='ar'||L==='fa'||L==='ur')r.classList.add('nc-rtl');}
 r.style.colorScheme=t;
 /* A cyber skin repaints the palette from nova.js, which runs at the end of
    <body>. Painting its background here, before the first frame, is what stops
