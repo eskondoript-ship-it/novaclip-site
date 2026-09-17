@@ -135,6 +135,25 @@ const T = {
   chint_food: { en:"Cooking, baking, eating", zh:"做饭、烘焙、吃", hi:"खाना बनाना, बेकिंग, खाना", es:"Cocinar, repostería, comer", ar:"طبخ وخَبز وأكل", fr:"Cuisine, pâtisserie, dégustation", bn:"রান্না, বেকিং, খাওয়া", pt:"Cozinhar, pastelaria, comer", ru:"Готовка, выпечка, еда", ur:"کھانا پکانا، بیکنگ، کھانا", id:"Memasak, memanggang, makan", de:"Kochen, Backen, Essen", ja:"料理、お菓子作り、食べる", tr:"Yemek, pastacılık, yeme", ko:"요리, 베이킹, 먹방", fa:"آشپزی، شیرینی‌پزی، خوردن", uk:"Готування, випічка, їжа", it:"Cucina, dolci, mangiare", pl:"Gotowanie, pieczenie, jedzenie", vi:"Nấu ăn, làm bánh, ăn uống" },
   chint_comedy: { en:"Bits, skits, edits", zh:"段子、短剧、剪辑", hi:"बिट्स, स्किट, एडिट", es:"Gags, sketches, edits", ar:"نِكات وإسكتشات ومونتاج", fr:"Vannes, sketches, montages", bn:"বিট, স্কিট, এডিট", pt:"Piadas, sketches, edits", ru:"Шутки, скетчи, эдиты", ur:"بٹس، اسکِٹس، ایڈٹس", id:"Lawakan, sketsa, editan", de:"Gags, Sketche, Edits", ja:"ネタ、コント、編集", tr:"Espriler, skeçler, editler", ko:"개그, 콩트, 편집물", fa:"جوک، اسکچ، ادیت", uk:"Жарти, скетчі, едити", it:"Gag, sketch, edit", pl:"Żarty, skecze, edity", vi:"Mảng miếng, tiểu phẩm, edit" },
   chint_tech: { en:"Phones, PCs, coding", zh:"手机、电脑、编程", hi:"फ़ोन, पीसी, कोडिंग", es:"Móviles, PCs, programación", ar:"هواتف وحواسيب وبرمجة", fr:"Téléphones, PC, code", bn:"ফোন, পিসি, কোডিং", pt:"Telemóveis, PCs, programação", ru:"Телефоны, ПК, код", ur:"فونز، پی سی، کوڈنگ", id:"Ponsel, PC, coding", de:"Handys, PCs, Programmieren", ja:"スマホ、PC、プログラミング", tr:"Telefonlar, bilgisayarlar, kodlama", ko:"폰, PC, 코딩", fa:"موبایل، کامپیوتر، کدنویسی", uk:"Телефони, ПК, код", it:"Telefoni, PC, programmazione", pl:"Telefony, PC, programowanie", vi:"Điện thoại, PC, lập trình" },
+  /* ELEVEN KEYS THAT WERE BEING ASKED FOR AND WERE NOT HERE.
+     Found by listing every data-t and data-tph on the site and checking it
+     against this table. A missing key is silent by design — applyLangText
+     leaves the English in place rather than blanking the element — so these
+     had simply never translated, on four pages, in nineteen languages, with
+     nothing anywhere to say so. The check is worth repeating whenever a
+     page grows a new data-t. */
+  hist_sub: { en:"Every question you have put to a NovaClip AI tutor, newest first. It is kept on this device and nowhere else — clearing your browser data clears it.", zh:"你向 NovaClip AI 导师提过的每个问题，最新的在前。只保存在这台设备上——清除浏览器数据就会清空。", hi:"NovaClip के AI ट्यूटर से पूछे गए आपके सारे सवाल, नए पहले। यह सिर्फ़ इसी डिवाइस पर रहता है — ब्राउज़र डेटा हटाने पर यह भी हट जाता है।", es:"Cada pregunta que has hecho a un tutor de IA de NovaClip, las más nuevas primero. Se guarda en este dispositivo y en ningún otro sitio: si borras los datos del navegador, se borra.", ar:"كل سؤال طرحته على مدرّس الذكاء الاصطناعي في NovaClip، الأحدث أولًا. يُحفظ على هذا الجهاز فقط — ومسح بيانات المتصفح يمسحه.", fr:"Chaque question posée à un tuteur IA de NovaClip, la plus récente en premier. Gardé sur cet appareil et nulle part ailleurs : effacer les données du navigateur l’efface.", bn:"NovaClip-এর AI টিউটরকে করা আপনার প্রতিটি প্রশ্ন, নতুনটি আগে। এটি কেবল এই ডিভাইসে থাকে — ব্রাউজারের ডেটা মুছলে এটিও মুছে যায়।", pt:"Cada pergunta que fizeste a um tutor de IA do NovaClip, as mais recentes primeiro. Fica neste dispositivo e em mais lado nenhum — limpar os dados do navegador limpa isto.", ru:"Каждый вопрос, который ты задал ИИ-репетитору NovaClip, новые сверху. Хранится только на этом устройстве — очистка данных браузера всё стирает.", ur:"ہر سوال جو آپ نے NovaClip کے AI ٹیوٹر سے پوچھا، نیا پہلے۔ یہ صرف اسی ڈیوائس پر رہتا ہے — براؤزر ڈیٹا صاف کرنے سے یہ بھی مٹ جاتا ہے۔", id:"Setiap pertanyaan yang kamu ajukan ke tutor AI NovaClip, terbaru dulu. Disimpan di perangkat ini saja — menghapus data peramban menghapusnya.", de:"Jede Frage, die du einem KI-Tutor von NovaClip gestellt hast, neueste zuerst. Bleibt auf diesem Gerät und sonst nirgends — Browserdaten löschen löscht sie.", ja:"NovaClipのAIチューターに投げた質問のすべて、新しい順。この端末にだけ保存され、ブラウザのデータを消すと消えます。", tr:"NovaClip’in YZ eğitmenine sorduğun her soru, en yenisi üstte. Yalnızca bu cihazda tutulur — tarayıcı verilerini silmek bunu da siler.", ko:"NovaClip AI 튜터에게 물어본 모든 질문, 최신순. 이 기기에만 저장되며 브라우저 데이터를 지우면 함께 사라집니다.", fa:"هر پرسشی که از مربی هوش مصنوعی NovaClip پرسیده‌ای، تازه‌ترین اول. فقط روی همین دستگاه می‌ماند — پاک‌کردن داده‌های مرورگر پاکش می‌کند.", uk:"Кожне запитання, яке ти поставив ШІ-репетитору NovaClip, найновіші згори. Зберігається лише на цьому пристрої — очищення даних браузера стирає його.", it:"Ogni domanda che hai fatto a un tutor IA di NovaClip, dalla più recente. Resta su questo dispositivo e da nessun’altra parte: cancellare i dati del browser la cancella.", pl:"Każde pytanie zadane korepetytorowi AI w NovaClip, od najnowszych. Trzymane tylko na tym urządzeniu — wyczyszczenie danych przeglądarki je usuwa.", vi:"Mọi câu hỏi bạn đã gửi cho gia sư AI của NovaClip, mới nhất trước. Chỉ lưu trên thiết bị này — xoá dữ liệu trình duyệt là mất." },
+  par_shield: { en:"Content blocking", zh:"内容拦截", hi:"कंटेंट ब्लॉकिंग", es:"Bloqueo de contenido", ar:"حجب المحتوى", fr:"Blocage de contenu", bn:"কনটেন্ট ব্লকিং", pt:"Bloqueio de conteúdos", ru:"Блокировка контента", ur:"مواد کی بلاکنگ", id:"Pemblokiran konten", de:"Inhaltssperre", ja:"コンテンツブロック", tr:"İçerik engelleme", ko:"콘텐츠 차단", fa:"مسدودسازی محتوا", uk:"Блокування вмісту", it:"Blocco dei contenuti", pl:"Blokowanie treści", vi:"Chặn nội dung" },
+  par_shield_s: { en:"Blocks unsuitable videos, streams and posts on YouTube, TikTok, Instagram and Twitch. Choose the rules here; the browser shield enforces them.", zh:"拦截 YouTube、TikTok、Instagram 和 Twitch 上不适合的视频、直播和帖子。规则在这里选，由浏览器防护执行。", hi:"YouTube, TikTok, Instagram और Twitch पर अनुपयुक्त वीडियो, स्ट्रीम और पोस्ट ब्लॉक करता है। नियम यहाँ चुनें; ब्राउज़र शील्ड उन्हें लागू करती है।", es:"Bloquea vídeos, directos y publicaciones no aptos en YouTube, TikTok, Instagram y Twitch. Elige las reglas aquí; el escudo del navegador las aplica.", ar:"يحجب الفيديوهات والبثوث والمنشورات غير المناسبة على YouTube وTikTok وInstagram وTwitch. اختر القواعد هنا، ودرع المتصفح ينفّذها.", fr:"Bloque les vidéos, les lives et les posts inadaptés sur YouTube, TikTok, Instagram et Twitch. Choisissez les règles ici ; le bouclier du navigateur les applique.", bn:"YouTube, TikTok, Instagram ও Twitch-এ অনুপযুক্ত ভিডিও, স্ট্রিম ও পোস্ট ব্লক করে। নিয়ম এখানে বেছে নিন; ব্রাউজার শিল্ড সেগুলো প্রয়োগ করে।", pt:"Bloqueia vídeos, diretos e publicações inadequados no YouTube, TikTok, Instagram e Twitch. Escolha as regras aqui; o escudo do navegador aplica-as.", ru:"Блокирует неподходящие видео, трансляции и посты на YouTube, TikTok, Instagram и Twitch. Правила выбираются здесь, а применяет их браузерный щит.", ur:"YouTube، TikTok، Instagram اور Twitch پر نامناسب ویڈیوز، اسٹریمز اور پوسٹس بلاک کرتا ہے۔ اصول یہاں چنیں؛ براؤزر شیلڈ انہیں نافذ کرتی ہے۔", id:"Memblokir video, siaran, dan unggahan yang tidak pantas di YouTube, TikTok, Instagram, dan Twitch. Pilih aturannya di sini; perisai peramban yang menegakkannya.", de:"Blockiert unpassende Videos, Streams und Beiträge auf YouTube, TikTok, Instagram und Twitch. Die Regeln wählen Sie hier, durchgesetzt werden sie vom Browser-Schutz.", ja:"YouTube、TikTok、Instagram、Twitch の不適切な動画・配信・投稿をブロックします。ルールはここで選び、ブラウザのシールドが適用します。", tr:"YouTube, TikTok, Instagram ve Twitch’te uygunsuz video, yayın ve gönderileri engeller. Kuralları burada seçin; tarayıcı kalkanı uygular.", ko:"YouTube, TikTok, Instagram, Twitch의 부적절한 영상·방송·게시물을 차단합니다. 규칙은 여기서 고르고, 브라우저 실드가 적용합니다.", fa:"ویدیوها، پخش‌های زنده و پست‌های نامناسب را در YouTube، TikTok، Instagram و Twitch مسدود می‌کند. قواعد را اینجا انتخاب کنید؛ سپر مرورگر اجرایشان می‌کند.", uk:"Блокує невідповідні відео, трансляції та дописи на YouTube, TikTok, Instagram і Twitch. Правила обираєте тут, а застосовує їх щит браузера.", it:"Blocca video, dirette e post inadatti su YouTube, TikTok, Instagram e Twitch. Le regole si scelgono qui; lo scudo del browser le applica.", pl:"Blokuje nieodpowiednie filmy, transmisje i posty na YouTube, TikTok, Instagram i Twitch. Reguły wybierasz tutaj, a egzekwuje je tarcza w przeglądarce.", vi:"Chặn video, buổi phát và bài đăng không phù hợp trên YouTube, TikTok, Instagram và Twitch. Chọn quy tắc ở đây; lá chắn trình duyệt thực thi." },
+  par_shield_plat: { en:"Where it applies", zh:"适用范围", hi:"कहाँ लागू होता है", es:"Dónde se aplica", ar:"أين يُطبَّق", fr:"Où cela s’applique", bn:"কোথায় প্রযোজ্য", pt:"Onde se aplica", ru:"Где действует", ur:"کہاں لاگو ہوتا ہے", id:"Berlaku di mana", de:"Wo es gilt", ja:"適用される場所", tr:"Nerede geçerli", ko:"적용 범위", fa:"کجا اعمال می‌شود", uk:"Де діє", it:"Dove si applica", pl:"Gdzie działa", vi:"Áp dụng ở đâu" },
+  par_shield_cats: { en:"What gets blocked", zh:"拦截哪些内容", hi:"क्या ब्लॉक होता है", es:"Qué se bloquea", ar:"ما الذي يُحجب", fr:"Ce qui est bloqué", bn:"কী ব্লক হয়", pt:"O que é bloqueado", ru:"Что блокируется", ur:"کیا بلاک ہوتا ہے", id:"Apa yang diblokir", de:"Was gesperrt wird", ja:"ブロックする対象", tr:"Neler engellenir", ko:"차단되는 것", fa:"چه چیزی مسدود می‌شود", uk:"Що блокується", it:"Cosa viene bloccato", pl:"Co jest blokowane", vi:"Những gì bị chặn" },
+  par_shield_lists: { en:"Your own lists", zh:"你自己的名单", hi:"आपकी अपनी सूचियाँ", es:"Tus propias listas", ar:"قوائمك الخاصة", fr:"Vos propres listes", bn:"আপনার নিজের তালিকা", pt:"As suas listas", ru:"Ваши собственные списки", ur:"آپ کی اپنی فہرستیں", id:"Daftar Anda sendiri", de:"Ihre eigenen Listen", ja:"ご自分のリスト", tr:"Kendi listeleriniz", ko:"직접 만든 목록", fa:"فهرست‌های خودتان", uk:"Ваші власні списки", it:"Le sue liste", pl:"Twoje własne listy", vi:"Danh sách của bạn" },
+  par_shield_try: { en:"Try it before you trust it", zh:"先试一试再信任它", hi:"भरोसा करने से पहले आज़माएँ", es:"Pruébalo antes de fiarte", ar:"جرّبه قبل أن تثق به", fr:"Testez-le avant de lui faire confiance", bn:"বিশ্বাস করার আগে পরীক্ষা করুন", pt:"Experimente antes de confiar", ru:"Проверьте, прежде чем доверять", ur:"بھروسہ کرنے سے پہلے آزمائیں", id:"Coba dulu sebelum percaya", de:"Erst testen, dann vertrauen", ja:"信頼する前に試してください", tr:"Güvenmeden önce deneyin", ko:"믿기 전에 먼저 시험해 보세요", fa:"پیش از اعتماد، امتحانش کنید", uk:"Перевірте, перш ніж довіряти", it:"Lo provi prima di fidarsi", pl:"Sprawdź, zanim zaufasz", vi:"Thử trước khi tin" },
+  f_shield: { en:"Content blocking on YouTube, TikTok, Instagram and Twitch — nine categories, your own allow and block lists, and a log of what it stopped", zh:"在 YouTube、TikTok、Instagram 和 Twitch 上拦截内容——九个类别、你自己的白名单和黑名单，以及拦截记录", hi:"YouTube, TikTok, Instagram और Twitch पर कंटेंट ब्लॉकिंग — नौ श्रेणियाँ, आपकी अपनी अनुमति और ब्लॉक सूचियाँ, और क्या रोका गया इसका लॉग", es:"Bloqueo de contenido en YouTube, TikTok, Instagram y Twitch: nueve categorías, tus propias listas de permitidos y bloqueados, y un registro de lo que paró", ar:"حجب المحتوى على YouTube وTikTok وInstagram وTwitch — تسع فئات، وقوائم سماح وحظر خاصة بك، وسجل بما جرى إيقافه", fr:"Blocage de contenu sur YouTube, TikTok, Instagram et Twitch — neuf catégories, vos propres listes d’autorisation et de blocage, et un journal de ce qui a été arrêté", bn:"YouTube, TikTok, Instagram ও Twitch-এ কনটেন্ট ব্লকিং — নয়টি বিভাগ, আপনার নিজের অনুমোদন ও ব্লক তালিকা, এবং কী আটকানো হলো তার লগ", pt:"Bloqueio de conteúdos no YouTube, TikTok, Instagram e Twitch — nove categorias, as suas listas de permitidos e bloqueados, e um registo do que travou", ru:"Блокировка контента на YouTube, TikTok, Instagram и Twitch — девять категорий, свои списки разрешённого и запрещённого и журнал остановленного", ur:"YouTube، TikTok، Instagram اور Twitch پر مواد کی بلاکنگ — نو زمرے، آپ کی اپنی اجازت اور بلاک فہرستیں، اور جو روکا گیا اس کا لاگ", id:"Pemblokiran konten di YouTube, TikTok, Instagram, dan Twitch — sembilan kategori, daftar izin dan blokir Anda sendiri, serta catatan apa yang dihentikan", de:"Inhaltssperre auf YouTube, TikTok, Instagram und Twitch — neun Kategorien, eigene Erlaubt- und Sperrlisten und ein Protokoll des Geblockten", ja:"YouTube・TikTok・Instagram・Twitch でのコンテンツブロック — 9つのカテゴリ、独自の許可/ブロックリスト、そして止めたもののログ", tr:"YouTube, TikTok, Instagram ve Twitch’te içerik engelleme — dokuz kategori, kendi izin ve engel listeleriniz ve neyin durdurulduğunun kaydı", ko:"YouTube, TikTok, Instagram, Twitch의 콘텐츠 차단 — 아홉 가지 분류, 직접 만든 허용·차단 목록, 그리고 무엇을 막았는지의 기록", fa:"مسدودسازی محتوا در YouTube، TikTok، Instagram و Twitch — نُه دسته، فهرست‌های مجاز و مسدود خودتان، و گزارشی از آنچه متوقف شده", uk:"Блокування вмісту на YouTube, TikTok, Instagram і Twitch — дев’ять категорій, власні списки дозволеного й забороненого та журнал зупиненого", it:"Blocco dei contenuti su YouTube, TikTok, Instagram e Twitch — nove categorie, le sue liste di permessi e blocchi e un registro di ciò che ha fermato", pl:"Blokowanie treści na YouTube, TikTok, Instagram i Twitch — dziewięć kategorii, własne listy dozwolonych i zablokowanych oraz dziennik tego, co zatrzymano", vi:"Chặn nội dung trên YouTube, TikTok, Instagram và Twitch — chín nhóm, danh sách cho phép và chặn của riêng bạn, cùng nhật ký những gì đã chặn" },
+  pen: { en:"Pen", zh:"钢笔", hi:"पेन", es:"Bolígrafo", ar:"قلم", fr:"Stylo", bn:"পেন", pt:"Caneta", ru:"Ручка", ur:"قلم", id:"Pena", de:"Stift", ja:"ペン", tr:"Kalem", ko:"펜", fa:"قلم", uk:"Ручка", it:"Penna", pl:"Długopis", vi:"Bút" },
+  marker: { en:"Marker", zh:"马克笔", hi:"मार्कर", es:"Rotulador", ar:"قلم تحديد", fr:"Marqueur", bn:"মার্কার", pt:"Marcador", ru:"Маркер", ur:"مارکر", id:"Spidol", de:"Marker", ja:"マーカー", tr:"Marker", ko:"마커", fa:"ماژیک", uk:"Маркер", it:"Pennarello", pl:"Marker", vi:"Bút dạ" },
+  pencil: { en:"Pencil", zh:"铅笔", hi:"पेंसिल", es:"Lápiz", ar:"قلم رصاص", fr:"Crayon", bn:"পেন্সিল", pt:"Lápis", ru:"Карандаш", ur:"پنسل", id:"Pensil", de:"Bleistift", ja:"鉛筆", tr:"Kurşun kalem", ko:"연필", fa:"مداد", uk:"Олівець", it:"Matita", pl:"Ołówek", vi:"Bút chì" },
+  eraser: { en:"Eraser", zh:"橡皮擦", hi:"रबर", es:"Goma", ar:"ممحاة", fr:"Gomme", bn:"রাবার", pt:"Borracha", ru:"Ластик", ur:"ربڑ", id:"Penghapus", de:"Radierer", ja:"消しゴム", tr:"Silgi", ko:"지우개", fa:"پاک‌کن", uk:"Гумка", it:"Gomma", pl:"Gumka", vi:"Tẩy" },
   ui_novacoins: { en:"NovaCoins", zh:"Nova 币", hi:"नोवाकॉइन्स", es:"NovaMonedas", ar:"عملات نوفا", fr:"NovaPièces", bn:"নোভাকয়েন", pt:"NovaMoedas", ru:"НоваМонеты", ur:"نووا کوائنز", id:"NovaKoin", de:"NovaMünzen", ja:"ノヴァコイン", tr:"NovaJeton", ko:"노바코인", fa:"نوواکوین", uk:"НоваМонети", it:"NovaMonete", pl:"NovaMonety", vi:"NovaXu" },
   ui_skin_none: { en:"Cyber theme — none", zh:"赛博主题 — 无", hi:"साइबर थीम — कोई नहीं", es:"Tema cyber — ninguno", ar:"ثيم سايبر — بدون", fr:"Thème cyber — aucun", bn:"সাইবার থিম — কোনোটি নয়", pt:"Tema cyber — nenhum", ru:"Кибертема — нет", ur:"سائبر تھیم — کوئی نہیں", id:"Tema cyber — tidak ada", de:"Cyber-Theme — keines", ja:"サイバーテーマ — なし", tr:"Cyber tema — yok", ko:"사이버 테마 — 없음", fa:"پوسته سایبری — هیچ‌کدام", uk:"Кібертема — немає", it:"Tema cyber — nessuno", pl:"Motyw cyber — brak", vi:"Chủ đề cyber — không" },
   /* THE TWELVE CYBER THEME NAMES.
@@ -2272,6 +2291,11 @@ function ncBuildBurger(bar) {
       'padding:15px 6px;border-radius:14px;' +
       'font:700 1.6rem/1.15 system-ui,sans-serif;letter-spacing:-.02em}' +
     '#ncsheet a .nci{width:23px;height:23px;flex:0 0 auto;opacity:.75}' +
+    /* The page's own routes, set apart by a hairline rather than a heading —
+       they are the same kind of thing as the rows above and do not need a
+       label to say so. */
+    '#ncsheet .nsgrp{display:flex;flex-direction:column;margin-top:10px;padding-top:10px;' +
+      'border-top:1px solid var(--nc-line,rgba(255,255,255,.12))}' +
     '#ncsheet a.on{color:var(--nc-cyan,#00E5FF)}' +
     '#ncsheet a.on .nci{opacity:1}' +
     '#ncsheet a:active{background:var(--nc-card,rgba(255,255,255,.06))}' +
@@ -2333,6 +2357,34 @@ function ncBuildBurger(bar) {
                  ' style="animation-delay:' + (i * 32) + 'ms">' + ncIcon(icon) +
                  '<span class="nct"' + (key ? ' data-t="' + key + '"' : '') + '>' + label + '</span></a>';
         }).join('') +
+        /* WHAT THE PAGE ITSELF NAVIGATES TO, WHEN THAT LIVES SOMEWHERE THIS
+           MENU CANNOT SEE.
+           The rule further up that hides a page's own second header says
+           "their real controls are reachable from the menu". On Studio that
+           was not true. Its rail is the app's own .nc-sidebar, hidden below
+           900px by the bundle, and the burger that opens the drawer version of
+           it sits in the .nc-topbar this site hides — so on a phone, Photo,
+           Hype Lab and the analytics panel could not be reached at all, and
+           from inside any panel there was no way back to Studio home short of
+           the browser's back button.
+
+           A page sets NC_PHONE_ROUTES and its own routes appear here, under
+           the site's own, in a group of their own. Empty everywhere else, so
+           this is one `if` on every other page. */
+        (function () {
+          var extra = window.NC_PHONE_ROUTES;
+          if (!extra || !extra.length) return '';
+          return '<div class="nsgrp">' +
+            extra.map(function (r, i) {
+              var on = r.href === location.hash;
+              return '<a href="' + r.href + '"' + (on ? ' class="on" aria-current="page"' : '') +
+                ' style="animation-delay:' + ((ncPhoneItems().length + i) * 32) + 'ms">' +
+                '<svg class="nci" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+                'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                '<path d="' + r.path + '"/></svg>' +
+                '<span class="nct">' + r.label + '</span></a>';
+            }).join('') + '</div>';
+        })() +
       '</nav>' +
       /* THE THREE THE BAR GAVE UP.
          Settings, Ask Nova and the page guide were three unlabelled icons in a
@@ -2355,6 +2407,14 @@ function ncBuildBurger(bar) {
        is how you close a menu and find yourself somewhere else. */
     try { document.documentElement.style.overflow = 'hidden'; } catch (e) {}
     sheet.querySelector('.nsx').onclick = close;
+    /* A HASH LINK DOES NOT NAVIGATE, SO NOTHING WOULD CLOSE THIS.
+       The site's own rows go to another page and the menu dies with it. The
+       page's own routes change only the hash, so without this the sheet stays
+       up, full screen, over the panel it just opened — which looks exactly
+       like the link doing nothing. */
+    [].forEach.call(sheet.querySelectorAll('.nsgrp a'), function (a) {
+      a.onclick = function () { close(); };
+    });
     /* Close first, then press the real control — several of them open a panel
        of their own, and opening one underneath a full-screen menu is the same
        as it not working. */
@@ -6802,7 +6862,12 @@ function ncPairTabs() {
     const anchor = href.includes('#') ? href.split('#')[1] : '';
     const on = href.split('#')[0] === here &&
                (anchor ? location.hash === '#' + anchor : !location.hash.startsWith('#fair'));
-    return '<a href="' + href + '" data-t="pair_' + key + '"' +
+    /* data-t="editor" / "photo", not "pair_editor" / "pair_photo". The pair_
+       prefix invented two keys that were never added to the table, so this
+       strip has been in English in every language since it was written — the
+       table has had `editor` and `photo` in twenty languages the whole time,
+       which is what the rail beside it uses. */
+    return '<a href="' + href + '" data-t="' + key + '"' +
            ' class="ncpt' + (on ? ' on' : '') + '"' + (on ? ' aria-current="page"' : '') + '>' +
            label + '</a>';
   }).join('');

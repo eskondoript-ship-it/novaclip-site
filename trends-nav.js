@@ -1237,6 +1237,24 @@
     });
   }
 
+  /* THE SAME ROUTES, FOR A PHONE.
+     Below 900px the bundle hides .nc-sidebar, and the burger that opens its
+     drawer version lives in the .nc-topbar that nova.js hides as a duplicate
+     second header. Between the two, everything in this file was unreachable on
+     a phone except the six the home screen happens to put on cards — Photo,
+     Hype Lab and the analytics panel had no route at all, and from inside any
+     panel there was no way back to Studio home.
+
+     nova.js's phone menu renders this list under the site's own rows. Home is
+     first because "get me out of this panel" is the commonest thing wanted
+     from a menu opened inside one. */
+  window.NC_PHONE_ROUTES = [{
+    href: '#/', label: 'Studio home',
+    path: 'M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5'
+  }].concat(Object.keys(PANELS).map(function (h) {
+    return { href: '#' + h, label: PANELS[h].label, path: PANELS[h].icon };
+  }));
+
   window.NC_TRENDS_NAV = { fixRail: fixRail, route: route, panels: PANELS };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

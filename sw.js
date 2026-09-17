@@ -186,6 +186,30 @@
    one anybody hits was the only silent one. It speaks now.
 
    index.html, nova.js and publish.html are all cached. */
+/* v58: three bugs found by going looking for them.
+
+   STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
+   hides .nc-sidebar, and the burger that opens its drawer version sits in the
+   .nc-topbar that nova.js hides as a duplicate second header — the rule whose
+   comment says "their real controls are reachable from the menu", which on
+   this one page was not true. What was left was the six routes the home screen
+   happens to put on cards: Photo, Hype Lab and the analytics panel had no way
+   in at all, and from inside any panel there was no way back to Studio home
+   short of the browser's back button. A page can now hand its own routes to
+   the phone menu (NC_PHONE_ROUTES) and Studio hands over all nine plus home.
+
+   ELEVEN KEYS WERE BEING ASKED FOR AND WERE NOT IN THE TABLE — the history
+   page's subtitle, six lines of the parent dashboard's content blocking, a
+   pricing feature line and the four drawing tools. A missing key is silent:
+   the translation pass leaves the English where it is, so these had never
+   translated in nineteen languages and nothing anywhere said so. Found by
+   listing every data-t on the site and checking it against the table.
+
+   AND THE EDITOR/PHOTO TAB STRIP invented two keys, pair_editor and
+   pair_photo, that were never added — while `editor` and `photo` have been in
+   the table in twenty languages the whole time. It reads them now.
+
+   nova.js and trends-nav.js. Both cached. */
 /* v57: the layout no longer mirrors for Farsi, and the welcome is translated.
 
    THE RAIL STAYS ON THE LEFT. dir=rtl on <html> mirrors the whole document —
@@ -592,7 +616,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v57';
+const CACHE = 'novaclip-v58';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
