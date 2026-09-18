@@ -56,6 +56,21 @@
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
 
+  /* THE WORDS IN THIS FILE COME FROM nova.js's TABLE.
+     Every string a panel draws carries a data-t as well, so the language pass
+     — which re-runs whenever the DOM grows, which is the only reason a panel
+     built on a click ever gets translated — keeps them right afterwards. This
+     is what fills them in the first time.
+
+     Guarded because this file can be parsed before nova.js has defined tr, and
+     a panel that throws while building is a blank screen where a tool should
+     be. When that happens the element is still stamped with its data-t, so the
+     pass fills it in a moment later. */
+  function tr(k) {
+    try { return (typeof window.tr === 'function' && window.tr(k)) || ''; }
+    catch (e) { return ''; }
+  }
+
   /* SOMETHING TO TAKE AWAY, not something to read.
      Every panel here ended at text on a page with a Copy button beside it,
      which is a draft you lose the moment you navigate. These three are what
@@ -108,6 +123,28 @@
     return (typeof window.ncCategoryNote === 'function') ? window.ncCategoryNote() : '';
   }
 
+  /* Translating the labels around a panel and leaving the panel's actual
+     contents in English only moves the problem: somebody reading the site in
+     Farsi asked for the Studio in Farsi, and the ideas and trends ARE the
+     Studio. English returns '' so the prompt is not padded with an
+     instruction that changes nothing. */
+  var LANG_NAMES = {
+    zh: 'Chinese (Simplified)', hi: 'Hindi', es: 'Spanish', ar: 'Arabic', fr: 'French',
+    bn: 'Bengali', pt: 'Portuguese', ru: 'Russian', ur: 'Urdu', id: 'Indonesian',
+    de: 'German', ja: 'Japanese', tr: 'Turkish', ko: 'Korean', fa: 'Persian (Farsi)',
+    uk: 'Ukrainian', it: 'Italian', pl: 'Polish', vi: 'Vietnamese'
+  };
+  function langNote() {
+    var code;
+    try { code = localStorage.getItem('nc_lang') || 'en'; } catch (e) { code = 'en'; }
+    var name = LANG_NAMES[code];
+    if (!name) return '';
+    /* The JSON keys stay English or the parser downstream stops matching. Only
+       the values people read are translated. */
+    return '\n\nWrite every value a person will read in ' + name +
+           '. Keep the JSON keys themselves in English exactly as given.';
+  }
+
   /* ==========================================================================
      THE RAIL
      ========================================================================== */
@@ -125,10 +162,10 @@
     /* full:true — these two get the whole screen. See FULL SCREEN in styles().
        They are the only entries with it, because they are the only two that
        are applications rather than forms. */
-    '/editor':     { label: 'Editor', full: true,
+    '/editor':     { label: 'Editor', key: 'editor', full: true,
                      icon: 'M4 6h16M4 12h10M4 18h7M17 11l4 4-4 4v-8z',
                      why: 'Cut, trim and finish a video, here' },
-    '/publish':    { label: 'AI Editor', full: true,
+    '/publish':    { label: 'AI Editor', key: 'publish', full: true,
                      icon: 'M12 3v4M12 17v4M3 12h4M17 12h4M7.5 7.5l2.5 2.5M14 14l2.5 2.5M16.5 7.5L14 10M10 14l-2.5 2.5',
                      why: 'It plans the edit, applies it, and gets it ready to post' },
     /* The third application, and it belongs with the other two. The thumbnail
@@ -137,22 +174,25 @@
        were working from. Same treatment as the Editor and the AI Editor:
        full:true, because it is a tool with its own rail, dock and canvas and a
        940px column is not where you retouch an image. */
-    '/photo':      { label: 'Photo', full: true,
+    '/photo':      { label: 'Photo', key: 'photo', full: true,
                      icon: 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6M8.5 9.5a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4z',
                      why: 'Crop, retouch and export a still — the same tool as photo.html' },
-    '/ideas':      { label: 'Video Ideas',
+    '/trends':     { label: 'Trend Spotter', key: 'st_trends_h',
+                     icon: 'M3 17l6-6 4 4 7-7M14 8h7v7',
+                     why: 'Find what is actually rising in your niche' },
+    '/ideas':      { label: 'Video Ideas', key: 'st_ideas_h',
                      icon: 'M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z',
                      why: 'Turn a trend into titles, hooks and formats' },
-    '/scripts':    { label: 'Scripts',
+    '/scripts':    { label: 'Scripts', key: 'st_scripts_h',
                      icon: 'M4 3h11l5 5v13H4zM15 3v5h5M8 13h8M8 17h5',
                      why: 'Turn a trend into a script, here' },
-    '/thumbnails': { label: 'Thumbnails',
+    '/thumbnails': { label: 'Thumbnails', key: 'st_thumb_h',
                      icon: 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6',
                      why: 'Make a 1280x720 thumbnail, here' },
-    '/studio':     { label: 'Studio',
+    '/studio':     { label: 'Studio', key: 'st_studio_h',
                      icon: 'M3 3v18h18M7 16v-5M12 16V8M17 16v-3',
                      why: 'How the videos you made from these trends are doing' },
-    '/hype':       { label: 'Hype Lab',
+    '/hype':       { label: 'Hype Lab', key: 'st_hype_h',
                      icon: 'M13 2 4 14h7l-1 8 9-12h-7z',
                      why: 'Find the seconds where your finished edit loses people, and fill them' }
   };
@@ -164,12 +204,27 @@
      LEAVE is empty and stays declared. It is the escape hatch for a route that
      becomes a real page again later, and an empty object costs nothing next to
      the router below having to grow an `if` back when that happens. */
+  /* '/', '/trends' and '/ideas' are the bundle's own rows and already point
+     where they should. They are listed so the loop in fixRail gives them the
+     same treatment as the rest — the label through the table, and a data-t so
+     the language pass keeps it. Without them a Persian rail read Home, Trend
+     Spotter and Video Ideas in English under eight translated rows. */
   var REWRITE = {
+    '/':           '#/',
+    '/trends':     '#/trends',
+    '/ideas':      '#/ideas',
     '/scripts':    '#/scripts',
     '/thumbnails': '#/thumbnails',
     '/editor':     '#/editor',
     '/publish':    '#/publish'
   };
+  /* The two rows the bundle owns that are not panels in this file: the app's
+     own home and its trends page. They have no entry in PANELS, so their words
+     live here. */
+  var OWN = {
+    '/':       { label: 'Home', key: 'home' }
+  };
+
   var LEAVE = {};
   /* Nothing is dropped from the app's own rail any more: the two rows it
      already had for Editor and Publish now point at panels that exist, so
@@ -182,7 +237,14 @@
      it when the burger is pressed, borrowing the same class. Looking the row
      up globally found whichever came first — the hidden one — so the drawer
      got none of the work done below. */
-  function railItem(side, href) { return side.querySelector('a[href="' + href + '"]'); }
+  /* .nc-nav-item, not any anchor. Three things in this rail point at "#/" —
+     the brand at the top, the Home row, and the card at the foot — and a bare
+     href match found the brand, translated that, and left the Home row in
+     English under ten translated rows. The nav rows are the only ones this
+     file has any business rewriting. */
+  function railItem(side, href) {
+    return side.querySelector('a.nc-nav-item[href="' + href + '"]');
+  }
 
   /* A row cloned from a sibling so the layout, classes and hover behaviour are
      the app's rather than a guess at them. Only the icon path and the label
@@ -215,10 +277,15 @@
       svg.appendChild(path);
     }
     var label = [].slice.call(a.childNodes).filter(function (n) {
-      return n.nodeType === 1 && n.tagName !== 'svg' && !n.querySelector('svg');
+      return n.nodeType === 1 && n.tagName !== 'svg' && !n.querySelector('svg') &&
+             (n.textContent || '').trim();
     }).pop();
-    if (label) label.textContent = spec.label;
-    else a.textContent = spec.label;
+    /* Through the table where the panel has a key, so a row added here is
+       in the same language as the rows around it. */
+    var words = (spec.key && tr(spec.key)) || spec.label;
+    if (spec.key) a.setAttribute('data-nc-key', spec.key);
+    if (label) { label.textContent = words; if (spec.key) label.setAttribute('data-t', spec.key); }
+    else a.textContent = words;
     var anchor = (after && after.parentNode) ? after : null;
     if (!anchor) {
       var items = nav.querySelectorAll('.nc-nav-item');
@@ -255,7 +322,7 @@
          already holds still fires the observer. */
       var want = REWRITE[route];
       if (a.getAttribute('href') !== want) a.href = want;
-      var spec = PANELS[route] || {};
+      var spec = PANELS[route] || OWN[route] || {};
       var why = spec.why || '';
       if (a.getAttribute('title') !== why) a.title = why;
       /* ONLY IF IT DIFFERS. fixRail() is called from a MutationObserver on
@@ -267,10 +334,17 @@
          trends.html taking over 110 seconds to reach DOMContentLoaded, from
          4 seconds before. */
       if (spec.label) {
+        /* The LAST element child that actually holds words. The active row
+           carries an extra empty marker element after its label, and .pop()
+           was picking that — which is why Home stayed in English while every
+           row around it translated. */
         var lab = [].slice.call(a.childNodes).filter(function (n) {
-          return n.nodeType === 1 && n.tagName !== 'svg' && !n.querySelector('svg');
+          return n.nodeType === 1 && n.tagName !== 'svg' && !n.querySelector('svg') &&
+                 (n.textContent || '').trim();
         }).pop();
-        if (lab && lab.textContent !== spec.label) lab.textContent = spec.label;
+        var want2 = (spec.key && tr(spec.key)) || spec.label;
+        if (lab && lab.textContent !== want2) lab.textContent = want2;
+        if (lab && spec.key && lab.getAttribute('data-t') !== spec.key) lab.setAttribute('data-t', spec.key);
       }
       a.classList.remove('nc-nav-item-active');
     });
@@ -426,6 +500,16 @@
       '.ncx .idea .hook{opacity:.8;margin-top:5px;font-style:italic;line-height:1.5}',
       '.ncx .idea .shape{opacity:.6;margin-top:5px;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}',
       '.ncx .idea .row{margin-top:10px}',
+      /* The heat badge. It carries no meaning of its own — it repeats what the
+         word inside it already says — so it is a tint, not a colour block, and
+         it stays legible if the palette behind it is light or dark. */
+      '.ncx .heat{display:inline-block;vertical-align:2px;margin-inline-start:6px;',
+      '  font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;',
+      '  padding:2px 7px;border-radius:999px;border:1px solid currentColor;opacity:.75}',
+      '.ncx .heat:empty{display:none}',
+      '.ncx .heat.hot{color:#ff5b5b}',
+      '.ncx .heat.rising{color:#ffb020}',
+      '.ncx .heat.steady{opacity:.45}',
       '.ncx .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:6px}',
       '.ncx .fact{border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:12px;',
       '  padding:11px 13px;background:color-mix(in srgb,currentColor 4%,transparent)}',
@@ -472,27 +556,208 @@
      the rail is a pipeline — trend, idea, script, thumbnail — and an idea you
      have to retype into the next step is an idea most people drop.
      ========================================================================== */
+  /* ==========================================================================
+     TREND SPOTTER — the scan, rebuilt here
+     ==========================================================================
+     The bundled app has a Trend Spotter screen with a niche box and a "Scan
+     for Trends" button. Measured: typing a niche and pressing it makes no
+     request to anything, renders no card, prints no error, and stores nothing.
+     Two of the three complaints about this page come straight out of that —
+     the results not matching the niche that was typed, and the certificate's
+     "Run a Trend Spotter scan" counter sitting at 0 no matter how many times
+     somebody scanned. A button that does nothing cannot count.
+
+     So the route is a panel in this file now, like the other eight, and the
+     scan is one this repo owns.
+
+     WITH SEARCH ON, DELIBERATELY. ncAsk takes { search: true } and the worker
+     turns on Google's search grounding — without it a model answers about the
+     world as it was when it was trained, which for a question with the word
+     "trending" in it is the one answer guaranteed to be wrong. The sources it
+     used are printed under the cards, because a trend you cannot check is a
+     rumour.
+     ========================================================================== */
+  function trendsPanel(box) {
+    if (box.dataset.view === 'trends') return;
+    box.dataset.view = 'trends';
+    box.innerHTML =
+      '<h1 data-t="st_trends_h">' + tr('st_trends_h') + '</h1>' +
+      '<p class="lede" data-t="st_trends_p">' + tr('st_trends_p') + '</p>' +
+      '<div class="card">' +
+        '<label for="ncxNiche" data-t="st_niche">' + tr('st_niche') + '</label>' +
+        '<input id="ncxNiche" type="text" maxlength="80" data-tph="st_niche_ph" ' +
+               'placeholder="' + tr('st_niche_ph') + '">' +
+        '<div class="two">' +
+          '<div><label for="ncxWhen" data-t="st_when">' + tr('st_when') + '</label>' +
+            '<select id="ncxWhen">' +
+              '<option value="week" data-t="st_when_week">' + tr('st_when_week') + '</option>' +
+              '<option value="month" selected data-t="st_when_month">' + tr('st_when_month') + '</option>' +
+              '<option value="season" data-t="st_when_season">' + tr('st_when_season') + '</option>' +
+            '</select></div>' +
+          '<div><label for="ncxSize" data-t="st_size">' + tr('st_size') + '</label>' +
+            '<select id="ncxSize">' +
+              '<option value="small" selected data-t="st_size_small">' + tr('st_size_small') + '</option>' +
+              '<option value="any" data-t="st_size_any">' + tr('st_size_any') + '</option>' +
+            '</select></div>' +
+        '</div>' +
+        '<div class="row"><button class="go" id="ncxScan" data-t="st_scan">' + tr('st_scan') + '</button></div>' +
+        '<div class="say" id="ncxScanSay" style="display:none"></div>' +
+      '</div>' +
+      '<div id="ncxTrendList"></div>';
+
+    var niche = $('#ncxNiche', box), sayEl = $('#ncxScanSay', box), list = $('#ncxTrendList', box);
+
+    /* Their own category, so the box is not empty on a page whose whole job is
+       to answer "what should I make". */
+    if (!niche.value && window.NC_CATEGORY && window.NC_CATEGORY.seed) {
+      niche.value = window.NC_CATEGORY.seed() || '';
+    }
+    try {
+      var carried = sessionStorage.getItem('nc_trend_niche');
+      if (carried) { niche.value = carried; sessionStorage.removeItem('nc_trend_niche'); }
+    } catch (e) {}
+
+    $('#ncxScan', box).addEventListener('click', async function () {
+      var t = (niche.value || '').trim();
+      if (!t) return say(sayEl, 'no', tr('st_scan_need'));
+      if (typeof window.ncAsk !== 'function') return say(sayEl, 'no', tr('st_no_ai'));
+      var btn = this;
+      btn.disabled = true;
+      say(sayEl, '', tr('st_scanning'));
+      list.innerHTML = '';
+      var when = $('#ncxWhen', box).value, size = $('#ncxSize', box).value;
+      try {
+        /* THE NICHE IS REPEATED AND FENCED. The complaint was that what came
+           back was about something else entirely, so the subject is given
+           once as a quoted string, once as a rule, and once as a refusal
+           condition — a model that drifts has to ignore it three times. */
+        var raw = await window.ncAsk(
+          'You are finding what is genuinely rising RIGHT NOW on YouTube, TikTok and Shorts ' +
+          'inside one niche, for a teenage creator.' + catNote() + '\n\n' +
+          'The niche, exactly as the creator typed it: "' + t + '"\n' +
+          'Window: what has been rising over the last ' +
+            (when === 'week' ? 'week' : when === 'season' ? 'three months' : 'month') + '.\n' +
+          'Channel size: ' + (size === 'small' ? 'small — under about 10,000 subscribers, so only ' +
+            'suggest things a small channel can actually reach' : 'any size') + '.\n\n' +
+          'EVERY trend must be about "' + t + '" itself. Not the broader category it belongs to, ' +
+          'not a neighbouring hobby, not a general platform trend that happens to be popular. ' +
+          'If you cannot find six real ones inside that niche, return fewer — an honest three ' +
+          'beats six padded out with things from somewhere else.\n\n' +
+          'Use the search results you have. Do not invent view counts or dates.\n\n' +
+          'Answer with ONE line of JSON and nothing else:\n' +
+          '{"trends":[{"title":"<max 8 words>","why":"<why it is rising, max 20 words>",' +
+          '"angle":"<one video this creator could make from it, max 16 words>",' +
+          '"heat":"<rising|hot|steady>"}]}\n' +
+          'The "heat" value stays one of those three English words whatever ' +
+          'language the rest is in — the page colours the badge from it.' +
+          langNote(),
+          { search: true, maxTokens: 1400 });
+        if (raw && raw.err) throw new Error(raw.err);
+        var body = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
+        var m = body.match(/\{[\s\S]*\}/);
+        if (!m) throw new Error(tr('st_scan_shape'));
+        var trends = (JSON.parse(m[0]) || {}).trends || [];
+        if (!trends.length) throw new Error(tr('st_scan_none'));
+
+        list.innerHTML = trends.slice(0, 6).map(function (it, i) {
+          /* The model answers in English whatever language the page is in, so
+             the badge word is mapped rather than printed. An unexpected word
+             falls through to itself — wrong language beats a blank badge. */
+          var heat = String(it.heat || '').toLowerCase().replace(/[^a-z]/g, '');
+          var heatWord = /^(hot|rising|steady)$/.test(heat) ? (tr('st_heat_' + heat) || heat) : heat;
+          return '<div class="card idea">' +
+            '<div class="ttl">' + esc(it.title || '') +
+              ' <span class="heat ' + esc(heat) + '">' + esc(heatWord) + '</span></div>' +
+            '<div class="hook">' + esc(it.why || '') + '</div>' +
+            '<div class="shape">' + esc(it.angle || '') + '</div>' +
+            '<div class="row">' +
+              '<button data-i="' + i + '">' + tr('st_to_ideas') + '</button>' +
+              '<button data-w="' + i + '">' + tr('st_to_script') + '</button>' +
+              '<button data-c="' + i + '">' + tr('st_copy') + '</button>' +
+            '</div></div>';
+        }).join('') + sourcesHTML(raw && raw.sources);
+
+        /* Counted HERE, on an answer that arrived, rather than on the press.
+           A scan that failed is not a scan, and paying for it would be the
+           counter lying in the other direction. */
+        try { if (typeof window.logSkill === 'function') window.logSkill('trend_scan'); } catch (e) {}
+        try { if (typeof window.addPts === 'function') window.addPts(5); } catch (e) {}
+
+        list.querySelectorAll('[data-i]').forEach(function (b2) {
+          b2.addEventListener('click', function () {
+            var it = trends[+b2.dataset.i] || {};
+            try { sessionStorage.setItem('nc_trend_seed', it.title || ''); } catch (e) {}
+            var h = host(); if (h) h.dataset.view = '';
+            location.hash = '/ideas';
+          });
+        });
+        list.querySelectorAll('[data-w]').forEach(function (b3) {
+          b3.addEventListener('click', function () {
+            var it = trends[+b3.dataset.w] || {};
+            try { sessionStorage.setItem('nc_trend_seed', it.title || ''); } catch (e) {}
+            var h = host(); if (h) h.dataset.view = '';
+            location.hash = '/scripts';
+          });
+        });
+        list.querySelectorAll('[data-c]').forEach(function (b4) {
+          b4.addEventListener('click', function () {
+            var it = trends[+b4.dataset.c] || {};
+            var text = (it.title || '') + '\n' + (it.why || '') + '\n' + (it.angle || '');
+            try { navigator.clipboard.writeText(text); say(sayEl, 'ok', tr('st_copied')); } catch (e) {}
+          });
+        });
+        say(sayEl, 'ok', tr('st_scan_ok').replace('{n}', trends.length));
+      } catch (e) {
+        say(sayEl, 'no', (e && e.message) || tr('st_no_reach'));
+      }
+      btn.disabled = false;
+    });
+  }
+
+  /* What it read, under what it said. Printed only when the worker returned
+     sources — with search off, or on a model that does not ground, there is
+     nothing honest to show and an empty "Sources" heading would imply there
+     was. */
+  function sourcesHTML(list) {
+    if (!list || !list.length) return '';
+    var seen = {}, out = [];
+    for (var i = 0; i < list.length && out.length < 6; i++) {
+      var u = list[i] && (list[i].uri || list[i].url || list[i]);
+      if (typeof u !== 'string' || !/^https?:/.test(u)) continue;
+      var host2 = u.replace(/^https?:\/\//, '').split('/')[0];
+      if (seen[host2]) continue;
+      seen[host2] = 1;
+      out.push('<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(host2) + '</a>');
+    }
+    if (!out.length) return '';
+    return '<p class="foot"><span data-t="st_sources">' + tr('st_sources') + '</span> ' +
+           out.join(' &middot; ') + '</p>';
+  }
+
   function ideasPanel(box) {
     if (box.dataset.view === 'ideas') return;
     box.dataset.view = 'ideas';
     box.innerHTML =
-      '<h1>Video Ideas</h1>' +
-      '<p class="lede">Six ideas from one subject, each with the hook it needs. Take any of them ' +
-      'straight through to Scripts with one press.</p>' +
+      '<h1 data-t="st_ideas_h">' + tr('st_ideas_h') + '</h1>' +
+      '<p class="lede" data-t="st_ideas_p">' + tr('st_ideas_p') + '</p>' +
       '<div class="card">' +
-        '<label for="ncxSeed">What is it about</label>' +
-        '<input id="ncxSeed" type="text" maxlength="120" placeholder="a trend, your channel, or anything">' +
+        '<label for="ncxSeed" data-t="st_ideas_seed">' + tr('st_ideas_seed') + '</label>' +
+        '<input id="ncxSeed" type="text" maxlength="120" data-tph="st_ideas_ph" placeholder="' + tr('st_ideas_ph') + '">' +
         '<div class="two">' +
-          '<div><label for="ncxShape">Shape</label><select id="ncxShape">' +
-            '<option>Any</option><option>POV</option><option>Talking to camera</option>' +
-            '<option>List</option><option>Tutorial</option><option>Reaction</option>' +
+          '<div><label for="ncxShape" data-t="st_shape">' + tr('st_shape') + '</label><select id="ncxShape">' +
+            '<option data-t="st_shape_any">' + tr('st_shape_any') + '</option>' +
+            '<option>POV</option>' +
+            '<option data-t="st_shape_cam">' + tr('st_shape_cam') + '</option>' +
+            '<option data-t="st_shape_list">' + tr('st_shape_list') + '</option>' +
+            '<option data-t="st_shape_tut">' + tr('st_shape_tut') + '</option>' +
+            '<option data-t="st_shape_react">' + tr('st_shape_react') + '</option>' +
           '</select></div>' +
-          '<div><label for="ncxAud">Who it is for</label><select id="ncxAud">' +
-            '<option>People who already follow me</option>' +
-            '<option>People who have never seen me</option>' +
+          '<div><label for="ncxAud" data-t="st_aud">' + tr('st_aud') + '</label><select id="ncxAud">' +
+            '<option data-t="st_aud_old">' + tr('st_aud_old') + '</option>' +
+            '<option data-t="st_aud_new">' + tr('st_aud_new') + '</option>' +
           '</select></div>' +
         '</div>' +
-        '<div class="row"><button class="go" id="ncxIdeaGo">Give me six</button></div>' +
+        '<div class="row"><button class="go" id="ncxIdeaGo" data-t="st_ideas_go">' + tr('st_ideas_go') + '</button></div>' +
         '<div class="say" id="ncxIdeaSay" style="display:none"></div>' +
       '</div>' +
       '<div id="ncxSaved"></div>' +
@@ -691,30 +956,32 @@
     if (box.dataset.view === 'scripts') return;
     box.dataset.view = 'scripts';
     box.innerHTML =
-      '<h1>Scripts</h1>' +
-      '<p class="lede">Turn a trend into something you can actually read out. It writes a hook, ' +
-      'the middle and an ending — short, because a short video is what this is for.</p>' +
+      '<h1 data-t="st_scripts_h">' + tr('st_scripts_h') + '</h1>' +
+      '<p class="lede" data-t="st_scripts_p">' + tr('st_scripts_p') + '</p>' +
       '<div class="card">' +
-        '<label for="ncxTopic">What is the video about</label>' +
-        '<input id="ncxTopic" type="text" maxlength="120" placeholder="the trend, or your own idea">' +
+        '<label for="ncxTopic" data-t="st_topic">' + tr('st_topic') + '</label>' +
+        '<input id="ncxTopic" type="text" maxlength="120" data-tph="st_topic_ph" placeholder="' + tr('st_topic_ph') + '">' +
         '<div class="two">' +
-          '<div><label for="ncxLen">How long</label><select id="ncxLen">' +
-            '<option value="15">15 seconds</option><option value="30" selected>30 seconds</option>' +
-            '<option value="60">60 seconds</option></select></div>' +
-          '<div><label for="ncxTone">How it sounds</label><select id="ncxTone">' +
-            '<option>Straight to the point</option><option>Funny</option>' +
-            '<option>Storytime</option><option>Explainer</option></select></div>' +
+          '<div><label for="ncxLen" data-t="st_len">' + tr('st_len') + '</label><select id="ncxLen">' +
+            '<option value="15" data-t="st_len15">' + tr('st_len15') + '</option>' +
+            '<option value="30" selected data-t="st_len30">' + tr('st_len30') + '</option>' +
+            '<option value="60" data-t="st_len60">' + tr('st_len60') + '</option></select></div>' +
+          '<div><label for="ncxTone" data-t="st_tone">' + tr('st_tone') + '</label><select id="ncxTone">' +
+            '<option data-t="st_tone_plain">' + tr('st_tone_plain') + '</option>' +
+            '<option data-t="st_tone_funny">' + tr('st_tone_funny') + '</option>' +
+            '<option data-t="st_tone_story">' + tr('st_tone_story') + '</option>' +
+            '<option data-t="st_tone_expl">' + tr('st_tone_expl') + '</option></select></div>' +
         '</div>' +
-        '<div class="row"><button class="go" id="ncxWrite">Write it</button>' +
-          '<button id="ncxCopy" disabled>Copy</button>' +
+        '<div class="row"><button class="go" id="ncxWrite" data-t="st_write">' + tr('st_write') + '</button>' +
+          '<button id="ncxCopy" disabled data-t="st_copy">' + tr('st_copy') + '</button>' +
           /* A file and a hand-off, so the draft outlives the tab. Both start
              disabled: offering "Download" before there is anything to download
              is a button that lies about being ready. */
-          '<button id="ncxDl" disabled>Download .txt</button>' +
-          '<button id="ncxToAi" disabled>Send to the AI Editor</button></div>' +
+          '<button id="ncxDl" disabled data-t="st_dl">' + tr('st_dl') + '</button>' +
+          '<button id="ncxToAi" disabled data-t="st_toai">' + tr('st_toai') + '</button></div>' +
         '<div class="say" id="ncxSay" style="display:none"></div>' +
-        '<label for="ncxOut" style="margin-top:16px">The script</label>' +
-        '<textarea id="ncxOut" placeholder="It appears here. Edit it — it is a first draft, not a script."></textarea>' +
+        '<label for="ncxOut" style="margin-top:16px" data-t="st_script">' + tr('st_script') + '</label>' +
+        '<textarea id="ncxOut" data-tph="st_script_ph" placeholder="' + tr('st_script_ph') + '"></textarea>' +
       '</div>';
 
     var topic = $('#ncxTopic', box), out = $('#ncxOut', box), sayEl = $('#ncxSay', box);
@@ -812,29 +1079,28 @@
     if (box.dataset.view === 'thumbnails') return;
     box.dataset.view = 'thumbnails';
     box.innerHTML =
-      '<h1>Thumbnails</h1>' +
-      '<p class="lede">1280&times;720, the size YouTube asks for. Drawn on this device — ' +
-      'nothing is uploaded and nothing is generated by a model, so it works offline.</p>' +
+      '<h1 data-t="st_thumb_h">' + tr('st_thumb_h') + '</h1>' +
+      '<p class="lede" data-t="st_thumb_p">' + tr('st_thumb_p') + '</p>' +
       '<div class="card">' +
         '<div class="two">' +
           '<div>' +
-            '<label for="ncxTitle">Big words</label>' +
-            '<input id="ncxTitle" type="text" maxlength="40" value="POV: it worked" placeholder="six words or fewer">' +
-            '<label for="ncxSub">Small words (optional)</label>' +
-            '<input id="ncxSub" type="text" maxlength="46" placeholder="the bit underneath">' +
-            '<label for="ncxLook">Look</label>' +
+            '<label for="ncxTitle" data-t="st_big">' + tr('st_big') + '</label>' +
+            '<input id="ncxTitle" type="text" maxlength="40" value="POV: it worked" data-tph="st_big_ph" placeholder="' + tr('st_big_ph') + '">' +
+            '<label for="ncxSub" data-t="st_small">' + tr('st_small') + '</label>' +
+            '<input id="ncxSub" type="text" maxlength="46" data-tph="st_small_ph" placeholder="' + tr('st_small_ph') + '">' +
+            '<label for="ncxLook" data-t="st_look">' + tr('st_look') + '</label>' +
             '<select id="ncxLook">' +
-              '<option value="0">Cyan on black</option>' +
-              '<option value="1">Hot pink</option>' +
-              '<option value="2">Lime on charcoal</option>' +
-              '<option value="3">Violet gradient</option>' +
+              '<option value="0" data-t="st_look0">' + tr('st_look0') + '</option>' +
+              '<option value="1" data-t="st_look1">' + tr('st_look1') + '</option>' +
+              '<option value="2" data-t="st_look2">' + tr('st_look2') + '</option>' +
+              '<option value="3" data-t="st_look3">' + tr('st_look3') + '</option>' +
             '</select>' +
-            '<label for="ncxShot">Your own picture (optional)</label>' +
+            '<label for="ncxShot" data-t="st_pic">' + tr('st_pic') + '</label>' +
             '<input id="ncxShot" type="file" accept="image/*">' +
-            '<div class="row"><button class="go" id="ncxSave">Save the PNG</button></div>' +
+            '<div class="row"><button class="go" id="ncxSave" data-t="st_savepng">' + tr('st_savepng') + '</button></div>' +
             '<div class="say" id="ncxSay2" style="display:none"></div>' +
           '</div>' +
-          '<div><label>Preview</label><canvas id="ncxCanvas" width="1280" height="720"></canvas></div>' +
+          '<div><label data-t="st_preview">' + tr('st_preview') + '</label><canvas id="ncxCanvas" width="1280" height="720"></canvas></div>' +
         '</div>' +
       '</div>';
 
@@ -989,26 +1255,23 @@
     var sinceLast = last ? Math.round((Date.now() - last.getTime()) / 86400000) : null;
 
     box.innerHTML =
-      '<h1>Studio</h1>' +
-      '<p class="lede">What this device already knows about your channel. The charts — watch time, ' +
-      'retention, where viewers come from — need a YouTube sign-in and live on the full Studio page.</p>' +
+      '<h1 data-t="st_studio_h">' + tr('st_studio_h') + '</h1>' +
+      '<p class="lede" data-t="st_studio_p">' + tr('st_studio_p') + '</p>' +
       '<div class="card">' +
         '<div class="facts">' +
-          '<div class="fact"><b>' + esc(channel || '—') + '</b><span>Connected channel</span></div>' +
-          '<div class="fact"><b>' + (dates.length || '—') + '</b><span>Uploads it has seen</span></div>' +
-          '<div class="fact"><b>' + esc(cadence) + '</b><span>Your usual gap</span></div>' +
-          '<div class="fact"><b>' + (sinceLast == null ? '—' : sinceLast + 'd') + '</b><span>Since the last one</span></div>' +
+          '<div class="fact"><b>' + esc(channel || '—') + '</b><span data-t="st_fact_ch">' + tr('st_fact_ch') + '</span></div>' +
+          '<div class="fact"><b>' + (dates.length || '—') + '</b><span data-t="st_fact_up">' + tr('st_fact_up') + '</span></div>' +
+          '<div class="fact"><b>' + esc(cadence) + '</b><span data-t="st_fact_gap">' + tr('st_fact_gap') + '</span></div>' +
+          '<div class="fact"><b>' + (sinceLast == null ? '—' : sinceLast + 'd') + '</b><span data-t="st_fact_since">' + tr('st_fact_since') + '</span></div>' +
         '</div>' +
         '<div class="say" style="margin-top:16px">' +
           (channel
-            ? 'Measured from the upload dates this device stored the last time Studio ran. ' +
-              'Nothing here was fetched just now.'
-            : '<b>No channel connected on this device yet.</b> Open the full Studio and sign in ' +
-              'with Google once; after that this panel fills in.') +
+            ? '<span data-t="st_studio_note">' + tr('st_studio_note') + '</span>'
+            : '<span data-t="st_studio_none">' + tr('st_studio_none') + '</span>') +
         '</div>' +
         '<div class="row">' +
-          '<a href="analytics.html"><button class="go">Open the full Studio</button></a>' +
-          '<a href="#/hype"><button>Hype Lab</button></a>' +
+          '<a href="analytics.html"><button class="go" data-t="st_openfull">' + tr('st_openfull') + '</button></a>' +
+          '<a href="#/hype"><button data-t="st_hype_h">' + tr('st_hype_h') + '</button></a>' +
         '</div>' +
       '</div>';
   }
@@ -1029,10 +1292,8 @@
     if (box.dataset.view === 'hype') return;
     box.dataset.view = 'hype';
     box.innerHTML =
-      '<h1>Hype Lab</h1>' +
-      '<p class="lede">Drop in a video you have already cut. It finds the seconds where attention ' +
-      'falls off and puts something there — a punch on the beat, a light wash, words, a music bed. ' +
-      'Nothing is uploaded to measure it.</p>' +
+      '<h1 data-t="st_hype_h">' + tr('st_hype_h') + '</h1>' +
+      '<p class="lede" data-t="st_hype_p">' + tr('st_hype_p') + '</p>' +
       '<div class="frame"><iframe id="ncxHype" title="Hype Lab" ' +
         'src="hype.html?embed=1" loading="lazy" ' +
         'allow="camera; microphone; clipboard-write"></iframe></div>';
@@ -1050,9 +1311,10 @@
       '<button type="button" class="ncxBack">' +
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
         'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-        '<path d="M15 18l-6-6 6-6"/></svg>Studio home</button>' +
+        '<path d="M15 18l-6-6 6-6"/></svg>' +
+        '<span data-t="st_home">' + tr('st_home') + '</span></button>' +
       '<span class="who">' + name + '</span>' +
-      '<a class="out" href="' + page + '">Open on its own page</a>' +
+      '<a class="out" href="' + page + '" data-t="st_ownpage">' + tr('st_ownpage') + '</a>' +
     '</div>';
   }
 
@@ -1082,14 +1344,13 @@
     if (box.dataset.view === 'editor') return;
     box.dataset.view = 'editor';
     box.innerHTML =
-      exitBar('Editor', 'editor.html') +
-      '<h1>Editor</h1>' +
-      '<p class="lede">The full timeline — cut, trim, text, colour, sound and export. ' +
-      'Nothing is uploaded: the footage stays in this browser.</p>' +
+      exitBar(tr('editor') || 'Editor', 'editor.html') +
+      '<h1 data-t="editor">' + tr('editor') + '</h1>' +
+      '<p class="lede" data-t="st_editor_p">' + tr('st_editor_p') + '</p>' +
       '<div class="frame tall"><iframe id="ncxEditor" title="Editor" ' +
         'src="editor.html?embed=1" loading="lazy" ' +
         'allow="camera; microphone; clipboard-write"></iframe></div>' +
-      '<p class="foot">Short of room? <a href="editor.html">Open the Editor on its own page</a>.</p>';
+      '<p class="foot"><a href="editor.html" data-t="st_editor_own">' + tr('st_editor_own') + '</a></p>';
     wireExit(box);
   }
 
@@ -1097,14 +1358,13 @@
     if (box.dataset.view === 'publish') return;
     box.dataset.view = 'publish';
     box.innerHTML =
-      exitBar('AI Editor', 'publish.html') +
-      '<h1>AI Editor</h1>' +
-      '<p class="lede">Drop in a clip and it plans the edit, applies it, and writes the title, ' +
-      'description and tags — ready to post to YouTube, TikTok or Shorts.</p>' +
+      exitBar(tr('publish') || 'AI Editor', 'publish.html') +
+      '<h1 data-t="publish">' + tr('publish') + '</h1>' +
+      '<p class="lede" data-t="st_ai_p">' + tr('st_ai_p') + '</p>' +
       '<div class="frame tall"><iframe id="ncxPublish" title="AI Editor" ' +
         'src="publish.html?embed=1" loading="lazy" ' +
         'allow="camera; microphone; clipboard-write"></iframe></div>' +
-      '<p class="foot">Short of room? <a href="publish.html">Open the AI Editor on its own page</a>.</p>';
+      '<p class="foot"><a href="publish.html" data-t="st_ai_own">' + tr('st_ai_own') + '</a></p>';
     wireExit(box);
   }
 
@@ -1112,15 +1372,13 @@
     if (box.dataset.view === 'photo') return;
     box.dataset.view = 'photo';
     box.innerHTML =
-      exitBar('Photo', 'photo.html') +
-      '<h1>Photo</h1>' +
-      '<p class="lede">Crop, retouch, add text and export a still — thumbnails, covers, ' +
-      'anything that is a picture rather than a cut. Nothing is uploaded: the image stays ' +
-      'in this browser.</p>' +
+      exitBar(tr('photo') || 'Photo', 'photo.html') +
+      '<h1 data-t="photo">' + tr('photo') + '</h1>' +
+      '<p class="lede" data-t="st_photo_p">' + tr('st_photo_p') + '</p>' +
       '<div class="frame tall"><iframe id="ncxPhoto" title="Photo editor" ' +
         'src="photo.html?embed=1" loading="lazy" ' +
         'allow="camera; clipboard-write"></iframe></div>' +
-      '<p class="foot">Short of room? <a href="photo.html">Open the Photo editor on its own page</a>.</p>';
+      '<p class="foot"><a href="photo.html" data-t="st_photo_own">' + tr('st_photo_own') + '</a></p>';
     wireExit(box);
   }
 
@@ -1154,7 +1412,8 @@
       document.documentElement.classList.toggle('nc-x-full', !!mine.full);
       if (page) page.style.display = 'none';
       box.style.display = '';
-      if (h === '/ideas') ideasPanel(box);
+      if (h === '/trends') trendsPanel(box);
+      else if (h === '/ideas') ideasPanel(box);
       else if (h === '/scripts') scriptsPanel(box);
       else if (h === '/thumbnails') thumbPanel(box);
       else if (h === '/hype') hypePanel(box);
@@ -1282,10 +1541,11 @@
      first because "get me out of this panel" is the commonest thing wanted
      from a menu opened inside one. */
   window.NC_PHONE_ROUTES = [{
-    href: '#/', label: 'Studio home',
+    href: '#/', label: tr('st_home') || 'Studio home',
     path: 'M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5'
   }].concat(Object.keys(PANELS).map(function (h) {
-    return { href: '#' + h, label: PANELS[h].label, path: PANELS[h].icon };
+    return { href: '#' + h, label: (PANELS[h].key && tr(PANELS[h].key)) || PANELS[h].label,
+             path: PANELS[h].icon };
   }));
 
   window.NC_TRENDS_NAV = { fixRail: fixRail, route: route, panels: PANELS };

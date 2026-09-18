@@ -208,6 +208,32 @@
    this presses that rather than reaching into React's state.
 
    trends.html and trends-nav.js. Both cached. */
+/* v60: the Trend Spotter scan is this repo's now, and the Studio speaks the
+   site's language.
+
+   The bundled Trend Spotter had a niche box and a Scan button. Measured in a
+   browser: typing a niche and pressing it made no request to anything,
+   rendered no card, printed no error, and stored nothing. Two complaints came
+   straight out of that one dead button — results that were "about another
+   niche" (there were no results, so the page kept whatever was on it) and the
+   Advanced Certificate's "Run a Trend Spotter scan" counter sitting at 0 after
+   a dozen scans. A button that does nothing cannot count.
+
+   So /trends is a panel in trends-nav.js now, beside the other eight, and the
+   scan asks with { search: true } — search grounding on, deliberately. Without
+   it a model answers about the world as it was when it was trained, which for
+   a question with the word "trending" in it is the one answer guaranteed to be
+   wrong. The niche is named three times in the prompt (as a quoted string, as
+   a rule, and as a refusal condition) because drifting off it was the
+   complaint. What it read is printed under the cards: a trend you cannot check
+   is a rumour. logSkill('trend_scan') fires on an answer that arrived, not on
+   the press — a scan that failed is not a scan.
+
+   And the Studio's AI output is translated, not just its labels. Somebody
+   reading the site in Farsi asked for the Studio in Farsi, and the trends are
+   the Studio. The JSON keys stay English or the parser stops matching.
+
+   trends-nav.js and nova.js. Both cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -638,7 +664,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v59';
+const CACHE = 'novaclip-v60';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
