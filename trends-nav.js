@@ -400,28 +400,88 @@
     s.id = STYLE_ID;
     s.textContent = [
       '.ncx{padding:28px 30px 70px;max-width:940px}',
-      '.ncx h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin:0 0 6px}',
+      '.ncx:not(.ncx-wide) h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin:0 0 6px}',
+
+      /* ------------------------------------------------------------------
+         .ncx-wide — THE PANEL GETS OUT OF THE WAY
+
+         Trend Spotter is drawn in the app's own classes now, and the app's
+         own classes are what this file has spent nine panels overriding.
+         `.ncx input` is (0,1,1) against `.nc-search-input`'s (0,1,0), so the
+         search bar would have come out wearing this file's form styling —
+         same for the headings, the labels and every button. Rather than
+         fight that selector by selector, every bare-element rule above is
+         scoped to :not(.ncx-wide), and the one panel that wants the app's
+         design asks for it by carrying that class.
+
+         The column also goes. 940px is right for a form; it is not right for
+         a grid of trend cards, a platform row and a 470px radar, which is
+         what the bundle laid this screen out for. */
+      '.ncx-wide{max-width:1180px;padding-top:34px}',
+      '.ncx-wide .nc-hero{text-align:center;padding:0 0 4px}',
+      '.ncx-wide .nc-hero-title{font-size:clamp(2rem,4.4vw,3.1rem);margin:10px 0 8px}',
+      '.ncx-wide .nc-hero-sub{font-size:1.05rem;font-weight:700;margin:0 0 6px}',
+      '.ncx-wide .nc-section-head{margin-bottom:14px}',
+      /* The two selects under the chips. They are this file's controls in the
+         middle of the bundle's hero, so they borrow the chip's shape rather
+         than inventing a third look for a dropdown. */
+      '.ncx-wide .ts-picks{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:16px}',
+      '.ncx-wide .ts-pick{display:inline-flex;align-items:center;gap:8px;padding:6px 8px 6px 15px;',
+      '  border-radius:999px;background:var(--nc-panel);border:1px solid var(--nc-border);',
+      '  font-size:.78rem;font-weight:800;color:var(--nc-muted);text-transform:uppercase;',
+      '  letter-spacing:.06em}',
+      '.ncx-wide .ts-pick select{background:transparent;border:0;color:var(--nc-text);',
+      '  font:inherit;font-size:.82rem;text-transform:none;letter-spacing:0;cursor:pointer;',
+      '  padding:4px 6px;border-radius:999px;outline:none}',
+      '.ncx-wide .nc-trend-card{cursor:pointer;position:relative}',
+      /* THE RADAR SIGNALS ARE BUTTONS, AND BUTTONS COME WITH A LOOK.
+         The bundle drew these as divs. They are buttons here so they can be
+         tabbed to and pressed with a keyboard, which is worth having on the
+         one control that opens the detail view — but every bare-element rule
+         in this file is scoped away from .ncx-wide, so nothing was overriding
+         the browser's own button chrome and each signal came out as a grey
+         rounded box with its name in it. The bundle's .nc-radar-dot and
+         .nc-radar-label do all the drawing; the button underneath has to be
+         nothing at all. */
+      '.ncx-wide .nc-radar-point{background:none;border:0;padding:0;margin:0;',
+      '  font:inherit;color:inherit;-webkit-appearance:none;appearance:none}',
+      '.ncx-wide .nc-radar-point:focus-visible{outline:2px solid var(--nc-cyan);',
+      '  outline-offset:4px;border-radius:8px}',
+      '.ncx-wide .nc-modal-head{display:flex;align-items:center;gap:13px;margin-bottom:6px}',
+      '.ncx-wide .nc-modal-head .nc-modal-title{font-weight:900;font-size:1.2rem;line-height:1.25}',
+      '.ncx-wide .nc-modal-section{margin-top:18px}',
+      '.ncx-wide .nc-modal-section-title{font-size:.7rem;font-weight:800;text-transform:uppercase;',
+      '  letter-spacing:.09em;color:var(--nc-muted);margin-bottom:7px}',
+      '.ncx-wide .nc-modal-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:22px}',
+      '.ncx-wide .nc-empty{text-align:center;padding:40px 20px;border:1px dashed var(--nc-border-strong);',
+      '  border-radius:var(--nc-radius-lg)}',
+      '.ncx-wide .nc-empty-title{font-weight:800;font-size:1.05rem;margin-bottom:6px}',
+      '.ncx-wide .nc-empty-text{color:var(--nc-muted);font-size:.9rem}',
+      '.ncx-wide .foot{margin-top:10px;font-size:.84rem;opacity:.65;text-align:center}',
+      '.ncx-wide .foot a{text-decoration:underline}',
+      '@media(max-width:820px){.ncx-wide{padding:20px 16px 60px}',
+      '  .ncx-wide .nc-radar-wrap{max-width:330px}}',
       '.ncx .lede{opacity:.72;margin:0 0 22px;line-height:1.6;max-width:70ch}',
       '.ncx .card{border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:16px;',
       '  padding:18px;background:color-mix(in srgb,currentColor 4%,transparent);margin-bottom:16px}',
-      '.ncx label{display:block;font-size:.8rem;opacity:.7;margin:12px 0 5px}',
+      '.ncx:not(.ncx-wide) label{display:block;font-size:.8rem;opacity:.7;margin:12px 0 5px}',
       /* A fixed dark fill is wrong half the time: this app follows the site
          theme, and rgba(0,0,0,.28) on the light theme is a grey box with dark
          text in it. Tinted from the current text colour instead, so it is a
          subtle wash on either. */
-      '.ncx input,.ncx select,.ncx textarea{width:100%;background:color-mix(in srgb,currentColor 8%,transparent);',
+      '.ncx:not(.ncx-wide) input,.ncx:not(.ncx-wide) select,.ncx:not(.ncx-wide) textarea{width:100%;background:color-mix(in srgb,currentColor 8%,transparent);',
       '  color:inherit;border:1px solid color-mix(in srgb,currentColor 26%,transparent);',
       '  border-radius:10px;padding:10px 12px;font:inherit;font-size:.93rem}',
-      '.ncx input::placeholder,.ncx textarea::placeholder{color:inherit;opacity:.45}',
-      '.ncx textarea{min-height:240px;resize:vertical;line-height:1.6;font-variant-numeric:tabular-nums}',
-      '.ncx input:focus,.ncx select:focus,.ncx textarea:focus{outline:none;border-color:#22d3ee}',
+      '.ncx:not(.ncx-wide) input::placeholder,.ncx:not(.ncx-wide) textarea::placeholder{color:inherit;opacity:.45}',
+      '.ncx:not(.ncx-wide) textarea{min-height:240px;resize:vertical;line-height:1.6;font-variant-numeric:tabular-nums}',
+      '.ncx:not(.ncx-wide) input:focus,.ncx:not(.ncx-wide) select:focus,.ncx:not(.ncx-wide) textarea:focus{outline:none;border-color:#22d3ee}',
       '.ncx .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}',
-      '.ncx button{border:1px solid color-mix(in srgb,currentColor 24%,transparent);',
+      '.ncx:not(.ncx-wide) button{border:1px solid color-mix(in srgb,currentColor 24%,transparent);',
       '  background:color-mix(in srgb,currentColor 8%,transparent);color:inherit;',
       '  border-radius:11px;padding:10px 16px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}',
-      '.ncx button:hover:not(:disabled){border-color:#22d3ee}',
-      '.ncx button:disabled{opacity:.45;cursor:not-allowed}',
-      '.ncx button.go{background:linear-gradient(110deg,#7c5cff,#22d3ee);border:0;color:#06121a;font-weight:800}',
+      '.ncx:not(.ncx-wide) button:hover:not(:disabled){border-color:#22d3ee}',
+      '.ncx:not(.ncx-wide) button:disabled{opacity:.45;cursor:not-allowed}',
+      '.ncx:not(.ncx-wide) button.go{background:linear-gradient(110deg,#7c5cff,#22d3ee);border:0;color:#06121a;font-weight:800}',
       '.ncx .say{margin-top:12px;font-size:.9rem;border:1px solid color-mix(in srgb,currentColor 22%,transparent);',
       '  border-radius:11px;padding:10px 13px;line-height:1.55}',
       '.ncx .say.no{border-color:rgba(255,90,90,.55);background:rgba(255,90,90,.08)}',
@@ -639,55 +699,203 @@
      have to retype into the next step is an idea most people drop.
      ========================================================================== */
   /* ==========================================================================
-     TREND SPOTTER — the scan, rebuilt here
+     TREND SPOTTER
      ==========================================================================
-     The bundled app has a Trend Spotter screen with a niche box and a "Scan
-     for Trends" button. Measured: typing a niche and pressing it makes no
-     request to anything, renders no card, prints no error, and stores nothing.
-     Two of the three complaints about this page come straight out of that —
-     the results not matching the niche that was typed, and the certificate's
-     "Run a Trend Spotter scan" counter sitting at 0 no matter how many times
-     somebody scanned. A button that does nothing cannot count.
+     THE DESIGN HERE IS THE APP'S OWN, BACK AGAIN.
 
-     So the route is a panel in this file now, like the other eight, and the
-     scan is one this repo owns.
+     The bundle shipped a whole Trend Spotter: a hero, a search bar with niche
+     chips under it, a live scan meter, an animated radar you could click a
+     signal on, cards with badges and metric tiles and sparklines, a platform
+     breakdown, hooks, opportunities, and a detail modal. All of it is in this
+     page's stylesheet — .nc-trend-card, .nc-radar-point, .nc-metric,
+     .nc-bar-fill, .nc-platform-best, .nc-hook-quote, .nc-modal and about
+     forty more — and none of it had ever been on screen, because the scan
+     that was supposed to fill it made no request and returned nothing. The
+     design was not missing. It was waiting for data that never came.
 
-     WITH SEARCH ON, DELIBERATELY. ncAsk takes { search: true } and the worker
-     turns on Google's search grounding — without it a model answers about the
-     world as it was when it was trained, which for a question with the word
-     "trending" in it is the one answer guaranteed to be wrong. The sources it
-     used are printed under the cards, because a trend you cannot check is a
-     rumour.
+     The version that replaced it worked and looked like a form. So: the
+     original markup and the original class names, rendered here, driven by a
+     scan this repo owns. Nothing new is invented where the bundle already had
+     a class for it — every element below is the shape its CSS was written
+     for.
+
+     WHAT THE BACKEND DOES NOW, WHICH IS THE PART THAT WAS ASKED TO GO FURTHER
+
+     Two passes, not one.
+
+       Pass one is grounded in live search ({ search: true }) and asks one
+       question: what is actually rising in this niche right now. It comes
+       back with, per trend, an emoji, a name, a category, which of the four
+       badges it earns, momentum, how crowded it already is, how well it fits
+       a channel this size, a seven-point shape for the sparkline, the best
+       platform for it, and the evidence for why it is moving.
+
+       Pass two takes those names and asks a different question — what would
+       this creator actually make — and returns the hooks, the openings and
+       the opportunities. Two focused calls beat one call asked to do both:
+       the schema stays small enough to come back whole, and a failure in the
+       second one still leaves the first on screen rather than an error page.
+
+     COMPETITION IS ASKED FOR AND SHOWN. "Rising" on its own sends a small
+     channel straight at whatever the biggest channels are already covering.
+     A trend that is climbing AND uncrowded is the one worth the afternoon,
+     so the cards carry both bars and the opportunities are picked on the gap
+     between them, not on momentum alone.
+
+     IT DOES NOT PAY TWICE FOR THE SAME QUESTION. Scans are cached per niche,
+     window and channel size for the session, so pressing a chip you pressed
+     ten seconds ago is instant and free. The cache is in memory: trends go
+     stale, and a stale answer restored tomorrow from storage would be worse
+     than no answer.
      ========================================================================== */
+
+  /* The chips under the search bar, exactly as the bundle had them. */
+  var NICHES = ['Minecraft', 'Gaming', 'Football', 'AI', 'Cooking',
+                'Beauty', 'Music', 'Fitness', 'Tech', 'Study'];
+
+  /* Which of the four badge styles a trend earns. The bundle has CSS for all
+     four and the names come back from the model, so anything it invents falls
+     back to 'rising' rather than rendering an unstyled pill. */
+  var BADGES = { hot: 1, rising: 1, breakout: 1, opportunity: 1 };
+
+  var scanCache = {};      /* in memory only — see the note above */
+  var lastScan = null;     /* what is on screen, for the modal and the radar */
+
+  function recentNiches() {
+    try { return JSON.parse(localStorage.getItem('nc_trend_recent') || '[]') || []; }
+    catch (e) { return []; }
+  }
+  function rememberNiche(n) {
+    var all = recentNiches().filter(function (x) { return x && x.n !== n; });
+    all.unshift({ n: n, at: Date.now() });
+    try { localStorage.setItem('nc_trend_recent', JSON.stringify(all.slice(0, 6))); } catch (e) {}
+  }
+
+  /* 0-100 into the width of a bar, with a floor: a 2% bar reads as a broken
+     bar rather than as a low number. */
+  function pct(v) { return Math.max(4, Math.min(100, Math.round(+v || 0))); }
+
+  /* The sparkline the bundle styles but never drew. Seven points, normalised
+     here rather than trusting whatever range the model picked. */
+  function sparkline(series) {
+    var pts = (series || []).map(Number).filter(function (n) { return isFinite(n); });
+    if (pts.length < 2) return '';
+    var lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts);
+    var span = (hi - lo) || 1, W = 100, H = 34;
+    var d = pts.map(function (p, i) {
+      var x = (i / (pts.length - 1)) * W;
+      var y = H - 3 - ((p - lo) / span) * (H - 6);
+      return (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+    var id = 'ncs' + Math.random().toString(36).slice(2, 8);
+    return '<svg class="nc-sparkline" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+      '<defs><linearGradient id="' + id + '" x1="0" x2="1" y1="0" y2="0">' +
+      '<stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#f472b6"/></linearGradient></defs>' +
+      '<path d="' + d + '" fill="none" stroke="url(#' + id + ')" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  /* Where each signal sits on the radar. Angle from the index so they spread
+     evenly; distance from momentum, so the things moving fastest sit nearest
+     the centre where the eye lands first. */
+  function radarPos(i, n, momentum) {
+    var ang = (i / Math.max(1, n)) * Math.PI * 2 - Math.PI / 2;
+    var r = 46 - (pct(momentum) / 100) * 30;      /* 16%..46% from the middle */
+    return { left: (50 + Math.cos(ang) * r).toFixed(2) + '%',
+             top:  (50 + Math.sin(ang) * r).toFixed(2) + '%' };
+  }
+
   function trendsPanel(box) {
     if (box.dataset.view === 'trends') return;
     box.dataset.view = 'trends';
+    box.className = 'ncx ncx-wide';
     box.innerHTML =
-      '<h1 data-t="st_trends_h">' + tr('st_trends_h') + '</h1>' +
-      '<p class="lede" data-t="st_trends_p">' + tr('st_trends_p') + '</p>' +
-      '<div class="card">' +
-        '<label for="ncxNiche" data-t="st_niche">' + tr('st_niche') + '</label>' +
-        '<input id="ncxNiche" type="text" maxlength="80" data-tph="st_niche_ph" ' +
-               'placeholder="' + tr('st_niche_ph') + '">' +
-        '<div class="two">' +
-          '<div><label for="ncxWhen" data-t="st_when">' + tr('st_when') + '</label>' +
-            '<select id="ncxWhen">' +
-              '<option value="week" data-t="st_when_week">' + tr('st_when_week') + '</option>' +
-              '<option value="month" selected data-t="st_when_month">' + tr('st_when_month') + '</option>' +
-              '<option value="season" data-t="st_when_season">' + tr('st_when_season') + '</option>' +
-            '</select></div>' +
-          '<div><label for="ncxSize" data-t="st_size">' + tr('st_size') + '</label>' +
-            '<select id="ncxSize">' +
-              '<option value="small" selected data-t="st_size_small">' + tr('st_size_small') + '</option>' +
-              '<option value="any" data-t="st_size_any">' + tr('st_size_any') + '</option>' +
-            '</select></div>' +
-        '</div>' +
-        '<div class="row"><button class="go" id="ncxScan" data-t="st_scan">' + tr('st_scan') + '</button></div>' +
-        '<div class="say" id="ncxScanSay" style="display:none"></div>' +
-      '</div>' +
-      '<div id="ncxTrendList"></div>';
+      /* ---- the hero, as it was ---- */
+      '<section class="nc-hero">' +
+        '<span class="nc-hero-badge" data-t="ts_badge">' + esc(tr('ts_badge')) + '</span>' +
+        '<h1 class="nc-hero-title"><span class="nc-gradient-text" data-t="st_trends_h">' +
+          esc(tr('st_trends_h')) + '</span></h1>' +
+        '<p class="nc-hero-sub" data-t="ts_sub">' + esc(tr('ts_sub')) + '</p>' +
+        '<p class="nc-hero-text" data-t="ts_lede">' + esc(tr('ts_lede')) + '</p>' +
 
-    var niche = $('#ncxNiche', box), sayEl = $('#ncxScanSay', box), list = $('#ncxTrendList', box);
+        /* ---- the search bar ---- */
+        '<div class="nc-search">' +
+          '<div class="nc-search-inner">' +
+            '<span class="nc-search-icon">' +
+              '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+              'stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/>' +
+              '<path d="M20 20l-3.5-3.5"/></svg></span>' +
+            '<input class="nc-search-input" id="ncxNiche" type="text" maxlength="80" ' +
+              'autocomplete="off" data-tph="st_niche_ph" placeholder="' + esc(tr('st_niche_ph')) + '">' +
+            '<button class="nc-btn nc-btn-primary" id="ncxScan" type="button">' +
+              '<span data-t="ts_scan">' + esc(tr('ts_scan')) + '</span></button>' +
+          '</div>' +
+          '<div class="nc-search-hint" data-t="ts_hint">' + esc(tr('ts_hint')) + '</div>' +
+          '<div id="ncxErr"></div>' +
+        '</div>' +
+
+        /* ---- the niche chips ---- */
+        '<div class="nc-chips" id="ncxChips" style="justify-content:center;margin-top:22px">' +
+          NICHES.map(function (n) {
+            return '<button type="button" class="nc-chip" data-niche="' + esc(n) + '">' + esc(n) + '</button>';
+          }).join('') +
+        '</div>' +
+
+        /* ---- the two controls the scan actually needs ---- */
+        /* NOT .nc-chips. Below 620px the bundle turns that class into a
+           horizontal scroller — a swipeable rail, which is the right answer
+           for ten niche chips and the wrong one for two controls you have to
+           set before pressing Scan. These wrap instead. */
+        '<div class="ts-picks">' +
+          '<label class="ts-pick"><span data-t="st_when">' + esc(tr('st_when')) + '</span>' +
+            '<select id="ncxWhen">' +
+              '<option value="week" data-t="st_when_week">' + esc(tr('st_when_week')) + '</option>' +
+              '<option value="month" selected data-t="st_when_month">' + esc(tr('st_when_month')) + '</option>' +
+              '<option value="season" data-t="st_when_season">' + esc(tr('st_when_season')) + '</option>' +
+            '</select></label>' +
+          '<label class="ts-pick"><span data-t="st_size">' + esc(tr('st_size')) + '</span>' +
+            '<select id="ncxSize">' +
+              '<option value="small" selected data-t="st_size_small">' + esc(tr('st_size_small')) + '</option>' +
+              '<option value="any" data-t="st_size_any">' + esc(tr('st_size_any')) + '</option>' +
+            '</select></label>' +
+        '</div>' +
+
+        '<div class="nc-ai-status" id="ncxAi">' +
+          '<span class="nc-ai-dot"></span>' +
+          '<span data-t="ts_ai">' + esc(tr('ts_ai')) + '</span>' +
+          '<span class="nc-muted">·</span>' +
+          '<span id="ncxAiWord" data-t="ts_ai_ready">' + esc(tr('ts_ai_ready')) + '</span>' +
+        '</div>' +
+        '<div id="ncxScanBar"></div>' +
+      '</section>' +
+
+      '<div id="ncxRecent"></div>' +
+
+      /* ---- the radar ---- */
+      '<section class="nc-anchor" style="margin-top:44px">' +
+        '<div class="nc-section-head">' +
+          '<h2 class="nc-section-title" data-t="ts_radar">' + esc(tr('ts_radar')) + '</h2>' +
+          '<p class="nc-section-sub" data-t="ts_radar_sub">' + esc(tr('ts_radar_sub')) + '</p>' +
+        '</div>' +
+        '<div class="nc-radar-wrap" id="ncxRadar">' +
+          '<div class="nc-radar-ring-outer"></div>' +
+          '<div class="nc-radar-sweep-wrap"><div class="nc-radar-sweep"></div>' +
+            '<div class="nc-radar-beam"></div></div>' +
+          '<div class="nc-radar-center"></div>' +
+        '</div>' +
+        '<div class="nc-radar-hint" id="ncxRadarHint" data-t="ts_radar_idle">' + esc(tr('ts_radar_idle')) + '</div>' +
+      '</section>' +
+
+      '<div id="ncxOut">' +
+        '<div class="nc-empty" style="margin-top:34px">' +
+          '<div class="nc-empty-title" data-t="ts_empty_h">' + esc(tr('ts_empty_h')) + '</div>' +
+          '<div class="nc-empty-text" data-t="ts_empty_p">' + esc(tr('ts_empty_p')) + '</div>' +
+        '</div>' +
+      '</div>';
+
+    var niche = $('#ncxNiche', box), out = $('#ncxOut', box), errBox = $('#ncxErr', box);
+    var radar = $('#ncxRadar', box), radarHint = $('#ncxRadarHint', box);
+    var aiPill = $('#ncxAi', box), aiWord = $('#ncxAiWord', box), barHost = $('#ncxScanBar', box);
 
     /* Their own category, so the box is not empty on a page whose whole job is
        to answer "what should I make". */
@@ -699,108 +907,365 @@
       if (carried) { niche.value = carried; sessionStorage.removeItem('nc_trend_niche'); }
     } catch (e) {}
 
+    function setAi(state, key) {
+      aiPill.className = 'nc-ai-status' + (state ? ' nc-ai-status-' + state : '');
+      aiWord.setAttribute('data-t', key);
+      aiWord.textContent = tr(key);
+    }
+    function err(msg) {
+      errBox.innerHTML = msg
+        ? '<div class="nc-search-error"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" ' +
+          'stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 8v5M12 17h.01"/>' +
+          '<circle cx="12" cy="12" r="9"/></svg>' + esc(msg) + '</div>'
+        : '';
+    }
+
+    /* The scan meter. Its steps are honest about what is happening — pass one,
+       pass two, drawing — rather than a bar that fills on a timer and sits at
+       90% waiting, which is the thing that makes a wait feel broken. */
+    function meter(step, key) {
+      barHost.innerHTML = step < 0 ? '' :
+        '<div class="nc-scan-status">' +
+          '<div class="nc-scan-message"><span class="nc-spinner"></span>' + esc(tr(key)) + '</div>' +
+          '<div class="nc-scan-track"><div class="nc-scan-fill" style="width:' + step + '%"></div></div>' +
+        '</div>';
+    }
+
+    function paintRecent() {
+      var host2 = $('#ncxRecent', box), all = recentNiches();
+      if (!host2) return;
+      if (!all.length) { host2.innerHTML = ''; return; }
+      host2.innerHTML =
+        '<div class="nc-section-head" style="margin-top:34px">' +
+          '<h2 class="nc-section-title" style="font-size:1rem" data-t="ts_recent">' +
+            esc(tr('ts_recent')) + '</h2></div>' +
+        '<div class="nc-recent">' + all.map(function (r) {
+          return '<button type="button" class="nc-recent-chip" data-niche="' + esc(r.n) + '">' +
+            esc(r.n) + '<span class="nc-recent-time">' + esc(ago(r.at)) + '</span></button>';
+        }).join('') + '</div>';
+      wireNiches(host2);
+    }
+    function ago(at) {
+      try { return (typeof window.ncAgo === 'function') ? window.ncAgo(at) : ''; }
+      catch (e) { return ''; }
+    }
+
+    function wireNiches(scope) {
+      scope.querySelectorAll('[data-niche]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          niche.value = b.dataset.niche;
+          $('#ncxChips', box).querySelectorAll('.nc-chip').forEach(function (c) {
+            c.classList.toggle('nc-chip-active', c.dataset.niche === b.dataset.niche);
+          });
+          $('#ncxScan', box).click();
+        });
+      });
+    }
+    wireNiches($('#ncxChips', box));
+    paintRecent();
+
+    niche.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); $('#ncxScan', box).click(); }
+    });
+
     $('#ncxScan', box).addEventListener('click', async function () {
       var t = (niche.value || '').trim();
-      if (!t) return say(sayEl, 'no', tr('st_scan_need'));
-      if (typeof window.ncAsk !== 'function') return say(sayEl, 'no', tr('st_no_ai'));
-      var btn = this;
-      btn.disabled = true;
-      say(sayEl, '', tr('st_scanning'));
-      list.innerHTML = '';
+      if (!t) { err(tr('st_scan_need')); niche.focus(); return; }
+      if (typeof window.ncAsk !== 'function') { err(tr('st_no_ai')); return; }
       var when = $('#ncxWhen', box).value, size = $('#ncxSize', box).value;
+      var key = t.toLowerCase() + '|' + when + '|' + size;
+      err('');
+      var btn = this;
+
+      if (scanCache[key]) { draw(scanCache[key], t); return; }
+
+      btn.disabled = true;
+      setAi('scanning', 'ts_ai_scanning');
+      radarHint.textContent = tr('ts_radar_scanning');
+      meter(30, 'ts_step1');
       try {
-        /* THE NICHE IS REPEATED AND FENCED. The complaint was that what came
-           back was about something else entirely, so the subject is given
-           once as a quoted string, once as a rule, and once as a refusal
-           condition — a model that drifts has to ignore it three times. */
-        var raw = await window.ncAsk(
-          'You are finding what is genuinely rising RIGHT NOW on YouTube, TikTok and Shorts ' +
-          'inside one niche, for a teenage creator.' + catNote() + '\n\n' +
-          'The niche, exactly as the creator typed it: "' + t + '"\n' +
-          'Window: what has been rising over the last ' +
-            (when === 'week' ? 'week' : when === 'season' ? 'three months' : 'month') + '.\n' +
-          'Channel size: ' + (size === 'small' ? 'small — under about 10,000 subscribers, so only ' +
-            'suggest things a small channel can actually reach' : 'any size') + '.\n\n' +
-          'EVERY trend must be about "' + t + '" itself. Not the broader category it belongs to, ' +
-          'not a neighbouring hobby, not a general platform trend that happens to be popular. ' +
-          'If you cannot find six real ones inside that niche, return fewer — an honest three ' +
-          'beats six padded out with things from somewhere else.\n\n' +
-          'Use the search results you have. Do not invent view counts or dates.\n\n' +
-          'Answer with ONE line of JSON and nothing else:\n' +
-          '{"trends":[{"title":"<max 8 words>","why":"<why it is rising, max 20 words>",' +
-          '"angle":"<one video this creator could make from it, max 16 words>",' +
-          '"heat":"<rising|hot|steady>"}]}\n' +
-          'The "heat" value stays one of those three English words whatever ' +
-          'language the rest is in — the page colours the badge from it.' +
-          langNote(),
-          { search: true, maxTokens: 1400 });
-        if (raw && raw.err) throw new Error(raw.err);
-        var body = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
-        var m = body.match(/\{[\s\S]*\}/);
-        if (!m) throw new Error(tr('st_scan_shape'));
-        var trends = (JSON.parse(m[0]) || {}).trends || [];
-        if (!trends.length) throw new Error(tr('st_scan_none'));
-
-        list.innerHTML = trends.slice(0, 6).map(function (it, i) {
-          /* The model answers in English whatever language the page is in, so
-             the badge word is mapped rather than printed. An unexpected word
-             falls through to itself — wrong language beats a blank badge. */
-          var heat = String(it.heat || '').toLowerCase().replace(/[^a-z]/g, '');
-          var heatWord = /^(hot|rising|steady)$/.test(heat) ? (tr('st_heat_' + heat) || heat) : heat;
-          return '<div class="card idea">' +
-            '<div class="ttl">' + esc(it.title || '') +
-              ' <span class="heat ' + esc(heat) + '">' + esc(heatWord) + '</span></div>' +
-            '<div class="hook">' + esc(it.why || '') + '</div>' +
-            '<div class="shape">' + esc(it.angle || '') + '</div>' +
-            '<div class="row">' +
-              '<button data-i="' + i + '">' + tr('st_to_ideas') + '</button>' +
-              '<button data-w="' + i + '">' + tr('st_to_script') + '</button>' +
-              '<button data-c="' + i + '">' + tr('st_copy') + '</button>' +
-            '</div></div>';
-        }).join('') + sourcesHTML(raw && raw.sources);
-
+        var found = await passOne(t, when, size);
+        if (!found.length) throw new Error(tr('st_scan_none'));
+        meter(70, 'ts_step2');
+        /* Pass two is allowed to fail. What it adds is worth having and is
+           not worth losing pass one over, so its result is optional and the
+           draw below simply leaves those sections out. */
+        var extra = null;
+        try { extra = await passTwo(t, found); } catch (e2) { extra = null; }
+        meter(100, 'ts_step3');
+        var res = { trends: found, extra: extra, at: Date.now() };
+        scanCache[key] = res;
+        rememberNiche(t);
+        draw(res, t);
+        setAi('done', 'ts_ai_done');
         /* Counted HERE, on an answer that arrived, rather than on the press.
            A scan that failed is not a scan, and paying for it would be the
            counter lying in the other direction. */
         try { if (typeof window.logSkill === 'function') window.logSkill('trend_scan'); } catch (e) {}
+        try { if (typeof window.addPts === 'function') window.addPts(5); } catch (e) {}
         try {
           if (typeof window.saveHist === 'function') {
-            window.saveHist('Trend Spotter', t, trends.slice(0, 3).map(function (x) {
-              return '• ' + (x.title || '');
+            window.saveHist('Trend Spotter', t, found.slice(0, 3).map(function (x) {
+              return '• ' + (x.name || '');
             }).join('\n'));
           }
         } catch (e) {}
-        try { if (typeof window.addPts === 'function') window.addPts(5); } catch (e) {}
-
-        list.querySelectorAll('[data-i]').forEach(function (b2) {
-          b2.addEventListener('click', function () {
-            var it = trends[+b2.dataset.i] || {};
-            try { sessionStorage.setItem('nc_trend_seed', it.title || ''); } catch (e) {}
-            var h = host(); if (h) h.dataset.view = '';
-            location.hash = '/ideas';
-          });
-        });
-        list.querySelectorAll('[data-w]').forEach(function (b3) {
-          b3.addEventListener('click', function () {
-            var it = trends[+b3.dataset.w] || {};
-            try { sessionStorage.setItem('nc_trend_seed', it.title || ''); } catch (e) {}
-            var h = host(); if (h) h.dataset.view = '';
-            location.hash = '/scripts';
-          });
-        });
-        list.querySelectorAll('[data-c]').forEach(function (b4) {
-          b4.addEventListener('click', function () {
-            var it = trends[+b4.dataset.c] || {};
-            var text = (it.title || '') + '\n' + (it.why || '') + '\n' + (it.angle || '');
-            try { navigator.clipboard.writeText(text); say(sayEl, 'ok', tr('st_copied')); } catch (e) {}
-          });
-        });
-        say(sayEl, 'ok', tr('st_scan_ok').replace('{n}', trends.length));
       } catch (e) {
-        say(sayEl, 'no', (e && e.message) || tr('st_no_reach'));
+        err((e && e.message) || tr('st_no_reach'));
+        setAi('error', 'ts_ai_error');
+        radarHint.textContent = tr('ts_radar_idle');
       }
+      meter(-1);
       btn.disabled = false;
     });
+
+    /* ---- PASS ONE: what is rising, grounded in live search ---------------- */
+    async function passOne(t, when, size) {
+      var raw = await window.ncAsk(
+        'You are finding what is genuinely rising RIGHT NOW on YouTube, TikTok and Shorts ' +
+        'inside one niche, for a teenage creator.' + catNote() + '\n\n' +
+        'The niche, exactly as the creator typed it: "' + t + '"\n' +
+        'Window: what has been rising over the last ' +
+          (when === 'week' ? 'week' : when === 'season' ? 'three months' : 'month') + '.\n' +
+        'Channel size: ' + (size === 'small' ? 'small — under about 10,000 subscribers, so only ' +
+          'suggest things a small channel can actually reach' : 'any size') + '.\n\n' +
+        'EVERY trend must be about "' + t + '" itself. Not the broader category it belongs to, ' +
+        'not a neighbouring hobby, not a general platform trend that happens to be popular. ' +
+        'If you cannot find six real ones inside that niche, return fewer — an honest three ' +
+        'beats six padded out with things from somewhere else.\n\n' +
+        'Use the search results you have. Do not invent view counts or dates.\n\n' +
+        'For each one, judge three things on a 0-100 scale and be willing to use the low end:\n' +
+        '  momentum   — how fast it is climbing right now\n' +
+        '  crowding   — how thoroughly the big channels have already covered it. ' +
+        'HIGH crowding is BAD news for a small channel, so say so honestly rather than ' +
+        'marking everything low to be encouraging.\n' +
+        '  fit        — how well a channel of this size could actually make it\n\n' +
+        'Answer with ONE line of JSON and nothing else:\n' +
+        '{"trends":[{"emoji":"<one emoji>","name":"<max 7 words>",' +
+        '"category":"<1-2 words>","badge":"<hot|rising|breakout|opportunity>",' +
+        '"why":"<why it is moving, from what you found, max 20 words>",' +
+        '"momentum":<0-100>,"crowding":<0-100>,"fit":<0-100>,' +
+        '"series":[<7 numbers, oldest to newest, the shape of its rise>],' +
+        '"platform":"<YouTube|TikTok|Shorts|Instagram>",' +
+        '"angle":"<one video this creator could make from it, max 16 words>"}]}\n' +
+        'The "badge" value stays one of those four English words whatever language the rest ' +
+        'is in — the page colours the pill from it.' + langNote(),
+        { search: true, maxTokens: 2000 });
+      if (raw && raw.err) throw new Error(raw.err);
+      var body = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
+      var m = body.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error(tr('st_scan_shape'));
+      var list = (JSON.parse(m[0]) || {}).trends || [];
+      list = list.slice(0, 6);
+      list.forEach(function (x) { x.sources = raw && raw.sources; });
+      return list;
+    }
+
+    /* ---- PASS TWO: what to actually make of them -------------------------- */
+    async function passTwo(t, found) {
+      var names = found.map(function (x) { return '- ' + (x.name || ''); }).join('\n');
+      var raw = await window.ncAsk(
+        'A teenage creator in the niche "' + t + '" has just been shown these rising trends:\n' +
+        names + '\n\n' + catNote() + '\n' +
+        'Turn them into something they can act on today.\n\n' +
+        'The opportunities are the ones where something is climbing and the big channels ' +
+        'have NOT covered it properly yet — a gap, not just a popular thing.\n' +
+        'The hooks are first lines said out loud, not titles.\n\n' +
+        'Answer with ONE line of JSON and nothing else:\n' +
+        '{"hooks":["<first line, max 14 words>", …up to 4],' +
+        '"opps":[{"title":"<max 9 words>","why":"<the gap, max 22 words>",' +
+        '"hot":<true|false>} …up to 3],' +
+        '"platforms":[{"name":"<YouTube|TikTok|Shorts|Instagram>","icon":"<one emoji>",' +
+        '"note":"<why this niche does well there, max 14 words>","best":<true|false>} …up to 3]}' +
+        langNote(),
+        { maxTokens: 1200 });
+      if (raw && raw.err) return null;
+      var body = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
+      var m = body.match(/\{[\s\S]*\}/);
+      return m ? JSON.parse(m[0]) : null;
+    }
+
+    /* ---- DRAW ------------------------------------------------------------- */
+    function draw(res, t) {
+      lastScan = res;
+      var list = res.trends, extra = res.extra || {};
+
+      /* the radar, repopulated */
+      radar.querySelectorAll('.nc-radar-point').forEach(function (p) { p.remove(); });
+      list.forEach(function (it, i) {
+        var p = radarPos(i, list.length, it.momentum);
+        var el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'nc-radar-point nc-radar-point-enter';
+        el.style.left = p.left; el.style.top = p.top;
+        el.style.animationDelay = (i * 90) + 'ms';
+        el.innerHTML =
+          '<span class="nc-radar-tooltip">' + esc(it.name || '') + '</span>' +
+          '<span class="nc-radar-dot"></span>' +
+          '<span class="nc-radar-label">' + esc((it.name || '').split(' ').slice(0, 3).join(' ')) + '</span>';
+        el.addEventListener('click', function () { openModal(it); });
+        radar.appendChild(el);
+      });
+      radarHint.textContent = tr('ts_radar_found').replace('{n}', list.length).replace('{q}', t);
+
+      var html =
+        '<div class="nc-section-head" style="margin-top:44px">' +
+          '<h2 class="nc-section-title">' + esc(tr('ts_found').replace('{q}', t)) + '</h2>' +
+          '<p class="nc-section-sub" data-t="ts_found_sub">' + esc(tr('ts_found_sub')) + '</p>' +
+        '</div>' +
+        '<div class="nc-trend-grid">' + list.map(function (it, i) {
+          var badge = BADGES[String(it.badge || '').toLowerCase()] ? String(it.badge).toLowerCase() : 'rising';
+          return '<div class="nc-card nc-card-hover nc-trend-card nc-card-clickable" data-i="' + i + '">' +
+            '<div class="nc-trend-top">' +
+              '<span class="nc-trend-emoji">' + esc(it.emoji || '📈') + '</span>' +
+              '<div class="nc-trend-badges">' +
+                '<span class="nc-badge nc-badge-' + badge + '">' + esc(tr('ts_b_' + badge) || badge) + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div>' +
+              '<div class="nc-trend-name">' + esc(it.name || '') + '</div>' +
+              '<div class="nc-trend-category">' + esc(it.category || '') + '</div>' +
+            '</div>' +
+            sparkline(it.series) +
+            '<div class="nc-trend-metrics">' +
+              '<div class="nc-metric"><div class="nc-metric-value">' + pct(it.momentum) + '</div>' +
+                '<div class="nc-metric-label" data-t="ts_m_mom">' + esc(tr('ts_m_mom')) + '</div></div>' +
+              '<div class="nc-metric"><div class="nc-metric-value">' + pct(it.fit) + '</div>' +
+                '<div class="nc-metric-label" data-t="ts_m_fit">' + esc(tr('ts_m_fit')) + '</div></div>' +
+            '</div>' +
+            '<div class="nc-bar-row">' +
+              '<span class="nc-bar-meta" data-t="ts_m_crowd">' + esc(tr('ts_m_crowd')) + '</span>' +
+              '<span class="nc-bar-track"><span class="nc-bar-fill nc-bar-fill-pink" ' +
+                'style="width:' + pct(it.crowding) + '%"></span></span>' +
+              '<span class="nc-bar-value">' + pct(it.crowding) + '</span>' +
+            '</div>' +
+            '<div class="nc-trend-foot">' +
+              '<span class="nc-tag">' + esc(it.platform || '') + '</span>' +
+              '<button type="button" class="nc-btn nc-btn-soft nc-btn-sm" data-open="' + i + '" ' +
+                'data-t="ts_open">' + esc(tr('ts_open')) + '</button>' +
+            '</div>' +
+          '</div>';
+        }).join('') + '</div>';
+
+      if (extra.platforms && extra.platforms.length) {
+        html += '<div class="nc-section-head" style="margin-top:40px">' +
+            '<h2 class="nc-section-title" data-t="ts_where">' + esc(tr('ts_where')) + '</h2></div>' +
+          '<div class="nc-platform-grid">' + extra.platforms.slice(0, 3).map(function (p) {
+            return '<div class="nc-card nc-platform-card' + (p.best ? ' nc-platform-best' : '') + '">' +
+              '<div class="nc-platform-name"><span class="nc-platform-icon">' + esc(p.icon || '▶') + '</span>' +
+                esc(p.name || '') +
+                (p.best ? ' <span class="nc-badge nc-badge-opportunity">' + esc(tr('ts_best')) + '</span>' : '') +
+              '</div>' +
+              '<div class="nc-muted" style="font-size:.84rem;line-height:1.5">' + esc(p.note || '') + '</div>' +
+            '</div>';
+          }).join('') + '</div>';
+      }
+
+      if (extra.hooks && extra.hooks.length) {
+        html += '<div class="nc-section-head" style="margin-top:40px">' +
+            '<h2 class="nc-section-title" data-t="ts_hooks">' + esc(tr('ts_hooks')) + '</h2>' +
+            '<p class="nc-section-sub" data-t="ts_hooks_sub">' + esc(tr('ts_hooks_sub')) + '</p></div>' +
+          '<div class="nc-hooks-grid">' + extra.hooks.slice(0, 4).map(function (h) {
+            return '<div class="nc-card nc-hook-card"><span class="nc-hook-quote">&ldquo;</span>' +
+              '<span>' + esc(h) + '</span></div>';
+          }).join('') + '</div>';
+      }
+
+      if (extra.opps && extra.opps.length) {
+        html += '<div class="nc-section-head" style="margin-top:40px">' +
+            '<h2 class="nc-section-title" data-t="ts_opps">' + esc(tr('ts_opps')) + '</h2>' +
+            '<p class="nc-section-sub" data-t="ts_opps_sub">' + esc(tr('ts_opps_sub')) + '</p></div>' +
+          '<div class="nc-grid-2">' + extra.opps.slice(0, 3).map(function (o) {
+            return '<div class="nc-card nc-opp-card' + (o.hot ? ' nc-opp-card-hot' : '') + '">' +
+              '<div class="nc-opp-title">' + esc(o.title || '') + '</div>' +
+              '<div class="nc-muted" style="font-size:.86rem;line-height:1.55">' + esc(o.why || '') + '</div>' +
+            '</div>';
+          }).join('') + '</div>';
+      }
+
+      html += sourcesHTML(list[0] && list[0].sources);
+      out.innerHTML = html;
+
+      out.querySelectorAll('[data-open]').forEach(function (b) {
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openModal(list[+b.dataset.open]);
+        });
+      });
+      out.querySelectorAll('.nc-trend-card').forEach(function (c) {
+        c.addEventListener('click', function () { openModal(list[+c.dataset.i]); });
+      });
+    }
+
+    /* ---- THE DETAIL MODAL, which the bundle also styled and never opened --- */
+    function openModal(it) {
+      if (!it) return;
+      var back = document.createElement('div');
+      back.className = 'nc-modal-backdrop';
+      var badge = BADGES[String(it.badge || '').toLowerCase()] ? String(it.badge).toLowerCase() : 'rising';
+      back.innerHTML =
+        '<div class="nc-modal" role="dialog" aria-modal="true">' +
+          '<button type="button" class="nc-btn nc-btn-icon nc-modal-close" aria-label="' +
+            esc(tr('ts_close')) + '">&times;</button>' +
+          '<div class="nc-modal-head">' +
+            '<span class="nc-trend-emoji">' + esc(it.emoji || '📈') + '</span>' +
+            '<div><div class="nc-modal-title">' + esc(it.name || '') + '</div>' +
+              '<div class="nc-trend-category">' + esc(it.category || '') + '</div></div>' +
+            '<span class="nc-badge nc-badge-' + badge + '">' + esc(tr('ts_b_' + badge) || badge) + '</span>' +
+          '</div>' +
+          '<div class="nc-modal-section">' +
+            '<div class="nc-modal-section-title" data-t="ts_why">' + esc(tr('ts_why')) + '</div>' +
+            '<p class="nc-soft">' + esc(it.why || '') + '</p>' +
+          '</div>' +
+          '<div class="nc-modal-section">' +
+            '<div class="nc-modal-section-title" data-t="ts_numbers">' + esc(tr('ts_numbers')) + '</div>' +
+            ['momentum', 'crowding', 'fit'].map(function (k, n) {
+              return '<div class="nc-bar-row" style="margin-top:8px">' +
+                '<span class="nc-bar-meta">' + esc(tr(['ts_m_mom', 'ts_m_crowd', 'ts_m_fit'][n])) + '</span>' +
+                '<span class="nc-bar-track"><span class="nc-bar-fill ' +
+                  ['', 'nc-bar-fill-pink', 'nc-bar-fill-cyan'][n] + '" style="width:' + pct(it[k]) + '%"></span></span>' +
+                '<span class="nc-bar-value">' + pct(it[k]) + '</span></div>';
+            }).join('') +
+          '</div>' +
+          '<div class="nc-modal-section">' +
+            '<div class="nc-modal-section-title" data-t="ts_make">' + esc(tr('ts_make')) + '</div>' +
+            '<p class="nc-soft">' + esc(it.angle || '') + '</p>' +
+          '</div>' +
+          '<div class="nc-modal-actions">' +
+            '<button type="button" class="nc-btn nc-btn-primary" data-go="ideas" data-t="st_to_ideas">' +
+              esc(tr('st_to_ideas')) + '</button>' +
+            '<button type="button" class="nc-btn nc-btn-soft" data-go="scripts" data-t="st_to_script">' +
+              esc(tr('st_to_script')) + '</button>' +
+            '<button type="button" class="nc-btn nc-btn-ghost" data-go="copy" data-t="st_copy">' +
+              esc(tr('st_copy')) + '</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(back);
+
+      function shut() { if (back.parentNode) back.remove(); document.removeEventListener('keydown', esc2); }
+      function esc2(e) { if (e.key === 'Escape') shut(); }
+      document.addEventListener('keydown', esc2);
+      back.addEventListener('click', function (e) { if (e.target === back) shut(); });
+      back.querySelector('.nc-modal-close').addEventListener('click', shut);
+      back.querySelectorAll('[data-go]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var to = b.dataset.go;
+          if (to === 'copy') {
+            var text = (it.name || '') + '\n' + (it.why || '') + '\n' + (it.angle || '');
+            try { navigator.clipboard.writeText(text); } catch (e) {}
+            b.textContent = tr('st_copied');
+            b.removeAttribute('data-t');
+            return;
+          }
+          try {
+            sessionStorage.setItem('nc_trend_seed', it.name || '');
+          } catch (e) {}
+          shut();
+          var h = host(); if (h) h.dataset.view = '';
+          location.hash = to === 'ideas' ? '/ideas' : '/scripts';
+        });
+      });
+    }
   }
 
   /* What it read, under what it said. Printed only when the worker returned
@@ -819,9 +1284,10 @@
       out.push('<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(host2) + '</a>');
     }
     if (!out.length) return '';
-    return '<p class="foot"><span data-t="st_sources">' + tr('st_sources') + '</span> ' +
+    return '<p class="foot" style="margin-top:26px"><span data-t="st_sources">' + tr('st_sources') + '</span> ' +
            out.join(' &middot; ') + '</p>';
   }
+
 
   /* ==========================================================================
      SHAPES — ONE TABLE, BOTH PANELS
@@ -1808,6 +2274,13 @@
       document.documentElement.classList.toggle('nc-x-full', !!mine.full);
       if (page) page.style.display = 'none';
       box.style.display = '';
+      /* BACK TO THE PLAIN COLUMN BEFORE ANY OTHER PANEL DRAWS.
+         Trend Spotter adds .ncx-wide to get the app's own styling and the
+         full width; nothing else wants either. Cleared here rather than in
+         each of the other eight, because a panel that forgets would come out
+         1180px wide with its form controls unstyled, and "the one you have
+         to remember" is how that happens. */
+      if (h !== '/trends') box.className = 'ncx';
       if (h === '/trends') trendsPanel(box);
       else if (h === '/ideas') ideasPanel(box);
       else if (h === '/scripts') scriptsPanel(box);

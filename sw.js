@@ -304,6 +304,44 @@
    living in a 940px column.
 
    trends-nav.js and nova.js. Both cached. */
+/* v63: the app's own Trend Spotter design is back, on a backend that goes
+   two passes deep — and the ask card stops covering the phone drawer.
+
+   THE DESIGN WAS NEVER MISSING. The bundle shipped a whole Trend Spotter:
+   hero, search bar, niche chips, a live scan meter, an animated radar with
+   clickable signals, cards with badges and metric tiles and sparklines, a
+   platform breakdown, hooks, opportunities and a detail modal. All of it is
+   in trends.html's stylesheet — .nc-trend-card, .nc-radar-point, .nc-metric,
+   .nc-bar-fill, .nc-platform-best, .nc-hook-quote, .nc-modal and about forty
+   more — and none of it had ever been on screen, because the scan that was
+   meant to fill it made no request and returned nothing. v60 replaced it with
+   something that worked and looked like a form. This is the original markup
+   and the original class names, driven by a scan this repo owns.
+
+   TWO PASSES. One grounded in live search asking only what is rising, with
+   momentum, crowding and fit judged per trend; one asking what this creator
+   would actually make of them, returning hooks, gaps and platforms. Small
+   schemas come back whole, and a failure in the second still leaves the first
+   on screen. Crowding is asked for and shown because "rising" alone sends a
+   small channel straight at what the big channels already own. Scans are
+   cached per niche/window/size for the session, so pressing a chip twice
+   costs one call, not two.
+
+   LIGHT MODE, WHICH THE BUNDLE NEVER HAD. Its palette sets --nc-text, which
+   nova.js flips, but --nc-panel and the border tokens are flipped by nobody —
+   so every .nc-card on this page was a dark panel with dark text on it in
+   light mode. Survivable with a hero and three cards on screen; not
+   survivable with twenty. The surfaces flip now; the accents do not.
+
+   AND THE ASK CARD STANDS DOWN FOR AN OPEN MENU. It is fixed at z-index
+   99950 and fires three seconds in, which is exactly how long it takes to
+   press the burger on a phone — so it landed on top of the drawer and covered
+   the first four rows. The drawer was there and it worked; it just could not
+   be seen. It waits for the menu to close now, steps aside if one opens under
+   it, and no longer grabs focus when it opened itself on a phone, because
+   that raised the keyboard over the page.
+
+   trends-nav.js, trends.html, nova.js, nova-ask.js. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -734,7 +772,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v62';
+const CACHE = 'novaclip-v63';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

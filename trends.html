@@ -228,6 +228,49 @@ if(b){r.style.background=b;r.setAttribute('data-skin',s);}}catch(e){}})();</scri
    text-align alone.
    --------------------------------------------------------------------------- */
 html body.nova .nc-hero-text { margin-left: auto; margin-right: auto; }
+
+/* ---------------------------------------------------------------------------
+   THE APP'S SURFACES, IN LIGHT MODE.
+
+   The bundle was written dark-only. Its palette block sets --nc-text, and
+   nova.js's theme flips that to #0B0E16 in light mode — but --nc-panel,
+   --nc-panel-solid, --nc-elev and the two border tokens are not flipped by
+   anybody, so they stay rgba(17,22,40,.66). Measured, not guessed: on this
+   page in light mode every .nc-card computes to a dark panel with dark text
+   on it. Near-black on near-black, everywhere the app draws a card.
+
+   It was survivable while the only thing on the route was a hero and three
+   how-it-works cards. Trend Spotter's own design is twenty cards, metric
+   tiles, bars and a modal, all built from these tokens, so it stops being
+   survivable the moment that design is on screen.
+
+   Only the surfaces move. The accents — pink, purple, blue, cyan, and the
+   gradients built from them — are the app's identity and they read on both,
+   so they are left exactly as they are.
+   --------------------------------------------------------------------------- */
+html[data-theme='light'] {
+  --nc-bg-2: #EEF1F8;
+  --nc-bg-3: #E6EAF4;
+  --nc-panel: rgba(255, 255, 255, .74);
+  --nc-panel-solid: #FFFFFF;
+  --nc-elev: #F4F6FC;
+  --nc-border: rgba(11, 14, 22, .10);
+  --nc-border-strong: rgba(11, 14, 22, .18);
+  --nc-soft: #48536B;
+  --nc-muted: #6B7590;
+}
+
+/* The handful of places the bundle wrote a dark value straight into a rule
+   rather than through a token. Each one is a surface, so each one flips. */
+html[data-theme='light'] .nc-search-inner { background: rgba(255,255,255,.86); box-shadow: 0 8px 28px rgba(11,14,22,.10); }
+html[data-theme='light'] .nc-metric,
+html[data-theme='light'] .nc-platform-icon { background: rgba(11,14,22,.04); }
+html[data-theme='light'] .nc-bar-track,
+html[data-theme='light'] .nc-scan-track { background: rgba(11,14,22,.10); }
+html[data-theme='light'] .nc-suggest-btn:hover { background: rgba(11,14,22,.05); }
+html[data-theme='light'] .nc-modal-backdrop { background: rgba(11,14,22,.42); }
+html[data-theme='light'] .nc-radar-ring-outer { background: radial-gradient(circle at 50% 50%, rgba(56,189,248,.10), rgba(167,139,250,.06) 40%, transparent 68%); }
+html[data-theme='light'] .nc-radar-label { text-shadow: 0 1px 6px rgba(255,255,255,.9); }
 </style>
 </head>
 <!-- class='nova' is load-bearing, not decoration. Every rule in this page's

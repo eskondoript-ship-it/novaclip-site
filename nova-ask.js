@@ -141,6 +141,11 @@
         'opacity:0;transform:translateY(-8px) scale(.98);',
         'transition:opacity .28s ease,transform .32s cubic-bezier(.2,.9,.3,1.1)}',
       '.nca.on{opacity:1;transform:none}',
+      /* Out of the way while a menu is open — see watchMenus(). Not display:none:
+         it keeps the same transition the card opens with, so it slides out and
+         back rather than blinking, and it is still the same element when the
+         menu closes. */
+      '.nca.nca-hid{opacity:0;transform:translateY(-8px) scale(.98);pointer-events:none}',
       '@media (max-width:760px){.nca{right:10px;left:10px;width:auto;top:66px}}',
       '.nca-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}',
       '.nca-top .ncm{flex:0 0 auto}',
@@ -187,6 +192,28 @@
     var g = el;
     setTimeout(function () { if (g && g.parentNode) g.remove(); }, 320);
     el = null;
+    if (watch) { clearInterval(watch); watch = null; }
+  }
+
+  /* AND IF A MENU OPENS UNDER AN ALREADY-OPEN CARD.
+     Holding it back until the menu closes covers the common case; this covers
+     the other order. The card is fixed at z-index 99950 and the drawer is at
+     45, so a card that was already on screen when the burger is pressed stays
+     on top of it — same covered menu, arrived at from the other direction.
+     It steps aside rather than closing, because the reader did not dismiss it
+     and it should still be there when they come back out of the menu.
+
+     Polled, not observed. It runs only while the card is on screen, which is
+     a few seconds of a visit, and a MutationObserver watching the whole
+     document for a drawer that may be created by React at any depth is a lot
+     more machinery for the same answer. */
+  var watch = null;
+  function watchMenus() {
+    if (watch) clearInterval(watch);
+    watch = setInterval(function () {
+      if (!el) { clearInterval(watch); watch = null; return; }
+      el.classList.toggle('nca-hid', menuOpen());
+    }, 400);
   }
 
   function say(msg, bad) {
@@ -293,7 +320,10 @@
     return out;
   }
 
-  function open() {
+  /* `auto` is true only when the three-second timer opened it. A press is a
+     question already being asked; a timer is an interruption, and the two do
+     not deserve the same behaviour from the keyboard. */
+  function open(auto) {
     if (el) return;
     markSeen();          /* claimed by the document that actually shows it */
     css();
@@ -355,9 +385,20 @@
 
     void el.offsetWidth;
     el.classList.add('on');
+    watchMenus();
     /* Focused, because the whole card is one text box and asking somebody to
-       click it first is a step for nothing. */
-    try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
+       click it first is a step for nothing.
+
+       NOT WHEN IT OPENED ITSELF ON A PHONE. Focusing a text box raises the
+       keyboard, and a keyboard that comes up on its own three seconds into a
+       page nobody asked a question on takes half the screen and hides the
+       thing they were reading. On a pointer it costs a click; on a phone it
+       costs the page. */
+    var small = false;
+    try { small = window.matchMedia('(max-width: 900px)').matches; } catch (e) {}
+    if (!(small && auto)) {
+      try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
+    }
   }
 
   /* THE MARK GOES DOWN WHEN THE CARD OPENS, NOT WHEN THE TIMER IS SET.
@@ -373,10 +414,46 @@
      Setting it in open() instead means only the document that actually puts
      the card on screen claims the visit. A reload before that simply tries
      again, and one after it is a card already seen. */
+  /* IS A MENU OPEN RIGHT NOW?
+
+     This card is fixed at z-index 99950 and three seconds is exactly how long
+     it takes somebody on a phone to press the burger. So the card was landing
+     on top of an open drawer and covering the first four rows of it — the
+     drawer was there, it worked, and it looked like it had gone again.
+
+     Two menus can be open: the app's own .nc-drawer inside Studio, and
+     nova.js's #ncsheet everywhere else. Checked by what is on screen rather
+     than by a flag, because neither of them tells this file anything. */
+  function menuOpen() {
+    try {
+      var d = document.querySelector('.nc-drawer, .nc-drawer-backdrop');
+      if (d && d.getBoundingClientRect().width > 0) return true;
+      var s = document.getElementById('ncsheet');
+      if (s && !s.hasAttribute('hidden') && getComputedStyle(s).display !== 'none') return true;
+    } catch (e) {}
+    return false;
+  }
+
   function boot() {
     if (SKIP.test(location.pathname)) return;
     if (seen()) return;
-    setTimeout(function () { if (!seen()) open(); }, DELAY);
+    /* Waits rather than gives up. Somebody who opened the menu in the first
+       three seconds is the reader this card is most for — they are looking
+       for something and have not found it. It asks once they have closed the
+       menu, and stops asking after a minute of menus, because at that point
+       they are navigating perfectly well without being interrupted. */
+    var waited = 0;
+    (function tick() {
+      setTimeout(function () {
+        if (seen()) return;
+        if (menuOpen()) {
+          waited += 1200;
+          if (waited > 60000) return;
+          return tick();
+        }
+        open(true);
+      }, waited ? 1200 : DELAY);
+    })();
   }
 
   function seen() {
