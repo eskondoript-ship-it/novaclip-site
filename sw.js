@@ -186,6 +186,28 @@
    one anybody hits was the only silent one. It speaks now.
 
    index.html, nova.js and publish.html are all cached. */
+/* v59: the app's own drawer is back on phones.
+
+   Asked for after v58 routed around it. The burger that opens it lives in
+   this page's .nc-topbar, which nova.js hides as a duplicate second header —
+   true everywhere else, and not here, where that bar is also the only handle
+   on the app's navigation. It shows again below 900px, sticking at 52px under
+   the site bar rather than at 0 where it would slide beneath it, and without
+   its points pill: two coin counts two pixels apart showing different numbers
+   was the real complaint behind the rule, and the site bar keeps that job.
+
+   fixRail worked on the FIRST .nc-sidebar, and on a phone there are two — the
+   hidden desktop rail and the drawer, which borrows the class. So the drawer
+   would have opened with the bundle's own rows, none of the three added here,
+   and two rows still pointing where they used to. It runs over every rail now.
+
+   And a row in the drawer closes it behind you. They are plain anchors to a
+   hash, so the app's router never sees them and the state holding the drawer
+   open was never told — tap Scripts and the panel opened underneath a menu
+   still covering it. The bundle's own backdrop carries the close handler, so
+   this presses that rather than reaching into React's state.
+
+   trends.html and trends-nav.js. Both cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -616,7 +638,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v58';
+const CACHE = 'novaclip-v59';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

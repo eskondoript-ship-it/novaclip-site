@@ -177,7 +177,12 @@
      one back two lines later. */
   var DROP = [];
 
-  function railItem(href) { return $('.nc-sidebar a[href="' + href + '"]'); }
+  /* Scoped to one rail, because on a phone there are two. The desktop rail is
+     always in the document (hidden below 900px) and the drawer mounts beside
+     it when the burger is pressed, borrowing the same class. Looking the row
+     up globally found whichever came first — the hidden one — so the drawer
+     got none of the work done below. */
+  function railItem(side, href) { return side.querySelector('a[href="' + href + '"]'); }
 
   /* A row cloned from a sibling so the layout, classes and hover behaviour are
      the app's rather than a guess at them. Only the icon path and the label
@@ -223,10 +228,20 @@
     else nav.appendChild(a);
   }
 
+  /* EVERY RAIL ON THE PAGE, NOT THE FIRST ONE.
+     There are two on a phone: the desktop rail, hidden by the bundle below
+     900px, and the drawer that the burger mounts, which carries the same
+     class. This used to do its work on whichever came first in the document —
+     the hidden one — so the drawer opened with the bundle's own rows and none
+     of the three added here, and with the two rewritten rows still pointing
+     where they used to. */
   function fixRail() {
-    var side = $('.nc-sidebar');
-    if (!side) return;
+    var rails = document.querySelectorAll('.nc-sidebar');
+    for (var i = 0; i < rails.length; i++) fixOneRail(rails[i]);
+    markActive();
+  }
 
+  function fixOneRail(side) {
     /* Point the app's own dead rows at the panels below, and give them the
        names the rest of the site uses. The bundle's row said "Publish", which
        is what that tool was called before it started doing the editing — the
@@ -234,7 +249,7 @@
        Editor", and one row saying something else is a fourth name for a thing
        that already has enough. */
     Object.keys(REWRITE).forEach(function (route) {
-      var a = railItem('#' + route);
+      var a = railItem(side, '#' + route);
       if (!a) return;
       /* Same reason as the label below: an attribute written to the value it
          already holds still fires the observer. */
@@ -262,7 +277,7 @@
 
     /* Take the two that belong to the main sidebar out of this one. */
     DROP.forEach(function (route) {
-      var a = railItem('#' + route);
+      var a = railItem(side, '#' + route);
       if (a) a.remove();
     });
 
@@ -273,17 +288,16 @@
        are findable. If the bundle ever stops shipping them, the fallback puts
        Photo at the end rather than nowhere. */
     addItem(nav, 'photo', PANELS['/photo'], '#/photo',
-            railItem('#/publish') || railItem('#/editor'));
+            railItem(side, '#/publish') || railItem(side, '#/editor'));
     addItem(nav, 'hype', PANELS['/hype'], '#/hype');
     addItem(nav, 'studio', PANELS['/studio'], '#/studio');
-    markActive();
   }
 
   function markActive() {
     var h = hash();
-    var side = $('.nc-sidebar');
-    if (!side) return;
-    side.querySelectorAll('.nc-nav-item').forEach(function (a) {
+    /* Both rails, same reason as fixRail: the drawer is a second copy and the
+       row lit in it has to be the row you are actually on. */
+    document.querySelectorAll('.nc-sidebar .nc-nav-item').forEach(function (a) {
       var href = a.getAttribute('href') || '';
       if (href.charAt(0) !== '#') return;
       var mine = PANELS[href.slice(1)];
@@ -1212,6 +1226,25 @@
     window.addEventListener('hashchange', route);
     window.addEventListener('popstate', route);
     window.addEventListener('nc-route', route);
+
+    /* SHUT THE DRAWER BEHIND YOU.
+       On a phone the rail is a drawer, and the rows in it that this file owns
+       are plain anchors to a hash. The app's router never sees them, so the
+       state that holds the drawer open is never told to close — tap Scripts
+       and the panel opens underneath a menu still covering it, which reads as
+       the tap having done nothing.
+
+       The backdrop is the bundle's own way out: it carries a click handler
+       that closes the drawer. Pressing it is how this asks, rather than
+       reaching into React's state, which is not ours to hold. */
+    document.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest && e.target.closest('.nc-drawer a[href^="#/"]');
+      if (!a) return;
+      setTimeout(function () {
+        var back = document.querySelector('.nc-drawer-backdrop');
+        if (back) back.click();
+      }, 30);
+    });
 
     /* Escape leaves a full-screen tool — but only while the focus is on this
        page. A keypress inside the iframe belongs to the iframe and never

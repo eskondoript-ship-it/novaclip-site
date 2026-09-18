@@ -173,6 +173,42 @@ if(b){r.style.background=b;r.setAttribute('data-skin',s);}}catch(e){}})();</scri
     overflow-y: auto;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   AND THE BAR THAT OPENS THAT DRAWER
+   ---------------------------------------------------------------------------
+   The drawer above is only reachable from a burger, and the burger lives in
+   this page's own `.nc-topbar` — which nova.js hides on every page, under a
+   rule whose reason is sound and whose comment is not quite true here:
+
+       html body .nc-topbar { display: none !important }
+
+   — the "no second header" rule. Everywhere else a page's top bar is a logo and a points total the site bar
+   above it already shows, and the things on it are reachable from the site
+   menu. On this page it also holds the only way into the app's own navigation,
+   so hiding it left the drawer with no handle.
+
+   Two things make the second header worth its 45px here rather than merely
+   tolerable:
+
+     - it sticks at 52px, under the site bar, instead of at 0 where it would
+       slide beneath it and vanish on the first scroll;
+     - its points pill goes. That was the real complaint behind the rule — two
+       coin counts, two pixels apart, showing different numbers. The site bar
+       keeps that job and this bar keeps the burger.
+
+   `html body.nova` is (0,2,2) against nova.js's (0,1,2), so this wins on
+   specificity rather than on being later in the cascade — nova.js appends its
+   stylesheet at runtime, which puts it after this one.
+   --------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  html body.nova .nc-topbar {
+    display: flex !important;
+    top: 52px;
+    z-index: 31;
+  }
+  html body.nova .nc-topbar .nc-points-pill { display: none !important; }
+}
 </style>
 </head>
 <!-- class='nova' is load-bearing, not decoration. Every rule in this page's
