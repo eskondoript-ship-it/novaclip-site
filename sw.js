@@ -266,6 +266,44 @@
 
    nova.js, history.html, trends.html, coder.html, animator.js, trends-nav.js.
    All cached. */
+/* v62: Video Ideas and Scripts rebuilt, and Hype Lab gets the whole screen.
+
+   THE SHAPE PICKER NEVER REACHED THE MODEL. It offered six words — POV, To
+   camera, List — and dropped the chosen one into the prompt as a bare label
+   on its own line. A model reads "POV" the way you read it shouted across a
+   room: it knows roughly what you mean and feels free to land somewhere
+   adjacent, which is why four of six came back as ordinary talking-head
+   videos with "POV:" typed at the front of the title. There are fifteen
+   shapes now and each carries a sentence saying what it actually is; that
+   sentence goes to the model, the label goes on the screen, and the format is
+   named as a definition, as a rule over all of them, and as a condition for
+   leaving one out.
+
+   The forms went from three controls to six and five. That was asked for and
+   it is also the fix: "six ideas about skateboarding" has a thousand right
+   answers and a model handed a thousand right answers picks the blandest.
+   Length, energy, what they can actually film with, and how it opens and ends
+   each cut that down to something the answer has to commit to.
+
+   SCRIPTS ASKS FOR BEATS. It used to ask for three labelled paragraphs and
+   drop them in a textarea — an essay about a video rather than something
+   anybody could stand up and film, with no idea what is on screen while the
+   words are said and a "30-second script" that ran fifty. Each beat now
+   carries a length, the words out loud and what the camera is looking at,
+   the panel adds the seconds up, and it says out loud whether the draft fits
+   the length that was asked for. The textarea stays, holding the same script
+   as plain text, because Copy, Download and the hand-off to the AI Editor all
+   read it.
+
+   Both panels are laid out for the screen they are on: an auto-fit option
+   grid that is three across on a laptop and one on a phone, and results in
+   cards rather than a single column with 600px of empty space beside it.
+
+   And Hype Lab is full:true, like the Editor, the AI Editor and Photo. It is
+   a player with a retention curve under it, and it was the last tool still
+   living in a 940px column.
+
+   trends-nav.js and nova.js. Both cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -696,7 +734,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v61';
+const CACHE = 'novaclip-v62';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

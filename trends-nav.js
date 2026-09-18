@@ -192,7 +192,14 @@
     '/studio':     { label: 'Studio', key: 'st_studio_h',
                      icon: 'M3 3v18h18M7 16v-5M12 16V8M17 16v-3',
                      why: 'How the videos you made from these trends are doing' },
-    '/hype':       { label: 'Hype Lab', key: 'st_hype_h',
+    /* THE FOURTH APPLICATION. Hype Lab loads a finished video, plays it,
+       draws a retention curve under it and marks the seconds where people
+       leave — a player and a timeline, which is the same shape as the Editor.
+       It was the one tool still sitting in the 940px column, and a video
+       preview half the width of the window with its own scrollbar is not
+       where you watch anything closely. "Make the Hype Lab screen bigger" is
+       the whole reason full:true exists three lines up. */
+    '/hype':       { label: 'Hype Lab', key: 'st_hype_h', full: true,
                      icon: 'M13 2 4 14h7l-1 8 9-12h-7z',
                      why: 'Find the seconds where your finished edit loses people, and fill them' }
   };
@@ -406,7 +413,7 @@
       '  color:inherit;border:1px solid color-mix(in srgb,currentColor 26%,transparent);',
       '  border-radius:10px;padding:10px 12px;font:inherit;font-size:.93rem}',
       '.ncx input::placeholder,.ncx textarea::placeholder{color:inherit;opacity:.45}',
-      '.ncx textarea{min-height:170px;resize:vertical;line-height:1.6}',
+      '.ncx textarea{min-height:240px;resize:vertical;line-height:1.6;font-variant-numeric:tabular-nums}',
       '.ncx input:focus,.ncx select:focus,.ncx textarea:focus{outline:none;border-color:#22d3ee}',
       '.ncx .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}',
       '.ncx button{border:1px solid color-mix(in srgb,currentColor 24%,transparent);',
@@ -500,6 +507,81 @@
       '.ncx .idea .hook{opacity:.8;margin-top:5px;font-style:italic;line-height:1.5}',
       '.ncx .idea .shape{opacity:.6;margin-top:5px;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}',
       '.ncx .idea .row{margin-top:10px}',
+      /* Four actions on a 300px card. At the shared button size they wrapped
+         with Copy alone on a second line, which reads as a mistake rather
+         than a row. Smaller inside a card only — the Give me six button and
+         the form row keep the size they had. */
+      '.ncx .idea .row button{padding:6px 11px;font-size:.82rem}',
+
+      /* ------------------------------------------------------------------
+         THE FORMS AND THE CARDS, REDRAWN
+
+         Both of these panels grew from three controls to six or seven, and a
+         two-column grid with seven things in it leaves one control sitting
+         alone on the last row looking like a mistake. `.opts` is auto-fit:
+         three across on a laptop, two on a tablet, one on a phone, and the
+         last row fills rather than stranding anything.
+
+         The results were a single column of full-width cards. Six of them
+         meant scrolling past the third to see the fourth, on a screen with
+         600px of empty space to the right of each one. `.grid` puts them in
+         columns wide enough to read a title in — 300px, so two on a laptop
+         column and three when the panel goes full width — and the cards carry
+         their number, so the order survives being laid out in a grid.
+
+         Everything is drawn from currentColor and color-mix rather than
+         hexes. These panels sit inside a page that has a light mode, a dark
+         mode and nine cyber skins on top of both, and a card with a hard
+         #11162a background is a black rectangle on the light one. */
+      '.ncx .form .opts{display:grid;gap:13px;margin-top:14px;',
+      '  grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}',
+      '.ncx .form .opt label{margin-top:0}',
+      '.ncx .grid{display:grid;gap:13px;',
+      '  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));align-items:start}',
+      '.ncx .sect{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;',
+      '  opacity:.6;margin:22px 2px 10px}',
+      '.ncx .idea{position:relative}',
+      /* The number sits in the corner as a watermark rather than in the flow.
+         In a grid the reading order is not always obvious, and a number that
+         pushes the title sideways costs more room than it earns. */
+      '.ncx .idea .num{position:absolute;top:10px;inset-inline-end:13px;',
+      '  font-size:1.5rem;font-weight:800;opacity:.13;line-height:1;pointer-events:none}',
+      '.ncx .idea .ttl{padding-inline-end:30px}',
+      '.ncx .chips{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}',
+      '.ncx .chip{display:inline-block;font-size:.66rem;font-weight:700;text-transform:uppercase;',
+      '  letter-spacing:.07em;padding:3px 9px;border-radius:999px;opacity:.7;',
+      '  border:1px solid color-mix(in srgb,currentColor 24%,transparent)}',
+      '.ncx .chip.lock{opacity:.85;background:color-mix(in srgb,currentColor 9%,transparent)}',
+      '.ncx .idea .first{margin-top:7px;font-size:.82rem;opacity:.62;line-height:1.5}',
+      '.ncx .idea .first span{text-transform:uppercase;letter-spacing:.06em;font-size:.68rem;',
+      '  font-weight:700;opacity:.75}',
+      '.ncx .idea.kept{border-inline-start:3px solid color-mix(in srgb,currentColor 35%,transparent)}',
+      /* A second weight of button. With five actions on a card, five buttons
+         that look equally important is five buttons nobody presses — the one
+         that is not a ghost is the one worth pressing. */
+      '.ncx .ghost{background:transparent;',
+      '  border:1px solid color-mix(in srgb,currentColor 24%,transparent);opacity:.85}',
+      '.ncx .ghost:hover{opacity:1;background:color-mix(in srgb,currentColor 7%,transparent)}',
+      '.ncx .hintline{font-size:.8rem;opacity:.6;margin:2px 0 8px;line-height:1.5}',
+
+      /* THE BEAT SHEET. One card per beat, the timecode on the right of the
+         label, the words out loud set larger than everything around them
+         because they are the only part that gets said, and what is on screen
+         underneath in the same quiet key as the rest of the furniture. */
+      '.ncx .beat{padding:13px 16px}',
+      '.ncx .beat .bhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px}',
+      '.ncx .beat .bt{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;opacity:.62}',
+      '.ncx .beat .btime{font-size:.72rem;opacity:.45;font-variant-numeric:tabular-nums;white-space:nowrap}',
+      '.ncx .beat .bsay{margin-top:7px;font-size:1.02rem;line-height:1.55}',
+      '.ncx .beat .bdo{margin-top:7px;font-size:.82rem;opacity:.6;line-height:1.5}',
+      '.ncx .beat .bdo span{text-transform:uppercase;letter-spacing:.06em;font-size:.68rem;',
+      '  font-weight:700;opacity:.8}',
+      '.ncx .meter{margin:0 2px 12px;padding:9px 14px;border-radius:12px;font-size:.86rem;',
+      '  border:1px solid color-mix(in srgb,currentColor 16%,transparent);',
+      '  background:color-mix(in srgb,currentColor 4%,transparent)}',
+      '.ncx .meter b{font-variant-numeric:tabular-nums;margin-inline-end:6px}',
+      '.ncx .meter.over{border-color:color-mix(in srgb,#ffb020 55%,transparent)}',
+      '.ncx .meter.over b{color:#ffb020}',
       /* The heat badge. It carries no meaning of its own — it repeats what the
          word inside it already says — so it is a tint, not a colour block, and
          it stays legible if the palette behind it is light or dark. */
@@ -741,27 +823,148 @@
            out.join(' &middot; ') + '</p>';
   }
 
+  /* ==========================================================================
+     SHAPES — ONE TABLE, BOTH PANELS
+     ==========================================================================
+     "The ideas should correspond to the shape of the video like POV etc" was
+     the complaint, and the old form is why it could not. It offered six words
+     — POV, To camera, List, Tutorial, Reaction — and dropped the chosen one
+     into the prompt as a bare label on a line of its own. A model reads "POV"
+     the way you would read it shouted across a room: it knows roughly what you
+     mean and it is free to decide you meant something adjacent. So four of the
+     six ideas came back as ordinary talking-head videos with "POV:" typed at
+     the front of the title.
+
+     Each shape carries a sentence saying what it actually is. That sentence
+     goes to the model; the label goes on the screen. A model given "the camera
+     IS the viewer, the creator acts as if the viewer is a character in the
+     scene" cannot quietly reinterpret it into a piece to camera.
+
+     The definitions are in English on purpose. They are instructions to the
+     model, not text anybody reads — the label beside each one is the part
+     that gets translated, and langNote() then asks for the ideas themselves
+     back in the reader's language. */
+  var SHAPES = [
+    { id: 'any', key: 'sh_any', def: '' },
+    { id: 'pov', key: 'sh_pov',
+      def: 'a POV video: the camera IS the viewer. The creator speaks and acts as if the ' +
+           'viewer is a character standing in the scene, and the title usually starts "POV:".' },
+    { id: 'talking', key: 'sh_talking',
+      def: 'straight to camera: one person, one take, talking to the lens. No scene, no acting.' },
+    { id: 'list', key: 'sh_list',
+      def: 'a numbered or ranked list, counted through on screen one item at a time.' },
+    { id: 'tutorial', key: 'sh_tutorial',
+      def: 'a how-to: the steps for one specific thing, in order, so somebody could follow along.' },
+    { id: 'react', key: 'sh_react',
+      def: 'a reaction: something plays on screen and the creator responds to it as it goes.' },
+    { id: 'day', key: 'sh_day',
+      def: 'a day in the life: short clips from a real day, in order, held together by a voiceover.' },
+    { id: 'story', key: 'sh_story',
+      def: 'story time: one true thing that happened, told start to finish, with the turn kept back.' },
+    { id: 'ba', key: 'sh_ba',
+      def: 'before and after: the state at the start, the work in the middle, the state at the end.' },
+    { id: 'challenge', key: 'sh_challenge',
+      def: 'a challenge: a rule is set out loud at the start, kept to, and passed or failed on camera.' },
+    { id: 'tier', key: 'sh_tier',
+      def: 'a tier list: things placed into ranked tiers, with the reason for each placement said out loud.' },
+    { id: 'myth', key: 'sh_myth',
+      def: 'myth versus fact: a belief people hold is stated plainly, then checked against what is true.' },
+    { id: 'first', key: 'sh_first',
+      def: 'a first try or unboxing: opening or attempting something for the first time, live on camera.' },
+    { id: 'skit', key: 'sh_skit',
+      def: 'a skit: a short scripted scene with characters and lines, played rather than explained.' },
+    { id: 'broll', key: 'sh_broll',
+      def: 'voiceover over b-roll: no face on screen, footage of the subject with narration over it.' }
+  ];
+  function shapeOptions(sel) {
+    return SHAPES.map(function (s) {
+      return '<option value="' + s.id + '"' + (s.id === sel ? ' selected' : '') +
+             ' data-t="' + s.key + '">' + esc(tr(s.key)) + '</option>';
+    }).join('');
+  }
+  function shapeBy(id) {
+    for (var i = 0; i < SHAPES.length; i++) if (SHAPES[i].id === id) return SHAPES[i];
+    return SHAPES[0];
+  }
+  /* The three lines that hold a model to one format: what it is, that every
+     one must be it, and what to do with an idea that cannot be. Empty for
+     "any", because an instruction to vary the format freely is what "any"
+     already means and a paragraph saying so is a paragraph of noise. */
+  function shapeRules(id, n) {
+    var s = shapeBy(id);
+    if (!s.def) return '';
+    var name = trEn(s.key);
+    return '\nFORMAT — this is the part that matters most here.\n' +
+      'Every single one must be ' + s.def + '\n' +
+      'All ' + n + ' of them are that one format. The variety comes from the subject, ' +
+      'not from drifting into other formats.\n' +
+      'If one cannot honestly be made that way, leave it out and return fewer. Fewer real ' +
+      'ones beats a full list with "' + name + '" bolted onto the front of every title.\n';
+  }
+  /* The English label, for the prompt. The screen gets tr(); the model gets
+     this, because an instruction half in Persian and half in English is a
+     worse instruction than one in either. */
+  function trEn(key) {
+    try {
+      var t = window.T && window.T[key];
+      return (t && t.en) || tr(key) || key;
+    } catch (e) { return tr(key) || key; }
+  }
+
+  /* ==========================================================================
+     VIDEO IDEAS
+     ==========================================================================
+     Six at a time, each with a title, the hook that has to earn the first two
+     seconds, the shape of the video, and the first thing on screen. Six
+     because three is not enough to choose from and a dozen is a list nobody
+     reads to the end of — but twelve is offered, because somebody scanning
+     for one usable title wants the wider net and should be allowed it.
+
+     The form grew from three controls to seven. That was asked for, and it
+     was also the fix: "give me six ideas about skateboarding" is a question
+     with a thousand right answers, and a model handed a thousand right
+     answers picks the blandest. Length, energy, and what they can actually
+     film with each cut the space down to something where the answer has to
+     commit.
+     ========================================================================== */
   function ideasPanel(box) {
     if (box.dataset.view === 'ideas') return;
     box.dataset.view = 'ideas';
     box.innerHTML =
       '<h1 data-t="st_ideas_h">' + tr('st_ideas_h') + '</h1>' +
       '<p class="lede" data-t="st_ideas_p">' + tr('st_ideas_p') + '</p>' +
-      '<div class="card">' +
+      '<div class="card form">' +
         '<label for="ncxSeed" data-t="st_ideas_seed">' + tr('st_ideas_seed') + '</label>' +
-        '<input id="ncxSeed" type="text" maxlength="120" data-tph="st_ideas_ph" placeholder="' + tr('st_ideas_ph') + '">' +
-        '<div class="two">' +
-          '<div><label for="ncxShape" data-t="st_shape">' + tr('st_shape') + '</label><select id="ncxShape">' +
-            '<option data-t="st_shape_any">' + tr('st_shape_any') + '</option>' +
-            '<option>POV</option>' +
-            '<option data-t="st_shape_cam">' + tr('st_shape_cam') + '</option>' +
-            '<option data-t="st_shape_list">' + tr('st_shape_list') + '</option>' +
-            '<option data-t="st_shape_tut">' + tr('st_shape_tut') + '</option>' +
-            '<option data-t="st_shape_react">' + tr('st_shape_react') + '</option>' +
+        '<input id="ncxSeed" type="text" maxlength="120" data-tph="st_ideas_ph" placeholder="' + esc(tr('st_ideas_ph')) + '">' +
+        '<div class="opts">' +
+          '<div class="opt"><label for="ncxShape" data-t="st_shape">' + tr('st_shape') + '</label>' +
+            '<select id="ncxShape">' + shapeOptions('any') + '</select></div>' +
+          '<div class="opt"><label for="ncxAud" data-t="st_aud">' + tr('st_aud') + '</label><select id="ncxAud">' +
+            '<option value="old" data-t="st_aud_old">' + tr('st_aud_old') + '</option>' +
+            '<option value="new" data-t="st_aud_new">' + tr('st_aud_new') + '</option>' +
+            '<option value="both" data-t="st_i_aud_both">' + tr('st_i_aud_both') + '</option>' +
           '</select></div>' +
-          '<div><label for="ncxAud" data-t="st_aud">' + tr('st_aud') + '</label><select id="ncxAud">' +
-            '<option data-t="st_aud_old">' + tr('st_aud_old') + '</option>' +
-            '<option data-t="st_aud_new">' + tr('st_aud_new') + '</option>' +
+          '<div class="opt"><label for="ncxILen" data-t="st_i_len">' + tr('st_i_len') + '</label><select id="ncxILen">' +
+            '<option value="15" data-t="st_i_len15">' + tr('st_i_len15') + '</option>' +
+            '<option value="30" selected data-t="st_i_len30">' + tr('st_i_len30') + '</option>' +
+            '<option value="60" data-t="st_i_len60">' + tr('st_i_len60') + '</option>' +
+            '<option value="180" data-t="st_i_len180">' + tr('st_i_len180') + '</option>' +
+          '</select></div>' +
+          '<div class="opt"><label for="ncxEnergy" data-t="st_i_energy">' + tr('st_i_energy') + '</label><select id="ncxEnergy">' +
+            '<option value="any" data-t="st_i_en_any">' + tr('st_i_en_any') + '</option>' +
+            '<option value="funny" data-t="st_i_en_funny">' + tr('st_i_en_funny') + '</option>' +
+            '<option value="calm" data-t="st_i_en_calm">' + tr('st_i_en_calm') + '</option>' +
+            '<option value="drama" data-t="st_i_en_drama">' + tr('st_i_en_drama') + '</option>' +
+            '<option value="useful" data-t="st_i_en_useful">' + tr('st_i_en_useful') + '</option>' +
+          '</select></div>' +
+          '<div class="opt"><label for="ncxGear" data-t="st_i_gear">' + tr('st_i_gear') + '</label><select id="ncxGear">' +
+            '<option value="phone" selected data-t="st_i_gear_phone">' + tr('st_i_gear_phone') + '</option>' +
+            '<option value="edit" data-t="st_i_gear_edit">' + tr('st_i_gear_edit') + '</option>' +
+            '<option value="setup" data-t="st_i_gear_setup">' + tr('st_i_gear_setup') + '</option>' +
+          '</select></div>' +
+          '<div class="opt"><label for="ncxCount" data-t="st_i_count">' + tr('st_i_count') + '</label><select id="ncxCount">' +
+            '<option value="6" selected data-t="st_i_count6">' + tr('st_i_count6') + '</option>' +
+            '<option value="12" data-t="st_i_count12">' + tr('st_i_count12') + '</option>' +
           '</select></div>' +
         '</div>' +
         '<div class="row"><button class="go" id="ncxIdeaGo" data-t="st_ideas_go">' + tr('st_ideas_go') + '</button></div>' +
@@ -774,27 +977,27 @@
 
     /* THE SHORTLIST, ON SCREEN. Saving into a store nobody can see is the same
        as not saving — this is what makes "Save it" a thing that happened
-       rather than a button that went grey. Drawn before the six new ones so
-       what you kept is the first thing on the page. */
+       rather than a button that went grey. Drawn before the new ones so what
+       you kept is the first thing on the page. */
     function paintSaved() {
       var wrap = $('#ncxSaved', box);
       if (!wrap) return;
       var all = savedIdeas();
       if (!all.length) { wrap.innerHTML = ''; return; }
       wrap.innerHTML =
-        '<h2 style="font-size:1rem;font-weight:800;margin:18px 2px 8px">' +
-          'Your shortlist (' + all.length + ')</h2>' +
-        all.map(function (it) {
-          return '<div class="card idea">' +
+        '<h2 class="sect">' + esc(tr('st_i_shortlist').replace('{n}', all.length)) + '</h2>' +
+        '<div class="grid">' + all.map(function (it) {
+          return '<div class="card idea kept">' +
             '<div class="ttl">' + esc(it.title) + '</div>' +
+            (it.shape ? '<div class="chips"><span class="chip">' + esc(it.shape) + '</span></div>' : '') +
             (it.hook ? '<div class="hook">&ldquo;' + esc(it.hook) + '&rdquo;</div>' : '') +
             '<div class="row">' +
-              '<button data-sw="' + esc(it.title) + '">Write the script</button>' +
-              '<button data-sx="' + esc(it.title) + '">Remove</button>' +
+              '<button data-sw="' + esc(it.title) + '" data-t="st_to_script">' + tr('st_to_script') + '</button>' +
+              '<button class="ghost" data-sx="' + esc(it.title) + '" data-t="st_i_remove">' + tr('st_i_remove') + '</button>' +
             '</div></div>';
-        }).join('') +
-        '<div class="row" style="margin:4px 2px 18px">' +
-          '<button id="ncxSavedDl">Download the shortlist</button>' +
+        }).join('') + '</div>' +
+        '<div class="row" style="margin:10px 2px 20px">' +
+          '<button class="ghost" id="ncxSavedDl" data-t="st_i_dl_list">' + tr('st_i_dl_list') + '</button>' +
         '</div>';
 
       wrap.querySelectorAll('[data-sw]').forEach(function (b) {
@@ -815,8 +1018,7 @@
             return (n + 1) + '. ' + it.title + (it.hook ? '\n   Hook: ' + it.hook : '') + '\n';
           }).join('\n');
         var ok = download('novaclip-shortlist.txt', body);
-        say(sayEl, ok ? 'ok' : 'no',
-            ok ? 'Saved as novaclip-shortlist.txt.' : 'This browser would not allow the download.');
+        say(sayEl, ok ? 'ok' : 'no', ok ? tr('st_i_dl_ok') : tr('st_i_dl_no'));
       });
     }
     paintSaved();
@@ -837,25 +1039,53 @@
 
     $('#ncxIdeaGo', box).addEventListener('click', async function () {
       var t = seed.value.trim();
-      if (!t) return say(sayEl, 'no', 'Say what it is about first.');
-      if (typeof window.ncAsk !== 'function') {
-        return say(sayEl, 'no', 'The AI helper did not load on this page.');
-      }
+      if (!t) return say(sayEl, 'no', tr('st_i_need'));
+      if (typeof window.ncAsk !== 'function') return say(sayEl, 'no', tr('st_no_ai'));
       var btn = this;
       btn.disabled = true;
-      say(sayEl, '', 'Thinking…');
+      say(sayEl, '', tr('st_i_thinking'));
       list.innerHTML = '';
+
+      var shapeId = $('#ncxShape', box).value;
+      var shape = shapeBy(shapeId);
+      var n = parseInt($('#ncxCount', box).value, 10) || 6;
+      var secs = $('#ncxILen', box).value;
+      var aud = $('#ncxAud', box).value;
+      var energy = $('#ncxEnergy', box).value;
+      var gear = $('#ncxGear', box).value;
+
+      var lenText = secs === '15' ? 'under 15 seconds' : secs === '30' ? 'about 15 to 30 seconds'
+                  : secs === '60' ? 'about 30 to 60 seconds' : 'one to three minutes';
+      var audText = aud === 'old' ? 'people who already follow them and know the running jokes'
+                  : aud === 'new' ? 'people who have never seen them before and need no context'
+                  : 'both at once — it has to land cold and still reward somebody who has been there a while';
+      var enText = energy === 'funny' ? 'funny' : energy === 'calm' ? 'calm and quiet'
+                 : energy === 'drama' ? 'tense — something at stake'
+                 : energy === 'useful' ? 'plainly useful, no performance' : 'whatever fits the idea';
+      var gearText = gear === 'phone' ? 'a phone and nothing else — no lights, no second person, no editing tricks'
+                   : gear === 'edit' ? 'a phone and basic editing — cuts, text on screen, sound'
+                   : 'a real setup: a camera, lights, and time to edit properly';
+
       try {
         var raw = await window.ncAsk(
-          'Give six short-video ideas for a teenage creator.' + catNote() + '\n' +
-          'Subject: ' + t + '\n' +
-          'Shape: ' + $('#ncxShape', box).value + '\n' +
-          'Audience: ' + $('#ncxAud', box).value + '\n\n' +
+          'Give ' + n + ' short-video ideas for a teenage creator.' + catNote() + '\n\n' +
+          'The subject, exactly as they typed it: "' + t + '"\n' +
+          'Length: ' + lenText + '.\n' +
+          'For: ' + audText + '.\n' +
+          'Energy: ' + enText + '.\n' +
+          'They can film with: ' + gearText + '.\n' +
+          shapeRules(shapeId, n) + '\n' +
+          'Every idea must be about "' + t + '" itself — not the wider category it sits in, ' +
+          'not a neighbouring hobby. No two may be the same idea in different words.\n\n' +
           'Answer with ONE line of JSON and nothing else:\n' +
-          '{"ideas":[{"title":"<max 8 words>","hook":"<the first line said out loud, max 12 words>",' +
-          '"shape":"<3 or 4 words on how it is filmed>"}]}\n\n' +
+          '{"ideas":[{"title":"<max 9 words, no hashtags, no ALL CAPS>",' +
+          '"hook":"<the first line, said out loud, max 12 words>",' +
+          '"shape":"<how it is filmed, 3 to 5 words' +
+            (shape.def ? ' — and it must be ' + trEn(shape.key).toLowerCase() : '') + '>",' +
+          '"first":"<the very first thing on screen, max 10 words>"}]}\n\n' +
           'Plain language a 15-year-old would actually use. No hashtags, no emoji, no ALL CAPS, ' +
-          'and nothing that promises something the video cannot show.');
+          'and nothing that promises something the video cannot show.' + langNote(),
+          { maxTokens: n > 6 ? 1800 : 1100 });
         /* ncAsk RESOLVES TO AN OBJECT, NOT A STRING.
            It answers { text, image, sources, err, cut, finish } — every other
            caller on the site reads r.err then r.text, and these two panels
@@ -867,34 +1097,53 @@
         if (raw && raw.err) throw new Error(raw.err);
         var body = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
         var m = body.match(/\{[\s\S]*\}/);
-        if (!m) throw new Error('The AI answered in a shape this panel could not read.');
+        if (!m) throw new Error(tr('st_scan_shape'));
         var ideas = (JSON.parse(m[0]) || {}).ideas || [];
-        if (!ideas.length) throw new Error('The AI sent no ideas back.');
-        list.innerHTML = ideas.slice(0, 6).map(function (it, i) {
-          return '<div class="card idea">' +
-            '<div class="ttl">' + esc(it.title || '') + '</div>' +
-            '<div class="hook">&ldquo;' + esc(it.hook || '') + '&rdquo;</div>' +
-            '<div class="shape">' + esc(it.shape || '') + '</div>' +
-            '<div class="row">' +
-              '<button data-s="' + i + '">Save it</button>' +
-              '<button data-w="' + i + '">Write the script</button>' +
-              '<button data-t="' + i + '">Make a thumbnail</button>' +
-              '<button data-c="' + i + '">Copy</button>' +
-            '</div></div>';
-        }).join('') +
-        /* One file with all six in it, so the answer survives closing the tab
-           whether or not any single idea was worth saving. */
-        '<div class="row" style="margin-top:12px">' +
-          '<button class="go" id="ncxIdeaDl">Download all six</button>' +
-        '</div>';
+        if (!ideas.length) throw new Error(tr('st_i_none'));
+        ideas = ideas.slice(0, n);
+
+        list.innerHTML =
+          '<h2 class="sect">' + esc(tr('st_i_fresh').replace('{n}', ideas.length)) +
+            (shape.def ? ' <span class="chip lock">' + esc(tr(shape.key)) + '</span>' : '') + '</h2>' +
+          '<div class="grid">' + ideas.map(function (it, i) {
+            return '<div class="card idea">' +
+              '<div class="num">' + (i + 1) + '</div>' +
+              '<div class="ttl">' + esc(it.title || '') + '</div>' +
+              (it.shape ? '<div class="chips"><span class="chip">' + esc(it.shape) + '</span></div>' : '') +
+              (it.hook ? '<div class="hook">&ldquo;' + esc(it.hook) + '&rdquo;</div>' : '') +
+              (it.first ? '<div class="first"><span data-t="st_i_first">' + tr('st_i_first') +
+                          '</span> ' + esc(it.first) + '</div>' : '') +
+              '<div class="row">' +
+                '<button data-s="' + i + '" data-t="st_i_save">' + tr('st_i_save') + '</button>' +
+                '<button class="ghost" data-w="' + i + '" data-t="st_to_script">' + tr('st_to_script') + '</button>' +
+                /* data-th, NOT data-t. applyLangText() walks every [data-t] on
+                   the page and looks the value up as a translation key — this
+                   button carried data-t="0", so the language pass was asking
+                   for a key called "0" on every render. It returned '' and did
+                   nothing, which is the kind of bug that never shows up until
+                   somebody adds a key that happens to be a number. */
+                '<button class="ghost" data-th="' + i + '" data-t="st_i_thumb">' + tr('st_i_thumb') + '</button>' +
+                '<button class="ghost" data-c="' + i + '" data-t="st_copy">' + tr('st_copy') + '</button>' +
+              '</div></div>';
+          }).join('') + '</div>' +
+          /* One file with all of them in it, so the answer survives closing
+             the tab whether or not any single idea was worth saving. */
+          '<div class="row" style="margin-top:14px">' +
+            '<button class="ghost" id="ncxIdeaDl" data-t="st_i_dl">' + tr('st_i_dl') + '</button>' +
+            '<button class="ghost" id="ncxIdeaAgain" data-t="st_i_again">' + tr('st_i_again') + '</button>' +
+          '</div>';
 
         list.querySelectorAll('[data-w]').forEach(function (b2) {
           b2.addEventListener('click', function () {
             var it = ideas[+b2.dataset.w] || {};
             /* Hand the title to Scripts and go there. Session storage rather
                than a variable because the Scripts panel reads its seed on
-               build, and this survives a reload of the app. */
-            try { sessionStorage.setItem('nc_trend_seed', it.title || ''); } catch (e) {}
+               build, and this survives a reload of the app. The shape travels
+               with it, so a POV idea does not become a talking-head script. */
+            try {
+              sessionStorage.setItem('nc_trend_seed', it.title || '');
+              sessionStorage.setItem('nc_shape_seed', shapeId);
+            } catch (e) {}
             var box2 = host();
             if (box2) box2.dataset.view = '';   /* force Scripts to rebuild with the new seed */
             location.hash = '/scripts';
@@ -903,8 +1152,9 @@
         list.querySelectorAll('[data-c]').forEach(function (b3) {
           b3.addEventListener('click', function () {
             var it = ideas[+b3.dataset.c] || {};
-            var text = (it.title || '') + '\n' + (it.hook || '') + '\n' + (it.shape || '');
-            try { navigator.clipboard.writeText(text); say(sayEl, 'ok', 'Copied.'); } catch (e) {}
+            var text = (it.title || '') + '\n' + (it.hook || '') + '\n' + (it.shape || '') +
+                       (it.first ? '\n' + it.first : '');
+            try { navigator.clipboard.writeText(text); say(sayEl, 'ok', tr('st_copied')); } catch (e) {}
           });
         });
 
@@ -914,20 +1164,21 @@
           b4.addEventListener('click', function () {
             var it = ideas[+b4.dataset.s] || {};
             if (saveIdea(it)) {
-              b4.textContent = 'Saved';
+              b4.textContent = tr('st_i_saved_btn');
+              b4.removeAttribute('data-t');
               b4.disabled = true;
-              say(sayEl, 'ok', 'Saved to your shortlist. It counts towards a certificate.');
+              say(sayEl, 'ok', tr('st_i_saved'));
               paintSaved();
             } else {
-              say(sayEl, 'ok', 'That one is already on your shortlist.');
+              say(sayEl, 'ok', tr('st_i_dupe'));
             }
           });
         });
 
         /* Straight to the thumbnail maker with the title already in it. */
-        list.querySelectorAll('[data-t]').forEach(function (b5) {
+        list.querySelectorAll('[data-th]').forEach(function (b5) {
           b5.addEventListener('click', function () {
-            var it = ideas[+b5.dataset.t] || {};
+            var it = ideas[+b5.dataset.th] || {};
             try { sessionStorage.setItem('nc_thumb_text', it.title || ''); } catch (e) {}
             var box3 = host();
             if (box3) box3.dataset.view = '';
@@ -935,20 +1186,23 @@
           });
         });
 
+        var again = $('#ncxIdeaAgain', box);
+        if (again) again.addEventListener('click', function () { $('#ncxIdeaGo', box).click(); });
+
         var dl = $('#ncxIdeaDl', box);
         if (dl) dl.addEventListener('click', function () {
-          var body = 'Six video ideas — ' + t + '\n' +
+          var body2 = ideas.length + ' video ideas — ' + t + '\n' +
             new Date().toLocaleString() + '\n\n' +
-            ideas.slice(0, 6).map(function (it, n) {
-              return (n + 1) + '. ' + (it.title || '') + '\n' +
+            ideas.map(function (it, k) {
+              return (k + 1) + '. ' + (it.title || '') + '\n' +
                      '   Hook:  ' + (it.hook || '') + '\n' +
-                     '   Shape: ' + (it.shape || '') + '\n';
+                     '   Shape: ' + (it.shape || '') + '\n' +
+                     (it.first ? '   Opens: ' + it.first + '\n' : '');
             }).join('\n');
-          var ok = download('novaclip-ideas.txt', body);
-          say(sayEl, ok ? 'ok' : 'no',
-              ok ? 'Saved as novaclip-ideas.txt.' : 'This browser would not allow the download.');
+          var ok = download('novaclip-ideas.txt', body2);
+          say(sayEl, ok ? 'ok' : 'no', ok ? tr('st_i_dl_ok') : tr('st_i_dl_no'));
         });
-        say(sayEl, 'ok', 'Six ideas. None of them is an instruction — pick one and change it.');
+        say(sayEl, 'ok', tr('st_i_done').replace('{n}', ideas.length));
         try {
           if (typeof window.saveHist === 'function') {
             window.saveHist('Video Ideas', t, ideas.slice(0, 3).map(function (x) {
@@ -965,6 +1219,22 @@
 
   /* ==========================================================================
      SCRIPTS
+     ==========================================================================
+     This used to ask for three labelled paragraphs and drop them in a
+     textarea. The result read like an essay about a video rather than
+     something anybody could stand up and film: no idea what is on screen
+     while the words are being said, no idea how long any part runs, and a
+     "30-second script" that took fifty seconds to read out.
+
+     It asks for beats now — a label, a length in seconds, the words out loud,
+     and what the camera is looking at while they are said — and the panel adds
+     up the seconds and says whether the draft actually fits the length that
+     was asked for. That last part is the whole difference between a script and
+     a piece of writing about a video.
+
+     The textarea stays, holding the same thing as plain text. Copy, Download
+     and the hand-off to the AI Editor all read it, the reader can edit it, and
+     a beat sheet nobody can paste anywhere is a beat sheet nobody uses.
      ========================================================================== */
   function scriptsPanel(box) {
     if (box.dataset.view === 'scripts') return;
@@ -972,35 +1242,57 @@
     box.innerHTML =
       '<h1 data-t="st_scripts_h">' + tr('st_scripts_h') + '</h1>' +
       '<p class="lede" data-t="st_scripts_p">' + tr('st_scripts_p') + '</p>' +
-      '<div class="card">' +
+      '<div class="card form">' +
         '<label for="ncxTopic" data-t="st_topic">' + tr('st_topic') + '</label>' +
-        '<input id="ncxTopic" type="text" maxlength="120" data-tph="st_topic_ph" placeholder="' + tr('st_topic_ph') + '">' +
-        '<div class="two">' +
-          '<div><label for="ncxLen" data-t="st_len">' + tr('st_len') + '</label><select id="ncxLen">' +
+        '<input id="ncxTopic" type="text" maxlength="120" data-tph="st_topic_ph" placeholder="' + esc(tr('st_topic_ph')) + '">' +
+        '<div class="opts">' +
+          '<div class="opt"><label for="ncxSShape" data-t="st_shape">' + tr('st_shape') + '</label>' +
+            '<select id="ncxSShape">' + shapeOptions('any') + '</select></div>' +
+          '<div class="opt"><label for="ncxLen" data-t="st_len">' + tr('st_len') + '</label><select id="ncxLen">' +
             '<option value="15" data-t="st_len15">' + tr('st_len15') + '</option>' +
             '<option value="30" selected data-t="st_len30">' + tr('st_len30') + '</option>' +
-            '<option value="60" data-t="st_len60">' + tr('st_len60') + '</option></select></div>' +
-          '<div><label for="ncxTone" data-t="st_tone">' + tr('st_tone') + '</label><select id="ncxTone">' +
-            '<option data-t="st_tone_plain">' + tr('st_tone_plain') + '</option>' +
-            '<option data-t="st_tone_funny">' + tr('st_tone_funny') + '</option>' +
-            '<option data-t="st_tone_story">' + tr('st_tone_story') + '</option>' +
-            '<option data-t="st_tone_expl">' + tr('st_tone_expl') + '</option></select></div>' +
+            '<option value="45" data-t="st_s_len45">' + tr('st_s_len45') + '</option>' +
+            '<option value="60" data-t="st_len60">' + tr('st_len60') + '</option>' +
+            '<option value="90" data-t="st_s_len90">' + tr('st_s_len90') + '</option></select></div>' +
+          '<div class="opt"><label for="ncxTone" data-t="st_tone">' + tr('st_tone') + '</label><select id="ncxTone">' +
+            '<option value="plain" data-t="st_tone_plain">' + tr('st_tone_plain') + '</option>' +
+            '<option value="funny" data-t="st_tone_funny">' + tr('st_tone_funny') + '</option>' +
+            '<option value="story" data-t="st_tone_story">' + tr('st_tone_story') + '</option>' +
+            '<option value="expl" data-t="st_tone_expl">' + tr('st_tone_expl') + '</option>' +
+            '<option value="hyped" data-t="st_s_tone_hyped">' + tr('st_s_tone_hyped') + '</option>' +
+            '<option value="calm" data-t="st_s_tone_calm">' + tr('st_s_tone_calm') + '</option></select></div>' +
+          '<div class="opt"><label for="ncxHook" data-t="st_s_hook">' + tr('st_s_hook') + '</label><select id="ncxHook">' +
+            '<option value="any" data-t="st_s_hook_any">' + tr('st_s_hook_any') + '</option>' +
+            '<option value="q" data-t="st_s_hook_q">' + tr('st_s_hook_q') + '</option>' +
+            '<option value="claim" data-t="st_s_hook_claim">' + tr('st_s_hook_claim') + '</option>' +
+            '<option value="cold" data-t="st_s_hook_cold">' + tr('st_s_hook_cold') + '</option>' +
+            '<option value="num" data-t="st_s_hook_num">' + tr('st_s_hook_num') + '</option>' +
+            '<option value="warn" data-t="st_s_hook_warn">' + tr('st_s_hook_warn') + '</option></select></div>' +
+          '<div class="opt"><label for="ncxEnd" data-t="st_s_end">' + tr('st_s_end') + '</label><select id="ncxEnd">' +
+            '<option value="stop" data-t="st_s_end_stop">' + tr('st_s_end_stop') + '</option>' +
+            '<option value="follow" data-t="st_s_end_follow">' + tr('st_s_end_follow') + '</option>' +
+            '<option value="comment" data-t="st_s_end_comment">' + tr('st_s_end_comment') + '</option>' +
+            '<option value="part2" data-t="st_s_end_part2">' + tr('st_s_end_part2') + '</option></select></div>' +
         '</div>' +
         '<div class="row"><button class="go" id="ncxWrite" data-t="st_write">' + tr('st_write') + '</button>' +
-          '<button id="ncxCopy" disabled data-t="st_copy">' + tr('st_copy') + '</button>' +
+          '<button class="ghost" id="ncxCopy" disabled data-t="st_copy">' + tr('st_copy') + '</button>' +
           /* A file and a hand-off, so the draft outlives the tab. Both start
              disabled: offering "Download" before there is anything to download
              is a button that lies about being ready. */
-          '<button id="ncxDl" disabled data-t="st_dl">' + tr('st_dl') + '</button>' +
-          '<button id="ncxToAi" disabled data-t="st_toai">' + tr('st_toai') + '</button></div>' +
+          '<button class="ghost" id="ncxDl" disabled data-t="st_dl">' + tr('st_dl') + '</button>' +
+          '<button class="ghost" id="ncxToAi" disabled data-t="st_toai">' + tr('st_toai') + '</button></div>' +
         '<div class="say" id="ncxSay" style="display:none"></div>' +
-        '<label for="ncxOut" style="margin-top:16px" data-t="st_script">' + tr('st_script') + '</label>' +
-        '<textarea id="ncxOut" data-tph="st_script_ph" placeholder="' + tr('st_script_ph') + '"></textarea>' +
+      '</div>' +
+      '<div id="ncxBeats"></div>' +
+      '<div class="card">' +
+        '<label for="ncxOut" data-t="st_script">' + tr('st_script') + '</label>' +
+        '<div class="hintline" data-t="st_s_edit">' + tr('st_s_edit') + '</div>' +
+        '<textarea id="ncxOut" data-tph="st_script_ph" placeholder="' + esc(tr('st_script_ph')) + '"></textarea>' +
       '</div>';
 
     var topic = $('#ncxTopic', box), out = $('#ncxOut', box), sayEl = $('#ncxSay', box);
     var write = $('#ncxWrite', box), copy = $('#ncxCopy', box);
-    var dlBtn = $('#ncxDl', box), aiBtn = $('#ncxToAi', box);
+    var dlBtn = $('#ncxDl', box), aiBtn = $('#ncxToAi', box), beats = $('#ncxBeats', box);
 
     if (dlBtn) dlBtn.addEventListener('click', function () {
       var text = (out.value || '').trim();
@@ -1009,8 +1301,7 @@
         .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'script';
       var ok = download('novaclip-' + name + '.txt',
         (topic.value || '') + '\n' + new Date().toLocaleString() + '\n\n' + text);
-      say(sayEl, ok ? 'ok' : 'no',
-          ok ? 'Saved as novaclip-' + name + '.txt.' : 'This browser would not allow the download.');
+      say(sayEl, ok ? 'ok' : 'no', ok ? tr('st_i_dl_ok') : tr('st_i_dl_no'));
     });
 
     /* THE SCRIPT IS WHAT THE AI EDITOR ASKS FOR ANYWAY.
@@ -1031,54 +1322,139 @@
       location.href = 'publish.html';
     });
 
-    /* If the reader came from a trend, use it. The app puts the trend it is
-       showing in the URL on its own routes; this reads the last one seen. */
+    /* If the reader came from a trend or an idea, use it — and the format
+       comes with it, so an idea picked as a POV does not quietly become a
+       talking-head script two clicks later. */
     try {
-      var seed = sessionStorage.getItem('nc_trend_seed');
-      if (seed && !topic.value) topic.value = seed;
+      var s1 = sessionStorage.getItem('nc_trend_seed');
+      if (s1 && !topic.value) topic.value = s1;
+      var s2 = sessionStorage.getItem('nc_shape_seed');
+      if (s2) { $('#ncxSShape', box).value = s2; sessionStorage.removeItem('nc_shape_seed'); }
     } catch (e) {}
 
-    out.addEventListener('input', function () { copy.disabled = !out.value.trim(); });
+    function enable() {
+      var has = !!out.value.trim();
+      copy.disabled = !has;
+      if (dlBtn) dlBtn.disabled = !has;
+      if (aiBtn) aiBtn.disabled = !has;
+    }
+    out.addEventListener('input', enable);
 
     copy.addEventListener('click', function () {
       if (!out.value.trim()) return;
       try {
         navigator.clipboard.writeText(out.value);
-        say(sayEl, 'ok', 'Copied.');
+        say(sayEl, 'ok', tr('st_copied'));
       } catch (e) { out.select(); }
     });
 
+    /* mm:ss from a running total, so a beat sheet reads like a timeline
+       rather than a list of durations somebody has to add up themselves. */
+    function clock(s) {
+      s = Math.max(0, Math.round(s));
+      return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+    }
+
     write.addEventListener('click', async function () {
       var t = topic.value.trim();
-      if (!t) return say(sayEl, 'no', 'Say what the video is about first.');
-      if (typeof window.ncAsk !== 'function') {
-        return say(sayEl, 'no', 'The AI helper did not load on this page.');
-      }
+      if (!t) return say(sayEl, 'no', tr('st_s_need'));
+      if (typeof window.ncAsk !== 'function') return say(sayEl, 'no', tr('st_no_ai'));
       write.disabled = true;
-      say(sayEl, '', 'Writing…');
-      var secs = $('#ncxLen', box).value;
+      say(sayEl, '', tr('st_s_writing'));
+      beats.innerHTML = '';
+
+      var secs = parseInt($('#ncxLen', box).value, 10) || 30;
       var tone = $('#ncxTone', box).value;
+      var shapeId = $('#ncxSShape', box).value;
+      var hookKind = $('#ncxHook', box).value;
+      var endKind = $('#ncxEnd', box).value;
+
+      var toneText = tone === 'funny' ? 'funny, but the joke never gets in the way of the point'
+                   : tone === 'story' ? 'told as a story, with the turn kept back until it lands'
+                   : tone === 'expl' ? 'explaining, patient, assuming nothing'
+                   : tone === 'hyped' ? 'high energy, fast, but never shouting at the viewer'
+                   : tone === 'calm' ? 'calm and unhurried, close to the microphone'
+                   : 'plain and direct';
+      var hookText = hookKind === 'q' ? 'The first line is a question the viewer wants answered.'
+                   : hookKind === 'claim' ? 'The first line is a bold claim the rest of the video has to back up.'
+                   : hookKind === 'cold' ? 'Open cold, mid-action, with no introduction at all.'
+                   : hookKind === 'num' ? 'The first line leads with a specific number.'
+                   : hookKind === 'warn' ? 'The first line warns them off a mistake most people make.'
+                   : 'Open however earns the first two seconds best.';
+      var endText = endKind === 'follow' ? 'End by giving them a reason to follow — a reason, not a request.'
+                  : endKind === 'comment' ? 'End on a question worth answering in the comments.'
+                  : endKind === 'part2' ? 'End on the opening of a part two, so it is worth coming back.'
+                  : 'End on the last real line. No sign-off, no "like and subscribe".';
+
       try {
-        var answer = await window.ncAsk(
-          'Write a script for a ' + secs + '-second short video for a teenage creator.\n' +
-          'Subject: ' + t + '\nTone: ' + tone + '\n\n' +
-          'Give it as plain text with three labelled parts — HOOK, MIDDLE, END. ' +
-          'The hook is the first two seconds and has to earn the rest. ' +
-          'Write words a 15-year-old would actually say out loud, no stage directions, ' +
-          'no hashtags, no emoji, and do not promise anything the video cannot show. ' +
-          'Keep it to what fits in ' + secs + ' seconds when read at a normal pace.');
+        var raw = await window.ncAsk(
+          'Write a script for a ' + secs + '-second short video for a teenage creator.' + catNote() + '\n\n' +
+          'Subject: "' + t + '"\n' +
+          'Tone: ' + toneText + '.\n' +
+          hookText + '\n' + endText + '\n' +
+          shapeRules(shapeId, 1) + '\n' +
+          'Break it into beats. Every beat carries how many seconds it runs, the words said ' +
+          'out loud, and what is on screen while they are said. The seconds must add up to ' +
+          'about ' + secs + ' — and the words in each beat must be sayable in the seconds you ' +
+          'gave it at a normal speaking pace, which is roughly two and a half words per second. ' +
+          'A beat with twenty words and three seconds is a beat nobody can film.\n\n' +
+          'Answer with ONE line of JSON and nothing else:\n' +
+          '{"beats":[{"t":"<label, 2 or 3 words>","secs":<whole number>,' +
+          '"say":"<the words out loud>","do":"<what is on screen, max 12 words>"}]}\n\n' +
+          'Words a 15-year-old would actually say out loud. No stage directions inside "say", ' +
+          'no hashtags, no emoji, and do not promise anything the video cannot show.' + langNote(),
+          { maxTokens: 1500 });
         /* Same object, same rule — see the note in the ideas panel above. */
-        if (answer && answer.err) throw new Error(answer.err);
-        out.value = ((answer && typeof answer === 'object') ? (answer.text || '')
-                                                           : String(answer || '')).trim();
-        copy.disabled = !out.value;
-        if (dlBtn) dlBtn.disabled = !out.value;
-        if (aiBtn) aiBtn.disabled = !out.value;
-        say(sayEl, out.value ? 'ok' : 'no',
-          out.value ? 'First draft. Change anything — it is yours.' : 'The AI sent nothing back.');
-        try {
-          if (out.value && typeof window.saveHist === 'function') window.saveHist('Scripts', t, out.value);
-        } catch (e) {}
+        if (raw && raw.err) throw new Error(raw.err);
+        var bodyTxt = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
+        var m = bodyTxt.match(/\{[\s\S]*\}/);
+        if (!m) throw new Error(tr('st_scan_shape'));
+        var list = (JSON.parse(m[0]) || {}).beats || [];
+        if (!list.length) throw new Error(tr('st_s_none'));
+
+        var run = 0, rows = [];
+        list.forEach(function (bt) {
+          var d = Math.max(1, Math.round(+bt.secs || 0));
+          rows.push({ t: bt.t || '', secs: d, say: bt.say || '', do: bt.do || '', at: run });
+          run += d;
+        });
+
+        /* HOW CLOSE THE DRAFT IS TO THE LENGTH THAT WAS ASKED FOR, said out
+           loud. A model asked for thirty seconds routinely writes forty-five,
+           and the old panel handed that over without a word — so the first
+           time anybody found out was reading it to camera. Within a fifth is
+           near enough to film; past that it says so. */
+        var off = run - secs;
+        var near = Math.abs(off) <= Math.max(3, secs * 0.2);
+        beats.innerHTML =
+          '<h2 class="sect">' + esc(tr('st_s_beats')) + '</h2>' +
+          '<div class="meter ' + (near ? 'ok' : 'over') + '">' +
+            '<b>' + clock(run) + '</b> ' +
+            esc((near ? tr('st_s_fits') : (off > 0 ? tr('st_s_long') : tr('st_s_short')))
+                  .replace('{n}', secs).replace('{d}', Math.abs(off))) +
+          '</div>' +
+          rows.map(function (r) {
+            return '<div class="card beat">' +
+              '<div class="bhead"><span class="bt">' + esc(r.t) + '</span>' +
+                '<span class="btime">' + clock(r.at) + '–' + clock(r.at + r.secs) + '</span></div>' +
+              '<div class="bsay">' + esc(r.say) + '</div>' +
+              (r.do ? '<div class="bdo"><span data-t="st_s_onscreen">' + tr('st_s_onscreen') +
+                      '</span> ' + esc(r.do) + '</div>' : '') +
+            '</div>';
+          }).join('');
+
+        /* The same script as plain text, for the textarea — and so Copy,
+           Download and the hand-off to the AI Editor keep reading one thing.
+           HOOK stays spelled that way on the first beat because publish.html
+           looks for it by name. */
+        out.value = rows.map(function (r, i) {
+          return (i === 0 ? 'HOOK — ' : '') + (r.t || '').toUpperCase() +
+                 '  (' + clock(r.at) + '–' + clock(r.at + r.secs) + ')\n' +
+                 r.say + (r.do ? '\n[on screen: ' + r.do + ']' : '');
+        }).join('\n\n');
+        enable();
+        say(sayEl, 'ok', tr('st_s_ok'));
+        try { if (typeof window.saveHist === 'function') window.saveHist('Scripts', t, out.value); } catch (e) {}
       } catch (err) {
         say(sayEl, 'no', esc((err && err.message) || String(err)));
       }
@@ -1309,11 +1685,14 @@
     if (box.dataset.view === 'hype') return;
     box.dataset.view = 'hype';
     box.innerHTML =
+      exitBar(tr('st_hype_h') || 'Hype Lab', 'hype.html') +
       '<h1 data-t="st_hype_h">' + tr('st_hype_h') + '</h1>' +
       '<p class="lede" data-t="st_hype_p">' + tr('st_hype_p') + '</p>' +
-      '<div class="frame"><iframe id="ncxHype" title="Hype Lab" ' +
+      '<div class="frame tall"><iframe id="ncxHype" title="Hype Lab" ' +
         'src="hype.html?embed=1" loading="lazy" ' +
-        'allow="camera; microphone; clipboard-write"></iframe></div>';
+        'allow="camera; microphone; clipboard-write"></iframe></div>' +
+      '<p class="foot"><a href="hype.html" data-t="st_hype_own">' + tr('st_hype_own') + '</a></p>';
+    wireExit(box);
   }
 
   /* Both tools, in a frame, exactly the way Hype Lab already sits here. The
