@@ -681,6 +681,13 @@
            A scan that failed is not a scan, and paying for it would be the
            counter lying in the other direction. */
         try { if (typeof window.logSkill === 'function') window.logSkill('trend_scan'); } catch (e) {}
+        try {
+          if (typeof window.saveHist === 'function') {
+            window.saveHist('Trend Spotter', t, trends.slice(0, 3).map(function (x) {
+              return '• ' + (x.title || '');
+            }).join('\n'));
+          }
+        } catch (e) {}
         try { if (typeof window.addPts === 'function') window.addPts(5); } catch (e) {}
 
         list.querySelectorAll('[data-i]').forEach(function (b2) {
@@ -942,6 +949,13 @@
               ok ? 'Saved as novaclip-ideas.txt.' : 'This browser would not allow the download.');
         });
         say(sayEl, 'ok', 'Six ideas. None of them is an instruction — pick one and change it.');
+        try {
+          if (typeof window.saveHist === 'function') {
+            window.saveHist('Video Ideas', t, ideas.slice(0, 3).map(function (x) {
+              return '• ' + (x.title || '');
+            }).join('\n'));
+          }
+        } catch (e) {}
       } catch (err) {
         say(sayEl, 'no', esc((err && err.message) || String(err)));
       }
@@ -1062,6 +1076,9 @@
         if (aiBtn) aiBtn.disabled = !out.value;
         say(sayEl, out.value ? 'ok' : 'no',
           out.value ? 'First draft. Change anything — it is yours.' : 'The AI sent nothing back.');
+        try {
+          if (out.value && typeof window.saveHist === 'function') window.saveHist('Scripts', t, out.value);
+        } catch (e) {}
       } catch (err) {
         say(sayEl, 'no', esc((err && err.message) || String(err)));
       }

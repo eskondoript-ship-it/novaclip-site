@@ -447,6 +447,10 @@ textarea:focus{outline:none;border-color:rgba(0,229,255,.5)}
 
     if (window.addPts) addPts(10);
     if (typeof logSkill === 'function') logSkill('ai_ask');
+    /* Into the History page. What they typed is worth keeping — it is often a
+       sentence they would have to invent again to get the same page back —
+       and the first line of the answer says which way it went. */
+    if (window.saveHist) saveHist('Coder', q, first.replace(/^\s*CAN:\s*/i, '').trim());
   }
 
   $('go').onclick = build;

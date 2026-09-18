@@ -396,6 +396,7 @@
       if (cut) start();
       if (typeof window.logSkill === 'function') window.logSkill('editing');
       if (window.addPts) addPts(5);
+      if (window.saveHist) window.saveHist('Puppet', q, 'Directed: ' + mot.base + (j.why ? ' — ' + j.why : ''));
     };
 
     /* ---- recording ------------------------------------------------------- */

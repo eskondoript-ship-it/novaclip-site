@@ -234,6 +234,38 @@
    the Studio. The JSON keys stay English or the parser stops matching.
 
    trends-nav.js and nova.js. Both cached. */
+/* v61: History records the whole site, pages come back where you left them,
+   the Studio hero lede is centred, and the certificates ask for more.
+
+   HISTORY WAS EMPTY BECAUSE ONLY ONE PAGE EVER WROTE TO IT. saveHist() was
+   called from ai.html and nowhere else, so somebody who had spent an afternoon
+   on the Studio, the Coder and the puppet found a page that said "no chats
+   yet". The Coder, the animator and the Studio's three AI panels write to it
+   now, the entry carries a time as a third element (parent.html reads x[0] and
+   .length, so it does not notice), and the list is one column newest-first
+   with the answer under the question instead of three questions per subject
+   and nothing else. It also has a Clear button, which a page holding a record
+   of what somebody asked should always have had.
+
+   COMING BACK LANDS WHERE YOU LEFT. The browser restores scroll for its own
+   Back button and cannot do it for a link, and every "back to the site" link
+   here is an ordinary link — so the position is kept per path in
+   sessionStorage, which dies with the tab. A #hash outranks it, a first visit
+   is not restored, and the first wheel, touch or keypress stands it down.
+
+   THE STUDIO HERO LEDE. Its own rule asks for margin:12px auto 0, and
+   body.nova p{margin:0} is (0,1,2) against that rule's (0,1,0), so the auto
+   margins never resolved and a 620px block sat hard left in a 976px hero with
+   its text centred inside it. Fixed on specificity, in trends.html.
+
+   THE CERTIFICATES ASK FOR MORE, AND CAN. Six skill ids carried all three
+   tiers while six others were logged by real pages into a ledger nothing read
+   — and three of those six had no Q_KEY, so a requirement built on them would
+   have rendered as a blank row with a number after it. The keys exist now, in
+   all twenty languages, and the tiers use them.
+
+   nova.js, history.html, trends.html, coder.html, animator.js, trends-nav.js.
+   All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -664,7 +696,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v60';
+const CACHE = 'novaclip-v61';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

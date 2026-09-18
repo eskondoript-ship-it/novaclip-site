@@ -142,7 +142,16 @@ const T = {
      had simply never translated, on four pages, in nineteen languages, with
      nothing anywhere to say so. The check is worth repeating whenever a
      page grows a new data-t. */
-  hist_sub: { en:"Every question you have put to a NovaClip AI tutor, newest first. It is kept on this device and nowhere else — clearing your browser data clears it.", zh:"你向 NovaClip AI 导师提过的每个问题，最新的在前。只保存在这台设备上——清除浏览器数据就会清空。", hi:"NovaClip के AI ट्यूटर से पूछे गए आपके सारे सवाल, नए पहले। यह सिर्फ़ इसी डिवाइस पर रहता है — ब्राउज़र डेटा हटाने पर यह भी हट जाता है।", es:"Cada pregunta que has hecho a un tutor de IA de NovaClip, las más nuevas primero. Se guarda en este dispositivo y en ningún otro sitio: si borras los datos del navegador, se borra.", ar:"كل سؤال طرحته على مدرّس الذكاء الاصطناعي في NovaClip، الأحدث أولًا. يُحفظ على هذا الجهاز فقط — ومسح بيانات المتصفح يمسحه.", fr:"Chaque question posée à un tuteur IA de NovaClip, la plus récente en premier. Gardé sur cet appareil et nulle part ailleurs : effacer les données du navigateur l’efface.", bn:"NovaClip-এর AI টিউটরকে করা আপনার প্রতিটি প্রশ্ন, নতুনটি আগে। এটি কেবল এই ডিভাইসে থাকে — ব্রাউজারের ডেটা মুছলে এটিও মুছে যায়।", pt:"Cada pergunta que fizeste a um tutor de IA do NovaClip, as mais recentes primeiro. Fica neste dispositivo e em mais lado nenhum — limpar os dados do navegador limpa isto.", ru:"Каждый вопрос, который ты задал ИИ-репетитору NovaClip, новые сверху. Хранится только на этом устройстве — очистка данных браузера всё стирает.", ur:"ہر سوال جو آپ نے NovaClip کے AI ٹیوٹر سے پوچھا، نیا پہلے۔ یہ صرف اسی ڈیوائس پر رہتا ہے — براؤزر ڈیٹا صاف کرنے سے یہ بھی مٹ جاتا ہے۔", id:"Setiap pertanyaan yang kamu ajukan ke tutor AI NovaClip, terbaru dulu. Disimpan di perangkat ini saja — menghapus data peramban menghapusnya.", de:"Jede Frage, die du einem KI-Tutor von NovaClip gestellt hast, neueste zuerst. Bleibt auf diesem Gerät und sonst nirgends — Browserdaten löschen löscht sie.", ja:"NovaClipのAIチューターに投げた質問のすべて、新しい順。この端末にだけ保存され、ブラウザのデータを消すと消えます。", tr:"NovaClip’in YZ eğitmenine sorduğun her soru, en yenisi üstte. Yalnızca bu cihazda tutulur — tarayıcı verilerini silmek bunu da siler.", ko:"NovaClip AI 튜터에게 물어본 모든 질문, 최신순. 이 기기에만 저장되며 브라우저 데이터를 지우면 함께 사라집니다.", fa:"هر پرسشی که از مربی هوش مصنوعی NovaClip پرسیده‌ای، تازه‌ترین اول. فقط روی همین دستگاه می‌ماند — پاک‌کردن داده‌های مرورگر پاکش می‌کند.", uk:"Кожне запитання, яке ти поставив ШІ-репетитору NovaClip, найновіші згори. Зберігається лише на цьому пристрої — очищення даних браузера стирає його.", it:"Ogni domanda che hai fatto a un tutor IA di NovaClip, dalla più recente. Resta su questo dispositivo e da nessun’altra parte: cancellare i dati del browser la cancella.", pl:"Każde pytanie zadane korepetytorowi AI w NovaClip, od najnowszych. Trzymane tylko na tym urządzeniu — wyczyszczenie danych przeglądarki je usuwa.", vi:"Mọi câu hỏi bạn đã gửi cho gia sư AI của NovaClip, mới nhất trước. Chỉ lưu trên thiết bị này — xoá dữ liệu trình duyệt là mất." },
+  hist_count: { en:"{n} saved", zh:"已保存 {n} 条", hi:"{n} सहेजे गए", es:"{n} guardadas", ar:"{n} محفوظة", fr:"{n} enregistrées", bn:"{n}টি সংরক্ষিত", pt:"{n} guardadas", ru:"Сохранено: {n}", ur:"{n} محفوظ", id:"{n} tersimpan", de:"{n} gespeichert", ja:"{n}件を保存", tr:"{n} kayıtlı", ko:"{n}개 저장됨", fa:"{n} ذخیره‌شده", uk:"Збережено: {n}", it:"{n} salvate", pl:"Zapisano: {n}", vi:"Đã lưu {n}" },
+  hist_clear: { en:"Clear history", zh:"清除历史", hi:"इतिहास मिटाएँ", es:"Borrar historial", ar:"مسح السجل", fr:"Effacer l’historique", bn:"ইতিহাস মুছুন", pt:"Limpar histórico", ru:"Очистить историю", ur:"تاریخ مٹائیں", id:"Hapus riwayat", de:"Verlauf löschen", ja:"履歴を消す", tr:"Geçmişi temizle", ko:"기록 지우기", fa:"پاک‌کردن تاریخچه", uk:"Очистити історію", it:"Cancella cronologia", pl:"Wyczyść historię", vi:"Xoá lịch sử" },
+  hist_clear_sure: { en:"Delete everything you have asked? This cannot be undone.", zh:"删除你问过的全部内容？此操作无法撤销。", hi:"आपने जो कुछ पूछा, सब मिटा दें? इसे वापस नहीं लाया जा सकता।", es:"¿Borrar todo lo que has preguntado? No se puede deshacer.", ar:"حذف كل ما سألت عنه؟ لا يمكن التراجع عن هذا.", fr:"Supprimer tout ce que tu as demandé ? C’est irréversible.", bn:"আপনি যা যা জিজ্ঞেস করেছেন সব মুছে ফেলবেন? এটি ফেরানো যাবে না।", pt:"Apagar tudo o que perguntaste? Isto não se pode desfazer.", ru:"Удалить всё, что ты спрашивал? Это нельзя отменить.", ur:"جو کچھ آپ نے پوچھا سب مٹا دیں؟ یہ واپس نہیں آئے گا۔", id:"Hapus semua yang pernah kamu tanyakan? Ini tidak bisa dibatalkan.", de:"Alles löschen, was du gefragt hast? Das lässt sich nicht rückgängig machen.", ja:"これまでの質問をすべて削除しますか？元には戻せません。", tr:"Sorduğun her şey silinsin mi? Bu geri alınamaz.", ko:"지금까지 물어본 것을 모두 지울까요? 되돌릴 수 없습니다.", fa:"همهٔ چیزهایی که پرسیده‌ای پاک شود؟ این کار برگشت‌پذیر نیست.", uk:"Видалити все, що ти запитував? Це не можна скасувати.", it:"Cancellare tutto quello che hai chiesto? Non si può annullare.", pl:"Usunąć wszystko, o co pytałeś? Tego nie da się cofnąć.", vi:"Xoá mọi thứ bạn đã hỏi? Không thể hoàn tác." },
+  ago_now: { en:"just now", zh:"刚刚", hi:"अभी-अभी", es:"ahora mismo", ar:"الآن", fr:"à l’instant", bn:"এইমাত্র", pt:"agora mesmo", ru:"только что", ur:"ابھی ابھی", id:"baru saja", de:"gerade eben", ja:"たった今", tr:"az önce", ko:"방금", fa:"همین حالا", uk:"щойно", it:"proprio ora", pl:"przed chwilą", vi:"vừa xong" },
+  ago_min: { en:"{n} min ago", zh:"{n} 分钟前", hi:"{n} मिनट पहले", es:"hace {n} min", ar:"قبل {n} دقيقة", fr:"il y a {n} min", bn:"{n} মিনিট আগে", pt:"há {n} min", ru:"{n} мин назад", ur:"{n} منٹ پہلے", id:"{n} menit lalu", de:"vor {n} Min.", ja:"{n}分前", tr:"{n} dk önce", ko:"{n}분 전", fa:"{n} دقیقه پیش", uk:"{n} хв тому", it:"{n} min fa", pl:"{n} min temu", vi:"{n} phút trước" },
+  ago_hour: { en:"{n}h ago", zh:"{n} 小时前", hi:"{n} घंटे पहले", es:"hace {n} h", ar:"قبل {n} ساعة", fr:"il y a {n} h", bn:"{n} ঘণ্টা আগে", pt:"há {n} h", ru:"{n} ч назад", ur:"{n} گھنٹے پہلے", id:"{n} jam lalu", de:"vor {n} Std.", ja:"{n}時間前", tr:"{n} sa önce", ko:"{n}시간 전", fa:"{n} ساعت پیش", uk:"{n} год тому", it:"{n} h fa", pl:"{n} godz. temu", vi:"{n} giờ trước" },
+  ago_day: { en:"{n}d ago", zh:"{n} 天前", hi:"{n} दिन पहले", es:"hace {n} d", ar:"قبل {n} يوم", fr:"il y a {n} j", bn:"{n} দিন আগে", pt:"há {n} d", ru:"{n} дн назад", ur:"{n} دن پہلے", id:"{n} hari lalu", de:"vor {n} Tg.", ja:"{n}日前", tr:"{n} gün önce", ko:"{n}일 전", fa:"{n} روز پیش", uk:"{n} дн тому", it:"{n} g fa", pl:"{n} dni temu", vi:"{n} ngày trước" },
+  hist_sub: { en:"Everything you have asked a NovaClip AI — the tutors, the Studio, the Coder — newest first, with the answer that came back. It is kept on this device and nowhere else, so clearing your browser data clears it.", zh:"你问过 NovaClip AI 的所有内容——导师、创作室、编码器——最新的在前，连同返回的答案。只保存在这台设备上，清除浏览器数据就会清空。", hi:"NovaClip के किसी भी AI से आपने जो कुछ पूछा — ट्यूटर, स्टूडियो, कोडर — नए पहले, साथ में जो जवाब आया। यह सिर्फ़ इसी डिवाइस पर रहता है, इसलिए ब्राउज़र डेटा हटाने पर यह भी हट जाता है।", es:"Todo lo que has preguntado a una IA de NovaClip —los tutores, el Estudio, el Coder—, lo más nuevo primero y con la respuesta que llegó. Se guarda en este dispositivo y en ningún otro sitio, así que si borras los datos del navegador, se borra.", ar:"كل ما سألته لذكاء NovaClip الاصطناعي — المدرّسون والاستوديو والمبرمج — الأحدث أولًا، ومعه الجواب الذي عاد. يُحفظ على هذا الجهاز فقط، ومسح بيانات المتصفح يمسحه.", fr:"Tout ce que tu as demandé à une IA NovaClip — les tuteurs, le Studio, le Coder — le plus récent en premier, avec la réponse reçue. Gardé sur cet appareil et nulle part ailleurs : effacer les données du navigateur l’efface.", bn:"NovaClip-এর যেকোনো AI-কে আপনি যা যা জিজ্ঞেস করেছেন — টিউটর, স্টুডিও, কোডার — নতুনটি আগে, সঙ্গে যে উত্তর এসেছিল। এটি কেবল এই ডিভাইসে থাকে, তাই ব্রাউজারের ডেটা মুছলে এটিও মুছে যায়।", pt:"Tudo o que perguntaste a uma IA do NovaClip — os tutores, o Estúdio, o Coder — do mais recente para o mais antigo, com a resposta que voltou. Fica neste dispositivo e em mais lado nenhum, por isso limpar os dados do navegador limpa isto.", ru:"Всё, что ты спрашивал у ИИ NovaClip — у наставников, в Студии, в Кодере — новое сверху, вместе с ответом. Хранится только на этом устройстве, так что очистка данных браузера всё стирает.", ur:"جو کچھ آپ نے NovaClip کے کسی بھی AI سے پوچھا — ٹیوٹر، اسٹوڈیو، کوڈر — نیا پہلے، ساتھ میں جو جواب آیا۔ یہ صرف اسی ڈیوائس پر رہتا ہے، اس لیے براؤزر ڈیٹا صاف کرنے سے یہ بھی مٹ جاتا ہے۔", id:"Semua yang pernah kamu tanyakan ke AI NovaClip — para tutor, Studio, Coder — terbaru dulu, lengkap dengan jawabannya. Disimpan di perangkat ini saja, jadi menghapus data peramban menghapusnya.", de:"Alles, was du eine NovaClip-KI gefragt hast — die Tutoren, das Studio, den Coder — neueste zuerst, mitsamt der Antwort. Bleibt auf diesem Gerät und sonst nirgends, Browserdaten löschen löscht es also.", ja:"NovaClipのAIに投げたすべて — チューター、スタジオ、コーダー — が新しい順に、返ってきた答えごと並びます。この端末にだけ保存されるので、ブラウザのデータを消すと消えます。", tr:"NovaClip’in herhangi bir yapay zekâsına sorduğun her şey — eğitmenler, Stüdyo, Coder — en yenisi üstte, dönen cevabıyla birlikte. Yalnızca bu cihazda tutulur, yani tarayıcı verilerini silmek bunu da siler.", ko:"NovaClip의 AI에게 물어본 모든 것 — 튜터, 스튜디오, 코더 — 을 최신순으로, 돌아온 답과 함께. 이 기기에만 저장되므로 브라우저 데이터를 지우면 함께 사라집니다.", fa:"هر چه از هوش مصنوعی NovaClip پرسیده‌ای — مربی‌ها، استودیو، کدنویس — تازه‌ترین اول، همراه با پاسخی که آمد. فقط روی همین دستگاه می‌ماند، پس پاک‌کردن داده‌های مرورگر پاکش می‌کند.", uk:"Усе, що ти запитував у ШІ NovaClip — наставників, Студії, Кодера — найновіше згори, разом із відповіддю. Зберігається лише на цьому пристрої, тож очищення даних браузера стирає його.", it:"Tutto quello che hai chiesto a un’IA di NovaClip — i tutor, lo Studio, il Coder — dal più recente, con la risposta che è arrivata. Resta su questo dispositivo e da nessun’altra parte, quindi cancellare i dati del browser la cancella.", pl:"Wszystko, o co pytałeś AI w NovaClip — korepetytorów, Studio, Coder — od najnowszych, razem z odpowiedzią. Trzymane tylko na tym urządzeniu, więc wyczyszczenie danych przeglądarki to usuwa.", vi:"Mọi thứ bạn đã hỏi AI của NovaClip — gia sư, Studio, Coder — mới nhất trước, kèm câu trả lời đã nhận. Chỉ lưu trên thiết bị này, nên xoá dữ liệu trình duyệt là mất." },
+  hist_hint: { en:"Where you asked it, when, and what came back.", zh:"你在哪里问的、什么时候，以及回答是什么。", hi:"आपने कहाँ पूछा, कब पूछा, और जवाब क्या आया।", es:"Dónde lo preguntaste, cuándo, y qué te respondió.", ar:"أين سألت، ومتى، وما الذي عاد إليك.", fr:"Où tu l’as demandé, quand, et ce qui est revenu.", bn:"কোথায় জিজ্ঞেস করেছিলেন, কখন, আর উত্তর কী এসেছিল।", pt:"Onde perguntaste, quando, e o que voltou.", ru:"Где спросил, когда и что пришло в ответ.", ur:"آپ نے کہاں پوچھا، کب، اور جواب کیا آیا۔", id:"Di mana kamu bertanya, kapan, dan apa jawabannya.", de:"Wo du gefragt hast, wann, und was zurückkam.", ja:"どこで、いつ聞いて、何が返ってきたか。", tr:"Nerede sordun, ne zaman ve ne döndü.", ko:"어디서, 언제 물었고, 무엇이 돌아왔는지.", fa:"کجا پرسیدی، کِی، و چه جوابی آمد.", uk:"Де запитав, коли і що прийшло у відповідь.", it:"Dove l’hai chiesto, quando, e cosa è tornato.", pl:"Gdzie pytałeś, kiedy i co wróciło.", vi:"Bạn hỏi ở đâu, khi nào, và nhận lại điều gì." },
+  hist_empty: { en:"Nothing yet. Ask the AI something and it turns up here.", zh:"还没有内容。去问 AI 一个问题，它就会出现在这里。", hi:"अभी कुछ नहीं। AI से कुछ पूछिए, वह यहाँ आ जाएगा।", es:"Todavía nada. Pregúntale algo a la IA y aparecerá aquí.", ar:"لا شيء بعد. اسأل الذكاء الاصطناعي شيئًا وسيظهر هنا.", fr:"Rien pour l’instant. Demande quelque chose à l’IA et ça apparaîtra ici.", bn:"এখনো কিছু নেই। AI-কে কিছু জিজ্ঞেস করুন, সেটি এখানে চলে আসবে।", pt:"Ainda nada. Pergunta algo à IA e aparece aqui.", ru:"Пока пусто. Спроси у ИИ что-нибудь — и оно появится здесь.", ur:"ابھی کچھ نہیں۔ AI سے کچھ پوچھیں، وہ یہاں آ جائے گا۔", id:"Belum ada apa-apa. Tanyakan sesuatu ke AI dan akan muncul di sini.", de:"Noch nichts. Frag die KI etwas, dann taucht es hier auf.", ja:"まだ何もありません。AIに何か聞くと、ここに出てきます。", tr:"Henüz bir şey yok. Yapay zekâya bir şey sor, burada belirsin.", ko:"아직 없습니다. AI에게 뭔가 물어보면 여기에 나타납니다.", fa:"هنوز چیزی نیست. از هوش مصنوعی چیزی بپرس تا اینجا بیاید.", uk:"Поки порожньо. Запитай щось у ШІ — і воно з’явиться тут.", it:"Ancora niente. Chiedi qualcosa all’IA e comparirà qui.", pl:"Jeszcze nic. Zapytaj AI o coś, a pojawi się tutaj.", vi:"Chưa có gì. Hỏi AI điều gì đó và nó sẽ hiện ở đây." },
   par_shield: { en:"Content blocking", zh:"内容拦截", hi:"कंटेंट ब्लॉकिंग", es:"Bloqueo de contenido", ar:"حجب المحتوى", fr:"Blocage de contenu", bn:"কনটেন্ট ব্লকিং", pt:"Bloqueio de conteúdos", ru:"Блокировка контента", ur:"مواد کی بلاکنگ", id:"Pemblokiran konten", de:"Inhaltssperre", ja:"コンテンツブロック", tr:"İçerik engelleme", ko:"콘텐츠 차단", fa:"مسدودسازی محتوا", uk:"Блокування вмісту", it:"Blocco dei contenuti", pl:"Blokowanie treści", vi:"Chặn nội dung" },
   par_shield_s: { en:"Blocks unsuitable videos, streams and posts on YouTube, TikTok, Instagram and Twitch. Choose the rules here; the browser shield enforces them.", zh:"拦截 YouTube、TikTok、Instagram 和 Twitch 上不适合的视频、直播和帖子。规则在这里选，由浏览器防护执行。", hi:"YouTube, TikTok, Instagram और Twitch पर अनुपयुक्त वीडियो, स्ट्रीम और पोस्ट ब्लॉक करता है। नियम यहाँ चुनें; ब्राउज़र शील्ड उन्हें लागू करती है।", es:"Bloquea vídeos, directos y publicaciones no aptos en YouTube, TikTok, Instagram y Twitch. Elige las reglas aquí; el escudo del navegador las aplica.", ar:"يحجب الفيديوهات والبثوث والمنشورات غير المناسبة على YouTube وTikTok وInstagram وTwitch. اختر القواعد هنا، ودرع المتصفح ينفّذها.", fr:"Bloque les vidéos, les lives et les posts inadaptés sur YouTube, TikTok, Instagram et Twitch. Choisissez les règles ici ; le bouclier du navigateur les applique.", bn:"YouTube, TikTok, Instagram ও Twitch-এ অনুপযুক্ত ভিডিও, স্ট্রিম ও পোস্ট ব্লক করে। নিয়ম এখানে বেছে নিন; ব্রাউজার শিল্ড সেগুলো প্রয়োগ করে।", pt:"Bloqueia vídeos, diretos e publicações inadequados no YouTube, TikTok, Instagram e Twitch. Escolha as regras aqui; o escudo do navegador aplica-as.", ru:"Блокирует неподходящие видео, трансляции и посты на YouTube, TikTok, Instagram и Twitch. Правила выбираются здесь, а применяет их браузерный щит.", ur:"YouTube، TikTok، Instagram اور Twitch پر نامناسب ویڈیوز، اسٹریمز اور پوسٹس بلاک کرتا ہے۔ اصول یہاں چنیں؛ براؤزر شیلڈ انہیں نافذ کرتی ہے۔", id:"Memblokir video, siaran, dan unggahan yang tidak pantas di YouTube, TikTok, Instagram, dan Twitch. Pilih aturannya di sini; perisai peramban yang menegakkannya.", de:"Blockiert unpassende Videos, Streams und Beiträge auf YouTube, TikTok, Instagram und Twitch. Die Regeln wählen Sie hier, durchgesetzt werden sie vom Browser-Schutz.", ja:"YouTube、TikTok、Instagram、Twitch の不適切な動画・配信・投稿をブロックします。ルールはここで選び、ブラウザのシールドが適用します。", tr:"YouTube, TikTok, Instagram ve Twitch’te uygunsuz video, yayın ve gönderileri engeller. Kuralları burada seçin; tarayıcı kalkanı uygular.", ko:"YouTube, TikTok, Instagram, Twitch의 부적절한 영상·방송·게시물을 차단합니다. 규칙은 여기서 고르고, 브라우저 실드가 적용합니다.", fa:"ویدیوها، پخش‌های زنده و پست‌های نامناسب را در YouTube، TikTok، Instagram و Twitch مسدود می‌کند. قواعد را اینجا انتخاب کنید؛ سپر مرورگر اجرایشان می‌کند.", uk:"Блокує невідповідні відео, трансляції та дописи на YouTube, TikTok, Instagram і Twitch. Правила обираєте тут, а застосовує їх щит браузера.", it:"Blocca video, dirette e post inadatti su YouTube, TikTok, Instagram e Twitch. Le regole si scelgono qui; lo scudo del browser le applica.", pl:"Blokuje nieodpowiednie filmy, transmisje i posty na YouTube, TikTok, Instagram i Twitch. Reguły wybierasz tutaj, a egzekwuje je tarcza w przeglądarce.", vi:"Chặn video, buổi phát và bài đăng không phù hợp trên YouTube, TikTok, Instagram và Twitch. Chọn quy tắc ở đây; lá chắn trình duyệt thực thi." },
   par_shield_plat: { en:"Where it applies", zh:"适用范围", hi:"कहाँ लागू होता है", es:"Dónde se aplica", ar:"أين يُطبَّق", fr:"Où cela s’applique", bn:"কোথায় প্রযোজ্য", pt:"Onde se aplica", ru:"Где действует", ur:"کہاں لاگو ہوتا ہے", id:"Berlaku di mana", de:"Wo es gilt", ja:"適用される場所", tr:"Nerede geçerli", ko:"적용 범위", fa:"کجا اعمال می‌شود", uk:"Де діє", it:"Dove si applica", pl:"Gdzie działa", vi:"Áp dụng ở đâu" },
@@ -694,6 +703,12 @@ const UI_T = {
   a4: { en:"Reached 500 NovaCoins", zh:"达到500积分", hi:"500 पॉइंट पहुँचे", es:"Llegaste a 500 puntos", ar:"بلغت 500 نقطة", fr:"500 points atteints", bn:"৫০০ পয়েন্ট পৌঁছেছেন", pt:"Atingiste 500 pontos", ru:"Набрал 500 очков", ur:"500 پوائنٹس حاصل کیے", id:"Mencapai 500 poin", de:"500 Punkte erreicht", ja:"500ポイント達成", tr:"500 puana ulaştın", ko:"500 포인트 달성", fa:"به ۵۰۰ امتیاز رسیدی", uk:"Набрав 500 балів", it:"Hai raggiunto 500 punti", pl:"Osiągnąłeś 500 punktów", vi:"Đạt 500 điểm" },
   sk_yt: { en:"Connect your YouTube channel", zh:"连接你的 YouTube 频道", hi:"अपना YouTube चैनल कनेक्ट करें", es:"Conecta tu canal de YouTube", ar:"اربط قناتك في يوتيوب", fr:"Connecte ta chaîne YouTube", bn:"আপনার YouTube চ্যানেল কানেক্ট করুন", pt:"Liga o teu canal do YouTube", ru:"Подключи свой канал YouTube", ur:"اپنا YouTube چینل منسلک کریں", id:"Hubungkan channel YouTube-mu", de:"Verbinde deinen YouTube-Kanal", ja:"YouTubeチャンネルを接続", tr:"YouTube kanalını bağla", ko:"YouTube 채널 연결하기", fa:"کانال یوتیوبت را وصل کن", uk:"Підключи свій YouTube-канал", it:"Collega il tuo canale YouTube", pl:"Podłącz swój kanał YouTube", vi:"Kết nối kênh YouTube của bạn" },
   sk_edit: { en:"Export a video from the Editor", zh:"从编辑器导出视频", hi:"एडिटर से वीडियो एक्सपोर्ट करें", es:"Exporta un vídeo desde el Editor", ar:"صدّر فيديو من المحرر", fr:"Exporte une vidéo depuis l'Éditeur", bn:"এডিটর থেকে ভিডিও এক্সপোর্ট করুন", pt:"Exporta um vídeo do Editor", ru:"Экспортируй видео из редактора", ur:"ایڈیٹر سے ویڈیو ایکسپورٹ کریں", id:"Ekspor video dari Editor", de:"Exportiere ein Video aus dem Editor", ja:"エディタから動画を書き出す", tr:"Editörden bir video dışa aktar", ko:"편집기에서 영상 내보내기", fa:"یک ویدیو از ادیتور اکسپورت کن", uk:"Експортуй відео з редактора", it:"Esporta un video dall'Editor", pl:"Wyeksportuj film z Edytora", vi:"Xuất video từ Trình chỉnh sửa" },
+  sk_reaction: { en:"Finish a set of five in Reaction", zh:"在反应游戏里完成一组五次", hi:"रिएक्शन में पाँच का एक सेट पूरा करें", es:"Completa una serie de cinco en Reacción", ar:"أكمِل مجموعة من خمسة في لعبة ردّ الفعل", fr:"Termine une série de cinq dans Réaction", bn:"রিঅ্যাকশনে পাঁচটির একটি সেট শেষ করুন", pt:"Termina uma série de cinco no Reação", ru:"Пройди серию из пяти в «Реакции»", ur:"ری ایکشن میں پانچ کا ایک سیٹ مکمل کریں", id:"Selesaikan satu set lima di Reaction", de:"Schaff eine Fünferserie in Reaktion", ja:"リアクションで5回ワンセットをやりきる", tr:"Reaction’da beşlik bir seri tamamla", ko:"리액션에서 다섯 번 한 세트 완료", fa:"یک دستهٔ پنج‌تایی در بازی واکنش را تمام کن", uk:"Пройди серію з п’яти в «Реакції»", it:"Completa una serie di cinque in Reazione", pl:"Ukończ serię pięciu w Reakcji", vi:"Hoàn thành một lượt năm trong Reaction" },
+  sk_aim: { en:"Finish a round of Target", zh:"完成一局瞄准", hi:"टारगेट का एक राउंड पूरा करें", es:"Completa una ronda de Diana", ar:"أكمِل جولة من لعبة الهدف", fr:"Termine une manche de Cible", bn:"টার্গেটের একটি রাউন্ড শেষ করুন", pt:"Termina uma ronda do Alvo", ru:"Пройди раунд «Мишени»", ur:"ٹارگٹ کا ایک راؤنڈ مکمل کریں", id:"Selesaikan satu ronde Target", de:"Beende eine Runde Ziel", ja:"ターゲットを1ラウンドやりきる", tr:"Target’ta bir tur tamamla", ko:"타깃 한 라운드 완료", fa:"یک دور از بازی هدف را تمام کن", uk:"Пройди раунд «Мішені»", it:"Completa un round di Bersaglio", pl:"Ukończ rundę Celu", vi:"Hoàn thành một vòng Target" },
+  sk_fair: { en:"Compare your channel in Fair Fight", zh:"在公平对决里比较你的频道", hi:"फेयर फाइट में अपना चैनल तुलना करें", es:"Compara tu canal en Duelo Justo", ar:"قارن قناتك في المواجهة العادلة", fr:"Compare ta chaîne dans Combat Loyal", bn:"ফেয়ার ফাইটে আপনার চ্যানেল তুলনা করুন", pt:"Compara o teu canal no Duelo Justo", ru:"Сравни свой канал в «Честном бою»", ur:"فیئر فائٹ میں اپنے چینل کا موازنہ کریں", id:"Bandingkan kanalmu di Fair Fight", de:"Vergleich deinen Kanal im fairen Duell", ja:"フェアファイトで自分のチャンネルを比べる", tr:"Fair Fight’ta kanalını karşılaştır", ko:"페어 파이트에서 내 채널 비교하기", fa:"کانالت را در نبرد منصفانه مقایسه کن", uk:"Порівняй свій канал у «Чесному бою»", it:"Confronta il tuo canale in Sfida Equa", pl:"Porównaj swój kanał w Uczciwej Walce", vi:"So kênh của bạn trong Fair Fight" },
+  sk_focus: { en:"Finish a 25-minute focus block", zh:"完成一次 25 分钟的专注时段", hi:"25 मिनट का फोकस ब्लॉक पूरा करें", es:"Completa un bloque de concentración de 25 minutos", ar:"أكمِل جلسة تركيز مدتها 25 دقيقة", fr:"Termine un bloc de concentration de 25 minutes", bn:"২৫ মিনিটের একটি ফোকাস ব্লক শেষ করুন", pt:"Termina um bloco de concentração de 25 minutos", ru:"Заверши 25-минутный блок фокуса", ur:"25 منٹ کا فوکس بلاک مکمل کریں", id:"Selesaikan satu blok fokus 25 menit", de:"Schließe einen 25-Minuten-Fokusblock ab", ja:"25分の集中ブロックをやりきる", tr:"25 dakikalık bir odak bloğunu tamamla", ko:"25분 집중 블록을 끝내기", fa:"یک بلوک تمرکز ۲۵ دقیقه‌ای را تمام کن", uk:"Заверши 25-хвилинний блок фокусу", it:"Completa un blocco di concentrazione da 25 minuti", pl:"Ukończ 25-minutowy blok skupienia", vi:"Hoàn thành một khối tập trung 25 phút" },
+  sk_community: { en:"Join in on the community page", zh:"在社区页面参与一次", hi:"कम्युनिटी पेज पर शामिल हों", es:"Participa en la página de la comunidad", ar:"شارك في صفحة المجتمع", fr:"Participe sur la page communauté", bn:"কমিউনিটি পেজে অংশ নিন", pt:"Participa na página da comunidade", ru:"Поучаствуй на странице сообщества", ur:"کمیونٹی صفحے پر شریک ہوں", id:"Ikut serta di halaman komunitas", de:"Mach auf der Community-Seite mit", ja:"コミュニティページに参加する", tr:"Topluluk sayfasına katıl", ko:"커뮤니티 페이지에 참여하기", fa:"در صفحهٔ انجمن شرکت کن", uk:"Долучися на сторінці спільноти", it:"Partecipa nella pagina della community", pl:"Włącz się na stronie społeczności", vi:"Tham gia trên trang cộng đồng" },
+  sk_editing: { en:"Publish or animate something you made", zh:"发布或动画化你做的东西", hi:"अपनी बनाई कोई चीज़ पब्लिश करें या एनिमेट करें", es:"Publica o anima algo que hayas hecho", ar:"انشر أو حرّك شيئًا صنعته", fr:"Publie ou anime quelque chose que tu as fait", bn:"নিজের বানানো কিছু প্রকাশ করুন বা অ্যানিমেট করুন", pt:"Publica ou anima algo que fizeste", ru:"Опубликуй или оживи что-то своё", ur:"اپنی بنائی کوئی چیز شائع کریں یا اینیمیٹ کریں", id:"Terbitkan atau animasikan sesuatu buatanmu", de:"Veröffentliche oder animiere etwas von dir", ja:"自分で作ったものを公開するか動かす", tr:"Yaptığın bir şeyi yayınla ya da canlandır", ko:"내가 만든 것을 게시하거나 움직이기", fa:"چیزی که ساخته‌ای را منتشر کن یا به حرکت درآور", uk:"Опублікуй або оживи щось своє", it:"Pubblica o anima qualcosa che hai fatto", pl:"Opublikuj lub ożyw coś, co zrobiłeś", vi:"Đăng hoặc làm chuyển động thứ bạn tạo ra" },
   sk_trend: { en:"Run a Trend Spotter scan", zh:"运行一次趋势扫描", hi:"ट्रेंड स्पॉटर स्कैन चलाएं", es:"Haz un análisis de Tendencias", ar:"أجرِ مسحًا لتتبع الاتجاهات", fr:"Lance un scan Trend Spotter", bn:"ট্রেন্ড স্পটার স্ক্যান চালান", pt:"Faz uma análise do Trend Spotter", ru:"Запусти скан Trend Spotter", ur:"ٹرینڈ اسپاٹر اسکین چلائیں", id:"Jalankan pindai Trend Spotter", de:"Einen Trend-Spotter-Scan starten", ja:"トレンドスポッターでスキャン", tr:"Trend Spotter taraması yap", ko:"트렌드 스포터 스캔 실행하기", fa:"اسکن ترند اسپاتر را اجرا کن", uk:"Запусти скан Trend Spotter", it:"Esegui una scansione di Trend Spotter", pl:"Uruchom skan Trend Spottera", vi:"Chạy quét Trend Spotter" },
   sk_idea: { en:"Save a video idea to your shortlist", zh:"将视频创意保存到候选清单", hi:"वीडियो आइडिया शॉर्टलिस्ट में सेव करें", es:"Guarda una idea de vídeo en tu lista corta", ar:"احفظ فكرة فيديو في قائمتك", fr:"Sauvegarde une idée de vidéo dans ta shortlist", bn:"ভিডিও আইডিয়া শর্টলিস্টে সেভ করুন", pt:"Guarda uma ideia de vídeo na tua shortlist", ru:"Сохрани идею видео в короткий список", ur:"ویڈیو آئیڈیا اپنی شارٹ لسٹ میں محفوظ کریں", id:"Simpan ide video ke daftar pendekmu", de:"Eine Videoidee in deine Shortlist speichern", ja:"動画アイデアを候補リストに保存", tr:"Bir video fikrini kısa listen'e kaydet", ko:"영상 아이디어를 후보 목록에 저장하기", fa:"یک ایده ویدیو در فهرست کوتاهت ذخیره کن", uk:"Збережи ідею відео в короткий список", it:"Salva un'idea video nella tua shortlist", pl:"Zapisz pomysł na film na listę krótką", vi:"Lưu ý tưởng video vào danh sách ngắn" },
   sk_analytics: { en:"Review your channel analytics", zh:"查看你的频道数据", hi:"अपना चैनल एनालिटिक्स देखें", es:"Revisa tus analíticas del canal", ar:"راجع تحليلات قناتك", fr:"Consulte les stats de ta chaîne", bn:"আপনার চ্যানেল অ্যানালিটিক্স দেখুন", pt:"Revê as análises do teu canal", ru:"Просмотри аналитику канала", ur:"اپنے چینل کے تجزیات دیکھیں", id:"Tinjau analitik channel-mu", de:"Deine Kanalanalysen prüfen", ja:"チャンネル分析を確認", tr:"Kanal analitiğini incele", ko:"채널 분석 검토하기", fa:"تحلیل کانالت را مرور کن", uk:"Переглянь аналітику каналу", it:"Rivedi le analisi del tuo canale", pl:"Przejrzyj analitykę swojego kanału", vi:"Xem lại phân tích kênh của bạn" },
@@ -3005,7 +3020,16 @@ const Q_KEY = {
   'Top the Strike Arena scoreboard':'sk_arena',
   'Finish a set of five in Reaction':'sk_reaction',
   'Finish a round of Target':'sk_aim',
-  'Compare your channel in Fair Fight':'sk_fair'
+  'Compare your channel in Fair Fight':'sk_fair',
+  /* THESE THREE HAD NO KEY, AND qName RETURNS '' FOR A KEY IT DOES NOT HAVE.
+     They are in SKILLS, they are logged from three real pages, and they were
+     the obvious things to ask a certificate for — but a requirement built on
+     them would have rendered as a blank row with a number after it, in every
+     language including English. Which is most of why the certificates only
+     ever asked for six things. */
+  'Finish a 25-minute focus block':'sk_focus',
+  'Join in on the community page':'sk_community',
+  'Publish or animate something you made':'sk_editing'
 };
 const qName = n => tr(Q_KEY[n] || n);
 
@@ -3059,17 +3083,36 @@ const SKILLS = {
    collected by playing, so the skill counts are what stop a certificate being
    awarded for time spent rather than work done. */
 const CERT_REQS = {
+  /* ASKED FOR MORE, AND THERE WAS MORE TO ASK FOR. Six ids carried the whole
+     scheme while six others — focus, community, editing, reaction, aim,
+     fair_fight — were being logged by real pages into a ledger nothing read.
+     Every line below is something a page on this site can actually record;
+     that is the only rule here, and it is the one that matters, because a
+     requirement nothing can complete is a certificate nobody can finish.
+
+     The shape of the three tiers is meant to say something:
+       Basic     — you have been round the place once. One of each, nothing
+                   deep, and it should take an afternoon.
+       Advanced  — you have made things and you have come back. Saving ideas
+                   and reviewing your own numbers are the two habits that
+                   separate somebody using the site from somebody practising.
+       Master    — you have done it enough times that it is not luck, and you
+                   have been in the parts that are not the tools: the
+                   community page, the games, the channel comparison. */
   'Basic Certificate': {
     pts: 150,
-    skills: { yt_connect:1, edit_export:3, trend_scan:3, ai_ask:5 }
+    skills: { yt_connect:1, edit_export:3, trend_scan:3, ai_ask:5,
+              idea_save:2, focus:1 }
   },
   'Advanced Certificate': {
     pts: 600,
-    skills: { yt_connect:1, edit_export:10, trend_scan:10, idea_save:5, analytics:5, ai_ask:15 }
+    skills: { yt_connect:1, edit_export:10, trend_scan:10, idea_save:5, analytics:5, ai_ask:15,
+              focus:3, editing:3, community:1, reaction:1 }
   },
   'Master Certificate': {
     pts: 1500,
-    skills: { yt_connect:1, edit_export:25, trend_scan:20, idea_save:15, analytics:15, ai_ask:30 }
+    skills: { yt_connect:1, edit_export:25, trend_scan:20, idea_save:15, analytics:15, ai_ask:30,
+              focus:8, editing:10, community:3, reaction:3, aim:3, fair_fight:1 }
   }
 };
 
@@ -3628,7 +3671,35 @@ window.toast = toast;   /* editor.html calls this for a missing tool script */
 function getPts() { return parseInt(localStorage.getItem('nc_points') || '0'); }
 function checkUnlocks(pts) { const u = JSON.parse(localStorage.getItem('nc_unlocked') || '[]'); for (const [need,name] of QUESTS.concat(ACHIEVEMENTS)) { if (pts >= need && !u.includes(name)) { u.push(name); setTimeout(() => toast(tr('ui_unlocked') + qName(name)), 1200); } } localStorage.setItem('nc_unlocked', JSON.stringify(u)); }
 function addPts(n) { const p = getPts() + n; localStorage.setItem('nc_points', p); ncSyncSoon(); const b = document.getElementById('ncpts'); if (b) b.textContent = '🪙 ' + p; toast((n >= 0 ? '+' : '') + n + ' 🪙'); checkUnlocks(p); refreshPanels(); }
-function saveHist(subject,q,a) { const h = JSON.parse(localStorage.getItem('nc_history') || '{}'); if (!h[subject]) h[subject] = []; h[subject].push([q,a.slice(0,200)]); if (h[subject].length > 10) h[subject].shift(); localStorage.setItem('nc_history', JSON.stringify(h)); refreshPanels(); }
+/* WHAT COUNTS AS HISTORY.
+   This wrote 200 characters of the answer and no time at all, and only
+   ai.html ever called it — so the History page was empty for somebody who had
+   spent an afternoon on Ask Nova, the Studio and the Coder, which is what
+   "the history aint working" was. Every surface where a person types a
+   question of their own calls it now, and the bucket name is where they were
+   standing when they asked.
+
+   The entry is [question, answer, when]. Third element, appended: parent.html
+   reads x[0] and .length in two places and neither notices a longer row, so
+   the Family Dashboard keeps working without being touched.
+
+   400 characters of answer rather than 200 because the old cut landed
+   mid-sentence on almost everything, and the page shows the answer now
+   instead of only listing the question. */
+function saveHist(subject, q, a) {
+  try {
+    const h = JSON.parse(localStorage.getItem('nc_history') || '{}');
+    const key = String(subject || 'NovaClip');
+    const text = String(q == null ? '' : q).trim();
+    if (!text) return;
+    if (!h[key]) h[key] = [];
+    h[key].push([text.slice(0, 300), String(a == null ? '' : a).slice(0, 400), Date.now()]);
+    if (h[key].length > 30) h[key] = h[key].slice(-30);
+    localStorage.setItem('nc_history', JSON.stringify(h));
+  } catch (e) { /* a full quota is not worth losing the answer over */ }
+  refreshPanels();
+}
+window.saveHist = saveHist;
 /* ============================================================
    ACCOUNT + SAVE SYNC
    Points, skills, certificates, saved ideas and AI history live in localStorage,
@@ -3808,8 +3879,102 @@ function refreshPanels() {
      "their own browser" is not the whole story: parent.html shows this same
      nc_history to a parent, so an answer written to look like markup would run
      on a page somebody else is reading. */
-  const hl = document.getElementById('histlist'); if (hl) { const h = JSON.parse(localStorage.getItem('nc_history') || '{}'); let html = ''; for (const s in h) { html += '<b>' + ncEscape(s) + '</b> (' + h[s].length + ' chats)<br>' + h[s].slice(-3).map(x => '• ' + ncEscape(x[0])).join('<br>') + '<br><br>'; } hl.innerHTML = html || tr('ui_no_chats'); }
+  const hl = document.getElementById('histlist'); if (hl) ncRenderHist(hl);
 }
+
+/* THE HISTORY LIST.
+   It used to group by subject, print the last three QUESTIONS of each and
+   nothing else, and say "(1 chats)". Grouping is the wrong axis: somebody
+   comes to this page asking "what did I ask?", which is a question about time,
+   not about subject. So it is one list, newest first, each row carrying where
+   it was asked, how long ago, the question, and the answer that came back —
+   the answer being the part worth coming back for.
+
+   Everything goes through ncEscape. It is the reader's own text, but
+   parent.html renders this same store for somebody else, and an answer written
+   to look like markup would run on their page. */
+function ncRenderHist(el) {
+  ncHistCSS();
+  let h = {};
+  try { h = JSON.parse(localStorage.getItem('nc_history') || '{}') || {}; } catch (e) {}
+  const rows = [];
+  for (const s in h) {
+    if (!Array.isArray(h[s])) continue;
+    h[s].forEach((x) => { if (x && x[0]) rows.push({ where: s, q: x[0], a: x[1] || '', at: x[2] || 0 }); });
+  }
+  if (!rows.length) { el.innerHTML = '<p class="nc-hist-none">' + tr('ui_no_chats') + '</p>'; return; }
+  /* Undated rows sort last rather than first. They are the ones written before
+     this carried a time, so they really are the oldest. */
+  rows.sort((a, b) => (b.at || 0) - (a.at || 0));
+  el.innerHTML =
+    '<p class="nc-hist-count">' + tr('hist_count').replace('{n}', rows.length) +
+    ' <button type="button" class="nc-hist-clear">' + tr('hist_clear') + '</button></p>' +
+    rows.slice(0, 60).map((r) =>
+      '<div class="nc-hist-row">' +
+        '<div class="nc-hist-meta">' + ncEscape(r.where) +
+          (r.at ? ' <span>' + ncEscape(ncAgo(r.at)) + '</span>' : '') + '</div>' +
+        '<div class="nc-hist-q">' + ncEscape(r.q) + '</div>' +
+        (r.a ? '<div class="nc-hist-a">' + ncEscape(r.a) + '</div>' : '') +
+      '</div>').join('');
+  const clear = el.querySelector('.nc-hist-clear');
+  if (clear) clear.addEventListener('click', function () {
+    if (!confirm(tr('hist_clear_sure'))) return;
+    try { localStorage.removeItem('nc_history'); } catch (e) {}
+    ncRenderHist(el);
+  });
+}
+window.ncRenderHist = ncRenderHist;
+
+/* The rows are built here, so they are styled here — splitting the two across
+   nova.js and history.html is how you get a page that renders but looks like
+   nothing. Injected on first render rather than at load, because every page
+   loads nova.js and only one of them has a history list.
+
+   Colours come from currentColor and the theme variables, not from hexes: this
+   list has to read in light mode, in dark mode and under all nine cyber
+   skins. */
+function ncHistCSS() {
+  if (document.getElementById('nc-hist-css')) return;
+  const s = document.createElement('style');
+  s.id = 'nc-hist-css';
+  s.textContent = [
+    '.nc-hist-count{display:flex;align-items:center;justify-content:space-between;gap:12px;',
+    '  flex-wrap:wrap;margin:0 0 14px;font-size:.85rem;opacity:.7}',
+    '.nc-hist-clear{font:inherit;cursor:pointer;padding:5px 12px;border-radius:999px;',
+    '  background:transparent;color:inherit;opacity:.85;',
+    '  border:1px solid color-mix(in srgb,currentColor 28%,transparent)}',
+    '.nc-hist-clear:hover{opacity:1;background:color-mix(in srgb,currentColor 8%,transparent)}',
+    '.nc-hist-row{padding:13px 0;border-top:1px solid color-mix(in srgb,currentColor 12%,transparent)}',
+    '.nc-hist-row:first-of-type{border-top:0}',
+    '.nc-hist-meta{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;opacity:.55;',
+    '  margin-bottom:5px}',
+    '.nc-hist-meta span{text-transform:none;letter-spacing:0;opacity:.8}',
+    '.nc-hist-meta span::before{content:"· "}',
+    '.nc-hist-q{font-weight:700;line-height:1.45}',
+    /* The answer is the reason to come back, but it is a stored fragment, so it
+       is set quieter than the question and given room to wrap rather than
+       being cut again at render time. */
+    '.nc-hist-a{margin-top:5px;opacity:.72;line-height:1.6;font-size:.92rem;',
+    '  white-space:pre-wrap;overflow-wrap:anywhere}',
+    '.nc-hist-none{opacity:.7;line-height:1.7;margin:0}'
+  ].join('');
+  document.head.appendChild(s);
+}
+
+/* "3 days ago" without pulling in a date library, and without pretending to
+   more precision than a stored millisecond deserves. */
+function ncAgo(ts) {
+  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (s < 90) return tr('ago_now');
+  const m = Math.round(s / 60);
+  if (m < 60) return tr('ago_min').replace('{n}', m);
+  const hr = Math.round(m / 60);
+  if (hr < 24) return tr('ago_hour').replace('{n}', hr);
+  const d = Math.round(hr / 24);
+  if (d < 30) return tr('ago_day').replace('{n}', d);
+  return new Date(ts).toLocaleDateString();
+}
+window.ncAgo = ncAgo;
 /* ===== PASTED-TWICE REPAIR =====
    When a file is pasted into itself rather than over itself, the browser does
    not complain: it drops the second <!DOCTYPE> and <head>, and quietly appends
@@ -7166,3 +7331,105 @@ function ncCookieBanner() {
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ncCookieBanner);
 else ncCookieBanner();
+
+/* ============================================================
+   COMING BACK TO WHERE YOU WERE
+
+   Reported like this: read a long page, press the link back to the site, and
+   land at the very top of the home page rather than at the row of cards the
+   link was in — "make it go to where they clicked the button not at the start
+   of the page, and make it for all the pages possible".
+
+   The browser does this for its own Back button and cannot do it for anything
+   else, because a link is a brand-new navigation to a page it has no scroll
+   position for. Every "back to the site" link on this site is an ordinary
+   link. So the position is kept here.
+
+   WHAT IS KEPT AND FOR HOW LONG. One entry per path in sessionStorage, which
+   is per tab and dies with the tab — a position from yesterday's reading is
+   not something anybody asked to come back to, and a shared computer should
+   not hand the next person a map of where the last one had got to. It is only
+   a number of pixels, but it is a number of pixels about somebody's reading.
+
+   WHEN IT IS *NOT* RESTORED, which is most of the rules:
+     - a URL with a #hash, because that is an explicit instruction about where
+       to land and it outranks a remembered one;
+     - a page opened with nothing saved for it, i.e. the first visit in this
+       tab — a fresh arrival belongs at the top;
+     - a saved position of 0, which is the top anyway;
+     - a position past the bottom of the page as it is now, since the page may
+       be shorter than it was;
+     - the moment the reader scrolls, touches or presses a key themselves. A
+       restore that fights the person doing the scrolling is worse than no
+       restore, and this fires late enough to matter.
+
+   WHY IT FIRES MORE THAN ONCE. The height of these pages is not settled at
+   DOMContentLoaded: nova.js adds a bar and a rail, fonts swap, the category
+   scene paints. Scrolling to 900px before the content is 900px tall does
+   nothing at all. So it tries on ready, again on load, and a few times over
+   the second after that, stopping early the moment it lands or the reader
+   takes over.
+   ============================================================ */
+(function ncScrollMemory() {
+  var KEY = 'nc_scroll_at';
+  var path = location.pathname || '/';
+
+  function read() {
+    try { return JSON.parse(sessionStorage.getItem(KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function write(map) {
+    try { sessionStorage.setItem(KEY, JSON.stringify(map)); } catch (e) {}
+  }
+  function y() {
+    return window.pageYOffset || document.documentElement.scrollTop || 0;
+  }
+
+  /* Saved on the way out rather than on every scroll: pagehide is the one
+     event that fires for a link click, a Back press, a tab close and a phone
+     switching apps alike, and writing storage on scroll would be a write per
+     frame. */
+  function remember() {
+    var map = read();
+    var at = y();
+    if (at > 20) map[path] = at; else delete map[path];
+    /* A cap, so a long session in one tab does not grow this without limit.
+       Oldest out first — the keys go in in visit order. */
+    var keys = Object.keys(map);
+    while (keys.length > 40) delete map[keys.shift()];
+    write(map);
+  }
+  window.addEventListener('pagehide', remember);
+  /* Safari used not to fire pagehide on a same-tab link; visibilitychange
+     covers that and costs nothing where pagehide already worked. */
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') remember();
+  });
+
+  if (location.hash) return;
+  var want = read()[path];
+  if (!want || want < 40) return;
+
+  var stop = false;
+  function theyTookOver() { stop = true; }
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function (e) {
+    window.addEventListener(e, theyTookOver, { passive: true, once: true });
+  });
+
+  function tryIt() {
+    if (stop) return true;
+    var max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    if (max < want - 4) return false;          /* page is not tall enough yet */
+    window.scrollTo(0, want);
+    return Math.abs(y() - want) < 4;
+  }
+
+  var tries = 0;
+  function attempt() {
+    if (tryIt() || ++tries > 12) return;
+    setTimeout(attempt, 90);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attempt);
+  else attempt();
+  window.addEventListener('load', function () { tries = 0; attempt(); });
+})();

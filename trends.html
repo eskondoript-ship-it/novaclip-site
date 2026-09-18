@@ -209,6 +209,25 @@ if(b){r.style.background=b;r.setAttribute('data-skin',s);}}catch(e){}})();</scri
   }
   html body.nova .nc-topbar .nc-points-pill { display: none !important; }
 }
+
+/* ---------------------------------------------------------------------------
+   THE HERO LEDE, CENTRED.
+
+   The line under "Plan. Create. Publish." sat 178px left of the heading it
+   belongs to. Its own rule already asks for it:
+
+     .nc-hero-text { max-width: 620px; margin: 12px auto 0 }
+
+   but the bundle's own reset, `body.nova p { margin: 0 }`, is (0,1,2) against
+   that rule's (0,1,0) and wins on specificity wherever it sits in the file. So
+   the auto margins never resolved, the 620px box stayed hard against the left
+   edge of a 976px hero, and only the text inside it was centred — which is why
+   it looked almost right and read wrong.
+
+   The block is what moves, not the text, so this sets the margins and leaves
+   text-align alone.
+   --------------------------------------------------------------------------- */
+html body.nova .nc-hero-text { margin-left: auto; margin-right: auto; }
 </style>
 </head>
 <!-- class='nova' is load-bearing, not decoration. Every rule in this page's
