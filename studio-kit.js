@@ -434,6 +434,21 @@
      holding one 16px lucide icon, with the name underneath. That box is the
      art slot CapCut fills with a moving thumbnail and this one fills with a
      grey droplet. Find it and put the real thing in it. */
+  /* THE CALLER EMPTIES WHATEVER THIS RETURNS, SO WHAT IT RETURNS MATTERS.
+     decorate() does `slot.textContent = ''` before dropping the thumbnail in.
+     That is right for a transition card, where the box holds one placeholder
+     icon and nothing else. It was catastrophic in the Effects panel, which has
+     no art box at all — a tile there is an icon, a name, a slider and a
+     percentage, so the first ancestor big enough to pass the size test was the
+     tile itself, and emptying it deleted the slider.
+
+     Measured, not guessed: twenty-one of the thirty-six effects had no control
+     left in the DOM. Not "hard to use" — gone. The only ones that survived were
+     the fifteen whose names this file does not recognise, so tileFor() bailed
+     before it could do any damage.
+
+     Two refusals fix it, and both are things that were never true of a real art
+     box: it never contains a form control, and it never contains text. */
   function artSlot(label) {
     var node = label;
     for (var up = 0; up < 4 && node; up++) {
@@ -444,6 +459,9 @@
         var k = kids[i];
         if (k === label || k.contains(label)) continue;
         if (!k.querySelector || !k.querySelector('svg')) continue;
+        /* Anything somebody can operate, or read, is not a placeholder. */
+        if (k.querySelector('input,textarea,select,button')) continue;
+        if ((k.textContent || '').trim()) continue;
         var r = k.getBoundingClientRect();
         if (r.height >= 36 && r.width >= 36) return k;
       }
@@ -456,6 +474,11 @@
     for (var i = 0; i < nodes.length; i++) {
       var n = nodes[i];
       if (n.dataset.nckit) continue;
+      /* editor-fx.js owns the Effects and Transitions tiles. It previews them
+         from the renderer's own effect table and the real transition geometry,
+         so its thumbnail is the thing that will actually happen rather than a
+         stand-in; two previews of one effect in one tile is one too many. */
+      if (n.closest && n.closest('.nc-fx-tile')) continue;
       /* leaf: no descendant carries text of its own */
       var kid = n.querySelector('*');
       if (kid && (kid.textContent || '').trim()) continue;

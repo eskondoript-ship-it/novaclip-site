@@ -342,6 +342,40 @@
    that raised the keyboard over the page.
 
    trends-nav.js, trends.html, nova.js, nova-ask.js. All cached. */
+/* v64: you can see what an effect or a transition does before you use it —
+   and there is now something different to see.
+
+   THE PANELS SHOWED YOU NOTHING. Thirty-six effects and twenty-six
+   transitions, each a name and a 16px line icon. You chose Kaleidoscope over
+   Prism by reading two words. Every tile has a live thumbnail now, drawn on
+   your own footage when the project has any and on a built-in test card when
+   it does not.
+
+   ALL TWENTY-SIX TRANSITIONS WERE THE SAME FADE. The renderer never read
+   transitionIn.type — the only places that field appears at all are two
+   tooltips on the timeline. Checked rather than assumed: one clip at one
+   playhead with fade, slide and cube rendered three byte-identical PNGs.
+   editor-fx.js implements the named geometry through the __ncGrade draw hook,
+   so Slide slides, Iris opens, Cube turns and Checker fills in diagonally. Ten
+   types at the same playhead now give ten different frames.
+
+   FIVE EFFECTS HAD NO RENDERING AT ALL. filmGrain, emboss,
+   chromaticAberration, shake and zoomPunch were in the panel, in the effects
+   object and in the AI presets, and in no branch of the filter builder. Their
+   sliders moved and nothing happened. The three colour ones have a filter now;
+   shake and zoomPunch are movement, so they live in the same per-frame hook as
+   the transitions.
+
+   AND STUDIO-KIT WAS DELETING TWENTY-ONE EFFECT TILES. Its artSlot() walks up
+   from a label looking for an art box to fill, and decorate() empties whatever
+   it returns. In the Transitions panel that is the icon box, which is right.
+   In the Effects panel there is no art box, so it returned the tile — and
+   emptying the tile deleted the slider. Twenty-one of the thirty-six effects
+   had no control left in the DOM; the only survivors were the fifteen whose
+   names it does not recognise. It now refuses any candidate holding a form
+   control or text, and skips tiles editor-fx.js has claimed.
+
+   editor-fx.js (NEW), editor.html, studio-kit.js. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -772,7 +806,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v63';
+const CACHE = 'novaclip-v64';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -814,6 +848,12 @@ const SHELL = [
      already in memory, so unlike the photo picker this one works offline. */
   '/grade.js',
   '/grade-ui.js',
+  /* The effect and transition previews, and the transition geometry itself.
+     Cached for the same reason the grade is: it is arithmetic on a canvas and
+     a built-in test card, no network anywhere in it. Leaving it out would give
+     an offline editor every tile blank AND every transition back to a plain
+     fade, since the same file is what makes them differ. */
+  '/editor-fx.js',
   /* The mixer is Web Audio and a generated impulse response — no files to
      fetch, so it works on a train like the grade does. */
   '/mixer.js',

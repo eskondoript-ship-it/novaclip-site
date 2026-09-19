@@ -1963,6 +1963,14 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      carries on without it if it is not, so this is additive. -->
 <script src='grade.js' defer></script>
 <script src='grade-ui.js' defer></script>
+<!-- AFTER grade.js, AND THAT IS NOT A PREFERENCE.
+     Both files hook window.__ncGrade, the once-per-clip-per-frame call inside
+     the draw loop. editor-fx.js keeps whatever it finds there and calls it
+     first, so the colour grade still lands and the transitions compose on top
+     of it. Loaded before grade.js it would capture nothing, and grade.js would
+     then overwrite it — every transition silently back to a plain fade, with
+     no error anywhere to say so. Both are defer, so they run in order. -->
+<script src='editor-fx.js' defer></script>
 <script src='mixer.js' defer></script>
 <script src='mixer-ui.js' defer></script>
 <script src='export-fix.js' defer></script>
