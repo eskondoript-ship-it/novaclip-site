@@ -376,6 +376,43 @@
    control or text, and skips tiles editor-fx.js has claimed.
 
    editor-fx.js (NEW), editor.html, studio-kit.js. All cached. */
+/* v65: the eleven duplicate effects are eleven different effects, clips move
+   between lanes, and the arrow keys move a clip in time.
+
+   ELEVEN OF THE THIRTY-SIX WERE LITERALLY ANOTHER ONE. Not similar — the same
+   filter string: vintage==sepia, pixelate==posterize==ascii,
+   scanlines==dots, halftone==crosshatch, mirror==wave. Thirty-six names,
+   five looks between those eleven. They could not have been separated inside
+   a filter chain, which is why they never were: CSS cannot pixelate, quantise
+   to a palette, draw a character grid, rotate a halftone screen, hatch,
+   mirror a half or displace a scanline. So ten of them are drawn now — real
+   block averaging, a real level quantiser, a real character ramp, a real
+   45-degree dot screen, real crossed strokes, real horizontal displacement —
+   and sepia stays a filter because sepia is what sepia is. They run inside
+   the editor's draw loop on the real frame, so the preview shows them and the
+   export contains them, and the panel thumbnails call the same functions.
+
+   MOVING A CLIP BETWEEN LANES. The timeline's drag handler captured the
+   clip's trackId once at pointerdown and never read clientY at all, so the
+   vertical axis was discarded and the clip sprang back. The store's moveClip
+   always took a trackId; nothing was ever passing one. Lanes light up as you
+   drag over them, an audio lane refuses anything that is not audio and says
+   so, and the correction goes through setState so one drag is still one undo.
+
+   THE ARROW KEYS MOVE TIME, NOT THE PICTURE. They were nudging
+   transform.positionX and positionY — moving the video inside the frame,
+   which is a once-a-project job — while sliding a clip a frame earlier had no
+   key at all. Left/Right is now one frame, Shift one second, Up/Down the next
+   lane that will take the clip. Nothing selected and the playhead keeps the
+   keys. Clicking a clip also takes the keyboard off the project-name field,
+   which the bundle's preventDefault had been leaving focused.
+
+   AND THE REACTION GAME ACCUSES YOU OF BEING A ROBOT. A single go under 100ms
+   is faster than signal reaches the back of the eye, so it is a guess that
+   landed. NovaClip's own human check appears, and folds the moment you touch
+   it.
+
+   editor-fx.js, editor-lanes.js (NEW), editor.html, reaction.html. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -806,7 +843,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v64';
+const CACHE = 'novaclip-v65';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -854,6 +891,9 @@ const SHELL = [
      an offline editor every tile blank AND every transition back to a plain
      fade, since the same file is what makes them differ. */
   '/editor-fx.js',
+  /* Dragging a clip between lanes. Pure DOM and store work, nothing fetched,
+     so it belongs in the cache with the rest of the editor's behaviour. */
+  '/editor-lanes.js',
   /* The mixer is Web Audio and a generated impulse response — no files to
      fetch, so it works on a train like the grade does. */
   '/mixer.js',

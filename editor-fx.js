@@ -169,8 +169,12 @@
     'Neon': 'neon', 'Invert': 'invert', 'Grayscale': 'grayscale', 'Sepia': 'sepia'
   };
 
+  /* A painter key has no filter of its own — its whole look is drawn. Asking
+     for one would put the bundle's old duplicate back on top of the thing
+     that replaced it. */
   function filterFor(key, v) {
     if (!(v > 0)) return '';
+    if (PAINT[key]) return '';
     var f = FX[key];
     return f ? f(v) : '';
   }
@@ -332,6 +336,391 @@
   }
 
   /* ==========================================================================
+     THE PAINTERS — REAL PIXEL WORK, NOT A FILTER STRING
+     ==========================================================================
+     Eleven of the thirty-six effects were the same as another one. Not similar
+     — identical, because the renderer's filter builder gave them the same
+     string:
+
+       vintage    == sepia                    sepia(v)
+       pixelate   == posterize == ascii       contrast(1 + v*0.3)
+       scanlines  == dots                     contrast(1 + v*0.15)
+       halftone   == crosshatch               contrast(1 + v*0.2)
+       mirror     == wave                     saturate(1 + v*0.1)
+
+     Thirty-six names, thirty-one of which did something, and only five
+     distinct looks between those eleven. Turning up the "ASCII" slider made
+     the picture very slightly more contrasty.
+
+     They could not have been fixed inside a filter string, and that is the
+     whole reason they were not: CSS filters cannot pixelate, cannot quantise
+     to a palette, cannot draw a character grid, cannot rotate a halftone
+     screen, cannot hatch, cannot mirror a half, cannot displace a scanline.
+     Nudging the contrast constants apart so the tiles looked different would
+     have been the worst of both — eleven effects that still do nothing, now
+     lying about it in eleven different ways.
+
+     So these ten are drawn. Each one takes the frame that is about to go on
+     screen and rewrites its pixels: a real block average for pixelate, a real
+     level quantiser for posterize, a real character ramp for ascii, a real
+     45-degree dot screen for halftone, real crossed strokes for crosshatch,
+     a real horizontal displacement for wave. sepia is the eleventh and it
+     stays a filter, because sepia(v) is genuinely what sepia is — it was
+     vintage that had been sitting on top of it, and vintage is a film look
+     now: tone, lifted blacks, vignette and grain.
+
+     WHERE THEY RUN. In the editor's own draw loop, on the real frame, which
+     means the preview shows them and the export contains them. The panel
+     thumbnails call the same functions on their own canvas, so the tile and
+     the video cannot disagree.
+
+     WHAT THEY COST. Every one works at the size the frame is being drawn at,
+     on a reused scratch canvas, and none of them runs at all unless its
+     slider is above zero. The screens (ascii, dots, halftone, crosshatch)
+     sample a downscaled copy rather than reading full-resolution pixels per
+     cell, which is the difference between a few thousand reads and a few
+     hundred thousand.
+     ========================================================================== */
+
+  /* Two reusable scratch canvases. Allocating a canvas per frame per clip is
+     how you turn an effect into a stutter. */
+  var _sc = [null, null];
+  function scratch(n, w, h) {
+    var c = _sc[n];
+    if (!c) { c = _sc[n] = document.createElement('canvas'); }
+    if (c.width !== w) c.width = w;
+    if (c.height !== h) c.height = h;
+    return c;
+  }
+  /* A copy of what is currently on g, to read from while g is being redrawn. */
+  function snapshot(g, w, h) {
+    var t = scratch(1, w, h), tg = t.getContext('2d');
+    tg.setTransform(1, 0, 0, 1, 0, 0);
+    tg.clearRect(0, 0, w, h);
+    tg.drawImage(g.canvas, 0, 0);
+    return t;
+  }
+  /* A downscaled copy, one pixel per cell, for the screen effects. */
+  function grid(g, cols, rows) {
+    var t = scratch(1, cols, rows), tg = t.getContext('2d');
+    tg.setTransform(1, 0, 0, 1, 0, 0);
+    tg.clearRect(0, 0, cols, rows);
+    tg.imageSmoothingEnabled = true;
+    tg.drawImage(g.canvas, 0, 0, cols, rows);
+    return tg.getImageData(0, 0, cols, rows).data;
+  }
+  function lum(d, i) { return (d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114) / 255; }
+
+  var _grain = null;
+  function grainTile() {
+    if (_grain) return _grain;
+    var c = document.createElement('canvas');
+    c.width = c.height = 96;
+    var g = c.getContext('2d'), d = g.createImageData(96, 96), p = d.data;
+    for (var i = 0; i < p.length; i += 4) {
+      var n = 120 + Math.random() * 135;
+      p[i] = p[i + 1] = p[i + 2] = n; p[i + 3] = 255;
+    }
+    g.putImageData(d, 0, 0);
+    _grain = c;
+    return c;
+  }
+
+  var PAINT = {
+    /* A real block average. Downscale with smoothing on so each block is the
+       mean of what it covers, then back up with smoothing off so the blocks
+       stay hard-edged — which is what makes it read as pixelation rather than
+       as a blur. */
+    pixelate: function (g, w, h, v) {
+      var s = Math.max(.012, 1 - v * .97);
+      var sw = Math.max(2, Math.round(w * s)), sh = Math.max(2, Math.round(h * s));
+      /* SCRATCH 1, NOT 0. In the editor's draw path the frame being painted
+         IS scratch 0, and asking for it at a new size resizes it, which
+         clears it — the effect came out solid black. The one painter that
+         needed a second canvas was the one that took the first one away from
+         itself. */
+      var t = scratch(1, sw, sh), tg = t.getContext('2d');
+      tg.setTransform(1, 0, 0, 1, 0, 0);
+      tg.clearRect(0, 0, sw, sh);
+      tg.imageSmoothingEnabled = true;
+      tg.drawImage(g.canvas, 0, 0, sw, sh);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      g.clearRect(0, 0, w, h);
+      g.imageSmoothingEnabled = false;
+      g.drawImage(t, 0, 0, sw, sh, 0, 0, w, h);
+      g.imageSmoothingEnabled = true;
+      g.restore();
+    },
+
+    /* Colour quantisation: twelve levels per channel down to two. A lookup
+       table rather than the arithmetic per pixel, because this runs over
+       every pixel of every frame. */
+    posterize: function (g, w, h, v) {
+      var n = Math.max(2, Math.round(12 - v * 10));
+      var step = 255 / (n - 1);
+      var lutA = new Uint8ClampedArray(256);
+      for (var i = 0; i < 256; i++) lutA[i] = Math.round(Math.round(i / step) * step);
+      var d = g.getImageData(0, 0, w, h), p = d.data;
+      for (var j = 0; j < p.length; j += 4) {
+        p[j] = lutA[p[j]]; p[j + 1] = lutA[p[j + 1]]; p[j + 2] = lutA[p[j + 2]];
+      }
+      g.putImageData(d, 0, 0);
+    },
+
+    /* A character ramp, darkest glyph for the darkest cell. Each glyph keeps
+       its cell's own colour rather than going green-on-black, which stays
+       readable as a picture instead of as a novelty. */
+    ascii: function (g, w, h, v) {
+      var cell = Math.max(4, Math.round(4 + v * 9));
+      var cols = Math.max(1, Math.ceil(w / cell)), rows = Math.max(1, Math.ceil(h / cell));
+      var d = grid(g, cols, rows);
+      var RAMP = ' .:-=+*#%@';
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = '#05070c'; g.fillRect(0, 0, w, h);
+      g.font = '700 ' + cell + 'px ui-monospace,Menlo,Consolas,monospace';
+      g.textBaseline = 'top';
+      for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++) {
+        var i = (y * cols + x) * 4;
+        var k = Math.round(lum(d, i) * (RAMP.length - 1));
+        if (k <= 0) continue;
+        g.fillStyle = 'rgb(' + d[i] + ',' + d[i + 1] + ',' + d[i + 2] + ')';
+        g.fillText(RAMP.charAt(k), x * cell, y * cell);
+      }
+      g.restore();
+    },
+
+    /* A CRT, not a contrast bump: dark lines every three pixels, and the
+       brightness roll a tube has from top to bottom. */
+    scanlines: function (g, w, h, v) {
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = 'rgba(0,0,0,' + (.72 * v).toFixed(3) + ')';
+      for (var y = 0; y < h; y += 3) g.fillRect(0, y, w, 1.4);
+      var gr = g.createLinearGradient(0, 0, 0, h);
+      gr.addColorStop(0, 'rgba(255,255,255,' + (.06 * v).toFixed(3) + ')');
+      gr.addColorStop(.5, 'rgba(0,0,0,0)');
+      gr.addColorStop(1, 'rgba(0,0,0,' + (.14 * v).toFixed(3) + ')');
+      g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.restore();
+    },
+
+    /* A dot-matrix panel: colour dots on black, radius by brightness. */
+    dots: function (g, w, h, v) {
+      var cell = Math.max(4, Math.round(4 + v * 10));
+      var cols = Math.max(1, Math.ceil(w / cell)), rows = Math.max(1, Math.ceil(h / cell));
+      var d = grid(g, cols, rows);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = '#04060b'; g.fillRect(0, 0, w, h);
+      for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++) {
+        var i = (y * cols + x) * 4;
+        var rad = lum(d, i) * cell * .46;
+        if (rad < .35) continue;
+        g.fillStyle = 'rgb(' + d[i] + ',' + d[i + 1] + ',' + d[i + 2] + ')';
+        g.beginPath(); g.arc(x * cell + cell / 2, y * cell + cell / 2, rad, 0, 6.2832); g.fill();
+      }
+      g.restore();
+    },
+
+    /* Newsprint: one monochrome screen, black ink on paper, and the grid
+       turned 45 degrees the way a real halftone screen is — which is the
+       thing that stops it looking like the dot-matrix above. */
+    halftone: function (g, w, h, v) {
+      var cell = Math.max(3, Math.round(3 + v * 8));
+      var cols = Math.max(1, Math.ceil(w / 2)), rows = Math.max(1, Math.ceil(h / 2));
+      var d = grid(g, cols, rows);
+      var diag = Math.ceil(Math.sqrt(w * w + h * h));
+      var a = Math.PI / 4, ca = Math.cos(a), sa = Math.sin(a);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#10131a';
+      g.translate(w / 2, h / 2); g.rotate(a); g.translate(-diag / 2, -diag / 2);
+      for (var y = 0; y < diag; y += cell) for (var x = 0; x < diag; x += cell) {
+        var cx = x - diag / 2, cy = y - diag / 2;
+        var ix = cx * ca - cy * sa + w / 2, iy = cx * sa + cy * ca + h / 2;
+        if (ix < 0 || iy < 0 || ix >= w || iy >= h) continue;
+        var gx = Math.min(cols - 1, Math.max(0, Math.round(ix / w * cols)));
+        var gy = Math.min(rows - 1, Math.max(0, Math.round(iy / h * rows)));
+        var rad = (1 - lum(d, (gy * cols + gx) * 4)) * cell * .62;
+        if (rad < .3) continue;
+        g.beginPath(); g.arc(x, y, rad, 0, 6.2832); g.fill();
+      }
+      g.restore();
+    },
+
+    /* Pen hatching on paper. One stroke direction for a light cell, four
+       crossed for a black one — the drawing technique the effect is named
+       after, rather than a texture laid over the top. */
+    crosshatch: function (g, w, h, v) {
+      var cell = Math.max(5, Math.round(5 + v * 7));
+      var cols = Math.max(1, Math.ceil(w / cell)), rows = Math.max(1, Math.ceil(h / cell));
+      var d = grid(g, cols, rows);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = '#f6f3ea'; g.fillRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(20,22,30,.8)';
+      g.lineWidth = Math.max(.6, cell * .09);
+      g.lineCap = 'round';
+      for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++) {
+        var dark = 1 - lum(d, (y * cols + x) * 4);
+        var n = Math.min(4, Math.floor(dark * 4.6));
+        if (n <= 0) continue;
+        var px = x * cell, py = y * cell;
+        g.beginPath();
+        if (n > 0) { g.moveTo(px, py); g.lineTo(px + cell, py + cell); }
+        if (n > 1) { g.moveTo(px, py + cell); g.lineTo(px + cell, py); }
+        if (n > 2) { g.moveTo(px, py + cell / 2); g.lineTo(px + cell, py + cell / 2); }
+        if (n > 3) { g.moveTo(px + cell / 2, py); g.lineTo(px + cell / 2, py + cell); }
+        g.stroke();
+      }
+      g.restore();
+    },
+
+    /* The left half, flipped onto the right. At half strength you get the
+       ghost of it, which is the useful setting. */
+    mirror: function (g, w, h, v) {
+      var t = snapshot(g, w, h);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      g.globalAlpha = Math.max(0, Math.min(1, v));
+      g.translate(w, 0); g.scale(-1, 1);
+      g.drawImage(t, 0, 0, w / 2, h, 0, 0, w / 2, h);
+      g.restore();
+    },
+
+    /* Horizontal displacement, two scanlines at a time, travelling with the
+       playhead so it moves rather than sitting there bent. */
+    wave: function (g, w, h, v, t) {
+      var src = snapshot(g, w, h);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      g.clearRect(0, 0, w, h);
+      var amp = v * w * .055, k = Math.PI * 6;
+      for (var y = 0; y < h; y += 2) {
+        var dx = Math.sin(y / h * k + t * 2.2) * amp;
+        g.drawImage(src, 0, y, w, 2, dx, y, w, 2);
+      }
+      g.restore();
+    },
+
+    /* A film look rather than a sepia slider: the tone, blacks lifted off
+       zero the way dye film never quite reaches black, a vignette, and grain.
+       This is the one that used to be a duplicate of sepia, and it is the
+       reason sepia is allowed to stay a plain filter. */
+    vintage: function (g, w, h, v) {
+      var d = g.getImageData(0, 0, w, h), p = d.data;
+      for (var i = 0; i < p.length; i += 4) {
+        var r = p[i], gg = p[i + 1], b = p[i + 2];
+        var tr = r * .393 + gg * .769 + b * .189;
+        var tg2 = r * .349 + gg * .686 + b * .168;
+        var tb = r * .272 + gg * .534 + b * .131;
+        tr = tr * (1 - .18 * v) + 34 * v;
+        tg2 = tg2 * (1 - .20 * v) + 28 * v;
+        tb = tb * (1 - .24 * v) + 40 * v;
+        p[i] = r + (tr - r) * v;
+        p[i + 1] = gg + (tg2 - gg) * v;
+        p[i + 2] = b + (tb - b) * v;
+      }
+      g.putImageData(d, 0, 0);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      var rad = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .25,
+                                       w / 2, h / 2, Math.max(w, h) * .72);
+      rad.addColorStop(0, 'rgba(0,0,0,0)');
+      rad.addColorStop(1, 'rgba(22,13,4,' + (.55 * v).toFixed(3) + ')');
+      g.fillStyle = rad; g.fillRect(0, 0, w, h);
+      g.globalAlpha = .16 * v;
+      g.globalCompositeOperation = 'overlay';
+      var tile = grainTile();
+      for (var gy = 0; gy < h; gy += 96) for (var gx = 0; gx < w; gx += 96) g.drawImage(tile, gx, gy);
+      g.restore();
+    }
+  };
+
+  /* Geometry first, then tone, then the screens that replace the picture
+     entirely, then the overlay. Running a halftone before a mirror would
+     mirror the dots rather than the image. */
+  var PAINT_ORDER = ['mirror', 'wave', 'pixelate', 'vintage', 'posterize',
+                     'ascii', 'dots', 'halftone', 'crosshatch', 'scanlines'];
+
+  /* The exact string the bundle's own filter builder pushes for each of these,
+     so it can be taken back out. Leaving it in would apply a contrast bump on
+     top of a painter that has already replaced every pixel — and for vintage
+     it would sepia-tone the film look a second time. */
+  var BUNDLE_FILTER = {
+    pixelate:   function (v) { return 'contrast(' + (1 + v * .3) + ')'; },
+    posterize:  function (v) { return 'contrast(' + (1 + v * .3) + ')'; },
+    ascii:      function (v) { return 'contrast(' + (1 + v * .3) + ')'; },
+    scanlines:  function (v) { return 'contrast(' + (1 + v * .15) + ')'; },
+    dots:       function (v) { return 'contrast(' + (1 + v * .15) + ')'; },
+    halftone:   function (v) { return 'contrast(' + (1 + v * .2) + ')'; },
+    crosshatch: function (v) { return 'contrast(' + (1 + v * .2) + ')'; },
+    mirror:     function (v) { return 'saturate(' + (1 + v * .1) + ')'; },
+    wave:       function (v) { return 'saturate(' + (1 + v * .1) + ')'; },
+    vintage:    function (v) { return 'sepia(' + v + ')'; }
+  };
+
+  function activePainters(fx) {
+    var out = [];
+    for (var i = 0; i < PAINT_ORDER.length; i++) {
+      var k = PAINT_ORDER[i];
+      if (fx && fx[k] > 0) out.push(k);
+    }
+    return out;
+  }
+
+  function runPaint(g, w, h, fx, t) {
+    var list = activePainters(fx);
+    for (var i = 0; i < list.length; i++) {
+      try { PAINT[list[i]](g, w, h, fx[list[i]], t || 0); } catch (e) {}
+    }
+    return list.length;
+  }
+
+  /* ==========================================================================
+     PUTTING THEM IN THE EDITOR'S OWN DRAW
+     ==========================================================================
+     These have to be in the video, not just in the panel — so they run inside
+     the renderer, on the frame it is about to composite, which means the
+     preview shows them and the export writes them out.
+
+     The draw loop's last act for a clip is one drawImage with the filter
+     already set. So the painter borrows that one call: the frame goes to a
+     scratch canvas with the same filter applied, the painters rewrite it, and
+     the result is drawn back through the same transform the editor had set up
+     — so the clip's position, scale, rotation and any transition still apply
+     exactly as they did.
+
+     The override is installed on the context, fires once and removes itself.
+     It is also cleared at the top of every hook call, because a clip that
+     never reaches drawImage — a text clip, a frame that throws — would
+     otherwise leave it armed for whatever is drawn next. */
+  function installPainter(ctx, clip, t) {
+    var fx = clip && clip.effects;
+    if (!activePainters(fx).length) return;
+    var orig = ctx.drawImage;
+    ctx.__ncPaint = true;
+    ctx.drawImage = function (img, a, b, c, d) {
+      delete ctx.drawImage;
+      delete ctx.__ncPaint;
+      /* Only the four-argument destination form is ours; anything else goes
+         straight through rather than being guessed at. */
+      if (arguments.length !== 5) return orig.apply(ctx, arguments);
+      var W2 = Math.max(1, Math.round(Math.abs(c))), H2 = Math.max(1, Math.round(Math.abs(d)));
+      if (W2 * H2 > 4200000) return orig.apply(ctx, arguments);   /* absurd size: don't */
+      try {
+        var off = scratch(0, W2, H2), og = off.getContext('2d');
+        og.setTransform(1, 0, 0, 1, 0, 0);
+        og.clearRect(0, 0, W2, H2);
+        og.filter = ctx.filter || 'none';
+        og.drawImage(img, 0, 0, W2, H2);
+        og.filter = 'none';
+        runPaint(og, W2, H2, fx, t);
+        var keep = ctx.filter;
+        ctx.filter = 'none';
+        orig.call(ctx, off, a, b, c, d);
+        ctx.filter = keep;
+      } catch (e) {
+        try { orig.apply(ctx, arguments); } catch (e2) {}
+      }
+    };
+  }
+
+  /* ==========================================================================
      THE DRAW HOOK
      ==========================================================================
      grade.js is already here. Its function is kept and called first, so the
@@ -362,12 +751,26 @@
   }
 
   window.__ncGrade = function (ctx, clip, parts) {
+    /* A painter armed on the last clip that never got drawn would fire on
+       this one. Disarm before anything else. */
+    if (ctx && ctx.__ncPaint) { try { delete ctx.drawImage; delete ctx.__ncPaint; } catch (e) {} }
     if (prevGrade) { try { prevGrade(ctx, clip, parts); } catch (e) {} }
     try {
       var store = window.__ncStore;
       if (!store || !clip) return;
       var st = store.getState();
       var t = st.playhead || 0;
+
+      /* Take the bundle's duplicate filter back out for anything a painter
+         now owns, then arm the painter. */
+      var pfx = clip.effects || {};
+      for (var pk in BUNDLE_FILTER) {
+        if (!(pfx[pk] > 0)) continue;
+        var dead = BUNDLE_FILTER[pk](pfx[pk]);
+        var at = parts.indexOf(dead);
+        if (at > -1) parts.splice(at, 1);
+      }
+      installPainter(ctx, clip, t);
 
       /* The two effects that are movement rather than colour. Time-based, so
          they only actually move while the playhead does. */
@@ -604,6 +1007,14 @@
       drawSource(g, w, h);
       g.restore();
       g.filter = 'none';
+      /* The drawn effects, run on the tile exactly as they run on the frame.
+         One object with one key in it, so only this tile's own effect fires. */
+      if (PAINT[key] && v > 0) {
+        var one = {}; one[key] = v;
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+        runPaint(g, w, h, one, demoT);
+        g.restore();
+      }
       if (demoing() && !hovering) {
         var fs = Math.round(h * .13);
         g.font = '600 ' + fs + 'px system-ui,sans-serif';
@@ -621,7 +1032,9 @@
     c.__ncFx = { paint: paint, step: step, visible: true };
     /* Only the two moving effects need a loop, and only while they are set. */
     function retune() {
-      var wants = !reduced && MOTION[key] && value() > 0;
+      /* wave travels with the playhead, so its tile has to tick like the two
+         motion effects do; the other painters are still pictures. */
+      var wants = !reduced && (MOTION[key] || key === 'wave') && value() > 0;
       if (wants) { live.add(step); wake(); } else { live.delete(step); paint(); }
     }
     if (slider) slider.addEventListener('input', retune);
@@ -795,6 +1208,6 @@
      the first render even if the observer above missed it. */
   setTimeout(boot, 1500);
 
-  window.NC_FX = { FX: FX, TRANS: TRANS, MOTION: MOTION, stepFor: stepFor,
-                   filterFor: filterFor, applyStep: applyStep, scan: scan };
+  window.NC_FX = { FX: FX, TRANS: TRANS, MOTION: MOTION, PAINT: PAINT, stepFor: stepFor,
+                   filterFor: filterFor, applyStep: applyStep, runPaint: runPaint, scan: scan };
 })();

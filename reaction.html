@@ -120,6 +120,46 @@ h1 { font-size:1.5rem; margin-bottom:4px; }
 button.again { margin-top:14px; min-height:44px; padding:12px 24px; border:0; border-radius:999px;
        background:var(--nc-cyan,#00F0FF); color:#04121a; font-weight:800; font-size:1rem; cursor:pointer; }
 .best { margin-top:12px; color:var(--nc-dim,#7E8AA6); font-size:.86rem; }
+
+/* ---------------------------------------------------------------------------
+   THE BIT WHERE IT ACCUSES YOU OF BEING A ROBOT
+
+   A single go under 100ms is not a reaction, it is a guess that happened to
+   land — the light takes about 80ms just to get from the screen to the back of
+   your eye. So the game stops and pretends not to believe you.
+
+   IT IS NOT A COPY OF ANYBODY'S CAPTCHA. It says NovaClip on it and the
+   checkbox is ours. Dressing a joke up in another company's branding is how a
+   joke becomes something somebody screenshots as if it were real, and this one
+   is funny enough without borrowing a logo.
+   --------------------------------------------------------------------------- */
+#nchuman { position:fixed; inset:0; z-index:99997; display:flex; align-items:center;
+       justify-content:center; padding:20px; background:rgba(4,6,12,.72);
+       backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
+       animation:nchIn .18s ease both; cursor:pointer; }
+@keyframes nchIn { from { opacity:0 } to { opacity:1 } }
+@keyframes nchPop { from { opacity:0; transform:translateY(10px) scale(.96) }
+                    to { opacity:1; transform:none } }
+.nch-card { width:min(380px,100%); border-radius:16px; padding:20px;
+       background:var(--nc-bg2,#0C1220); border:1px solid var(--nc-line,rgba(255,255,255,.14));
+       box-shadow:0 24px 70px rgba(0,0,0,.55); animation:nchPop .26s cubic-bezier(.34,1.3,.64,1) both;
+       text-align:left; }
+.nch-row { display:flex; align-items:center; gap:12px; padding:14px;
+       border:1px solid var(--nc-line,rgba(255,255,255,.14)); border-radius:12px;
+       background:var(--nc-card,rgba(255,255,255,.04)); }
+.nch-box { width:26px; height:26px; flex:0 0 auto; border-radius:6px;
+       border:2px solid var(--nc-dim,#7E8AA6); background:transparent; }
+.nch-row b { font-size:.95rem; font-weight:700; color:var(--nc-text,#EAF2FF); }
+.nch-brand { margin-left:auto; text-align:right; font-size:.6rem; line-height:1.3;
+       color:var(--nc-dim,#7E8AA6); font-weight:700; letter-spacing:.06em; }
+.nch-say { margin:16px 0 0; font-size:1.02rem; font-weight:800; line-height:1.45;
+       color:var(--nc-text,#EAF2FF); }
+.nch-sub { margin:8px 0 0; font-size:.82rem; color:var(--nc-dim,#7E8AA6); line-height:1.5; }
+.nch-joke { text-align:center; font-size:1.6rem; font-weight:900; padding:34px 24px;
+       color:var(--nc-text,#EAF2FF); }
+@media (prefers-reduced-motion:reduce) {
+  #nchuman, .nch-card { animation:none }
+}
 </style>
 </head>
 <body>
@@ -242,6 +282,8 @@ function press() {
   if (state === 'go') {
     times.push(performance.now() - greenAt);
     drawRuns();
+    /* Faster than a person can be. See notHuman() below. */
+    if (times[times.length - 1] < HUMAN_LIMIT) notHuman();
     if (times.length >= GOES) return finish();
     state = 'between';
     pad.className = '';
@@ -298,6 +340,62 @@ function finish() {
      fast, so there is nothing to gain by gaming the timer. */
   try { if (typeof addPts === 'function') addPts(5); } catch (e) {}
   try { if (typeof logSkill === 'function') logSkill('reaction'); } catch (e) {}
+}
+
+/* ===========================================================================
+   "NGL I THINK YOU'RE NOT HUMAN"
+   ===========================================================================
+   Signal takes roughly 80ms just to travel from the screen to the back of the
+   eye, before anything has decided to move a finger. A single go under 100ms
+   is therefore not a reaction at all — it is a guess that happened to land on
+   the green. The set still counts it, because the median is what gets
+   recorded and one lucky guess cannot move a median of five. The game just
+   declines to believe you for a moment first.
+
+   THE OVERLAY EATS THE CLICK. It covers the pad, so the press that dismisses
+   it cannot also arm the next go — without that, the joke would cost you the
+   go you were about to take.
+
+   AND IT ALWAYS LETS GO. Click, key, or nothing at all: the punchline shows
+   for two seconds and removes itself. There is no state left behind and no
+   way to end up stuck behind it.
+   =========================================================================== */
+const HUMAN_LIMIT = 100;
+
+function notHuman() {
+  if (document.getElementById('nchuman')) return;
+
+  const veil = document.createElement('div');
+  veil.id = 'nchuman';
+  veil.setAttribute('role', 'dialog');
+  veil.setAttribute('aria-label', 'Are you human?');
+  veil.innerHTML =
+    '<div class="nch-card">' +
+      '<div class="nch-row">' +
+        '<span class="nch-box"></span>' +
+        '<b>I am not a robot</b>' +
+        '<span class="nch-brand">NovaClip<br>human check</span>' +
+      '</div>' +
+      '<p class="nch-say">Ngl I think you\u2019re not human.</p>' +
+      '<p class="nch-sub">That go was under ' + HUMAN_LIMIT + 'ms. Tap anywhere to prove yourself.</p>' +
+    '</div>';
+  document.body.appendChild(veil);
+
+  let done = false;
+  function punchline() {
+    if (done) return;
+    done = true;
+    veil.removeEventListener('pointerdown', onHit, true);
+    document.removeEventListener('keydown', onKey, true);
+    veil.innerHTML = '<div class="nch-card nch-joke">im joking</div>';
+    setTimeout(() => { if (veil.parentNode) veil.remove(); }, 2000);
+  }
+  function onHit(e) { e.preventDefault(); e.stopPropagation(); punchline(); }
+  function onKey(e) { e.preventDefault(); e.stopPropagation(); punchline(); }
+  veil.addEventListener('pointerdown', onHit, true);
+  document.addEventListener('keydown', onKey, true);
+  /* Nobody stares at it forever. If they do nothing, it tells them anyway. */
+  setTimeout(punchline, 6000);
 }
 
 pad.addEventListener('pointerdown', (e) => { e.preventDefault(); press(); });
