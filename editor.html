@@ -1976,6 +1976,10 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      so the vertical axis was simply discarded. This listens in the bubble
      phase, which puts its pointermove after theirs, and corrects the track. -->
 <script src='editor-lanes.js' defer></script>
+<!-- More than one timeline per project: same media library, separate cut.
+     After editor-lanes.js because a new timeline is created with the same
+     four default lanes that file seeds a new project with. -->
+<script src='editor-timelines.js' defer></script>
 <script src='mixer.js' defer></script>
 <script src='mixer-ui.js' defer></script>
 <script src='export-fix.js' defer></script>

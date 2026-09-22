@@ -110,6 +110,34 @@
  * clicked a clip and every arrow went into that field. Clicking a clip now
  * takes the keyboard with it.
  *
+ * ------------------------------------------------------------------------
+ * A SECOND VIDEO LANE, FROM THE START
+ * ------------------------------------------------------------------------
+ * A new project opened with exactly three lanes: V1, A1, T1. One video lane.
+ * So the first thing anybody tried after lane-dragging shipped — pick up a
+ * clip, drag it down — had nowhere to land, because the only other two lanes
+ * are audio (which refuses video) and text. The feature worked and looked
+ * broken, which is the same thing as not working.
+ *
+ * A fresh project gets V1, V2, A1, T1 now. Two video lanes is the smallest
+ * number where layering means anything, and four rows is what fits in the
+ * timeline's default height — a fifth would open the editor with a scrollbar
+ * in the timeline, which is a worse first impression than a missing lane.
+ * "+ Video" in the timeline toolbar still adds as many more as you want.
+ *
+ * IT ONLY EVER SEEDS A PRISTINE PROJECT. The check is exact: three lanes,
+ * named and kinded exactly as the bundle creates them, and no clips. Anything
+ * else — one clip, one renamed lane, one added or removed lane — is somebody's
+ * own arrangement and is never touched again.
+ *
+ * That check does the job a "have I already done this" flag would do, and does
+ * it better. The first version kept such a flag and it was wrong in the most
+ * ordinary case there is: the editor autosaves every eight seconds, so opening
+ * the editor and closing it sooner than that saved nothing, the next load
+ * restored the original three lanes, and the flag stopped V2 ever coming back.
+ * The lane appeared once and then was gone for good.
+ *
+ * ------------------------------------------------------------------------
  * HELD KEYS DO NOT FILL THE UNDO STACK. The first press of a run goes through
  * moveClip, which records one history entry; while the key repeats it writes
  * through setState, which records none. Hold Right for two seconds and Undo
@@ -299,6 +327,69 @@
   /* CAPTURE, because their handler calls stopPropagation and nothing in the
      bubble phase below the root ever sees this event. */
   document.addEventListener('pointerdown', onDown, true);
+
+
+  /* ==========================================================================
+     THE STARTING LANES
+     ========================================================================== */
+  /* NO "HAVE I DONE THIS ALREADY" FLAG, AND THAT IS THE POINT.
+     The first version wrote one, and it was wrong in the ordinary case:
+     the editor autosaves every eight seconds, so opening the editor and
+     closing it inside that window saved nothing, the next load restored the
+     original three lanes, and the flag stopped V2 ever coming back. The lane
+     appeared once and then vanished for good.
+
+     The pristine check below is a better flag than any flag. A project with a
+     clip in it, or a lane added, removed or renamed, fails it and is never
+     touched again — so the only thing that can be re-seeded is a project with
+     nothing in it, where re-seeding is the right answer anyway. */
+
+  /* Exactly the three the bundle makes and nothing else. A project with any
+     clip in it, or any lane added, removed or renamed, is somebody's own and
+     is not touched. */
+  function isPristine(st) {
+    if (!st || !st.tracks || st.tracks.length !== 3) return false;
+    if (st.clips && st.clips.length) return false;
+    var want = [['video', 'V1'], ['audio', 'A1'], ['text', 'T1']];
+    for (var i = 0; i < 3; i++) {
+      if (st.tracks[i].kind !== want[i][0] || st.tracks[i].name !== want[i][1]) return false;
+    }
+    return true;
+  }
+
+  function seedLanes() {
+    var s = store();
+    if (!s || !s.getState || !s.setState) return false;
+    var st = s.getState();
+    if (!isPristine(st)) return false;
+
+    /* Built by hand rather than through addTrack, for two reasons: addTrack
+       appends, so the new video lane would land under the text lane instead
+       of beside its own kind, and it pushes a history entry, which would make
+       Undo on a brand-new project delete a lane the person never added. */
+    var v1 = st.tracks[0];
+    var v2 = { id: 'track_nc_v2_' + Date.now().toString(36),
+               kind: 'video', name: 'V2', locked: false, hidden: false, muted: false,
+               height: v1.height || 72 };
+    s.setState({ tracks: [st.tracks[0], v2, st.tracks[1], st.tracks[2]] });
+    return true;
+  }
+
+  /* The project the editor restores from storage arrives after this file runs,
+     and it arrives from IndexedDB, so there is no one moment to hook. It tries
+     a few times over the first couple of seconds and stops the first time it
+     either seeds or finds something that is not a pristine project. */
+  (function waitForStore() {
+    var tries = 0;
+    (function tick() {
+      setTimeout(function () {
+        if (!store()) { if (++tries < 40) tick(); return; }
+        if (seedLanes()) return;
+        if (!isPristine(store().getState())) return;
+        if (++tries < 40) tick();
+      }, 120);
+    })();
+  })();
 
   /* ==========================================================================
      THE ARROW KEYS

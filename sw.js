@@ -413,6 +413,41 @@
    it.
 
    editor-fx.js, editor-lanes.js (NEW), editor.html, reaction.html. All cached. */
+/* v66: a new project has two video lanes, and a project can hold more than
+   one timeline.
+
+   THE SECOND VIDEO LANE. A new project opened with V1, A1, T1 — one video
+   lane — so the first thing anybody tried after lane-dragging shipped had
+   nowhere to land: the only other lanes are audio, which refuses video, and
+   text. A fresh project gets V1, V2, A1, T1 now. Four rows is what fits the
+   timeline's default height; a fifth would open the editor with a scrollbar
+   in it. Only a pristine project is ever touched — three lanes named exactly
+   as the bundle makes them and no clips. There is deliberately no "already
+   done this" flag: the first version kept one and it was wrong in the most
+   ordinary case, because the editor autosaves every eight seconds, so closing
+   the tab sooner than that saved nothing and the flag stopped the lane ever
+   coming back.
+
+   MORE THAN ONE TIMELINE. A strip of tabs above the lanes. Each timeline has
+   its own lanes, clips and markers; the media library, the settings and the
+   project name stay shared — which is the difference between this and a
+   second project, and the whole point: upload once, cut it four ways. Undo
+   travels with the timeline, in memory, so Undo on Timeline 2 can never
+   restore a clip into Timeline 1.
+
+   Two bugs worth remembering, both found by measuring rather than reading.
+   The project id does not exist when the editor opens — the projects layer
+   writes it on its first save — so timelines made in the first seconds were
+   filed under 'default', and the next lookup found nothing and built a fresh
+   empty one over the top; the shelf is carried across the one time the name
+   changes. And the boot order was backwards: stashing the live store into the
+   active timeline as soon as the store existed saved the editor's empty
+   startup state over the real work, because the project restore lands seconds
+   later. nc_timelines is written every two seconds and on pagehide, so it is
+   never staler than the project's own save, and on boot it is applied to the
+   store rather than read from it.
+
+   editor-lanes.js, editor-timelines.js (NEW), editor.html. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -843,7 +878,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v65';
+const CACHE = 'novaclip-v66';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -894,6 +929,9 @@ const SHELL = [
   /* Dragging a clip between lanes. Pure DOM and store work, nothing fetched,
      so it belongs in the cache with the rest of the editor's behaviour. */
   '/editor-lanes.js',
+  /* The timeline tabs. Storage and DOM only — nothing fetched — so it works
+     offline like the rest of the editor's behaviour. */
+  '/editor-timelines.js',
   /* The mixer is Web Audio and a generated impulse response — no files to
      fetch, so it works on a train like the grade does. */
   '/mixer.js',
