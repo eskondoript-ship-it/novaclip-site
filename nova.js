@@ -6165,6 +6165,40 @@ function ncEditorTools() {
   });
 }
 
+/* ============================================================================
+   THE ASSISTANT, ON EVERY SCREEN
+   ============================================================================
+   nova-help.js draws a Help button that works out which screen you are on —
+   which Studio route, which framed tool, which editor panel — and asks the AI
+   about that screen rather than about the page.
+
+   It is loaded from here rather than from a script tag, because a tag is
+   thirty-four files to edit and thirty-four chances to miss one, and "every
+   screen" is the whole requirement. nova.js is already on every page.
+
+   nova-guide.js comes with it where it is not already there. It holds the
+   written walkthroughs the card folds away under the ask box, and six pages
+   had never loaded it — which would have left those six able to talk to the
+   model and nothing else. The two are only useful together.
+
+   Inside a frame as well as outside, which is the point: Studio's Photo,
+   editor, AI Editor and Hype Lab panels are ?embed=1 iframes with no top bar,
+   so until now the screens with the most to explain were the only ones with
+   no help button at all.
+   ============================================================================ */
+function ncHelpEverywhere() {
+  [['ncguidejs', 'nova-guide.js'], ['nchelpjs', 'nova-help.js']].forEach(function (f) {
+    if (document.getElementById(f[0])) return;
+    /* A page with its own tag for it keeps that one. */
+    if (document.querySelector('script[src$="' + f[1] + '"]')) return;
+    const s = document.createElement('script');
+    s.id = f[0];
+    s.src = f[1];
+    s.defer = true;
+    document.head.appendChild(s);
+  });
+}
+
 /* Pages that are hosted inside another page — Games, AI, Socials each put two
    existing pages behind tabs — must not draw a second sidebar inside the first
    one, or a second points badge over it. The host adds ?embed=1; everything
@@ -6220,6 +6254,7 @@ window.addEventListener('DOMContentLoaded', () => {
      each of them mounts into the first .themewrap it finds, and the bar has to
      exist by then or they mount into the sidebar and the bar comes up empty. */
   ncBuildBar();
+  ncHelpEverywhere();
   ncLoadTour();
   /* The class is already on <html> from parse time; this is only the button
      catching up with it, now that there is a button. */

@@ -510,6 +510,36 @@
    to use" instead of a green tick above a site that does not work.
 
    ai-worker.js, nova.js. All cached. */
+/* v69: the assistant is on every screen now, and it knows which one.
+
+   The "?" in the top bar had two problems. It was not everywhere: the bar is
+   not drawn inside a frame (ncBuildBar returns null under ?embed=1), and
+   Studio shows the Photo tool, the editor, the AI Editor and Hype Lab as
+   frames — so the screens with the most to explain were the only ones with no
+   help button at all. And it was not specific: a page is not a place.
+   trends.html is ten screens behind a hash and the editor is twenty-two
+   panels, so somebody in the Memes panel asking how to put words on a meme
+   got a paragraph about dropping a clip on the timeline.
+
+   nova-help.js works the place out — the editor's own panel via
+   editor-help.js, else the Studio route from the hash, else the framed tool,
+   else the page — prints it at the top of the card so you can see whether it
+   understood, and asks the AI about that screen. The steps are not copied: it
+   reads nova-guide.js's table, and the model gets those steps plus the
+   heading and buttons actually on screen, so an answer names real controls.
+   In the editor it stands down, because editor-help.js already knows the rail
+   and the inspector tabs.
+
+   Built for somebody stuck rather than somebody reading: the ask box is at the
+   top, three real questions sit under it as one-tap buttons, the written steps
+   are folded away so the card does not open as a wall of text, and the button
+   says "Help" rather than being an unlabelled circle in a corner.
+
+   Loaded from nova.js rather than a script tag — a tag is thirty-four files to
+   edit and thirty-four chances to miss one — and nova-guide.js comes with it,
+   since six pages had never loaded that either.
+
+   nova-help.js (NEW), nova.js. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -940,7 +970,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v68';
+const CACHE = 'novaclip-v69';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -1032,6 +1062,9 @@ const SHELL = [
      down rather than asked of a model: a help button that needs the network
      is missing at exactly the moment somebody is stuck. */
   '/nova-guide.js',
+  /* The assistant that knows which screen you are on. Its written half comes
+     out of nova-guide.js above, so the two are only useful cached together. */
+  '/nova-help.js',
   /* The five step-by-step walkthroughs, for the same reason and one more: the
      editor and the photo editor both work with the network off, so their
      instructions have to as well. */
