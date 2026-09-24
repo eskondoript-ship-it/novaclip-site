@@ -540,6 +540,25 @@
    since six pages had never loaded that either.
 
    nova-help.js (NEW), nova.js. All cached. */
+/* v70: telling two 429s apart, and a self-check that actually asks.
+
+   ai-worker.js allows 20 requests a minute per IP and says "too many requests
+   from this connection" when it refuses. ncSayWhy matched that on /rate limit/
+   and rewrote it as "the shared AI is out of free requests" — a different
+   problem with a different fix, and a day spent looking at Google for
+   something that never left Cloudflare. Everyone behind one router shares that
+   allowance, so it is the failure that looks exactly like a dead AI while
+   every key involved is fine. The two now read differently.
+
+   And the Profile self-check has a second AI row that asks the AI a real
+   question the way a page does. /health says the Worker is deployed;
+   /health?probe=1 says the key and the model are good; both can be green while
+   the site is dead, because they are GETs and the AI is a POST that goes
+   through the rate limiter and the allowed-model list first. The new row
+   reports the HTTP status and the reason verbatim, which ncAsk now carries out
+   instead of dropping.
+
+   nova.js. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -970,7 +989,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v69';
+const CACHE = 'novaclip-v70';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

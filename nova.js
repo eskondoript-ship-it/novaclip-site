@@ -5411,6 +5411,18 @@ function ncSayWhy(reason, status) {
     return 'The AI refused the request as malformed. This is a NovaClip bug rather than ' +
            'anything you did — try once more, and if it keeps happening the model this site ' +
            'asks for has probably changed under it.';
+  /* THE SITE'S OWN LIMIT IS NOT GOOGLE'S.
+     ai-worker.js allows 20 requests a minute per IP address and says so in its
+     own words — "too many requests from this connection". That sentence was
+     being swallowed by the quota rule below and shown as "the shared AI is out
+     of free requests", which is a different problem with a different fix.
+     Everyone behind one router — a school, a family, a phone hotspot — shares
+     that allowance, so this is the failure that looks exactly like a dead AI
+     while every key involved is working perfectly. */
+  if (/from this connection|too many requests/i.test(r))
+    return 'NovaClip is limiting how fast this internet connection can ask — 20 questions a minute, ' +
+           'shared by everyone on the same wifi. Wait a minute and try again, or add your own key in ' +
+           'your profile to skip the queue entirely.';
   if (/quota|rate limit|resource has been exhausted/i.test(r))
     return 'NovaClip\'s shared AI is out of free requests for now. Add your own key in your ' +
            'profile to keep going, or come back in a few minutes.';
@@ -5598,7 +5610,7 @@ async function ncAsk(prompt, opts) {
   const routes = ncRoutes(provider, model, own, opts);
   const tried = [];
   let data = null, err = '', raw = '';
-  let via = null, answered = '', switchedFrom = '';
+  let via = null, answered = '', switchedFrom = '', code = 0;
 
   {
     /* One request down one route, in a form all three of them take. */
@@ -5823,6 +5835,10 @@ async function ncAsk(prompt, opts) {
     }
 
     if (!via) {
+      /* The HTTP status leaves here as well as the sentence. A reader needs the
+         sentence; whoever is working out why the site has been failing since
+         Tuesday needs the number, and it was thrown away at this line. */
+      code = (last && last.status) || 0;
       err = (last && last.err) || 'Could not reach the AI. Check your connection.';
       /* "Out of free requests" reads like nobody tried the alternatives, so
          when there were alternatives, say that they were tried too. */
@@ -5839,7 +5855,8 @@ async function ncAsk(prompt, opts) {
       catch (e) { err = 'The AI service sent something that was not an answer.'; }
     }
   }
-  if (err) return { text: '', image: '', err: err, via: '', switched: '' };
+  if (err) return { text: '', image: '', err: err, via: '', switched: '', status: code,
+                    tried: tried.map(function (t) { return t.key; }) };
 
   let text = '', image = '';
   const cand = data && data.candidates && data.candidates[0];
@@ -6068,6 +6085,33 @@ async function ncAIProbe() {
   } catch (e) { return { checked: false }; }
 }
 
+/* THE ONLY CHECK THAT CANNOT LIE: ask it something.
+
+   /health says the Worker is deployed. /health?probe=1 says the key works and
+   the model is being served. Both can be green while the site is still dead,
+   because neither takes the path the site takes — they are GETs, and the AI is
+   a POST that goes through the rate limiter, the body-size caps and the
+   allowed-model list first.
+
+   So this does what a page does: one real ncAsk, the shortest possible, and it
+   reports the HTTP status and the reason verbatim. That is the difference
+   between "the AI is broken" and "429, too many requests from this
+   connection", which are three days apart in how long they take to fix. */
+async function ncAITest() {
+  const t0 = Date.now();
+  try {
+    const r = await ncAsk('Reply with the single word: ok', { maxTokens: 12, temperature: 0 });
+    const ms = Date.now() - t0;
+    if (r && !r.err && (r.text || '').trim()) return { ok: true, ms: ms, via: r.via || '' };
+    return { ok: false, ms: ms, status: (r && r.status) || 0,
+             err: (r && r.err) || 'No answer, and no reason given.',
+             tried: (r && r.tried) || [] };
+  } catch (e) {
+    return { ok: false, ms: Date.now() - t0, status: 0,
+             err: 'The test itself failed: ' + (e && e.message || e) };
+  }
+}
+
 async function ncDiag() {
   const yt = ncYouTube();
   const rows = [{
@@ -6111,10 +6155,22 @@ async function ncDiag() {
   }
   rows.push({ name: 'AI', live: ai.live, detail: ai.why +
     (ncAIKey() ? ' Your own key is set in this browser, so AI works either way.' : '') });
+
+  /* The row above is the plumbing. This one is the tap. */
+  const t = await ncAITest();
+  rows.push({
+    name: 'AI, asked for real',
+    live: t.ok,
+    detail: t.ok
+      ? 'Answered in ' + t.ms + 'ms' + (t.via ? ' through ' + t.via : '') + '. This is the check that matters.'
+      : (t.status ? 'HTTP ' + t.status + '. ' : '') + t.err +
+        (t.tried && t.tried.length > 1 ? ' Routes tried: ' + t.tried.join(', ') + '.' : '')
+  });
   rows.push({ name: 'Accounts and scores', live: srv.live, detail: srv.why });
   return rows;
 }
 window.ncDiag = ncDiag; window.ncYouTube = ncYouTube; window.ncAIProbe = ncAIProbe;
+window.ncAITest = ncAITest;
 
 /* ============================================================================
    THE EDITOR'S EXTRA TOOLS
