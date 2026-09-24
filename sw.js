@@ -559,6 +559,34 @@
    instead of dropping.
 
    nova.js. All cached. */
+/* v71: the help reads the screen now, instead of describing the page.
+
+   Knowing which panel somebody is on is not the same as knowing what is on it.
+   The card could say "this is Video Ideas" and then answer out of a table
+   written months ago, which is no use to somebody looking at four boxes they
+   have already filled in.
+
+   So it reads: visible text in document order, controls with their current
+   values, headings marked ##, buttons marked [button]. The site's own chrome
+   is skipped — the first version read in document order and spent its whole
+   budget on Theme, Vibe, Language, Home, Channel, Studio, Create, Learn,
+   Games, which is identical on all thirty-four pages — and a content container
+   is preferred where the page has one. There is a new first action on the
+   card, "Explain what is on this screen", and every ordinary question carries
+   the same reading, so an answer can name the slider that is already at 0.40.
+
+   IT REFUSES TO READ A KEY OR A PASSWORD. Reading the screen means sending the
+   screen, and the profile page has a box holding the visitor's own Gemini key.
+   Password, hidden and file inputs, and any field whose name looks like a key
+   or a token, are named to the model and never valued. Verified against a page
+   carrying a real-looking key, an api_token and a password field: all three
+   came out as "not read", and NC_HELP.read() is exported so that claim can be
+   checked rather than believed.
+
+   editor-help.js borrows the same reader rather than keeping a second copy,
+   and gets the same explain button.
+
+   nova-help.js, editor-help.js, sw.js. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -989,7 +1017,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v70';
+const CACHE = 'novaclip-v71';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

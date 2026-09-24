@@ -115,6 +115,117 @@
   };
   var SUGGEST_ANY = ['What can I do here?', 'How do I start?', 'What am I missing?'];
 
+  /* ------------------------------------------------------------------------
+     READING THE SCREEN
+
+     Knowing which panel somebody is on is not the same as knowing what is on
+     it. "Explain this" is only worth asking if the answer is about the actual
+     headings, buttons and values in front of them — including the ones this
+     file has never heard of, which is most of them, because the site changes
+     faster than any table in it.
+
+     So the card reads the screen: visible text in document order, the controls
+     with their current values, and nothing else. It is capped hard, because a
+     prompt that carries an entire page costs real money on a free tier and
+     buries the question at the end of it.
+
+     WHAT IT REFUSES TO READ, AND WHY THAT MATTERS.
+     Reading the screen means sending the screen. A password field, and any
+     field whose name looks like a key or a token, is named but never valued —
+     the profile page has a box holding the visitor's own Gemini key, and a
+     help feature that posts that key to a Worker would be the single worst bug
+     in this repository. Hidden and file inputs go the same way.
+     ---------------------------------------------------------------------- */
+  var SKIP_TAGS = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, HEAD: 1, LINK: 1, META: 1, SVG: 1, PATH: 1, CANVAS: 1, IFRAME: 1, VIDEO: 1, AUDIO: 1 };
+  var SECRET_RE = /key|password|passcode|token|secret|api|auth|pin\b/i;
+
+  function onScreen(el) {
+    var r = el.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    /* A screenful either side of the viewport: what they can see, plus what a
+       small scroll would show, which is usually the rest of the panel. */
+    if (r.bottom < -220 || r.top > innerHeight + 700) return false;
+    var s = getComputedStyle(el);
+    return s.visibility !== 'hidden' && s.display !== 'none' && s.opacity !== '0';
+  }
+
+  function readScreen(cap) {
+    cap = cap || 2600;
+    var out = [], seen = {}, total = 0;
+
+    /* THE PAGE, NOT THE FURNITURE.
+       The first version read in document order, which meant the top bar and
+       the rail went first — Theme, Vibe, Language, Ask Nova, Home, Channel,
+       Studio, Create, Learn, Games — and the cap was spent on the navigation
+       that is identical on all thirty-four pages before it reached a word of
+       the thing somebody was actually looking at. The content container is
+       read where a page has one, and the site's own chrome is skipped
+       wherever it sits. */
+    var root = document.querySelector('main') || document.querySelector('.content') ||
+               document.querySelector('.shell') || document.getElementById('nova-root') ||
+               document.body;
+    if (!root) return '';
+
+    var chrome = [];
+    try {
+      var sel = '#ncbar,#ncrail,#ncpts,#nctoast,#nchq-card,#nchq-btn,#ncguidebtn,#ncaskbtn,' +
+                '.sidebar,.themewrap,nav,footer,#ncanav,#nca-card,#ncsheet,#nccookie';
+      document.querySelectorAll(sel).forEach(function (e) { chrome.push(e); });
+    } catch (e) {}
+    function furniture(el) {
+      for (var i = 0; i < chrome.length; i++) if (chrome[i] === el || chrome[i].contains(el)) return true;
+      return false;
+    }
+
+    function push(tag, text) {
+      text = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+      if (!text) return;
+      var k = (tag + '|' + text).toLowerCase();
+      if (seen[k]) return;
+      seen[k] = 1;
+      var line = tag ? tag + ' ' + text : text;
+      if (total + line.length + 1 > cap) return;
+      total += line.length + 1;
+      out.push(line);
+    }
+
+    var all = root.querySelectorAll('*');
+    for (var i = 0; i < all.length && i < 4000 && total < cap; i++) {
+      var el = all[i], tag = el.tagName;
+      if (SKIP_TAGS[tag]) continue;
+      if (furniture(el)) continue;
+      if (!onScreen(el)) continue;
+
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+        var type = String(el.type || '').toLowerCase();
+        var name = (el.name || el.id || el.placeholder || el.getAttribute('aria-label') || '').trim();
+        if (type === 'password' || type === 'hidden' || type === 'file' || SECRET_RE.test(name)) {
+          push('[field]', (name || 'a private field') + ' — not read');
+          continue;
+        }
+        var val = tag === 'SELECT'
+          ? (el.selectedOptions && el.selectedOptions[0] ? el.selectedOptions[0].textContent : '')
+          : (el.value || '');
+        push('[field]', (name || 'field') + (String(val).trim() ? ' = ' + String(val).slice(0, 80) : ' (empty)'));
+        continue;
+      }
+
+      /* Its own words, not its children's — otherwise every wrapper repeats
+         the whole page and the cap is spent three levels above the content. */
+      var own = '';
+      for (var n = el.firstChild; n; n = n.nextSibling) if (n.nodeType === 3) own += n.nodeValue + ' ';
+      if (!own.trim()) continue;
+
+      if (/^H[1-6]$/.test(tag)) push('##', own);
+      else if (tag === 'BUTTON' || el.getAttribute('role') === 'button') push('[button]', own);
+      else if (tag === 'A') push('[link]', own);
+      else if (tag === 'LABEL') push('[label]', own);
+      else if (tag === 'LI') push('•', own);
+      else push('', own);
+    }
+    return out.join('\n');
+  }
+
   function pageFile() {
     return (location.pathname.split('/').pop() || 'index.html').toLowerCase() || 'index.html';
   }
@@ -213,6 +324,15 @@
     '#nchq-card .x:hover{color:#fff}' +
 
     '#nchq-ask{padding:12px 15px}' +
+    /* The first thing in the card, because "what even is this" comes before
+       any question somebody could phrase. It reads the screen and explains it. */
+    '#nchq-explain{width:100%;margin-bottom:9px;padding:11px 12px;border-radius:11px;cursor:pointer;' +
+      'border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.14);color:#dff1ff;' +
+      'font:700 13px/1.3 inherit;text-align:left}' +
+    '#nchq-explain:hover{background:rgba(56,189,248,.26);color:#fff}' +
+    '#nchq-explain:before{content:"\\1F50D  "}' +
+    '#nchq-explain[disabled]{opacity:.6;cursor:default}' +
+    '#nchq-read{margin-top:9px;color:#8494b4;font-size:11.5px;line-height:1.45}' +
     '#nchq-ask .row{display:flex;gap:7px}' +
     '#nchq-ask input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;color:#e8edf8;' +
       'border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);font:inherit}' +
@@ -266,22 +386,34 @@
     return 'English';
   }
 
-  function ask(p, q, out, go) {
+  function ask(p, q, out, go, mode) {
     out.className = '';
-    out.textContent = 'Thinking…';
+    out.textContent = mode === 'explain' ? 'Reading the screen…' : 'Thinking…';
     if (go) go.disabled = true;
     var w = written(p);
     var steps = (w && w.steps) ? w.steps.map(function (s) { return s.replace(/<[^>]+>/g, ''); }) : [];
+    var screen = readScreen(mode === 'explain' ? 3000 : 2200);
+
     var prompt =
       'You are the help assistant inside NovaClip, a video and content site a teenager is using in a ' +
       'browser. Right now they are on: ' + p.label + '.\n' +
       (w ? 'What that is: ' + w.what + '\n' : '') +
-      (steps.length ? 'What it can do:\n- ' + steps.join('\n- ') + '\n' : '') +
-      'On screen: ' + (around(p) || 'nothing else worth noting') + '\n' +
-      'They asked: "' + q + '"\n\n' +
-      'Answer in at most 70 words, in ' + langName() + '. Tell them which buttons to press, in order, ' +
-      'using the names above. If NovaClip cannot do what they asked, say so in one sentence and say ' +
-      'what it can do instead. Talk to them directly, no greeting, no headings, no markdown.';
+      (steps.length ? 'What it is for:\n- ' + steps.join('\n- ') + '\n' : '') +
+      (p.route || p.topic || p.embed ? 'Context: ' + around(p) + '\n' : '') +
+      '\nTHIS IS WHAT IS ACTUALLY ON THEIR SCREEN RIGHT NOW, read off the page. ## is a heading, ' +
+      '[button] is a button they can press, [field] is a box with its current value, • is a list item:\n' +
+      '<<<\n' + screen + '\n>>>\n\n';
+
+    prompt += (mode === 'explain')
+      ? 'Explain this screen to them in at most 90 words, in ' + langName() + '. Say what it is for, ' +
+        'then name the two or three things worth doing first — using the exact button names above so ' +
+        'they can find them. If a field already has something in it, say what that means. ' +
+        'Talk to them directly. No greeting, no headings, no markdown, no lists of everything.'
+      : 'They asked: "' + q + '"\n\n' +
+        'Answer in at most 70 words, in ' + langName() + '. Use what is on their screen above: name the ' +
+        'exact buttons to press, in order. If what they want is not on this screen, say where it is ' +
+        'instead. If NovaClip cannot do it at all, say so in one sentence and say what it can do ' +
+        'instead. Talk to them directly, no greeting, no headings, no markdown.';
 
     if (typeof window.ncAsk !== 'function') {
       out.className = 'bad';
@@ -289,7 +421,7 @@
       if (go) go.disabled = false;
       return;
     }
-    window.ncAsk(prompt, { maxTokens: 400, temperature: 0.4 }).then(function (r) {
+    window.ncAsk(prompt, { maxTokens: mode === 'explain' ? 500 : 400, temperature: 0.4 }).then(function (r) {
       if (go) go.disabled = false;
       if (!r || r.err) {
         out.className = 'bad';
@@ -312,9 +444,11 @@
       '<div class="hd"><div><b>Need a hand?</b><s></s></div>' +
         '<button class="x" type="button" aria-label="Close">×</button></div>' +
       '<div id="nchq-ask">' +
+        '<button type="button" id="nchq-explain">Explain what is on this screen</button>' +
         '<div class="row"><input type="text"><button type="button">Ask</button></div>' +
         '<div id="nchq-out"></div>' +
         '<div id="nchq-chips"></div>' +
+        '<div id="nchq-read"></div>' +
       '</div>' +
       '<div id="nchq-body"></div>';
 
@@ -324,7 +458,10 @@
     var input = card.querySelector('#nchq-ask input'),
         go = card.querySelector('#nchq-ask .row button'),
         out = card.querySelector('#nchq-out'),
-        chips = card.querySelector('#nchq-chips');
+        chips = card.querySelector('#nchq-chips'),
+        exp = card.querySelector('#nchq-explain');
+
+    exp.onclick = function () { input.value = ''; ask(p, '', out, exp, 'explain'); };
 
     input.placeholder = 'Ask anything about this screen…';
     go.onclick = function () {
@@ -341,6 +478,12 @@
       b.onclick = function () { input.value = q; ask(p, q, out, go); };
       chips.appendChild(b);
     });
+
+    /* Said out loud rather than buried in a policy page: answering means
+       sending what is on screen. The exception is the one that matters — a
+       password or a key box is named to the model and never valued. */
+    card.querySelector('#nchq-read').textContent =
+      'To answer, it reads what is on this screen and sends it to the AI. Password and key boxes are never read.';
 
     var body = card.querySelector('#nchq-body');
     if (w) {
@@ -453,5 +596,7 @@
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', start);
   else start();
 
-  window.NC_HELP = { open: open, close: close, where: place };
+  /* read() is exported on purpose: "what exactly would you send?" is a fair
+     question, and the only honest answer is to let it be printed. */
+  window.NC_HELP = { open: open, close: close, where: place, read: readScreen };
 })();

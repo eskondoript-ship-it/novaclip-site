@@ -454,6 +454,12 @@
     '.nchlp-tip s{display:block;text-decoration:none;font-weight:700;color:#7dd3fc;font-size:11px;' +
       'letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}' +
     '.nchlp-ask{padding:10px 14px 12px;border-top:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.18)}' +
+    '.nchlp-explain{width:100%;margin-bottom:8px;padding:10px 12px;border-radius:11px;cursor:pointer;' +
+      'border:1px solid rgba(56,189,248,.4);background:rgba(56,189,248,.14);color:#dff1ff;' +
+      'font:700 12.5px/1.3 inherit;text-align:left}' +
+    '.nchlp-explain:hover{background:rgba(56,189,248,.26);color:#fff}' +
+    '.nchlp-explain:before{content:"\\1F50D  "}' +
+    '.nchlp-explain[disabled]{opacity:.6;cursor:default}' +
     '.nchlp-row{display:flex;gap:7px}' +
     '.nchlp-row input{flex:1;min-width:0;padding:8px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.16);' +
       'background:rgba(255,255,255,.06);color:#e8edf8;font:inherit}' +
@@ -583,22 +589,40 @@
     } catch (e) { return ''; }
   }
 
-  function ask(id, q, out, btn) {
+  /* What the panel actually says right now, read off the screen. nova-help.js
+     owns the reader — it skips the site's chrome and refuses to read a
+     password or key box — and it is loaded on this page too, so there is no
+     second copy of that logic here. Without it an answer can only describe the
+     panel in general; with it, it can name the slider that is already at 0.40
+     and the clip that is already selected. */
+  function screenText(n) {
+    try { return (window.NC_HELP && window.NC_HELP.read) ? window.NC_HELP.read(n || 2000) : ''; }
+    catch (e) { return ''; }
+  }
+
+  function ask(id, q, out, btn, mode) {
     var t = TOPICS[id];
     out.className = 'nchlp-ans';
-    out.textContent = 'Thinking…';
+    out.textContent = mode === 'explain' ? 'Reading the panel…' : 'Thinking…';
     btn.disabled = true;
+    var seen = screenText(mode === 'explain' ? 2600 : 1900);
     var prompt =
       'You are the help assistant inside NovaClip, a video editor that runs in a browser tab. ' +
       'A teenager is using it and is on the "' + t.title + '" panel.\n' +
       'What that panel is: ' + t.what + '\n' +
       'What it can do:\n- ' + t.steps.map(function (s) { return s.replace(/<[^>]+>/g, ''); }).join('\n- ') + '\n' +
       state() + '\n' +
-      'They asked: "' + q + '"\n\n' +
-      'Answer in at most 70 words, in ' + langName(langNow()) + '. Tell them which buttons to press, in order, ' +
-      'using the names above. If this editor cannot do what they asked, say so in one sentence and say what it ' +
-      'can do instead. No greeting, no headings, no markdown.';
-    window.ncAsk(prompt, { maxTokens: 400, temperature: 0.4 }).then(function (r) {
+      (seen ? '\nTHIS IS WHAT IS ON THEIR SCREEN RIGHT NOW, read off the page. ## is a heading, ' +
+              '[button] is a button, [field] is a box with its current value:\n<<<\n' + seen + '\n>>>\n' : '') +
+      (mode === 'explain'
+        ? '\nExplain this panel to them in at most 90 words, in ' + langName(langNow()) + '. Say what it is for, ' +
+          'then name the two or three things worth doing first, using the exact names above. If something is ' +
+          'already set or selected, say what that means. Talk to them directly. No greeting, no headings, no markdown.'
+        : '\nThey asked: "' + q + '"\n\n' +
+          'Answer in at most 70 words, in ' + langName(langNow()) + '. Tell them which buttons to press, in order, ' +
+          'using the names above. If this editor cannot do what they asked, say so in one sentence and say what it ' +
+          'can do instead. No greeting, no headings, no markdown.');
+    window.ncAsk(prompt, { maxTokens: mode === 'explain' ? 500 : 400, temperature: 0.4 }).then(function (r) {
       btn.disabled = false;
       if (!r || r.err) {
         out.className = 'nchlp-ans bad';
@@ -632,6 +656,7 @@
         '<div class="nchlp-more"></div>' +
       '</div>' +
       '<div class="nchlp-ask">' +
+        '<button type="button" class="nchlp-explain">Explain what is on this panel</button>' +
         '<div class="nchlp-row"><input type="text"><button>Ask</button></div>' +
         '<div class="nchlp-ans"></div>' +
       '</div>';
@@ -654,7 +679,8 @@
     });
     card.querySelector('.nchlp-x').onclick = close;
     var input = card.querySelector('input'), go = card.querySelector('.nchlp-row button'),
-        out = card.querySelector('.nchlp-ans');
+        out = card.querySelector('.nchlp-ans'), exp = card.querySelector('.nchlp-explain');
+    exp.onclick = function () { input.value = ''; ask(id, '', out, exp, 'explain'); };
     input.placeholder = 'Ask about this panel…';
     go.onclick = function () {
       var q = input.value.trim();
