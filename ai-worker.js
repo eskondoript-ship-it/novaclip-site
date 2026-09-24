@@ -129,6 +129,52 @@ const DEFAULT_MODEL = {
   openai: 'gpt-4o-mini'
 };
 
+/* ---------------------------------------------------------------------------
+   WHEN ONE VENDOR RUNS OUT, USE ANOTHER
+   ---------------------------------------------------------------------------
+   Free tiers run dry, and they run dry at the worst moment: a class of thirty
+   opening the same page at once. Until now that was the end of it — the vendor
+   said 429, this Worker passed 429 through faithfully, and every AI feature on
+   the site stopped until the quota window rolled over.
+
+   Every key this Worker has is a way of answering the same question. So when
+   the one that was asked runs out, the next one that is configured gets asked
+   instead, and the reader gets an answer rather than an apology.
+
+   WHAT COUNTS AS "RUN OUT", AND WHAT DOES NOT
+     429  out of quota or rate limited — the case this exists for
+     503  the vendor is overloaded, which is the same thing from where we sit
+     500/502/504 upstream fell over; another vendor may well be fine
+   A 400 is a bad request and will be equally bad at the next vendor. A 401 is
+   a broken key, which is a deploy problem and must be reported, not papered
+   over by quietly spending somebody else's key. Neither one switches.
+
+   TWO REQUESTS NEVER SWITCH, AND SAY SO
+     Images — only the Gemini adapter takes them.
+     Search grounding — only Gemini can look things up.
+   Falling those over would mean answering a different question from the one
+   asked: an ungrounded guess dressed up as a searched answer is worse than a
+   clear "the AI is out of quota". This Worker already refuses to fake either
+   one, and it keeps refusing.
+
+   THE FALLBACK USES EACH VENDOR'S OWN DEFAULT MODEL. There is no honest
+   mapping from "gemini-3.6-flash" to an OpenAI id, and inventing one produces
+   a 404 from the second vendor on top of the 429 from the first.
+
+   The answer carries X-NovaClip-Provider so the page can say who wrote it, and
+   X-NovaClip-Switched when that is not who was asked.
+   --------------------------------------------------------------------------- */
+const FAILOVER_ORDER = ['gemini', 'openrouter', 'openai'];
+const SWITCHABLE = new Set([429, 500, 502, 503, 504]);
+
+/* The providers worth trying after `from`, in order: configured on this
+   worker, not the one that just failed, and not already tried. */
+function othersFor(env, from, tried) {
+  return FAILOVER_ORDER.filter(function (p) {
+    return p !== from && !tried.has(p) && !!env[SECRET[p]];
+  });
+}
+
 const MAX_BODY = 64 * 1024;      // a prompt bigger than this is not a prompt
 
 /* ---- IMAGES ---------------------------------------------------------------
@@ -191,6 +237,11 @@ const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
+  /* A cross-origin response hides every header the server does not name here,
+     so without this the page can see the answer but not who wrote it. It is
+     two strings and it is what lets nova.js say "Gemini is out, OpenAI
+     answered" instead of leaving somebody to wonder why the voice changed. */
+  'Access-Control-Expose-Headers': 'X-NovaClip-Provider, X-NovaClip-Switched',
   'Access-Control-Max-Age': '86400'
 };
 
@@ -370,6 +421,11 @@ export default {
         keys: { gemini: !!env.GEMINI_API_KEY, openrouter: !!env.OPENROUTER_API_KEY, openai: !!env.OPENAI_API_KEY },
         kv: !!env.RL,
         models: ALLOWED_MODELS,
+        /* The order a request falls through when a vendor runs out, with only
+           the vendors this deployment can actually reach. One key configured
+           means no failover, which is worth seeing on the health page rather
+           than discovering at four in the afternoon. */
+        failover: FAILOVER_ORDER.filter(function (p) { return !!env[SECRET[p]]; }),
         note: (['gemini', 'openrouter', 'openai']
           .filter(function (p) { return !!env[SECRET[p]]; })
           .join(', ') || 'none') + ' — Settings > Variables and Secrets > Add secret (GEMINI_API_KEY, OPENROUTER_API_KEY, OPENAI_API_KEY).'
@@ -721,46 +777,87 @@ export default {
       return fail(503, 'This NovaClip AI worker has no ' + SECRET[provider] + ' secret set. Whoever deployed it needs to add it — and OpenRouter/OpenAI only work when their key is on the worker too.');
     }
 
-    /* Without a timeout a hung upstream holds the request until Cloudflare kills
-       it, and the browser sees a network error rather than a reason. */
-    const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), UPSTREAM_TIMEOUT_MS);
+    /* An image or a grounded search can only be answered by Gemini, so those
+       two never switch vendors. See FAILOVER_ORDER above for why that is the
+       honest behaviour rather than a limitation. */
+    const pinned = search || img.count > 0;
 
-    let upstream;
-    try {
-      upstream = await upstreamFetch(provider, model, body.payload, env[SECRET[provider]], abort.signal, search);
-    } catch (e) {
-      clearTimeout(timer);
-      return fail(504, e.name === 'AbortError'
-        ? 'The model took too long to answer.'
-        : 'Could not reach the model service.');
-    }
-    clearTimeout(timer);
+    const tried = new Set();
+    let at = provider, atModel = model;
+    let upstream = null, text = '', lastStatus = 0, lastReason = '';
 
-    const text = await upstream.text();
+    /* At most one switch per vendor, and never more vendors than exist. */
+    for (let hop = 0; hop < FAILOVER_ORDER.length; hop++) {
+      tried.add(at);
 
-    /* The pass-through this file exists for. The vendor's status becomes our
-       status, and its message becomes our reason, so the page can say "out of
-       quota" instead of "500". */
-    if (!upstream.ok) {
-      let reason = '';
-      try { reason = (JSON.parse(text).error || {}).message || ''; } catch (e) {}
-      if (upstream.status === 429) {
-        reason = 'NovaClip\'s shared AI is out of free quota for now. Add your own key in your profile to keep going.';
-      } else if (upstream.status === 401 || (upstream.status === 400 && /key not valid|invalid api key/i.test(reason))) {
-        reason = 'The ' + provider + ' key on this worker was rejected by its vendor. Whoever deployed it needs to replace ' + SECRET[provider] + '.';
-      } else if (upstream.status === 404) {
-        reason = 'The vendor no longer serves the model "' + model + '". Update ALLOWED_MODELS and nova.js.';
+      /* Without a timeout a hung upstream holds the request until Cloudflare
+         kills it, and the browser sees a network error rather than a reason. */
+      const abort = new AbortController();
+      const timer = setTimeout(() => abort.abort(), UPSTREAM_TIMEOUT_MS);
+      let threw = null;
+      try {
+        upstream = await upstreamFetch(at, atModel, body.payload, env[SECRET[at]], abort.signal, search);
+      } catch (e) {
+        threw = e;
       }
-      return fail(upstream.status, reason || ('The model service answered ' + upstream.status + '.'));
+      clearTimeout(timer);
+
+      if (threw) {
+        /* A vendor that cannot be reached at all is exactly what another
+           vendor is for — but a timeout on a long prompt will time out again,
+           so it is treated as switchable rather than fatal and the reason is
+           kept in case nothing else answers either. */
+        lastStatus = 504;
+        lastReason = threw.name === 'AbortError'
+          ? 'The model took too long to answer.'
+          : 'Could not reach the model service.';
+        upstream = null;
+      } else {
+        text = await upstream.text();
+        if (upstream.ok) break;
+        lastStatus = upstream.status;
+        lastReason = '';
+        try { lastReason = (JSON.parse(text).error || {}).message || ''; } catch (e) {}
+      }
+
+      const canSwitch = !pinned && SWITCHABLE.has(lastStatus);
+      const next = canSwitch ? othersFor(env, at, tried)[0] : null;
+      if (!next) break;
+      at = next;
+      atModel = DEFAULT_MODEL[next];
+      upstream = null;
     }
+
+    /* Nothing answered. The reason names the vendor that was actually asked
+       last, and says plainly that the others were tried too — "out of quota"
+       reads very differently when it means all of them. */
+    if (!upstream || !upstream.ok) {
+      let reason = lastReason;
+      if (lastStatus === 429) {
+        reason = tried.size > 1
+          ? 'Every AI on this NovaClip worker is out of quota for now (' +
+            Array.from(tried).join(', ') + '). Add your own key in your profile to keep going.'
+          : 'NovaClip\'s shared AI is out of free quota for now. Add your own key in your profile to keep going.';
+      } else if (lastStatus === 401 || (lastStatus === 400 && /key not valid|invalid api key/i.test(reason))) {
+        reason = 'The ' + at + ' key on this worker was rejected by its vendor. Whoever deployed it needs to replace ' + SECRET[at] + '.';
+      } else if (lastStatus === 404) {
+        reason = 'The vendor no longer serves the model "' + atModel + '". Update ALLOWED_MODELS and nova.js.';
+      }
+      return fail(lastStatus || 502, reason || ('The model service answered ' + lastStatus + '.'));
+    }
+
+    /* Who actually wrote it. The page reads these to say so out loud. */
+    const who = {
+      'X-NovaClip-Provider': at,
+      ...(at !== provider ? { 'X-NovaClip-Switched': provider + '->' + at } : {})
+    };
 
     /* Gemini passes through untouched; the chat-completions vendors are folded
        back into Gemini's candidates shape so ncAsk reads them the same way. */
-    if (provider === 'gemini') {
+    if (at === 'gemini') {
       return new Response(text, {
         status: 200,
-        headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS }
+        headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS, ...who }
       });
     }
     let upstreamJson;
@@ -772,7 +869,7 @@ export default {
     }
     return new Response(JSON.stringify(geminiShape), {
       status: 200,
-      headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS }
+      headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS, ...who }
     });
   }
 };

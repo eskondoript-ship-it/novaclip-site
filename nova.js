@@ -152,6 +152,7 @@ const T = {
   hist_sub: { en:"Everything you have asked a NovaClip AI — the tutors, the Studio, the Coder — newest first, with the answer that came back. It is kept on this device and nowhere else, so clearing your browser data clears it.", zh:"你问过 NovaClip AI 的所有内容——导师、创作室、编码器——最新的在前，连同返回的答案。只保存在这台设备上，清除浏览器数据就会清空。", hi:"NovaClip के किसी भी AI से आपने जो कुछ पूछा — ट्यूटर, स्टूडियो, कोडर — नए पहले, साथ में जो जवाब आया। यह सिर्फ़ इसी डिवाइस पर रहता है, इसलिए ब्राउज़र डेटा हटाने पर यह भी हट जाता है।", es:"Todo lo que has preguntado a una IA de NovaClip —los tutores, el Estudio, el Coder—, lo más nuevo primero y con la respuesta que llegó. Se guarda en este dispositivo y en ningún otro sitio, así que si borras los datos del navegador, se borra.", ar:"كل ما سألته لذكاء NovaClip الاصطناعي — المدرّسون والاستوديو والمبرمج — الأحدث أولًا، ومعه الجواب الذي عاد. يُحفظ على هذا الجهاز فقط، ومسح بيانات المتصفح يمسحه.", fr:"Tout ce que tu as demandé à une IA NovaClip — les tuteurs, le Studio, le Coder — le plus récent en premier, avec la réponse reçue. Gardé sur cet appareil et nulle part ailleurs : effacer les données du navigateur l’efface.", bn:"NovaClip-এর যেকোনো AI-কে আপনি যা যা জিজ্ঞেস করেছেন — টিউটর, স্টুডিও, কোডার — নতুনটি আগে, সঙ্গে যে উত্তর এসেছিল। এটি কেবল এই ডিভাইসে থাকে, তাই ব্রাউজারের ডেটা মুছলে এটিও মুছে যায়।", pt:"Tudo o que perguntaste a uma IA do NovaClip — os tutores, o Estúdio, o Coder — do mais recente para o mais antigo, com a resposta que voltou. Fica neste dispositivo e em mais lado nenhum, por isso limpar os dados do navegador limpa isto.", ru:"Всё, что ты спрашивал у ИИ NovaClip — у наставников, в Студии, в Кодере — новое сверху, вместе с ответом. Хранится только на этом устройстве, так что очистка данных браузера всё стирает.", ur:"جو کچھ آپ نے NovaClip کے کسی بھی AI سے پوچھا — ٹیوٹر، اسٹوڈیو، کوڈر — نیا پہلے، ساتھ میں جو جواب آیا۔ یہ صرف اسی ڈیوائس پر رہتا ہے، اس لیے براؤزر ڈیٹا صاف کرنے سے یہ بھی مٹ جاتا ہے۔", id:"Semua yang pernah kamu tanyakan ke AI NovaClip — para tutor, Studio, Coder — terbaru dulu, lengkap dengan jawabannya. Disimpan di perangkat ini saja, jadi menghapus data peramban menghapusnya.", de:"Alles, was du eine NovaClip-KI gefragt hast — die Tutoren, das Studio, den Coder — neueste zuerst, mitsamt der Antwort. Bleibt auf diesem Gerät und sonst nirgends, Browserdaten löschen löscht es also.", ja:"NovaClipのAIに投げたすべて — チューター、スタジオ、コーダー — が新しい順に、返ってきた答えごと並びます。この端末にだけ保存されるので、ブラウザのデータを消すと消えます。", tr:"NovaClip’in herhangi bir yapay zekâsına sorduğun her şey — eğitmenler, Stüdyo, Coder — en yenisi üstte, dönen cevabıyla birlikte. Yalnızca bu cihazda tutulur, yani tarayıcı verilerini silmek bunu da siler.", ko:"NovaClip의 AI에게 물어본 모든 것 — 튜터, 스튜디오, 코더 — 을 최신순으로, 돌아온 답과 함께. 이 기기에만 저장되므로 브라우저 데이터를 지우면 함께 사라집니다.", fa:"هر چه از هوش مصنوعی NovaClip پرسیده‌ای — مربی‌ها، استودیو، کدنویس — تازه‌ترین اول، همراه با پاسخی که آمد. فقط روی همین دستگاه می‌ماند، پس پاک‌کردن داده‌های مرورگر پاکش می‌کند.", uk:"Усе, що ти запитував у ШІ NovaClip — наставників, Студії, Кодера — найновіше згори, разом із відповіддю. Зберігається лише на цьому пристрої, тож очищення даних браузера стирає його.", it:"Tutto quello che hai chiesto a un’IA di NovaClip — i tutor, lo Studio, il Coder — dal più recente, con la risposta che è arrivata. Resta su questo dispositivo e da nessun’altra parte, quindi cancellare i dati del browser la cancella.", pl:"Wszystko, o co pytałeś AI w NovaClip — korepetytorów, Studio, Coder — od najnowszych, razem z odpowiedzią. Trzymane tylko na tym urządzeniu, więc wyczyszczenie danych przeglądarki to usuwa.", vi:"Mọi thứ bạn đã hỏi AI của NovaClip — gia sư, Studio, Coder — mới nhất trước, kèm câu trả lời đã nhận. Chỉ lưu trên thiết bị này, nên xoá dữ liệu trình duyệt là mất." },
   hist_hint: { en:"Where you asked it, when, and what came back.", zh:"你在哪里问的、什么时候，以及回答是什么。", hi:"आपने कहाँ पूछा, कब पूछा, और जवाब क्या आया।", es:"Dónde lo preguntaste, cuándo, y qué te respondió.", ar:"أين سألت، ومتى، وما الذي عاد إليك.", fr:"Où tu l’as demandé, quand, et ce qui est revenu.", bn:"কোথায় জিজ্ঞেস করেছিলেন, কখন, আর উত্তর কী এসেছিল।", pt:"Onde perguntaste, quando, e o que voltou.", ru:"Где спросил, когда и что пришло в ответ.", ur:"آپ نے کہاں پوچھا، کب، اور جواب کیا آیا۔", id:"Di mana kamu bertanya, kapan, dan apa jawabannya.", de:"Wo du gefragt hast, wann, und was zurückkam.", ja:"どこで、いつ聞いて、何が返ってきたか。", tr:"Nerede sordun, ne zaman ve ne döndü.", ko:"어디서, 언제 물었고, 무엇이 돌아왔는지.", fa:"کجا پرسیدی، کِی، و چه جوابی آمد.", uk:"Де запитав, коли і що прийшло у відповідь.", it:"Dove l’hai chiesto, quando, e cosa è tornato.", pl:"Gdzie pytałeś, kiedy i co wróciło.", vi:"Bạn hỏi ở đâu, khi nào, và nhận lại điều gì." },
   hist_empty: { en:"Nothing yet. Ask the AI something and it turns up here.", zh:"还没有内容。去问 AI 一个问题，它就会出现在这里。", hi:"अभी कुछ नहीं। AI से कुछ पूछिए, वह यहाँ आ जाएगा।", es:"Todavía nada. Pregúntale algo a la IA y aparecerá aquí.", ar:"لا شيء بعد. اسأل الذكاء الاصطناعي شيئًا وسيظهر هنا.", fr:"Rien pour l’instant. Demande quelque chose à l’IA et ça apparaîtra ici.", bn:"এখনো কিছু নেই। AI-কে কিছু জিজ্ঞেস করুন, সেটি এখানে চলে আসবে।", pt:"Ainda nada. Pergunta algo à IA e aparece aqui.", ru:"Пока пусто. Спроси у ИИ что-нибудь — и оно появится здесь.", ur:"ابھی کچھ نہیں۔ AI سے کچھ پوچھیں، وہ یہاں آ جائے گا۔", id:"Belum ada apa-apa. Tanyakan sesuatu ke AI dan akan muncul di sini.", de:"Noch nichts. Frag die KI etwas, dann taucht es hier auf.", ja:"まだ何もありません。AIに何か聞くと、ここに出てきます。", tr:"Henüz bir şey yok. Yapay zekâya bir şey sor, burada belirsin.", ko:"아직 없습니다. AI에게 뭔가 물어보면 여기에 나타납니다.", fa:"هنوز چیزی نیست. از هوش مصنوعی چیزی بپرس تا اینجا بیاید.", uk:"Поки порожньо. Запитай щось у ШІ — і воно з’явиться тут.", it:"Ancora niente. Chiedi qualcosa all’IA e comparirà qui.", pl:"Jeszcze nic. Zapytaj AI o coś, a pojawi się tutaj.", vi:"Chưa có gì. Hỏi AI điều gì đó và nó sẽ hiện ở đây." },
+  ai_swap: { en:"The usual AI ran out of requests, so a different one answered this.", zh:"常用的 AI 已用完额度，这条回答来自另一个 AI。", hi:"हमेशा वाला AI खत्म हो गया, तो यह जवाब किसी दूसरे AI ने दिया।", es:"La IA de siempre se quedó sin peticiones, así que esto lo respondió otra.", ar:"نفدت طلبات الذكاء الاصطناعي المعتاد، فأجاب عن هذا ذكاء اصطناعي آخر.", fr:"L’IA habituelle n’avait plus de requêtes, alors une autre a répondu.", bn:"চেনা AI-এর কোটা ফুরিয়ে গেছে, তাই এটির উত্তর দিয়েছে অন্য একটি AI।", pt:"A IA de sempre ficou sem pedidos, por isso outra respondeu a esta.", ru:"У обычного ИИ закончились запросы, поэтому ответил другой.", ur:"معمول کا AI ختم ہو گیا، تو اس کا جواب کسی اور AI نے دیا۔", id:"AI yang biasa kehabisan kuota, jadi yang ini dijawab AI lain.", de:"Der übliche KI-Dienst hatte keine Anfragen mehr, also hat ein anderer geantwortet.", ja:"いつものAIが上限に達したので、これは別のAIが答えました。", tr:"Her zamanki yapay zekânın hakkı bitti, bunu başka biri yanıtladı.", ko:"평소 쓰던 AI의 요청이 바닥나서 다른 AI가 답했습니다.", fa:"درخواست‌های هوش مصنوعی همیشگی تمام شد، پس این را یکی دیگر جواب داد.", uk:"У звичайного ШІ закінчилися запити, тож відповів інший.", it:"L’IA solita ha finito le richieste, così ha risposto un’altra.", pl:"Zwykłe AI wyczerpało zapytania, więc odpowiedziało inne.", vi:"AI thường dùng đã hết lượt, nên cái này do một AI khác trả lời." },
   par_shield: { en:"Content blocking", zh:"内容拦截", hi:"कंटेंट ब्लॉकिंग", es:"Bloqueo de contenido", ar:"حجب المحتوى", fr:"Blocage de contenu", bn:"কনটেন্ট ব্লকিং", pt:"Bloqueio de conteúdos", ru:"Блокировка контента", ur:"مواد کی بلاکنگ", id:"Pemblokiran konten", de:"Inhaltssperre", ja:"コンテンツブロック", tr:"İçerik engelleme", ko:"콘텐츠 차단", fa:"مسدودسازی محتوا", uk:"Блокування вмісту", it:"Blocco dei contenuti", pl:"Blokowanie treści", vi:"Chặn nội dung" },
   par_shield_s: { en:"Blocks unsuitable videos, streams and posts on YouTube, TikTok, Instagram and Twitch. Choose the rules here; the browser shield enforces them.", zh:"拦截 YouTube、TikTok、Instagram 和 Twitch 上不适合的视频、直播和帖子。规则在这里选，由浏览器防护执行。", hi:"YouTube, TikTok, Instagram और Twitch पर अनुपयुक्त वीडियो, स्ट्रीम और पोस्ट ब्लॉक करता है। नियम यहाँ चुनें; ब्राउज़र शील्ड उन्हें लागू करती है।", es:"Bloquea vídeos, directos y publicaciones no aptos en YouTube, TikTok, Instagram y Twitch. Elige las reglas aquí; el escudo del navegador las aplica.", ar:"يحجب الفيديوهات والبثوث والمنشورات غير المناسبة على YouTube وTikTok وInstagram وTwitch. اختر القواعد هنا، ودرع المتصفح ينفّذها.", fr:"Bloque les vidéos, les lives et les posts inadaptés sur YouTube, TikTok, Instagram et Twitch. Choisissez les règles ici ; le bouclier du navigateur les applique.", bn:"YouTube, TikTok, Instagram ও Twitch-এ অনুপযুক্ত ভিডিও, স্ট্রিম ও পোস্ট ব্লক করে। নিয়ম এখানে বেছে নিন; ব্রাউজার শিল্ড সেগুলো প্রয়োগ করে।", pt:"Bloqueia vídeos, diretos e publicações inadequados no YouTube, TikTok, Instagram e Twitch. Escolha as regras aqui; o escudo do navegador aplica-as.", ru:"Блокирует неподходящие видео, трансляции и посты на YouTube, TikTok, Instagram и Twitch. Правила выбираются здесь, а применяет их браузерный щит.", ur:"YouTube، TikTok، Instagram اور Twitch پر نامناسب ویڈیوز، اسٹریمز اور پوسٹس بلاک کرتا ہے۔ اصول یہاں چنیں؛ براؤزر شیلڈ انہیں نافذ کرتی ہے۔", id:"Memblokir video, siaran, dan unggahan yang tidak pantas di YouTube, TikTok, Instagram, dan Twitch. Pilih aturannya di sini; perisai peramban yang menegakkannya.", de:"Blockiert unpassende Videos, Streams und Beiträge auf YouTube, TikTok, Instagram und Twitch. Die Regeln wählen Sie hier, durchgesetzt werden sie vom Browser-Schutz.", ja:"YouTube、TikTok、Instagram、Twitch の不適切な動画・配信・投稿をブロックします。ルールはここで選び、ブラウザのシールドが適用します。", tr:"YouTube, TikTok, Instagram ve Twitch’te uygunsuz video, yayın ve gönderileri engeller. Kuralları burada seçin; tarayıcı kalkanı uygular.", ko:"YouTube, TikTok, Instagram, Twitch의 부적절한 영상·방송·게시물을 차단합니다. 규칙은 여기서 고르고, 브라우저 실드가 적용합니다.", fa:"ویدیوها، پخش‌های زنده و پست‌های نامناسب را در YouTube، TikTok، Instagram و Twitch مسدود می‌کند. قواعد را اینجا انتخاب کنید؛ سپر مرورگر اجرایشان می‌کند.", uk:"Блокує невідповідні відео, трансляції та дописи на YouTube, TikTok, Instagram і Twitch. Правила обираєте тут, а застосовує їх щит браузера.", it:"Blocca video, dirette e post inadatti su YouTube, TikTok, Instagram e Twitch. Le regole si scelgono qui; lo scudo del browser le applica.", pl:"Blokuje nieodpowiednie filmy, transmisje i posty na YouTube, TikTok, Instagram i Twitch. Reguły wybierasz tutaj, a egzekwuje je tarcza w przeglądarce.", vi:"Chặn video, buổi phát và bài đăng không phù hợp trên YouTube, TikTok, Instagram và Twitch. Chọn quy tắc ở đây; lá chắn trình duyệt thực thi." },
   par_shield_plat: { en:"Where it applies", zh:"适用范围", hi:"कहाँ लागू होता है", es:"Dónde se aplica", ar:"أين يُطبَّق", fr:"Où cela s’applique", bn:"কোথায় প্রযোজ্য", pt:"Onde se aplica", ru:"Где действует", ur:"کہاں لاگو ہوتا ہے", id:"Berlaku di mana", de:"Wo es gilt", ja:"適用される場所", tr:"Nerede geçerli", ko:"적용 범위", fa:"کجا اعمال می‌شود", uk:"Де діє", it:"Dove si applica", pl:"Gdzie działa", vi:"Áp dụng ở đâu" },
@@ -5297,18 +5298,31 @@ function ncSetLocalModel(m) {
    throws. The three failures it separates are the three that actually happen:
    nothing listening, listening but refusing this origin, and running with the
    wrong model pulled. */
+/* Was Ollama there the last time anyone looked? Remembered across page loads,
+   because it is the answer to "is there anywhere else to send this" and asking
+   the question properly costs a request that usually fails. Only ever written
+   by ncLocalCheck — a flag nothing verifies is a lie waiting to happen. */
+function ncLocalReady() {
+  try { return localStorage.getItem('nc_local_ok') === '1'; } catch (e) { return false; }
+}
+function ncLocalSeen(ok) {
+  try { ok ? localStorage.setItem('nc_local_ok', '1') : localStorage.removeItem('nc_local_ok'); } catch (e) {}
+}
+
 async function ncLocalCheck() {
   const url = ncLocalUrl();
   try {
     const res = await fetch(url + '/api/tags', { method: 'GET' });
-    if (!res.ok) return { ok: false, models: [], err: 'Ollama answered ' + res.status + '.' };
+    if (!res.ok) { ncLocalSeen(false); return { ok: false, models: [], err: 'Ollama answered ' + res.status + '.' }; }
     const j = await res.json();
     const models = (j.models || []).map(m => m.name);
+    ncLocalSeen(models.length > 0);
     return {
       ok: true, models: models, err: models.length ? '' :
         'Ollama is running but has no models. Run: ollama pull ' + ncLocalModel()
     };
   } catch (e) {
+    ncLocalSeen(false);
     /* fetch rejects the same way for "nothing is listening" and "CORS said
        no", so both possibilities are named rather than guessed between. */
     return { ok: false, models: [], err:
@@ -5374,6 +5388,134 @@ function ncSayWhy(reason, status) {
   return r;
 }
 
+/* ============================================================================
+   WHEN ONE AI RUNS OUT, ASK THE NEXT ONE
+   ============================================================================
+   A free tier shared by a whole school runs out at about four in the afternoon.
+   Until now that was the end of the feature: the page said "out of free
+   requests for now, come back in a few minutes", which is true, unhelpful, and
+   the last thing a fourteen-year-old with a deadline wants to read.
+
+   There is almost always somewhere else to ask. This file now keeps a list of
+   routes per request rather than one, tries them in order, and only reports a
+   failure when every one of them has failed. ai-worker.js does the same thing
+   one level down — if the shared key is exhausted at Gemini it re-asks at
+   OpenRouter or OpenAI before answering — so between the two there are up to
+   five chances at an answer where there used to be one.
+
+   WHAT COUNTS AS "RUN OUT". Only a limit or an outage moves the request:
+   429, and the 5xx family, and a fetch that never arrived. A 400 is a request
+   this site got wrong and every provider will reject it the same way; a 401 or
+   403 is a key that needs fixing and hiding that behind a working fallback is
+   how a broken key survives for a month. Those stop where they happen, and say
+   so.
+
+   WHAT NEVER MOVES. A grounded search is Gemini-only — answering it from a
+   model with no web access is not a fallback, it is a different and worse
+   answer to a question about what is popular this week, so a searching request
+   never drops to the model on your machine. The same goes for anything that
+   asked for an image.
+
+   THE COOLDOWN. A route that has just said "no quota" will say it again for
+   the next several minutes, and paying a failed request for that on every
+   feature the page uses is slow in exactly the moment the site is already
+   struggling. So an exhausted route is stood down for ten minutes. It lives in
+   sessionStorage, not localStorage: a quota that resets should not need the
+   browser closed to be noticed, and a new tab is a fair moment to try again.
+   ============================================================================ */
+const NC_COOL_MS = 10 * 60 * 1000;
+const NC_COOL = (function () {
+  try { return JSON.parse(sessionStorage.getItem('nc_ai_cool') || '{}') || {}; }
+  catch (e) { return {}; }
+})();
+
+function ncCoolSave() {
+  try { sessionStorage.setItem('nc_ai_cool', JSON.stringify(NC_COOL)); } catch (e) {}
+}
+function ncCooling(key) {
+  const until = NC_COOL[key] || 0;
+  if (!until) return false;
+  if (Date.now() >= until) { delete NC_COOL[key]; ncCoolSave(); return false; }
+  return true;
+}
+function ncCool(key, on) {
+  if (on === false) delete NC_COOL[key]; else NC_COOL[key] = Date.now() + NC_COOL_MS;
+  ncCoolSave();
+}
+
+/* A switch is worth knowing about and not worth interrupting for: one small
+   line along the bottom, once per session, gone in seven seconds. Somebody
+   whose script suddenly reads a little differently deserves to know why, and
+   nobody needs to be told twice. */
+let NC_SWAP_SAID = false;
+function ncSwapNote() {
+  if (NC_SWAP_SAID) return;
+  NC_SWAP_SAID = true;
+  try { if (sessionStorage.getItem('nc_ai_swap_said')) return; sessionStorage.setItem('nc_ai_swap_said', '1'); } catch (e) {}
+  if (typeof document === 'undefined' || !document.body) return;
+  const el = document.createElement('div');
+  el.textContent = (typeof tr === 'function' && tr('ai_swap')) ||
+    'The usual AI ran out of requests, so a different one answered this.';
+  /* plaintext, not an rtl direction: the site keeps dir=ltr everywhere and
+     lets the paragraph find its own side. */
+  el.style.cssText =
+    'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;' +
+    'max-width:min(520px,92vw);padding:10px 15px;border-radius:999px;' +
+    'background:rgba(15,19,34,.94);color:#e8edf8;border:1px solid rgba(255,255,255,.14);' +
+    'font:500 13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:center;' +
+    'box-shadow:0 10px 30px rgba(0,0,0,.4);unicode-bidi:plaintext;transition:opacity .5s';
+  document.body.appendChild(el);
+  setTimeout(function () { el.style.opacity = '0'; }, 6200);
+  setTimeout(function () { el.remove(); }, 6900);
+}
+
+/* Is this failure worth asking someone else about? */
+function ncWorthSwitching(status, reason) {
+  if (status === 0) return true;                       /* never arrived */
+  if (status === 429) return true;
+  if (status >= 500) return true;
+  return /quota|rate limit|resource has been exhausted|overloaded|try again later/i.test(String(reason || ''));
+}
+
+/* The routes this request may take, best first, cooled-down ones removed.
+   Each is { key, kind, provider, model, label }: kind is how to send it,
+   provider is who ends up answering, label is what to call it in a sentence
+   aimed at the reader. */
+function ncRoutes(provider, model, own, opts) {
+  const shared = function (p) {
+    return { key: 'worker:' + p, kind: 'worker', provider: p,
+             model: p === provider ? model : ncDefaultModel(p),
+             label: 'NovaClip\'s shared AI' };
+  };
+  const here = { key: 'local', kind: 'local', provider: 'local', model: ncLocalModel(),
+                 label: 'the model on this machine' };
+  const want = [];
+
+  if (provider === 'local') {
+    /* A model on your own machine has no quota to run out of, so the only
+       reason to leave it is that it is not running. */
+    want.push(here, shared('gemini'));
+  } else if (ncKeyLooksReal(own)) {
+    want.push({ key: 'own', kind: 'own', provider: 'gemini', model: model, label: 'your own key' });
+    want.push(shared('gemini'));
+  } else {
+    want.push(shared(provider));
+    if (provider !== 'gemini') want.push(shared('gemini'));
+    /* Offline last, and only if Ollama has actually answered here before —
+       and never for a request that needs the live web or draws a picture,
+       neither of which a small text model can do at all. */
+    const needsGoogle = !!opts.search || /image|imagen|vision/i.test(String(model || ''));
+    if (!needsGoogle && ncLocalReady()) want.push(here);
+  }
+
+  const open = want.filter(function (r) { return !ncCooling(r.key); });
+  /* Everything is cooling: try the first one anyway rather than refuse
+     without asking. A cooldown is a guess about the next ten minutes, not a
+     fact, and the caller would rather wait for a real answer than get a
+     cached excuse. */
+  return open.length ? open : [want[0]];
+}
+
 async function ncAsk(prompt, opts) {
   opts = opts || {};
   const provider = opts.provider || ncActiveProvider();
@@ -5409,23 +5551,24 @@ async function ncAsk(prompt, opts) {
   }
 
   const own = provider === 'gemini' ? ncAIKey() : '';
-  let data = null, err = '';
-  try {
-    let r, raw;
+  const routes = ncRoutes(provider, model, own, opts);
+  const tried = [];
+  let data = null, err = '', raw = '';
+  let via = null, answered = '', switchedFrom = '';
 
-    /* One request, in a form both routes take. Called twice at most: once as
-       asked, and once more without thinkingConfig if that is what was refused. */
-    async function send() {
+  {
+    /* One request down one route, in a form all three of them take. */
+    async function send(route) {
       /* Ollama speaks its own request and reply shape. Rather than teach every
          caller of ncAsk a second one, the reply is translated here into the
          shape the rest of this function already reads — so a page that asks
          for an edit plan cannot tell which machine answered. */
-      if (provider === 'local') {
+      if (route.kind === 'local') {
         const res = await fetch(ncLocalUrl() + '/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: model,
+            model: route.model,
             stream: false,
             messages: [{ role: 'user', content: prompt }],
             options: {
@@ -5451,14 +5594,14 @@ async function ncAsk(prompt, opts) {
           })
         };
       }
-      if (ncKeyLooksReal(own)) {
+      if (route.kind === 'own') {
         /* The key goes in a header, not in ?key=. A URL is the most-copied
            string in a browser: it lands in history, in devtools, in any
            extension that watches requests, and in the Referer of anything the
            page loads next. A header is none of those places. Google accepts
            x-goog-api-key for exactly this reason, and ai-worker.js has always
            used it — this was the one call that did not. */
-        const res = await fetch(NC_AI_DIRECT + model + ':generateContent', {
+        const res = await fetch(NC_AI_DIRECT + route.model + ':generateContent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': own.trim() },
           body: JSON.stringify(body)
@@ -5466,11 +5609,20 @@ async function ncAsk(prompt, opts) {
         return { res: res, raw: await res.text().catch(function () { return ''; }) };
       }
       const res = await fetch(NC_AI_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: provider, model: model, payload: body, search: opts.search === true }) });
+        body: JSON.stringify({ provider: route.provider, model: route.model, payload: body, search: opts.search === true }) });
       return { res: res, raw: await res.text().catch(function () { return ''; }) };
     }
 
-    let out = await send();
+    /* ONE ROUTE, TRIED AS FAR AS IT IS WORTH TRYING.
+       The two retries below — dropping thinkingConfig, and asking again with a
+       bigger budget — are about one provider's habits, so they belong inside a
+       single route rather than around the list of them. Returns
+       { ok, raw, status, reason, err }; it never throws, because a route that
+       cannot be reached is a result the loop needs, not an exception. */
+    async function ask(route) {
+      let out = null;
+      try {
+        out = await send(route);
 
     /* "This model does not know what thinkingConfig is." Drop it, remember
        that, and ask again — otherwise a model rename turns every AI feature on
@@ -5492,11 +5644,11 @@ async function ncAsk(prompt, opts) {
        so a model that rejects it costs one wasted call per page rather than
        one per feature. If the second attempt fails too, its error is the one
        reported, so a genuine problem is not hidden behind the retry. */
-    if (out.res.status === 400 && wantThinking && body.generationConfig.thinkingConfig) {
-      NC_NO_THINKING.add(model);
-      delete body.generationConfig.thinkingConfig;
-      out = await send();
-    }
+        if (out.res.status === 400 && wantThinking && body.generationConfig.thinkingConfig) {
+          NC_NO_THINKING.add(route.model);
+          delete body.generationConfig.thinkingConfig;
+          out = await send(route);
+        }
 
     /* ------------------------------------------------------------------
        RAN OUT OF ROOM? ASK AGAIN WITH MORE ROOM.
@@ -5520,57 +5672,108 @@ async function ncAsk(prompt, opts) {
        So: one more attempt, with three times the budget, only when the answer
        came back truncated. Bounded — it never loops, and it only ever costs a
        second call on a request that already failed. */
-    try {
-      const first = JSON.parse(out.raw || '{}');
-      const why = first.candidates && first.candidates[0] && first.candidates[0].finishReason;
-      const asked = body.generationConfig.maxOutputTokens;
-      if (why === 'MAX_TOKENS' && asked && !opts.__widened) {
-        body.generationConfig.maxOutputTokens = Math.min(asked * 3, 8192);
-        opts.__widened = true;
-        out = await send();
+        let widen = 0;
+        try {
+          const first = JSON.parse(out.raw || '{}');
+          const why = first.candidates && first.candidates[0] && first.candidates[0].finishReason;
+          const asked = body.generationConfig.maxOutputTokens;
+          if (why === 'MAX_TOKENS' && asked && !opts.__widened) widen = Math.min(asked * 3, 8192);
+        } catch (e) { /* not JSON, or no candidates — the paths below report it */ }
+        if (widen) {
+          body.generationConfig.maxOutputTokens = widen;
+          opts.__widened = true;
+          out = await send(route);
+        }
+      } catch (e) {
+        /* For a model on this machine the connection is not the suspect, and
+           "check your connection" sends someone to their router over a service
+           that is simply not started. Status 0 means the request never landed,
+           which the loop treats as a reason to try somewhere else. */
+        return { status: 0, reason: '', err: route.kind === 'local'
+          ? 'No answer from ' + ncLocalUrl() + '. Start Ollama, or check it is allowed ' +
+            'to answer this site (OLLAMA_ORIGINS=' + location.origin + ').'
+          : 'Could not reach the AI. Check your connection.' };
       }
-    } catch (e) { /* not JSON, or no candidates — the paths below report it */ }
 
-    r = out.res; raw = out.raw;
-    if (ncKeyLooksReal(own)) {
-      if (r.status === 400 || r.status === 403) err = 'That key was refused by Google. Check it in your profile.';
-      else if (r.status === 429) err = 'Your own key is out of quota for now.';
-    }
+      const r = out.res;
+      if (r.ok) {
+        /* Which vendor actually wrote this. The worker names itself in a
+           header, and names the one it started at when it had to switch —
+           without it, a Gemini outage answered by OpenAI is invisible here and
+           the page cannot say why the voice changed. */
+        let by = '', from = '';
+        try {
+          by = r.headers.get('X-NovaClip-Provider') || '';
+          from = r.headers.get('X-NovaClip-Switched') || '';
+        } catch (e) {}
+        return { ok: true, raw: out.raw, status: r.status, by: by || route.provider, from: from };
+      }
 
-    /* Both Google and ai-worker.js explain a failure in the body; the status
-       alone is the least useful part of it. "The AI service answered 500." is
-       what this page used to say when the worker was sitting there telling us
-       its key was missing. */
-
-    if (!err && !r.ok) {
+      /* Both Google and ai-worker.js explain a failure in the body; the status
+         alone is the least useful part of it. "The AI service answered 500." is
+         what this page used to say when the worker was sitting there telling us
+         its key was missing. */
       let reason = '';
       try {
-        const j = JSON.parse(raw || '{}');
+        const j = JSON.parse(out.raw || '{}');
         reason = j.error && (typeof j.error === 'string' ? j.error : j.error.message) || '';
       } catch (e) {}
-      err = ncSayWhy(reason, r.status) || ('The AI service answered ' + r.status + '.');
+
+      let why = '';
+      if (route.kind === 'own') {
+        if (r.status === 400 || r.status === 403) why = 'That key was refused by Google. Check it in your profile.';
+        else if (r.status === 429) why = 'Your own key is out of quota for now.';
+      }
+      if (!why) why = ncSayWhy(reason, r.status) || ('The AI service answered ' + r.status + '.');
       /* A 5xx with nothing to say is the one case where the status really is all
          we know, so name the likely cause rather than leaving a bare number. */
-      if (!reason && r.status >= 500) {
-        err = 'The AI service answered ' + r.status + '. That usually means the ' +
+      if (!reason && r.status >= 500 && route.kind === 'worker') {
+        why = 'The AI service answered ' + r.status + '. That usually means the ' +
               'NovaClip worker is misconfigured — open ' + NC_AI_WORKER + '/health to see. ' +
               'Adding your own key in your profile works around it.';
       }
+      return { status: r.status, reason: reason, err: why };
     }
-    if (!err) {
+
+    /* ------------------------------------------------------------------
+       DOWN THE LIST UNTIL SOMEONE ANSWERS
+       ------------------------------------------------------------------
+       Each failure either stops here or moves on, and nothing else happens in
+       between: no waiting, no repeats of the same route. Worst case is one
+       request per route, which is three. */
+    let last = null;
+    for (let i = 0; i < routes.length; i++) {
+      const route = routes[i];
+      tried.push(route);
+      const got = await ask(route);
+      if (got.ok) {
+        via = route; raw = got.raw; answered = got.by; switchedFrom = got.from;
+        ncCool(route.key, false);   /* it works again — stop skipping it */
+        break;
+      }
+      last = got;
+      if (!ncWorthSwitching(got.status, got.reason)) break;
+      ncCool(route.key);
+    }
+
+    if (!via) {
+      err = (last && last.err) || 'Could not reach the AI. Check your connection.';
+      /* "Out of free requests" reads like nobody tried the alternatives, so
+         when there were alternatives, say that they were tried too. */
+      if (tried.length > 1) {
+        /* Vendor text does not reliably end in a full stop, and two sentences
+           run together read as one broken one. */
+        if (!/[.!?]$/.test(err)) err += '.';
+        err += ' Every AI NovaClip could reach was asked (' + tried.length + ' of them) and ' +
+               'none of them could answer.';
+        if (!ncKeyLooksReal(own)) err += ' Adding your own key in your profile is the way past this.';
+      }
+    } else {
       try { data = JSON.parse(raw); }
       catch (e) { err = 'The AI service sent something that was not an answer.'; }
     }
-  } catch (e) {
-    /* For a model on this machine the connection is not the suspect, and
-       "check your connection" sends someone to their router over a service
-       that is simply not started. */
-    err = provider === 'local'
-      ? 'No answer from ' + ncLocalUrl() + '. Start Ollama, or check it is allowed ' +
-        'to answer this site (OLLAMA_ORIGINS=' + location.origin + ').'
-      : 'Could not reach the AI. Check your connection.';
   }
-  if (err) return { text: '', image: '', err: err };
+  if (err) return { text: '', image: '', err: err, via: '', switched: '' };
 
   let text = '', image = '';
   const cand = data && data.candidates && data.candidates[0];
@@ -5613,7 +5816,24 @@ async function ncAsk(prompt, opts) {
     if (c.web && c.web.uri && c.web.title) sources.push({ uri: c.web.uri, title: c.web.title });
   });
 
-  return { text: text, image: image, sources: sources, err: err, cut: cut, finish: finish };
+  /* Who answered in the end, and whether that was the first choice. A feature
+     that wants to say "the shared AI was busy, this came from your own key"
+     has what it needs; one that does not care can go on ignoring it, which is
+     every existing caller. */
+  const hopped = !!(via && routes[0] && via.key !== routes[0].key);
+  const switched = hopped
+    ? ('The first AI could not answer, so this one came from ' + via.label +
+       (answered && answered !== via.provider ? ' (' + answered + ')' : '') + '.')
+    : (switchedFrom
+        /* No hop here, but the worker made one of its own — the vendor it
+           usually asks was out, so it asked a different one. */
+        ? ('The usual AI was out of requests, so this was answered by ' + (answered || 'another model') + '.')
+        : '');
+  try { window.ncLastVia = { route: via ? via.key : '', provider: answered, switched: switched, tried: tried.length }; } catch (e) {}
+  if (switched) ncSwapNote();
+
+  return { text: text, image: image, sources: sources, err: err, cut: cut, finish: finish,
+           via: via ? via.key : '', provider: answered, switched: switched };
 }
 
 /* ============================================================================
@@ -5686,7 +5906,10 @@ window.ncKeyLooksReal = ncKeyLooksReal; window.ncAsk = ncAsk;
 /* The local-model controls, so a page (or the console) can point the site at
    a model on this machine and check whether it is actually there. */
 window.ncLocalCheck = ncLocalCheck; window.ncLocalUrl = ncLocalUrl;
-window.ncSetLocalUrl = ncSetLocalUrl;
+window.ncSetLocalUrl = ncSetLocalUrl; window.ncLocalReady = ncLocalReady;
+/* The failover, exposed so a page (or a probe) can see which routes a request
+   would take and clear a cooldown by hand. */
+window.ncRoutes = ncRoutes; window.ncCool = ncCool; window.ncCooling = ncCooling;
 window.ncLocalModel = ncLocalModel; window.ncSetLocalModel = ncSetLocalModel;
 /* One call to move every AI feature on the site onto your own machine, and
    the same call with no argument to put it back. */
