@@ -5246,11 +5246,55 @@ function ncActiveProvider() {
   return 'gemini';
 }
 
+/* ---------------------------------------------------------------------------
+   THE MODEL NAMES, AND WHAT HAPPENS WHEN ONE OF THEM IS RETIRED
+   ---------------------------------------------------------------------------
+   A model name is a thing that stops existing without warning, and when it
+   does, every AI feature on the site answers 404 — not 429 — so none of the
+   quota failover helps. That is the outage that lasts days instead of minutes,
+   because from the page it looks exactly like "the AI is broken" and nothing
+   says which of two files has the dead string in it.
+
+   So the names are a list rather than one string, best first. The first one is
+   what gets asked; if the vendor says it does not serve that any more, the
+   next is tried, and the one that worked is remembered for the rest of the
+   session so it costs one wasted call per browser tab rather than one per
+   feature. ai-worker.js does the same with its own copy of this list, and its
+   /health?probe=1 reports which of these names are alive right now.
+   --------------------------------------------------------------------------- */
+const NC_MODELS = {
+  gemini: ['gemini-3.6-flash', 'gemini-2.5-flash-lite', 'gemini-3.1-flash-lite'],
+  openrouter: ['openai/gpt-4o-mini', 'deepseek/deepseek-chat'],
+  openai: ['gpt-4o-mini', 'gpt-4o']
+};
+
+/* The name that worked last, per provider, for this tab only. A page load is
+   cheap to re-learn on and a stale note is what this replaces. */
+function ncModelPick(provider) {
+  try {
+    const p = sessionStorage.getItem('nc_model_ok_' + provider);
+    if (p && (NC_MODELS[provider] || []).indexOf(p) >= 0) return p;
+  } catch (e) {}
+  return '';
+}
+function ncModelWorks(provider, model) {
+  try { sessionStorage.setItem('nc_model_ok_' + provider, model); } catch (e) {}
+}
+/* The next name to try after `model` has been refused as unknown. */
+function ncModelNext(provider, model, tried) {
+  const list = NC_MODELS[provider] || [];
+  for (let i = 0; i < list.length; i++) if (!tried || tried.indexOf(list[i]) < 0) return list[i];
+  return '';
+}
+/* "That model does not exist here" rather than "that request was wrong". */
+function ncModelGone(status, reason) {
+  if (status === 404) return true;
+  return status === 400 && /not found|does not exist|no longer available|is not supported|unsupported model|deprecated/i.test(String(reason || ''));
+}
+
 function ncDefaultModel(provider) {
-  if (provider === 'openrouter') return 'openai/gpt-4o-mini';
-  if (provider === 'openai') return 'gpt-4o-mini';
   if (provider === 'local') return ncLocalModel();
-  return 'gemini-3.6-flash';
+  return ncModelPick(provider) || (NC_MODELS[provider] || [])[0] || 'gemini-3.6-flash';
 }
 
 /* ---------------------------------------------------------------------------
@@ -5697,6 +5741,9 @@ async function ncAsk(prompt, opts) {
 
       const r = out.res;
       if (r.ok) {
+        /* Remember the name that answered, so the rest of this tab skips a
+           model that has been retired instead of re-discovering it. */
+        if (route.kind === 'own') ncModelWorks(route.provider, route.model);
         /* Which vendor actually wrote this. The worker names itself in a
            header, and names the one it started at when it had to switch —
            without it, a Gemini outage answered by OpenAI is invisible here and
@@ -5719,8 +5766,27 @@ async function ncAsk(prompt, opts) {
         reason = j.error && (typeof j.error === 'string' ? j.error : j.error.message) || '';
       } catch (e) {}
 
+      /* THE NAME IS DEAD, NOT THE REQUEST.
+         Only on the direct route — the worker runs the same list on its own
+         side, so retrying the worker from here would just spend the same calls
+         twice. Bounded by the length of NC_MODELS, and it only ever happens
+         after a request that already failed. */
+      const gone = ncModelGone(r.status, reason);
+      if (route.kind === 'own' && gone) {
+        route.__tried = (route.__tried || []).concat([route.model]);
+        const next = ncModelNext(route.provider, route.model, route.__tried);
+        if (next) { route.model = next; return ask(route); }
+      }
+
       let why = '';
-      if (route.kind === 'own') {
+      if (gone) {
+        /* Ahead of the key message below, because a retired model arrives as a
+           400 on the direct route and "check your key" would send somebody to
+           look at a key that is perfectly fine. */
+        why = 'The AI model names this site uses are not being served any more (tried ' +
+              ((route.__tried || []).concat([route.model]).join(', ')) +
+              '). They need updating in nova.js and on the worker.';
+      } else if (route.kind === 'own') {
         if (r.status === 400 || r.status === 403) why = 'That key was refused by Google. Check it in your profile.';
         else if (r.status === 429) why = 'Your own key is out of quota for now.';
       }
@@ -5980,6 +6046,28 @@ async function ncProbe(base, want) {
   }
 }
 
+/* One real call at the vendor, through the worker's own probe endpoint, and
+   the worker's own reading of what came back. Never throws: a diagnostic that
+   can break the diagnostics page is worse than no diagnostic. */
+async function ncAIProbe() {
+  try {
+    const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), 12000) : 0;
+    const r = await fetch(NC_AI_WORKER + '/health?probe=1', ctl ? { signal: ctl.signal } : undefined);
+    clearTimeout(timer);
+    const j = await r.json().catch(() => null);
+    if (!j || typeof j.ok !== 'boolean') return { checked: false };
+    return {
+      checked: true,
+      ok: j.ok,
+      /* j.likely is written by the worker for exactly this sentence — it names
+         the fix rather than the symptom. */
+      why: j.likely || j.google_says || 'The AI service would not answer a test call.',
+      note: (j.serving && j.default_is_served === false) ? j.likely : ''
+    };
+  } catch (e) { return { checked: false }; }
+}
+
 async function ncDiag() {
   const yt = ncYouTube();
   const rows = [{
@@ -6011,12 +6099,22 @@ async function ncDiag() {
     ncProbe(NC_AI_WORKER, 'ai'),
     ncProbe(ncServer(), 'leaderboard')
   ]);
+  /* "The key is set" and "the AI answers" are different questions, and only the
+     second one matters when the site has been failing for days. A worker that
+     reports itself healthy is asked to spend one tiny call on the real vendor,
+     which is what catches the case /health cannot see: the key is fine and the
+     model names this site asks for have been retired. */
+  if (ai.live) {
+    const deep = await ncAIProbe();
+    if (deep && deep.checked && !deep.ok) { ai.live = false; ai.why = deep.why; }
+    else if (deep && deep.checked && deep.note) { ai.why += ' ' + deep.note; }
+  }
   rows.push({ name: 'AI', live: ai.live, detail: ai.why +
     (ncAIKey() ? ' Your own key is set in this browser, so AI works either way.' : '') });
   rows.push({ name: 'Accounts and scores', live: srv.live, detail: srv.why });
   return rows;
 }
-window.ncDiag = ncDiag; window.ncYouTube = ncYouTube;
+window.ncDiag = ncDiag; window.ncYouTube = ncYouTube; window.ncAIProbe = ncAIProbe;
 
 /* ============================================================================
    THE EDITOR'S EXTRA TOOLS

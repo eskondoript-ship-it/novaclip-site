@@ -480,6 +480,36 @@
    is what the first version cost before the chips stopped asking.
 
    ai-worker.js, nova.js, editor-help.js (NEW), editor.html. All cached. */
+/* v68: the outage that lasts days, rather than the one that lasts minutes.
+
+   The failover in v67 switches vendors when one runs out of requests, and that
+   is the wrong medicine for the failure that actually takes the site down for
+   three days: a retired model. A model that no longer exists answers 404, not
+   429, and 404 was deliberately not switchable — so every AI feature on the
+   site died and stayed dead, with the page saying "the AI is broken" and
+   nothing anywhere naming the two files holding the dead string.
+
+   A MODEL THAT IS GONE NOW FALLS BACK TO ANOTHER MODEL AT THE SAME VENDOR.
+   Not to another vendor: only Gemini can search and only Gemini takes an
+   image, so a retired gemini-3.6-flash should become gemini-2.5-flash-lite,
+   not become OpenAI. ALLOWED_MODELS was already the list of what this site is
+   willing to ask for, and it doubles as the list of what to try next; image
+   models are kept out of a text fallback and text models out of an image one.
+   Only when the vendor has nothing left does it cross to another vendor, and
+   the failure message then names every model/vendor pair it asked. nova.js
+   runs the same list on the direct route, where nothing else can help, and
+   remembers the name that answered for the rest of the tab.
+
+   AND THE DIAGNOSIS IS ON THE SITE NOW, NOT ONLY IN A WORKER URL.
+   /health?probe=1 used to spend one call on one hard-coded model, which
+   answers "is the key working" — not the question you have on day three,
+   which is WHICH of these names is still served. It probes every allowed
+   model and reports each one, plus which are alive and whether the default is
+   among them. The Profile self-check calls it when that section is opened, so
+   the AI row can say "the key works, the model name is dead, here is the one
+   to use" instead of a green tick above a site that does not work.
+
+   ai-worker.js, nova.js. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -910,7 +940,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v67';
+const CACHE = 'novaclip-v68';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

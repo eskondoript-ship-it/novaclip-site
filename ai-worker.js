@@ -175,6 +175,43 @@ function othersFor(env, from, tried) {
   });
 }
 
+/* ---------------------------------------------------------------------------
+   A MODEL THAT IS GONE IS NOT THE SAME AS A VENDOR THAT IS BUSY
+   ---------------------------------------------------------------------------
+   Vendors retire models, and when one goes the request does not come back as
+   429 — it comes back as 404, or as a 400 saying the model is not supported.
+   The failover above deliberately does not move on either of those, so a
+   retired model took every AI feature on the site down until somebody noticed
+   and edited two files. That is the outage that lasts days rather than
+   minutes, and it is the one this handles.
+
+   The answer is not another vendor, it is another model AT THE SAME VENDOR:
+   only Gemini can search and only Gemini takes an image, so a retired
+   gemini-3.6-flash should become gemini-2.5-flash-lite, not become OpenAI.
+   The vendors' own lists are already here in ALLOWED_MODELS — the point of
+   that table was to stop a key being spent on the most expensive model, and
+   it doubles as the list of what else this site is willing to ask for.
+
+   Image models are kept out of a text fallback and text models out of an
+   image one: answering "draw me a thumbnail" with a model that cannot draw is
+   not a fallback, it is a different failure with a nicer status code.
+   --------------------------------------------------------------------------- */
+const MODEL_GONE = /not found|does not exist|no longer available|is not supported|unsupported model|deprecated|has been retired/i;
+
+function modelIsGone(status, reason) {
+  if (status === 404) return true;
+  return status === 400 && MODEL_GONE.test(String(reason || ''));
+}
+
+/* The same vendor's other models, best first, minus the ones already asked. */
+function modelsFor(provider, want, tried) {
+  const wantsImage = /image/i.test(String(want || ''));
+  return (ALLOWED_MODELS[provider] || []).filter(function (m) {
+    if (tried.has(provider + '/' + m)) return false;
+    return /image/i.test(m) === wantsImage;
+  });
+}
+
 const MAX_BODY = 64 * 1024;      // a prompt bigger than this is not a prompt
 
 /* ---- IMAGES ---------------------------------------------------------------
@@ -241,7 +278,7 @@ const CORS = {
      so without this the page can see the answer but not who wrote it. It is
      two strings and it is what lets nova.js say "Gemini is out, OpenAI
      answered" instead of leaving somebody to wonder why the voice changed. */
-  'Access-Control-Expose-Headers': 'X-NovaClip-Provider, X-NovaClip-Switched',
+  'Access-Control-Expose-Headers': 'X-NovaClip-Provider, X-NovaClip-Switched, X-NovaClip-Model',
   'Access-Control-Max-Age': '86400'
 };
 
@@ -370,42 +407,84 @@ export default {
        is echoed — only the upstream status and the vendor's own words. */
     if (url.pathname === '/health' && url.searchParams.get('probe') === '1') {
       if (!env.GEMINI_API_KEY) return json({ probe: 'gemini', ok: false, reason: 'GEMINI_API_KEY is not set.' });
-      const model = 'gemini-3.6-flash';
-      let r, body = '';
-      try {
-        r = await fetch(GOOGLE + model + ':generateContent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-          body: JSON.stringify({ contents: [{ parts: [{ text: 'ping' }] }],
-            generationConfig: { maxOutputTokens: 1 } })
-        });
-        body = await r.text();
-      } catch (e) {
-        return json({ probe: 'gemini', ok: false, reason: 'Could not reach Google: ' + String(e.message || e) });
+
+      /* EVERY model this worker is allowed to ask for, not just the default.
+
+         It used to probe one hard-coded name, which answers "is the key
+         working" and not the question you have when the site has been dead for
+         three days: WHICH of these names is still being served. A retired model
+         and a rejected key look identical from the page and need completely
+         different fixes, and one of them is a two-word edit. Four tiny calls,
+         only when a human opens this URL. */
+      const wanted = (ALLOWED_MODELS.gemini || []).slice();
+      const model = DEFAULT_MODEL.gemini;
+      if (wanted.indexOf(model) < 0) wanted.unshift(model);
+
+      const each = [];
+      for (let i = 0; i < wanted.length; i++) {
+        let rr = null, bb = '', why = '', st = '';
+        try {
+          rr = await fetch(GOOGLE + wanted[i] + ':generateContent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+            body: JSON.stringify({ contents: [{ parts: [{ text: 'ping' }] }],
+              generationConfig: { maxOutputTokens: 1 } })
+          });
+          bb = await rr.text();
+        } catch (e) {
+          each.push({ model: wanted[i], ok: false, http: 0, google_status: '',
+                      google_says: 'Could not reach Google: ' + String(e.message || e) });
+          continue;
+        }
+        try {
+          const j = JSON.parse(bb);
+          why = (j.error && (j.error.message || j.error.status)) || '';
+          st = (j.error && j.error.status) || '';
+        } catch (e) { why = bb.slice(0, 200); }
+        each.push({ model: wanted[i], ok: rr.ok, http: rr.status, google_status: st,
+                    google_says: why || (rr.ok ? 'answered' : 'no message') });
       }
-      let reason = '', status = '';
-      try {
-        const j = JSON.parse(body);
-        reason = (j.error && (j.error.message || j.error.status)) || '';
-        status = (j.error && j.error.status) || '';
-      } catch (e) { reason = body.slice(0, 300); }
+
+      const working = each.filter(function (e) { return e.ok; }).map(function (e) { return e.model; });
+      /* The headline is the model the site actually asks for. If that one is
+         dead, it is the first one that still answers — because at that point
+         the useful sentence is "this name works, the default does not". */
+      const head = each.filter(function (e) { return e.model === model; })[0] ||
+                   each.filter(function (e) { return e.ok; })[0] || each[0];
+      if (!head) return json({ probe: 'gemini', ok: false, reason: 'Could not reach Google at all.', models: each });
+      const reason = head.google_says;
 
       return json({
         probe: 'gemini', model,
-        ok: r.ok,
-        http: r.status,
-        google_status: status,
-        google_says: reason || (r.ok ? 'the call succeeded' : 'no message'),
-        /* The three that actually happen, named so the fix is obvious. */
-        likely: !r.ok && /SERVICE_DISABLED|has not been used|is disabled/i.test(reason)
+        ok: working.length > 0,
+        http: head.http,
+        google_status: head.google_status,
+        google_says: reason,
+        /* Which names are alive right now. If this list is empty the model
+           names in this file and in nova.js are what need changing; if it has
+           entries but the site is still failing, the default is the dead one. */
+        models: each,
+        serving: working,
+        default_is_served: working.indexOf(model) >= 0,
+        /* The ones that actually happen, named so the fix is obvious. The
+           model case is first because it is the only one of these that can
+           take the site down for days while the key is perfectly fine. */
+        likely: working.length && working.indexOf(model) < 0
+            ? 'The key works, but the model this site asks for ("' + model + '") is not being served. ' +
+              'Serving now: ' + working.join(', ') + '. Put one of those in DEFAULT_MODEL in ai-worker.js ' +
+              'and in ncDefaultModel in nova.js.'
+          : !working.length && each.every(function (e) { return e.http === 404; })
+            ? 'The key works, but not one of these model names is served any more. They all need replacing ' +
+              'in ALLOWED_MODELS and DEFAULT_MODEL here, and in ncDefaultModel in nova.js.'
+          : !head.ok && /SERVICE_DISABLED|has not been used|is disabled/i.test(reason)
             ? 'Generative Language API is not enabled on this project. Enable it, wait a minute, retry.'
-          : !r.ok && /API_KEY_SERVICE_BLOCKED|not authorized|restricted/i.test(reason)
+          : !head.ok && /API_KEY_SERVICE_BLOCKED|not authorized|restricted/i.test(reason)
             ? 'The key is restricted to a set of APIs that excludes Generative Language. Edit the key: API restrictions > add Generative Language API, or set it to unrestricted.'
-          : !r.ok && /API key not valid|API_KEY_INVALID/i.test(reason)
+          : !head.ok && /API key not valid|API_KEY_INVALID/i.test(reason)
             ? 'The key string itself is wrong — a Firebase browser key or a truncated paste will do this.'
-          : !r.ok && /quota|RESOURCE_EXHAUSTED/i.test(reason)
+          : !head.ok && /quota|RESOURCE_EXHAUSTED/i.test(reason)
             ? 'Out of quota for now.'
-          : r.ok ? 'Working. If the site still fails, the problem is in the page, not the key.'
+          : head.ok ? 'Working. If the site still fails, the problem is in the page, not the key.'
           : 'Unrecognised — read google_says.'
       });
     }
@@ -782,13 +861,18 @@ export default {
        honest behaviour rather than a limitation. */
     const pinned = search || img.count > 0;
 
-    const tried = new Set();
+    const tried = new Set();        /* vendors asked */
+    const triedM = new Set();       /* provider/model pairs asked */
     let at = provider, atModel = model;
     let upstream = null, text = '', lastStatus = 0, lastReason = '';
 
-    /* At most one switch per vendor, and never more vendors than exist. */
-    for (let hop = 0; hop < FAILOVER_ORDER.length; hop++) {
+    /* Every vendor once, plus the alternative models at whichever vendor turns
+       out to have retired the one we asked for. Bounded, and every hop only
+       ever happens on a request that already failed. */
+    const MAX_HOPS = FAILOVER_ORDER.length + 3;
+    for (let hop = 0; hop < MAX_HOPS; hop++) {
       tried.add(at);
+      triedM.add(at + '/' + atModel);
 
       /* Without a timeout a hung upstream holds the request until Cloudflare
          kills it, and the browser sees a network error rather than a reason. */
@@ -820,7 +904,16 @@ export default {
         try { lastReason = (JSON.parse(text).error || {}).message || ''; } catch (e) {}
       }
 
-      const canSwitch = !pinned && SWITCHABLE.has(lastStatus);
+      /* The model, not the vendor. Try what else this vendor serves before
+         leaving it — and this one applies even to a pinned request, because
+         staying at Gemini is exactly what a pinned request needs. */
+      const gone = modelIsGone(lastStatus, lastReason);
+      if (gone) {
+        const alt = modelsFor(at, model, triedM)[0];
+        if (alt) { atModel = alt; upstream = null; continue; }
+      }
+
+      const canSwitch = !pinned && (SWITCHABLE.has(lastStatus) || gone);
       const next = canSwitch ? othersFor(env, at, tried)[0] : null;
       if (!next) break;
       at = next;
@@ -840,8 +933,14 @@ export default {
           : 'NovaClip\'s shared AI is out of free quota for now. Add your own key in your profile to keep going.';
       } else if (lastStatus === 401 || (lastStatus === 400 && /key not valid|invalid api key/i.test(reason))) {
         reason = 'The ' + at + ' key on this worker was rejected by its vendor. Whoever deployed it needs to replace ' + SECRET[at] + '.';
-      } else if (lastStatus === 404) {
-        reason = 'The vendor no longer serves the model "' + atModel + '". Update ALLOWED_MODELS and nova.js.';
+      } else if (modelIsGone(lastStatus, reason)) {
+        /* Every model this worker is allowed to ask for has been asked and
+           refused. Naming them is the whole diagnosis: it is the difference
+           between "the AI is broken" and "these four model names are dead and
+           need replacing in ALLOWED_MODELS, DEFAULT_MODEL and nova.js". */
+        reason = 'No model this worker is allowed to use is being served any more. Tried: ' +
+          Array.from(triedM).join(', ') + '. The names need updating in ai-worker.js ' +
+          '(ALLOWED_MODELS and DEFAULT_MODEL) and in nova.js (ncDefaultModel).';
       }
       return fail(lastStatus || 502, reason || ('The model service answered ' + lastStatus + '.'));
     }
@@ -849,6 +948,10 @@ export default {
     /* Who actually wrote it. The page reads these to say so out loud. */
     const who = {
       'X-NovaClip-Provider': at,
+      /* Which name answered. The vendor can stay the same while the model
+         changes under it, and when that happens this header is the only thing
+         that says the default in this file has been retired. */
+      'X-NovaClip-Model': atModel,
       ...(at !== provider ? { 'X-NovaClip-Switched': provider + '->' + at } : {})
     };
 
