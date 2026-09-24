@@ -448,6 +448,38 @@
    store rather than read from it.
 
    editor-lanes.js, editor-timelines.js (NEW), editor.html. All cached. */
+/* v67: when one AI runs out, the next one is asked — and every panel of the
+   editor can explain itself.
+
+   THE FAILOVER, IN BOTH HALVES. ai-worker.js used to pass a vendor's 429
+   through faithfully and that was the end of every AI feature until the quota
+   window rolled over. It now tries the vendors it has keys for in turn —
+   Gemini, OpenRouter, OpenAI — and only reports a failure when all of them
+   have failed; /health lists the order it can actually use. A 400 and a 401
+   still stop where they happen, because a bad request is bad everywhere and a
+   broken key hidden behind a working fallback survives for a month. Images
+   and grounded searches never switch: only Gemini serves them, and an
+   ungrounded guess presented as a searched answer is a worse answer, not a
+   fallback. nova.js does the same one level up — own key, then the shared
+   worker, then a model on your own machine — and stands a route down for ten
+   minutes once it has said it is out, so the next feature on the page does
+   not pay for the same refusal. The answer says who wrote it through two
+   headers the worker now exposes, and a switch is mentioned once per session
+   in whatever language the site is in.
+
+   HELP PER PANEL, NOT PER PAGE. The rail has thirteen buttons, the inspector
+   five tabs, and four of the rail buttons open a window of their own — and the
+   only help near any of it was the top bar's "?", which answers for the whole
+   application. A "How?" button now sits at the bottom of whichever column you
+   are in, knows which panel is open, and answers about that one. The steps are
+   written into the file and read off the running editor, so they work offline
+   and cannot drift into being AI-generated guesses; the ask box is for the
+   question that is not on the card, and it sends the panel's own steps and the
+   state of the project with it. In a language that is not English the card is
+   translated once by the model and kept — one request, not twenty-one, which
+   is what the first version cost before the chips stopped asking.
+
+   ai-worker.js, nova.js, editor-help.js (NEW), editor.html. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -932,6 +964,10 @@ const SHELL = [
   /* The timeline tabs. Storage and DOM only — nothing fetched — so it works
      offline like the rest of the editor's behaviour. */
   '/editor-timelines.js',
+  /* The per-panel help. Its steps are written into the file rather than asked
+     of the model, which is the whole point of them — a help button that needs
+     the network is missing exactly when somebody is stuck on a train. */
+  '/editor-help.js',
   /* The mixer is Web Audio and a generated impulse response — no files to
      fetch, so it works on a train like the grade does. */
   '/mixer.js',
