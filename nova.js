@@ -7574,10 +7574,33 @@ window.addEventListener('DOMContentLoaded', () => {
     location.reload();
   });
 
+  /* WHICH PAGES HAVE SOMETHING TO LOSE — ASKED, NOT ASSUMED.
+
+     This used to answer "the editor and the photo tool, always", which is the
+     safe reading of a page that can hold work and the wrong one most of the
+     time: the editor is opened empty far more often than it is left with a cut
+     in it. An empty editor has nothing to lose, so it sat behind a pill
+     waiting for permission to update, and anybody who did not notice the pill
+     kept being served last week's files — which looks exactly like a change
+     that was pushed and never arrived. It is the reason the per-panel help
+     went on answering about "the editor" days after it stopped doing that.
+
+     So the editor is asked. Clips on the timeline means work; an empty project
+     means swap now. If the store cannot be read at all, the cautious answer
+     stands. */
   function risky() {
     var here = (location.pathname.split('/').pop() || '').toLowerCase();
     if (window.NC_UNSAVED) return true;              // any page may declare itself busy
-    return here === 'editor.html' || here === 'photo.html';
+    if (here === 'editor.html') {
+      try {
+        var st = window.__ncStore && window.__ncStore.getState();
+        if (st && Array.isArray(st.clips)) return st.clips.length > 0;
+      } catch (e) {}
+      return true;
+    }
+    /* The photo tool has no equivalent question to ask yet, so it still asks
+       the reader. An open image is exactly the thing not to swap under. */
+    return here === 'photo.html';
   }
 
   function takeOver(worker) {
@@ -7608,7 +7631,10 @@ window.addEventListener('DOMContentLoaded', () => {
       'box-shadow:0 16px 40px rgba(0,0,0,.5);font:600 13px/1.3 "Segoe UI",system-ui,sans-serif;' +
       'max-width:calc(100vw - 24px)';
     var msg = document.createElement('span');
-    msg.textContent = 'A new version of NovaClip is ready.';
+    /* Why somebody would press it, and the reassurance that stops them not
+       pressing it. The editor saves every eight seconds, so "reload" costs
+       nothing — and a pill that does not say so gets dismissed forever. */
+    msg.textContent = 'A new version of NovaClip is ready. Your project is saved.';
     var go = document.createElement('button');
     go.type = 'button';
     go.textContent = 'Reload';

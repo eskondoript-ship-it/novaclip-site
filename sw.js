@@ -614,6 +614,28 @@
    it, which covers both orders.
 
    nova-guide.js, nova-help.js, nova.js. All cached. */
+/* v73: why the editor went on showing last week's help.
+
+   The per-panel help was correct on all nine sidebar panels from the commit
+   that added it — verified panel by panel — and the editor went on answering
+   about "the editor" for days anyway, because the files being run were not the
+   files that had been pushed.
+
+   nova.js asks a waiting service worker to take over as soon as it is
+   installed, except on pages that might be holding work, which ask the reader
+   first through a pill. risky() answered "editor.html, always" — the safe
+   reading, and the wrong one most of the time, because the editor is opened
+   empty far more often than it is left with a cut in it. An empty editor sat
+   behind a pill waiting for permission it did not need, and anybody who did
+   not notice the pill kept being served the old bundle.
+
+   It asks the store now: clips on the timeline means work and the pill stays;
+   an empty project swaps immediately. If the store cannot be read, the
+   cautious answer stands. The pill also says the project is saved, which is
+   true — the editor writes every eight seconds — and is the sentence that
+   decides whether anybody ever presses Reload.
+
+   nova.js. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -1044,7 +1066,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v72';
+const CACHE = 'novaclip-v73';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
