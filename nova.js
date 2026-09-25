@@ -6261,6 +6261,45 @@ function ncHelpEverywhere() {
   });
 }
 
+/* ============================================================================
+   A LINK INSIDE A PANEL MUST NOT LOAD A PAGE INTO THE PANEL
+   ============================================================================
+   Studio shows the editor, the Photo tool, the AI Editor and Hype Lab as
+   frames, and the Games, Socials and AI pages do the same with their tabs. The
+   pages in those frames are ordinary pages with ordinary links — the editor's
+   header has <a href="index.html">Back to the site</a> — and inside a frame
+   that link does what a link does: it loads the whole home page, rail and
+   hero and all, INSIDE the panel. Above it sits Studio's exit bar, still
+   saying "Editor / Open on its own page", because as far as Studio knows
+   nothing happened. The result is the site wearing itself as a hat, and no
+   way back out except the browser's own Back button.
+
+   Nothing on this site is meant to be read inside one of its own panels, so a
+   link that leaves the framed tool takes the whole window with it. Only
+   same-origin page links: anchors within the page, mailto:, tel:, external
+   links and anything the tool opens in a new tab are left exactly as they are.
+   ============================================================================ */
+function ncEmbedLinks() {
+  document.addEventListener('click', function (e) {
+    const a = e.target && e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    /* A link that already says where it wants to go is left alone. */
+    if (a.target && a.target !== '_self') return;
+    if (a.hasAttribute('download')) return;
+    const href = a.getAttribute('href') || '';
+    if (!href || href.charAt(0) === '#') return;
+    if (/^(mailto:|tel:|javascript:|data:|blob:)/i.test(href)) return;
+    let u;
+    try { u = new URL(a.href, location.href); } catch (err) { return; }
+    if (u.origin !== location.origin) return;
+    /* Same page, different hash: that is the tool routing itself, not leaving. */
+    if (u.pathname === location.pathname && u.search === location.search) return;
+    e.preventDefault();
+    try { window.top.location.href = u.href; }
+    catch (err) { location.href = u.href; }   /* a cross-origin top is not ours to move */
+  }, true);
+}
+
 /* Pages that are hosted inside another page — Games, AI, Socials each put two
    existing pages behind tabs — must not draw a second sidebar inside the first
    one, or a second points badge over it. The host adds ?embed=1; everything
@@ -6270,6 +6309,7 @@ window.NC_EMBED = NC_EMBED;
 
 window.addEventListener('DOMContentLoaded', () => {
   if (NC_EMBED) {
+    ncEmbedLinks();
     const st = document.createElement('style');
     st.textContent = '.sidebar,#ncpts,#nctoast{display:none!important}' +
                      'body{margin-left:0!important;padding-bottom:0!important}' +

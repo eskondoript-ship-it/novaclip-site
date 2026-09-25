@@ -559,6 +559,23 @@
    instead of dropping.
 
    nova.js. All cached. */
+/* v74: a link inside a panel loaded a whole page into the panel.
+
+   Studio shows the editor, the Photo tool, the AI Editor and Hype Lab as
+   ?embed=1 frames, and the pages in them are ordinary pages with ordinary
+   links. The editor's header carries <a href="index.html">Back to the site</a>,
+   and inside a frame that did exactly what a link does: it loaded the home
+   page — rail, hero, "Run your channel like a game" and all — INSIDE the
+   Studio panel, with Studio's exit bar still above it saying "Editor / Open on
+   its own page", because as far as Studio knew nothing had happened. The site
+   wearing itself as a hat, with no way out but the browser's Back button.
+
+   A link that leaves a framed tool now takes the whole window with it. Only
+   same-origin page links: in-page anchors, mailto:, tel:, downloads, targeted
+   links and anything external are untouched, and a hash route inside the tool
+   still stays in the tool.
+
+   nova.js. All cached. */
 /* v71: the help reads the screen now, instead of describing the page.
 
    Knowing which panel somebody is on is not the same as knowing what is on it.
@@ -1066,7 +1083,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v73';
+const CACHE = 'novaclip-v74';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
