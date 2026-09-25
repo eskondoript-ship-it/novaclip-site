@@ -65,9 +65,14 @@
   var ROUTES = {
     '/':           { label: 'Studio home',          guide: 'trends.html' },
     '/trends':     { label: 'Trend Spotter',        guide: 'trends.html' },
-    '/ideas':      { label: 'Video Ideas',          guide: 'trends.html' },
-    '/scripts':    { label: 'Scripts',              guide: 'trends.html' },
-    '/thumbnails': { label: 'Thumbnails',           guide: 'trends.html' },
+    /* These three are panels inside trends.html rather than pages, so there is
+       no written walkthrough that is actually about them — showing Studio's
+       steps under the heading "Video Ideas" would be worse than admitting it.
+       guide is empty, so one gets written for the screen instead; bg is what
+       the model is told about the place they are standing in. */
+    '/ideas':      { label: 'Video Ideas',          guide: '', bg: 'trends.html' },
+    '/scripts':    { label: 'Scripts',              guide: '', bg: 'trends.html' },
+    '/thumbnails': { label: 'Thumbnails',           guide: '', bg: 'trends.html' },
     '/editor':     { label: 'the video editor',     guide: 'editor.html' },
     '/publish':    { label: 'the AI Editor',        guide: 'publish.html' },
     '/photo':      { label: 'the Photo editor',     guide: 'photo.html' },
@@ -249,7 +254,7 @@
     if (/trends\.html/.test(file)) {
       var hash = (location.hash || '#/').replace(/^#/, '') || '/';
       var r = ROUTES[hash] || ROUTES['/'];
-      return { label: r.label, guide: r.guide, route: hash };
+      return { label: r.label, guide: r.guide, bg: r.bg || r.guide, route: hash };
     }
     /* 3. A tool inside a frame. The page is the right answer, but saying so
           matters: somebody in Studio's Photo panel is not "in Studio". */
@@ -262,7 +267,14 @@
      into this file: one table, one place to fix it. */
   function written(p) {
     var g = window.ncGuide && window.ncGuide.pages;
-    return (g && g[p.guide]) || null;
+    if (!g) return null;
+    return g[p.guide] || g[p.bg] || null;
+  }
+  /* The walkthrough that is genuinely ABOUT this screen, as opposed to the one
+     about the page it lives in. Only the first is worth showing as steps. */
+  function ownWritten(p) {
+    var g = window.ncGuide && window.ncGuide.pages;
+    return (g && p.guide && g[p.guide]) || null;
   }
   function suggestions(p) { return SUGGEST[p.guide] || SUGGEST_ANY; }
 
@@ -378,6 +390,92 @@
   }
 
   var card = null, btn = null;
+
+  /* ------------------------------------------------------------------------
+     THE WALKTHROUGH CARD, FOR A SCREEN THAT HAS NO WALKTHROUGH
+
+     nova-guide.js's card — Nova flying out, reading the page, three numbered
+     steps, "Got it" — is the thing people actually recognise as help here, and
+     it existed for twenty-four filenames. A filename is not a screen: Video
+     Ideas, Scripts and Thumbnails are panels inside trends.html and had no
+     steps of their own, and neither does any page added after that table was
+     written.
+
+     So where there is no written walkthrough, one is written for this screen,
+     from what is on it. Nova is already saying "reading this page…" while she
+     flies, which is exactly what is happening — the card renders when the
+     answer lands, and the steps are about the four boxes actually in front of
+     somebody rather than about the page in general.
+
+     Kept for the session, per screen and per language: the same screen does
+     not pay for it twice, and a page reload is a fair moment to look again.
+     ---------------------------------------------------------------------- */
+  function genKey(p) {
+    var lang = 'en';
+    try { if (typeof window.lang === 'function') lang = window.lang(); } catch (e) {}
+    return 'nc_help_gen_' + lang + '_' + (p.topic || p.route || p.guide || pageFile());
+  }
+  function genRead(p) {
+    try {
+      var j = JSON.parse(sessionStorage.getItem(genKey(p)) || 'null');
+      return (j && j.steps && j.steps.length) ? j : null;
+    } catch (e) { return null; }
+  }
+  function genSave(p, g) { try { sessionStorage.setItem(genKey(p), JSON.stringify(g)); } catch (e) {} }
+
+  function generate(p, then) {
+    if (typeof window.ncAsk !== 'function') { then(null); return; }
+    var w = written(p), screen = readScreen(2600);
+    window.ncAsk(
+      'You are writing the help card for one screen of NovaClip, a video and content site used by ' +
+      'teenagers. The screen is: ' + p.label + '.\n' +
+      (w ? 'The part of the site it lives in: ' + w.what + '\n' : '') +
+      '\nTHIS IS WHAT IS ON THE SCREEN, read off the page. ## is a heading, [button] is a button, ' +
+      '[field] is a box with its current value:\n<<<\n' + screen + '\n>>>\n\n' +
+      'Write the card in ' + langName() + ', as JSON and nothing else:\n' +
+      '{"title":"", "what":"", "steps":["","",""], "tip":""}\n' +
+      'title: what this screen is called, two or three words.\n' +
+      'what: one sentence on what it is for.\n' +
+      'steps: three or four, in the order somebody should actually do them, each under 25 words, ' +
+      'naming the real buttons and boxes above so they can be found on screen.\n' +
+      'tip: one thing people miss or get wrong here. Never invent a feature that is not on the screen.',
+      { maxTokens: 700, temperature: 0.3 }
+    ).then(function (r) {
+      if (!r || r.err) { then(null); return; }
+      var j = (typeof window.ncJSON === 'function') ? window.ncJSON(r.text) : null;
+      if (!j || !j.steps || !j.steps.length) { then(null); return; }
+      var g = { title: String(j.title || p.label).slice(0, 60),
+                what: String(j.what || '').slice(0, 220),
+                steps: j.steps.slice(0, 5).map(function (x) { return String(x).slice(0, 220); }),
+                tip: j.tip ? String(j.tip).slice(0, 240) : '' };
+      genSave(p, g);
+      then(g);
+    }, function () { then(null); });
+  }
+
+  /* The walkthrough to show for this screen, if we already have one. */
+  function walkthrough(p) {
+    if (p.topic && window.__ncHelp && window.__ncHelp.topics) {
+      var t = window.__ncHelp.topics[p.topic];
+      if (t) return { title: t.title, what: t.what, steps: t.steps, tip: t.tip };
+    }
+    return ownWritten(p) || genRead(p);
+  }
+
+  /* The Help button opens the card people recognise, about the screen they are
+     on. Where nothing is written for it, Nova flies and reads while the model
+     writes one, and the card renders when it lands — which is the animation
+     doing what it has always claimed to be doing. */
+  function guide() {
+    var p = place(), have = walkthrough(p);
+    if (!window.ncGuide || !window.ncGuide.show) { open(); return; }   /* no guide file — the compact card still works */
+    window.ncGuide.show(have || null);
+    if (have) return;
+    generate(p, function (g) {
+      if (!g) return;
+      try { window.ncGuide.render(g); } catch (e) {}
+    });
+  }
 
   function langName() {
     try {
@@ -545,7 +643,16 @@
     btn.innerHTML = '<i>?</i><span>Help</span>';
     btn.title = 'Ask about this screen';
     btn.setAttribute('aria-label', 'Ask about this screen');
-    btn.onclick = function (e) { e.preventDefault(); e.stopPropagation(); toggle(); };
+    btn.onclick = function (e) {
+      e.preventDefault(); e.stopPropagation();
+      /* The card they recognise first. Its own "Ask Nova something else"
+         button opens the compact one, which is where a typed question goes. */
+      if (card && card.classList.contains('on')) { close(); return; }
+      /* Pressing it again while the walkthrough is up closes it, rather than
+         being a button that does nothing because show() sees itself open. */
+      try { if (window.ncGuide && window.ncGuide.isOpen && window.ncGuide.isOpen()) { window.ncGuide.close(); return; } } catch (e) {}
+      guide();
+    };
     document.body.appendChild(btn);
 
     /* ONE BUTTON PER CORNER, AND THE INNER ONE WINS.
@@ -598,5 +705,5 @@
 
   /* read() is exported on purpose: "what exactly would you send?" is a fair
      question, and the only honest answer is to let it be printed. */
-  window.NC_HELP = { open: open, close: close, where: place, read: readScreen };
+  window.NC_HELP = { open: open, close: close, where: place, read: readScreen, guide: guide };
 })();

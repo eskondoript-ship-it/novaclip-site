@@ -587,6 +587,33 @@
    and gets the same explain button.
 
    nova-help.js, editor-help.js, sw.js. All cached. */
+/* v72: Nova's walkthrough card, for the screen rather than the filename.
+
+   The card people recognise as help here is nova-guide.js's — Nova flies out,
+   says "reading this page…", and lands three numbered steps with Got it and
+   Ask Nova something else. It existed for twenty-four filenames, and a
+   filename is not a screen: Video Ideas, Scripts and Thumbnails are panels
+   inside trends.html and had no steps of their own, framed tools had no way to
+   reach it at all, and neither has any page added since that table was
+   written.
+
+   show() takes a walkthrough now. nova-help.js works out which screen somebody
+   is actually on and hands the matching one in; called with nothing it behaves
+   exactly as before. Where nothing is written for a screen, one is written FOR
+   it, from what is on it — which is what Nova has always claimed to be doing
+   while she flies. Steps name the boxes that are really there, with the values
+   already in them. Kept for the session, per screen and per language.
+
+   The bar's "?" and the Help button now answer the same way about the same
+   screen, and the card's second button hands off to the screen helper's ask
+   box instead of the site-wide one.
+
+   One race worth naming: the model is quicker than the animation, so a
+   generated walkthrough could be drawn and then immediately overwritten by the
+   scheduled render of the page's own. render() stores it as well as drawing
+   it, which covers both orders.
+
+   nova-guide.js, nova-help.js, nova.js. All cached. */
 /* v58: three bugs found by going looking for them.
 
    STUDIO HAD THREE PANELS A PHONE COULD NOT REACH. Below 900px the bundle
@@ -1017,7 +1044,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v71';
+const CACHE = 'novaclip-v72';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

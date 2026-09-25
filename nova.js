@@ -2261,6 +2261,12 @@ function ncBuildBar() {
        The tour is the fallback rather than the first choice, so that a page
        nova-guide.js has never heard of still has something behind the "?"
        instead of a toast apologising. */
+    /* The screen helper first. It resolves which screen this actually is —
+       which Studio route, which framed tool — and hands the matching
+       walkthrough to the same card, so the bar's "?" and the Help button no
+       longer answer differently about the same screen. Plain ncGuide is the
+       fallback for a page where nova-help.js has not loaded. */
+    if (window.NC_HELP && window.NC_HELP.guide) { window.NC_HELP.guide(); return; }
     if (window.ncGuide && window.ncGuide.show) { window.ncGuide.show(); return; }
     if (window.NC_HOWTO && window.NC_HOWTO.open(true)) return;
     toast('The page guide has not loaded on this page.');

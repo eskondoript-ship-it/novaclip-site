@@ -31,6 +31,7 @@
   if (window.ncGuide) return;
 
   var BTN = 'ncguidebtn';        // built by nova.js, in the top bar
+  var shown = null;              // an explicit walkthrough for this screen, if one was handed in
   var reduced = false;
   try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
@@ -443,7 +444,13 @@
          do not cover. */
       close();
       later(function () {
-        try { if (window.NC_ASK) window.NC_ASK.open(); } catch (e) {}
+        /* The screen helper first: it asks about the screen they are looking
+           at, which is what "something else" means while standing in a panel.
+           The site-wide Ask card is the fallback for pages without one. */
+        try {
+          if (window.NC_HELP && window.NC_HELP.open) { window.NC_HELP.open(); return; }
+          if (window.NC_ASK) window.NC_ASK.open();
+        } catch (e) {}
       }, 420);
     };
   }
@@ -453,13 +460,26 @@
     });
   }
 
-  function show() {
+  /* show() takes an optional walkthrough now.
+
+     It used to always render guideFor(), which is keyed on the filename — and
+     a filename is not a place. trends.html is ten screens behind a hash and
+     the editor is twenty-two panels, so the Video Ideas screen got Studio's
+     walkthrough and the Memes panel got the editor's. nova-help.js works out
+     which screen somebody is actually on and hands the matching one in here;
+     called with nothing, this behaves exactly as it always did.
+
+     Anything passed in must carry steps — a card with a title and no steps is
+     worse than the generic one it would have replaced. */
+  function show(entry) {
     if (open) return;
     ensure();
-    /* Where she comes FROM. The bar button normally, and the middle of the top
-       of the screen if the bar is not on this page — an animation with no
-       origin is better than no guide at all. */
-    var from = document.getElementById(BTN);
+    shown = (entry && entry.steps && entry.steps.length) ? entry : null;
+    /* Where she comes FROM. The bar button normally, the screen helper's
+       button when there is no bar — which is every framed page — and the
+       middle of the top of the screen if neither is there. An animation with
+       no origin is better than no guide at all. */
+    var from = document.getElementById(BTN) || document.getElementById('nchq-btn');
     var r = from ? from.getBoundingClientRect()
                  : { left: innerWidth / 2 - 20, top: 8, width: 40, height: 40, bottom: 48 };
     open = true;
@@ -511,7 +531,7 @@
       if (window.NC_MASCOT) window.NC_MASCOT.scan(nova.firstChild, false);
       rings.forEach(function (x) { x.style.display = 'none'; });
       status.classList.remove('on');
-      render(guideFor());
+      render(shown || guideFor());
       var nr = nova.getBoundingClientRect();
       var top = Math.round(nr.bottom + 18);
       card.style.top = top + 'px';
@@ -526,7 +546,7 @@
     if (!open) return;
     open = false;
     clearTimers();
-    var from = document.getElementById(BTN);
+    var from = document.getElementById(BTN) || document.getElementById('nchq-btn');
     card.classList.remove('on');
     status.classList.remove('on');
     rings.forEach(function (x) { x.style.display = 'none'; });
@@ -550,5 +570,23 @@
      poll would never have succeeded. nova.js builds a "?" in the top bar
      beside Ask Nova and calls ncGuide.show(); this file only has to exist. */
 
-  window.ncGuide = { show: show, close: close, guideFor: guideFor, pages: GUIDE };
+  /* render() and isOpen() are exported so a screen-specific walkthrough that
+     arrives late — one the model is still writing while Nova flies out and
+     reads the page — can replace the card's contents in place instead of
+     making the reader watch the animation twice. */
+  window.ncGuide = { show: show, close: close, guideFor: guideFor, pages: GUIDE,
+                     generic: GENERIC,
+                     /* A walkthrough written for this screen can arrive either
+                        side of the fly-in: the model is quick and the animation
+                        is not. Storing it as well as drawing it covers both
+                        orders — arrive early and the scheduled render picks it
+                        up, arrive late and this draws it. Without the first
+                        half, an early answer was drawn and then immediately
+                        overwritten by the page's own walkthrough. */
+                     render: function (g) {
+                       if (!g || !g.steps || !g.steps.length) return;
+                       shown = g;
+                       if (open && card && card.classList.contains('on')) render(g);
+                     },
+                     isOpen: function () { return open; } };
 })();
