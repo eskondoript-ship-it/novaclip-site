@@ -559,6 +559,28 @@
    instead of dropping.
 
    nova.js. All cached. */
+/* v75: one help button in the editor, not three.
+
+   The editor had the Help pill, the bar's "?" and two "How?" pills of
+   editor-help.js's own — three buttons for one job, one of them twice, all
+   answering about the same panel. The two How? pills are gone.
+
+   editor-help.js is not gone, and none of what it knows is deleted: TOPICS is
+   still the twenty-two panel walkthroughs, now() still works out which panel,
+   window or inspector tab is open, and state() still reports the timeline.
+   nova-help.js reads all three — that is where "Emojis, in the video editor"
+   comes from, and the walkthrough Nova lands for it, and now the clip count
+   and selection that let an answer say "the clip you have selected". Its card
+   is still built and still opens from __ncHelp.open(); it has no button of its
+   own any more, so the measuring that kept two pills glued to two moving
+   columns went with them.
+
+   nova-help.js no longer stands down in the editor, which it did only because
+   those pills existed. It also means the frame announces itself properly
+   there, so Studio's Editor panel shows one pill instead of the host's and the
+   frame's together.
+
+   editor-help.js, nova-help.js. All cached. */
 /* v74: a link inside a panel loaded a whole page into the panel.
 
    Studio shows the editor, the Photo tool, the AI Editor and Hype Lab as
@@ -1083,7 +1105,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v74';
+const CACHE = 'novaclip-v75';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

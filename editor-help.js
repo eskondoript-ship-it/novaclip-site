@@ -710,7 +710,18 @@
      when one of the rail's windows is open the left button moves onto it,
      because that window is the panel you are standing in. */
   function place() {
-    if (!btnL) return;
+    /* No pills any more, so there is nothing to glue to a column — but the
+       card still has to land somewhere sensible when __ncHelp.open() puts it
+       up. Bottom right, where every other floating thing on this site lives. */
+    if (!btnL) {
+      if (card && card.style.display !== 'none') {
+        card.style.left = '';
+        card.style.right = '15px';
+        card.style.top = '';
+        card.style.bottom = '66px';
+      }
+      return;
+    }
     var m = modalEl(), modal = m ? m.id : '', col = null, r = null;
 
     if (modal) {
@@ -778,42 +789,28 @@
     return b;
   }
 
+  /* THE TWO "How?" PILLS ARE GONE, AND THIS FILE STILL MATTERS.
+
+     They sat at the bottom of the two columns, and with the Help pill and the
+     bar's "?" both answering per panel as well, the editor had three help
+     buttons in one screen — one of them twice. Three buttons for one job is
+     not three times the help; it is a screen nobody can read.
+
+     What this file knows did not stop being true, so none of it is deleted.
+     TOPICS is still the twenty-two panel walkthroughs, now() still works out
+     which panel, window and inspector tab is open, and state() still reports
+     the timeline. nova-help.js reads all three: that is where "Emojis, in the
+     video editor" comes from, and the walkthrough Nova lands for it.
+
+     The card below is still built and still correct — __ncHelp.open() opens it
+     — it simply has no button of its own any more.
+
+     What boot() is still for: the panel-switch watcher, so a card that is open
+     follows the panel, and Escape to close. Nothing is measured or positioned
+     now, so the resize, scroll and mutation work that used to keep two
+     floating pills glued to two moving columns is gone with them. */
   function boot() {
     css();
-    btnL = button('How?', 'left');
-    btnR = button('How?', 'right');
-    place();
-
-    /* First time in the editor: draw the eye to it once, then never again. */
-    try {
-      if (!localStorage.getItem('nc_help_met')) {
-        localStorage.setItem('nc_help_met', '1');
-        btnL.classList.add('nchlp-new');
-        setTimeout(function () { btnL.classList.remove('nchlp-new'); }, 8200);
-      }
-    } catch (e) {}
-
-    /* The columns move when the window resizes, when a panel opens, and when
-       the sidebar is collapsed. One rAF-throttled pass covers all three. */
-    var queued = false, last = 0;
-    function bump() {
-      if (queued) return;
-      queued = true;
-      /* At most four times a second. The observer below fires on every frame
-         of playback, and measuring the layout that often for a button that
-         has not moved is the kind of thing that makes a preview stutter. */
-      setTimeout(function () {
-        requestAnimationFrame(function () {
-          queued = false; last = Date.now();
-          try { place(); } catch (e) {}
-        });
-      }, Math.max(0, 240 - (Date.now() - last)));
-    }
-    addEventListener('resize', bump);
-    addEventListener('scroll', bump, true);
-    try { new MutationObserver(bump).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] }); } catch (e) {}
-    /* A panel switch while the card is open should change what the card says,
-       not leave it explaining the last one. */
     setInterval(function () {
       if (!openId || openSide === 'right' || !card || card.style.display === 'none') return;
       var now = openModal() || panelTopic();
@@ -842,6 +839,9 @@
     },
     close: close,
     topics: TOPICS,
-    now: function () { return openModal() || panelTopic(); }
+    now: function () { return openModal() || panelTopic(); },
+    /* The timeline as one sentence. nova-help.js puts it in the prompt, so an
+       answer can say "the clip you have selected" rather than "a clip". */
+    state: state
   };
 })();

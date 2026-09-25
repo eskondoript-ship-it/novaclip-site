@@ -498,6 +498,12 @@
       (w ? 'What that is: ' + w.what + '\n' : '') +
       (steps.length ? 'What it is for:\n- ' + steps.join('\n- ') + '\n' : '') +
       (p.route || p.topic || p.embed ? 'Context: ' + around(p) + '\n' : '') +
+      (p.topic && window.__ncHelp && window.__ncHelp.state ? (function () {
+        /* The timeline, from the editor's own store: how many clips, which
+           lanes, what is selected. It is the difference between "select a
+           clip" and "the clip you have selected". */
+        try { return window.__ncHelp.state() + '\n'; } catch (e) { return ''; }
+      })() : '') +
       '\nTHIS IS WHAT IS ACTUALLY ON THEIR SCREEN RIGHT NOW, read off the page. ## is a heading, ' +
       '[button] is a button they can press, [field] is a box with its current value, • is a list item:\n' +
       '<<<\n' + screen + '\n>>>\n\n';
@@ -631,10 +637,10 @@
   function toggle() { (card && card.classList.contains('on')) ? close() : open(); }
 
   function boot() {
-    /* editor.html has a finer one of these already, per rail panel and per
-       inspector tab, and two help buttons in one corner is not twice the
-       help. */
-    if (window.__ncHelp) return;
+    /* It used to stand down in the editor, because editor-help.js drew two
+       "How?" pills of its own there. Those are gone — three help buttons on one
+       screen is not three times the help — so this one is the editor's button
+       as well, and editor-help.js is what it asks about the panel. */
     if (document.getElementById('nchq-btn')) return;
     css();
     btn = document.createElement('button');
