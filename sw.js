@@ -581,6 +581,35 @@
    frame's together.
 
    editor-help.js, nova-help.js. All cached. */
+/* v76: the two cheap fixes to the AI bill.
+
+   Grounding was the most expensive line in the product: about $35 per thousand
+   grounded requests, which made one Trend Spotter scan cost roughly what
+   eighteen ordinary AI answers cost — and 80% of that was the search, not the
+   model.
+
+   THE WORKER DOES THE SEARCH ITSELF when SEARCH_API_KEY is set. Brave or
+   Serper, six results, pasted into the prompt as context, and the model asked
+   WITHOUT the grounding tool — a few dollars per thousand instead of
+   thirty-five. The page cannot tell: the sources come back in
+   groundingMetadata exactly where nova.js already reads them. With no secret
+   set, or if the search fails or returns nothing, it falls through to Gemini's
+   own grounding and behaves as it always did. A request we grounded ourselves
+   is only text by the time it leaves, so it can also fail over to another
+   vendor — a second, quieter win.
+
+   AND THE SAME PUBLIC QUESTION IS PAID FOR ONCE. Grounded answers are cached
+   in KV for six hours under a hash of the request AS IT ARRIVED — not of the
+   payload after the results are pasted in, which would change between two
+   askers a minute apart and never hit. A hit skips the search and the model.
+   Ordinary prompts are never cached: they are cheap, often personal, and have
+   no business in a shared store.
+
+   nova.js passes searchQuery through; trends-nav.js sends the question a
+   person would actually type rather than the three hundred lines of
+   instructions around it.
+
+   ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
 /* v74: a link inside a panel loaded a whole page into the panel.
 
    Studio shows the editor, the Photo tool, the AI Editor and Hype Lab as
@@ -1105,7 +1134,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v75';
+const CACHE = 'novaclip-v76';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

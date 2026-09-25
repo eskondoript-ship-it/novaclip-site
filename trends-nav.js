@@ -1050,7 +1050,13 @@
         '"angle":"<one video this creator could make from it, max 16 words>"}]}\n' +
         'The "badge" value stays one of those four English words whatever language the rest ' +
         'is in — the page colours the pill from it.' + langNote(),
-        { search: true, maxTokens: 2000 });
+        /* searchQuery is what actually goes to the search engine. The prompt
+           above is three hundred lines of instructions and is useless as a
+           query; this is the question a person would type. It also keys the
+           worker's cache, so the whole class scanning "minecraft" after school
+           pays for one search between them. */
+        { search: true, maxTokens: 2000,
+          searchQuery: t + ' trending videos ' + (when || 'this week') + ' youtube tiktok shorts' });
       if (raw && raw.err) throw new Error(raw.err);
       var body = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
       var m = body.match(/\{[\s\S]*\}/);

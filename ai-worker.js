@@ -212,6 +212,101 @@ function modelsFor(provider, want, tried) {
   });
 }
 
+/* ---------------------------------------------------------------------------
+   GROUNDING, THE CHEAP WAY — AND CACHED
+   ---------------------------------------------------------------------------
+   Asking Gemini to ground an answer is one line of JSON and it is the most
+   expensive line in this file. The tool is billed per grounded request at
+   roughly thirty-five dollars per thousand, which made one Trend Spotter scan
+   cost about as much as eighteen ordinary AI answers — and eighty per cent of
+   that was the search, not the model.
+
+   A plain search API costs a few dollars per thousand queries for the same
+   thing: a list of current pages about a subject. So when SEARCH_API_KEY is
+   set, this Worker does the search itself, pastes the results into the prompt
+   as context, and asks the model WITHOUT the grounding tool. The page cannot
+   tell: the sources come back in groundingMetadata exactly where nova.js
+   already looks for them.
+
+   With no SEARCH_API_KEY it falls back to Gemini's own grounding, so a
+   deployment that has not set the secret keeps working exactly as before.
+
+   AND THE SAME QUESTION IS ONLY PAID FOR ONCE. A trend scan is a public
+   question about a public subject — "what is moving in Minecraft this week" —
+   and the answer is the same for everybody who asks it that afternoon. It is
+   cached in KV under a hash of the exact request, so a second asker, or the
+   same asker tomorrow morning, is free. The key is the whole payload, so two
+   different prompts can never collide; a hit means somebody asked for
+   precisely this, word for word.
+   --------------------------------------------------------------------------- */
+const SEARCH_TTL = 6 * 60 * 60;        // six hours: trends move by the day, not the minute
+const SEARCH_HITS = 6;                 // enough to ground an answer, small enough to stay cheap
+
+const SEARCH_API = {
+  brave: {
+    req: (k, q) => [
+      'https://api.search.brave.com/res/v1/web/search?count=' + SEARCH_HITS + '&q=' + encodeURIComponent(q),
+      { headers: { Accept: 'application/json', 'X-Subscription-Token': k } }
+    ],
+    read: (j) => ((j.web && j.web.results) || []).map(r => ({ title: r.title, uri: r.url, text: r.description || '' }))
+  },
+  serper: {
+    req: (k, q) => [
+      'https://google.serper.dev/search',
+      { method: 'POST', headers: { 'X-API-KEY': k, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: q, num: SEARCH_HITS }) }
+    ],
+    read: (j) => (j.organic || []).map(r => ({ title: r.title, uri: r.link, text: r.snippet || '' }))
+  }
+};
+
+/* Never throws and never blocks the answer: a search that fails returns no
+   hits, and the caller falls back to Gemini's own grounding. */
+async function webSearch(env, q) {
+  const which = SEARCH_API[(env.SEARCH_PROVIDER || 'brave').toLowerCase()] || SEARCH_API.brave;
+  try {
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 6000);
+    const [url, init] = which.req(env.SEARCH_API_KEY, q);
+    const r = await fetch(url, Object.assign({ signal: abort.signal }, init));
+    clearTimeout(timer);
+    if (!r.ok) return [];
+    const j = await r.json();
+    return which.read(j).filter(h => h && h.uri && h.title).slice(0, SEARCH_HITS);
+  } catch (e) { return []; }
+}
+
+/* The results, pasted in front of the prompt the page wrote. */
+function withContext(payload, q, hits) {
+  let copy;
+  try { copy = JSON.parse(JSON.stringify(payload)); } catch (e) { return payload; }
+  if (!copy.contents || !copy.contents[0] || !Array.isArray(copy.contents[0].parts)) return payload;
+  const lines = hits.map((h, i) =>
+    (i + 1) + '. ' + h.title + ' — ' + h.uri + '\n   ' + String(h.text || '').slice(0, 300)).join('\n');
+  copy.contents[0].parts.unshift({ text:
+    'LIVE WEB RESULTS for "' + q + '", fetched seconds ago. Treat these as what is true right now, ' +
+    'and do not claim anything they do not support:\n' + lines + '\n\n---\n' });
+  return copy;
+}
+
+/* Put the sources where nova.js already reads them, so a self-searched answer
+   and a Gemini-grounded one are the same shape to the page. */
+function withSources(text, hits) {
+  if (!hits || !hits.length) return text;
+  try {
+    const j = JSON.parse(text);
+    j.groundingMetadata = { groundingChunks: hits.map(h => ({ web: { uri: h.uri, title: h.title } })) };
+    return JSON.stringify(j);
+  } catch (e) { return text; }
+}
+
+async function cacheKey(parts) {
+  const bytes = new TextEncoder().encode(JSON.stringify(parts));
+  const buf = await crypto.subtle.digest('SHA-256', bytes);
+  return 'gs:' + Array.from(new Uint8Array(buf)).slice(0, 16)
+    .map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 const MAX_BODY = 64 * 1024;      // a prompt bigger than this is not a prompt
 
 /* ---- IMAGES ---------------------------------------------------------------
@@ -278,7 +373,7 @@ const CORS = {
      so without this the page can see the answer but not who wrote it. It is
      two strings and it is what lets nova.js say "Gemini is out, OpenAI
      answered" instead of leaving somebody to wonder why the voice changed. */
-  'Access-Control-Expose-Headers': 'X-NovaClip-Provider, X-NovaClip-Switched, X-NovaClip-Model',
+  'Access-Control-Expose-Headers': 'X-NovaClip-Provider, X-NovaClip-Switched, X-NovaClip-Model, X-NovaClip-Cache',
   'Access-Control-Max-Age': '86400'
 };
 
@@ -505,6 +600,11 @@ export default {
            means no failover, which is worth seeing on the health page rather
            than discovering at four in the afternoon. */
         failover: FAILOVER_ORDER.filter(function (p) { return !!env[SECRET[p]]; }),
+        /* Grounding: who does the searching, and whether answers are cached.
+           "gemini-builtin" is the expensive path — roughly ten times the price
+           of a plain search API for the same list of pages. */
+        grounding: env.SEARCH_API_KEY ? ((env.SEARCH_PROVIDER || 'brave') + ' (search API)') : 'gemini-builtin',
+        search_cache: env.RL ? (SEARCH_TTL / 3600) + 'h in KV' : 'off — no RL KV binding',
         note: (['gemini', 'openrouter', 'openai']
           .filter(function (p) { return !!env[SECRET[p]]; })
           .join(', ') || 'none') + ' — Settings > Variables and Secrets > Add secret (GEMINI_API_KEY, OPENROUTER_API_KEY, OPENAI_API_KEY).'
@@ -846,8 +946,9 @@ export default {
     /* Grounding is a Google-side tool. Refuse rather than silently ignore, so a
        caller knows their "search the live web" request did not happen. */
     const search = body.search === true;
-    if (search && provider !== 'gemini') {
-      return fail(400, 'Search grounding is a Gemini feature; the ' + provider + ' adapter cannot search.');
+    if (search && provider !== 'gemini' && !env.SEARCH_API_KEY) {
+      return fail(400, 'Search grounding is a Gemini feature; the ' + provider + ' adapter cannot search. ' +
+                       'Set SEARCH_API_KEY and this Worker will do the search itself for any provider.');
     }
 
     /* A provider with no key on the worker is "not enabled" — a clear reason
@@ -856,10 +957,61 @@ export default {
       return fail(503, 'This NovaClip AI worker has no ' + SECRET[provider] + ' secret set. Whoever deployed it needs to add it — and OpenRouter/OpenAI only work when their key is on the worker too.');
     }
 
-    /* An image or a grounded search can only be answered by Gemini, so those
-       two never switch vendors. See FAILOVER_ORDER above for why that is the
-       honest behaviour rather than a limitation. */
-    const pinned = search || img.count > 0;
+    /* ------------------------------------------------------------------
+       THE SAME PUBLIC QUESTION IS ONLY PAID FOR ONCE
+       ------------------------------------------------------------------
+       Keyed on the request as it arrived — provider, model, the page's own
+       payload and the search query — and NOT on the payload after the search
+       results are pasted in. Keying on the injected version would mean two
+       people asking the same thing a minute apart got different keys, because
+       the web moved between them, and the cache would never hit. This way a
+       hit skips the search AND the model.
+
+       Only grounded requests are cached. An ordinary prompt is cheap, often
+       personal, and has no business in a shared store. */
+    let cacheK = '';
+    if (search && env.RL) {
+      try {
+        cacheK = await cacheKey([provider, model, body.payload,
+                                 typeof body.searchQuery === 'string' ? body.searchQuery : '']);
+        const hit = await env.RL.get(cacheK);
+        if (hit) {
+          return new Response(hit, {
+            status: 200,
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS,
+                       'X-NovaClip-Cache': 'hit' }
+          });
+        }
+      } catch (e) { cacheK = ''; }   /* a broken cache must never break an answer */
+    }
+
+    /* ------------------------------------------------------------------
+       GROUNDING: OUR OWN SEARCH WHERE WE HAVE A KEY FOR ONE
+       ------------------------------------------------------------------
+       With SEARCH_API_KEY set, the Worker fetches the results itself and
+       pastes them into the prompt, and the model is asked WITHOUT the
+       grounding tool — a few dollars per thousand instead of thirty-five.
+       Without the secret, or if the search fails or returns nothing, this
+       falls through and Gemini grounds it exactly as it always did. */
+    let payload = body.payload;
+    let hits = null;
+    let grounded = search;
+    const sq = typeof body.searchQuery === 'string' ? body.searchQuery.trim().slice(0, 200) : '';
+
+    if (search && env.SEARCH_API_KEY && sq) {
+      const found = await webSearch(env, sq);
+      if (found.length) {
+        payload = withContext(payload, sq, found);
+        hits = found;
+        grounded = false;
+      }
+    }
+
+    /* An image can only be answered by Gemini, and so can a request we are
+       asking GEMINI to ground. One we grounded ourselves is only text by the
+       time it leaves here, so it may fail over to another vendor like anything
+       else — which is a second, quieter win from doing the search ourselves. */
+    const pinned = grounded || img.count > 0;
 
     const tried = new Set();        /* vendors asked */
     const triedM = new Set();       /* provider/model pairs asked */
@@ -880,7 +1032,7 @@ export default {
       const timer = setTimeout(() => abort.abort(), UPSTREAM_TIMEOUT_MS);
       let threw = null;
       try {
-        upstream = await upstreamFetch(at, atModel, body.payload, env[SECRET[at]], abort.signal, search);
+        upstream = await upstreamFetch(at, atModel, payload, env[SECRET[at]], abort.signal, grounded);
       } catch (e) {
         threw = e;
       }
@@ -958,9 +1110,12 @@ export default {
     /* Gemini passes through untouched; the chat-completions vendors are folded
        back into Gemini's candidates shape so ncAsk reads them the same way. */
     if (at === 'gemini') {
-      return new Response(text, {
+      const out = withSources(text, hits);
+      if (cacheK) { try { await env.RL.put(cacheK, out, { expirationTtl: SEARCH_TTL }); } catch (e) {} }
+      return new Response(out, {
         status: 200,
-        headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS, ...who }
+        headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS, ...who,
+                   ...(cacheK ? { 'X-NovaClip-Cache': 'miss' } : {}) }
       });
     }
     let upstreamJson;
@@ -970,9 +1125,12 @@ export default {
     if (!geminiShape) {
       return fail(502, 'The AI answered in a shape this worker could not read.');
     }
-    return new Response(JSON.stringify(geminiShape), {
+    const shaped = withSources(JSON.stringify(geminiShape), hits);
+    if (cacheK) { try { await env.RL.put(cacheK, shaped, { expirationTtl: SEARCH_TTL }); } catch (e) {} }
+    return new Response(shaped, {
       status: 200,
-      headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS, ...who }
+      headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS, ...who,
+                 ...(cacheK ? { 'X-NovaClip-Cache': 'miss' } : {}) }
     });
   }
 };

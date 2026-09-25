@@ -5398,7 +5398,7 @@ function ncKeyLooksReal(k) { return /^AIza[\w-]{30,}$/.test((k || '').trim()); }
    answer: if the model could not be reached, err says so and text is empty, so
    callers can tell "it said nothing" apart from "it could not be asked".
 
-   opts: { provider, model, temperature, maxTokens, search }. provider defaults to
+   opts: { provider, model, temperature, maxTokens, search, searchQuery }. provider defaults to
    the active selection (ncActiveProvider); model defaults per provider. A personal
    key applies only to gemini — an AIza key cannot be spent at OpenRouter or
    OpenAI, so those two always go through the worker's shared key. search:true
@@ -5671,7 +5671,14 @@ async function ncAsk(prompt, opts) {
         return { res: res, raw: await res.text().catch(function () { return ''; }) };
       }
       const res = await fetch(NC_AI_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: route.provider, model: route.model, payload: body, search: opts.search === true }) });
+        body: JSON.stringify({ provider: route.provider, model: route.model, payload: body,
+          search: opts.search === true,
+          /* What to type into a search engine, when the caller knows. The
+             worker uses it to do the search itself for a few dollars per
+             thousand instead of Gemini's thirty-five, and to key the cache —
+             so the same public question is paid for once. Without it the
+             worker falls back to Gemini's own grounding. */
+          searchQuery: opts.searchQuery || '' }) });
       return { res: res, raw: await res.text().catch(function () { return ''; }) };
     }
 
