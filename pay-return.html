@@ -153,7 +153,31 @@ a.b.alt,button.b.alt{background:transparent;color:var(--nc-text,#EAF2FF);
 
       if (!already) {
         try {
-          localStorage.setItem('nc_pro', '1');
+          /* THE RECORD HAS A SHAPE, AND '1' IS NOT IT.
+             ncPro() parses this and ncProHas('tools') asks it for a named
+             field. Written as the string '1' it parsed to the number 1, and
+             (1)['tools'] is undefined — so every Pro feature stayed locked for
+             somebody who had just paid, while the demo path in pricing.html,
+             which writes the object properly, worked fine. The bug was
+             invisible to anyone testing without a card.
+
+             The plan name decides what they get. If it is one we do not
+             recognise, they are granted everything: they demonstrably paid,
+             and a payer locked out is a worse error than a payer given too
+             much, which support can correct. */
+          var planName = String(res.j.plan || (order && order.plan) || '');
+          var lc = planName.toLowerCase();
+          var isBundle = /bundle/.test(lc);
+          var isFamily = /dashboard|family|parent/.test(lc);
+          var isTools  = /tools|kids|upgrade/.test(lc);
+          var known = isBundle || isFamily || isTools;
+          localStorage.setItem('nc_pro', JSON.stringify({
+            tier:   isBundle ? 'bundle' : (isFamily ? 'family' : (isTools ? 'tools' : 'bundle')),
+            family: isBundle || isFamily || !known,
+            tools:  isBundle || isTools  || !known,
+            since:  new Date().toISOString(),
+            plans:  planName ? [planName] : []
+          }));
           localStorage.setItem('nc_subscription', JSON.stringify({
             plan: res.j.plan || (order && order.plan) || 'NovaClip',
             price: money(res.j.amount, res.j.currency),

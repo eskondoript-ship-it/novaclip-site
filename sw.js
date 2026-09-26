@@ -610,6 +610,20 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v77: a paying customer got nothing.
+
+   ncPro() parses nc_pro and ncProHas('tools') asks the result for a named
+   field. pricing.html writes that record properly, as an object. pay-return.html
+   — the page a real Stripe customer lands on — wrote the string '1', which
+   parses to the number 1, and (1)['tools'] is undefined. So every Pro feature
+   stayed locked for the one person who had actually paid for them, while the
+   demo path worked perfectly and hid it.
+
+   pay-return.html now writes the same shape pricing.html does, derived from
+   the plan name. An unrecognised plan grants everything: they demonstrably
+   paid, and a payer locked out is a worse failure than a payer given too much.
+
+   pay-return.html. Cached, so the bump matters. */
 /* v74: a link inside a panel loaded a whole page into the panel.
 
    Studio shows the editor, the Photo tool, the AI Editor and Hype Lab as
@@ -1134,7 +1148,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v76';
+const CACHE = 'novaclip-v77';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
