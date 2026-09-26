@@ -10,10 +10,10 @@
    "How do I use the editor" has one correct answer and it does not change
    between visits. Sending it to Gemini would cost tokens on the one thing the
    Business Model Canvas identifies as the only cost that scales with free
-   users, take a second and a half, and — the part that actually matters —
-   would fail on a train. This site is offline-capable and installable; a help
-   button that needs the network is a help button that is missing exactly when
-   somebody is stuck.
+   users, take a second and a half, and — the part that actually matters — would
+   fail on the slow, flaky connection somebody is most likely to be stuck on. A
+   help button that needs its own round trip to the model is a help button that
+   is missing exactly when it is wanted.
 
    So the steps are local, instant and free. The AI is still one tap away from
    the same card for anything not covered, which is what Ask Nova is for.
@@ -52,7 +52,7 @@
         'The top bar sets the theme, the language and the vibe. They follow you to every other page.',
         'Nothing here needs an account. A profile is offered when it starts to be worth having.'
       ],
-      tip: 'The whole site works offline once you have opened it — you can install it from your browser menu.'
+      tip: 'You can install it from your browser menu — it opens like an app, straight to this page.'
     },
     'editor.html': {
       title: 'The video editor',
@@ -106,7 +106,7 @@
         'Choose which effects to allow: music, light, words, motion.',
         'Export. Generated flashing is capped at three per second to stay inside WCAG 2.3.1, whatever you ask for.'
       ],
-      tip: 'All of it runs on your machine, so it is free to use and works offline. Only "ask the AI for the words" needs the network.'
+      tip: 'All of it runs on your machine, so it is free to use and nothing is uploaded. Only "ask the AI for the words" leaves your device.'
     },
     'photo.html': {
       title: 'The photo editor',
@@ -271,7 +271,7 @@
       'Nothing needs an account to try. A profile is offered when it starts to be worth having.',
       'Ask Nova is in the top bar — press it and say what you want to do, in plain words.'
     ],
-    tip: 'Everything you have opened once works offline afterwards.'
+    tip: 'Pages you have opened once load instantly the next time.'
   };
 
   function pageKey() {

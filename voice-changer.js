@@ -445,7 +445,7 @@
         '<button id="ncVcX" class="ncvc-x" type="button" aria-label="Close and go back to the editor" title="Back to the editor">&times;</button>' +
         '<h2>Voice changer</h2>' +
         '<p class="lede">Pick a clip that has sound, or record a new line. ' +
-        'It is changed on this device — nothing is uploaded, and it works offline.</p>' +
+        'It is changed on this device — nothing is uploaded, and your voice never leaves the browser.</p>' +
 
         '<div class="step"><h3><i class="num">1</i> The sound</h3>' +
           '<div class="row">' +

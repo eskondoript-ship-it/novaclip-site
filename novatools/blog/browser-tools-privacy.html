@@ -38,7 +38,7 @@
   {
    "@type": "BlogPosting",
    "headline": "Why browser tools do not upload your files, and how to check in a minute",
-   "description": "How in-browser tools work without uploading anything, how to verify it with the Network tab or by going offline, and what a website still sees even when it collects nothing.",
+   "description": "How in-browser tools work without uploading anything, how to verify it with the Network tab, and what a website still sees even when it collects nothing.",
    "url": "https://mynovatools.com/blog/browser-tools-privacy.html",
    "datePublished": "2026-08-06",
    "dateModified": "2026-08-06",
@@ -159,10 +159,13 @@ it and look at the request payload: that is your data, and now you know where it
 went. This works on any site, not just this one, and it is the single most useful
 thing to know how to do about web privacy.</p>
 
-<h3>The offline test</h3>
-<p>Even simpler, and harder to fake. Load the page, turn off your Wi-Fi, and keep
-using it. Tools that run in your browser keep working with no network at all.
-Tools that need a server fail immediately.</p>
+<h3>The disconnect test</h3>
+<p>Even simpler, and harder to fake. With the page already open, drop your
+connection and press the button. A tool that does its work in your browser gets
+to the answer; a tool that needs a server fails immediately. It is a test of
+where the work happens, not a promise that any site is usable without a
+connection &mdash; you needed one to open the page, and you will need one to
+open it again.</p>
 
 <h2>What a website still sees</h2>
 <p>&ldquo;Nothing is uploaded&rdquo; is a precise claim and it is worth being
@@ -179,7 +182,8 @@ against your own Network tab.</p>
 
 <h2>How to judge any free tool site</h2>
 <ul>
-<li><strong>Does it work offline?</strong> The fastest signal there is.</li>
+<li><strong>Does the work still happen with the connection dropped?</strong>
+The fastest signal there is.</li>
 <li><strong>Does it insist on an account for something that does not need one?</strong>
 An email address is the product being collected.</li>
 <li><strong>Is there a file size limit?</strong> Limits usually mean uploads,

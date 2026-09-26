@@ -140,7 +140,7 @@
         'The article it came from is saved with it, so you can credit it later.',
         'If nothing comes back, try one of the category buttons — the search is looking at real article images, not a stock library.'
       ],
-      tip: 'This one does need the network. The stickers are the ones that work offline.'
+      tip: 'This one fetches real photos, so it needs a connection. The stickers are drawn here and never do.'
     },
     audio: {
       title: 'Audio',
@@ -195,7 +195,7 @@
         'Apply it — the changed sound goes back onto the timeline as a clip.',
         'The original is still in the media library, so nothing is lost.'
       ],
-      tip: 'This runs on your own device. Nothing is uploaded, and it works offline.'
+      tip: 'This runs on your own device. Nothing is uploaded, and your voice never leaves the browser.'
     },
     record: {
       title: 'Record yourself',

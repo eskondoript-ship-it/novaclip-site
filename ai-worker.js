@@ -817,7 +817,7 @@ export default {
 
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
     if (await rateLimited(env, ip)) {
-      return fail(429, 'Too many requests from this connection. Wait a minute, or add your own key in your profile.');
+      return fail(429, 'Too many requests from this connection. Wait a minute and try again.');
     }
 
     const raw = await request.text();
@@ -1081,8 +1081,8 @@ export default {
       if (lastStatus === 429) {
         reason = tried.size > 1
           ? 'Every AI on this NovaClip worker is out of quota for now (' +
-            Array.from(tried).join(', ') + '). Add your own key in your profile to keep going.'
-          : 'NovaClip\'s shared AI is out of free quota for now. Add your own key in your profile to keep going.';
+            Array.from(tried).join(', ') + '). The quota refills — try again in a few minutes.'
+          : 'NovaClip\'s shared AI is out of free quota for now. The quota refills — try again in a few minutes.';
       } else if (lastStatus === 401 || (lastStatus === 400 && /key not valid|invalid api key/i.test(reason))) {
         reason = 'The ' + at + ' key on this worker was rejected by its vendor. Whoever deployed it needs to replace ' + SECRET[at] + '.';
       } else if (modelIsGone(lastStatus, reason)) {

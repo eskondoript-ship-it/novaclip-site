@@ -460,8 +460,8 @@
    broken key hidden behind a working fallback survives for a month. Images
    and grounded searches never switch: only Gemini serves them, and an
    ungrounded guess presented as a searched answer is a worse answer, not a
-   fallback. nova.js does the same one level up — own key, then the shared
-   worker, then a model on your own machine — and stands a route down for ten
+   fallback. nova.js does the same one level up — the shared worker, then a
+   model on your own machine if Ollama is running — and stands a route down for ten
    minutes once it has said it is out, so the next feature on the page does
    not pay for the same refusal. The answer says who wrote it through two
    headers the worker now exposes, and a switch is mentioned once per session
@@ -610,6 +610,34 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v78: two promises the site should not have been making.
+
+   THE KEY BOX IS GONE. The profile had a password field that took a Google AI
+   key, kept it in localStorage and sent it from the page straight to Google.
+   It was offered as a way past the shared quota, and it was the wrong offer to
+   put in front of a thirteen-year-old: a billable credential, readable by
+   anyone holding the phone, on a site whose whole safety story is that nothing
+   of theirs is anywhere it should not be. Every AI request now goes through
+   ai-worker.js, which holds the keys and already walks three vendors before it
+   gives up. The route list is worker → the other vendors → a model on your own
+   machine, and every "add your own key in your profile" sentence — in the
+   page, in the worker and in the privacy policy — is replaced by what is
+   actually true: the quota refills, wait a few minutes. Any key a visitor
+   pasted into the old build is deleted from their browser on the next load,
+   because the box that could have deleted it no longer exists.
+
+   AND IT DOES NOT CLAIM TO WORK OFFLINE. The help cards, the tool copy and
+   NovaTools' own front page all said so. The service worker still precaches —
+   that is what makes a second visit instant and what carries the update pill —
+   but you need a connection to reach novaclip.org in the first place, so
+   "works offline" was a promise the site could not keep. What is true and
+   still said: nothing is uploaded, nothing is fetched once a tool is open, and
+   the work happens on your own device.
+
+   nova.js, nova-help.js, nova-guide.js, editor-help.js, editor.html,
+   voice-changer.js, tools.html, tools-extra.js, flap.html, privacy.html,
+   ai.html, ai-worker.js (deploy it — a push does not), and the NovaTools
+   pages. Cached, so the bump matters. */
 /* v77: a paying customer got nothing.
 
    ncPro() parses nc_pro and ncProHas('tools') asks the result for a named
@@ -1148,7 +1176,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v77';
+const CACHE = 'novaclip-v78';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

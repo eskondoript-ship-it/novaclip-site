@@ -116,7 +116,7 @@
     'game.html':      ['How do I play?', 'How do I get a high score?', 'Do points count for anything?'],
     'socials.html':   ['Which platform suits me?', 'When should I post?', 'What am I missing?'],
     'coder.html':     ['What can I build here?', 'How do I run my code?', 'I am stuck — help'],
-    'profile.html':   ['What is my own key for?', 'How do I change my name?', 'What is saved about me?']
+    'profile.html':   ['How do I change my name?', 'How do I pick a picture?', 'What is saved about me?']
   };
   var SUGGEST_ANY = ['What can I do here?', 'How do I start?', 'What am I missing?'];
 

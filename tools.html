@@ -1867,7 +1867,7 @@ IMPL['soundboard'] = {
     '<div class="cats" id="sfxcats" style="margin-bottom:14px"></div>' +
     '<div id="sfxgrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr));gap:8px;max-height:46vh;overflow-y:auto"></div>' +
     '<p class="note" id="sfxnote">Press one to hear it. The arrow saves it as a WAV. ' +
-    'Every sound is generated here, in this tab — nothing is downloaded, so the whole board works offline.</p>',
+    'Every sound is generated here, in this tab — nothing is downloaded and nothing is uploaded.</p>',
   wire() {
     let cat = 'all', term = '';
     let ctx = null;
@@ -2160,7 +2160,8 @@ IMPL['cleanup'] = {
    joints and a mesh deformer bending the artwork, and both need a server.
 
    The trade is a fair one: you place nine points once, by dragging, and in
-   exchange nothing is uploaded, there is no queue, and it runs offline.
+   exchange nothing is uploaded, there is no queue, and no server sees the
+   drawing.
    =========================================================================== */
 /* THE DRAWING BOARD.
    Asked for by name, and it fills a real gap: "Animate a drawing" has always

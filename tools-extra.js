@@ -9,7 +9,7 @@
    THE RULE THIS FILE FOLLOWS
 
    Nothing that needs a key, a server or a model download. Everything runs in
-   the tab, offline, on the visitor's own data. That is not a limitation being
+   the tab, on the visitor's own data. That is not a limitation being
    worked around, it is the whole promise of the page: "nothing uploads" is
    only true if it is true of every tool on it.
 
