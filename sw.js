@@ -610,6 +610,39 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v81: three legal gaps, one of which the code was actually creating.
+
+   THE SERVER WAS STORING IP ADDRESSES WHILE THIS SITE'S PRIVACY POLICY SAID IT
+   HELD "nothing that identifies you". leaderboard-worker.js recorded the owner of
+   a claimed leaderboard name as 'anon:' + the caller's address, in KV, with no
+   expiry, and keyed every rate limit on the address too. These are mostly
+   children's addresses. The address is now hashed on arrival with the same PEPPER
+   secret saltFor() uses and only the hash is stored, an anonymous hold on a name
+   expires after 90 days, and records written under the old scheme are recognised
+   once and rewritten — so the rightful holder keeps their name and the stored
+   addresses drain out as people come back, rather than a fix for a privacy
+   problem reintroducing the name-theft bug the same function was written to stop.
+
+   NOBODY COULD TELL WHO RUNS THE SITE OR COMPLAIN ABOUT IT. privacy.html now
+   names the controller, says where they are, points at the CNPD by name for
+   anybody who wants to complain to someone other than us, and sets out the
+   lawful basis, the retention periods and the transfers out of the EU — all of
+   which were simply absent. The legal name and postal address are left as a
+   marked comment in the page rather than invented.
+
+   AND CONSENT COULD BE GIVEN BUT NEVER TAKEN BACK. The cookie banner never
+   returned once answered, so there was no route back at all. The analytics
+   section now carries the current answer and two buttons to change it, which is
+   what Art 7(3) actually asks for.
+
+   THERE WAS NO WAY FOR A RIGHTSHOLDER TO COMPLAIN. One sentence told users not to
+   infringe and nothing said what happens when somebody does. terms.html has a new
+   section 9: what the libraries check, what they deliberately leave out, how to
+   send a copyright complaint and what we do with it, how to contest a removal,
+   and that doing it repeatedly ends the account. Sections 9-15 became 10-16.
+
+   leaderboard-worker.js (DEPLOY IT — a push does not), privacy.html, terms.html.
+   Both policy pages are cached, so the bump matters. */
 /* v80: a level that measures the channel, and a parent card that never worked.
 
    Asked for as "levels for creators based on how big is their channel". There
@@ -1234,7 +1267,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v80';
+const CACHE = 'novaclip-v81';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

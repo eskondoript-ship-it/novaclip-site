@@ -187,7 +187,7 @@ a.back { margin-bottom:0; }
   <h1>Privacy</h1>
   <p class='lede big'>Most people using NovaClip are teenagers. This page
      is written to be read by them, not by a lawyer.</p>
-  <p class='updated'>Last updated 10 September 2026 · NovaClip · novaclip.org ·
+  <p class='updated'>Last updated 27 September 2026 · NovaClip · novaclip.org ·
      <a href='/terms.html'>Terms of Use</a></p>
 
   <div class='card'>
@@ -255,7 +255,18 @@ a.back { margin-bottom:0; }
      under-18s means holding data that can be breached, and it means a password
      a young person has probably reused elsewhere. So we hold neither. What our
      server stores against your code is the progress you saved and the time you
-     saved it — nothing that identifies you.</p>
+     saved it — no name, no email, nothing you did not type in yourself.</p>
+  <p><strong>One correction, because this page used to say something stronger than the
+     truth.</strong> It said the server held "nothing that identifies you". Our
+     leaderboard also has to know who claimed a name, so that somebody else cannot
+     post under it, and for a player with no account that used to be recorded as
+     their <strong>IP address</strong> — which is information about a person, and it
+     was kept with no end date. That was not what this page promised, so the
+     software changed rather than the promise: the address is now put through a
+     one-way hash with a secret only the server has, so what is stored cannot be
+     turned back into an address, and an anonymous claim on a name expires after
+     90 days. The addresses stored under the old scheme are replaced the next time
+     each player comes back.</p>
   <p>The cost is real and worth saying: <strong>lose the code and the account cannot
      be recovered</strong>, because there is nothing to prove it was yours.</p>
   <p>On a first visit NovaClip asks you to make a profile. It is a question, not a
@@ -359,10 +370,80 @@ a.back { margin-bottom:0; }
      code, because NovaClip never asks for the first two and never sends the
      third. Nothing you type — not a message you check for scams, not an AI
      prompt, not a video — reaches it.</p>
-  <p><strong>To switch it off:</strong> block cookies for this site in your browser
-     settings, use your browser's tracking protection, or install Google's own
+  <p><strong>Nothing is counted until you say yes.</strong> The first time you open
+     NovaClip a box at the bottom asks, with the same weight on both answers, and
+     the default before you touch it is no. Here is what you chose, and you can
+     change it right now — taking permission back has to be as easy as giving it:</p>
+  <!-- Art 7(3): withdrawing consent must be as easy as giving it, and until this
+       existed there was no way back at all — the banner never came back once it
+       had been answered. Two buttons and the current state, rather than a link
+       that reopens the banner, because this page is one of the four the banner is
+       deliberately not shown on. -->
+  <div id='consentbox' style='margin:14px 0;padding:14px 16px;border-radius:14px;
+       border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04)'>
+    <p id='consentnow' style='margin:0 0 10px;font-weight:700'>Checking…</p>
+    <button type='button' id='consentyes' style='min-height:44px;padding:11px 16px;margin-right:8px;
+      border-radius:11px;border:0;cursor:pointer;font:700 14px inherit;background:#00F0FF;color:#04121a'>
+      Yes, count my visits</button>
+    <button type='button' id='consentno' style='min-height:44px;padding:11px 16px;
+      border-radius:11px;cursor:pointer;font:700 14px inherit;background:transparent;
+      color:inherit;border:1px solid rgba(255,255,255,.2)'>No, do not</button>
+  </div>
+  <script>
+  /* nova.js owns the answer and the gtag update; this is only a second place to
+     give it. If nova.js has not loaded the buttons say so rather than lying. */
+  (function () {
+    function paint() {
+      var box = document.getElementById('consentnow');
+      if (!box) return;
+      var a = window.ncConsent ? ncConsent() : undefined;
+      box.textContent = !window.ncConsent
+        ? 'This control needs the site script, which has not loaded.'
+        : a === 'yes' ? 'Right now: yes — your visits are counted.'
+        : a === 'no'  ? 'Right now: no — nothing is counted.'
+        : 'Right now: you have not been asked yet, so nothing is counted.';
+    }
+    function set(v) { if (window.ncSetConsent) { ncSetConsent(v); paint(); } }
+    document.addEventListener('DOMContentLoaded', function () {
+      paint();
+      /* nova.js is at the end of <body>, so on a slow parse the first paint can
+         land before ncConsent exists. One retry rather than a polling loop. */
+      setTimeout(paint, 600);
+      var y = document.getElementById('consentyes'), n = document.getElementById('consentno');
+      if (y) y.onclick = function () { set('yes'); };
+      if (n) n.onclick = function () { set('no'); };
+    });
+  })();
+  </script>
+  <p>You can also block cookies for this site in your browser settings, use your
+     browser's tracking protection, or install Google's own
      <a href='https://tools.google.com/dlpage/gaoptout' target='_blank' rel='noopener'>opt-out add-on</a>.
      NovaClip works exactly the same with it blocked.</p>
+
+  <h2>Why we are allowed to hold any of it, and for how long</h2>
+  <p>Short, because there is not much to account for:</p>
+  <ul>
+    <li><strong>Counting visits</strong> happens on your <strong>consent</strong>, asked
+        for above, and it is the only thing on this site that works that way.</li>
+    <li><strong>Saving your progress, your account and the leaderboard</strong> happens
+        because you asked for them — the <strong>contract</strong> between you and this
+        site, in the legal sense. Without them the feature is the thing that breaks.</li>
+    <li><strong>Rate limits, the moderation checks and the parent PIN</strong> are our
+        <strong>legitimate interest</strong> in the site not being wrecked, and in a
+        space used by minors staying usable.</li>
+  </ul>
+  <p><strong>How long:</strong> what is on your device stays until you clear it. A saved
+     account and its progress stay until you ask us to delete them. A claimed
+     leaderboard name held without an account lapses after <strong>90 days</strong>.
+     The short-lived counters behind the rate limits expire within minutes. There is
+     nothing on our side we keep "just in case".</p>
+  <p><strong>Where it goes:</strong> our workers run on Cloudflare, and the AI features
+     pass your prompt to Google's Gemini. Both are American companies operating in
+     Europe, so some of this is processed outside the EU under the standard
+     safeguards those companies publish. We send them nothing about you beyond what
+     the feature needs.</p>
+  <p><strong>No profiling, and no decisions made about you by a machine.</strong> Nothing
+     here scores you, ranks you or decides anything about you automatically.</p>
 
   <h2>Age</h2>
   <p>NovaClip is for people aged 13 and over. The site asks your age once and
@@ -383,13 +464,45 @@ a.back { margin-bottom:0; }
     <li><strong>Ask what we hold:</strong> email us with your code. Under the GDPR
         and the UK GDPR you have the right to see it, correct it, or have it
         deleted, and we will answer within 30 days.</li>
+    <li><strong>Take back the consent you gave:</strong> the two buttons in the
+        Google Analytics section above, any time, with no reason needed.</li>
+    <li><strong>Complain about us to somebody who is not us:</strong> see below.</li>
   </ul>
 
   <h2>Security</h2>
   <p>NovaClip is served over HTTPS everywhere. API keys live on the server and
-     are never sent to your browser. Requests to save progress are rate-limited.
+     are never sent to your browser — there is no box anywhere on this site that
+     asks you for one. Passwords are put through 600,000 rounds of PBKDF2 in your
+     browser and never arrive here at all. The parent PIN is stored hashed. The
+     leaderboard's record of who claimed a name is hashed with a server-side
+     secret. Requests to save progress are rate-limited.
      No system is perfect, and we would rather say that plainly than claim
      otherwise.</p>
+
+  <h2>Who runs this, and how to complain about us</h2>
+  <p>NovaClip is run by <strong>one person</strong>, in <strong>Portugal</strong>, as an
+     independent project — not a company with a privacy department. That person is
+     the data controller for everything on this page, and
+     <a href='mailto:novacliptools@gmail.com'>novacliptools@gmail.com</a> reaches them
+     directly. There is no data protection officer, because at this size the law
+     does not require one and pretending otherwise would be theatre.</p>
+  <!-- ==========================================================================
+       STILL TO ADD, AND ONLY THE OWNER CAN: the controller's LEGAL NAME and a
+       POSTAL ADDRESS. The GDPR (Art 13) and Portuguese e-commerce law
+       (DL 7/2004, art. 10) both require them, and a contact email alone does not
+       satisfy either. If the project is registered for tax, the NIF belongs here
+       too. Paste them into the paragraph above — "run by Ana Exemplo, Rua …,
+       Lisboa, NIF …" — and this section is finished. Nothing was invented here on
+       purpose: a made-up name on a privacy policy is worse than a missing one.
+       ========================================================================== -->
+  <p><strong>If you think we have handled your information badly, you can complain to a
+     regulator, and you do not have to go through us first.</strong> In Portugal that is
+     the <strong>Comissão Nacional de Proteção de Dados (CNPD)</strong> —
+     <a href='https://www.cnpd.pt' target='_blank' rel='noopener'>cnpd.pt</a>. If you
+     live elsewhere in the EU you can complain to your own country's data protection
+     authority instead, and in the UK it is the Information Commissioner's Office.
+     We would rather you emailed us first so we can fix it, but that is a preference,
+     not a condition.</p>
 
   <h2>Changes</h2>
   <p>If what NovaClip does changes, this page changes with it and the date at the

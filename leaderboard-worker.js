@@ -242,23 +242,75 @@ const cleanCode = (v) => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
    played anonymously and later signs in keeps their name rather than losing it
    to their own earlier self — the claim upgrades from the IP to the account
    key when the same IP presents one. */
-async function nameOwner(env, name, key, ip) {
+/* `who` is the hashed visitor tag; `rawIp` is passed ONLY to recognise records
+   written by the version of this worker that stored the address itself, and is
+   never written anywhere. See the legacy branch below.
+
+   An anonymous hold on a name now lapses. A name claimed from a browser with no
+   account is somebody who may never come back, and holding their address hash
+   against that name forever — to keep a stranger off a word — is storing data
+   about a child for no reason that survives being said out loud. Ninety days is
+   long enough to cover a school term's worth of returning to a game. A hold
+   backed by an actual account does not expire, because that record is the
+   account key they already gave us. */
+const ANON_NAME_TTL = 90 * 24 * 60 * 60;
+
+async function nameOwner(env, name, key, who, rawIp) {
   const nameKey = 'name:' + String(name).toLowerCase();
-  const claimant = validKey(key) ? key : 'anon:' + ip;
+  const mine = validKey(key);
+  const claimant = mine ? key : 'anon:' + who;
   const owner = await env.DB.get(nameKey);
 
   if (!owner) {
-    await env.DB.put(nameKey, claimant);
+    await env.DB.put(nameKey, claimant, mine ? {} : { expirationTtl: ANON_NAME_TTL });
     return { ok: true };
   }
   if (owner === claimant) return { ok: true };
 
-  // an anonymous claim from this same address, now with an account behind it
-  if (validKey(key) && owner === 'anon:' + ip) {
+  /* LEGACY RECORDS, UPGRADED IN PLACE RATHER THAN BROKEN.
+     Every name claimed before this change is stored as 'anon:<the address>'.
+     Left alone, the hashed tag would not match it and the rightful holder would
+     be told their own name belongs to another player — the exact bug the comment
+     above this function describes, reintroduced by the fix for it. So the old
+     form is recognised once, and immediately rewritten to the hash (or to the
+     account key), which also means the stored addresses drain out of KV as
+     people come back rather than sitting there until someone remembers. */
+  if (owner === 'anon:' + rawIp) {
+    await env.DB.put(nameKey, claimant, mine ? {} : { expirationTtl: ANON_NAME_TTL });
+    return { ok: true };
+  }
+
+  // an anonymous claim from this same visitor, now with an account behind it
+  if (mine && owner === 'anon:' + who) {
     await env.DB.put(nameKey, key);
     return { ok: true };
   }
   return { ok: false };
+}
+
+/* ---------------------------------------------------------------------------
+   THE VISITOR TAG, AND WHY THE RAW ADDRESS STOPPED BEING STORED
+   ---------------------------------------------------------------------------
+   This worker used to write 'anon:' + the caller's IP address straight into KV:
+   as the owner of a claimed leaderboard name, with no expiry, and as part of
+   every rate-limit key. An IP address is personal data, these are mostly
+   children's, and privacy.html said in as many words that what the server holds
+   is "nothing that identifies you". That was not true, and a policy that has
+   drifted from the software is the one kind of policy that is worse than none.
+
+   So the address is now hashed the moment it arrives and only the hash is
+   stored. The hash is keyed with the same PEPPER secret saltFor() uses, so
+   without that secret it cannot be walked back to an address even by somebody
+   holding the whole KV namespace — and with it, the same visitor still produces
+   the same tag, which is all the two callers actually needed.
+
+   Truncated to 24 hex characters: 96 bits, far past collision territory for the
+   number of people who will ever play this, and short enough to read in a KV
+   listing when something is being debugged.
+   --------------------------------------------------------------------------- */
+async function visitorHash(env, ip) {
+  const pepper = (env && env.PEPPER) || 'novaclip-unpeppered';
+  return (await sha256Hex(pepper + '|visitor|' + String(ip || 'unknown'))).slice(0, 24);
 }
 
 async function rateLimited(env, bucket, ms) {
@@ -428,7 +480,8 @@ export default {
         pepper: env.PEPPER
           ? 'set'
           : 'not set — add a Worker secret called PEPPER (any long random string) ' +
-            'so an unused username cannot be told apart from a taken one',
+            'so an unused username cannot be told apart from a taken one, and so ' +
+            'the stored visitor tags cannot be walked back to IP addresses',
         hint: env.DB ? 'Put this address in NC_SERVER in nova.js.'
                      : 'The community pages stay offline until DB is bound.'
       }, env.DB ? 200 : 500);
@@ -439,6 +492,9 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, '') || '/';
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    /* Hashed once per request. Everything below uses `who`; `ip` survives only
+       so nameOwner() can recognise a record written before this change. */
+    const who = await visitorHash(env, ip);
     let body = {};
     if (request.method === 'POST') {
       try { body = await request.json(); } catch (e) { return json({ error: 'bad json' }, 400); }
@@ -446,7 +502,7 @@ export default {
 
     // ---------- accounts ----------
     if (path === '/account' && request.method === 'POST') {
-      if (await rateLimited(env, 'acct:' + ip, 10000)) return json({ error: 'slow down' }, 429);
+      if (await rateLimited(env, 'acct:' + who, 10000)) return json({ error: 'slow down' }, 429);
       const key = newKey();
       let code = newCode(), tries = 0;
       // a collision here would hand someone else's save to a stranger
@@ -467,7 +523,7 @@ export default {
     }
 
     if (path === '/account/register' && request.method === 'POST') {
-      if (await rateLimited(env, 'reg:' + ip, 15000)) return json({ error: 'slow down' }, 429);
+      if (await rateLimited(env, 'reg:' + who, 15000)) return json({ error: 'slow down' }, 429);
       const user = cleanUser(body.username);
       if (!validUser(user)) {
         return json({ error: 'A username is 3 to 20 characters: letters, numbers, and . _ - in the middle.' }, 400);
@@ -510,7 +566,7 @@ export default {
          lock a real person out of their own account by guessing at it; per
          address alone lets a spread of usernames through from one machine. */
       if (await rateLimited(env, 'login:' + user, 1500) ||
-          await rateLimited(env, 'loginip:' + ip, 800)) {
+          await rateLimited(env, 'loginip:' + who, 800)) {
         return json({ error: 'too many tries just now — wait a moment' }, 429);
       }
       if (!validUser(user) || !validAuth(body.authKey)) {
@@ -551,7 +607,7 @@ export default {
     }
 
     if (path === '/account/resolve' && request.method === 'POST') {
-      if (await rateLimited(env, 'resolve:' + ip, 2000)) return json({ error: 'slow down' }, 429);
+      if (await rateLimited(env, 'resolve:' + who, 2000)) return json({ error: 'slow down' }, 429);
       const code = cleanCode(body.code);
       if (code.length !== 8) return json({ error: 'that code does not look right' }, 400);
       const key = await env.DB.get('code:' + code);
@@ -590,7 +646,7 @@ export default {
         return json((await env.DB.get(keyFor(map, mode), 'json')) || []);
       }
       if (request.method === 'POST') {
-        if (await rateLimited(env, 'board:' + ip, WRITE_COOLDOWN_MS)) return json({ error: 'slow down' }, 429);
+        if (await rateLimited(env, 'board:' + who, WRITE_COOLDOWN_MS)) return json({ error: 'slow down' }, 429);
 
         /* ---- A NAME BELONGS TO ONE ACCOUNT ----
            The board keys rows by name, so without this two people called
@@ -608,7 +664,7 @@ export default {
            A player with no account key can still post, but only under a name
            nobody has claimed — which is the honest trade for not signing in. */
         const wanted = cleanName(body.name);
-        if (!(await nameOwner(env, wanted, body.key, ip)).ok) {
+        if (!(await nameOwner(env, wanted, body.key, who, ip)).ok) {
           return json({ error: 'the name "' + wanted + '" belongs to another player', taken: true }, 409);
         }
 
@@ -702,7 +758,7 @@ export default {
         if (!g) return json({ error: 'unknown game' }, 400);
         const spec = GAMES[g];
 
-        if (await rateLimited(env, 'sc:' + g + ':' + ip, 5000)) {
+        if (await rateLimited(env, 'sc:' + g + ':' + who, 5000)) {
           return json({ error: 'slow down' }, 429);
         }
 
@@ -716,7 +772,7 @@ export default {
            name owns it, and after that only that account may post under it.
            Without this, one row per name means anybody can overwrite anybody. */
         const wanted = cleanName(body.name);
-        if (!(await nameOwner(env, wanted, body.key, ip)).ok) {
+        if (!(await nameOwner(env, wanted, body.key, who, ip)).ok) {
           return json({ error: 'the name "' + wanted + '" belongs to another player', taken: true }, 409);
         }
 
@@ -779,7 +835,7 @@ export default {
     /* Anybody may report. A report is a request for a human to look, so it is
        deliberately cheap to make and rate limited rather than gated. */
     if (path === '/report' && request.method === 'POST') {
-      if (await rateLimited(env, 'rep:' + ip, 10000)) return json({ error: 'slow down' }, 429);
+      if (await rateLimited(env, 'rep:' + who, 10000)) return json({ error: 'slow down' }, 429);
       const id = String(body.postId || '').slice(0, 64);
       if (!id) return json({ error: 'which post?' }, 400);
 
