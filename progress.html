@@ -246,6 +246,13 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
     <div class='xpnext' id='ptsnext'></div>
   </div>
 
+  <!-- Two ladders, and they are deliberately not the same ladder. The bar above
+       is NovaClip points — what you have done on this site. This one is the
+       channel, which no amount of using NovaClip can move. Keeping them apart,
+       and saying so on the card itself, is the whole point: one bar mixing both
+       would make neither number mean anything. -->
+  <div id='ncCreatorLevel' style='margin:0 0 18px'></div>
+
   <div class='grid'>
     <div class='card'>
       <h2 data-t='quests'>Rewards</h2>
@@ -325,6 +332,12 @@ function renderProgress() {
 window.addEventListener('DOMContentLoaded', () => { renderProgress(); setTimeout(renderProgress, 80); });
 window.onSkillLogged = renderProgress;
 </script>
+<!-- The creator level, read from the channel snapshot Studio saves. The div it
+     fills is above this tag and therefore already parsed, so it renders in
+     place with no load event to wait for. With the full ladder: this is the
+     page where the whole ladder belongs. -->
+<script src='creator-level.js'></script>
+<script>if (window.NC_CREATOR) NC_CREATOR.render('ncCreatorLevel', true);</script>
 <script src='category-scene.js'></script>
 <script src='categories.js'></script>
 <script src='nova.js'></script>

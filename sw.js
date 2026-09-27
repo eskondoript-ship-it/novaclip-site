@@ -610,6 +610,33 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v80: a level that measures the channel, and a parent card that never worked.
+
+   Asked for as "levels for creators based on how big is their channel". There
+   is already a level system and this is deliberately not it: nc_points measures
+   what somebody has done on NovaClip and can be topped by a person with no
+   channel at all. creator-level.js measures the channel — twelve rungs, dense
+   at the bottom (0, 10, 50, 100) because that is where almost everybody using
+   this site actually is, and a ladder whose second rung is a thousand tells all
+   of them the same thing. Both are on progress.html, side by side, each saying
+   on its own card which of the two it is.
+
+   THE BUG IT FOUND. parent.html has read a cache called nc_ytsnap since the day
+   it was written. Nothing has ever written it — the writer belonged to the chat
+   widget that was removed, and went with it. So "What this could pay" has shown
+   its no-channel-connected paragraph to every parent who ever opened it,
+   including the ones whose child has a channel connected. analytics.html had
+   the numbers in hand the whole time and stored none of them. It now writes the
+   snapshot in the shape ncPayEstimate() already expects, so the level and the
+   parent's estimate read the same four numbers and the second one starts
+   working for the first time. Signing out of YouTube forgets it.
+
+   Hidden subscriber counts climb the ladder on views instead and the card says
+   so — reading a hidden count as zero would tell a creator with fifty thousand
+   subscribers they are on level one, which is the worst thing this could do.
+
+   creator-level.js is NEW. analytics.html, progress.html, privacy.html.
+   Cached, so the bump matters. */
 /* v79: footage you are allowed to use, and credits that exist.
 
    THE ASK WAS "movie scenes, small part". That cannot be shipped: there is no
@@ -1207,7 +1234,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v79';
+const CACHE = 'novaclip-v80';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -1251,6 +1278,11 @@ const SHELL = [
      that open, look normal, and offer nothing. */
   '/footage.js',
   '/media-credit.js',
+  /* The creator level and the channel snapshot both pages read. Cached because
+     the level is arithmetic on four numbers already in localStorage — it is one
+     of the few panels on the site that is fully correct with no connection at
+     all, and leaving it out would blank it for no reason. */
+  '/creator-level.js',
   /* The grade and its panels. Colour correction is arithmetic on the frame
      already in memory, so unlike the photo picker this one works offline. */
   '/grade.js',

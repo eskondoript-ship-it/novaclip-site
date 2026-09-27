@@ -492,6 +492,10 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
   </section>
 
   <div id='dash'>
+    <!-- The creator level. Empty until creator-level.js has a snapshot, which
+         is written by the same function that fills the four stat tiles above,
+         so by the time the dashboard is shown it is always there. -->
+    <div id='ncCreatorLevel' style='margin-bottom:16px'></div>
     <div class='comprow'>
       <label class='switch'>
         <input type='checkbox' id='compToggle' checked>
@@ -696,6 +700,21 @@ async function boot() {
         viewsSub: 'all time', subsSub: st.hiddenSubscriberCount ? 'hidden by the channel' : 'all time',
         videosSub: 'public uploads', avgSub: 'lifetime average'
       });
+      /* KEEP THE NUMBERS. This page used to fill its own dashboard and store
+         nothing, so every other page on the site had no idea a channel existed
+         — including parent.html, which has read nc_ytsnap since it was written
+         against a writer that was removed with the chat widget. One line here
+         gives the creator level its ladder AND makes the parent's "what this
+         could pay" card work for the first time. Four numbers and a title; the
+         OAuth token stays in nc_yt where nova.js keeps it out of the sync. */
+      if (window.NC_CREATOR) NC_CREATOR.save({
+        name: (myStats.snippet && myStats.snippet.title) || '',
+        subscribers: +st.subscriberCount || 0,
+        subsHidden: !!st.hiddenSubscriberCount,
+        totalViews: views,
+        videos: vids,
+        created: (myStats.snippet && myStats.snippet.publishedAt) || ''
+      });
       enterDash();
     }
     else {
@@ -725,6 +744,10 @@ async function enterDash() {
   }
   document.getElementById('connectrow').style.display = 'none';
   document.getElementById('dash').style.display = 'block';
+  /* Without the full ladder: inside a dashboard that is already twelve panels
+     deep, twelve more rungs is noise. progress.html is where the whole ladder
+     belongs, and it shows it. */
+  if (window.NC_CREATOR) NC_CREATOR.render('ncCreatorLevel', false);
   ffFill();                       // real channels near your size, for Fair Fight
   drawAll();
   try {
@@ -1932,6 +1955,10 @@ function signedInUI(name) {
     if (so) so.onclick = (e) => {
       e.preventDefault();
       localStorage.removeItem('nc_yt');
+      /* The snapshot goes with the token. Leaving it would keep a creator level
+         and a parent pay estimate on screen for a channel nobody is signed in
+         to any more. */
+      if (window.NC_CREATOR) NC_CREATOR.forget();
       auth.signOut().then(() => location.reload());
     };
   }
@@ -2035,6 +2062,9 @@ onAuthStateChanged(auth, (user) => { if (user) signedInUI(user.displayName); });
 getRedirectResult(auth).then(r => { if (r) afterSignIn(r); }).catch(e => note(explainAuth(e)));
 </script>
 
+<!-- The creator level ladder, and the channel snapshot it and the parent
+     dashboard both read. -->
+<script src='creator-level.js'></script>
 <script src='rank.js'></script>
 <!-- The NexusStream panels. Reads nothing on its own — the page hands it the
      channel through NX.refresh(), so the order relative to nova.js does not
