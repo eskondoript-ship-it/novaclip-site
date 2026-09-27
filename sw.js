@@ -610,6 +610,37 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v79: footage you are allowed to use, and credits that exist.
+
+   THE ASK WAS "movie scenes, small part". That cannot be shipped: there is no
+   length of a commercial film that is safe to host, the EU has no fair use, and
+   a site that HOSTS the clip is the infringer rather than the teenager who used
+   it. So this is the version that does the same job — footage.js, a new rail
+   tab, real cinematic footage from Wikimedia Commons under licences the
+   rightsholder actually granted, which the editor trims to whatever the video
+   needs. You get the scene by cutting, not by taking.
+
+   AND THE PHOTO PICKER WAS MAKING A CLAIM IT DID NOT CHECK. Its header said
+   "everything it returns is freely licensed" and nothing in the file looked.
+   Wikipedia articles use non-free images under fair-use rationales — film
+   posters, album covers, logos — and those are the lead images of exactly the
+   articles somebody searches. So it could hand a thirteen-year-old a
+   copyrighted poster as a video asset, silently.
+
+   media-credit.js is new and owns the part both pickers were missing: it reads
+   the real licence off each file and FAILS CLOSED, refusing no-derivatives and
+   non-commercial licences by name (editing is a derivative; a monetised channel
+   breaks NC retroactively). It also owns the credits ledger, which is the other
+   half of the bug — photos.js did collect credits, into a localStorage key
+   nothing read, nothing displayed and no export carried. A credit nobody can
+   see is not attribution. Now both pickers write author and licence into one
+   ledger, a Credits button in each sheet opens it, and it produces the block of
+   text that goes under a video. The old private key is migrated in rather than
+   dropped.
+
+   media-credit.js and footage.js are NEW — they will not exist on the server
+   yet, and editor.html has to go with them or the rail's new tab reports itself
+   missing. photos.js, editor.html, privacy.html. Cached, so the bump matters. */
 /* v78: two promises the site should not have been making.
 
    THE KEY BOX IS GONE. The profile had a password field that took a Google AI
@@ -1176,7 +1207,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v78';
+const CACHE = 'novaclip-v79';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -1210,10 +1241,16 @@ const SHELL = [
      broken one, which is the worse failure to debug. */
   '/photo-fx.js',
   /* The photo picker itself is cached even though the photographs it fetches
-     are not and cannot be. That is the point: offline, the button is still
-     there and says in words that it needs the network and that Stickers does
+     are not and cannot be. That is the point: with no connection the button is
+     still there and says in words that it needs one and that Stickers does
      not. A missing button would just look like the feature had gone. */
   '/photos.js',
+  /* The footage picker, same reasoning, and media-credit.js which BOTH of them
+     refuse to run without — it holds the licence gate. Leaving that one out of
+     the precache would be the worst possible partial install: two libraries
+     that open, look normal, and offer nothing. */
+  '/footage.js',
+  '/media-credit.js',
   /* The grade and its panels. Colour correction is arithmetic on the frame
      already in memory, so unlike the photo picker this one works offline. */
   '/grade.js',

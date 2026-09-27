@@ -30,9 +30,24 @@
    (origin=* is in the query string for exactly that reason), so there is no
    key, no secret, no third Worker to deploy at the wrong address.
 
-   Everything it returns is freely licensed, and every picture inserted here
-   carries its article title and a link back, because these are somebody's
-   photographs and that is the deal.
+   THE LICENCE CLAIM THIS HEADER USED TO MAKE, AND WHY IT WAS WRONG
+
+   It said: "Everything it returns is freely licensed." Nothing in the file
+   checked that, and it is not true. Wikipedia articles routinely use NON-FREE
+   images under a fair-use rationale — film posters, album covers, company
+   logos, book jackets — and those are the lead images of exactly the articles
+   somebody searches for. So this picker could hand a thirteen-year-old a
+   copyrighted film poster as a video asset and say nothing.
+
+   The licence is now read off each file and checked by media-credit.js, which
+   fails closed: anything not positively identified as free is dropped before
+   the grid is drawn. That costs a second request per search and thins some
+   results. Both are the right price.
+
+   And the credit is no longer written somewhere nobody looks. It used to go
+   into localStorage under a key nothing read; now it goes into the shared
+   ledger with the author and the licence beside it, the Credits button in this
+   sheet opens it, and it produces the block of text that goes under a video.
 
    HOW A PICTURE GETS INTO THE EDITOR
 
@@ -84,17 +99,19 @@
     ['Plants',  'flower']
   ];
 
-  /* Second layer, behind the choice of Wikipedia over Commons. Substring
-     matched against the whole query, so it also catches these inside longer
-     phrases. It is not a content filter and does not pretend to be one — it
-     is the obvious cases, cheaply. */
-  var BLOCKED = ['porn', 'nude', 'nudity', 'naked', 'sex', 'xxx', 'erotic', 'nsfw',
+  /* Second layer, behind the choice of Wikipedia over Commons. The canonical
+     list moved to media-credit.js so the footage picker uses the same one — a
+     blocklist kept in two files is a blocklist that drifts. This copy is the
+     fallback for that file being missing from the server: it blocks less, but
+     a picker that has lost its filter must fail safe rather than fail open. */
+  var FALLBACK_BLOCK = ['porn', 'nude', 'nudity', 'naked', 'sex', 'xxx', 'erotic', 'nsfw',
     'hentai', 'fetish', 'topless', 'lingerie', 'genital', 'breast', 'penis', 'vagina',
     'gore', 'beheading', 'execution', 'suicide', 'self-harm', 'corpse'];
 
   function blocked(q) {
-    var s = ' ' + q.toLowerCase().replace(/[^a-z]+/g, ' ') + ' ';
-    for (var i = 0; i < BLOCKED.length; i++) if (s.indexOf(BLOCKED[i]) > -1) return true;
+    if (window.NC_MEDIA && NC_MEDIA.blocked) return NC_MEDIA.blocked(q);
+    var s = ' ' + String(q || '').toLowerCase().replace(/[^a-z]+/g, ' ') + ' ';
+    for (var i = 0; i < FALLBACK_BLOCK.length; i++) if (s.indexOf(FALLBACK_BLOCK[i]) > -1) return true;
     return false;
   }
 
@@ -131,7 +148,10 @@
       gsrnamespace: '0',
       prop: 'pageimages|info',
       inprop: 'url',
-      piprop: 'thumbnail|original',
+      /* name comes back as p.pageimage, the File: title of the lead image. It
+         is what the licence lookup below needs, and asking for it here costs
+         nothing — the alternative is a request per result. */
+      piprop: 'thumbnail|original|name',
       pithumbsize: '480'
     };
     var qs = Object.keys(params).map(function (k) {
@@ -154,6 +174,7 @@
           if (!p.thumbnail || !p.thumbnail.source) return;
           out.push({
             title: p.title,
+            file: p.pageimage ? 'File:' + p.pageimage : '',
             thumb: p.thumbnail.source,
             full: (p.original && p.original.source) || p.thumbnail.source,
             page: p.fullurl || ('https://en.wikipedia.org/wiki/' + encodeURIComponent(p.title)),
@@ -163,8 +184,72 @@
         /* The API returns the map in arbitrary key order; index is the search
            ranking and is the order somebody expects to read them in. */
         out.sort(function (a, b) { return a.index - b.index; });
-        return out;
+        return withLicences(out);
       });
+  }
+
+  /* --------------------------------------------------------------------------
+     THE LICENCE, FOR EVERY RESULT, IN ONE MORE REQUEST
+     --------------------------------------------------------------------------
+     A lead image can be a fair-use film poster, so the licence has to be read
+     rather than assumed — see the header. extmetadata is per FILE, not per
+     article, so it is a second lookup; but titles= takes up to fifty of them at
+     once, so it is one request for the whole grid rather than one per picture.
+
+     Asking en.wikipedia rather than Commons is deliberate: a lead image may be
+     hosted locally OR on Commons, and the local API answers for both. Asking
+     Commons directly would return nothing for the locally-hosted ones, which
+     are disproportionately the non-free ones — the exact files this check
+     exists to catch.
+
+     ANYTHING NOT POSITIVELY FREE IS DROPPED. If this request fails outright,
+     the grid comes back empty rather than unchecked: an unverified picture is
+     the thing this function was added to prevent, so a network failure must not
+     be a way around it.
+     -------------------------------------------------------------------------- */
+  function withLicences(list) {
+    var named = list.filter(function (it) { return it.file; });
+    if (!named.length || !window.NC_MEDIA) return [];
+
+    var params = {
+      action: 'query', format: 'json', origin: '*',
+      titles: named.slice(0, 50).map(function (it) { return it.file; }).join('|'),
+      prop: 'imageinfo',
+      iiprop: 'extmetadata',
+      iiextmetadatafilter: 'License|LicenseShortName|LicenseUrl|UsageTerms|Artist|Credit|Restrictions'
+    };
+    var qs = Object.keys(params).map(function (k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }).join('&');
+
+    return fetch(API + '?' + qs, { credentials: 'omit' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        var pages = (d && d.query && d.query.pages) || {};
+        var byTitle = {};
+        Object.keys(pages).forEach(function (k) {
+          var p = pages[k];
+          var ii = p.imageinfo && p.imageinfo[0];
+          if (p.title && ii) byTitle[p.title] = ii.extmetadata;
+        });
+        var kept = [];
+        named.forEach(function (it) {
+          var meta = byTitle[it.file];
+          if (!meta) return;                       // no licence block: not offered
+          var lic = NC_MEDIA.licence(meta);
+          if (!lic.ok) return;
+          it.licence = lic.name;
+          it.licenceUrl = lic.url;
+          it.author = lic.author;
+          it.warn = lic.warn;
+          kept.push(it);
+        });
+        return kept;
+      })
+      .catch(function () { return []; });
   }
 
   /* --------------------------------------------------------------------------
@@ -206,18 +291,21 @@
   /* --------------------------------------------------------------------------
      ATTRIBUTION
      --------------------------------------------------------------------------
-     These are real photographs under real licences. The editor has nowhere to
-     put a credit, so it is kept where it can be got at later: a list in
-     localStorage, newest first, capped so it cannot grow without limit. Small,
-     but it is the difference between "freely licensed" and "taken".
+     Into the shared ledger in media-credit.js, with the author and the licence
+     that the lookup above actually read — which is what an attribution needs
+     and what the old version of this had no way of knowing. The Credits button
+     in the sheet footer opens it; the old private key is migrated in there.
      -------------------------------------------------------------------------- */
   function credit(item) {
-    try {
-      var k = 'nc_photo_credits';
-      var list = JSON.parse(localStorage.getItem(k) || '[]');
-      list.unshift({ title: item.title, page: item.page, at: Date.now() });
-      localStorage.setItem(k, JSON.stringify(list.slice(0, 200)));
-    } catch (e) {}
+    if (!window.NC_MEDIA) return;
+    NC_MEDIA.credit.add({
+      kind: 'photo',
+      title: item.title,
+      author: item.author || '',
+      licence: item.licence || '',
+      licenceUrl: item.licenceUrl || '',
+      page: item.page
+    });
   }
 
   /* ========================================================================
@@ -317,9 +405,24 @@
     bar.appendChild(chips);
 
     var grid = el('div', 'ncph-grid');
-    var foot = el('div', 'ncph-foot',
-      'Photographs from Wikipedia, free to use. The article each one came from is ' +
-      'saved with your project so you can credit it.');
+
+    var foot = el('div', 'ncph-foot');
+    foot.style.display = 'flex';
+    foot.style.alignItems = 'center';
+    foot.style.gap = '10px';
+    var why = el('p', null,
+      'Photographs from Wikipedia. Only ones that are free to reuse are shown — ' +
+      'the rest are left out. Press Credits for the line to put under your video.');
+    why.style.margin = '0';
+    why.style.flex = '1 1 auto';
+    var crBtn = el('button', null, 'Credits');
+    crBtn.type = 'button';
+    crBtn.style.cssText = 'flex:0 0 auto;min-height:36px;padding:8px 13px;border-radius:10px;' +
+      'cursor:pointer;font:700 12px inherit;background:transparent;color:inherit;' +
+      'border:1px solid var(--nc-line2,rgba(255,255,255,.16))';
+    crBtn.onclick = function () { if (window.NC_MEDIA) NC_MEDIA.credit.open(); };
+    foot.appendChild(why);
+    foot.appendChild(crBtn);
 
     sheet.appendChild(head); sheet.appendChild(bar); sheet.appendChild(grid); sheet.appendChild(foot);
     veil.appendChild(sheet);
@@ -333,6 +436,12 @@
       lastQuery = q;
       var mine = ++reqId;
 
+      if (!window.NC_MEDIA) {
+        note('<b>Photos needs media-credit.js.</b>That file reads the licence on ' +
+             'every picture, and without it none can be offered — a lead image ' +
+             'can be a copyrighted film poster. Upload it next to editor.html.');
+        return;
+      }
       if (blocked(q)) {
         note('<b>Not that one.</b>Try one of the buttons above, or search for a thing — ' +
              'a car, a city, an animal.');
@@ -364,8 +473,15 @@
       job.then(function (list) {
         if (mine !== reqId) return;                 // a later search already won
         if (!list.length) {
+          /* Two different empty grids: nothing matched, or things matched and
+             every one was non-free. The second is the common one for searches
+             about films, games and brands, and it deserves its own sentence
+             rather than reading as a broken search. */
           note(q === '*' ? '<b>Nothing came back.</b>Try one of the buttons above.'
-            : '<b>No photos for “' + esc(q) + '”.</b>Try a broader word, or one of the buttons above.');
+            : '<b>No free photos for “' + esc(q) + '”.</b>' +
+              'Either nothing matched, or what matched is copyrighted — posters, ' +
+              'album covers and logos are left out on purpose. Try a broader word, ' +
+              'or one of the buttons above.');
           return;
         }
         grid.textContent = '';
