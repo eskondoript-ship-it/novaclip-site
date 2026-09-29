@@ -294,6 +294,15 @@ const T = {
   st_look1: { en:"Hot pink", zh:"亮粉", hi:"हॉट पिंक", es:"Rosa intenso", ar:"وردي صارخ", fr:"Rose vif", bn:"গাঢ় গোলাপি", pt:"Rosa vivo", ru:"Ярко-розовый", ur:"شوخ گلابی", id:"Merah muda menyala", de:"Knallpink", ja:"ホットピンク", tr:"Parlak pembe", ko:"핫 핑크", fa:"صورتی تند", uk:"Яскраво-рожевий", it:"Rosa acceso", pl:"Jaskrawy róż", vi:"Hồng rực" },
   st_look2: { en:"Lime on charcoal", zh:"炭灰配青柠", hi:"चारकोल पर लाइम", es:"Lima sobre carbón", ar:"ليموني على فحمي", fr:"Vert citron sur anthracite", bn:"চারকোলের উপর লাইম", pt:"Lima sobre carvão", ru:"Лаймовый на угольном", ur:"چارکول پر لائم", id:"Hijau limau di atas arang", de:"Limette auf Anthrazit", ja:"チャコールにライム", tr:"Antrasit üzerine misket limonu", ko:"차콜 위 라임", fa:"لیمویی روی زغالی", uk:"Лаймовий на вугільному", it:"Lime su antracite", pl:"Limonka na grafitowym", vi:"Xanh chanh trên nền than" },
   st_look3: { en:"Violet gradient", zh:"紫色渐变", hi:"वायलेट ग्रेडिएंट", es:"Degradado violeta", ar:"تدرّج بنفسجي", fr:"Dégradé violet", bn:"ভায়োলেট গ্রেডিয়েন্ট", pt:"Gradiente violeta", ru:"Фиолетовый градиент", ur:"وائلٹ گریڈیئنٹ", id:"Gradien ungu", de:"Violetter Verlauf", ja:"バイオレットのグラデーション", tr:"Mor geçiş", ko:"바이올렛 그러데이션", fa:"گرادیان بنفش", uk:"Фіолетовий градієнт", it:"Sfumatura viola", pl:"Fioletowy gradient", vi:"Chuyển sắc tím" },
+  /* The Studio thumbnail maker paints its own background with the image model
+     instead of only accepting an upload. */
+  st_ai_pic: { en:"Or describe a background and let the AI paint it", zh:"或者描述一个背景，让 AI 来画", hi:"या बैकग्राउंड बताइए और AI उसे बना देगा", es:"O describe un fondo y deja que la IA lo pinte", ar:"أو صف خلفية ودع الذكاء الاصطناعي يرسمها", fr:"Ou décris un fond et laisse l’IA le peindre", bn:"অথবা একটি ব্যাকগ্রাউন্ড বর্ণনা করুন, AI সেটি এঁকে দেবে", pt:"Ou descreve um fundo e deixa a IA pintá-lo", ru:"Или опиши фон, и ИИ его нарисует", ur:"یا پس منظر بیان کریں اور AI اسے بنا دے گا", id:"Atau jelaskan latar belakang dan biarkan AI melukisnya", de:"Oder beschreibe einen Hintergrund und lass die KI ihn malen", ja:"または背景を説明して、AIに描かせる", tr:"Ya da bir arka plan tarif et, yapay zekâ çizsin", ko:"또는 배경을 설명하면 AI가 그려 줍니다", fa:"یا پس‌زمینه را توصیف کن تا هوش مصنوعی آن را بکشد", uk:"Або опиши фон, і ШІ його намалює", it:"Oppure descrivi uno sfondo e lascia che l’IA lo dipinga", pl:"Albo opisz tło, a AI je namaluje", vi:"Hoặc mô tả một nền và để AI vẽ nó" },
+  st_ai_pic_ph: { en:"a skateboard mid-trick at sunset", zh:"日落时正在做特技的滑板", hi:"सूर्यास्त में ट्रिक करता स्केटबोर्ड", es:"un monopatín a media pirueta al atardecer", ar:"لوح تزلج في منتصف حركة عند الغروب", fr:"un skateboard en plein trick au coucher du soleil", bn:"সূর্যাস্তে ট্রিক করতে থাকা একটি স্কেটবোর্ড", pt:"um skate a meio de um truque ao pôr do sol", ru:"скейтборд в прыжке на закате", ur:"غروب آفتاب میں ٹرک کرتا اسکیٹ بورڈ", id:"skateboard di tengah trik saat matahari terbenam", de:"ein Skateboard mitten im Trick bei Sonnenuntergang", ja:"夕暮れにトリック中のスケートボード", tr:"gün batımında numara yapan bir kaykay", ko:"노을 속 트릭 중인 스케이트보드", fa:"اسکیت‌برد در میانهٔ حرکت هنگام غروب", uk:"скейтборд у стрибку на заході сонця", it:"uno skateboard a metà trick al tramonto", pl:"deskorolka w trakcie tricku o zachodzie słońca", vi:"một chiếc ván trượt giữa động tác lúc hoàng hôn" },
+  st_ai_go: { en:"Generate background", zh:"生成背景", hi:"बैकग्राउंड बनाएँ", es:"Generar fondo", ar:"أنشئ الخلفية", fr:"Générer le fond", bn:"ব্যাকগ্রাউন্ড তৈরি করুন", pt:"Gerar fundo", ru:"Создать фон", ur:"پس منظر بنائیں", id:"Buat latar belakang", de:"Hintergrund erzeugen", ja:"背景を生成", tr:"Arka plan oluştur", ko:"배경 생성", fa:"ساخت پس‌زمینه", uk:"Створити фон", it:"Genera sfondo", pl:"Wygeneruj tło", vi:"Tạo nền" },
+  st_ai_busy: { en:"Painting it — this takes 10 to 20 seconds.", zh:"正在绘制——需要 10 到 20 秒。", hi:"बनाया जा रहा है — इसमें 10 से 20 सेकंड लगते हैं।", es:"Pintándolo: tarda entre 10 y 20 segundos.", ar:"يجري الرسم — يستغرق من 10 إلى 20 ثانية.", fr:"Peinture en cours : cela prend 10 à 20 secondes.", bn:"আঁকা হচ্ছে — এতে ১০ থেকে ২০ সেকেন্ড লাগে।", pt:"A pintar — demora 10 a 20 segundos.", ru:"Рисуем — это занимает от 10 до 20 секунд.", ur:"بنایا جا رہا ہے — اس میں 10 سے 20 سیکنڈ لگتے ہیں۔", id:"Sedang melukis — butuh 10 sampai 20 detik.", de:"Wird gemalt — das dauert 10 bis 20 Sekunden.", ja:"描画中 — 10〜20秒かかります。", tr:"Çiziliyor — 10 ila 20 saniye sürer.", ko:"그리는 중 — 10~20초 걸립니다.", fa:"در حال کشیدن — ۱۰ تا ۲۰ ثانیه طول می‌کشد.", uk:"Малюємо — це триває 10–20 секунд.", it:"Lo sto dipingendo: ci vogliono 10-20 secondi.", pl:"Maluję — zajmuje to 10 do 20 sekund.", vi:"Đang vẽ — mất 10 đến 20 giây." },
+  st_ai_ok: { en:"Painted. Shrink it on screen: if it does not read small, it does not work.", zh:"画好了。在屏幕上缩小看看：如果小尺寸看不清，它就不管用。", hi:"बन गया। स्क्रीन पर छोटा करके देखिए: अगर छोटे में नहीं पढ़ा जाता, तो काम नहीं करेगा।", es:"Listo. Redúcelo en pantalla: si no se lee pequeño, no funciona.", ar:"تم الرسم. صغّرها على الشاشة: إن لم تُقرأ وهي صغيرة فلن تنجح.", fr:"C’est peint. Réduis-le à l’écran : s’il ne se lit pas en petit, il ne marche pas.", bn:"আঁকা হয়ে গেছে। স্ক্রিনে ছোট করে দেখুন: ছোট অবস্থায় পড়া না গেলে এটি কাজ করবে না।", pt:"Pronto. Reduz no ecrã: se não se lê em pequeno, não funciona.", ru:"Готово. Уменьши на экране: если не читается маленьким — не работает.", ur:"بن گیا۔ اسکرین پر چھوٹا کر کے دیکھیں: اگر چھوٹے سائز میں نہ پڑھا جائے تو یہ کام نہیں کرے گا۔", id:"Selesai. Perkecil di layar: kalau tidak terbaca saat kecil, berarti tidak berhasil.", de:"Fertig gemalt. Verkleinere es am Bildschirm: Wenn es klein nicht lesbar ist, funktioniert es nicht.", ja:"描けました。画面で小さくして確認を：小さくて読めないなら機能しません。", tr:"Çizildi. Ekranda küçült: küçükken okunmuyorsa işe yaramaz.", ko:"완성됐습니다. 화면에서 축소해 보세요: 작게 안 보이면 소용없습니다.", fa:"کشیده شد. روی صفحه کوچکش کن: اگر در اندازهٔ کوچک خوانا نباشد، کار نمی‌کند.", uk:"Готово. Зменш на екрані: якщо не читається малим — не працює.", it:"Dipinto. Rimpiccioliscilo a schermo: se non si legge in piccolo, non funziona.", pl:"Gotowe. Zmniejsz na ekranie: jeśli nie da się odczytać w małym rozmiarze, nie działa.", vi:"Đã vẽ xong. Thu nhỏ trên màn hình: nếu nhỏ mà không đọc được thì không dùng được." },
+  st_ai_none: { en:"No image came back. The image model may be busy — the rest of the AI is unaffected.", zh:"没有返回图片。图像模型可能正忙——其他 AI 功能不受影响。", hi:"कोई तस्वीर नहीं आई। इमेज मॉडल व्यस्त हो सकता है — बाकी AI पर असर नहीं है।", es:"No llegó ninguna imagen. El modelo de imagen puede estar ocupado; el resto de la IA no se ve afectado.", ar:"لم تصل أي صورة. قد يكون نموذج الصور مشغولًا — بقية الذكاء الاصطناعي لم تتأثر.", fr:"Aucune image n’est revenue. Le modèle d’image est peut-être occupé — le reste de l’IA n’est pas touché.", bn:"কোনো ছবি আসেনি। ইমেজ মডেল ব্যস্ত থাকতে পারে — বাকি AI-তে কোনো প্রভাব পড়েনি।", pt:"Não veio nenhuma imagem. O modelo de imagem pode estar ocupado — o resto da IA não é afetado.", ru:"Картинка не пришла. Модель изображений может быть занята — остальной ИИ работает.", ur:"کوئی تصویر نہیں آئی۔ امیج ماڈل مصروف ہو سکتا ہے — باقی AI متاثر نہیں ہوا۔", id:"Tidak ada gambar yang kembali. Model gambar mungkin sibuk — AI lainnya tidak terpengaruh.", de:"Es kam kein Bild zurück. Das Bildmodell ist vielleicht ausgelastet — der Rest der KI ist nicht betroffen.", ja:"画像が返ってきませんでした。画像モデルが混んでいる可能性があります — 他のAI機能には影響ありません。", tr:"Hiç görsel gelmedi. Görsel modeli meşgul olabilir — yapay zekânın geri kalanı etkilenmedi.", ko:"이미지가 오지 않았습니다. 이미지 모델이 바쁠 수 있습니다 — 나머지 AI는 정상입니다.", fa:"تصویری برنگشت. مدل تصویر ممکن است شلوغ باشد — بقیهٔ هوش مصنوعی مشکلی ندارد.", uk:"Зображення не надійшло. Модель зображень може бути зайнята — решта ШІ працює.", it:"Non è arrivata nessuna immagine. Il modello di immagini potrebbe essere occupato: il resto dell’IA non è toccato.", pl:"Nie wróciło żadne zdjęcie. Model obrazu może być zajęty — reszta AI działa.", vi:"Không có ảnh nào trả về. Mô hình ảnh có thể đang bận — phần còn lại của AI không bị ảnh hưởng." },
+  st_ai_need: { en:"Describe the picture first.", zh:"请先描述图片。", hi:"पहले तस्वीर का वर्णन करें।", es:"Describe primero la imagen.", ar:"صف الصورة أولًا.", fr:"Décris d’abord l’image.", bn:"প্রথমে ছবিটি বর্ণনা করুন।", pt:"Descreve primeiro a imagem.", ru:"Сначала опиши картинку.", ur:"پہلے تصویر بیان کریں۔", id:"Jelaskan dulu gambarnya.", de:"Beschreibe zuerst das Bild.", ja:"まず画像を説明してください。", tr:"Önce resmi tarif et.", ko:"먼저 그림을 설명해 주세요.", fa:"اول تصویر را توصیف کن.", uk:"Спершу опиши картинку.", it:"Descrivi prima l’immagine.", pl:"Najpierw opisz obraz.", vi:"Hãy mô tả bức ảnh trước." },
   st_pic: { en:"Your own picture (optional)", zh:"你自己的图片（可选）", hi:"आपकी अपनी तस्वीर (वैकल्पिक)", es:"Tu propia imagen (opcional)", ar:"صورتك الخاصة (اختياري)", fr:"Ta propre image (facultatif)", bn:"আপনার নিজের ছবি (ঐচ্ছিক)", pt:"A tua própria imagem (opcional)", ru:"Своя картинка (не обязательно)", ur:"آپ کی اپنی تصویر (اختیاری)", id:"Gambarmu sendiri (opsional)", de:"Dein eigenes Bild (optional)", ja:"自分の画像（任意）", tr:"Kendi resmin (isteğe bağlı)", ko:"직접 고른 사진 (선택)", fa:"تصویر خودت (اختیاری)", uk:"Власне зображення (необов’язково)", it:"Una tua immagine (facoltativo)", pl:"Własne zdjęcie (opcjonalnie)", vi:"Ảnh của bạn (tuỳ chọn)" },
   st_savepng: { en:"Save the PNG", zh:"保存 PNG", hi:"PNG सेव करें", es:"Guardar el PNG", ar:"احفظ ملف PNG", fr:"Enregistrer le PNG", bn:"PNG সেভ করুন", pt:"Guardar o PNG", ru:"Сохранить PNG", ur:"PNG محفوظ کریں", id:"Simpan PNG", de:"PNG speichern", ja:"PNGを保存", tr:"PNG’yi kaydet", ko:"PNG 저장", fa:"ذخیرهٔ PNG", uk:"Зберегти PNG", it:"Salva il PNG", pl:"Zapisz PNG", vi:"Lưu PNG" },
   st_preview: { en:"Preview", zh:"预览", hi:"प्रीव्यू", es:"Vista previa", ar:"معاينة", fr:"Aperçu", bn:"প্রিভিউ", pt:"Pré-visualização", ru:"Предпросмотр", ur:"پیش منظر", id:"Pratinjau", de:"Vorschau", ja:"プレビュー", tr:"Önizleme", ko:"미리보기", fa:"پیش‌نمایش", uk:"Перегляд", it:"Anteprima", pl:"Podgląd", vi:"Xem trước" },
@@ -385,6 +394,9 @@ const T = {
   st_to_script: { en:"Write a script", zh:"写脚本", hi:"स्क्रिप्ट लिखें", es:"Escribir un guion", ar:"اكتب نصًّا", fr:"Écrire un script", bn:"স্ক্রিপ্ট লিখুন", pt:"Escrever um guião", ru:"Написать сценарий", ur:"اسکرپٹ لکھیں", id:"Tulis naskah", de:"Ein Skript schreiben", ja:"台本を書く", tr:"Senaryo yaz", ko:"대본 쓰기", fa:"نوشتن فیلمنامه", uk:"Написати сценарій", it:"Scrivi uno script", pl:"Napisz scenariusz", vi:"Viết kịch bản" },
   st_copied: { en:"Copied.", zh:"已复制。", hi:"कॉपी हो गया।", es:"Copiado.", ar:"تم النسخ.", fr:"Copié.", bn:"কপি হয়েছে।", pt:"Copiado.", ru:"Скопировано.", ur:"کاپی ہو گیا۔", id:"Tersalin.", de:"Kopiert.", ja:"コピーしました。", tr:"Kopyalandı.", ko:"복사했습니다.", fa:"کپی شد.", uk:"Скопійовано.", it:"Copiato.", pl:"Skopiowano.", vi:"Đã sao chép." },
   st_sources: { en:"Read from:", zh:"读取自：", hi:"इनसे पढ़ा गया:", es:"Leído de:", ar:"مقروء من:", fr:"Lu sur\u00a0:", bn:"যেখান থেকে পড়া:", pt:"Lido de:", ru:"Прочитано из:", ur:"یہاں سے پڑھا گیا:", id:"Dibaca dari:", de:"Gelesen aus:", ja:"参照元:", tr:"Şuradan okundu:", ko:"출처:", fa:"خوانده‌شده از:", uk:"Прочитано з:", it:"Letto da:", pl:"Odczytane z:", vi:"Đọc từ:" },
+  /* Shown under a scan that asked for live search and did not get one, so an
+     ungrounded answer is never presented as a searched one. */
+  st_nolive: { en:"No live search this time \u2014 this scan comes from what the AI already knows, not from the web today.", zh:"本次没有实时搜索——这次扫描来自 AI 已有的知识，而不是今天的网络。", hi:"इस बार लाइव सर्च नहीं हुई — यह स्कैन AI की पहले से मौजूद जानकारी से है, आज के वेब से नहीं।", es:"Sin búsqueda en vivo esta vez: este escaneo viene de lo que la IA ya sabe, no de la web de hoy.", ar:"لا يوجد بحث مباشر هذه المرة — هذا الفحص من معرفة الذكاء الاصطناعي السابقة، وليس من الويب اليوم.", fr:"Pas de recherche en direct cette fois\u00a0: ce scan vient de ce que l'IA sait déjà, pas du web d'aujourd'hui.", bn:"এইবার লাইভ সার্চ হয়নি — এই স্ক্যানটি AI-এর আগে থেকে জানা তথ্য থেকে, আজকের ওয়েব থেকে নয়।", pt:"Sem pesquisa ao vivo desta vez: esta análise vem do que a IA já sabe, não da web de hoje.", ru:"На этот раз без живого поиска — скан основан на том, что ИИ уже знает, а не на сегодняшнем вебе.", ur:"اس بار لائیو سرچ نہیں ہوئی — یہ اسکین AI کی پہلے سے موجود معلومات سے ہے، آج کے ویب سے نہیں۔", id:"Tanpa pencarian langsung kali ini — pindaian ini dari yang sudah diketahui AI, bukan dari web hari ini.", de:"Diesmal ohne Live-Suche: Dieser Scan stammt aus dem, was die KI schon weiß, nicht aus dem Web von heute.", ja:"今回はライブ検索なし — このスキャンはAIが既に知っていることに基づいており、今日のウェブではありません。", tr:"Bu sefer canlı arama yok — bu tarama yapay zekânın zaten bildiklerinden, bugünün web'inden değil.", ko:"이번에는 실시간 검색 없음 — 이 스캔은 AI가 이미 아는 내용이며, 오늘의 웹이 아닙니다.", fa:"این بار جستجوی زنده انجام نشد — این اسکن از دانسته‌های قبلی هوش مصنوعی است، نه از وب امروز.", uk:"Цього разу без живого пошуку — скан спирається на те, що ШІ вже знає, а не на сьогоднішній веб.", it:"Nessuna ricerca dal vivo stavolta: questa scansione viene da ciò che l'IA già sa, non dal web di oggi.", pl:"Tym razem bez wyszukiwania na żywo — ten skan pochodzi z tego, co AI już wie, nie z dzisiejszego internetu.", vi:"Lần này không có tìm kiếm trực tiếp — bản quét này dựa trên những gì AI đã biết, không phải web hôm nay." },
   ui_novacoins: { en:"NovaCoins", zh:"Nova 币", hi:"नोवाकॉइन्स", es:"NovaMonedas", ar:"عملات نوفا", fr:"NovaPièces", bn:"নোভাকয়েন", pt:"NovaMoedas", ru:"НоваМонеты", ur:"نووا کوائنز", id:"NovaKoin", de:"NovaMünzen", ja:"ノヴァコイン", tr:"NovaJeton", ko:"노바코인", fa:"نوواکوین", uk:"НоваМонети", it:"NovaMonete", pl:"NovaMonety", vi:"NovaXu" },
   ui_skin_none: { en:"Cyber theme — none", zh:"赛博主题 — 无", hi:"साइबर थीम — कोई नहीं", es:"Tema cyber — ninguno", ar:"ثيم سايبر — بدون", fr:"Thème cyber — aucun", bn:"সাইবার থিম — কোনোটি নয়", pt:"Tema cyber — nenhum", ru:"Кибертема — нет", ur:"سائبر تھیم — کوئی نہیں", id:"Tema cyber — tidak ada", de:"Cyber-Theme — keines", ja:"サイバーテーマ — なし", tr:"Cyber tema — yok", ko:"사이버 테마 — 없음", fa:"پوسته سایبری — هیچ‌کدام", uk:"Кібертема — немає", it:"Tema cyber — nessuno", pl:"Motyw cyber — brak", vi:"Chủ đề cyber — không" },
   /* THE TWELVE CYBER THEME NAMES.
@@ -5574,7 +5586,7 @@ async function ncAsk(prompt, opts) {
   const routes = ncRoutes(provider, model, opts);
   const tried = [];
   let data = null, err = '', raw = '';
-  let via = null, answered = '', switchedFrom = '', code = 0;
+  let via = null, answered = '', switchedFrom = '', code = 0, grounding = '';
 
   {
     /* One request down one route, in a form all three of them take. */
@@ -5717,12 +5729,17 @@ async function ncAsk(prompt, opts) {
            header, and names the one it started at when it had to switch —
            without it, a Gemini outage answered by OpenAI is invisible here and
            the page cannot say why the voice changed. */
-        let by = '', from = '';
+        let by = '', from = '', ground = '';
         try {
           by = r.headers.get('X-NovaClip-Provider') || '';
           from = r.headers.get('X-NovaClip-Switched') || '';
+          /* Whether this answer actually saw the live web. The worker drops the
+             grounding rather than the answer when Google's separate search
+             quota runs out, and says so here. */
+          ground = r.headers.get('X-NovaClip-Grounding') || '';
         } catch (e) {}
-        return { ok: true, raw: out.raw, status: r.status, by: by || route.provider, from: from };
+        return { ok: true, raw: out.raw, status: r.status, by: by || route.provider,
+                 from: from, ground: ground };
       }
 
       /* Both Google and ai-worker.js explain a failure in the body; the status
@@ -5771,6 +5788,7 @@ async function ncAsk(prompt, opts) {
       const got = await ask(route);
       if (got.ok) {
         via = route; raw = got.raw; answered = got.by; switchedFrom = got.from;
+        grounding = got.ground || '';
         ncCool(route.key, false);   /* it works again — stop skipping it */
         break;
       }
@@ -5780,6 +5798,28 @@ async function ncAsk(prompt, opts) {
     }
 
     if (!via) {
+      /* ------------------------------------------------------------------
+         THE SEARCH RAN OUT, NOT THE AI
+         ------------------------------------------------------------------
+         Google meters live-web grounding separately from the model itself, on a
+         much smaller free allowance, and a grounded request cannot fail over to
+         another vendor — only Gemini can search. So Trend Spotter, the one
+         caller that asks for search:true, reported "NovaClip's shared AI is out
+         of free requests" on days when every other AI feature on the site
+         answered perfectly. The message was wrong about what had run out and
+         wrong about what to do.
+
+         One more attempt without the search. An ungrounded scan is worse than a
+         grounded one — the result carries searchFailed so the page can say so —
+         and it is far better than telling somebody the AI is dead while it is
+         answering everywhere else. Bounded: __nosearch stops it recursing. */
+      if (opts.search && !opts.__nosearch &&
+          ncWorthSwitching((last && last.status) || 0, last && last.reason)) {
+        const plain = await ncAsk(prompt, Object.assign({}, opts,
+                                  { search: false, __nosearch: true }));
+        if (plain && !plain.err) { plain.searchFailed = true; return plain; }
+      }
+
       /* The HTTP status leaves here as well as the sentence. A reader needs the
          sentence; whoever is working out why the site has been failing since
          Tuesday needs the number, and it was thrown away at this line. */
@@ -5861,7 +5901,10 @@ async function ncAsk(prompt, opts) {
   if (switched) ncSwapNote();
 
   return { text: text, image: image, sources: sources, err: err, cut: cut, finish: finish,
-           via: via ? via.key : '', provider: answered, switched: switched };
+           via: via ? via.key : '', provider: answered, switched: switched,
+           /* Asked for live search and did not get it. The caller decides what
+              to say; what it must not do is present this as a searched answer. */
+           searchFailed: !!(opts.search && (grounding === 'dropped' || grounding === 'none')) };
 }
 
 /* ============================================================================

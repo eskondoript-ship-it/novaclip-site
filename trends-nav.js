@@ -1063,7 +1063,13 @@
       if (!m) throw new Error(tr('st_scan_shape'));
       var list = (JSON.parse(m[0]) || {}).trends || [];
       list = list.slice(0, 6);
-      list.forEach(function (x) { x.sources = raw && raw.sources; });
+      /* Carried on the trends themselves because that is what the cache and
+         the redraw keep; a scan restored from Recent Scans then still says
+         whether it saw the web. */
+      list.forEach(function (x) {
+        x.sources = raw && raw.sources;
+        x.ungrounded = !!(raw && raw.searchFailed);
+      });
       return list;
     }
 
@@ -1189,6 +1195,7 @@
           }).join('') + '</div>';
       }
 
+      html += groundNote(list[0] && list[0].ungrounded);
       html += sourcesHTML(list[0] && list[0].sources);
       out.innerHTML = html;
 
@@ -1278,6 +1285,20 @@
      sources — with search off, or on a model that does not ground, there is
      nothing honest to show and an empty "Sources" heading would imply there
      was. */
+  /* THE SCAN RAN, THE SEARCH DID NOT.
+     Google meters live-web grounding on a separate, much smaller free
+     allowance than the model, so the search runs out while the AI is still
+     answering everything else on the site. That used to end the scan with
+     "NovaClip's shared AI is out of free requests" — wrong about what had
+     run out, and wrong that there was nothing to show. Now the scan comes
+     back ungrounded and says which it was, because an ungrounded answer
+     presented as a searched one is the worst of the three outcomes. */
+  function groundNote(ungrounded) {
+    if (!ungrounded) return '';
+    return '<p class="foot" data-t="st_nolive" style="margin-top:22px;opacity:.8">' +
+           esc(tr('st_nolive')) + '</p>';
+  }
+
   function sourcesHTML(list) {
     if (!list || !list.length) return '';
     var seen = {}, out = [];
@@ -1938,8 +1959,10 @@
      THUMBNAILS
      ==========================================================================
      1280x720 because that is the size YouTube asks for, drawn on a canvas
-     here. No upload, no model, no network — which is why it works when the AI
-     does not. */
+     here. The words, the colours and the export are local and always work,
+     with or without a network. The background is the one part that can come
+     from the image model — described in a sentence instead of hunting for a
+     photo — and when it cannot, everything else still draws. */
   function thumbPanel(box) {
     if (box.dataset.view === 'thumbnails') return;
     box.dataset.view = 'thumbnails';
@@ -1962,7 +1985,12 @@
             '</select>' +
             '<label for="ncxShot" data-t="st_pic">' + tr('st_pic') + '</label>' +
             '<input id="ncxShot" type="file" accept="image/*">' +
-            '<div class="row"><button class="go" id="ncxSave" data-t="st_savepng">' + tr('st_savepng') + '</button></div>' +
+            '<label for="ncxPrompt" data-t="st_ai_pic">' + tr('st_ai_pic') + '</label>' +
+            '<input id="ncxPrompt" type="text" maxlength="160" data-tph="st_ai_pic_ph" placeholder="' + tr('st_ai_pic_ph') + '">' +
+            '<div class="row">' +
+              '<button id="ncxPaint" data-t="st_ai_go">' + tr('st_ai_go') + '</button>' +
+              '<button class="go" id="ncxSave" data-t="st_savepng">' + tr('st_savepng') + '</button>' +
+            '</div>' +
             '<div class="say" id="ncxSay2" style="display:none"></div>' +
           '</div>' +
           '<div><label data-t="st_preview">' + tr('st_preview') + '</label><canvas id="ncxCanvas" width="1280" height="720"></canvas></div>' +
@@ -2073,6 +2101,66 @@
       img.onload = function () { photo = img; draw(); };
       img.onerror = function () { say(sayEl, 'no', 'That image could not be read.'); };
       img.src = URL.createObjectURL(f);
+    });
+
+    /* ----------------------------------------------------------------------
+       THE BACKGROUND, PAINTED
+       ----------------------------------------------------------------------
+       The image model draws the picture only. The title is NOT asked for in
+       the prompt and is drawn afterwards by the canvas above, because image
+       models spell badly at thumbnail sizes and a misspelt word baked into a
+       picture cannot be fixed — whereas text on the canvas stays editable,
+       stays in the reader's language, and is stroked for contrast so it holds
+       up small. So the model is told to leave room for it rather than to
+       write it.
+
+       The result goes into the same `photo` slot as an upload, so the looks,
+       the darkening gradient, the text layer and the PNG export need no idea
+       where the picture came from. */
+    var paint = $('#ncxPaint', box), wish = $('#ncxPrompt', box);
+
+    paint.addEventListener('click', async function () {
+      var want = (wish.value || '').trim();
+      if (!want) { say(sayEl, 'no', tr('st_ai_need')); wish.focus(); return; }
+      if (typeof window.ncAsk !== 'function') { say(sayEl, 'no', tr('st_no_ai')); return; }
+      paint.disabled = true;
+      say(sayEl, '', tr('st_ai_busy'));
+      try {
+        var r = await window.ncAsk(
+          'Generate a YouTube thumbnail BACKGROUND image, 16:9, bold and high contrast, ' +
+          'still readable when it is the size of a postage stamp. One clear subject, ' +
+          'simple background, nothing cluttered.\n' +
+          'Leave the left half and the bottom third uncluttered — large text will be placed ' +
+          'there afterwards. Do NOT draw any words, letters or numbers in the image.\n' +
+          'It is for a channel run by a teenager: nothing frightening, nothing adult, ' +
+          'no real person\'s face.\n' +
+          'The picture: ' + want,
+          { model: 'gemini-2.5-flash-image' });
+        if (r && r.err) { say(sayEl, 'no', esc(r.err)); return; }
+        if (!r || !r.image) { say(sayEl, 'no', tr('st_ai_none')); return; }
+        var img = new Image();
+        img.onload = function () {
+          photo = img;
+          /* An uploaded file and a painted one are the same slot, so clear the
+             file input — otherwise the box still names a picture that is no
+             longer the one on the canvas. */
+          try { shot.value = ''; } catch (e) {}
+          draw();
+          say(sayEl, 'ok', tr('st_ai_ok'));
+        };
+        img.onerror = function () { say(sayEl, 'no', tr('st_ai_none')); };
+        img.src = r.image;
+        try { if (typeof window.logSkill === 'function') window.logSkill('thumbnail'); } catch (e) {}
+        try { if (typeof window.addPts === 'function') window.addPts(10); } catch (e) {}
+      } catch (e) {
+        say(sayEl, 'no', esc((e && e.message) || String(e)));
+      } finally {
+        paint.disabled = false;
+      }
+    });
+
+    wish.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); paint.click(); }
     });
 
     $('#ncxSave', box).addEventListener('click', function () {

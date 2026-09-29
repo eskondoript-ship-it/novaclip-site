@@ -196,6 +196,10 @@ canvas{display:block;width:100vw;height:100vh}
     S.state = run ? 'play' : 'ready';
     S.t = 0; S.score = 0; S.newBest = false; S.flash = 0;
     S.bird.y = H * 0.42; S.bird.vy = 0; S.pipes = [];
+    /* The counter on screen is only written when a pipe is passed, so without
+       this a new run opened showing the last run's score until the first pipe —
+       which reads as the game not resetting. */
+    scoreEl.textContent = '0';
     if (run) { hud.classList.add('hide'); ov.style.display = 'none'; }
   }
 

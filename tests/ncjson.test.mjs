@@ -113,9 +113,12 @@ test('any 400 is retried once without thinkingConfig, and remembered', () => {
     /if \(out\.res\.status === 400 && wantThinking && body\.generationConfig\.thinkingConfig\) \{([\s\S]{0,220})/);
   assert.ok(m, 'the retry-without-thinking branch is missing or no longer gated on the field');
   const body = m[1];
-  assert.ok(/NC_NO_THINKING\.add\(model\)/.test(body), 'the model must be remembered');
+  /* send() and the model both moved onto the route when ncAsk learned to walk
+     a list of them; these two patterns still pinned the old spellings and had
+     been failing ever since, which is worse than no test. */
+  assert.ok(/NC_NO_THINKING\.add\(route\.model\)/.test(body), 'the model must be remembered');
   assert.ok(/delete body\.generationConfig\.thinkingConfig/.test(body), 'the field must be dropped');
-  assert.ok(/out = await send\(\)/.test(body), 'it must ask again');
+  assert.ok(/out = await send\(route\)/.test(body), 'it must ask again');
 });
 
 test('a retried request still reports the second failure, not a swallowed one', () => {
@@ -125,9 +128,9 @@ test('a retried request still reports the second failure, not a swallowed one', 
      is read from `out` after the retry block, so whatever the second attempt
      said is what the reader gets. */
   const after = src.slice(src.indexOf('delete body.generationConfig.thinkingConfig'));
-  const assign = after.indexOf('r = out.res; raw = out.raw;');
+  const assign = after.indexOf('const r = out.res;');
   assert.ok(assign > 0, 'the response must be re-read after the retry');
-  assert.ok(assign < after.indexOf('if (!err && !r.ok)'),
+  assert.ok(assign < after.indexOf('return { status: r.status'),
     'the error must be built from the retried response, not the first one');
 });
 

@@ -610,6 +610,39 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v82: three bugs, reported together.
+
+   NOVA FLAP DID NOT RESET THE NUMBER ON SCREEN. The score itself did reset —
+   reset() has always set S.score = 0 — but the counter is only written when a
+   pipe is passed, so a new run opened still showing the last run's total and
+   kept it until the first pipe. It looked exactly like a game that never
+   resets. reset() now writes the zero as well as storing it.
+
+   TREND SPOTTER SAID THE AI WAS OUT WHILE THE AI WAS ANSWERING EVERYWHERE ELSE.
+   Google meters live-web grounding separately from the model, on a much smaller
+   free allowance, and a grounded request cannot fail over because only Gemini
+   can search — so ai-worker.js pinned it to Gemini, took the 429, and reported
+   "NovaClip's shared AI is out of free requests". Wrong about what had run out
+   and wrong that there was nothing to show: Ask Nova and every editor helper
+   were fine on the same key, because they do not ask for search. The worker now
+   gives up the grounding rather than the answer — one more attempt without the
+   search tool before it fails — and says which it did in X-NovaClip-Grounding.
+   nova.js does the same from its side, so this is fixed for anyone whose worker
+   has not been redeployed yet, and the scan carries searchFailed so the panel
+   prints "no live search this time" instead of passing an ungrounded answer off
+   as a searched one.
+
+   THE STUDIO'S THUMBNAIL MAKER ONLY TOOK UPLOADS. It now paints its own
+   background from a sentence, with gemini-2.5-flash-image — the same model
+   ai.html already uses. The model draws the picture only: the title is still
+   drawn by the canvas afterwards, because image models spell badly at thumbnail
+   size and a misspelt word baked into a picture cannot be fixed, while text on
+   the canvas stays editable, stays in the reader's language and gets its
+   contrast stroke. A painted background lands in the same slot as an uploaded
+   one, so the looks, the darkening and the PNG export needed no changes.
+
+   flap.html, nova.js, trends-nav.js, ai-worker.js (DEPLOY IT — a push does not).
+   All four are cached, so the bump matters. */
 /* v81: three legal gaps, one of which the code was actually creating.
 
    THE SERVER WAS STORING IP ADDRESSES WHILE THIS SITE'S PRIVACY POLICY SAID IT
@@ -1267,7 +1300,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v81';
+const CACHE = 'novaclip-v82';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

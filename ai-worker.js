@@ -373,7 +373,7 @@ const CORS = {
      so without this the page can see the answer but not who wrote it. It is
      two strings and it is what lets nova.js say "Gemini is out, OpenAI
      answered" instead of leaving somebody to wonder why the voice changed. */
-  'Access-Control-Expose-Headers': 'X-NovaClip-Provider, X-NovaClip-Switched, X-NovaClip-Model, X-NovaClip-Cache',
+  'Access-Control-Expose-Headers': 'X-NovaClip-Provider, X-NovaClip-Switched, X-NovaClip-Model, X-NovaClip-Cache, X-NovaClip-Grounding',
   'Access-Control-Max-Age': '86400'
 };
 
@@ -1011,7 +1011,8 @@ export default {
        asking GEMINI to ground. One we grounded ourselves is only text by the
        time it leaves here, so it may fail over to another vendor like anything
        else — which is a second, quieter win from doing the search ourselves. */
-    const pinned = grounded || img.count > 0;
+    let pinned = grounded || img.count > 0;
+    let dropped = false;            /* did we give up the live search to answer? */
 
     const tried = new Set();        /* vendors asked */
     const triedM = new Set();       /* provider/model pairs asked */
@@ -1019,9 +1020,10 @@ export default {
     let upstream = null, text = '', lastStatus = 0, lastReason = '';
 
     /* Every vendor once, plus the alternative models at whichever vendor turns
-       out to have retired the one we asked for. Bounded, and every hop only
-       ever happens on a request that already failed. */
-    const MAX_HOPS = FAILOVER_ORDER.length + 3;
+       out to have retired the one we asked for, plus the one extra hop that
+       dropping the grounding buys. Bounded, and every hop only ever happens on
+       a request that already failed. */
+    const MAX_HOPS = FAILOVER_ORDER.length + 4;
     for (let hop = 0; hop < MAX_HOPS; hop++) {
       tried.add(at);
       triedM.add(at + '/' + atModel);
@@ -1066,7 +1068,27 @@ export default {
       }
 
       const canSwitch = !pinned && (SWITCHABLE.has(lastStatus) || gone);
-      const next = canSwitch ? othersFor(env, at, tried)[0] : null;
+      let next = canSwitch ? othersFor(env, at, tried)[0] : null;
+
+      /* GROUNDING HAS ITS OWN QUOTA, AND IT RUNS OUT FIRST.
+         Google meters the search tool separately from the model, at a much
+         lower free allowance. So Trend Spotter — the only caller that asks for
+         search: true — started reporting "the shared AI is out of free quota"
+         on a day when Ask Nova and every editor helper answered perfectly: the
+         grounded request was pinned to Gemini and could not fail over, and the
+         thing that was actually exhausted was the search, not the AI.
+         Give up the live search rather than the answer. The scan comes back
+         ungrounded, which is worse than grounded and enormously better than an
+         error, and the response says which it was. */
+      if (!next && grounded && !dropped && (SWITCHABLE.has(lastStatus) || gone)) {
+        grounded = false;
+        pinned = img.count > 0;
+        dropped = true;
+        triedM.delete(at + '/' + atModel);   /* not yet asked WITHOUT the tool */
+        upstream = null;
+        continue;
+      }
+
       if (!next) break;
       at = next;
       atModel = DEFAULT_MODEL[next];
@@ -1104,7 +1126,11 @@ export default {
          changes under it, and when that happens this header is the only thing
          that says the default in this file has been retired. */
       'X-NovaClip-Model': atModel,
-      ...(at !== provider ? { 'X-NovaClip-Switched': provider + '->' + at } : {})
+      ...(at !== provider ? { 'X-NovaClip-Switched': provider + '->' + at } : {}),
+      /* Whether the answer actually saw the live web, so the page can say so
+         instead of presenting an ungrounded guess as a search. */
+      ...(search ? { 'X-NovaClip-Grounding':
+            dropped ? 'dropped' : hits ? 'search-api' : grounded ? 'gemini' : 'none' } : {})
     };
 
     /* Gemini passes through untouched; the chat-completions vendors are folded
