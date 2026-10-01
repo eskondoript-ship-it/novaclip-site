@@ -610,6 +610,27 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v83: free exports carry the name now. watermark.js is a new shell file and
+   it works by wrapping captureStream rather than by editing the editor's
+   bundle — the bundle is minified build output and the next build would drop
+   the change, whereas a wrapper is also guaranteed to draw last, which is the
+   only way to be sure nothing paints over the mark.
+
+   It is deliberately not a corner stamp. One mask inpainted on every frame is
+   what the one-click removers do, so the mark hops between five anchors every
+   four seconds, one of those anchors sits inside the picture where a crop
+   cannot reach it, and the size, tilt and opacity move a little at each hop so
+   template matching does not lock on. Under all of it there is a very faint
+   large diagonal and a repeating low-amplitude pattern that is invisible at
+   normal viewing but still correlates after a re-encode.
+
+   Paying customers get nothing — not the visible mark and not the invisible
+   layer either, because a site that sells "nothing is uploaded, no adverts"
+   cannot quietly stamp a hidden signal into work somebody paid for.
+
+   watermark.js (new), editor.html (loads it). The bump is what delivers both:
+   editor.html is cached, so without it a returning visitor gets the old page
+   that never asks for the new file. */
 /* v82: three bugs, reported together.
 
    NOVA FLAP DID NOT RESET THE NUMBER ON SCREEN. The score itself did reset —
@@ -1300,7 +1321,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v82';
+const CACHE = 'novaclip-v83';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -1375,6 +1396,12 @@ const SHELL = [
   '/mixer-ui.js',
   /* Picks a video encoder that actually emits bytes on this machine. */
   '/export-fix.js',
+  /* Puts the name on a free export. Cached beside export-fix.js because the two
+     are the export path between them — that one chooses the recorder, this one
+     decides what the recorder is handed — and because an offline export that
+     quietly came out unmarked would be the one way to get a clean file for
+     nothing. Everything it draws is canvas work, so it needs no network. */
+  '/watermark.js',
   /* Works out how long a dropped file actually is. It belongs in the shell for
      the same reason export-fix.js does: the editor loads it before its own
      bundle, and without it every import falls back to the four-line probe that
