@@ -610,6 +610,37 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v88: the Studio rail fits the screen it is actually on.
+
+   Reported as "the site looks like this, make it look like that", with the two
+   screenshots being the same page at 100% and at 80% browser zoom. The second
+   one was not a nicer design, it was the only way to see the bottom of the
+   rail — which is a layout fault, not a preference.
+
+   MEASURED BEFORE IT WAS TOUCHED. At 1920x1080 nothing overflows at all, which
+   is why the first look found nothing. The sidebar is 248 CSS pixels wide but
+   370 pixels in the screenshot, so that display is scaled about 150% and the
+   real window is nearer 1288x620. At that size the rail's content is 816px
+   tall: the points card and the creator card sit below the fold, exactly as
+   the screenshot shows. The top bar was never overflowing — the browser's own
+   zoom popup was covering it.
+
+   So the rail is tighter (ten link rows, the brand, the labels and the two
+   cards all brought in), the hero is smaller so more of the page shows, and
+   that took 816px down to 620.
+
+   AND THEN THE REAL FIX, because 620 in a 620 window fits one laptop and
+   nothing shorter. The rail is now structured rather than tuned: the brand
+   stays at the top, the two cards are pinned to the bottom, and only the list
+   of links between them scrolls when there is not room. The cards cannot be
+   pushed off screen at any height now — checked at 760, 650, 620, 580, 520
+   and 460.
+
+   The rules are scoped to .nc-sidebar on purpose: the same nav markup is
+   reused inside the mobile drawer, and an unscoped flex rule would have made
+   that drawer scroll oddly on phones.
+
+   trends.html only. Cached, so the bump is what delivers it. */
 /* v87: chips for gaming edits and for music edits.
 
    Twelve more, measured the same way as the last batch — run through the real
@@ -1424,7 +1455,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v87';
+const CACHE = 'novaclip-v88';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
