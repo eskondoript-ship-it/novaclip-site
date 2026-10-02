@@ -1996,6 +1996,11 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      deferred-order sensitive against export-fix.js: that one picks the
      recorder, this one decides what the recorder is handed. -->
 <script src='watermark.js' defer></script>
+<!-- Type a channel name, see what actually works on it, and get a plan for your
+     own version. Loaded after footage.js on purpose: it offers a button through
+     to that picker when one is present, since the footage you can legally cut
+     comes from there and not from YouTube. -->
+<script src='clipfinder.js' defer></script>
 <!-- Looks at every video dropped in: how fast it flashes, whether it is blank,
      and one deliberately-unreliable colour check that says so on screen. All
      of it in this tab — nothing is uploaded and nothing is blocked. -->

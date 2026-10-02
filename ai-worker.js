@@ -385,6 +385,14 @@ const json = (obj, status) => new Response(JSON.stringify(obj), {
 /* Every failure answers in one shape, so ncAsk never has to guess. */
 const fail = (status, reason) => json({ error: reason }, status);
 
+/* "PT12M34S" -> 754. YouTube gives every length in this shape and nothing else
+   in this worker needs it, so it lives next to the thing that does. */
+function iso8601Seconds(d) {
+  const m = /^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(String(d || ''));
+  if (!m) return 0;
+  return (+(m[1] || 0)) * 86400 + (+(m[2] || 0)) * 3600 + (+(m[3] || 0)) * 60 + (+(m[4] || 0));
+}
+
 /* ---- vendor adapters ------------------------------------------------
    Gemini and OpenAI/OpenRouter take different request shapes. The site always
    sends Gemini's shape (contents/generationConfig); this converts it for the
@@ -667,6 +675,133 @@ export default {
        every megabyte of every playthrough on your bill for no benefit — the
        URI is already time-limited and carries no key of ours.
        ======================================================================== */
+    /* ========================================================================
+       /yt — a channel name in, that channel's biggest videos out
+       ========================================================================
+       WHAT THIS DOES AND, MORE IMPORTANTLY, WHAT IT DOES NOT
+
+       It returns titles, view counts, lengths, thumbnails and video ids. It
+       does NOT return the video, and nothing downstream of it can: YouTube's
+       terms forbid taking the file, there is no API that offers it, and a site
+       that served somebody else's video to be re-cut would be the infringer —
+       the same conclusion footage.js already reached about film clips, for the
+       same reasons. Playback happens in YouTube's own embedded player, which is
+       the one way they do permit it.
+
+       QUOTA, WHICH IS THE REASON THIS IS SHAPED ODDLY
+
+       The YouTube Data API gives 10,000 units a day. A search costs 100 of
+       them; every other call here costs 1. Asking search for "this channel's
+       most-viewed videos" would therefore cost 100 units PER LOOKUP and run
+       out after a hundred of them.
+
+       So search is used once, only to turn a name into a channel id, and that
+       mapping is cached in KV — a channel's id never changes, so a name looked
+       up once is free for a month afterwards. The videos themselves come from
+       the channel's uploads playlist (1 unit) and one batched stats call (1
+       unit), and the sort by view count happens here. A cached channel costs
+       two units instead of a hundred: roughly three thousand lookups a day
+       rather than a hundred.
+       ====================================================================== */
+    if (url.pathname === '/yt') {
+      if (!env.YOUTUBE_API_KEY) {
+        return fail(503, 'This worker has no YOUTUBE_API_KEY secret set, so it cannot look up channels.');
+      }
+      const name = (url.searchParams.get('channel') || '').trim();
+      if (!name) return fail(400, 'Give me a channel name.');
+      if (name.length > 80) return fail(400, 'That channel name is too long.');
+
+      const K = encodeURIComponent(env.YOUTUBE_API_KEY);
+      const YT = 'https://www.googleapis.com/youtube/v3/';
+      const want = Math.min(12, Math.max(3, parseInt(url.searchParams.get('n') || '8', 10) || 8));
+
+      /* A name maps to one channel for ever, so this is cached hard. */
+      const idKey = 'ytid:' + name.toLowerCase();
+      let chanId = null, cached = false;
+      if (env.RL) { try { chanId = await env.RL.get(idKey); cached = !!chanId; } catch (e) {} }
+
+      try {
+        if (!chanId) {
+          const sr = await fetch(YT + 'search?part=snippet&type=channel&maxResults=1&q=' +
+            encodeURIComponent(name) + '&key=' + K);
+          const sj = await sr.json();
+          if (!sr.ok) {
+            const why = (sj && sj.error && sj.error.message) || ('YouTube said ' + sr.status);
+            return json({ error: why }, sr.status === 403 ? 429 : 502);
+          }
+          const hit = sj.items && sj.items[0];
+          chanId = hit && (hit.id && hit.id.channelId);
+          if (!chanId) return json({ state: 'NONE', reason: 'No channel found with that name.' }, 404);
+          if (env.RL) { try { await env.RL.put(idKey, chanId, { expirationTtl: 2592000 }); } catch (e) {} }
+        }
+
+        /* The uploads playlist holds every public video the channel has, in
+           reverse order of posting. One unit. */
+        const cr = await fetch(YT + 'channels?part=snippet,contentDetails,statistics&id=' +
+          chanId + '&key=' + K);
+        const cj = await cr.json();
+        const chan = cj.items && cj.items[0];
+        if (!chan) return json({ state: 'NONE', reason: 'That channel has gone.' }, 404);
+        const uploads = chan.contentDetails &&
+                        chan.contentDetails.relatedPlaylists &&
+                        chan.contentDetails.relatedPlaylists.uploads;
+        if (!uploads) return json({ state: 'NONE', reason: 'That channel has no public videos.' }, 404);
+
+        const pr = await fetch(YT + 'playlistItems?part=contentDetails&maxResults=50&playlistId=' +
+          uploads + '&key=' + K);
+        const pj = await pr.json();
+        const ids = (pj.items || [])
+          .map(function (i) { return i.contentDetails && i.contentDetails.videoId; })
+          .filter(Boolean);
+        if (!ids.length) return json({ state: 'NONE', reason: 'That channel has no public videos.' }, 404);
+
+        /* Fifty videos' statistics in one call, which is the whole reason this
+           is cheap enough to offer at all. */
+        const vr = await fetch(YT + 'videos?part=snippet,statistics,contentDetails&id=' +
+          ids.slice(0, 50).join(',') + '&key=' + K);
+        const vj = await vr.json();
+
+        const vids = (vj.items || []).map(function (v) {
+          const th = (v.snippet && v.snippet.thumbnails) || {};
+          const pick = th.medium || th.high || th.default || {};
+          return {
+            id: v.id,
+            title: (v.snippet && v.snippet.title) || '',
+            published: (v.snippet && v.snippet.publishedAt) || '',
+            views: parseInt((v.statistics && v.statistics.viewCount) || '0', 10),
+            likes: parseInt((v.statistics && v.statistics.likeCount) || '0', 10),
+            seconds: iso8601Seconds((v.contentDetails && v.contentDetails.duration) || ''),
+            thumb: pick.url || '',
+            url: 'https://www.youtube.com/watch?v=' + v.id
+          };
+        /* Anything under a minute is usually a Short, and a Short is a bad
+           thing to study for structure — there is no structure to find. */
+        }).filter(function (v) { return v.seconds >= 45; })
+          .sort(function (a, b) { return b.views - a.views; })
+          .slice(0, want);
+
+        return json({
+          state: 'OK',
+          cachedChannel: cached,
+          channel: {
+            id: chanId,
+            title: (chan.snippet && chan.snippet.title) || name,
+            thumb: (chan.snippet && chan.snippet.thumbnails &&
+                   (chan.snippet.thumbnails.default || {}).url) || '',
+            subscribers: parseInt((chan.statistics && chan.statistics.subscriberCount) || '0', 10),
+            hidden: !!(chan.statistics && chan.statistics.hiddenSubscriberCount)
+          },
+          videos: vids,
+          /* Said in the payload as well as in the UI, so that anything built on
+             this endpoint later cannot quietly forget it. */
+          note: 'Titles and statistics only. The video itself cannot be served or downloaded ' +
+                'from here — play it in YouTube’s own player.'
+        });
+      } catch (e) {
+        return fail(502, 'YouTube did not answer: ' + (e && e.message ? e.message : 'unknown error'));
+      }
+    }
+
     if (url.pathname === '/aerial') {
       if (!env.GOOGLE_MAPS_KEY) {
         return fail(503, 'This worker has no GOOGLE_MAPS_KEY secret set, so it cannot look up aerial video.');

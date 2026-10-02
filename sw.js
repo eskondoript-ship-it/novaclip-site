@@ -610,6 +610,32 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v85: type a channel name, see what works on it.
+
+   clipfinder.js is a new shell file and editor.html loads it. Give it a
+   YouTube channel and it returns that channel's most-watched videos, ranked,
+   with lengths and view counts; pick a stretch of one and the AI writes a plan
+   for a video of your own on the same idea — the hook, the beats, what to
+   film, a title and a thumbnail.
+
+   WHAT IT DELIBERATELY DOES NOT DO, because the ask was for a clip you could
+   edit: the video does not arrive on the timeline, and could not. YouTube's
+   terms forbid taking the file, there is no API that offers it, the work is
+   somebody's copyright, and a site that served it to be re-cut would be the
+   infringer rather than the teenager who clicked. footage.js reached that
+   conclusion in writing about film clips and nothing about YouTube changes it.
+   So playback is YouTube's own embed, which is the one way they permit it, and
+   what leaves the panel is the idea. The footage you actually cut with is one
+   button away in the licensed picker.
+
+   ai-worker.js gains /yt and needs a YOUTUBE_API_KEY secret — DEPLOY IT, a
+   push does not. The endpoint is shaped around quota rather than around
+   tidiness: a search costs 100 units of the daily 10,000 and everything else
+   costs 1, so search runs once to turn a name into a channel id, that id is
+   cached in KV for a month, and the videos come from the uploads playlist plus
+   one batched stats call. A cold lookup is 103 units; a warm one is 2.
+
+   clipfinder.js (new), editor.html, ai-worker.js (deploy it). */
 /* v84: the trial is real now, and the pricing page stopped promising adverts.
 
    TWO FREE WEEKS, FOUR TIMES OVER. A new visitor is given a fortnight of
@@ -1353,7 +1379,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v84';
+const CACHE = 'novaclip-v85';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -1428,6 +1454,11 @@ const SHELL = [
   '/mixer-ui.js',
   /* Picks a video encoder that actually emits bytes on this machine. */
   '/export-fix.js',
+  /* The clip finder: type a channel, see what actually works on it, and get a
+     plan for your own version. Cached because the panel, the ranking and the
+     wording all work without a connection — only the lookup itself needs one,
+     and it says so rather than appearing broken. */
+  '/clipfinder.js',
   /* Puts the name on a free export. Cached beside export-fix.js because the two
      are the export path between them — that one chooses the recorder, this one
      decides what the recorder is handed — and because an offline export that
