@@ -610,6 +610,38 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v89: the Studio rail is on every page, and the old sizes are back.
+
+   TWO THINGS WERE ASKED FOR. "Bring back the old UI but in this form" — v88
+   shrank the rail as well as pinning its foot cards, and the pinning is what
+   actually made it fit, so every size is back to what it was and the structure
+   stays. And "I want that on every page, not just Trend Spotter".
+
+   THE RAIL NOW UPGRADES THE SIDEBAR THAT IS ALREADY THERE. Twenty-two pages
+   already had a .sidebar — a plain list of links, 200px wide, with each page's
+   own offset built around it. Putting a second rail in front of that was the
+   first attempt and it was wrong: two navigations, content underneath, and a
+   measurement sweep full of red. So nova.js restyles and refills the existing
+   one, and only a page with no sidebar at all gets a new element.
+
+   It is built in one assignment rather than a dozen appends, because several
+   pages rebuild their own sidebar from their own script afterwards and a
+   half-finished tree is how the rail ended up with an empty nav and no cards.
+   A small observer puts it back if a page wipes it later.
+
+   WIDTH AND BREAKPOINT GO THROUGH THE SITE'S OWN MACHINERY. nova.js already
+   offsets the bar with body:has(.sidebar) #ncbar{left:var(--nc-rail)}, so the
+   rail publishes --nc-rail-w rather than inventing a second system that
+   competes with that one on equal specificity. It is published as a class and
+   not as an inline style, because an inline style beats a media query and the
+   rail has to be able to disappear below 900px — the same breakpoint and the
+   same reasoning trends.html uses, since at tablet width a 248px column is a
+   third of the screen and the burger is already the navigation.
+
+   And the bar's rail toggle finally does something on every page. It has been
+   there for a long time with nothing listening to it.
+
+   nova.js, trends.html. Both cached, so the bump delivers them. */
 /* v88: the Studio rail fits the screen it is actually on.
 
    Reported as "the site looks like this, make it look like that", with the two
@@ -1455,7 +1487,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v88';
+const CACHE = 'novaclip-v89';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
