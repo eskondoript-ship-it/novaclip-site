@@ -610,6 +610,36 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v92: the AI's Gen Z vocabulary, 117 terms with 56 of them defined.
+
+   It was eighteen words on one line in ai.html, and a second, differently
+   worded line in analytics.html — so the tutors and the channel coach spoke
+   noticeably different slang. One list now, in nova.js as window.ncSlang(),
+   read by both. Each page keeps its old line as a fallback, so a page that
+   loads before nova.js gives a thinner voice rather than silently answering in
+   plain English with the switch set to Gen Z.
+
+   Half the list carries a six-word definition and half does not, and the split
+   is the point. A model knows "no cap" and "lowkey". It does not reliably know
+   "fanum tax", "aura farming", "clock it", "6-7" or "IJBOL" — new enough that a
+   confident wrong guess is the likely outcome, and slang used wrongly reads
+   worse to a teenager than no slang at all. Defining "fr" would just be paying
+   for tokens.
+
+   The rules at the end are about direction, not vocabulary. A third of this
+   list is insult vocabulary and all of it is in, because a coach that cannot
+   say "that thumbnail is mid" is not speaking the language. What the rules fix
+   is who it points at: the work, never the person. The two appearance terms,
+   mewing and looksmaxxing, are defined so the AI understands a teenager who
+   uses them, and are the one case it is told not to advise on — this site sells
+   that child's parent a filter that blocks eating-disorder content.
+
+   COST: about 1,030 tokens on every AI request made in Gen Z mode, against
+   roughly 45 before. The AI bill is the cost that grows with every free user,
+   so that is worth knowing. Plain English mode is unchanged and unaffected.
+
+   nova.js, ai.html, analytics.html. No worker change — the prompt is built in
+   the browser and passed through. */
 /* v91: the half of the site that was never translated, and the Farsi home page.
 
    Measured rather than guessed: every page loaded twice, once in English and
@@ -1547,7 +1577,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v91';
+const CACHE = 'novaclip-v92';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

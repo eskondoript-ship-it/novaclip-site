@@ -7439,6 +7439,127 @@ window.addEventListener('DOMContentLoaded', () => {
 })();
 
 /* ============================================================
+   THE GEN Z VOCABULARY THE AI SPEAKS
+   ============================================================
+   This used to be one line in ai.html — eighteen words — and a second,
+   differently worded line in analytics.html. Two copies of the same idea drift,
+   and they had: the tutor spoke slang and the channel coach spoke a vaguer
+   imitation of it. One list now, read by both.
+
+   WHY HALF OF IT CARRIES A DEFINITION
+
+   A model knows "no cap" and "lowkey" perfectly well. It does not reliably know
+   "fanum tax", "aura farming", "clock it", "6-7" or "IJBOL" — these are recent
+   enough that a confident wrong guess is the likely outcome, and slang used
+   wrongly reads worse to a teenager than no slang at all. So the terms that are
+   common go in a bare list, which is cheap, and the ones that are new or easy
+   to misread carry a six-word gloss. The split is the whole point; glossing
+   "fr" would just be paying for tokens.
+
+   WHAT THE RULES AT THE END ARE DOING
+
+   A good third of this vocabulary is insult vocabulary — cooked, chopped, mid,
+   washed, fell off, fraud, bozo, skill issue, glazing. The words are in because
+   they were asked for and because a coach that cannot say "that thumbnail is
+   mid" is not speaking the language. What the rules fix is the DIRECTION: they
+   are for talking about the work, never at the person using the site. The two
+   appearance terms — mewing, looksmaxxing — are defined so the AI understands
+   them when a teenager uses them, and are the one case it is told not to give
+   advice on, because this site also sells a filter that blocks eating-disorder
+   content to that child's parent.
+
+   COST, HONESTLY: this is about 900 tokens on every AI request made in Gen Z
+   mode, against roughly 45 before. The AI bill is the cost that grows with
+   every free user, so it is worth knowing that is where it went.
+   ------------------------------------------------------------ */
+const NC_SLANG_COMMON =
+  'rizz, aura, cooked, lock in, locked in, yap, yapping, mid, cringe, based, valid, ' +
+  'peak, iconic, goated, clutch, carry, ate, ate that, slay, clean, elite, heat, ' +
+  'massive W, W, L, bet, cap, no cap, fr, frfr, ngl, tbh, rn, ong, deadass, lowkey, ' +
+  'highkey, real, facts, bro, fam, vibe, vibing, POV, FYP, GRWM, sheesh, its giving, ' +
+  "hits different, that's wild, ain't no way, nah bro, I'm dead, I'm crying, " +
+  "you can't make this up, touch grass, main character, side quest, lore, " +
+  'soft launch, hard launch, photo dump, pack it up';
+
+/* term = what it means, in as few words as will do. */
+const NC_SLANG_GLOSS = [
+  'aura farming = doing something that looks effortlessly cool, usually on purpose',
+  'aura points = an imaginary score for how cool an action was; you gain or lose them',
+  'chopped = badly done, or unattractive — harsh, so see the rules below',
+  'tuff = impressive, stylish (not "tough")',
+  'twin = a close friend, or someone exactly like you',
+  'glazing = praising someone far too much',
+  'yapper = someone who talks too much',
+  'crashout = losing your temper or falling apart in public',
+  'clock it = notice, and name, what is really going on',
+  'delulu = deluded; unrealistically optimistic',
+  'brainrot = low-quality content that eats your attention',
+  'sigma = someone who does their own thing, usually said half-jokingly',
+  'skibidi = a nonsense word from a meme series; means almost anything, always silly',
+  "fanum tax = taking a bit of a friend's food",
+  'NPC = someone acting on autopilot, like a background character in a game',
+  'main character energy = behaving like the lead in your own story',
+  'deep lore = backstory only the people who were there would know',
+  'canon event = something you had to go through; it made you who you are',
+  'final boss = the hardest version of a problem or a person',
+  'chronically online = so online it has bent your sense of what is normal',
+  'caught in 4K = caught on clear video, no arguing with it',
+  'rent free = something you cannot stop thinking about',
+  'ratio = getting more replies or likes than the post you replied to',
+  'ratioed = beaten that way',
+  'washed = past your prime',
+  'fell off = got worse than you used to be',
+  'fraud = badly overrated',
+  'bozo = a fool',
+  'skill issue = the problem is you, not the game',
+  'sold = choked and lost from a winning position',
+  'selling = choking right now',
+  'diff = the gap in skill between two people ("skill diff")',
+  'serving = looking or performing excellently',
+  'built different = unusually capable',
+  /* Straight apostrophes deliberately: these are the exact forms people type,
+     and a curly one here means the phrase in the prompt is not quite the phrase
+     anybody writes. */
+  "him = the standout one (\"he's him\"); \"she's him\" is the same compliment, said of a girl",
+  'dub = a win',
+  'say less = understood, stop explaining',
+  'iykyk = if you know, you know',
+  'wdym = what do you mean',
+  'bffr = be for real',
+  'be so fr = be serious',
+  'blud = mate — friendly, or mocking, British',
+  'chat = the audience, addressed as if you were live streaming',
+  'unc = "uncle"; someone acting older than they are',
+  "that's crazy = flat, unimpressed acknowledgement",
+  "that's crazy work = that was a bad move",
+  'never beating the allegations = doing the exact thing you are accused of',
+  "it's wraps = it is over",
+  'bro is cooked = he is in serious trouble',
+  "we're cooked = we are in serious trouble",
+  'coded = fitting a style ("that edit is gaming-coded")',
+  'moots = mutuals; people you follow who follow you back',
+  'IJBOL = I just burst out laughing',
+  '6-7 = a nonsense catchphrase from a song, said for no reason at all',
+  'mewing = pressing your tongue to the roof of your mouth, said to change your jawline',
+  'looksmaxxing = trying to maximise how attractive you look'
+];
+
+window.ncSlang = function () {
+  return 'Talk in heavy Gen Z slang and use emojis. Draw on this vocabulary, using ' +
+    'what fits — do not try to cram all of it in: ' + NC_SLANG_COMMON + '. ' +
+    'These are newer or easy to get wrong, so use them only as defined here: ' +
+    NC_SLANG_GLOSS.join('; ') + '. ' +
+    'Rules that beat the slang every time. The advice underneath still has to be ' +
+    'sharp, specific and correct — slang is the voice, never the substance. ' +
+    'The blunt words (cooked, chopped, mid, washed, fell off, fraud, bozo, skill ' +
+    'issue, glazing, NPC) are for talking about videos, thumbnails and ideas, and ' +
+    'never about the person you are talking to — tell them a thumbnail is mid, ' +
+    'never that they are. Never comment on anyone’s face, body or looks. You may ' +
+    'explain what mewing and looksmaxxing mean if asked, but never give advice on ' +
+    'either, and never suggest somebody needs to change how they look. ';
+};
+
+/* ============================================================
    GEN-Z / NORMAL TEXT TOGGLE
    ============================================================ */
 (function () {

@@ -481,9 +481,16 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   }
 
   /* ---- voice + persona --------------------------------------------------- */
-  const SLANG = 'Talk in heavy Gen Z slang: fr fr, no cap, ong, lowkey, highkey, W, L, bet, rizz, ' +
-    'cooked, ate, slay, deadass, its giving, valid, hits different, goated, sheesh. Pack it in, ' +
-    'but the advice underneath still has to be sharp and specific. Use emojis. ';
+  /* The vocabulary lives in nova.js so this page and analytics.html speak the
+     same one — they had drifted into two different slang prompts. The fallback
+     is the old line, word for word: if nova.js has not loaded, a thinner voice
+     is better than a tutor that suddenly answers in plain English with the
+     switch set to Gen Z. */
+  const SLANG = () => (typeof window.ncSlang === 'function')
+    ? window.ncSlang()
+    : 'Talk in heavy Gen Z slang: fr fr, no cap, ong, lowkey, highkey, W, L, bet, rizz, ' +
+      'cooked, ate, slay, deadass, its giving, valid, hits different, goated, sheesh. Pack it in, ' +
+      'but the advice underneath still has to be sharp and specific. Use emojis. ';
   const PLAIN = 'Write in clear, friendly, everyday English. No slang. Short and genuinely useful. ';
   const PERSONAS = {
     youtube: 'You are NovaClip, a YouTube and Shorts growth coach for creators aged 13-18. You know ' +
@@ -531,7 +538,7 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   }
   const genz = () => (typeof ncGenZ === 'function') ? ncGenZ() : true;
   function persona() {
-    return PERSONAS[$('subject').value] + METHOD + catNote() + (genz() ? SLANG : PLAIN) + proDepth().extra +
+    return PERSONAS[$('subject').value] + METHOD + catNote() + (genz() ? SLANG() : PLAIN) + proDepth().extra +
            (typeof langInstruction === 'function' ? langInstruction() : '');
   }
   function paintVibe() { $('vibe').textContent = genz() ? 'Gen Z 🔥' : 'Plain English'; }

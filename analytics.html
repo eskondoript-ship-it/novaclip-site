@@ -1747,7 +1747,13 @@ document.addEventListener('click', async (e) => {
 
   const prompt =
     (genz
-      ? 'You are a gen-z creator coach for a teenager. Use heavy gen-z slang and emojis but stay genuinely useful. '
+      /* The same vocabulary the AI tutors use, from nova.js. This page used to
+         carry its own one-line version of the instruction, so the channel coach
+         and the tutors spoke noticeably different slang. */
+      ? 'You are a gen-z creator coach for a teenager. ' +
+        (typeof window.ncSlang === 'function'
+          ? window.ncSlang()
+          : 'Use heavy gen-z slang and emojis but stay genuinely useful. ')
       : 'You are a friendly creator coach for a teenager aged 13-18. Clear everyday English, no slang. ') +
     'Review this channel for the period. Be specific and honest — if something is going badly, say so kindly. ' +
     'Structure: 1) one-line verdict 2) what is working 3) what to fix 4) exactly three actions for next week. ' +
