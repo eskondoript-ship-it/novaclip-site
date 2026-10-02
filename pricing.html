@@ -345,7 +345,15 @@ html[data-device="phone-s"] .btsave { display: none; }
 <div class='wrap'>
   <a class='backlnk' href='index.html'>← Back to NovaClip</a>
   <h1><span data-t='plans'>Plans &</span> <span class='g' data-t='pricing'>Pricing</span></h1>
-  <p class='sub' data-t='price_sub'>The kid's core experience is free. Paid plans fund the platform — and every ad or offer lives on the <a href='parent.html'>parent dashboard</a>, never in front of the kids.</p>
+  <!-- This line used to say every ad lives on the parent dashboard. privacy.html
+       says, in terms, that there is no advertising on NovaClip at all — so the
+       old copy promised a thing the policy forbids, and sold the weaker version
+       of the truth besides. There are no adverts anywhere, and that is the
+       better sentence. -->
+  <p class='sub' data-t='price_sub'>Everything a teenager needs to make videos is free, and stays free. Parents pay for the part that looks after them &mdash; and no video ever leaves the device it was made on. Every plan starts with two weeks free, and no card.</p>
+  <!-- Filled in by the script at the foot of this page when a trial is running.
+       Somebody deciding whether to pay should be told what they already have. -->
+  <p id='trialline' class='sub' style='display:none;font-weight:700;color:#B6FF3C'></p>
 
   <div style='margin-bottom:30px'>
     <label style='font-size:0.85rem; color:#7E8AA6; margin-right:8px' data-t='currency'>Currency</label>
@@ -381,8 +389,9 @@ html[data-device="phone-s"] .btsave { display: none; }
         <li data-t='f2'>Activity overview of your kid's usage</li>
         <li data-t='f3'>Harassment comment scanner + instant alerts</li>
         <li data-t='f4'>One-tap report to YouTube's flow</li>
-        <li data-t='f5'>All ads shown to parents only</li>
+        <li data-t='f5'>No adverts anywhere &mdash; not for your child, and not for you</li>
               <li data-t='f_shield'>Content blocking on YouTube, TikTok, Instagram and Twitch &mdash; nine categories, your own allow and block lists, and a log of what it stopped</li>
+        <li data-t='f_nothing'>Nothing your child makes is ever uploaded &mdash; editing happens on their own device</li>
 </ul>
       <button class='cta' data-t='cta_trial'>Start free trial</button>
     </div>
@@ -1324,5 +1333,27 @@ else initCheckout();
 <script src='nova-ask.js' defer></script>
 <script src='nova-mascot.js' defer></script>
 <script src='nova-guide.js' defer></script>
+<script>
+/* Tells a visitor what they already have before asking them to buy anything.
+   Somebody three days into a free fortnight who is shown a wall of prices and
+   no mention of their trial reasonably concludes the trial was not real. */
+(function () {
+  function paint() {
+    var el = document.getElementById('trialline');
+    if (!el || typeof ncTrialDaysLeft !== 'function') return;
+    var left = ncTrialDaysLeft();
+    if (left == null) return;                       /* paying, or not trialling */
+    var t = (typeof ncTrial === 'function' && ncTrial()) || {};
+    var round = t.rounds || 1;
+    el.textContent = left + ' ' + (typeof tr === 'function' ? tr('tr_days') : 'days left')
+      + ' · ' + (typeof tr === 'function' ? tr('tr_onnow') : 'your free trial is running')
+      + (round > 1 ? ' (' + round + '/4)' : '');
+    el.style.display = '';
+  }
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', function () { setTimeout(paint, 80); });
+  else setTimeout(paint, 80);
+})();
+</script>
 </body>
 </html>

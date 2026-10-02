@@ -610,6 +610,38 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v84: the trial is real now, and the pricing page stopped promising adverts.
+
+   TWO FREE WEEKS, FOUR TIMES OVER. A new visitor is given a fortnight of
+   everything, and when it runs out they are given another, up to four times —
+   eight weeks in all, handed over a fortnight at a time. Somebody still here
+   after two weeks gets told they have two more, which is a better moment than
+   a payment wall, and nobody is cut off the first week they get busy. After
+   the fourth it genuinely stops: the record is removed and ncPro() goes back
+   to null.
+
+   ncPro() now expires a trial record. It cannot expire a paid one, because a
+   paid record has no end date in it at all — that asymmetry is deliberate and
+   is the thing to preserve if this code is ever touched again.
+
+   THIS MACHINE IS EXCLUDED. Open any page once with ?nc_owner=1 and the device
+   never gets a trial, and loses one it already had. ?nc_owner=0 undoes it. A
+   flag in the browser, not a fingerprint — nothing is sent anywhere.
+
+   THE ANNOUNCEMENT SURVIVES A RELOAD. The first page a new visitor sees
+   reloads itself once for the age gate, which destroyed the message exactly
+   for the person who most needed it. What is owed is written to storage and
+   paid on the next load instead.
+
+   PRICING SAID SOMETHING THAT WAS NOT TRUE. The subtitle promised that "every
+   ad or offer lives on the parent dashboard" and a feature line read "All ads
+   shown to parents only" — while privacy.html states that there is no
+   advertising on NovaClip at all. The policy is the one that binds, so both
+   now say there are no adverts anywhere, which is also the stronger thing to
+   be selling. The subtitle leads on what is free and on nothing being
+   uploaded, and says the trial needs no card.
+
+   nova.js, pricing.html. Both cached, so the bump is what delivers them. */
 /* v83: free exports carry the name now. watermark.js is a new shell file and
    it works by wrapping captureStream rather than by editing the editor's
    bundle — the bundle is minified build output and the next build would drop
@@ -1321,7 +1353,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v83';
+const CACHE = 'novaclip-v84';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

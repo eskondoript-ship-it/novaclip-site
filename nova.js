@@ -396,6 +396,13 @@ const T = {
   st_sources: { en:"Read from:", zh:"读取自：", hi:"इनसे पढ़ा गया:", es:"Leído de:", ar:"مقروء من:", fr:"Lu sur\u00a0:", bn:"যেখান থেকে পড়া:", pt:"Lido de:", ru:"Прочитано из:", ur:"یہاں سے پڑھا گیا:", id:"Dibaca dari:", de:"Gelesen aus:", ja:"参照元:", tr:"Şuradan okundu:", ko:"출처:", fa:"خوانده‌شده از:", uk:"Прочитано з:", it:"Letto da:", pl:"Odczytane z:", vi:"Đọc từ:" },
   /* Shown under a scan that asked for live search and did not get one, so an
      ungrounded answer is never presented as a searched one. */
+  tr_onnow: { en:"your free trial is running", zh:"你的免费试用进行中", hi:"आपका मुफ़्त ट्रायल चल रहा है", es:"tu prueba gratis está activa", ar:"تجربتك المجانية جارية", fr:"ton essai gratuit est en cours", bn:"আপনার ফ্রি ট্রায়াল চলছে", pt:"a tua experiência grátis está a decorrer", ru:"идёт бесплатный период", ur:"آپ کا مفت ٹرائل جاری ہے", id:"uji coba gratismu sedang berjalan", de:"deine Gratisphase läuft", ja:"無料体験が進行中です", tr:"ücretsiz denemen sürüyor", ko:"무료 체험이 진행 중입니다", fa:"دورهٔ رایگان شما در جریان است", uk:"триває безкоштовний період", it:"la tua prova gratuita è attiva", pl:"twój darmowy okres trwa", vi:"bản dùng thử miễn phí đang chạy" },
+  f_nothing: { en:"Nothing your child makes is ever uploaded — editing happens on their own device", zh:"孩子制作的任何内容都不会被上传——编辑在他们自己的设备上进行", hi:"आपका बच्चा जो बनाता है वह कभी अपलोड नहीं होता — एडिटिंग उनके अपने डिवाइस पर होती है", es:"Nada de lo que crea tu hijo se sube nunca: la edición ocurre en su propio dispositivo", ar:"لا يُرفع أي شيء يصنعه طفلك — التحرير يتم على جهازه هو", fr:"Rien de ce que crée votre enfant n'est jamais envoyé : le montage se fait sur son appareil", bn:"আপনার সন্তান যা বানায় তা কখনো আপলোড হয় না — এডিটিং তার নিজের ডিভাইসেই হয়", pt:"Nada do que o teu filho cria é enviado — a edição acontece no aparelho dele", ru:"Ничто из созданного ребёнком не загружается — монтаж идёт на его устройстве", ur:"آپ کا بچہ جو بناتا ہے وہ کبھی اپ لوڈ نہیں ہوتا — ایڈیٹنگ اس کے اپنے ڈیوائس پر ہوتی ہے", id:"Apa pun yang dibuat anak Anda tidak pernah diunggah — penyuntingan terjadi di perangkatnya sendiri", de:"Nichts, was Ihr Kind macht, wird je hochgeladen — geschnitten wird auf dem eigenen Gerät", ja:"お子様が作ったものがアップロードされることはありません — 編集は本人の端末で行われます", tr:"Çocuğunuzun yaptığı hiçbir şey yüklenmez — düzenleme kendi cihazında olur", ko:"아이가 만든 것은 절대 업로드되지 않습니다 — 편집은 본인 기기에서 이루어집니다", fa:"هیچ‌چیزی که فرزندتان می‌سازد آپلود نمی‌شود — تدوین روی دستگاه خودش انجام می‌شود", uk:"Ніщо створене дитиною не завантажується — монтаж відбувається на її пристрої", it:"Nulla di ciò che crea tuo figlio viene mai caricato: il montaggio avviene sul suo dispositivo", pl:"Nic, co tworzy Twoje dziecko, nie jest wysyłane — montaż dzieje się na jego urządzeniu", vi:"Không gì con bạn tạo ra bị tải lên — việc dựng phim diễn ra trên thiết bị của bé" },
+  tr_start: { en:"Your 2 free weeks of NovaClip start now. Everything is unlocked.", zh:"你的 NovaClip 两周免费体验从现在开始，全部功能已解锁。", hi:"आपके NovaClip के 2 मुफ़्त हफ़्ते अभी शुरू। सब कुछ अनलॉक है।", es:"Tus 2 semanas gratis de NovaClip empiezan ahora. Todo está desbloqueado.", ar:"أسبوعاك المجانيان في NovaClip يبدآن الآن. كل شيء مفتوح.", fr:"Tes 2 semaines gratuites de NovaClip commencent maintenant. Tout est débloqué.", bn:"আপনার NovaClip-এর ২ সপ্তাহ ফ্রি এখনই শুরু। সব কিছু আনলক।", pt:"As tuas 2 semanas grátis do NovaClip começam agora. Está tudo desbloqueado.", ru:"Твои 2 бесплатные недели NovaClip начинаются сейчас. Всё открыто.", ur:"آپ کے NovaClip کے 2 مفت ہفتے ابھی شروع۔ سب کچھ کھلا ہے۔", id:"2 minggu gratis NovaClip-mu dimulai sekarang. Semua terbuka.", de:"Deine 2 Gratiswochen NovaClip starten jetzt. Alles ist freigeschaltet.", ja:"NovaClipの無料2週間が今スタート。すべて使えます。", tr:"NovaClip'te 2 ücretsiz haftan şimdi başlıyor. Her şey açık.", ko:"NovaClip 무료 2주가 지금 시작됩니다. 모든 기능이 열렸어요.", fa:"دو هفته رایگان NovaClip از همین حالا شروع شد. همه‌چیز باز است.", uk:"Твої 2 безкоштовні тижні NovaClip починаються зараз. Усе відкрито.", it:"Le tue 2 settimane gratis di NovaClip iniziano ora. È tutto sbloccato.", pl:"Twoje 2 darmowe tygodnie NovaClip zaczynają się teraz. Wszystko odblokowane.", vi:"2 tuần miễn phí NovaClip của bạn bắt đầu ngay. Mọi thứ đã mở khóa." },
+  tr_more: { en:"Not done yet — here are another 2 weeks on us.", zh:"还没结束——再送你两周。", hi:"अभी ख़त्म नहीं — ये लीजिए और 2 हफ़्ते, हमारी तरफ़ से।", es:"Aún no se acaba: aquí tienes otras 2 semanas, invita la casa.", ar:"لم ينتهِ بعد — إليك أسبوعين آخرين على حسابنا.", fr:"Ce n'est pas fini : voilà 2 semaines de plus, offertes.", bn:"এখনো শেষ হয়নি — আরও ২ সপ্তাহ, আমাদের তরফ থেকে।", pt:"Ainda não acabou — ficas com mais 2 semanas, por nossa conta.", ru:"Ещё не всё — вот ещё 2 недели от нас.", ur:"ابھی ختم نہیں — یہ لیں مزید 2 ہفتے، ہماری طرف سے۔", id:"Belum selesai — ini 2 minggu lagi, gratis dari kami.", de:"Noch nicht vorbei — hier sind 2 weitere Wochen, geschenkt.", ja:"まだ終わりません — もう2週間どうぞ。", tr:"Daha bitmedi — 2 hafta daha bizden.", ko:"아직 끝이 아니에요 — 2주 더 드릴게요.", fa:"هنوز تمام نشده — دو هفته دیگر مهمان ما باشید.", uk:"Ще не все — ось іще 2 тижні від нас.", it:"Non è finita: altre 2 settimane, offre la casa.", pl:"To jeszcze nie koniec — masz kolejne 2 tygodnie od nas.", vi:"Chưa hết đâu — tặng bạn thêm 2 tuần nữa." },
+  tr_end: { en:"Your free weeks have ended. Everything you made is still yours.", zh:"免费体验结束了。你做的一切仍然属于你。", hi:"आपके मुफ़्त हफ़्ते ख़त्म हुए। आपने जो बनाया, वह आपका ही है।", es:"Tus semanas gratis han terminado. Todo lo que hiciste sigue siendo tuyo.", ar:"انتهت أسابيعك المجانية. كل ما صنعته لا يزال لك.", fr:"Tes semaines gratuites sont terminées. Tout ce que tu as fait reste à toi.", bn:"আপনার ফ্রি সপ্তাহ শেষ। আপনি যা বানিয়েছেন তা আপনারই থাকছে।", pt:"As tuas semanas grátis acabaram. Tudo o que fizeste continua a ser teu.", ru:"Бесплатные недели закончились. Всё, что ты сделал, остаётся твоим.", ur:"آپ کے مفت ہفتے ختم ہو گئے۔ جو کچھ آپ نے بنایا وہ آپ کا ہی ہے۔", id:"Minggu gratismu sudah habis. Semua yang kamu buat tetap milikmu.", de:"Deine Gratiswochen sind vorbei. Alles, was du gemacht hast, bleibt deins.", ja:"無料期間が終了しました。作ったものはすべてあなたのものです。", tr:"Ücretsiz haftaların bitti. Yaptığın her şey hâlâ senin.", ko:"무료 기간이 끝났어요. 만든 것은 모두 그대로 당신 것입니다.", fa:"هفته‌های رایگان شما تمام شد. هر چه ساخته‌اید همچنان مال شماست.", uk:"Безкоштовні тижні завершилися. Усе, що ти зробив, лишається твоїм.", it:"Le tue settimane gratis sono finite. Tutto ciò che hai creato resta tuo.", pl:"Twoje darmowe tygodnie się skończyły. Wszystko, co zrobiłeś, nadal jest twoje.", vi:"Những tuần miễn phí đã kết thúc. Mọi thứ bạn làm vẫn là của bạn." },
+  tr_days: { en:"days left", zh:"天剩余", hi:"दिन बाकी", es:"días restantes", ar:"يومًا متبقيًا", fr:"jours restants", bn:"দিন বাকি", pt:"dias restantes", ru:"дней осталось", ur:"دن باقی", id:"hari lagi", de:"Tage übrig", ja:"日残り", tr:"gün kaldı", ko:"일 남음", fa:"روز باقی", uk:"днів лишилось", it:"giorni rimasti", pl:"dni zostało", vi:"ngày còn lại" },
+  tr_see: { en:"See plans", zh:"查看方案", hi:"प्लान देखें", es:"Ver planes", ar:"عرض الخطط", fr:"Voir les offres", bn:"প্ল্যান দেখুন", pt:"Ver planos", ru:"Тарифы", ur:"پلان دیکھیں", id:"Lihat paket", de:"Pläne ansehen", ja:"プランを見る", tr:"Planlara bak", ko:"요금제 보기", fa:"دیدن پلن‌ها", uk:"Тарифи", it:"Vedi i piani", pl:"Zobacz plany", vi:"Xem gói" },
   st_nolive: { en:"No live search this time \u2014 this scan comes from what the AI already knows, not from the web today.", zh:"本次没有实时搜索——这次扫描来自 AI 已有的知识，而不是今天的网络。", hi:"इस बार लाइव सर्च नहीं हुई — यह स्कैन AI की पहले से मौजूद जानकारी से है, आज के वेब से नहीं।", es:"Sin búsqueda en vivo esta vez: este escaneo viene de lo que la IA ya sabe, no de la web de hoy.", ar:"لا يوجد بحث مباشر هذه المرة — هذا الفحص من معرفة الذكاء الاصطناعي السابقة، وليس من الويب اليوم.", fr:"Pas de recherche en direct cette fois\u00a0: ce scan vient de ce que l'IA sait déjà, pas du web d'aujourd'hui.", bn:"এইবার লাইভ সার্চ হয়নি — এই স্ক্যানটি AI-এর আগে থেকে জানা তথ্য থেকে, আজকের ওয়েব থেকে নয়।", pt:"Sem pesquisa ao vivo desta vez: esta análise vem do que a IA já sabe, não da web de hoje.", ru:"На этот раз без живого поиска — скан основан на том, что ИИ уже знает, а не на сегодняшнем вебе.", ur:"اس بار لائیو سرچ نہیں ہوئی — یہ اسکین AI کی پہلے سے موجود معلومات سے ہے، آج کے ویب سے نہیں۔", id:"Tanpa pencarian langsung kali ini — pindaian ini dari yang sudah diketahui AI, bukan dari web hari ini.", de:"Diesmal ohne Live-Suche: Dieser Scan stammt aus dem, was die KI schon weiß, nicht aus dem Web von heute.", ja:"今回はライブ検索なし — このスキャンはAIが既に知っていることに基づいており、今日のウェブではありません。", tr:"Bu sefer canlı arama yok — bu tarama yapay zekânın zaten bildiklerinden, bugünün web'inden değil.", ko:"이번에는 실시간 검색 없음 — 이 스캔은 AI가 이미 아는 내용이며, 오늘의 웹이 아닙니다.", fa:"این بار جستجوی زنده انجام نشد — این اسکن از دانسته‌های قبلی هوش مصنوعی است، نه از وب امروز.", uk:"Цього разу без живого пошуку — скан спирається на те, що ШІ вже знає, а не на сьогоднішній веб.", it:"Nessuna ricerca dal vivo stavolta: questa scansione viene da ciò che l'IA già sa, non dal web di oggi.", pl:"Tym razem bez wyszukiwania na żywo — ten skan pochodzi z tego, co AI już wie, nie z dzisiejszego internetu.", vi:"Lần này không có tìm kiếm trực tiếp — bản quét này dựa trên những gì AI đã biết, không phải web hôm nay." },
   ui_novacoins: { en:"NovaCoins", zh:"Nova 币", hi:"नोवाकॉइन्स", es:"NovaMonedas", ar:"عملات نوفا", fr:"NovaPièces", bn:"নোভাকয়েন", pt:"NovaMoedas", ru:"НоваМонеты", ur:"نووا کوائنز", id:"NovaKoin", de:"NovaMünzen", ja:"ノヴァコイン", tr:"NovaJeton", ko:"노바코인", fa:"نوواکوین", uk:"НоваМонети", it:"NovaMonete", pl:"NovaMonety", vi:"NovaXu" },
   ui_skin_none: { en:"Cyber theme — none", zh:"赛博主题 — 无", hi:"साइबर थीम — कोई नहीं", es:"Tema cyber — ninguno", ar:"ثيم سايبر — بدون", fr:"Thème cyber — aucun", bn:"সাইবার থিম — কোনোটি নয়", pt:"Tema cyber — nenhum", ru:"Кибертема — нет", ur:"سائبر تھیم — کوئی نہیں", id:"Tema cyber — tidak ada", de:"Cyber-Theme — keines", ja:"サイバーテーマ — なし", tr:"Cyber tema — yok", ko:"사이버 테마 — 없음", fa:"پوسته سایبری — هیچ‌کدام", uk:"Кібертема — немає", it:"Tema cyber — nessuno", pl:"Motyw cyber — brak", vi:"Chủ đề cyber — không" },
@@ -675,7 +682,7 @@ Object.assign(T, TR_T);
 /* ===== PRICING PAGE — visible chrome translated, checkout JS left alone ===== */
 const PR_T = {
   plans: { en:"Plans &", zh:"方案与", hi:"योजनाएं और", es:"Planes y", ar:"الخطط و", fr:"Forfaits et", bn:"পরিকল্পনা ও", pt:"Planos e", ru:"Тарифы и", ur:"پلانز اور", id:"Paket dan", de:"Pläne und", ja:"プランと", tr:"Planlar ve", ko:"요금제 및", fa:"طرح‌ها و", uk:"Тарифи та", it:"Piani e", pl:"Plany i", vi:"Gói và" },
-  price_sub: { en:"The kid's core experience is free. Paid plans fund the platform — and every ad or offer lives on the <a href='parent.html'>parent dashboard</a>, never in front of the kids.", zh:"孩子的核心体验免费。付费方案为平台提供支持——所有广告或优惠都只在<a href='parent.html'>家长面板</a>中，绝不出现在孩子面前。", hi:"बच्चों का मुख्य अनुभव मुफ़्त है। पेड प्लान प्लेटफ़ॉर्म को चलाते हैं — और हर विज्ञापन या ऑफर <a href='parent.html'>पैरेंट डैशबोर्ड</a> पर होता है, कभी बच्चों के सामने नहीं।", es:"La experiencia principal del niño es gratis. Los planes de pago financian la plataforma — y cada anuncio u oferta vive en el <a href='parent.html'>panel de padres</a>, nunca frente a los niños.", ar:"تجربة الطفل الأساسية مجانية. الخطط المدفوعة تمول المنصة — وكل إعلان أو عرض يكون في <a href='parent.html'>لوحة الأهل</a>، وليس أمام الأطفال أبدًا.", fr:"L'expérience principale de l'enfant est gratuite. Les forfaits payants financent la plateforme — chaque pub ou offre vit dans le <a href='parent.html'>tableau de bord parental</a>, jamais devant les enfants.", bn:"বাচ্চাদের মূল অভিজ্ঞতা ফ্রি। পেইড প্ল্যান প্ল্যাটফর্ম চালায় — আর প্রতিটি বিজ্ঞাপন বা অফার <a href='parent.html'>অভিভাবক ড্যাশবোর্ডে</a> থাকে, বাচ্চাদের সামনে কখনো না।", pt:"A experiência principal do miúdo é grátis. Os planos pagos financiam a plataforma — e cada anúncio ou oferta vive no <a href='parent.html'>painel dos pais</a>, nunca à frente dos miúdos.", ru:"Основной опыт ребёнка бесплатен. Платные тарифы финансируют платформу — вся реклама и предложения живут на <a href='parent.html'>родительской панели</a>, никогда перед детьми.", ur:"بچوں کا بنیادی تجربہ مفت ہے۔ پےڈ پلانز پلیٹ فارم چلاتے ہیں — اور ہر اشتہار یا آفر <a href='parent.html'>والدین کے ڈیش بورڈ</a> پر ہوتا ہے، کبھی بچوں کے سامنے نہیں۔", id:"Pengalaman utama anak gratis. Paket berbayar mendanai platform — dan setiap iklan atau penawaran ada di <a href='parent.html'>dasbor orang tua</a>, tidak pernah di depan anak.", de:"Die Kern-Erfahrung des Kindes ist kostenlos. Bezahlte Pläne finanzieren die Plattform — und jede Anzeige oder jedes Angebot lebt im <a href='parent.html'>Eltern-Dashboard</a>, nie vor den Kindern.", ja:"子供の基本体験は無料です。有料プランがプラットフォームを支えます — 広告やオファーはすべて<a href='parent.html'>保護者ダッシュボード</a>に置かれ、子供の前には一切出ません。", tr:"Çocuğun temel deneyimi ücretsiz. Ücretli planlar platformu finanse eder — tüm reklam ve teklifler <a href='parent.html'>veli panelinde</a> yaşar, çocukların önünde asla.", ko:"아이의 핵심 경험은 무료입니다. 유료 플랜이 플랫폼을 운영하며 — 모든 광고나 제안은 <a href='parent.html'>부모 대시보드</a>에만 있고, 아이들 앞에는 절대 없습니다.", fa:"تجربه اصلی کودک رایگان است. پلن‌های پولی هزینه پلتفرم را تأمین می‌کنند — و هر تبلیغ یا پیشنهاد فقط در <a href='parent.html'>داشبورد والدین</a> دیده می‌شود، هرگز جلوی کودکان.", uk:"Основний досвід дитини безкоштовний. Платні тарифи фінансують платформу — вся реклама живе на <a href='parent.html'>батьківській панелі</a>, ніколи перед дітьми.", it:"L'esperienza principale del bambino è gratuita. I piani a pagamento finanziano la piattaforma — ogni annuncio o offerta vive nel <a href='parent.html'>pannello genitori</a>, mai davanti ai bambini.", pl:"Podstawowe doświadczenie dziecka jest darmowe. Płatne plany finansują platformę — każda reklama lub oferta żyje na <a href='parent.html'>panelu rodzica</a>, nigdy przed dziećmi.", vi:"Trải nghiệm cốt lõi của trẻ miễn phí. Gói trả phí tài trợ nền tảng — mọi quảng cáo hay ưu đãi nằm ở <a href='parent.html'>bảng điều khiển phụ huynh</a>, không bao giờ trước mặt trẻ." },
+  price_sub: { en:"Everything a teenager needs to make videos is free, and stays free. Parents pay for the part that looks after them — and no video ever leaves the device it was made on. Every plan starts with two weeks free, and no card.", zh:"青少年制作视频所需的一切都是免费的，并将一直免费。家长付费的是守护他们的那部分——而且视频永远不会离开它被制作的设备。每个方案都从两周免费开始，无需银行卡。", hi:"वीडियो बनाने के लिए किशोर को जो चाहिए, वह सब मुफ़्त है और मुफ़्त ही रहेगा। माता-पिता उस हिस्से के लिए भुगतान करते हैं जो उनका ध्यान रखता है — और कोई वीडियो कभी उस डिवाइस से बाहर नहीं जाता जहाँ वह बना। हर प्लान दो हफ़्ते मुफ़्त से शुरू होता है, बिना कार्ड के।", es:"Todo lo que un adolescente necesita para hacer vídeos es gratis, y seguirá siéndolo. Los padres pagan por la parte que los cuida — y ningún vídeo sale nunca del dispositivo donde se hizo. Cada plan empieza con dos semanas gratis, sin tarjeta.", ar:"كل ما يحتاجه المراهق لصناعة الفيديو مجاني، وسيبقى مجانيًا. الأهل يدفعون مقابل الجزء الذي يحميه — ولا يغادر أي فيديو الجهاز الذي صُنع عليه. كل خطة تبدأ بأسبوعين مجانًا، وبدون بطاقة.", fr:"Tout ce dont un ado a besoin pour faire des vidéos est gratuit, et le restera. Les parents paient pour la partie qui veille sur lui — et aucune vidéo ne quitte jamais l'appareil où elle a été faite. Chaque offre commence par deux semaines gratuites, sans carte.", bn:"ভিডিও বানাতে একজন কিশোরের যা লাগে সবই ফ্রি, এবং ফ্রিই থাকবে। বাবা-মা টাকা দেন সেই অংশের জন্য যা তাদের দেখে রাখে — আর কোনো ভিডিও কখনো সেই ডিভাইস ছাড়ে না যেখানে সেটি বানানো হয়েছে। প্রতিটি প্ল্যান শুরু হয় দুই সপ্তাহ ফ্রি দিয়ে, কার্ড ছাড়াই।", pt:"Tudo o que um adolescente precisa para fazer vídeos é grátis, e continua grátis. Os pais pagam pela parte que toma conta dele — e nenhum vídeo sai do aparelho onde foi feito. Todos os planos começam com duas semanas grátis, e sem cartão.", ru:"Всё, что подростку нужно для создания видео, бесплатно и останется бесплатным. Родители платят за ту часть, которая за ним присматривает — и ни одно видео не покидает устройство, на котором было сделано. Любой план начинается с двух бесплатных недель, без карты.", ur:"ویڈیو بنانے کے لیے نوجوان کو جو کچھ چاہیے وہ سب مفت ہے، اور مفت ہی رہے گا۔ والدین اس حصے کی ادائیگی کرتے ہیں جو ان کا خیال رکھتا ہے — اور کوئی ویڈیو کبھی اس ڈیوائس سے باہر نہیں جاتی جہاں وہ بنی۔ ہر پلان دو ہفتے مفت سے شروع ہوتا ہے، بغیر کارڈ کے۔", id:"Semua yang dibutuhkan remaja untuk membuat video itu gratis, dan tetap gratis. Orang tua membayar untuk bagian yang menjaga mereka — dan tidak ada video yang pernah keluar dari perangkat tempat ia dibuat. Setiap paket dimulai dengan dua minggu gratis, tanpa kartu.", de:"Alles, was ein Teenager zum Videomachen braucht, ist kostenlos und bleibt es. Eltern zahlen für den Teil, der auf ihr Kind achtet — und kein Video verlässt je das Gerät, auf dem es entstand. Jeder Plan beginnt mit zwei Gratiswochen, ohne Karte.", ja:"10代が動画を作るのに必要なものはすべて無料で、これからも無料です。保護者が支払うのは見守る部分だけ — そして動画が作られた端末から出ることは決してありません。どのプランも2週間無料から、カード不要で始まります。", tr:"Bir gencin video yapmak için ihtiyaç duyduğu her şey ücretsiz ve ücretsiz kalacak. Ebeveynler onu kollayan kısım için öder — ve hiçbir video yapıldığı cihazdan çıkmaz. Her plan iki ücretsiz haftayla, kartsız başlar.", ko:"10대가 영상을 만드는 데 필요한 모든 것은 무료이고, 계속 무료입니다. 부모가 내는 것은 아이를 지켜보는 부분입니다 — 그리고 영상은 만들어진 기기를 절대 떠나지 않습니다. 모든 요금제는 2주 무료로 시작하며 카드가 필요 없습니다.", fa:"هر چه نوجوان برای ساختن ویدیو لازم دارد رایگان است و رایگان می‌ماند. والدین برای بخشی پول می‌دهند که مراقب اوست — و هیچ ویدیویی دستگاهی را که در آن ساخته شده ترک نمی‌کند. هر پلن با دو هفته رایگان و بدون کارت آغاز می‌شود.", uk:"Усе, що потрібно підлітку для створення відео, безкоштовне й лишиться таким. Батьки платять за ту частину, що наглядає за ним — і жодне відео не залишає пристрій, на якому зроблене. Кожен план починається з двох безкоштовних тижнів, без картки.", it:"Tutto ciò che serve a un adolescente per fare video è gratis, e resta gratis. I genitori pagano per la parte che veglia su di lui — e nessun video lascia mai il dispositivo su cui è stato fatto. Ogni piano inizia con due settimane gratis, senza carta.", pl:"Wszystko, czego nastolatek potrzebuje do tworzenia filmów, jest darmowe i takie zostanie. Rodzice płacą za tę część, która go pilnuje — a żaden film nigdy nie opuszcza urządzenia, na którym powstał. Każdy plan zaczyna się od dwóch darmowych tygodni, bez karty.", vi:"Mọi thứ một thiếu niên cần để làm video đều miễn phí, và sẽ luôn miễn phí. Phụ huynh trả tiền cho phần trông chừng các em — và không video nào rời khỏi thiết bị đã tạo ra nó. Mọi gói đều bắt đầu với hai tuần miễn phí, không cần thẻ." },
   currency: { en:"Currency", zh:"货币", hi:"मुद्रा", es:"Moneda", ar:"العملة", fr:"Devise", bn:"মুদ্রা", pt:"Moeda", ru:"Валюта", ur:"کرنسی", id:"Mata uang", de:"Währung", ja:"通貨", tr:"Para birimi", ko:"통화", fa:"ارز", uk:"Валюта", it:"Valuta", pl:"Waluta", vi:"Tiền tệ" },
   monthly: { en:"Monthly", zh:"每月", hi:"मासिक", es:"Mensual", ar:"شهري", fr:"Mensuel", bn:"মাসিক", pt:"Mensal", ru:"Ежемесячно", ur:"ماہانہ", id:"Bulanan", de:"Monatlich", ja:"月額", tr:"Aylık", ko:"월간", fa:"ماهانه", uk:"Щомісяця", it:"Mensile", pl:"Miesięcznie", vi:"Hàng tháng" },
   yearly: { en:"Yearly", zh:"每年", hi:"वार्षिक", es:"Anual", ar:"سنوي", fr:"Annuel", bn:"বার্ষিক", pt:"Anual", ru:"Ежегодно", ur:"سالانہ", id:"Tahunan", de:"Jährlich", ja:"年額", tr:"Yıllık", ko:"연간", fa:"سالانه", uk:"Щорічно", it:"Annuale", pl:"Rocznie", vi:"Hàng năm" },
@@ -702,7 +709,7 @@ const PR_T = {
   f2: { en:"Activity overview of your kid's usage", zh:"查看孩子的使用情况", hi:"बच्चे की गतिविधि की झलक", es:"Resumen de la actividad de tu hijo", ar:"نظرة على نشاط طفلك", fr:"Aperçu de l'activité de votre enfant", bn:"সন্তানের ব্যবহারের সারাংশ", pt:"Resumo da atividade do teu filho", ru:"Обзор активности ребёнка", ur:"بچے کے استعمال کا جائزہ", id:"Ringkasan aktivitas anak", de:"Aktivitätsübersicht deines Kindes", ja:"子供の利用状況の概要", tr:"Çocuğunun kullanım özeti", ko:"자녀 사용 활동 요약", fa:"نمای فعالیت کودک", uk:"Огляд активності дитини", it:"Riepilogo dell'attività di tuo figlio", pl:"Przegląd aktywności dziecka", vi:"Tổng quan hoạt động của con bạn" },
   f3: { en:"Harassment comment scanner + instant alerts", zh:"骚扰评论扫描+即时警报", hi:"उत्पीड़न टिप्पणी स्कैनर + तुरंत अलर्ट", es:"Escáner de comentarios de acoso + alertas al instante", ar:"ماسح تعليقات التحرش + تنبيهات فورية", fr:"Détecteur de harcèlement + alertes instantanées", bn:"হয়রানি কমেন্ট স্ক্যানার + তৎক্ষণাৎ সতর্কতা", pt:"Scanner de assédio + alertas instantâneos", ru:"Сканер токсичных комментариев + мгновенные оповещения", ur:"ہراسمنٹ کمنٹ اسکینر + فوری الرٹس", id:"Pemindai komentar pelecehan + peringatan instan", de:"Mobbing-Kommentar-Scanner + Sofort-Alerts", ja:"ハラスメントコメント検知＋即時アラート", tr:"Taciz yorum tarayıcısı + anında uyarı", ko:"괴롭힘 댓글 스캐너 + 즉시 알림", fa:"اسکنر کامنت آزار + هشدار فوری", uk:"Сканер образливих коментарів + миттєві сповіщення", it:"Scanner commenti offensivi + avvisi istantanei", pl:"Skaner obraźliwych komentarzy + natychmiastowe alerty", vi:"Quét bình luận quấy rối + cảnh báo tức thì" },
   f4: { en:"One-tap report to YouTube's flow", zh:"一键上报给YouTube", hi:"वन-टैप रिपोर्ट YouTube को", es:"Denuncia en un toque al sistema de YouTube", ar:"إبلاغ بنقرة واحدة لمسار يوتيوب", fr:"Signalement en un tap vers YouTube", bn:"এক ট্যাপে YouTube-এ রিপোর্ট", pt:"Denúncia num toque para o YouTube", ru:"Репорт в YouTube в один тап", ur:"ایک ٹیپ میں YouTube کو رپورٹ", id:"Lapor sekali tap ke YouTube", de:"1-Tap-Meldung an YouTube", ja:"ワンタップでYouTubeへ報告", tr:"Tek dokunuşla YouTube raporu", ko:"한 번에 유튜브 신고", fa:"گزارش یک‌لمسه به یوتیوب", uk:"Поскаржитись на YouTube одним дотиком", it:"Segnala a YouTube con un tap", pl:"Zgłoszenie do YouTube jednym dotknięciem", vi:"Báo cáo YouTube một chạm" },
-  f5: { en:"All ads shown to parents only", zh:"所有广告只展示给家长", hi:"सभी विज्ञापन सिर्फ पैरेंट्स को", es:"Todos los anuncios solo a los padres", ar:"كل الإعلانات للأهل فقط", fr:"Toutes les pubs uniquement aux parents", bn:"সব বিজ্ঞাপন শুধু অভিভাবকদের", pt:"Todos os anúncios só aos pais", ru:"Вся реклама — только родителям", ur:"تمام اشتہار صرف والدین کو", id:"Semua iklan hanya untuk orang tua", de:"Werbung nur für Eltern", ja:"広告は保護者のみに表示", tr:"Tüm reklamlar sadece velilere", ko:"광고는 부모에게만 표시", fa:"همه تبلیغ‌ها فقط برای والدین", uk:"Уся реклама — лише батькам", it:"Tutte le pubblicità solo ai genitori", pl:"Wszystkie reklamy tylko dla rodziców", vi:"Mọi quảng cáo chỉ hiện với phụ huynh" },
+  f5: { en:"No adverts anywhere — not for your child, and not for you", zh:"任何地方都没有广告——孩子看不到，你也看不到", hi:"कहीं कोई विज्ञापन नहीं — न आपके बच्चे के लिए, न आपके लिए", es:"Sin anuncios en ninguna parte: ni para tu hijo, ni para ti", ar:"لا إعلانات في أي مكان — لا لطفلك ولا لك", fr:"Aucune publicité, nulle part : ni pour votre enfant, ni pour vous", bn:"কোথাও কোনো বিজ্ঞাপন নেই — আপনার সন্তানের জন্যও নয়, আপনার জন্যও নয়", pt:"Sem anúncios em lado nenhum — nem para o teu filho, nem para ti", ru:"Нигде никакой рекламы — ни ребёнку, ни вам", ur:"کہیں بھی کوئی اشتہار نہیں — نہ آپ کے بچے کے لیے، نہ آپ کے لیے", id:"Tidak ada iklan di mana pun — tidak untuk anak Anda, tidak untuk Anda", de:"Nirgends Werbung — weder für Ihr Kind noch für Sie", ja:"どこにも広告はありません — お子様にも、あなたにも", tr:"Hiçbir yerde reklam yok — ne çocuğunuza, ne size", ko:"어디에도 광고가 없습니다 — 아이에게도, 당신에게도", fa:"هیچ تبلیغی در هیچ کجا — نه برای فرزند شما، نه برای شما", uk:"Ніде жодної реклами — ні дитині, ні вам", it:"Nessuna pubblicità da nessuna parte: né per tuo figlio, né per te", pl:"Nigdzie żadnych reklam — ani dla dziecka, ani dla Ciebie", vi:"Không quảng cáo ở bất cứ đâu — không cho con bạn, cũng không cho bạn" },
   f6: { en:"Priority AI answers", zh:"优先AI回答", hi:"प्रायोरिटी AI उत्तर", es:"Respuestas de IA prioritarias", ar:"إجابات ذكاء اصطناعي ذات أولوية", fr:"Réponses IA prioritaires", bn:"অগ্রাধিকার AI উত্তর", pt:"Respostas de IA prioritárias", ru:"Приоритетные ответы ИИ", ur:"ترجیحی AI جوابات", id:"Jawaban AI prioritas", de:"Priorisierte KI-Antworten", ja:"優先AI回答", tr:"Öncelikli YZ yanıtları", ko:"우선 AI 답변", fa:"پاسخ‌های AI با اولویت", uk:"Пріоритетні відповіді ШІ", it:"Risposte AI prioritarie", pl:"Priorytetowe odpowiedzi AI", vi:"Trả lời AI ưu tiên" },
   f7: { en:"Longer editor exports", zh:"更长的编辑器导出", hi:"लंबे एडिटर एक्सपोर्ट", es:"Exportaciones más largas del editor", ar:"تصديرات أطول من المحرر", fr:"Exports plus longs de l'éditeur", bn:"দীর্ঘ এডিটর এক্সপোর্ট", pt:"Exportações mais longas", ru:"Более длинный экспорт из редактора", ur:"لمبے ایڈیٹر ایکسپورٹس", id:"Ekspor editor lebih panjang", de:"Längere Editor-Exports", ja:"より長いエディタ書き出し", tr:"Daha uzun editör çıktısı", ko:"더 긴 편집기 내보내기", fa:"خروجی طولانی‌تر از ادیتور", uk:"Довший експорт з редактора", it:"Export dell'editor più lunghi", pl:"Dłuższe eksporty z edytora", vi:"Xuất video dài hơn" },
   f8: { en:"Extra effects & transitions", zh:"更多特效与转场", hi:"अतिरिक्त इफ़ेक्ट और ट्रांज़िशन", es:"Más efectos y transiciones", ar:"مؤثرات وانتقالات إضافية", fr:"Effets et transitions en plus", bn:"অতিরিক্ত ইফেক্ট ও ট্রানজিশন", pt:"Mais efeitos e transições", ru:"Дополнительные эффекты и переходы", ur:"اضافی افیکٹس اور ٹرانزیشنز", id:"Efek & transisi ekstra", de:"Extra Effekte & Übergänge", ja:"追加エフェクトとトランジション", tr:"Ekstra efekt ve geçişler", ko:"추가 효과 및 전환", fa:"افکت و انتقال اضافه", uk:"Додаткові ефекти та переходи", it:"Effetti e transizioni extra", pl:"Dodatkowe efekty i przejścia", vi:"Hiệu ứng & chuyển cảnh thêm" },
@@ -3890,6 +3897,10 @@ window.ncServer = ncServer;
    no image ever goes in here. */
 const NC_SYNC_KEYS = ['nc_username', 'nc_avatar_color', 'nc_avatar_emblem',
                       'nc_points', 'nc_skills', 'nc_certs','nc_pro','nc_subscription', 'nc_cert_enrolled',
+  /* The trial follows the account, not the browser. Otherwise the same person
+     gets a fresh eight weeks on every device they own, and the trial is not a
+     trial. nc_owner deliberately does NOT sync: that one IS about the device. */
+                      'nc_trial',
   /* New game bests, so they follow the code like the flap score does. */
   'nc_reaction_best', 'nc_aim_best',
                       'nc_ideas', 'nc_history', 'nc_unlocked', 'nc_lb', 'nc_name',
@@ -7436,11 +7447,205 @@ window.addEventListener('DOMContentLoaded', () => {
        ncProHas('family') parental controls, PIN, activity overview
      ========================================================================== */
   window.ncPro = function () {
-    try { return JSON.parse(localStorage.getItem('nc_pro') || 'null'); } catch (e) { return null; }
+    let p;
+    try { p = JSON.parse(localStorage.getItem('nc_pro') || 'null'); } catch (e) { return null; }
+    if (!p) return null;
+    /* Only a trial carries an end date. A paid plan has no 'until' at all, so
+       this cannot expire somebody who is actually paying — which would be the
+       worst possible bug to ship here. */
+    if (p.trial && p.until && Date.now() > Date.parse(p.until)) return null;
+    return p;
   };
   window.ncProHas = function (what) {
     const p = ncPro();
     return !!(p && p[what]);
+  };
+
+  /* ==========================================================================
+     THE FREE TRIAL
+     --------------------------------------------------------------------------
+     Two weeks of everything, given four times over: eight weeks in all, handed
+     out a fortnight at a time. Somebody who is still here after a fortnight is
+     told they have another one, which is a better moment than a payment wall —
+     and it means nobody is cut off the first time they get busy for a week.
+
+     WHAT IT GRANTS. The same record a payer gets, plus trial:true and an end
+     date. Every gate on the site already asks ncProHas(), so nothing else
+     needed changing: the trial unlocks the parent screen, the longer exports
+     and the extra tools, and it takes the watermark off exports, because a
+     trial that still brands the work is not a trial of the paid product.
+
+     WHO DOES NOT GET ONE. This machine. Open any page with ?nc_owner=1 once
+     and the device is marked as the owner's: no trial starts, none extends,
+     and any trial already on it is cleared. ?nc_owner=0 undoes it. It is a
+     flag in this browser, not a fingerprint — nothing is sent anywhere, and
+     the only thing anyone could achieve by setting it on their own machine is
+     to refuse themselves a free trial.
+
+     WHEN IT ENDS IT REALLY ENDS. After the fourth fortnight the record is
+     removed and ncPro() returns null. The work people made is in their own
+     browser and stays theirs; it is the paid features that stop.
+     ========================================================================== */
+  const TRIAL_DAYS = 14;
+  const TRIAL_ROUNDS = 4;          /* 14 days, four times over = eight weeks */
+
+  window.ncIsOwner = function () {
+    try { return localStorage.getItem('nc_owner') === '1'; } catch (e) { return false; }
+  };
+  window.ncTrial = function () {
+    try { return JSON.parse(localStorage.getItem('nc_trial') || 'null'); } catch (e) { return null; }
+  };
+  window.ncTrialDaysLeft = function () {
+    const p = ncPro();
+    if (!p || !p.trial || !p.until) return null;
+    return Math.max(0, Math.ceil((Date.parse(p.until) - Date.now()) / 864e5));
+  };
+
+  function ncTrialGrant(round) {
+    const now = new Date();
+    const until = new Date(now.getTime() + TRIAL_DAYS * 864e5).toISOString();
+    const had = ncTrial();
+    try {
+      localStorage.setItem('nc_trial', JSON.stringify({
+        started: (had && had.started) || now.toISOString(),
+        until: until,
+        rounds: round
+      }));
+      localStorage.setItem('nc_pro', JSON.stringify({
+        tier: 'bundle', family: true, tools: true,
+        since: now.toISOString(), until: until, trial: true,
+        plans: ['Free trial']
+      }));
+    } catch (e) {}
+    try { if (typeof ncSyncSoon === 'function') ncSyncSoon(); } catch (e) {}
+  }
+
+  /* What still needs saying is stored, not returned. The first page a new
+     visitor ever sees reloads itself once — the age gate does it — and a
+     message handed straight to the screen is destroyed by that reload, so the
+     one person who most needs telling never gets told. Writing it down means
+     the next load says it instead. Cleared only once it has been on screen
+     long enough to read. */
+  function ncTrialNote(kind) {
+    try {
+      const t = ncTrial() || {};
+      t.announce = kind;
+      localStorage.setItem('nc_trial', JSON.stringify(t));
+    } catch (e) {}
+  }
+
+  /* Returns what just happened, or null. Safe to call on every page load. */
+  window.ncTrialTick = function () {
+    if (ncIsOwner()) return null;
+    let rec = null;
+    try { rec = JSON.parse(localStorage.getItem('nc_pro') || 'null'); } catch (e) {}
+    /* Somebody who bought a plan during their trial keeps it. Their record has
+       no trial flag, so it is left completely alone. */
+    if (rec && !rec.trial) return null;
+
+    const t = ncTrial();
+    if (!t) { ncTrialGrant(1); ncTrialNote('start'); return 'start'; }
+    if (t.ended) return null;
+    if (Date.now() < Date.parse(t.until)) return null;        /* still running */
+
+    if ((t.rounds || 1) < TRIAL_ROUNDS) {
+      ncTrialGrant((t.rounds || 1) + 1);
+      ncTrialNote('extend');
+      return 'extend';
+    }
+    try {
+      localStorage.setItem('nc_trial', JSON.stringify(
+        Object.assign({}, t, { ended: true, endedAt: new Date().toISOString() })));
+      if (rec && rec.trial) localStorage.removeItem('nc_pro');
+    } catch (e) {}
+    ncTrialNote('end');
+    return 'end';
+  };
+
+  /* The owner switch. Read before anything else so that marking this machine
+     also clears a trial it had already been given. */
+  (function ncOwnerSwitch() {
+    let q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    if (!q.has('nc_owner')) return;
+    const on = q.get('nc_owner') !== '0';
+    try {
+      if (on) {
+        localStorage.setItem('nc_owner', '1');
+        localStorage.removeItem('nc_trial');
+        let rec = null;
+        try { rec = JSON.parse(localStorage.getItem('nc_pro') || 'null'); } catch (e) {}
+        if (rec && rec.trial) localStorage.removeItem('nc_pro');   /* never a paid one */
+      } else {
+        localStorage.removeItem('nc_owner');
+      }
+    } catch (e) {}
+  })();
+
+  /* The bar that says what just happened. Deliberately a bar and not a modal:
+     nobody should have to dismiss something to use the editor, and a trial
+     that interrupts the work it is meant to sell is a bad trial. */
+  function ncTrialBanner(kind) {
+    if (!kind || document.getElementById('nctrialbar')) return;
+    const left = ncTrialDaysLeft();
+    const msg = kind === 'start' ? tr('tr_start')
+              : kind === 'extend' ? tr('tr_more')
+              : tr('tr_end');
+    const bar = document.createElement('div');
+    bar.id = 'nctrialbar';
+    bar.setAttribute('role', 'status');
+    bar.style.cssText =
+      'position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:996;' +
+      'max-width:min(680px,calc(100vw - 28px));box-sizing:border-box;' +
+      'display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;' +
+      'font:600 0.86rem/1.35 system-ui,-apple-system,sans-serif;color:#0F172A;' +
+      'background:#fff;border:1px solid ' + (kind === 'end' ? '#FECACA' : '#C7D2FE') + ';' +
+      'box-shadow:0 10px 30px rgba(15,23,42,0.16);';
+    const dot = document.createElement('span');
+    dot.style.cssText = 'flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:' +
+      (kind === 'end' ? '#B91C1C' : '#4F46E5') + ';';
+    const txt = document.createElement('span');
+    txt.style.cssText = 'flex:1 1 auto';
+    txt.textContent = msg + (kind !== 'end' && left != null
+      ? ' · ' + left + ' ' + tr('tr_days') : '');
+    bar.appendChild(dot);
+    bar.appendChild(txt);
+    if (kind === 'end') {
+      const a = document.createElement('a');
+      a.href = 'pricing.html';
+      a.textContent = tr('tr_see');
+      a.style.cssText = 'flex:0 0 auto;text-decoration:none;color:#fff;background:#4F46E5;' +
+        'padding:7px 12px;border-radius:9px;font-weight:700;';
+      bar.appendChild(a);
+    }
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.setAttribute('aria-label', 'Close');
+    x.textContent = '×';
+    x.style.cssText = 'flex:0 0 auto;border:0;background:transparent;cursor:pointer;' +
+      'font-size:20px;line-height:1;color:#64748B;padding:0 2px;';
+    x.onclick = function () { bar.remove(); };
+    bar.appendChild(x);
+    document.body.appendChild(bar);
+    if (kind !== 'end') setTimeout(function () { if (bar.isConnected) bar.remove(); }, 12000);
+  }
+
+  window.ncTrialBoot = function () {
+    try { ncTrialTick(); } catch (e) {}
+    const t = ncTrial();
+    if (!t || !t.announce) return;
+    ncTrialBanner(t.announce);
+    /* Forgotten only once it has been readable for a moment. If the page
+       reloads before that — which is exactly what happens to a first-time
+       visitor — the message is still owed and the next load pays it. */
+    setTimeout(function () {
+      try {
+        const cur = ncTrial();
+        if (!cur || !cur.announce) return;
+        delete cur.announce;
+        localStorage.setItem('nc_trial', JSON.stringify(cur));
+      } catch (e) {}
+    }, 2500);
   };
 
   /* The badge. A plan you cannot see is a plan people forget they are paying
@@ -7452,8 +7657,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const b = document.createElement('a');
     b.id = 'ncprobadge';
     b.href = 'pro.html';
-    b.textContent = 'PRO';
-    b.title = 'NovaClip Pro — ' + (p.plans || []).join(', ');
+    /* A trial says so, and says how long is left. A badge that reads PRO on a
+       trial is the reason people are surprised when it stops. */
+    const left = ncTrialDaysLeft();
+    b.textContent = p.trial && left != null ? 'TRIAL · ' + left + 'd' : 'PRO';
+    b.title = p.trial
+      ? 'NovaClip free trial — ' + (left == null ? '' : left + ' days left')
+      : 'NovaClip Pro — ' + (p.plans || []).join(', ');
     b.style.cssText = 'position:fixed;top:14px;right:96px;z-index:995;padding:5px 12px;border-radius:20px;' +
       'font:800 0.7rem/1 system-ui,sans-serif;letter-spacing:2px;text-decoration:none;color:#04121a;' +
       'background:linear-gradient(90deg,#B6FF3C,#00F0FF);box-shadow:0 4px 16px rgba(0,240,255,0.3);';
@@ -7528,7 +7738,9 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  function boot() { ncBuildGenZToggle(); ncBuildProBadge(); setTimeout(ncApplyGenZ, 60); }
+  /* The trial runs before the badge, so the badge can show the days left on
+     the very first page view rather than on the second. */
+  function boot() { ncTrialBoot(); ncBuildGenZToggle(); ncBuildProBadge(); setTimeout(ncApplyGenZ, 60); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
