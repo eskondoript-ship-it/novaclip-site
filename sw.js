@@ -610,6 +610,24 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v87: chips for gaming edits and for music edits.
+
+   Twelve more, measured the same way as the last batch — run through the real
+   Commons query and the real licence and size gates, with the surviving count
+   written beside each one in footage.js. Gaming, Arcade, Esports, Glitch, Neon;
+   Guitar, Drums, Piano, Singing, Orchestra, Synth, Buskers. Between 32 and 41
+   clips each. Forty-three chips in all now, in a row that scrolls.
+
+   Two obvious candidates were measured and deliberately NOT shipped: "dj
+   turntable" returns 2 usable clips and "stage lights" returns 6. A chip that
+   lands on six tiles is worse than no chip, which is the whole reason these
+   are measured rather than guessed.
+
+   Commons is thinner on gameplay than on weather for an obvious reason —
+   footage of a commercial game is not free, and the gate dropped two of them
+   under "video game". That is the gate working, not a shortage.
+
+   footage.js only. Cached, so the bump is what delivers it. */
 /* v86: a great deal more footage, and the reason there was not more before.
 
    The picker's chip row goes from twelve buttons to thirty-one. Every new term
@@ -1406,7 +1424,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v86';
+const CACHE = 'novaclip-v87';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

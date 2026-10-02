@@ -137,7 +137,32 @@
     ['Aerial',      'drone aerial'],         /* 21 */
     ['Flowers',     'flower'],               /* 20 */
     ['Machines',    'machine factory'],      /* 20 */
-    ['Timelapse',   'timelapse']             /* 19 */
+    ['Timelapse',   'timelapse'],            /* 19 */
+    /* ---- for gaming edits ----
+       Kept together so they are adjacent when the row is scrolled. Commons is
+       thinner on gameplay than on weather, for an obvious reason: footage of a
+       commercial game is not free, and the licence gate drops it — it caught
+       two under "video game" here, which is the gate doing its job rather than
+       a shortage. What IS there is the free games, demoscene work, arcade
+       cabinets and the look-and-feel footage an edit actually cuts to. */
+    ['Gaming',      'video game'],           /* 35 */
+    ['Arcade',      'arcade'],               /* 39 */
+    ['Esports',     'esports'],              /* 36 */
+    ['Glitch',      'glitch'],               /* 37 */
+    ['Neon',        'neon light'],           /* 39 */
+    /* ---- for music edits ----
+       The broad "Music" chip above finds performances; these find the thing
+       itself, which is what a cutaway needs. Two obvious candidates were
+       measured and NOT shipped: "dj turntable" returns 2 usable clips and
+       "stage lights" returns 6, and a chip that lands on six tiles is worse
+       than no chip at all. */
+    ['Guitar',      'guitar'],               /* 36 */
+    ['Drums',       'drums'],                /* 32 */
+    ['Piano',       'piano'],                /* 41 */
+    ['Singing',     'singing'],              /* 38 */
+    ['Orchestra',   'orchestra'],            /* 37 */
+    ['Synth',       'synthesizer'],          /* 34 */
+    ['Buskers',     'street musician']       /* 40 */
   ];
 
   /* The canonical list is in media-credit.js. This is the fallback for the one
