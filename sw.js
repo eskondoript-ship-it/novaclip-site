@@ -610,6 +610,25 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v90: the sidebar work is reversed, all of it.
+
+   v88 made the Studio rail fit a short window and v89 put that rail on every
+   page. Both are undone at the request of the person whose site this is:
+   nova.js and trends.html are byte for byte what they were at v87.
+
+   Specifically gone: the rail's pinned foot cards and the scrolling link list
+   on trends.html, the smaller hero, and the whole site-wide rail in nova.js —
+   the markup, the skin, the --nc-rail-w publishing and the observer that put
+   the rail back when a page rebuilt its own sidebar. The bar's rail toggle
+   goes back to having nothing to hide, which is where it was before.
+
+   Nothing else in v88 or v89 is affected because neither touched anything
+   else. The changelog entries for both are left above rather than deleted:
+   what was tried and then taken out is worth knowing about by whoever reads
+   this next.
+
+   nova.js and trends.html, both back to v87. Cached, so the bump delivers
+   the reversal. */
 /* v89: the Studio rail is on every page, and the old sizes are back.
 
    TWO THINGS WERE ASKED FOR. "Bring back the old UI but in this form" — v88
@@ -1487,7 +1506,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v89';
+const CACHE = 'novaclip-v90';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
