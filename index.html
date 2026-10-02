@@ -190,6 +190,23 @@ a{color:inherit;text-decoration:none}
    18ch instead of 14ch lets it break into two lines rather than three,
    which is most of the height back on its own. */
 h1{font-size:clamp(2.2rem,min(7.2vw,10.5vh),5.6rem);font-weight:800;line-height:0.96;letter-spacing:-.035em;max-width:18ch}
+/* PERSIAN AND ARABIC WERE PRINTING THE HEADLINE ACROSS THE ARTWORK.
+   max-width is 18ch, which is 897px here, and the burst sits at the right-hand
+   end of that box. English never reaches it because "Run your channel / like a
+   game." wraps after six words and stops around 930px — so for nineteen of the
+   twenty languages the box has 200px of slack nobody could see.
+
+   Persian has no such slack: the same sentence sets as two full-width lines
+   that fill the box to 1121px, which is the bright centre of the burst. It is
+   the BOX that is too wide, not the alignment — the text is right-aligned
+   because the line is right-to-left, and that is correct and stays.
+
+   Narrowing the box alone just turned it into three leaning lines that were
+   taller than the space above the buttons. Setting the headline smaller fixes
+   both at once: ch is a font-relative unit, so the 18ch box shrinks with the
+   type and the sentence still sets as two lines — now ending at 929px, which
+   is where the English headline ends. Everything below it stays put. */
+html.nc-rtl .hero h1{font-size:clamp(1.75rem,min(5.7vw,8.3vh),4.4rem)}
 h1 .w1{display:inline-block;animation:fadeSlide .8s .3s both}
 h1 .w2{display:inline-block;animation:fadeSlide .8s .45s both}
 h1 .n{color:var(--cyan);text-shadow:0 0 40px rgba(0,240,255,.4);display:inline-block;animation:fadeSlide .8s .6s both,neonPulse 3s 1.5s ease-in-out infinite}
@@ -649,9 +666,9 @@ html.nc-rtl .ticker, html.nc-rtl .marquee { direction:ltr; }
   <div class='slideR'>
     <div class='xp-row'><span data-t='xp_progress'>YOUR PROGRESS</span><span id='xpnum'>0 XP</span></div>
     <div class='xp-bar'><div class='xp-fill' id='xpfill'></div></div>
-    <div class='reward'><span class='amt'>100</span><div class='txt'><b data-t='rw1_t'>1 day of NovaClip Pro</b><span data-t='rw1_d'>Your first unlock — one quest away.</span></div></div>
-    <div class='reward'><span class='amt'>450</span><div class='txt'><b data-t='rw2_t'>1 week of Pro</b><span data-t='rw2_d'>Editor exports, priority AI.</span></div></div>
-    <div class='reward'><span class='amt'>1250</span><div class='txt'><b data-t='rw3_t'>1 month of Pro</b><span data-t='rw3_d'>The grind pays off.</span></div></div>
+    <div class='reward'><span class='amt'>150</span><div class='txt'><b data-t='rw1_t'>Basic Certificate</b><span data-t='rw1_d'>The points half. The rest is work you have done.</span></div></div>
+    <div class='reward'><span class='amt'>600</span><div class='txt'><b data-t='rw2_t'>Advanced Certificate</b><span data-t='rw2_d'>Reviewed by a coach before it is issued.</span></div></div>
+    <div class='reward'><span class='amt'>1500</span><div class='txt'><b data-t='rw3_t'>Master Certificate</b><span data-t='rw3_d'>Earned, never bought.</span></div></div>
   </div>
 </section>
 

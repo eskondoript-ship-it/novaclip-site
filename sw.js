@@ -610,6 +610,47 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v91: the half of the site that was never translated, and the Farsi home page.
+
+   Measured rather than guessed: every page loaded twice, once in English and
+   once in the language under test, comparing the visible text node by node. In
+   all nineteen non-English languages about half of every page came back
+   byte-identical to English, and the counts agreed to within three points of
+   each other. That is the signature of strings missing from the site, not from
+   a language — there is nothing to look up, so every language falls back
+   together.
+
+   Three things in this version:
+
+   1. The dictionary had sixteen keys with English and nothing else, fifteen of
+      them the sign-up dialog. The first screen a new speaker of any of the
+      other nineteen languages ever saw was entirely in English. All 14,500
+      cells are now filled.
+
+   2. i18n-ui.js (NEW FILE — it must be deployed with nova.js or the editor,
+      the Studio and the games stay English): the phrase layer made big enough
+      to matter, 104 UI labels in all twenty languages, kept out of nova.js
+      because it will keep growing. nova.js loads it and looks the two tables
+      up as one.
+
+   3. ncPhrase() had two faults that capped what the layer could ever do: a
+      44-character limit that skipped most real labels, and a `seen` set that
+      translated only the FIRST occurrence of any string on a page. It also
+      never touched placeholder or title attributes, so every search box on the
+      site stayed English whatever the table held.
+
+   Separately: index.html's headline box is 18ch, and the burst artwork sits at
+   its right-hand end. English wraps early and never reaches it; Persian filled
+   the box and printed across the artwork. The four right-to-left languages now
+   set the headline smaller, which shrinks the ch-based box with it.
+
+   Also: the Progress page's rewards promised a day, a week, a fortnight and a
+   month of free NovaClip Pro at 100/450/700/1250 NovaCoins. NovaClip Pro is
+   not a product any more, and checkUnlocks() never granted anything — it
+   recorded the name and raised a toast. They are now the three certificates'
+   real point gates, 150/600/1500, which CERT_REQS actually checks.
+
+   i18n-ui.js (new), nova.js, index.html, progress.html. */
 /* v90: the sidebar work is reversed, all of it.
 
    v88 made the Studio rail fit a short window and v89 put that rail on every
@@ -1506,7 +1547,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v90';
+const CACHE = 'novaclip-v91';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -1516,6 +1557,10 @@ const SHELL = [
   '/index.html',
   '/offline.html',
   '/nova.js',
+  /* The UI phrase table. nova.js loads it on every page and translates
+     nothing outside the dictionary until it arrives, so an offline launch
+     without it comes up in English however the language is set. */
+  '/i18n-ui.js',
   '/logo.svg',
   /* Analytics is the page most likely to be opened on a train, and its charts
      came from a CDN until now — which is to say they did not come at all. */
