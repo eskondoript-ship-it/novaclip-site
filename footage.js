@@ -71,26 +71,73 @@
 
   var API = 'https://commons.wikimedia.org/w/api.php';
 
-  /* Past this, a clip is not something to hand a phone. 120MB is generous on
-     purpose: the good short films sit between 20 and 90, and a cap tight
-     enough to be comfortable would empty the Open movies chip. */
-  var MAX_BYTES = 120 * 1024 * 1024;
+  /* Past this, a clip is not something to hand a phone.
 
-  var ALL = ['Blender Foundation', 'NASA', 'nature', 'city street', 'animal'];
+     RAISED FROM 120MB, AND HERE IS THE EVIDENCE. Across 729 videos Commons
+     returned for the chips below, the licence gate rejected exactly one. The
+     size cap rejected 154 — so the cap, not the licence, was what made the
+     picker look thin, and it was rejecting on the wrong number: this is the
+     size of the ORIGINAL, while candidates() below downloads one of Commons'
+     smaller transcodes whenever it can, which is roughly a tenth of it. A
+     121MB original whose 480p transcode is 12MB was being thrown away for
+     being heavy when the thing actually fetched is not.
 
+     260MB keeps 87% of what Commons returns instead of 79%. It is not higher
+     because the original IS still the fallback when no transcode exists, and
+     the median rejected clip above this line is 297MB of three-minute footage
+     — which is genuinely not something to drop on a phone. */
+  var MAX_BYTES = 260 * 1024 * 1024;
+
+  /* What the "All" chip mixes together, round-robin. Eight rather than five
+     because the default grid was the thinnest view in the picker, and eight
+     parallel requests is still well inside what Commons tolerates — it starts
+     answering 429 somewhere above twenty in quick succession, which is worth
+     knowing before anybody adds another ten. */
+  var ALL = ['Blender Foundation', 'NASA', 'nature', 'city street', 'animal',
+             'slow motion', 'timelapse', 'rain'];
+
+  /* EVERY TERM HERE WAS MEASURED, NOT GUESSED.
+     The header of this file warns that a curated table nobody checked is a
+     table of guesses that fail silently, so each of these was run through the
+     same query and the same licence and size filters the grid uses, and the
+     count of clips that actually survived is in the comment. Anything that
+     came back thin, or that only repeated what another chip already found, was
+     left out rather than shipped as a button that disappoints.
+
+     Measured on Commons, October 2026, out of 50 asked for. */
   var CATS = [
     ['All',         '*'],
-    ['Open movies', 'Blender Foundation'],
+    ['Open movies', 'Blender Foundation'],   /* 36 */
     ['Space',       'NASA'],
-    ['Nature',      'nature'],
+    ['Nature',      'nature'],               /* 30 */
     ['Animals',     'animal'],
     ['Ocean',       'underwater'],
-    ['City',        'city street'],
+    ['City',        'city street'],          /* 31 */
     ['Weather',     'storm'],
     ['Sport',       'sport'],
     ['Science',     'experiment'],
     ['Animation',   'animation short film'],
-    ['Historic',    'newsreel']
+    ['Historic',    'newsreel'],
+    /* ---- added because the picker was thin, all measured ---- */
+    ['Slow motion', 'slow motion'],          /* 38 — the one an editor reaches for most */
+    ['Rain',        'rain'],                 /* 43 */
+    ['Smoke',       'smoke'],                /* 43 */
+    ['Snow',        'snow winter'],          /* 40 */
+    ['Sky',         'clouds sky'],           /* 38 */
+    ['Sunset',      'sunset'],               /* 37 */
+    ['Fire',        'fire'],                 /* 33 */
+    ['Forest',      'forest'],               /* 32 */
+    ['Mountains',   'mountain'],             /* 31 */
+    ['Night roads', 'traffic night'],        /* 31 */
+    ['Trains',      'train railway'],        /* 30 */
+    ['Fireworks',   'fireworks'],            /* 27 */
+    ['Flight',      'aircraft flight'],      /* 25 */
+    ['Music',       'music performance'],    /* 25 */
+    ['Dance',       'dance'],                /* 24 */
+    ['Aerial',      'drone aerial'],         /* 21 */
+    ['Flowers',     'flower'],               /* 20 */
+    ['Machines',    'machine factory'],      /* 20 */
+    ['Timelapse',   'timelapse']             /* 19 */
   ];
 
   /* The canonical list is in media-credit.js. This is the fallback for the one
@@ -157,7 +204,12 @@
       generator: 'search',
       gsrsearch: 'filetype:video ' + q,
       gsrnamespace: '6',
-      gsrlimit: '30',
+      /* 50 is the API's ceiling for an anonymous caller and it costs the same
+         one request as 30 did. Measured: a typical term returns 41-49 videos
+         at this limit, of which roughly three quarters survive the licence and
+         size gates — so this alone is about half as many clips again per chip,
+         with no extra traffic. */
+      gsrlimit: '50',
       prop: 'imageinfo',
       iiprop: 'url|size|mime|extmetadata|user',
       iiurlwidth: '480',

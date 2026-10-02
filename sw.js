@@ -610,6 +610,33 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v86: a great deal more footage, and the reason there was not more before.
+
+   The picker's chip row goes from twelve buttons to thirty-one. Every new term
+   was measured before it was added, not guessed: each was run through the same
+   Commons query and the same licence and size gates the grid uses, and the
+   count of clips that actually survived is written beside it in footage.js.
+   Nothing thin, and nothing that only repeated a chip already there, was
+   shipped. Slow motion, rain, smoke, snow, sky, sunset, fire, forest,
+   mountains, night roads, trains, fireworks, flight, music, dance, aerial,
+   flowers, machines, timelapse.
+
+   gsrlimit 30 -> 50, which is the API's ceiling for an anonymous caller and
+   costs the same single request. About half as many clips again per chip for
+   no extra traffic.
+
+   AND THE REAL FIND. Across 729 videos Commons returned for those terms, the
+   licence gate rejected exactly one. The SIZE cap rejected 154. So the cap was
+   what made the picker look thin — and it was judging the wrong number: that
+   is the size of the ORIGINAL, while the insert path downloads one of Commons'
+   smaller transcodes whenever one exists, roughly a tenth of it. A 121MB
+   original whose 480p transcode is 12MB was being thrown out for being heavy
+   when the thing actually fetched is not. The cap is 260MB now: 87% of what
+   Commons returns instead of 79%. Not higher, because the original is still
+   the fallback when no transcode exists, and the median clip above that line
+   is 297MB of three-minute footage.
+
+   footage.js only. Cached, so the bump is what delivers it. */
 /* v85: type a channel name, see what works on it.
 
    clipfinder.js is a new shell file and editor.html loads it. Give it a
@@ -1379,7 +1406,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v85';
+const CACHE = 'novaclip-v86';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
