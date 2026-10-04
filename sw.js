@@ -610,6 +610,53 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v94: the avatar shop, and the end of the game skins that never were.
+
+   "Exclusive game skins — Pro weapon finishes in Strike Arena" was advertised
+   on pro.html and as f9 on the pricing page, in all twenty languages. Strike
+   Arena is deleted, and there is no ncPro check in any of the five game files,
+   so the skins did not exist either: a paid feature with nothing behind it, on
+   the two pages whose job is to say what paying gets you. Replaced with the
+   watermark, which watermark.js really does gate on ncProHas('tools') and
+   which was advertised nowhere.
+
+   THE SHOP. Eighteen avatars bought with NovaCoins, in five star tiers at 150,
+   400, 900, 2000 and 5000. They are actual solids, not emoji: avatar3d.js (NEW
+   FILE) builds each one as geometry and draws it with the same software
+   renderer nova-logo3d.js uses — vertices, one rotation, a perspective divide,
+   a painter's sort, flat shading. No library, nothing fetched, 13KB of
+   arithmetic. A .glb would be a binary, and binaries cannot ship through the
+   artifact this site is delivered by.
+
+   The ladder is the geometry: a one-star is a four-face tetrahedron and a
+   five-star is the sixteen-ray nova, so you can tell what somebody has from
+   across a room at 30 pixels without reading a number.
+
+   A model is stored as an id ("saturn" is nine bytes and recolours itself with
+   the category), and ncAvatar() hands back a baked sprite — so the rail, a
+   comment on community.html and a gift box all keep working untouched, because
+   every one of them already branched on whether the value starts with "data:".
+
+   The eighteen that were free stay free. They cost nothing to render and they
+   already work everywhere an avatar appears; an account with no name and no
+   photo still has to have a face, and charging for the floor is not a shop.
+
+   TWO COUNTERS, AND THERE HAD TO BE. NovaCoins only ever went up, so one number
+   could be both "earned" and "left to spend" without anybody noticing. The
+   moment an avatar costs coins those stop being the same number: deducting
+   from a single counter would mean buying a 900-coin avatar pushes you 900
+   further from the Master Certificate — paying for a cosmetic would un-earn a
+   credential. nc_points is now the spendable balance; nc_points_lifetime is
+   what was ever earned, and the certificates, the milestones and the Progress
+   bar all read that. Nobody loses anything: no one has ever spent, so every
+   existing balance IS that player's lifetime, and getPtsLifetime() seeds itself
+   from whichever is larger the first time it is read.
+
+   spendPts() refuses rather than going negative, ncBuyAvatar() returns false
+   unless it actually bought something, and saving the profile falls back to the
+   free set if the chosen avatar is not owned.
+
+   avatar3d.js (new), nova.js, pro.html, pricing.html. */
 /* v93: Gen Z mode across the teenage half of the site, and two stale claims.
 
    The slang table had 58 lines against 195 data-t keys the site actually
@@ -1623,7 +1670,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v93';
+const CACHE = 'novaclip-v94';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -1637,6 +1684,9 @@ const SHELL = [
      nothing outside the dictionary until it arrives, so an offline launch
      without it comes up in English however the language is set. */
   '/i18n-ui.js',
+  /* The avatar solids. Geometry as text, no assets to fetch, so an avatar
+     somebody paid NovaCoins for still draws with the laptop shut. */
+  '/avatar3d.js',
   '/logo.svg',
   /* Analytics is the page most likely to be opened on a train, and its charts
      came from a CDN until now — which is to say they did not come at all. */

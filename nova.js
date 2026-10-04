@@ -713,7 +713,15 @@ const PR_T = {
   f6: { en:"Priority AI answers", zh:"优先AI回答", hi:"प्रायोरिटी AI उत्तर", es:"Respuestas de IA prioritarias", ar:"إجابات ذكاء اصطناعي ذات أولوية", fr:"Réponses IA prioritaires", bn:"অগ্রাধিকার AI উত্তর", pt:"Respostas de IA prioritárias", ru:"Приоритетные ответы ИИ", ur:"ترجیحی AI جوابات", id:"Jawaban AI prioritas", de:"Priorisierte KI-Antworten", ja:"優先AI回答", tr:"Öncelikli YZ yanıtları", ko:"우선 AI 답변", fa:"پاسخ‌های AI با اولویت", uk:"Пріоритетні відповіді ШІ", it:"Risposte AI prioritarie", pl:"Priorytetowe odpowiedzi AI", vi:"Trả lời AI ưu tiên" },
   f7: { en:"Longer editor exports", zh:"更长的编辑器导出", hi:"लंबे एडिटर एक्सपोर्ट", es:"Exportaciones más largas del editor", ar:"تصديرات أطول من المحرر", fr:"Exports plus longs de l'éditeur", bn:"দীর্ঘ এডিটর এক্সপোর্ট", pt:"Exportações mais longas", ru:"Более длинный экспорт из редактора", ur:"لمبے ایڈیٹر ایکسپورٹس", id:"Ekspor editor lebih panjang", de:"Längere Editor-Exports", ja:"より長いエディタ書き出し", tr:"Daha uzun editör çıktısı", ko:"더 긴 편집기 내보내기", fa:"خروجی طولانی‌تر از ادیتور", uk:"Довший експорт з редактора", it:"Export dell'editor più lunghi", pl:"Dłuższe eksporty z edytora", vi:"Xuất video dài hơn" },
   f8: { en:"Extra effects & transitions", zh:"更多特效与转场", hi:"अतिरिक्त इफ़ेक्ट और ट्रांज़िशन", es:"Más efectos y transiciones", ar:"مؤثرات وانتقالات إضافية", fr:"Effets et transitions en plus", bn:"অতিরিক্ত ইফেক্ট ও ট্রানজিশন", pt:"Mais efeitos e transições", ru:"Дополнительные эффекты и переходы", ur:"اضافی افیکٹس اور ٹرانزیشنز", id:"Efek & transisi ekstra", de:"Extra Effekte & Übergänge", ja:"追加エフェクトとトランジション", tr:"Ekstra efekt ve geçişler", ko:"추가 효과 및 전환", fa:"افکت و انتقال اضافه", uk:"Додаткові ефекти та переходи", it:"Effetti e transizioni extra", pl:"Dodatkowe efekty i przejścia", vi:"Hiệu ứng & chuyển cảnh thêm" },
-  f9: { en:"Exclusive game skins", zh:"专属游戏皮肤", hi:"एक्सक्लूसिव गेम स्किन्स", es:"Pieles de juego exclusivas", ar:"سكنات ألعاب حصرية", fr:"Skins de jeu exclusifs", bn:"এক্সক্লুসিভ গেম স্কিন", pt:"Skins de jogo exclusivas", ru:"Эксклюзивные скины", ur:"ایکسکلوژو گیم سکنز", id:"Skin game eksklusif", de:"Exklusive Game-Skins", ja:"限定ゲームスキン", tr:"Özel oyun kaplamaları", ko:"독점 게임 스킨", fa:"اسکین‌های اختصاصی بازی", uk:"Ексклюзивні скіни", it:"Skin di gioco esclusive", pl:"Ekskluzywne skórki do gier", vi:"Skin game độc quyền" },
+  f9: { en:"No watermark on your exports", zh:"导出不带水印", hi:"एक्सपोर्ट पर कोई वॉटरमार्क नहीं", es:"Sin marca de agua en tus exportaciones", ar:"بلا علامة مائية على تصديراتك", fr:"Pas de filigrane sur tes exports", bn:"এক্সপোর্টে কোনো ওয়াটারমার্ক নেই", pt:"Sem marca de água nas tuas exportações", ru:"Без водяного знака на экспорте", ur:"آپ کے ایکسپورٹ پر کوئی واٹر مارک نہیں", id:"Tanpa watermark di hasil ekspormu", de:"Kein Wasserzeichen auf deinen Exporten", ja:"書き出しに透かしが入りません", tr:"Dışa aktarımlarında filigran yok", ko:"내보내기에 워터마크 없음", fa:"بدون واترمارک روی خروجی‌هایت", uk:"Без водяного знака на експорті", it:"Nessuna filigrana sulle tue esportazioni", pl:"Bez znaku wodnego na eksportach", vi:"Không có hình mờ trên bản xuất" },
+  ui_av_shop: { en:"Avatar shop", zh:"头像商店", hi:"अवतार शॉप", es:"Tienda de avatares", ar:"متجر الصور الرمزية", fr:"Boutique d'avatars", bn:"অ্যাভাটার শপ", pt:"Loja de avatares", ru:"Магазин аватаров", ur:"اوتار شاپ", id:"Toko avatar", de:"Avatar-Shop", ja:"アバターショップ", tr:"Avatar dükkânı", ko:"아바타 상점", fa:"فروشگاه آواتار", uk:"Магазин аватарів", it:"Negozio di avatar", pl:"Sklep z awatarami", vi:"Cửa hàng avatar" },
+  ui_av_tospend: { en:"{n} to spend", zh:"可用 {n}", hi:"खर्च करने को {n}", es:"{n} para gastar", ar:"{n} للإنفاق", fr:"{n} à dépenser", bn:"খরচ করার মতো {n}", pt:"{n} para gastar", ru:"{n} на траты", ur:"خرچ کے لیے {n}", id:"{n} untuk dibelanjakan", de:"{n} zum Ausgeben", ja:"使えるのは {n}", tr:"harcanacak {n}", ko:"쓸 수 있는 {n}", fa:"{n} برای خرج کردن", uk:"{n} на витрати", it:"{n} da spendere", pl:"{n} do wydania", vi:"còn {n} để tiêu" },
+  ui_av_buy: { en:"Get {e} for {n}", zh:"用 {n} 兑换 {e}", hi:"{n} में {e} लें", es:"Consigue {e} por {n}", ar:"احصل على {e} مقابل {n}", fr:"Prends {e} pour {n}", bn:"{n} দিয়ে {e} নাও", pt:"Leva {e} por {n}", ru:"Забрать {e} за {n}", ur:"{n} میں {e} لیں", id:"Ambil {e} seharga {n}", de:"{e} für {n} holen", ja:"{n} で {e} を入手", tr:"{n} karşılığında {e} al", ko:"{n}에 {e} 받기", fa:"{e} را با {n} بگیر", uk:"Забрати {e} за {n}", it:"Prendi {e} per {n}", pl:"Weź {e} za {n}", vi:"Lấy {e} với {n}" },
+  ui_av_got: { en:"{e} is yours.", zh:"{e} 已归你所有。", hi:"{e} अब आपका है।", es:"{e} ya es tuyo.", ar:"{e} أصبح لك.", fr:"{e} est à toi.", bn:"{e} এখন তোমার।", pt:"{e} já é teu.", ru:"{e} теперь твой.", ur:"{e} اب آپ کا ہے۔", id:"{e} sekarang milikmu.", de:"{e} gehört jetzt dir.", ja:"{e} はあなたのものです。", tr:"{e} artık senin.", ko:"{e} 이제 내 것입니다.", fa:"{e} حالا مال توست.", uk:"{e} тепер твій.", it:"{e} ora è tuo.", pl:"{e} jest już twój.", vi:"{e} giờ là của bạn." },
+  ui_av_short: { en:"{n} more NovaCoins and it is yours.", zh:"再攒 {n} 积分就能拿到。", hi:"{n} और NovaCoins, फिर यह आपका।", es:"{n} NovaCoins más y es tuyo.", ar:"{n} نقطة أخرى ويصبح لك.", fr:"Encore {n} NovaCoins et il est à toi.", bn:"আর {n} NovaCoins, তাহলেই তোমার।", pt:"Mais {n} NovaCoins e é teu.", ru:"Ещё {n} NovaCoins — и он твой.", ur:"{n} مزید NovaCoins اور یہ آپ کا۔", id:"Kurang {n} NovaCoins lagi.", de:"Noch {n} NovaCoins, dann gehört er dir.", ja:"あと {n} NovaCoins で手に入ります。", tr:"{n} NovaCoins daha, sonra senin.", ko:"{n} NovaCoins만 더 모으면 됩니다.", fa:"{n} NovaCoins دیگر و مال توست.", uk:"Ще {n} NovaCoins — і він твій.", it:"Ancora {n} NovaCoins ed è tuo.", pl:"Jeszcze {n} NovaCoins i jest twój.", vi:"Thêm {n} NovaCoins nữa là của bạn." },
+  ui_av_free: { en:"Free to everyone", zh:"所有人免费", hi:"सबके लिए मुफ़्त", es:"Gratis para todos", ar:"مجاني للجميع", fr:"Gratuits pour tous", bn:"সবার জন্য ফ্রি", pt:"Grátis para todos", ru:"Бесплатно всем", ur:"سب کے لیے مفت", id:"Gratis untuk semua", de:"Für alle kostenlos", ja:"だれでも無料", tr:"Herkese ücretsiz", ko:"누구나 무료", fa:"رایگان برای همه", uk:"Безкоштовно для всіх", it:"Gratis per tutti", pl:"Za darmo dla wszystkich", vi:"Miễn phí cho mọi người" },
+  ui_av_earned: { en:"Earned", zh:"已赚取", hi:"कमाए गए", es:"Ganado", ar:"المكتسب", fr:"Gagné", bn:"অর্জিত", pt:"Ganho", ru:"Заработано", ur:"کمائے گئے", id:"Diperoleh", de:"Verdient", ja:"獲得ぶん", tr:"Kazanılan", ko:"모은 점수", fa:"کسب‌شده", uk:"Зароблено", it:"Guadagnati", pl:"Zdobyte", vi:"Đã kiếm" },
+  ui_av_yes: { en:"Buy it", zh:"买下", hi:"ले लो", es:"Comprar", ar:"اشترِ", fr:"Acheter", bn:"কিনে নাও", pt:"Comprar", ru:"Купить", ur:"خریدیں", id:"Beli", de:"Kaufen", ja:"買う", tr:"Al", ko:"구매", fa:"بخر", uk:"Купити", it:"Compra", pl:"Kup", vi:"Mua" },
   f10: { en:"Family Dashboard included", zh:"含家庭面板", hi:"फैमिली डैशबोर्ड शामिल", es:"Panel familiar incluido", ar:"تشمل لوحة العائلة", fr:"Tableau familial inclus", bn:"ফ্যামিলি ড্যাশবোর্ড অন্তর্ভুক্ত", pt:"Painel familiar incluído", ru:"Семейная панель включена", ur:"فیملی ڈیش بورڈ شامل", id:"Termasuk dasbor keluarga", de:"Familien-Dashboard inklusive", ja:"ファミリーダッシュボード込み", tr:"Aile paneli dahil", ko:"가족 대시보드 포함", fa:"داشبورد خانواده گنجانده شده", uk:"Сімейна панель включена", it:"Pannello famiglia incluso", pl:"Panel rodzinny w zestawie", vi:"Bao gồm bảng điều khiển gia đình" },
   f11: { en:"Kids' Tools Upgrade included", zh:"含孩子工具升级", hi:"किड्स टूल्स अपग्रेड शामिल", es:"Mejora de herramientas para niños incluida", ar:"تشمل ترقية أدوات الأطفال", fr:"Forfait enfants inclus", bn:"কিডস টুলস আপগ্রেড অন্তর্ভুক্ত", pt:"Upgrade de ferramentas incluído", ru:"Детские инструменты Pro включены", ur:"کڈز ٹولز اپ گریڈ شامل", id:"Termasuk upgrade alat anak", de:"Kinder-Tools-Upgrade inklusive", ja:"子供ツールアップグレード込み", tr:"Çocuk araçları yükseltme dahil", ko:"키즈 도구 업그레이드 포함", fa:"ارتقای ابزار کودکان گنجانده شده", uk:"Дитячі інструменти включені", it:"Upgrade strumenti bambini incluso", pl:"Rozszerzenie narzędzi w zestawie", vi:"Bao gồm nâng cấp công cụ trẻ em" },
   f12: { en:"Priority support", zh:"优先支持", hi:"प्रायोरिटी सपोर्ट", es:"Soporte prioritario", ar:"دعم ذو أولوية", fr:"Support prioritaire", bn:"অগ্রাধিকার সাপোর্ট", pt:"Suporte prioritário", ru:"Приоритетная поддержка", ur:"ترجیحی سپورٹ", id:"Dukungan prioritas", de:"Priorisierter Support", ja:"優先サポート", tr:"Öncelikli destek", ko:"우선 지원", fa:"پشتیبانی اولویت‌دار", uk:"Пріоритетна підтримка", it:"Supporto prioritario", pl:"Priorytetowe wsparcie", vi:"Hỗ trợ ưu tiên" },
@@ -3209,21 +3217,32 @@ window.ncRephrase = function () {
    an error earlier in nova.js, say — is not also left without its furniture.
    Deliberately not async-blocking: the page renders in English for a moment
    and then settles, which is what it already did for the dictionary. */
-(function loadPhrases() {
-  if (window.NC_PHRASES || document.getElementById('nc-i18n-ui')) return;
+function ncSideload(file, id, done) {
+  if (document.getElementById(id)) return;
   /* Resolved against nova.js's own URL rather than the page's. A bare
      'i18n-ui.js' is relative to the DOCUMENT, so every page under novatools/
      would have asked for /novatools/i18n-ui.js and got a 404 — the one set of
      pages that would have failed silently and in English. */
-  let base = '/i18n-ui.js';
+  let base = '/' + file;
   const me = [...document.querySelectorAll('script[src]')]
     .find(t => /(^|\/)nova\.js(\?|$)/.test(t.getAttribute('src') || ''));
-  if (me) { try { base = new URL('i18n-ui.js', me.src).href; } catch (e) {} }
+  if (me) { try { base = new URL(file, me.src).href; } catch (e) {} }
   const s = document.createElement('script');
-  s.id = 'nc-i18n-ui';
+  s.id = id;
   s.src = base;
-  s.onload = () => { try { ncPhrase(); } catch (e) {} };
+  s.onload = () => { try { done(); } catch (e) {} };
   document.head.appendChild(s);
+}
+
+(function loadPhrases() {
+  if (!window.NC_PHRASES) ncSideload('i18n-ui.js', 'nc-i18n-ui', () => ncPhrase());
+  /* The avatar solids. Only the profile card and the picker need them, but
+     both can be on screen within a second of boot, and the file is 11KB of
+     arithmetic with nothing to fetch. When it lands the rail repaints, because
+     until then a bought avatar has been showing as a plain star. */
+  if (!window.NC_AV3D) ncSideload('avatar3d.js', 'nc-av3d', function () {
+    try { dispatchEvent(new Event('nc-avatar-3d')); } catch (e) {}
+  });
 })();
 
 /* The gates are the certificates' own point requirements, so this bar fills
@@ -3358,7 +3377,9 @@ function logSkill(id, n) {
 function certProgress(tier) {
   const req = CERT_REQS[tier];
   if (!req) return null;
-  const have = getPts(), missing = [];
+  /* Lifetime, not the balance: a certificate is a record of work done, and
+     buying an avatar must not take one away. */
+  const have = getPtsLifetime(), missing = [];
   let done = 0, total = 0;
 
   total++; if (have >= req.pts) done++;
@@ -3896,8 +3917,47 @@ function applyTheme(name) {
 function toast(msg) { const t = document.getElementById('nctoast'); if (!t) return; t.textContent = msg; t.style.display = 'block'; clearTimeout(t.hideTimer); t.hideTimer = setTimeout(() => { t.style.display = 'none'; }, 3000); }
 window.toast = toast;   /* editor.html calls this for a missing tool script */
 function getPts() { return parseInt(localStorage.getItem('nc_points') || '0'); }
-function checkUnlocks(pts) { const u = JSON.parse(localStorage.getItem('nc_unlocked') || '[]'); for (const [need,name] of QUESTS.concat(ACHIEVEMENTS)) { if (pts >= need && !u.includes(name)) { u.push(name); setTimeout(() => toast(tr('ui_unlocked') + qName(name)), 1200); } } localStorage.setItem('nc_unlocked', JSON.stringify(u)); }
-function addPts(n) { const p = getPts() + n; localStorage.setItem('nc_points', p); ncSyncSoon(); const b = document.getElementById('ncpts'); if (b) b.textContent = '🪙 ' + p; toast((n >= 0 ? '+' : '') + n + ' 🪙'); checkUnlocks(p); refreshPanels(); }
+
+/* WHAT WAS EVER EARNED, as opposed to what is left to spend.
+   Until the avatar shop existed these were the same number and nothing had to
+   tell them apart. They are not the same now: spending from the single counter
+   would push somebody further from the Master Certificate every time they
+   bought a picture.
+
+   Seeded from whichever is larger the first time it is read, so everybody who
+   played before this existed keeps the certificate progress they earned —
+   their balance has never been spent, so it IS their lifetime total. */
+function getPtsLifetime() {
+  const life = parseInt(localStorage.getItem('nc_points_lifetime') || '0');
+  const bal = getPts();
+  if (life < bal) { try { localStorage.setItem('nc_points_lifetime', bal); } catch (e) {} return bal; }
+  return life;
+}
+/* The only thing that takes NovaCoins away, and it refuses rather than going
+   negative. Lifetime is deliberately untouched. */
+function spendPts(n) {
+  n = Math.round(n);
+  if (!(n > 0)) return false;
+  const bal = getPts();
+  if (bal < n) return false;
+  try { localStorage.setItem('nc_points', bal - n); } catch (e) {}
+  if (typeof ncSyncSoon === 'function') ncSyncSoon();
+  const b = document.getElementById('ncpts');
+  if (b) b.textContent = '\u{1FA99} ' + (bal - n);
+  try { refreshPanels(); } catch (e) {}
+  try { dispatchEvent(new Event('nc-points')); } catch (e) {}
+  return true;
+}
+window.getPtsLifetime = getPtsLifetime;
+window.spendPts = spendPts;
+function checkUnlocks(pts) {
+  /* Milestones are passed once and stay passed, so they read lifetime too —
+     otherwise spending could re-lock one and announce it again later. */
+  pts = getPtsLifetime(); const u = JSON.parse(localStorage.getItem('nc_unlocked') || '[]'); for (const [need,name] of QUESTS.concat(ACHIEVEMENTS)) { if (pts >= need && !u.includes(name)) { u.push(name); setTimeout(() => toast(tr('ui_unlocked') + qName(name)), 1200); } } localStorage.setItem('nc_unlocked', JSON.stringify(u)); }
+function addPts(n) { const p = getPts() + n; localStorage.setItem('nc_points', p);
+  /* Earning raises both; spending (spendPts) lowers only the balance. */
+  if (n > 0) { try { localStorage.setItem('nc_points_lifetime', getPtsLifetime() + n); } catch (e) {} }
+  ncSyncSoon(); const b = document.getElementById('ncpts'); if (b) b.textContent = '🪙 ' + p; toast((n >= 0 ? '+' : '') + n + ' 🪙'); checkUnlocks(p); refreshPanels(); }
 /* WHAT COUNTS AS HISTORY.
    This wrote 200 characters of the answer and no time at all, and only
    ai.html ever called it — so the History page was empty for somebody who had
@@ -3973,7 +4033,8 @@ window.ncServer = ncServer;
    the same on a phone as it does on a laptop. Two short strings and a name;
    no image ever goes in here. */
 const NC_SYNC_KEYS = ['nc_username', 'nc_avatar_color', 'nc_avatar_emblem',
-                      'nc_points', 'nc_skills', 'nc_certs','nc_pro','nc_subscription', 'nc_cert_enrolled',
+                      'nc_points', 'nc_points_lifetime', 'nc_avatars',
+                      'nc_skills', 'nc_certs','nc_pro','nc_subscription', 'nc_cert_enrolled',
   /* The trial follows the account, not the browser. Otherwise the same person
      gets a fresh eight weeks on every device they own, and the trial is not a
      trial. nc_owner deliberately does NOT sync: that one IS about the device. */
@@ -4103,7 +4164,7 @@ window.ncKey = ncKey; window.ncCode = ncCode;
 window.ncApi = ncApi;
 
 function refreshPanels() {
-  const pts = getPts();
+  const pts = getPtsLifetime();
   const ql = document.getElementById('questlist'); if (ql) ql.innerHTML = QUESTS.map(([need,name]) => pts >= need ? qName(name) + tr('ui_done') : qName(name) + ' — ' + (need - pts) + ' ' + tr('ui_go')).join('<br>');
   const al = document.getElementById('achlist'); if (al) al.innerHTML = ACHIEVEMENTS.map(([need,name]) => pts >= need ? qName(name) : tr('ui_reach').replace('{n}', need).replace('{p}', pts)).join('<br>');
   /* The questions go through ncEscape first. They are typed by the reader, but
@@ -4557,8 +4618,84 @@ const NC_AVATARS = ['\u{1F984}','\u{1F98A}','\u{1F431}','\u{1F438}','\u{1F419}',
   '\u{1F680}','\u{1F30D}','\u{26A1}','\u{1F525}','\u{1F308}','\u{1F3AE}',
   '\u{1F3A7}','\u{1F3AC}','\u{1F4F8}','\u{1F3A8}','\u{2B50}','\u{1F36A}'];
 
+/* ============================================================================
+   THE AVATAR SHOP
+   ============================================================================
+   The eighteen above stay free and always will — an account with no name and
+   no photo still has to have a face, and charging for that would be charging
+   for the floor.
+
+   These are the ones you buy, and they are not emoji: avatar3d.js builds each
+   one as actual geometry and draws it with the same software renderer the
+   home-page mark uses. The ladder is deliberate — a one-star is a four-face
+   tetrahedron and a five-star is the sixteen-ray nova, so you can tell which
+   somebody has from across a room at 30 pixels without reading a number. The prices are set against what the site
+   actually pays out — the Basic Certificate needs 150 NovaCoins, so a one-star
+   avatar at 150 is "about an afternoon" and the five-star at 5000 is a long
+   way past the Master Certificate. Nothing here is on the critical path of
+   anything: every one of them is a picture.
+   ========================================================================== */
+const NC_AVATAR_SHOP = [
+  { m:'tetra',   s:1, c:150 },  { m:'cube',    s:1, c:150 },
+  { m:'octa',    s:1, c:150 },  { m:'star4',   s:1, c:150 },
+  { m:'star5',   s:2, c:400 },  { m:'crystal', s:2, c:400 },
+  { m:'ring',    s:2, c:400 },  { m:'crown',   s:2, c:400 },
+  { m:'icosa',   s:3, c:900 },  { m:'gem',     s:3, c:900 },
+  { m:'rocket',  s:3, c:900 },  { m:'saturn',  s:3, c:900 },
+  { m:'star8',   s:4, c:2000 }, { m:'comet',   s:4, c:2000 },
+  { m:'shard',   s:4, c:2000 },
+  { m:'nova',    s:5, c:5000 }, { m:'trophy',  s:5, c:5000 },
+  { m:'diamond', s:5, c:5000 }
+];
+
+function ncAvatarsOwned() {
+  try { return JSON.parse(localStorage.getItem('nc_avatars') || '[]') || []; } catch (e) { return []; }
+}
+function ncAvatarShopRow(id) {
+  for (var i = 0; i < NC_AVATAR_SHOP.length; i++) if (NC_AVATAR_SHOP[i].m === id) return NC_AVATAR_SHOP[i];
+  return null;
+}
+/* Free ones are owned by definition; bought ones are owned once recorded. */
+function ncOwnsAvatar(v) {
+  return NC_AVATARS.indexOf(v) >= 0 || ncAvatarsOwned().indexOf(v) >= 0;
+}
+/* Returns true only if it actually bought something, so the caller cannot
+   hand out an avatar on the strength of a failed purchase. */
+function ncBuyAvatar(id) {
+  const row = ncAvatarShopRow(id);
+  if (!row || ncOwnsAvatar(id)) return false;
+  if (!spendPts(row.c)) return false;
+  const owned = ncAvatarsOwned();
+  owned.push(id);
+  try { localStorage.setItem('nc_avatars', JSON.stringify(owned)); } catch (err) {}
+  if (typeof ncSyncSoon === 'function') ncSyncSoon();
+  return true;
+}
+window.ncOwnsAvatar = ncOwnsAvatar;
+window.ncBuyAvatar = ncBuyAvatar;
+
 function ncName()   { return localStorage.getItem('nc_name') || ''; }
-function ncAvatar() { return localStorage.getItem('nc_avatar') || NC_AVATARS[0]; }
+/* The raw stored value: an emoji, a model id, or a data: URL from an upload. */
+function ncAvatarRaw() { return localStorage.getItem('nc_avatar') || NC_AVATARS[0]; }
+
+/* WHAT EVERY OTHER PAGE ASKS FOR, and why it is not the raw value.
+   A model is stored as an id — "saturn" is nine bytes and recolours itself when
+   the category changes, where a baked PNG is forty kilobytes that does not. But
+   the places that show an avatar (this rail, a comment on community.html, a
+   gift box) already branch on whether the value starts with "data:", because
+   an uploaded photo has always been a data URL. Handing them a baked sprite
+   means all of them keep working with no change at all.
+
+   If avatar3d.js has not landed yet, a model id would otherwise render as the
+   literal word "saturn", so it falls back to a star until it has. */
+function ncAvatar() {
+  const v = ncAvatarRaw();
+  if (ncAvatarShopRow(v)) {
+    try { return window.NC_AV3D ? NC_AV3D.sprite(v, 72) : '\u2B50'; } catch (e) { return '\u2B50'; }
+  }
+  return v;
+}
+window.ncAvatarRaw = ncAvatarRaw;
 
 function ncProfile() {
   const sb = document.querySelector('.sidebar');
@@ -4674,6 +4811,15 @@ function ncProfile() {
      out. The badge in the top bar already listens for this. */
   addEventListener('storage', paintCoins);
   addEventListener('nc-points', paintCoins);
+  /* Until avatar3d.js lands, a bought avatar renders as a plain star — this
+     is what turns it into the solid once it can be drawn. */
+  addEventListener('nc-avatar-3d', paint);
+  /* The solids are lit with the category's two colours, so changing category
+     has to rebake them. */
+  addEventListener('nc-category', function () {
+    try { if (window.NC_AV3D) NC_AV3D.forget(); } catch (e) {}
+    paint();
+  });
 
   function openProfile() {
     if (document.getElementById('ncprofui')) return;
@@ -4692,6 +4838,16 @@ function ncProfile() {
       '<p id="ncperr" style="color:#FF6B9D;font-size:13px;margin-top:7px;display:none"></p>' +
       '<label style="display:block;font-size:12.5px;color:#8A97B4;margin:18px 0 8px">' + tr('ui_picture') + '</label>' +
       '<div id="ncpavs" style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px"></div>' +
+      /* The shop. Below the free set and visibly separate from it, because the
+         difference between "yours already" and "costs 900" is the only thing
+         somebody needs to understand here. */
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin:20px 0 2px">' +
+      '<label style="font-size:12.5px;color:#8A97B4">' + tr('ui_av_shop') + '</label>' +
+      '<span id="ncavbal" style="font-size:12px;color:#FFD36E"></span></div>' +
+      '<div id="ncavprev" style="display:none;margin:6px 0 2px"></div>' +
+      '<div id="ncavshop"></div>' +
+      '<div id="ncavbuy" style="display:none;margin-top:10px;padding:11px 12px;border-radius:12px;' +
+      'background:rgba(255,211,110,0.08);border:1px solid rgba(255,211,110,0.28)"></div>' +
       '<label style="display:block;margin-top:12px;font-size:12.5px;color:#8A97B4">' +
       tr('ui_or_own') + ' <input type="file" id="ncpfile" accept="image/*" style="display:block;margin-top:6px;font-size:12px"></label>' +
       '<p style="color:#8A97B4;font-size:12px;margin-top:10px;line-height:1.5">' +
@@ -4711,17 +4867,123 @@ function ncProfile() {
       '</div></div>';
     document.body.appendChild(o);
 
-    let pick = ncAvatar();
+    let pick = ncAvatarRaw();
     const grid = document.getElementById('ncpavs');
-    function drawAvs() {
-      grid.innerHTML = NC_AVATARS.map(a =>
-        '<button data-a="' + a + '" style="aspect-ratio:1;border-radius:11px;cursor:pointer;font-size:19px;' +
-        'border:2px solid ' + (a === pick ? '#00E5FF' : 'rgba(255,255,255,0.1)') + ';' +
-        'background:rgba(255,255,255,0.04)">' + a + '</button>').join('');
-      grid.querySelectorAll('button').forEach(b =>
-        b.onclick = () => { pick = b.dataset.a; drawAvs(); });
+    const shop = document.getElementById('ncavshop');
+    const buyBar = document.getElementById('ncavbuy');
+    const balEl = document.getElementById('ncavbal');
+
+    /* A cell holds either an emoji (the free set) or a 3D model. The model is
+       drawn as a baked still rather than a live canvas: eighteen spinning
+       canvases is eighteen times the work for a picker most people look at for
+       four seconds, and the one that is selected spins on its own below. */
+    function cell(a, selected, dim, lock) {
+      const row = ncAvatarShopRow(a);
+      const inner = row
+        ? (window.NC_AV3D
+            ? '<img src="' + NC_AV3D.sprite(a, 40) + '" alt="" ' +
+              'style="width:100%;height:100%;object-fit:contain;display:block;pointer-events:none">'
+            : '⭐')
+        : a;
+      return '<button data-a="' + a + '" style="aspect-ratio:1;border-radius:11px;cursor:pointer;' +
+        'font-size:19px;position:relative;line-height:1;padding:3px;overflow:hidden;' +
+        'border:2px solid ' + (selected ? '#00E5FF' : 'rgba(255,255,255,0.1)') + ';' +
+        'background:rgba(255,255,255,0.04)' + (dim ? ';opacity:' + dim : '') + '">' + inner +
+        (lock ? '<span style="position:absolute;right:1px;bottom:0;font-size:9px">\u{1F512}</span>' : '') +
+        '</button>';
     }
+
+    /* The preview. One live canvas, showing whatever is selected, so the thing
+       being bought can be seen as the solid it is rather than as a 40px still.
+       Stopped and restarted on every redraw so there is never more than one
+       animation loop running. */
+    let stopSpin = null;
+    function drawPreview() {
+      const host = document.getElementById('ncavprev');
+      if (!host) return;
+      if (stopSpin) { stopSpin(); stopSpin = null; }
+      const row = ncAvatarShopRow(pick);
+      if (!row || !window.NC_AV3D) { host.style.display = 'none'; host.innerHTML = ''; return; }
+      host.style.display = 'block';
+      host.innerHTML = '<canvas width="96" height="96" style="width:96px;height:96px;display:block;margin:0 auto"></canvas>' +
+        '<div style="text-align:center;font-size:11px;color:#FFD36E;letter-spacing:2px;margin-top:2px">' +
+        '★'.repeat(row.s) + '</div>';
+      stopSpin = NC_AV3D.spin(host.querySelector('canvas'), pick);
+    }
+
+    function drawAvs() {
+      grid.innerHTML = NC_AVATARS.map(a => cell(a, a === pick, 0, false)).join('');
+      grid.querySelectorAll('button').forEach(b =>
+        b.onclick = () => { pick = b.dataset.a; buyBar.style.display = 'none'; drawAvs(); drawShop(); drawPreview(); });
+    }
+
+    function drawShop() {
+      if (!shop) return;
+      const owned = ncAvatarsOwned(), bal = getPts();
+      if (balEl) balEl.textContent = tr('ui_av_tospend').replace('{n}', bal.toLocaleString() + ' \u{1FA99}');
+      const tiers = [1, 2, 3, 4, 5];
+      shop.innerHTML = tiers.map(s => {
+        const items = NC_AVATAR_SHOP.filter(x => x.s === s);
+        if (!items.length) return '';
+        return '<div style="margin-top:9px">' +
+          '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px">' +
+            '<span style="color:#FFD36E;letter-spacing:2px">' + '★'.repeat(s) + '</span>' +
+            '<span style="color:#8A97B4">' + items[0].c.toLocaleString() + ' \u{1FA99}</span></div>' +
+          '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px">' +
+          items.map(x => {
+            const own = owned.indexOf(x.m) >= 0;
+            /* Three states and they have to look like three: yours, affordable,
+               and out of reach. One dim state for the last two would make the
+               shop a wall of grey with no way to tell what is close. */
+            return cell(x.m, x.m === pick, own ? 0 : (bal >= x.c ? '.75' : '.32'), !own);
+          }).join('') + '</div></div>';
+      }).join('');
+
+      shop.querySelectorAll('button').forEach(b => b.onclick = () => {
+        const e = b.dataset.a;
+        if (ncOwnsAvatar(e)) { pick = e; buyBar.style.display = 'none'; drawAvs(); drawShop(); drawPreview(); return; }
+        const row = ncAvatarShopRow(e);
+        if (!row) return;
+        const short = row.c - getPts();
+        if (short > 0) {
+          /* Say how far off it is rather than just refusing. A locked thing
+             with no number on it is the same as a broken button. */
+          buyBar.style.display = 'block';
+          /* Its stars, not its id — "nova" is the name of a mesh and means
+             nothing to the person reading it. */
+          buyBar.innerHTML = '<div style="font-size:12.5px;color:#EAF2FF">' +
+            '<span style="color:#FFD36E;letter-spacing:2px">' + '\u2605'.repeat(row.s) + '</span> · ' +
+            ncEscape(tr('ui_av_short').replace('{n}', short.toLocaleString())) + '</div>';
+          return;
+        }
+        /* Affordable: confirm before taking the coins. Spending is the one
+           thing on this page that cannot be undone with another click. */
+        buyBar.style.display = 'block';
+        buyBar.innerHTML =
+          '<div style="font-size:12.5px;margin-bottom:9px;color:#EAF2FF">' +
+          ncEscape(tr('ui_av_buy').replace('{e}', '\u2605'.repeat(row.s))
+                                   .replace('{n}', row.c.toLocaleString() + ' \u{1FA99}')) + '</div>' +
+          '<div style="display:flex;gap:8px">' +
+          '<button id="ncavyes" style="flex:1;padding:9px;border:0;border-radius:10px;cursor:pointer;' +
+          'background:linear-gradient(110deg,#FFD36E,#FF9F45);color:#1a1205;font:inherit;font-weight:700">' +
+          ncEscape(tr('ui_av_yes')) + '</button>' +
+          '<button id="ncavno" style="padding:9px 14px;border:1px solid rgba(255,255,255,0.16);' +
+          'border-radius:10px;cursor:pointer;background:none;color:#EAF2FF;font:inherit">' +
+          ncEscape(tr('ui_cancel')) + '</button></div>';
+        document.getElementById('ncavno').onclick = () => { buyBar.style.display = 'none'; };
+        document.getElementById('ncavyes').onclick = () => {
+          if (!ncBuyAvatar(e)) { buyBar.style.display = 'none'; return; }
+          pick = e;
+          buyBar.style.display = 'none';
+          toast(tr('ui_av_got').replace('{e}', ''));
+          drawAvs(); drawShop(); drawPreview();
+        };
+      });
+    }
+
     drawAvs();
+    drawShop();
+    drawPreview();
     document.getElementById('ncpname').value = ncName();
 
     /* Two network calls, so it waits until the section is actually opened. */
@@ -4759,7 +5021,9 @@ function ncProfile() {
       img.src = URL.createObjectURL(f);
     };
 
-    document.getElementById('ncpcancel').onclick = () => o.remove();
+    /* Cancel has to stop the preview too, or the loop keeps running against
+       a canvas that is no longer in the document. */
+    document.getElementById('ncpcancel').onclick = () => { if (stopSpin) stopSpin(); o.remove(); };
     document.getElementById('ncpsave').onclick = () => {
       const v = document.getElementById('ncpname').value.trim();
       const err = document.getElementById('ncperr');
@@ -4768,8 +5032,13 @@ function ncProfile() {
       if (!mod.ok) { err.textContent = tr('ui_name_taken'); err.style.display = 'block'; return; }
       try {
         localStorage.setItem('nc_name', v);
-        localStorage.setItem('nc_avatar', pick);
+        /* Belt and braces. `pick` is only ever set to something owned, but this
+           is the one line that decides what the account wears, and a locked
+           avatar getting saved because of some future bug up there should fail
+           closed to the free set rather than hand out a 5000-coin one. */
+        localStorage.setItem('nc_avatar', ncOwnsAvatar(pick) ? pick : NC_AVATARS[0]);
       } catch (e) {}
+      if (stopSpin) stopSpin();
       paint(); o.remove();
       if (window.ncSyncSoon) ncSyncSoon();
     };
@@ -7674,7 +7943,7 @@ window.ncSlang = function () {
     f_nothing:'nothing ur kid makes is ever uploaded — editing happens on their own device',
     cta_trial:'start the free trial',
     kids_up:"kids' tools upgrade", f6:'priority AI answers, no waiting',
-    f7:'longer editor exports', f8:'extra fx n transitions', f9:'exclusive game skins',
+    f7:'longer editor exports', f8:'extra fx n transitions', f9:'no watermark on ur exports',
     cta_upgrade:'upgrade the tools', bestvalue:'BEST VALUE',
     fam_bundle:'family bundle', f10:'family dashboard included',
     f11:"kids' tools upgrade included", f12:'priority support', cta_bundle:'get the bundle',
@@ -7689,6 +7958,12 @@ window.ncSlang = function () {
     f14m:'— issues at 1500 novacoins once u have exported 25 videos, run 20 scans n finished 3 rounds in the games',
     f21:'featured creator showcase', f22:'priority support + 1:1 session',
     f23:'platinum verified badge', cta_master:'get master',
+
+    /* the avatar shop */
+    ui_av_shop:'avatar shop', ui_av_tospend:'{n} to spend',
+    ui_av_buy:'cop {e} for {n}', ui_av_got:'{e} is urs now.',
+    ui_av_short:'{n} more novacoins n its urs.',
+    ui_av_free:'free for everyone', ui_av_earned:'earned', ui_av_yes:'cop it',
 
     /* ---- NOT SLANGED, ON PURPOSE: the 37 par_* keys ----
        The parent dashboard is where somebody sets a 5-digit PIN, picks which

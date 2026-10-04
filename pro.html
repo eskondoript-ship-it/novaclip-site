@@ -199,8 +199,14 @@ const TOOLS = [
     where: 'Open the Editor', href: 'editor.html', need: 'tools' },
   { t: 'Video ratings', p: 'Every upload scored on hook, title, thumbnail and consistency, with the one change that would help most.',
     where: 'Open Analytics', href: 'analytics.html', need: 'tools' },
-  { t: 'Exclusive game skins', p: 'Pro weapon finishes in Strike Arena.',
-    where: 'Open Games', href: 'game.html', need: 'tools' }
+  /* WAS: "Exclusive game skins — Pro weapon finishes in Strike Arena."
+     Strike Arena is deleted, and there was no ncPro check in any of the five
+     game files, so the skins did not exist either — a paid feature with
+     nothing behind it, on the page whose whole job is to say what paying gets
+     you. The watermark is the opposite case: watermark.js really does gate on
+     ncProHas('tools') and it was advertised nowhere. */
+  { t: 'No watermark on your exports', p: 'The free editor stamps finished videos. This takes it off.',
+    where: 'Open the Editor', href: 'editor.html', need: 'tools' }
 ];
 const FAMILY = [
   { t: 'Parental controls & PIN', p: 'A PIN on purchases, and limits you set rather than ones we assume.',
