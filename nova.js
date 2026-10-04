@@ -4828,9 +4828,23 @@ function ncProfile() {
     o.style.cssText = 'position:fixed;inset:0;z-index:99996;display:grid;place-items:center;' +
       'background:rgba(4,6,12,0.9);backdrop-filter:blur(10px);padding:22px;font-family:system-ui,sans-serif';
     o.innerHTML =
+      /* THE DIALOG HAD TO BE ABLE TO SCROLL, AND COULD NOT.
+         It is 1062px tall with the avatar shop in it, pinned to the middle of a
+         fixed overlay with overflow:visible — so on any window shorter than
+         about 1100px the bottom simply was not reachable. Measured at 720px,
+         which is a 1080p screen at 150%: the last two shop tiers AND the Save
+         button were below the fold with no way to get to them. That is why the
+         avatars could not be bought.
+
+         A flex column with a scrolling middle fixes it properly rather than by
+         making the overlay scroll: the heading stays put, the body scrolls, and
+         Save and Cancel stay on screen where they can always be pressed. */
       '<div style="width:100%;max-width:400px;background:#0C1220;border:1px solid rgba(255,255,255,0.12);' +
-      'border-radius:20px;padding:26px;color:#EAF2FF">' +
-      '<h2 style="font-size:1.25rem;font-weight:650;margin-bottom:16px">' + tr('ui_profile') + '</h2>' +
+      'border-radius:20px;padding:26px;color:#EAF2FF;display:flex;flex-direction:column;' +
+      'max-height:calc(100vh - 44px);box-sizing:border-box">' +
+      '<h2 style="font-size:1.25rem;font-weight:650;margin-bottom:16px;flex:0 0 auto">' + tr('ui_profile') + '</h2>' +
+      /* everything between the heading and the buttons scrolls */
+      '<div id="ncpbody" style="flex:1 1 auto;overflow-y:auto;min-height:0;margin:0 -4px;padding:0 4px">' +
       '<label style="display:block;font-size:12.5px;color:#8A97B4;margin-bottom:6px">' + tr('ui_name') + '</label>' +
       '<input id="ncpname" maxlength="20" placeholder="' + tr('ui_name_ph') + '" ' +
       'style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,0.14);' +
@@ -4859,7 +4873,8 @@ function ncProfile() {
       'Is anything still a demo? <span style="color:#00E5FF">Check now</span></summary>' +
       '<div id="ncdiag" style="font-size:12px;line-height:1.5;margin-top:11px;color:#8A97B4">Checking…</div>' +
       '</details>' +
-      '<div style="display:flex;gap:9px;margin-top:20px">' +
+      '</div>' +
+      '<div style="display:flex;gap:9px;margin-top:18px;flex:0 0 auto">' +
       '<button id="ncpsave" style="flex:1;padding:12px;border:0;border-radius:12px;cursor:pointer;' +
       'background:linear-gradient(110deg,#7C5CFF,#00E5FF);color:#05070E;font:inherit;font-weight:650">' + tr('ui_save') + '</button>' +
       '<button id="ncpcancel" style="padding:12px 18px;border:1px solid rgba(255,255,255,0.14);' +

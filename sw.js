@@ -610,6 +610,29 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v95: the avatars could not actually be bought.
+
+   Reported as "I can't buy the avatars", and it was not the shop logic — that
+   worked in every test. It was the dialog the shop is in.
+
+   The profile dialog is 1062px tall with the shop in it, pinned to the middle
+   of a fixed overlay with overflow:visible. Nothing scrolled. Measured at a
+   720px-tall window — a 1080p screen at 150%, which is what the report came
+   from — the card ran from y=22 to y=1084 and the Save button sat at y=1007.
+   The last shop tiers and the button that commits the choice were both below
+   the fold with no way to reach them. The shop was visible enough to be
+   annoying and not reachable enough to use.
+
+   That is mine: the dialog was already tall, and adding the shop to it is what
+   pushed it past the point where it still fitted on a normal screen.
+
+   Fixed as a flex column with a scrolling middle rather than by making the
+   overlay scroll, so the heading stays put, the body scrolls, and Save and
+   Cancel stay on screen where they can always be pressed. Verified by buying
+   one, with clicks only, at 720px and at 640px: cell reachable, buy button on
+   screen, 512 - 150 = 362, avatar worn after Save.
+
+   nova.js. */
 /* v94: the avatar shop, and the end of the game skins that never were.
 
    "Exclusive game skins — Pro weapon finishes in Strike Arena" was advertised
@@ -1670,7 +1693,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v94';
+const CACHE = 'novaclip-v95';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
