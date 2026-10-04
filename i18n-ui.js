@@ -157,11 +157,63 @@
 
   };
 
+  /* ------------------------------------------------------------------
+     THE GEN Z COLUMN
+     nova.js's ncApplyGenZ() can only reach an element carrying data-t,
+     and most of the editor, the Studio tiles and the games have no key
+     at all — which is why Gen Z mode used to look finished on the home
+     page and stop at the Studio door. These rows are already indexed by
+     their exact English wording for the translator, so the slang rides
+     along in the same row.
+
+     Only where the two voices genuinely differ. "Score", "Upload" and
+     "Time" are the same word either way, and a row that only lower-cases
+     a word is not worth the bytes.
+     ------------------------------------------------------------------ */
+  var Z = {
+    "Media Library": "ur media",
+    "Drop media here": "drop ur media here",
+    "Photos": "pics",
+    "Record yourself": "record urself",
+    "No clip selected": "nothing selected",
+    "same media, separate cut": "same clip, separate cut",
+    "Back to the site": "back to the site",
+    "Creator Studio": "creator studio",
+    "Open Trend Spotter": "open the trend radar",
+    "Go to Trend Spotter": "go to the trend radar",
+    "Trend Spotter": "trend radar",
+    "Find what to make before it peaks.": "catch it before it goes mid.",
+    "Titles, hooks and formats to steal the feed.": "titles, hooks n formats that take the feed.",
+    "Turn a trend into a full script.": "turn a trend into a whole script.",
+    "Click-through thumbnails that convert.": "thumbnails people actually click.",
+    "Cut, pace and package your video.": "cut it, pace it, package it.",
+    "Ship to every platform at once.": "post everywhere at once.",
+    "Jump back into a niche you already scanned.": "hop back into a niche u already scanned.",
+    "Subscribers": "subs",
+    "Your channel": "ur channel",
+    "Performance": "how its going",
+    "Who is watching": "whos watching",
+    "Ready?": "u ready?",
+    "Press to start": "press to start",
+    "What do you want built?": "what do u want built?",
+    "Build it": "build it",
+    "✓ Things it can build": "✓ stuff it can build",
+    "✕ Things it will refuse, and say so": "✕ stuff it will refuse, n say so",
+    "A landing page for your channel links": "a landing page for ur channel links",
+    "Thumbnail templates you fill in and screenshot": "thumbnail templates u fill in n screenshot",
+    "Small games and widgets for your community": "small games n widgets for ur community",
+    "Getting into an account that is not yours": "getting into an account that isnt urs",
+    "Downloading videos that are not yours": "downloading videos that arent urs",
+    "Yes, that is fine": "yeah thats fine",
+    "No thanks": "nah"
+  };
+
   var out = {}, k, i, o;
   for (k in R) {
     if (!Object.prototype.hasOwnProperty.call(R, k)) continue;
     o = { en: k };
     for (i = 0; i < L.length; i++) o[L[i]] = R[k][i];
+    if (Z[k]) o.genz = Z[k];
     out[k] = o;
   }
   window.NC_PHRASES = out;

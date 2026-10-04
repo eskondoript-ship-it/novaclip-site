@@ -610,6 +610,52 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v93: Gen Z mode across the teenage half of the site, and two stale claims.
+
+   The slang table had 58 lines against 195 data-t keys the site actually
+   renders, so switching the mode on gave a slang home page and a plain
+   everything-else. It now covers 148. The 47 left out are deliberate: the
+   thirteen skin names are product names, and the 34 par_* keys are the parent
+   dashboard, which is where somebody sets a 5-digit PIN and picks which of nine
+   content categories to block. That is the one screen where misreading a label
+   costs more than a laugh, and it is explicitly the parent's screen. The Gen Z
+   switch is a teenager's choice about a teenager's product; it stops at that
+   door.
+
+   TWO STALE CLAIMS, NEITHER COSMETIC
+
+   f14m, the Master Certificate's requirement line on the pricing page in all
+   twenty languages, said it issues once you have "topped the Arena board 3
+   times". The Arena was deleted; arena_mvp is gone from SKILLS and CERT_REQS.
+   A page selling a certificate was naming a requirement nothing can record.
+   What CERT_REQS asks for instead is three rounds finished in the games, so
+   that is what it now says, in all twenty.
+
+   The Gen Z reward strip was the same fault in the other table: rw1/rw2/rw3
+   still read "first upload / trend hunter / sharpshooter", and rw3 described
+   "top the arena board". Their English was corrected in v91 when the rewards
+   became the three certificates and this table was missed, so turning Gen Z
+   mode on brought the dead rewards back.
+
+   HOW IT REACHES TEXT WITH NO KEY
+
+   ncApplyGenZ() could only touch an element carrying data-t, and most of the
+   editor and the Studio tiles carry none. i18n-ui.js already indexes those
+   labels by their exact English wording for the translator, so 35 of its rows
+   gained a `genz` value and the slang rides in the same row.
+
+   Two bugs fixed in that pass. It had no write guard, so driving it from the
+   MutationObserver would have looped; it now compares what each element says
+   before writing. And the dictionary pass runs after it and put the English
+   back, which is why the Studio rail read "Video Ideas" beside a tile reading
+   "video ideas" — that pass now clears the slang stamp it invalidates.
+
+   KNOWN LIMIT: the Studio rail inside trends.html keeps its English labels.
+   That page is a built React bundle and re-renders over anything written from
+   outside; the pass runs and is reverted. Fixing it means changing that
+   bundle's source, which is not in this repo.
+
+   nova.js, i18n-ui.js. */
 /* v92: the AI's Gen Z vocabulary, 117 terms with 56 of them defined.
 
    It was eighteen words on one line in ai.html, and a second, differently
@@ -1577,7 +1623,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v92';
+const CACHE = 'novaclip-v93';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

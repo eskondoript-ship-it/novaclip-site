@@ -721,7 +721,7 @@ const PR_T = {
   f14b: { en:"Earned, not bought", zh:"靠努力获得而非购买", hi:"कमाया हुआ, खरीदा नहीं", es:"Se gana, no se compra", ar:"يُكتسب ولا يُشترى", fr:"Ça se gagne, ça ne s'achète pas", bn:"অর্জিত, কেনা নয়", pt:"Ganha-se, não se compra", ru:"Зарабатывается, не покупается", ur:"کما کر حاصل کریں، خریدا نہیں", id:"Diraih, bukan dibeli", de:"Verdient, nicht gekauft", ja:"買うのではなく獲得するもの", tr:"Kazanılır, satın alınmaz", ko:"사는 게 아니라 따는 것", fa:"کسب‌کردنی است، نه خریدنی", uk:"Здобувається, не купується", it:"Si guadagna, non si compra", pl:"Zdobywa się, nie kupuje", vi:"Kiếm được, không mua" },
   f14: { en:"— issues at 150 NovaCoins once you have exported 3 videos, run 3 trend scans and used the AI tutors", zh:"— 导出3个视频、扫描3次趋势并使用AI导师后，达到150分即可获得", hi:"— 3 वीडियो एक्सपोर्ट, 3 ट्रेंड स्कैन और AI ट्यूटर इस्तेमाल करने के बाद 150 pts पर मिलता है", es:"— se emite a los 150 pts cuando hayas exportado 3 vídeos, hecho 3 escaneos de tendencias y usado los tutores IA", ar:"— يُمنح عند 150 نقطة بعد تصدير 3 فيديوهات وإجراء 3 عمليات مسح للاتجاهات واستخدام مدرّسي الذكاء الاصطناعي", fr:"— délivré à 150 pts une fois 3 vidéos exportées, 3 scans de tendances lancés et les tuteurs IA utilisés", bn:"— ৩টি ভিডিও এক্সপোর্ট, ৩টি ট্রেন্ড স্ক্যান ও AI টিউটর ব্যবহার করলে ১৫০ পয়েন্টে পাওয়া যায়", pt:"— emitido aos 150 pts depois de exportar 3 vídeos, correr 3 análises de tendências e usar os tutores de IA", ru:"— выдаётся на 150 очков после экспорта 3 видео, 3 сканов трендов и уроков ИИ", ur:"— 3 ویڈیوز ایکسپورٹ، 3 ٹرینڈ اسکین اور AI ٹیوٹرز استعمال کرنے کے بعد 150 پوائنٹس پر ملتا ہے", id:"— keluar di 150 poin setelah ekspor 3 video, jalankan 3 pindaian tren, dan pakai tutor AI", de:"— gibt es ab 150 Punkten, sobald du 3 Videos exportiert, 3 Trend-Scans gestartet und die KI-Tutoren genutzt hast", ja:"— 動画を3本書き出し、トレンドを3回スキャンし、AIチューターを使ったら150ptsで発行", tr:"— 3 video dışa aktarınca, 3 trend taraması yapınca ve YZ eğitmenlerini kullanınca 150 puanda verilir", ko:"— 영상 3개 내보내기, 트렌드 3회 스캔, AI 튜터 사용 후 150점에서 발급", fa:"— پس از اکسپورت ۳ ویدیو، ۳ اسکن ترند و استفاده از مربی‌های AI در ۱۵۰ امتیاز صادر می‌شود", uk:"— видається на 150 балів після експорту 3 відео, 3 сканувань трендів і уроків ШІ", it:"— rilasciato a 150 pt dopo aver esportato 3 video, fatto 3 scan di tendenze e usato i tutor AI", pl:"— przyznawane na 150 pkt po wyeksportowaniu 3 filmów, 3 skanach trendów i użyciu tutorów AI", vi:"— cấp ở 150 điểm sau khi xuất 3 video, chạy 3 lần quét xu hướng và dùng gia sư AI" },
   f14a: { en:"— issues at 600 NovaCoins once you have exported 10 videos, saved 5 ideas and reviewed your analytics", zh:"— 导出10个视频、保存5个灵感并查看分析后，达到600分即可获得", hi:"— 10 वीडियो एक्सपोर्ट, 5 आइडिया सेव और एनालिटिक्स रिव्यू के बाद 600 pts पर", es:"— se emite a los 600 pts tras exportar 10 vídeos, guardar 5 ideas y revisar tus análisis", ar:"— يُمنح عند 600 نقطة بعد تصدير 10 فيديوهات وحفظ 5 أفكار ومراجعة تحليلاتك", fr:"— délivré à 600 pts après 10 exports, 5 idées sauvegardées et une revue des stats", bn:"— ১০টি ভিডিও এক্সপোর্ট, ৫টি আইডিয়া সেভ ও অ্যানালিটিক্স দেখার পর ৬০০ পয়েন্টে", pt:"— emitido aos 600 pts após exportar 10 vídeos, guardar 5 ideias e rever as análises", ru:"— на 600 очков после экспорта 10 видео, 5 идей и просмотра аналитики", ur:"— 10 ویڈیوز ایکسپورٹ، 5 آئیڈیاز سیو اور اینالائٹکس ریویو کے بعد 600 پوائنٹس پر", id:"— keluar di 600 poin setelah ekspor 10 video, simpan 5 ide, dan tinjau analitik", de:"— gibt es ab 600 Punkten, sobald du 10 Videos exportiert, 5 Ideen gespeichert und deine Analysen geprüft hast", ja:"— 動画10本書き出し、アイデア5件保存、分析を確認したら600ptsで発行", tr:"— 10 video dışa aktarınca, 5 fikir kaydedince ve analitiğini inceleyince 600 puanda verilir", ko:"— 영상 10개 내보내기, 아이디어 5개 저장, 분석 검토 후 600점에서 발급", fa:"— پس از اکسپورت ۱۰ ویدیو، ذخیره ۵ ایده و بررسی آمار در ۶۰۰ امتیاز", uk:"— на 600 балів після експорту 10 відео, 5 ідей і перегляду аналітики", it:"— rilasciato a 600 pt dopo 10 export, 5 idee salvate e analisi riviste", pl:"— na 600 pkt po eksporcie 10 filmów, zapisaniu 5 pomysłów i analizie statystyk", vi:"— cấp ở 600 điểm sau khi xuất 10 video, lưu 5 ý tưởng và xem phân tích" },
-  f14m: { en:"— issues at 1500 NovaCoins once you have exported 25 videos, run 20 scans and topped the Arena board 3 times", zh:"— 导出25个视频、扫描20次并3次登顶竞技场榜单后，达到1500分即可获得", hi:"— 25 वीडियो एक्सपोर्ट, 20 स्कैन और 3 बार अखाड़ा टॉप करने के बाद 1500 pts पर", es:"— a los 1500 pts tras exportar 25 vídeos, hacer 20 escaneos y ser 3 veces top del Arena", ar:"— عند 1500 نقطة بعد تصدير 25 فيديو وإجراء 20 مسحًا والتصدر في الساحة 3 مرات", fr:"— à 1500 pts après 25 exports, 20 scans et 3 fois premier de l'Arène", bn:"— ২৫টি ভিডিও এক্সপোর্ট, ২০টি স্ক্যান ও ৩ বার অ্যারেনা টপ করার পর ১৫০০ পয়েন্টে", pt:"— aos 1500 pts após exportar 25 vídeos, fazer 20 análises e liderar a Arena 3 vezes", ru:"— на 1500 очков после экспорта 25 видео, 20 сканов и 3 побед в Арене", ur:"— 25 ویڈیوز ایکسپورٹ، 20 اسکین اور 3 بار ایرینا ٹاپ کرنے کے بعد 1500 پوائنٹس پر", id:"— keluar di 1500 poin setelah ekspor 25 video, 20 pindaian, dan 3 kali juara Arena", de:"— gibt es ab 1500 Punkten nach 25 Exporten, 20 Scans und 3-mal Platz 1 in der Arena", ja:"— 動画25本書き出し、20回スキャン、アリーナ3回首位で1500pts", tr:"— 25 video, 20 tarama ve 3 kez Arena zirvesi sonrası 1500 puanda", ko:"— 영상 25개 내보내기, 스캔 20회, 아레나 3회 1위 후 1500점에서 발급", fa:"— پس از اکسپورت ۲۵ ویدیو، ۲۰ اسکن و ۳ بار صدرنشینی در آرنا در ۱۵۰۰ امتیاز", uk:"— на 1500 балів після експорту 25 відео, 20 сканувань і 3 перемог в Арені", it:"— a 1500 pt dopo 25 export, 20 scan e 3 volte primo nell'Arena", pl:"— na 1500 pkt po 25 eksportach, 20 skanach i 3 razy na szczycie Areny", vi:"— cấp ở 1500 điểm sau khi xuất 25 video, quét 20 lần và 3 lần đứng đầu Arena" },
+  f14m: { en:"— issues at 1500 NovaCoins once you have exported 25 videos, run 20 scans and finished 3 rounds in the games", zh:"— 导出25个视频、扫描20次并在游戏里完成3轮后，达到1500分即可获得", hi:"— 25 वीडियो एक्सपोर्ट, 20 स्कैन और गेम्स में 3 राउंड पूरे करने के बाद 1500 पॉइंट पर मिलता है", es:"— se emite a los 1500 puntos cuando hayas exportado 25 vídeos, hecho 20 escaneos y completado 3 rondas en los juegos", ar:"— تُمنح عند 1500 نقطة بعد تصدير 25 فيديو وإجراء 20 مسحًا وإنهاء 3 جولات في الألعاب", fr:"— délivré à 1500 points une fois 25 vidéos exportées, 20 scans lancés et 3 manches terminées dans les jeux", bn:"— ২৫টি ভিডিও এক্সপোর্ট, ২০টি স্ক্যান আর গেমে ৩ রাউন্ড শেষ করলে ১৫০০ পয়েন্টে দেওয়া হয়", pt:"— emitido aos 1500 pontos depois de exportares 25 vídeos, fazeres 20 análises e terminares 3 rondas nos jogos", ru:"— выдаётся на 1500 очках, когда экспортировано 25 видео, сделано 20 сканов и пройдено 3 раунда в играх", ur:"— 25 ویڈیوز ایکسپورٹ، 20 اسکین اور گیمز میں 3 راؤنڈ مکمل کرنے کے بعد 1500 پوائنٹس پر ملتا ہے", id:"— diterbitkan pada 1500 poin setelah kamu mengekspor 25 video, menjalankan 20 pindaian, dan menyelesaikan 3 ronde di gim", de:"— wird bei 1500 Punkten ausgestellt, sobald du 25 Videos exportiert, 20 Scans gemacht und 3 Runden in den Spielen beendet hast", ja:"— 動画25本を書き出し、20回スキャンし、ゲームで3ラウンド終えると1500ポイントで発行", tr:"— 25 video dışa aktarıp 20 tarama yapıp oyunlarda 3 tur bitirdiğinde 1500 puanda verilir", ko:"— 영상 25개를 내보내고 스캔 20회를 돌리고 게임에서 3라운드를 마치면 1500포인트에 발급", fa:"— پس از خروجی‌گرفتن ۲۵ ویدیو، ۲۰ اسکن و تمام‌کردن ۳ دور در بازی‌ها، در ۱۵۰۰ امتیاز صادر می‌شود", uk:"— видається на 1500 балах, коли експортовано 25 відео, зроблено 20 сканів і пройдено 3 раунди в іграх", it:"— rilasciato a 1500 punti dopo aver esportato 25 video, fatto 20 scansioni e finito 3 round nei giochi", pl:"— wydawany przy 1500 punktach po wyeksportowaniu 25 filmów, 20 skanach i ukończeniu 3 rund w grach", vi:"— cấp ở mốc 1500 điểm khi bạn đã xuất 25 video, chạy 20 lượt quét và hoàn thành 3 vòng trong các trò chơi" },
   f15: { en:"Shareable on socials & CVs", zh:"可在社交平台和简历中分享", hi:"सोशल और CV पर शेयर करें", es:"Compartible en redes y CVs", ar:"قابل للمشاركة على المنصات والسير الذاتية", fr:"Partageable sur les réseaux et CV", bn:"সোশ্যাল ও সিভিতে শেয়ারযোগ্য", pt:"Partilhável em redes e CVs", ru:"Можно делиться в соцсетях и резюме", ur:"سوشل اور CV پر شیئر کریں", id:"Bisa dibagikan di sosial & CV", de:"In sozialen Netzwerken & Lebensläufen teilbar", ja:"SNSや履歴書で共有可能", tr:"Sosyal medyada ve CV'lerde paylaşılabilir", ko:"소셜 및 이력서에 공유 가능", fa:"قابل اشتراک در شبکه‌ها و رزومه", uk:"Можна ділитися в соцмережах і резюме", it:"Condivisibile su social e CV", pl:"Można udostępniać w social i CV", vi:"Chia sẻ trên mạng xã hội & CV" },
   f16: { en:"Verified badge on your profile", zh:"个人主页上的认证徽章", hi:"प्रोफाइल पर वेरिफाइड बैज", es:"Insignia verificada en tu perfil", ar:"شارة موثقة في ملفك", fr:"Badge vérifié sur votre profil", bn:"প্রোফাইলে ভেরিফাইড ব্যাজ", pt:"Selo verificado no perfil", ru:"Подтверждённый значок в профиле", ur:"پروفائل پر ویریفائیڈ بیج", id:"Lencana terverifikasi di profil", de:"Verifiziertes Abzeichen im Profil", ja:"プロフィールに認証バッジ", tr:"Profilinde doğrulanmış rozet", ko:"프로필에 인증 배지", fa:"نشان تأیید در پروفایل", uk:"Підтверджений значок у профілі", it:"Badge verificato sul profilo", pl:"Zweryfikowana odznaka na profilu", vi:"Huy hiệu đã xác minh trên hồ sơ" },
   f17: { en:"Everything in Basic", zh:"包含基础版所有内容", hi:"बेसिक में सब कुछ", es:"Todo lo de Básico", ar:"كل شيء في الأساسية", fr:"Tout ce qu'inclut Basic", bn:"বেসিকের সবকিছু", pt:"Tudo do Básico", ru:"Всё из Basic", ur:"بیسک کی ہر چیز", id:"Semua yang ada di Basic", de:"Alles aus Basic", ja:"Basicのすべて", tr:"Basic'teki her şey", ko:"베이직의 모든 것", fa:"همه امکانات پایه", uk:"Все з Basic", it:"Tutto incluso in Basic", pl:"Wszystko z Basic", vi:"Mọi thứ trong Basic" },
@@ -910,12 +910,24 @@ function applyLangText() {
     if (!v || el.__ncT === v) return;
     if (/[<>]/.test(v)) el.innerHTML = v; else el.textContent = v;
     el.__ncT = v;
+    /* This has just put the English back over whatever the Gen Z pass wrote, so
+       its stamp is now a lie and would make it skip the repair. Clearing it is
+       what tells the pass below that this element needs doing again. Without
+       this the Studio rail read "Video Ideas" while the tile beside it read
+       "video ideas": the slang was applied at boot and silently overwritten the
+       first time anything else on the page changed. */
+    el.__ncZ = null;
   });
   document.querySelectorAll('[data-tph]').forEach(el => {
     const v = tr(el.dataset.tph);
     if (v && el.placeholder !== v) el.placeholder = v;
   });
   ncPhrase();
+  /* Safe to drive from the observer now that both passes stamp what they
+     wrote: a second run over an already-translated page writes nothing, so it
+     produces no mutation and nothing wakes again. Without this, a React page
+     that mounts its UI after boot kept its English labels in Gen Z mode. */
+  try { if (typeof window.ncApplyGenZ === 'function') window.ncApplyGenZ(); } catch (e) {}
 }
 function applyLang(code) {
   localStorage.setItem('nc_lang', code);
@@ -3185,7 +3197,13 @@ function ncPhrase() {
    its first pass by then. Running the pass twice costs one tree walk and
    changes nothing the second time — a phrase that has been translated no
    longer matches its English key. */
-window.ncRephrase = function () { try { ncPhrase(); } catch (e) {} };
+window.ncRephrase = function () {
+  try { ncPhrase(); } catch (e) {}
+  /* Gen Z mode reads the same table's `genz` column, so it needs waking when
+     the table lands too — otherwise the slang covers the keyed half of the
+     page and stops, which is the half-finished look this mode keeps acquiring. */
+  try { if (typeof window.ncApplyGenZ === 'function') window.ncApplyGenZ(); } catch (e) {}
+};
 
 /* Loaded rather than imported so that a page which never reaches this line —
    an error earlier in nova.js, say — is not also left without its furniture.
@@ -7565,9 +7583,13 @@ window.ncSlang = function () {
 (function () {
   const GENZ = {
     hero_line1:'run ur channel', hero_line2:'like a game fr',
-    startchannel:'lock in', seerewards:'peep the rewards',
-    home:'Home', studio:'Studio', analytics:'Stats', trends:'Studio',
-    editor:'Editor', sniper:'Games', ai:'NovaClip AI',
+    startchannel:'lock in', seerewards:'peep the Ws',
+    /* Lower case throughout, because the rail sets half of these beside
+       "games", "socials", "fam" and "ur profile" — "Home" and "Studio" among
+       them read as a different voice in the same list. Brand names keep their
+       capitals; nothing else does. */
+    home:'home', studio:'studio', analytics:'stats', trends:'studio',
+    editor:'editor', sniper:'games', ai:'NovaClip AI',
     studio_h:'NovaClip Studio', studio_sub:'link ur channel n scope the competition',
     analytics_h:'Stats', analytics_sub:'ur numbers vs the ops — no cap',
     analytics_hint:'link ur channel to pull the stats.',
@@ -7577,7 +7599,7 @@ window.ncSlang = function () {
     e_effects_h:'fx n filters', e_memes_h:'meme search', e_text_h:'text on screen',
     e_voice_h:'AI voiceover', e_clip_h:'selected clip', e_filter:'filter', e_trans:'transition',
     e_import:'⊕ drop ur media', e_export:'export',
-    language:'Language',
+    language:'language',
 
     /* The other 68 keys. Gen Z mode covered a third of the site, so switching it
        on gave you a slang homepage and a plain everything-else — which reads as
@@ -7585,34 +7607,98 @@ window.ncSlang = function () {
        uses now has a line here, so the switch changes the whole thing. */
     eyebrow:'for teen creators · 13-18', scrolldown:'▼ keep scrolling',
     sec1_h1:'smart', sec1_h2:'coaching', sec2_h1:'fair', sec2_h2:'fights',
-    sec_play:'play', sec_nums:'the numbers', play_h:'grind for real rewards',
-    nums_h:'built different', trend_h:'whats hot rn', trend_p:'find the wave before it breaks',
+    sec_play:'play', sec_nums:'the numbers', play_h:'grind for real Ws',
+    nums_h:'built different', trend_h:'whats hot rn', trend_p:'catch the wave before it goes mid',
     final_h:"ur channel's <span class='g'>next level</span><br>starts in a tab.",
-    final_p:'no downloads. no card. just open it and go.', final_btn:'lock in',
+    final_p:'no downloads. no card. say less.', final_btn:'lock in',
     footer:'made for creators who are still in school',
-    card_ai_d:'three tutors on call, in ur language, tuned for teen creators. ask, learn, level up.',
+    card_ai_d:'three tutors on call, in ur language, built for teen creators. ask, learn, level up. no yapping.',
     card_duel_d:'only fight channels within 20k subs. subs and views pick the winner. win = points.',
-    card_quest_d:'quests, streaks and badges for actually doing the work.',
-    coach1:'channel coach', coach1d:'titles, hooks and growth that actually work',
+    card_quest_d:'every W feeds one bar. the milestones are the three certificates.',
+    coach1:'channel coach', coach1d:'titles, hooks n growth that actually hit',
     coach2:'space tutor',   coach2d:'turn curiosity into stuff people watch',
-    coach3:'money tutor',   coach3d:'side hustles and smart moves, no waffle',
+    coach3:'money tutor',   coach3d:'side hustles n smart moves. no yapping.',
     meta_ai:'AI tutors on call', meta_editor:'browser editor', meta_rewards:'quests & rewards',
     st_languages:'languages', st_games:'games', st_tools:'tools', st_downloads:'downloads',
     how1:'connect ur channel', how2:'do the work', how3:'get the badge',
     ticker:"<b>AI TUTORS</b> · <i>VIDEO EDITOR</i> · <u>CHANNEL DUELS</u> · <b>TREND RADAR</b> · <i>GAMES</i> · <u>STATS</u> · <b>REWARDS</b> · ",
-    signin:'sign in w google', ask:'ask', scan:'scan it', scanning:'scanning...',
-    video:'video', thumb:'thumbnail', compare:'compare w rivals',
-    fight:'fight!', duel_label:'views + subs duel (max 20k sub gap)',
+    signin:'sign in w google', ask:'ask', scan:'scan it', scanning:'locked in...',
+    video:'video', thumb:'thumbnail', compare:'compare w the opps',
+    fight:'run it!', duel_label:'views + subs duel (max 20k sub gap)',
     ai_h:'NovaClip AI',
     quests:'quests', achievements:'achievements', history:'ur chats', recent:'recent',
     xp_progress:'progress', prog_h:'ur progress', prog_sub:'everything u earned, in one place',
     prog_skills:'skills', prog_skills_d:'what u have actually practised',
-    prog_rewards_d:'stuff u unlocked', prog_ach_d:'badges u earned', prog_hist_d:'ur AI chats',
-    rw1_t:'first upload', rw1_d:'export a video from the editor',
-    rw2_t:'trend hunter', rw2_d:'run 3 trend scans',
-    rw3_t:'sharpshooter', rw3_d:'top the arena board',
+    prog_rewards_d:'the points half of each certificate. the reps are next to the prices.', prog_ach_d:'badges u earned', prog_hist_d:'ur AI chats',
+    rw1_t:'basic certificate', rw1_d:'the points half. the rest is work u actually did.',
+    rw2_t:'advanced certificate', rw2_d:'a coach checks it before it is issued.',
+    rw3_t:'master certificate', rw3_d:'earned, never bought. no glazing.',
     credits_btn:'credits', credits_note:'every model and sound, and who made it',
-    e_learn:'learn', e_learn_h:'learn'
+    e_learn:'learn', e_learn_h:'learn',
+    /* ---- the bar and the rail. Short, because they are controls. ---- */
+    theme:'skin', ui_skin_none:'cyber skin — none',
+    vibe:'vibe', vibe_normal:'normal', vibe_genz:'gen z', asknova:'ask nova',
+    nav_channel:'ur channel', nav_create:'make stuff', nav_learn:'learn',
+    games:'games', socials:'socials', nav_you:'u', profile:'ur profile',
+    family:'fam', pricing:'plans', categories:'categories', ccat_classic:'classic',
+    ui_novacoins:'novacoins', photo:'photo',
+
+    /* ---- the rest of the home page ---- */
+    skip:'skip to the good bit', sec_learn:'01 — learn n build',
+    duel_you:'U', duel_vs:'VS', duel_rival:'THE OPP', duel_fair:'02 — fight fair, no diff',
+    builtby:'© 2026 NovaClip · built by eskon',
+
+    /* ---- the Studio rail ---- */
+    st_back:'back to NovaClip', st_trends_h:'trend radar', st_ideas_h:'video ideas',
+    st_scripts_h:'scripts', st_thumb_h:'thumbnails', publish:'AI editor',
+    st_hype_h:'hype lab', st_studio_h:'studio',
+
+    /* ---- the AI tools ---- */
+    coach:'coach', director:'video director', clips:'clip finder',
+    titles:'title tester', seo:'SEO',
+
+    /* ---- history ---- */
+    hist_sub:'everything u have asked a NovaClip AI — the tutors, the studio, the coder — newest first, w the answer that came back. kept on this device n nowhere else, so clearing ur browser data clears it.',
+    hist_hint:'where u asked it, when, n what came back.',
+
+    /* ---- pricing. Every claim here is the English one reworded and not one
+           of them is changed: what is included, what it costs and what a
+           certificate takes are the same facts in a different voice. ---- */
+    plans:'plans &', certs:'certificates', currency:'currency',
+    monthly:'monthly', yearly:'yearly', twomonths:'2 months free', onetime:'one-time',
+    price_sub:'everything a teen needs to make videos is free, n stays free. ur parent pays for the part that looks after u — n no video ever leaves the device it was made on. every plan starts w two weeks free, no card.',
+    f1:'parent controls + PIN', f2:'see what ur kid is actually up to',
+    f3:'harassment comment scanner + instant alerts', f4:'one-tap report to YouTube',
+    f5:'no ads anywhere — not for ur kid, not for u',
+    f_shield:'blocks content on YouTube, TikTok, Insta n Twitch — nine categories, ur own allow n block lists, n a log of what it stopped',
+    f_nothing:'nothing ur kid makes is ever uploaded — editing happens on their own device',
+    cta_trial:'start the free trial',
+    kids_up:"kids' tools upgrade", f6:'priority AI answers, no waiting',
+    f7:'longer editor exports', f8:'extra fx n transitions', f9:'exclusive game skins',
+    cta_upgrade:'upgrade the tools', bestvalue:'BEST VALUE',
+    fam_bundle:'family bundle', f10:'family dashboard included',
+    f11:"kids' tools upgrade included", f12:'priority support', cta_bundle:'get the bundle',
+    cert_basic:'basic certificate', f13:'entry NovaClip creator certificate',
+    f14b:'earned, not bought — no glazing',
+    f14:'— issues at 150 novacoins once u have exported 3 videos, run 3 trend scans n used the AI tutors',
+    f15:'shareable on socials n CVs', f16:'verified badge on ur profile', cta_basic:'get basic',
+    cert_adv:'advanced certificate', f17:'everything in basic',
+    f14a:'— issues at 600 novacoins once u have exported 10 videos, saved 5 ideas n reviewed ur analytics',
+    f18:'portfolio review by a mentor', f19:'gold verified badge', cta_adv:'get advanced',
+    toptier:'TOP TIER', cert_master:'master certificate', f20:'everything in advanced',
+    f14m:'— issues at 1500 novacoins once u have exported 25 videos, run 20 scans n finished 3 rounds in the games',
+    f21:'featured creator showcase', f22:'priority support + 1:1 session',
+    f23:'platinum verified badge', cta_master:'get master',
+
+    /* ---- NOT SLANGED, ON PURPOSE: the 37 par_* keys ----
+       The parent dashboard is where somebody sets a 5-digit PIN, picks which
+       of nine content categories to block, and reads what the harassment
+       scanner found. It is the one screen on this site where misreading a
+       label has a consequence worse than confusion, and it is explicitly the
+       parent's screen — the part families pay for. The Gen Z switch is a
+       teenager's choice about a teenager's product; it stops at that door.
+       Also left alone: the thirteen skin names, which are product names
+       ("Void Cyber", "Bloodmoon Protocol"), and "Family Dashboard". */
   };
 
   /* ==========================================================================
@@ -7863,12 +7949,58 @@ window.ncSlang = function () {
       const k = el.getAttribute('data-t');
       const v = GENZ[k];
       if (!v) return;
+      /* WRITE ONLY WHAT CHANGED: assigning textContent replaces the element's
+         children, which is a childList mutation, which wakes the observer,
+         which calls this again. Unguarded that is a loop turning over several
+         times a second forever — and a visible one, because rebuilding the
+         headline restarts the entrance animation on its two coloured words.
+
+         For plain text, ask the element what it SAYS rather than trusting a
+         stamp. A stamp only records that this pass wrote something once; it
+         cannot know that trends.html then re-rendered its own rail over the
+         top, which is exactly what was happening — the stamp said "video
+         ideas", the rail said "Video Ideas", and the stamp blocked the repair.
+         Comparing the live text is both exact and self-healing, and writing the
+         same value is skipped, so it still cannot loop.
+
+         Markup keeps the stamp, because the browser normalises innerHTML on the
+         way back out (class='n' returns as class="n") so it never compares
+         equal, and that is a loop rather than a repair. */
+      const markup = /<[a-z][\s\S]*>/i.test(v);
+      if (markup ? el.__ncZ === v : el.textContent === v) return;
       /* Some strings carry markup — the headline has a coloured span, the ticker
          has bold and italics. textContent would print "<span class='g'>" on the
          page as text, so anything with a tag in it goes in as HTML. Same rule
          the translator already uses, for the same reason. */
       if (/<[a-z][\s\S]*>/i.test(v)) el.innerHTML = v; else el.textContent = v;
+      el.__ncZ = v;
     });
+
+    /* THE HALF OF THE SITE THAT HAS NO KEY.
+       The table above can only reach an element carrying data-t, and 195 keys
+       is not the whole interface — the editor's panels, the analytics tiles and
+       the games are plain markup with no key on them at all. That is why Gen Z
+       mode could look complete on the home page and stop at the Studio door.
+
+       i18n-ui.js already indexes those labels by their exact English wording,
+       for the translator. Giving an entry a `genz` value lets the same row
+       serve both: the translator reads the language columns, this reads that
+       one. Only the entries where the slang is genuinely different carry it —
+       "Score" and "Upload" are the same word in both voices, and a row that
+       just lower-cases a word is not worth the bytes. */
+    const X = window.NC_PHRASES;
+    if (!X) return;
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = w.nextNode())) {
+      const par = n.parentNode;
+      if (!par || par.nodeName === 'SCRIPT' || par.nodeName === 'STYLE' || par.nodeName === 'OPTION') continue;
+      const raw = n.nodeValue || '';
+      const key = raw.trim();
+      if (!key || key.length > 120) continue;
+      const row = X[key];
+      if (row && row.genz) n.nodeValue = raw.replace(key, row.genz);
+    }
   };
 
   window.ncSetGenZ = function (on) {
@@ -7923,7 +8055,23 @@ window.ncSlang = function () {
 
   /* The trial runs before the badge, so the badge can show the days left on
      the very first page view rather than on the second. */
-  function boot() { ncTrialBoot(); ncBuildGenZToggle(); ncBuildProBadge(); setTimeout(ncApplyGenZ, 60); }
+  /* A FEW PASSES, NOT ONE.
+     One pass at 60ms assumes every label on the page exists by then, and on
+     trends.html it does not: that page renders its own Studio rail from its own
+     list, after nova.js has been and gone, so the rail came back in English
+     while the tile beside it stayed in slang. The MutationObserver catches most
+     of that, but not a page that writes its labels in a way it does not see.
+
+     Re-running is free — the pass compares what each element says before
+     writing, so a settled page produces no writes and therefore no mutations.
+     Four passes over three seconds, then it stops: a fixed, bounded cost, and
+     the same shape as the retry ncBuildGenZToggle already uses for the bar. */
+  function ncGenZSettle() {
+    [60, 400, 1200, 3000].forEach(ms => setTimeout(() => {
+      try { ncApplyGenZ(); } catch (e) {}
+    }, ms));
+  }
+  function boot() { ncTrialBoot(); ncBuildGenZToggle(); ncBuildProBadge(); ncGenZSettle(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
