@@ -722,6 +722,8 @@ const PR_T = {
   ui_av_free: { en:"Free to everyone", zh:"所有人免费", hi:"सबके लिए मुफ़्त", es:"Gratis para todos", ar:"مجاني للجميع", fr:"Gratuits pour tous", bn:"সবার জন্য ফ্রি", pt:"Grátis para todos", ru:"Бесплатно всем", ur:"سب کے لیے مفت", id:"Gratis untuk semua", de:"Für alle kostenlos", ja:"だれでも無料", tr:"Herkese ücretsiz", ko:"누구나 무료", fa:"رایگان برای همه", uk:"Безкоштовно для всіх", it:"Gratis per tutti", pl:"Za darmo dla wszystkich", vi:"Miễn phí cho mọi người" },
   ui_av_earned: { en:"Earned", zh:"已赚取", hi:"कमाए गए", es:"Ganado", ar:"المكتسب", fr:"Gagné", bn:"অর্জিত", pt:"Ganho", ru:"Заработано", ur:"کمائے گئے", id:"Diperoleh", de:"Verdient", ja:"獲得ぶん", tr:"Kazanılan", ko:"모은 점수", fa:"کسب‌شده", uk:"Зароблено", it:"Guadagnati", pl:"Zdobyte", vi:"Đã kiếm" },
   ui_av_yes: { en:"Buy it", zh:"买下", hi:"ले लो", es:"Comprar", ar:"اشترِ", fr:"Acheter", bn:"কিনে নাও", pt:"Comprar", ru:"Купить", ur:"خریدیں", id:"Beli", de:"Kaufen", ja:"買う", tr:"Al", ko:"구매", fa:"بخر", uk:"Купити", it:"Compra", pl:"Kup", vi:"Mua" },
+  ui_av_yours: { en:"Your avatar", zh:"你的头像", hi:"आपका अवतार", es:"Tu avatar", ar:"صورتك الرمزية", fr:"Ton avatar", bn:"তোমার অ্যাভাটার", pt:"O teu avatar", ru:"Твой аватар", ur:"آپ کا اوتار", id:"Avatarmu", de:"Dein Avatar", ja:"あなたのアバター", tr:"Avatarın", ko:"내 아바타", fa:"آواتار تو", uk:"Твій аватар", it:"Il tuo avatar", pl:"Twój awatar", vi:"Avatar của bạn" },
+  ui_av_tap: { en:"Tap to change or buy one", zh:"点击更换或购买", hi:"बदलने या खरीदने के लिए टैप करें", es:"Toca para cambiar o comprar", ar:"انقر للتغيير أو الشراء", fr:"Touche pour changer ou en acheter un", bn:"বদলাতে বা কিনতে ট্যাপ করো", pt:"Toca para mudar ou comprar", ru:"Нажми, чтобы сменить или купить", ur:"بدلنے یا خریدنے کے لیے ٹیپ کریں", id:"Ketuk untuk ganti atau beli", de:"Tippen zum Wechseln oder Kaufen", ja:"タップして変更・購入", tr:"Değiştirmek veya almak için dokun", ko:"눌러서 바꾸거나 구매", fa:"برای تغییر یا خرید بزن", uk:"Натисни, щоб змінити чи купити", it:"Tocca per cambiare o comprarne uno", pl:"Dotknij, by zmienić lub kupić", vi:"Chạm để đổi hoặc mua" },
   f10: { en:"Family Dashboard included", zh:"含家庭面板", hi:"फैमिली डैशबोर्ड शामिल", es:"Panel familiar incluido", ar:"تشمل لوحة العائلة", fr:"Tableau familial inclus", bn:"ফ্যামিলি ড্যাশবোর্ড অন্তর্ভুক্ত", pt:"Painel familiar incluído", ru:"Семейная панель включена", ur:"فیملی ڈیش بورڈ شامل", id:"Termasuk dasbor keluarga", de:"Familien-Dashboard inklusive", ja:"ファミリーダッシュボード込み", tr:"Aile paneli dahil", ko:"가족 대시보드 포함", fa:"داشبورد خانواده گنجانده شده", uk:"Сімейна панель включена", it:"Pannello famiglia incluso", pl:"Panel rodzinny w zestawie", vi:"Bao gồm bảng điều khiển gia đình" },
   f11: { en:"Kids' Tools Upgrade included", zh:"含孩子工具升级", hi:"किड्स टूल्स अपग्रेड शामिल", es:"Mejora de herramientas para niños incluida", ar:"تشمل ترقية أدوات الأطفال", fr:"Forfait enfants inclus", bn:"কিডস টুলস আপগ্রেড অন্তর্ভুক্ত", pt:"Upgrade de ferramentas incluído", ru:"Детские инструменты Pro включены", ur:"کڈز ٹولز اپ گریڈ شامل", id:"Termasuk upgrade alat anak", de:"Kinder-Tools-Upgrade inklusive", ja:"子供ツールアップグレード込み", tr:"Çocuk araçları yükseltme dahil", ko:"키즈 도구 업그레이드 포함", fa:"ارتقای ابزار کودکان گنجانده شده", uk:"Дитячі інструменти включені", it:"Upgrade strumenti bambini incluso", pl:"Rozszerzenie narzędzi w zestawie", vi:"Bao gồm nâng cấp công cụ trẻ em" },
   f12: { en:"Priority support", zh:"优先支持", hi:"प्रायोरिटी सपोर्ट", es:"Soporte prioritario", ar:"دعم ذو أولوية", fr:"Support prioritaire", bn:"অগ্রাধিকার সাপোর্ট", pt:"Suporte prioritário", ru:"Приоритетная поддержка", ur:"ترجیحی سپورٹ", id:"Dukungan prioritas", de:"Priorisierter Support", ja:"優先サポート", tr:"Öncelikli destek", ko:"우선 지원", fa:"پشتیبانی اولویت‌دار", uk:"Пріоритетна підтримка", it:"Supporto prioritario", pl:"Priorytetowe wsparcie", vi:"Hỗ trợ ưu tiên" },
@@ -4626,26 +4628,29 @@ const NC_AVATARS = ['\u{1F984}','\u{1F98A}','\u{1F431}','\u{1F438}','\u{1F419}',
    for the floor.
 
    These are the ones you buy, and they are not emoji: avatar3d.js builds each
-   one as actual geometry and draws it with the same software renderer the
-   home-page mark uses. The ladder is deliberate — a one-star is a four-face
-   tetrahedron and a five-star is the sixteen-ray nova, so you can tell which
-   somebody has from across a room at 30 pixels without reading a number. The prices are set against what the site
+   one as actual geometry — little round characters, big head, stubby body, two
+   feet — and draws it with the same software renderer the home-page mark uses.
+
+   Each gets exactly ONE distinguishing feature, because at 40 pixels two is
+   mud. That feature is the rarity ladder: a one-star is bare-headed, a
+   five-star wears a crown, carries a trophy or has the nova over its head. You
+   can tell which somebody has from across a room without reading a number. The prices are set against what the site
    actually pays out — the Basic Certificate needs 150 NovaCoins, so a one-star
    avatar at 150 is "about an afternoon" and the five-star at 5000 is a long
    way past the Master Certificate. Nothing here is on the critical path of
    anything: every one of them is a picture.
    ========================================================================== */
 const NC_AVATAR_SHOP = [
-  { m:'tetra',   s:1, c:150 },  { m:'cube',    s:1, c:150 },
-  { m:'octa',    s:1, c:150 },  { m:'star4',   s:1, c:150 },
-  { m:'star5',   s:2, c:400 },  { m:'crystal', s:2, c:400 },
-  { m:'ring',    s:2, c:400 },  { m:'crown',   s:2, c:400 },
-  { m:'icosa',   s:3, c:900 },  { m:'gem',     s:3, c:900 },
-  { m:'rocket',  s:3, c:900 },  { m:'saturn',  s:3, c:900 },
-  { m:'star8',   s:4, c:2000 }, { m:'comet',   s:4, c:2000 },
-  { m:'shard',   s:4, c:2000 },
-  { m:'nova',    s:5, c:5000 }, { m:'trophy',  s:5, c:5000 },
-  { m:'diamond', s:5, c:5000 }
+  { m:'rookie',  s:1, c:150 },  { m:'blocky',  s:1, c:150 },
+  { m:'capper',  s:1, c:150 },  { m:'horned',  s:1, c:150 },
+  { m:'eared',   s:2, c:400 },  { m:'antenna', s:2, c:400 },
+  { m:'hooper',  s:2, c:400 },  { m:'sparky',  s:2, c:400 },
+  { m:'astro',   s:3, c:900 },  { m:'winger',  s:3, c:900 },
+  { m:'jewel',   s:3, c:900 },  { m:'devil',   s:3, c:900 },
+  { m:'caped',   s:4, c:2000 }, { m:'starlet', s:4, c:2000 },
+  { m:'haloed',  s:4, c:2000 },
+  { m:'king',    s:5, c:5000 }, { m:'champ',   s:5, c:5000 },
+  { m:'nova',    s:5, c:5000 }
 ];
 
 function ncAvatarsOwned() {
@@ -4698,6 +4703,12 @@ function ncAvatar() {
 window.ncAvatarRaw = ncAvatarRaw;
 
 function ncProfile() {
+  /* PUBLISHED BEFORE THE EARLY RETURN, and that matters. The dialog is defined
+     inside this function, and this function gives up immediately on a page with
+     no .sidebar — which is trends.html, the Studio, where most of the time is
+     spent. Exposing it after the return meant the one page that most needed
+     another way in was the one page that did not get one. */
+  window.ncOpenProfile = openProfile;
   const sb = document.querySelector('.sidebar');
   if (!sb || document.getElementById('ncprof')) return;
 
@@ -5055,6 +5066,7 @@ function ncProfile() {
       } catch (e) {}
       if (stopSpin) stopSpin();
       paint(); o.remove();
+      try { dispatchEvent(new Event('nc-avatar-changed')); } catch (e) {}
       if (window.ncSyncSoon) ncSyncSoon();
     };
   }
@@ -7740,6 +7752,71 @@ window.addEventListener('DOMContentLoaded', () => {
   if (document.readyState !== 'loading') { ncCheckSuspension(); ncAgeBoot(); ncForgetLock(); }
 })();
 
+/* ============================================================================
+   THE AVATAR, ON THE FRONT PAGE
+   ============================================================================
+   Asked for: show the one somebody bought next to the headline. It does a
+   second job that matters more — the shop lived at the bottom of a dialog
+   opened by a small card at the foot of the rail, which is most of why it
+   could not be bought. This is a 96px character beside the headline that says
+   what it is and opens the shop when tapped.
+
+   Built here rather than in index.html so it cannot drift from the picker it
+   opens, and so the one place that knows how to draw a bought avatar is the
+   only place that draws it.
+   ========================================================================== */
+function ncHeroAvatar() {
+  const h1 = document.querySelector('.hero h1');
+  if (!h1 || document.getElementById('ncheroav')) return;
+
+  const box = document.createElement('button');
+  box.id = 'ncheroav';
+  box.type = 'button';
+  box.style.cssText =
+    'display:flex;align-items:center;gap:12px;margin:18px 0 0;padding:9px 14px 9px 9px;' +
+    'border-radius:16px;cursor:pointer;background:var(--nc-card,rgba(255,255,255,0.05));' +
+    'border:1px solid var(--nc-line2,rgba(255,255,255,0.14));color:inherit;font:inherit;' +
+    'text-align:left;animation:fadeSlide 1s 1s both;' +
+    /* The hero is a stretch flex column, so a plain block button grew to the
+       full width of the page and read as a banner rather than as a card. */
+    'align-self:flex-start;width:fit-content;max-width:min(100%,330px)';
+  document.body.appendChild(box);        /* so fonts/vars resolve before measuring */
+  h1.insertAdjacentElement('afterend', box);
+
+  function paintHero() {
+    const raw = (typeof ncAvatarRaw === 'function') ? ncAvatarRaw() : '';
+    const row = (typeof ncAvatarShopRow === 'function') ? ncAvatarShopRow(raw) : null;
+    box.innerHTML = '';
+    const face = document.createElement('div');
+    face.style.cssText = 'width:62px;height:62px;flex:0 0 auto;display:grid;place-items:center';
+    if (row && window.NC_AV3D) {
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = 62;
+      cv.style.cssText = 'width:62px;height:62px;display:block';
+      face.appendChild(cv);
+      /* it turns, because a still 3D character looks like a sticker */
+      if (box.__stop) box.__stop();
+      box.__stop = NC_AV3D.spin(cv, raw, 0.012);
+    } else if (raw && raw.indexOf('data:') === 0) {
+      face.innerHTML = '<img src="' + raw + '" alt="" style="width:54px;height:54px;border-radius:50%;object-fit:cover">';
+    } else {
+      face.style.fontSize = '36px';
+      face.textContent = raw || '\u2B50';
+    }
+    const words = document.createElement('div');
+    words.innerHTML =
+      '<div style="font-weight:700;font-size:0.92rem">' + ncEscape(tr('ui_av_yours')) +
+      (row ? ' <span style="color:#FFD36E;letter-spacing:1px">' + '\u2605'.repeat(row.s) + '</span>' : '') +
+      '</div><div style="font-size:0.76rem;opacity:.7">' + ncEscape(tr('ui_av_tap')) + '</div>';
+    box.append(face, words);
+  }
+
+  box.onclick = () => { if (typeof window.ncOpenProfile === 'function') window.ncOpenProfile(); };
+  addEventListener('nc-avatar-3d', paintHero);
+  addEventListener('nc-avatar-changed', paintHero);
+  paintHero();
+}
+
 /* ============================================================
    THE GEN Z VOCABULARY THE AI SPEAKS
    ============================================================
@@ -8361,7 +8438,8 @@ window.ncSlang = function () {
       try { ncApplyGenZ(); } catch (e) {}
     }, ms));
   }
-  function boot() { ncTrialBoot(); ncBuildGenZToggle(); ncBuildProBadge(); ncGenZSettle(); }
+  function boot() { ncTrialBoot(); ncBuildGenZToggle(); ncBuildProBadge(); ncGenZSettle();
+    try { ncHeroAvatar(); } catch (e) {} }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();

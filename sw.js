@@ -610,6 +610,43 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v96: characters instead of solids, and the shop is reachable at last.
+
+   STILL COULD NOT BUY. v95 made the dialog scroll, which was a real fault, but
+   not the whole one. The dialog is opened from #ncprof, the profile card at the
+   foot of the rail — and trends.html, the Studio, renders its own rail and has
+   no #ncprof at all. On the page where most of the time is spent there was no
+   way to open the shop by any means. openProfile() is now published as
+   window.ncOpenProfile BEFORE ncProfile()'s early return, which is the line
+   that matters: it returns immediately on a page with no .sidebar, so exposing
+   it afterwards left the one page that needed another way in without one.
+
+   AND A WAY IN THAT CAN BE SEEN. A 62px character beside the home-page
+   headline showing the one being worn, its stars, and "tap to change or buy
+   one". Asked for as "display it next to run ur channel like a game fr"; it
+   doubles as the entrance the shop never had.
+
+   CHARACTERS. The eighteen are now little round people rather than geometric
+   solids — big head, stubby body, two feet, two arms, and eyes. One
+   distinguishing feature each, because at 40 pixels two is mud, and that
+   feature is the rarity ladder: bare-headed at one star, a crown or a trophy
+   or the nova at five.
+
+   TWO RENDERER BUGS FOUND BY LOOKING AT IT:
+
+   1. +z is AWAY from the camera, not towards it — project() divides by
+      (d + z2), so a larger z draws smaller. Every face-side part was being
+      built on the back of the head. rookie's eyes were inside its own skull
+      and leaked a few pixels at the silhouette; blocky's sat behind an opaque
+      cube and showed nothing at all. Measured: 26 dark pixels in a 120px bake,
+      then 0, now 116 and 122.
+
+   2. Canvas antialiases every path separately, so two triangles sharing an edge
+      each cover about half that edge and the background shows through between
+      them. On a sphere that is a wireframe over the whole head. Every triangle
+      is now stroked in its own fill colour.
+
+   avatar3d.js, nova.js. */
 /* v95: the avatars could not actually be bought.
 
    Reported as "I can't buy the avatars", and it was not the shop logic — that
@@ -1693,7 +1730,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v95';
+const CACHE = 'novaclip-v96';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

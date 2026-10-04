@@ -43,15 +43,19 @@
      gradient where it wants one rather than taking depth as a proxy for it. */
   function mesh() { return { v: [], f: [] }; }
   function vert(m, x, y, z) { m.v.push([x, y, z]); return m.v.length - 1; }
-  function face(m, a, b, c, s) { m.f.push([a, b, c, s]); }
+  /* A face is [a, b, c, shade, material]. material 0 means "mix the two
+     palette colours by shade", which is everything the solids used. 1 is ink
+     and 2 is near-white — without those two a character has no eyes, and a
+     character with no eyes is a lump. */
+  function face(m, a, b, c, s, mat) { m.f.push([a, b, c, s, mat || 0]); }
   /* Quads come out of every ring-shaped builder below, and every one of them
      wants the same two triangles. */
-  function quad(m, a, b, c, d, s) { face(m, a, b, c, s); face(m, a, c, d, s); }
+  function quad(m, a, b, c, d, s, mat) { face(m, a, b, c, s, mat); face(m, a, c, d, s, mat); }
 
   function merge(a, b) {
     var off = a.v.length, i;
     for (i = 0; i < b.v.length; i++) a.v.push(b.v[i]);
-    for (i = 0; i < b.f.length; i++) a.f.push([b.f[i][0] + off, b.f[i][1] + off, b.f[i][2] + off, b.f[i][3]]);
+    for (i = 0; i < b.f.length; i++) a.f.push([b.f[i][0] + off, b.f[i][1] + off, b.f[i][2] + off, b.f[i][3], b.f[i][4] || 0]);
     return a;
   }
   /* Non-uniform scale, for the parts that are a primitive flattened in one
@@ -63,6 +67,10 @@
     }
     return m;
   }
+
+  /* Repaint every face of a part. Used for the eyes and the white of a helmet
+     visor, which are whole small meshes rather than individual faces. */
+  function mat(m, k) { for (var i = 0; i < m.f.length; i++) m.f[i][4] = k; return m; }
 
   /* Rotate about Y. place() only turns about X, which is all most parts need —
      but anything arranged radially (the rocket's fins) has to face outward as
@@ -254,89 +262,138 @@
     return m;
   }
 
-  /* ---------------------------------------------------------------- models
-     Eighteen, in the order of the five rarity tiers. Each is a function so
-     nothing is built until somebody actually looks at it. */
+  /* ------------------------------------------------------------ characters
+     Little round people, in the Stumble Guys shape: a head that is nearly as
+     big as the body, a stubby torso, two arm blobs and two feet. That shape is
+     chosen rather than copied — it is the one that still reads as a person at
+     40 pixels, which is the size these are mostly seen at, and it gives every
+     variant a face to hang an expression on.
+
+     One builder makes all eighteen. Each gets ONE distinguishing feature,
+     because at 40px two is mud: a cap, a horn, ears, a crown, wings, a halo.
+     The feature is what the rarity ladder is made of, so the five-star ones
+     carry the things worth 5000 NovaCoins and the one-stars are plain. */
+
+  function guy(opt) {
+    opt = opt || {};
+    var m = mesh();
+    var headY = 0.34, headR = opt.headR || 0.43;
+
+    /* body: a squashed ball, wider at the bottom, so it sits rather than floats */
+    merge(m, place(squash(ball(12, 8, 0.40), 1.06, 1.02, 0.96), 1, 0, -0.32, 0));
+    /* feet */
+    merge(m, place(squash(ball(8, 5, 0.15), 1.15, 0.8, 1.3), 1, -0.19, -0.70, 0.02));
+    merge(m, place(squash(ball(8, 5, 0.15), 1.15, 0.8, 1.3), 1, 0.19, -0.70, 0.02));
+    /* arms */
+    merge(m, place(squash(ball(8, 5, 0.135), 0.85, 1.3, 0.85), 1, -0.45, -0.28, 0.02));
+    merge(m, place(squash(ball(8, 5, 0.135), 0.85, 1.3, 0.85), 1, 0.45, -0.28, 0.02));
+
+    /* head */
+    if (opt.head === 'cube') {
+      merge(m, place(platonic('cube'), headR * 1.12, 0, headY, 0));
+    } else {
+      merge(m, place(squash(ball(14, 10, headR), 1.0, 0.94, 1.0), 1, 0, headY, 0));
+    }
+
+    /* eyes — two dark beads and two white glints.
+       NEGATIVE z, and that is the whole story of why there were no faces here
+       for several passes. project() divides by (d + z2), so a LARGER z is a
+       SMALLER figure: +z is away from the camera, not towards it. Every
+       face-side part was therefore being built on the back of the head —
+       rookie's eyes were inside its own skull and only leaked a few pixels at
+       the silhouette, and blocky's sat neatly behind an opaque cube. Anything
+       meant to face the reader goes to -z; anything behind them, +z. */
+    var cube = opt.head === 'cube';
+    var ez = -(cube ? headR * 1.02 : headR * 0.80);
+    var ex = headR * (cube ? 0.26 : 0.34), ey = headY + headR * 0.10;
+    merge(m, place(mat(ball(7, 5, 0.085), 1), 1, -ex, ey, ez));
+    merge(m, place(mat(ball(7, 5, 0.085), 1), 1, ex, ey, ez));
+    merge(m, place(mat(ball(6, 4, 0.034), 2), 1, -ex + 0.03, ey + 0.035, ez - 0.055));
+    merge(m, place(mat(ball(6, 4, 0.034), 2), 1, ex + 0.03, ey + 0.035, ez - 0.055));
+
+    var top = headY + headR * 0.92, f = opt.feature;
+
+    if (f === 'cap') {
+      merge(m, place(squash(ball(12, 6, headR * 0.98), 1, 0.5, 1), 1, 0, top - 0.10, 0));
+      merge(m, place(squash(ball(10, 4, headR * 0.52), 1, 0.28, 1.5), 1, 0, top - 0.16, -headR * 0.72));
+    } else if (f === 'horn') {
+      merge(m, place(cone(7, 0.11, 0.30), 1, 0, top - 0.04, 0));
+    } else if (f === 'horns') {
+      merge(m, place(cone(6, 0.09, 0.26), 1, -0.26, top - 0.12, 0, 0.42));
+      merge(m, place(cone(6, 0.09, 0.26), 1, 0.26, top - 0.12, 0, -0.42));
+    } else if (f === 'ears') {
+      merge(m, place(squash(ball(9, 6, 0.19), 0.55, 1.15, 0.9), 1, -headR * 1.00, headY + 0.13, 0));
+      merge(m, place(squash(ball(9, 6, 0.19), 0.55, 1.15, 0.9), 1, headR * 1.00, headY + 0.13, 0));
+    } else if (f === 'antenna') {
+      merge(m, place(tube(5, 0.022, 0.26), 1, 0, top - 0.06, 0));
+      merge(m, place(ball(8, 6, 0.085), 1, 0, top + 0.22, 0));
+    } else if (f === 'halo') {
+      /* Tilted towards the camera. Flat, it is seen at the camera's own 18
+         degrees and draws as a bar — which reads as a stick balanced on the
+         head rather than as a halo. */
+      merge(m, place(annulus(20, 0.24, 0.345, 0.028), 1, 0, top + 0.16, -0.02, 0.62));
+    } else if (f === 'crown') {
+      merge(m, place(tube(10, headR * 0.62, 0.11), 1, 0, top - 0.07, 0));
+      for (var i = 0; i < 5; i++) {
+        var ang = 2 * Math.PI * i / 5;
+        merge(m, place(cone(4, 0.055, 0.16), 1,
+                       Math.cos(ang) * headR * 0.52, top + 0.04, Math.sin(ang) * headR * 0.52));
+      }
+    } else if (f === 'helmet') {
+      merge(m, place(squash(ball(14, 8, headR * 1.08), 1, 0.74, 1), 1, 0, headY + 0.07, 0));
+      merge(m, place(mat(squash(ball(12, 5, headR * 0.80), 1, 0.42, 0.55), 2), 1, 0, headY + 0.02, -headR * 0.62));
+    } else if (f === 'wings') {
+      merge(m, place(turn(squash(cone(3, 0.30, 0.42), 1, 1, 0.09), 1.35), 1, -0.34, -0.22, 0.26));
+      merge(m, place(turn(squash(cone(3, 0.30, 0.42), 1, 1, 0.09), -1.35), 1, 0.34, -0.22, 0.26));
+    } else if (f === 'cape') {
+      merge(m, place(squash(cone(5, 0.40, 0.72), 1, 1, 0.22), 1, 0, -0.66, 0.26, Math.PI));
+    } else if (f === 'star') {
+      merge(m, place(star(5, 0.42, 0.05), 0.30, 0, top + 0.16, 0.02));
+    } else if (f === 'nova') {
+      merge(m, place(star(8, 0.31, 0.05), 0.36, 0, top + 0.18, 0.02));
+      merge(m, place(annulus(18, 0.22, 0.31, 0.022), 1, 0, top + 0.02, 0, 1.3));
+    } else if (f === 'trophy') {
+      merge(m, place(cone(10, 0.23, 0.27), 1, 0.56, 0.16, -0.16, Math.PI));
+      merge(m, place(tube(8, 0.045, 0.13), 1, 0.56, 0.01, -0.16));
+      merge(m, place(tube(10, 0.17, 0.06), 1, 0.56, -0.07, -0.16));
+    } else if (f === 'bolt') {
+      merge(m, place(star(4, 0.24, 0.05), 0.26, 0, top + 0.13, 0.02));
+    } else if (f === 'gem') {
+      merge(m, place(gem(8), 0.27, 0, top + 0.16, 0.02));
+    } else if (f === 'ring') {
+      merge(m, place(annulus(16, 0.11, 0.17, 0.03), 1, -headR * 0.95, headY + 0.04, 0, 1.5708));
+    }
+    return m;
+  }
+
   var MODELS = {
-    /* 1 star — one solid, four to twenty faces. */
-    tetra:  function () { return platonic('tetra'); },
-    cube:   function () { return platonic('cube'); },
-    octa:   function () { return platonic('octa'); },
-    star4:  function () { return star(4, 0.40, 0.13); },
+    /* 1 star — plain, and told apart by the shape of the head */
+    rookie:  function () { return guy({}); },
+    blocky:  function () { return guy({ head: 'cube' }); },
+    capper:  function () { return guy({ feature: 'cap' }); },
+    horned:  function () { return guy({ feature: 'horn' }); },
 
-    /* 2 stars — a solid with something done to it. */
-    star5:  function () { return star(5, 0.45, 0.15); },
-    crystal:function () { return place(spindle(6, 0.52, 1.0, 0.72), 1); },
-    ring:   function () { return place(annulus(20, 0.52, 0.92, 0.10), 1, 0, 0, 0, 1.15); },
-    crown:  function () {
-      var m = tube(12, 0.62, 0.34, 0.55);
-      for (var i = 0; i < 6; i++) {
-        var a = 2 * Math.PI * i / 6;
-        merge(m, place(cone(4, 0.14, 0.42), 1, Math.cos(a) * 0.52, 0.30, Math.sin(a) * 0.52));
-      }
-      return place(m, 1, 0, -0.32, 0);
-    },
+    /* 2 stars — something on the head */
+    eared:   function () { return guy({ feature: 'ears' }); },
+    antenna: function () { return guy({ feature: 'antenna' }); },
+    hooper:  function () { return guy({ feature: 'ring' }); },
+    sparky:  function () { return guy({ feature: 'bolt' }); },
 
-    /* 3 stars — two parts that read as an object rather than a shape. */
-    icosa:  function () { return platonic('icosa'); },
-    gem:    function () { return gem(10); },
-    rocket: function () {
-      var m = tube(12, 0.30, 0.76, 0.6);
-      merge(m, place(cone(12, 0.30, 0.52), 1, 0, 0.76, 0));
-      /* The fins were cones standing at radius 0.24 — inside a body of radius
-         0.26, so they were buried in it and the rocket read as a crystal.
-         Squashed flat and moved outboard they read as fins from any angle. */
-      for (var i = 0; i < 3; i++) {
-        var a = 2 * Math.PI * i / 3;
-        /* Flattened to a plate, turned to face outward, then moved out to the
-           hull. All three were parallel before, which is why none of them read
-           as a fin from any angle. */
-        var fin = turn(squash(cone(3, 0.34, 0.46), 1, 1, 0.10), -a);
-        merge(m, place(fin, 1, Math.cos(a) * 0.26, -0.04, Math.sin(a) * 0.26));
-      }
-      return place(m, 1, 0, -0.62, 0);
-    },
-    saturn: function () {
-      var m = ball(14, 9, 0.56);
-      merge(m, place(annulus(22, 0.78, 1.14, 0.030), 1, 0, 0, 0, 0.34));
-      return m;
-    },
+    /* 3 stars — kit, rather than decoration */
+    astro:   function () { return guy({ feature: 'helmet' }); },
+    winger:  function () { return guy({ feature: 'wings' }); },
+    jewel:   function () { return guy({ feature: 'gem' }); },
+    devil:   function () { return guy({ feature: 'horns' }); },
 
-    /* 4 stars — bigger, and moving. */
-    star8:  function () { return star(8, 0.42, 0.16); },
-    comet:  function () {
-      /* The first version put a short fat cone under a ball and read as an ice
-         cream. A comet is a small bright head with a long thin tail BEHIND it,
-         so the tail is now two and a half times the head's diameter, tapered,
-         and the whole thing is tilted as if it were travelling. */
-      var m = ball(12, 8, 0.30);
-      var tail = squash(cone(10, 0.22, 1.30), 1, 1, 1);
-      merge(m, place(tail, 1, 0, 0, 0, Math.PI));
-      return place(m, 1, 0, 0.42, 0, -0.55);
-    },
-    shard:  function () {
-      var m = spindle(5, 0.42, 1.05, 0.52);
-      merge(m, place(spindle(5, 0.22, 0.52, 0.26), 1, 0.46, -0.10, 0.18));
-      merge(m, place(spindle(5, 0.18, 0.42, 0.20), 1, -0.44, -0.18, -0.14));
-      return m;
-    },
+    /* 4 stars — the ones people will want */
+    caped:   function () { return guy({ feature: 'cape' }); },
+    starlet: function () { return guy({ feature: 'star' }); },
+    haloed:  function () { return guy({ feature: 'halo' }); },
 
-    /* 5 stars — the nova itself, and the two things you put on a shelf. */
-    nova:   function () { return star(8, 0.31, 0.12); },
-    trophy: function () {
-      /* A bowl, a stem and a plinth. The bowl is a cone turned over so it is
-         wide at the top — the first version used a spindle, which is pointed at
-         both ends and reads as a spinning top rather than as something you win. */
-      var bowl = place(cone(14, 0.52, 0.52), 1, 0, 0.52, 0, Math.PI);
-      var m = bowl;
-      merge(m, place(tube(10, 0.10, 0.26, 0.45), 1, 0, -0.26, 0));
-      merge(m, place(tube(14, 0.42, 0.14, 0.35), 1, 0, -0.44, 0));
-      /* The two handles are what makes a cup a trophy at 40 pixels. */
-      merge(m, place(squash(annulus(12, 0.10, 0.20, 0.035), 1, 1, 1), 1, -0.52, 0.26, 0, 1.5708));
-      merge(m, place(squash(annulus(12, 0.10, 0.20, 0.035), 1, 1, 1), 1, 0.52, 0.26, 0, 1.5708));
-      return place(m, 1, 0, 0.06, 0);
-    },
-    diamond:function () { return place(gem(14), 1.04); }
+    /* 5 stars — earned, and meant to look it */
+    king:    function () { return guy({ feature: 'crown' }); },
+    champ:   function () { return guy({ feature: 'trophy' }); },
+    nova:    function () { return guy({ feature: 'nova' }); }
   };
 
   /* Built the first time one is drawn and kept — eighteen meshes is a few
@@ -388,7 +445,7 @@
     var order = [];
     for (i = 0; i < m.f.length; i++) {
       var f = m.f[i], A = pts[f[0]], B = pts[f[1]], C = pts[f[2]];
-      order.push([(A[2] + B[2] + C[2]) / 3, A, B, C, f[3]]);
+      order.push([(A[2] + B[2] + C[2]) / 3, A, B, C, f[3], f[4] || 0]);
     }
     order.sort(function (a, b) { return b[0] - a[0]; });
     for (i = 0; i < order.length; i++) {
@@ -397,11 +454,21 @@
          logo uses, and the reason a painter's sort is enough for solids. */
       if ((b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1]) >= 0) continue;
       var lit = 0.52 + 0.62 * Math.max(0, Math.min(1, (o[0] + 1.3) / 2.6));
-      var col = mix(cols[0], cols[1], o[4]);
+      var col = o[5] === 1 ? [26, 24, 38] : o[5] === 2 ? [246, 248, 255]
+                                           : mix(cols[0], cols[1], o[4]);
       ctx.fillStyle = 'rgb(' + (col[0] * lit | 0) + ',' + (col[1] * lit | 0) + ',' + (col[2] * lit | 0) + ')';
       ctx.beginPath();
       ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]);
-      ctx.closePath(); ctx.fill();
+      ctx.closePath();
+      ctx.fill();
+      /* AND STROKE IT, in the same colour. Canvas antialiases every path on its
+         own, so two triangles sharing an edge each cover about half that edge's
+         pixels and the background shows through the middle. On a sphere that is
+         a visible wireframe over the whole head — it looked like a rendering
+         fault, and at 40px it looked like noise. */
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
   }
 
@@ -420,7 +487,7 @@
     cv.width = px * dpr; cv.height = px * dpr;
     var ctx = cv.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    render(ctx, px, px, id, -0.6, cols);
+    render(ctx, px, px, id, -0.34, cols);
     var url = cv.toDataURL('image/png');
     sprites[key] = url;
     return url;
@@ -436,7 +503,7 @@
     var w = Math.max(1, r.width || canvas.width), h = Math.max(1, r.height || canvas.height);
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    var cols = palette(), ry = -0.6, raf = 0, stopped = false;
+    var cols = palette(), ry = -0.34, raf = 0, stopped = false;
     var still = false;
     try { still = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
     function frame() {
