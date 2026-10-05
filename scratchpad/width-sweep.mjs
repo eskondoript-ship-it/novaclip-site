@@ -28,7 +28,7 @@ const PAGES = ['index.html', 'tools.html', 'socials.html', 'editor.html',
      offline.html is here too. It looks like an internal fallback, but it is
      the page somebody sees when their train goes into a tunnel, which is the
      worst possible moment for it to be broken on a phone. */
-  'categories.html', 'history.html', 'aim.html', 'flap.html', 'reaction.html',
+  'categories.html', 'history.html', 'verify.html', 'aim.html', 'flap.html', 'reaction.html',
   'report.html', 'pay-return.html', 'offline.html'];
 
 const SIZES = [

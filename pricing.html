@@ -914,7 +914,64 @@ function issueEarned() {
     changed = true;
   });
   if (changed) localStorage.setItem('nc_certs', JSON.stringify(owned));
+  /* And then ask the server to sign it — see signEarned(). */
+  signEarned();
   return owned;
+}
+
+/* ---------------------------------------------------------------------------
+   A NUMBER ANYBODY CAN CHECK, AND WHY THE ONE ABOVE IS NOT IT
+
+   certCode() is a plain hash of the name, the tier and the date, computed in
+   this page. Anybody who can read this file can compute the same number for
+   any name they like, which makes it a reference, not a credential: it tells
+   two copies of the same certificate apart and it proves nothing about either.
+
+   The real number is signed by the worker with a key that is only there
+   (leaderboard-worker.js, /cert/issue). It will not sign for an account whose
+   saved progress does not meet the requirements, so a certificate number that
+   checks out at verify.html is one this site issued, to that name, on that
+   day. Change the name on the document and the number stops matching it.
+
+   It needs the account sync to be on, because the worker checks THAT account's
+   progress. With no server configured a certificate still issues and still
+   prints — it carries the local reference and says so, rather than printing a
+   number that cannot be checked as though it could be.
+--------------------------------------------------------------------------- */
+let signing = false;
+function signEarned() {
+  if (signing) return;
+  if (typeof ncApi !== 'function' || typeof ncKey !== 'function' || !ncKey()) return;
+  const owned = ownedCerts();
+  const unsigned = owned.filter(r => !r.serial);
+  if (!unsigned.length) return;
+  signing = true;
+  (async () => {
+    let changed = false;
+    for (const rec of unsigned) {
+      const tier = Object.keys(CERTS).find(t => CERTS[t].tier === rec.tier);
+      if (!tier) continue;
+      try {
+        const out = await ncApi('/cert/issue', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: ncKey(), tier: tier, name: rec.name })
+        });
+        if (out && out.serial) { rec.serial = out.serial; rec.signedOn = out.issued; changed = true; }
+      } catch (e) {
+        /* Not an error worth a dialog: the certificate is already issued and
+           already shown. It is the verifiable number that is missing, and the
+           next page load tries again. */
+        console.warn('certificate not signed yet — ' + (e && e.message));
+      }
+    }
+    if (changed) {
+      localStorage.setItem('nc_certs', JSON.stringify(owned));
+      try { if (typeof ncSyncSoon === 'function') ncSyncSoon(); } catch (e) {}
+      const open = document.getElementById('certIssued');
+      if (open && open.style.display !== 'none') renderCertState();
+    }
+    signing = false;
+  })();
 }
 
 function renderCert(tier, rec) {
@@ -934,7 +991,11 @@ function renderCert(tier, rec) {
     '<div class="cskills">' + c.skills.map(s => '<span>' + s + '</span>').join('') + '</div>' +
     '<div class="cfoot">' +
       '<div><b>' + d.toLocaleDateString(undefined, { day:'numeric', month:'long', year:'numeric' }) + '</b>Date of issue</div>' +
-      '<div><b class="ccode">' + code + '</b>Verification code</div>' +
+      /* The signed number when the worker has given us one, the local
+         reference when it has not — and labelled differently, because one of
+         them can be checked by a stranger and the other cannot. */
+      '<div><b class="ccode">' + (rec.serial || code) + '</b>' +
+        (rec.serial ? 'Verify at novaclip.org/verify.html' : 'Reference (not yet verifiable)') + '</div>' +
       '<div class="cseal">' + c.icon + '</div>' +
     '</div>';
   box.style.display = 'block';

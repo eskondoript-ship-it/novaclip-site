@@ -610,6 +610,45 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v101: certificates that can be checked, and a page for checking them.
+
+   Asked for in one line — put the learner's name on the certificate, and make
+   it impossible to replicate. The first half is a field. The second half is
+   not possible as asked, and saying so is part of the answer: a certificate is
+   a document, and any document can be copied or retyped. What CAN be done is
+   make a forgery fail the moment anybody checks it.
+
+   THE NUMBER IS A SIGNATURE. leaderboard-worker.js now signs certificates with
+   HMAC-SHA256 over the holder's name, the tier and the date, keyed with a new
+   Worker secret called CERT_SECRET. It refuses to sign at all when that secret
+   is missing rather than falling back to something computable, and it refuses
+   to sign for an account whose own saved progress does not meet the tier's
+   requirements. Change the name on a certificate and its number stops matching
+   it; invent a number and it belongs to nobody.
+
+   verify.html (NEW FILE) is where anyone — a parent, a school, an employer —
+   types that number in and gets back the name, the tier and the date it was
+   issued against. No account, no login: the person holding a certificate has
+   no reason to have one of ours. The answer carries those three things and
+   nothing else.
+
+   pricing.html now asks the worker to sign each certificate as it is earned,
+   stores the signed number alongside the local record, and labels the two
+   differently on the card — one can be checked by a stranger and the other
+   cannot. certCode(), the old client-side hash, stays as a local reference and
+   is finally described as what it is: anybody who can read the page can
+   compute it for any name, which makes it a reference and not a credential.
+
+   privacy.html gains both directions of this — the name that goes on a
+   certificate and is kept so the number can be checked, and the fact that
+   anyone holding a number can ask who it was issued to.
+
+   YOU MUST ADD THE SECRET: Worker -> Settings -> Variables and Secrets -> Add
+   -> Secret, called CERT_SECRET, any long random string. /health says
+   certificates: ready once it is there, and until then issuing answers 503.
+
+   leaderboard-worker.js (deploy it — a push does not), verify.html (new),
+   pricing.html, privacy.html. */
 /* v100: the face back as it was, the body as it now is.
 
    Asked for in one line: the face like before, keep the body. So the whites of
@@ -1860,7 +1899,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v100';
+const CACHE = 'novaclip-v101';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2000,6 +2039,10 @@ const SHELL = [
      nothing but the file above. */
   '/history.html',
   '/categories.html',
+  /* The certificate check. Small, and the one page on this site most likely to
+     be opened by somebody who has never been here before — from a QR code on a
+     printed certificate, often on a phone with one bar. */
+  '/verify.html',
   '/ai-edit.js',
   '/ai-edit-panel.js',
   /* Sends the Trend Spotter's rail to the real pages. Without it that rail

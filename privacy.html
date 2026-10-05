@@ -213,7 +213,8 @@ a.back { margin-bottom:0; }
      local storage, on the computer or phone you are using:</p>
   <ul>
     <li>Your display name, avatar, username and language, if you set them</li>
-    <li>Your progress: levels, streaks, coins, certificates and skill history</li>
+    <li>Your progress: levels, streaks, coins, certificates and skill history. A certificate
+        also carries the number it was issued under, so it can be printed and checked</li>
     <li>Video editor projects and their settings</li>
     <li>A list of sign-in attempts on this device, so you can see anything you do not
         recognise. It stays here and is never sent</li>
@@ -346,6 +347,8 @@ a.back { margin-bottom:0; }
     <tr><td>Press <b>“Ask the AI to write the words”</b> in Hype Lab</td><td>Four still frames from that clip, at 512px. Not the video, not the sound, not the filename</td><td>The same worker, and on to Gemini. Nothing is sent unless you press it — measuring the clip, adding the effects and making the music all happen on your device</td></tr>
     <tr><td>Check a message with the safety tools</td><td>The text you pasted</td><td>The same worker; card numbers and codes are stripped out before it is sent</td></tr>
     <tr><td>Save progress with a code</td><td>Your progress and your code</td><td>Our Cloudflare Worker (Cloudflare KV storage)</td></tr>
+    <tr><td>Earn a certificate</td><td>The name that goes on it — your connected channel's name, or your display name if you have no channel — together with which certificate it is and the date</td><td>Our Cloudflare Worker, which signs the certificate and keeps that record so the number on it can be checked later. It is the only way a certificate can be told apart from a document somebody typed themselves</td></tr>
+    <tr><td>Someone checks a certificate number at <b>/verify.html</b></td><td>The number they typed</td><td>The same worker, which answers with the name, the certificate and the date that number was issued against — and nothing else. Anyone holding the number can do this, which is the point of it: the number is printed on the certificate for exactly that purpose</td></tr>
     <tr><td>Finish a run in Typing, Flap, Reaction or Aim</td><td>The score, and the name the board shows you under — your display name if you set one, otherwise your username, otherwise a connected channel's name. Nothing else about the run, and nothing at all if you have set none of those: the board asks you for a name first rather than sending one you did not choose</td><td>Our Cloudflare Worker (Cloudflare KV storage). The board is public, so the name and score on it are visible to anyone playing that game</td></tr>
     <tr><td>Research trends or connect a channel</td><td>The search, or the channel you authorised</td><td>YouTube's own API</td></tr>
     <tr><td>Use the globe or map views</td><td>The place being looked at</td><td>Google Maps and ArcGIS map tiles</td></tr>

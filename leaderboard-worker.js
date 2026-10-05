@@ -55,6 +55,8 @@
      GET  /board?map=&mode=         -> [ rows ]              top 25
      POST /board {name,kills,key?}  -> { ok, rank, board }   submit a run
                                     -> 409 if that name is another player's
+     POST /cert/issue {key,tier,name} -> { serial, issued }  sign a certificate
+     GET  /cert/verify?c=            -> { valid, name, tier } check one
 
    PUTTING IT ONLINE WITHOUT A COMMAND LINE
      1. dash.cloudflare.com -> Workers & Pages -> Create -> Worker -> Deploy
@@ -322,6 +324,123 @@ async function rateLimited(env, bucket, ms) {
 
 
 /* ===========================================================================
+   CERTIFICATES THAT CANNOT BE FAKED BY TYPING ONE
+   ===========================================================================
+   A certificate is a Word file or a PDF, and anybody can edit one. Nothing
+   printed on a document can stop that — not a watermark, not a password on
+   the file, not a pattern behind the text. What CAN be done is to make a
+   forgery fail the moment somebody checks it, and that is what this is.
+
+   HOW IT WORKS
+
+   The number on a certificate is not a serial anybody can invent: it is
+   HMAC-SHA256 over the holder’s name, the tier and the date of issue, keyed
+   with a secret that exists only on this worker. Change the name on the
+   document and the number no longer matches it. Invent a number and it belongs
+   to nobody. Neither can be worked out from the certificate, from this file,
+   or from anything in the browser, because the key is not in any of them.
+
+   Anyone — a parent, a school, an employer — reads the number off the
+   certificate, types it into novaclip.org/verify.html (or scans the QR code,
+   which goes to the same place) and gets back the name, the tier and the date
+   that number was issued against. If those do not match the document in their
+   hand, the document is not ours.
+
+   WHAT IT DOES NOT CLAIM
+
+   It does not stop anybody printing a copy of a REAL certificate — a copy of
+   a genuine credential is genuine, and that is as true of a degree as it is of
+   this. It does not prove the person holding it is the person named on it;
+   nothing about a paper certificate ever has. And the requirements below are
+   checked against this account’s own saved progress, which the browser wrote,
+   so it proves what NovaClip recorded rather than what a child actually did.
+   Said plainly because the alternative is implying a guarantee that is not
+   there.
+
+   THE SECRET
+   Settings -> Variables and Secrets -> Add -> Secret, called CERT_SECRET, any
+   long random string. Without it this worker refuses to issue rather than
+   signing with a default, because a signature everybody can compute is not a
+   signature — /health says which state it is in.
+   ========================================================================== */
+
+/* The same three tiers nova.js checks in CERT_REQS, and the same numbers.
+   DUPLICATED ON PURPOSE AND A RISK WORTH NAMING: the browser decides when to
+   ASK for a certificate, this file decides whether to SIGN one, and a copy
+   that cannot be edited from the browser is the whole point. If a requirement
+   changes in nova.js it has to change here too, or a learner meets the new bar
+   and is refused at the door. */
+const CERT_TIERS = {
+  'Basic Certificate': {
+    code: 'BA', pts: 150,
+    skills: { yt_connect: 1, edit_export: 3, trend_scan: 3, ai_ask: 5, idea_save: 2, focus: 1 }
+  },
+  'Advanced Certificate': {
+    code: 'AD', pts: 600,
+    skills: { yt_connect: 1, edit_export: 10, trend_scan: 10, idea_save: 5, analytics: 5,
+              ai_ask: 15, focus: 3, editing: 3, community: 1, reaction: 1 }
+  },
+  'Master Certificate': {
+    code: 'MA', pts: 1500,
+    skills: { yt_connect: 1, edit_export: 25, trend_scan: 20, idea_save: 15, analytics: 15,
+              ai_ask: 30, focus: 8, editing: 10, community: 3, reaction: 3, aim: 3, fair_fight: 1 }
+  }
+};
+const CERT_BY_CODE = { BA: 'Basic Certificate', AD: 'Advanced Certificate', MA: 'Master Certificate' };
+
+/* A name is printed on a credential, so it is cleaned hard: no control
+   characters, no markup, 48 characters, and nothing that could be mistaken for
+   a second line. */
+function cleanHolder(v) {
+  const s = String(v == null ? '' : v)
+    .replace(/[\u0000-\u001f\u007f<>]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 48);
+  return s || 'NOVACLIP CREATOR';
+}
+
+async function hmacHex(secret, msg) {
+  const k = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return hex(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg)));
+}
+
+/* NC-BA-XXXX-XXXX-XXXX. Twelve characters of the signature in the same
+   alphabet the recovery codes use — no I, O, 0 or 1, because somebody is
+   going to read this off a printed page and type it into a phone. Sixty bits,
+   which is not guessable, and every character of it comes from the key. */
+function certSerial(tierCode, sigHex) {
+  let out = '';
+  for (let i = 0; i < 12; i++) {
+    out += CODE_ALPHABET[parseInt(sigHex.slice(i * 2, i * 2 + 2), 16) % CODE_ALPHABET.length];
+  }
+  return 'NC-' + tierCode + '-' + out.slice(0, 4) + '-' + out.slice(4, 8) + '-' + out.slice(8, 12);
+}
+function cleanSerial(v) {
+  const s = String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const m = s.match(/^NC(BA|AD|MA)([A-Z0-9]{12})$/);
+  return m ? 'NC-' + m[1] + '-' + m[2].slice(0, 4) + '-' + m[2].slice(4, 8) + '-' + m[2].slice(8, 12) : '';
+}
+
+/* What is still missing for a tier, read from the account's own saved
+   progress. Returns [] when the certificate is earned. */
+function certMissing(data, tier) {
+  const req = CERT_TIERS[tier];
+  const miss = [];
+  const num = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : 0; };
+  const life = Math.max(num((data || {}).nc_points_lifetime), num((data || {}).nc_points));
+  if (life < req.pts) miss.push({ what: 'points', have: life, need: req.pts });
+  let skills = {};
+  try { skills = JSON.parse((data || {}).nc_skills || '{}') || {}; } catch (e) {}
+  for (const id in req.skills) {
+    const got = num(skills[id]);
+    if (got < req.skills[id]) miss.push({ what: id, have: got, need: req.skills[id] });
+  }
+  return miss;
+}
+
+/* ===========================================================================
    THE SOCIAL LAYER — comments, friends, groups, and the suspension that
    actually holds
    ===========================================================================
@@ -477,6 +596,13 @@ export default {
            derivable from this file, which is what stops the salt endpoint
            answering "does this person have an account here". Worth saying,
            because nothing else would ever surface it. */
+        /* Certificates are signed here or not at all — see the block above
+           CERT_TIERS. Unset, /cert/issue refuses rather than signing with a
+           default that anybody could compute. */
+        certificates: env.CERT_SECRET
+          ? 'ready'
+          : 'not set — add a Worker secret called CERT_SECRET (any long random string). ' +
+            'Until then no certificate can be issued or checked.',
         pepper: env.PEPPER
           ? 'set'
           : 'not set — add a Worker secret called PEPPER (any long random string) ' +
@@ -635,6 +761,55 @@ export default {
       if (blob.length > SAVE_MAX_BYTES) return json({ error: 'save too big' }, 413);
       await env.DB.put('save:' + key, blob);
       return json({ ok: true, at: Date.now() });
+    }
+
+    // ---------- certificates ----------
+    /* Issued here and nowhere else, because the signature is what makes a
+       forged certificate detectable and the key for it is only on this worker.
+       See the block above CERT_TIERS for what that does and does not prove. */
+    if (path === '/cert/issue' && request.method === 'POST') {
+      if (!env.CERT_SECRET) {
+        return json({ error: 'this worker cannot sign certificates yet \u2014 add a secret called CERT_SECRET' }, 503);
+      }
+      if (await rateLimited(env, 'cert:' + who, 5000)) return json({ error: 'slow down' }, 429);
+      const key = body.key;
+      if (!validKey(key)) return json({ error: 'bad key' }, 400);
+      const tier = CERT_TIERS[body.tier] ? body.tier : '';
+      if (!tier) return json({ error: 'no such certificate' }, 400);
+      const row = await env.DB.get('save:' + key, 'json');
+      if (!row) return json({ error: 'no such save' }, 404);
+      const missing = certMissing(row.data, tier);
+      if (missing.length) return json({ error: 'not earned yet', missing }, 403);
+
+      const name = cleanHolder(body.name);
+      /* A DATE, not a timestamp: it is what the certificate prints, and asking
+         twice on the same day has to give the same number back rather than
+         minting a second credential for the same work. */
+      const iso = new Date().toISOString().slice(0, 10);
+      const tc = CERT_TIERS[tier].code;
+      const serial = certSerial(tc, await hmacHex(env.CERT_SECRET, name + '|' + tc + '|' + iso));
+      await env.DB.put('cert:' + serial, JSON.stringify({ name, tier, iso, key, at: Date.now() }));
+      return json({ serial, name, tier, issued: iso });
+    }
+
+    /* Public on purpose. Whoever is holding the certificate is the person who
+       needs to check it, and they have no account here. The answer carries the
+       three things printed on the document and nothing else — no key, no
+       points, no history. */
+    if (path === '/cert/verify' && request.method === 'GET') {
+      const c = cleanSerial(url.searchParams.get('c'));
+      if (!c) return json({ valid: false, reason: 'that is not a NovaClip certificate number' });
+      const rec = await env.DB.get('cert:' + c, 'json');
+      if (!rec) return json({ valid: false, reason: 'no certificate with that number has been issued' });
+      /* Recomputed rather than trusted. The stored row and the number have to
+         agree, so an edited record fails the same way an invented number
+         does. */
+      if (env.CERT_SECRET) {
+        const tc = (CERT_TIERS[rec.tier] || {}).code || '';
+        const again = certSerial(tc, await hmacHex(env.CERT_SECRET, rec.name + '|' + tc + '|' + rec.iso));
+        if (again !== c) return json({ valid: false, reason: 'the details do not match the number' });
+      }
+      return json({ valid: true, name: rec.name, tier: rec.tier, issued: rec.iso });
     }
 
     // ---------- leaderboard ----------
