@@ -230,8 +230,14 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
 /* The strip wraps rather than squeezing: fourteen dots at a fixed size stay
    readable on a 320px screen, fourteen dots sharing the width do not. */
 .stkdots { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+/* An empty day has to be visible, and this page is read in both themes. A flat
+   rgba(255,255,255,.07) is a dot on the dark page and nothing at all on the
+   light one — the first run of this printed ten dots where there were fourteen,
+   with the four empty days simply absent. Mixed from the text colour instead,
+   so it is dark on a light page and light on a dark one by construction. */
 .stkdots i { width: 13px; height: 13px; border-radius: 4px; display: block;
-  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.10); }
+  background: color-mix(in srgb, currentColor 11%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
 .stkdots i.part { background: rgba(255,180,67,.28); border-color: rgba(255,180,67,.45); }
 .stkdots i.full { background: linear-gradient(140deg, #FFB443, #FF2E97);
   border-color: transparent; box-shadow: 0 0 9px rgba(255,120,120,.35); }
@@ -403,9 +409,12 @@ function renderStreak() {
   if (fill) fill.style.width = Math.max(2, Math.min(100, st.secs / st.need * 100)) + '%';
   const today = document.getElementById('stkToday');
   if (today) {
-    today.textContent = st.done
-      ? T('ui_st_done', 'Today counts. Come back tomorrow to keep it going.')
-      : T('ui_st_today', '{m} of 15 minutes today').replace('{m}', Math.floor(st.secs / 60));
+    /* Always the minute count, never the sentence beside the number. When the
+       day was already earned both read "Today counts…", and the card printed
+       the same line twice with a progress bar between them. Capped at fifteen
+       on a day that is done, because "26 of 15 minutes" is not a sentence. */
+    const mins = Math.min(15, Math.floor(st.secs / 60));
+    today.textContent = T('ui_st_today', '{m} of 15 minutes today').replace('{m}', mins);
   }
   const best = document.getElementById('stkBest');
   if (best) best.textContent = st.best > 0 ? T('ui_st_best', 'Best so far: {n} days').replace('{n}', st.best) : '';

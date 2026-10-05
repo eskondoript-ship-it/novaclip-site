@@ -301,6 +301,12 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
 .ok{color:#6EE7A8;font-size:.88rem;margin-top:11px;min-height:20px}
 .vidrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
 .vidrow .catbtn{display:inline-block;text-align:center}
+/* A class selector outranks the browser's own [hidden]{display:none}, so the
+   rule above un-hid the Remove button: it was on screen with nothing to
+   remove. Caught by a screenshot, not by the probe — which asked the element
+   whether its hidden property was set (it was) rather than whether it was
+   being drawn (it was). */
+.vidrow .catbtn[hidden]{display:none}
 .catbtn.ghost{background:none;color:var(--nc-text,#EAF2FF);
   border:1px solid var(--nc-line2,rgba(255,255,255,.18))}
 </style>
