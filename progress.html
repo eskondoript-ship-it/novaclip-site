@@ -213,6 +213,28 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
 .skrow { flex-wrap: wrap; padding: 10px 2px; }
 .skrow .skbar { flex: 1 0 100%; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.07); overflow: hidden; margin-top: 5px; }
 .skrow .skbar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #00E5FF, #7C5CFF); box-shadow: 0 0 8px rgba(0,229,255,0.5); }
+
+/* the daily streak card */
+.stktop { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.stkflame { font-size: 1.6rem; filter: grayscale(1) opacity(.45); }
+.stkcard.on .stkflame { filter: none; }
+.stknum {
+  font-size: 2.1rem; font-weight: 800; letter-spacing: -.02em;
+  background: linear-gradient(90deg, #FFB443, #FF2E97);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.stkcard:not(.on) .stknum { background: none; color: var(--nc-dim, #7E8AA6); }
+.stklbl { color: var(--nc-dim, #7E8AA6); font-size: .92rem; }
+.stkfoot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-top: 8px; font-size: .84rem; color: var(--nc-dim, #7E8AA6); }
+/* The strip wraps rather than squeezing: fourteen dots at a fixed size stay
+   readable on a 320px screen, fourteen dots sharing the width do not. */
+.stkdots { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.stkdots i { width: 13px; height: 13px; border-radius: 4px; display: block;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.10); }
+.stkdots i.part { background: rgba(255,180,67,.28); border-color: rgba(255,180,67,.45); }
+.stkdots i.full { background: linear-gradient(140deg, #FFB443, #FF2E97);
+  border-color: transparent; box-shadow: 0 0 9px rgba(255,120,120,.35); }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
@@ -244,6 +266,32 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
     </div>
     <div class='xpbar'><i id='ptsfill'></i></div>
     <div class='xpnext' id='ptsnext'></div>
+  </div>
+
+  <!-- THE DAILY STREAK. Fifteen minutes of active use makes a day count; the
+       engine is in nova.js and reads the same screen-time day book the Family
+       Dashboard charts, so there is one definition of "used it today". -->
+  <div class='card wide stkcard' style='margin:0 0 18px'>
+    <h2 data-t='ui_st_h'>Daily streak</h2>
+    <div class='hint' data-t='ui_st_d'>Fifteen minutes on NovaClip makes the day count.
+      Miss a day and the count starts again at one.</div>
+    <div class='body'>
+      <div class='stktop'>
+        <span class='stkflame' id='stkFlame'>🔥</span>
+        <span class='stknum' id='stkNum'>0</span>
+        <span class='stklbl' id='stkLbl'>No streak running.</span>
+      </div>
+      <div class='xpbar' style='margin-top:4px'><i id='stkFill' style='width:2%'></i></div>
+      <div class='stkfoot'>
+        <span id='stkToday'>0 of 15 minutes today</span>
+        <span id='stkBest'></span>
+      </div>
+      <!-- Fourteen days, newest on the right. A filled dot is a day that
+           reached fifteen minutes; a half-lit one is a day the site was open
+           for less than that, which is worth telling apart from a day it was
+           never opened at all. -->
+      <div class='stkdots' id='stkDots'></div>
+    </div>
   </div>
 
   <!-- Two ladders, and they are deliberately not the same ladder. The bar above
@@ -309,6 +357,8 @@ function renderProgress() {
     }
   }
 
+  renderStreak();
+
   const sl = document.getElementById('skilllist');
   if (sl && typeof SKILLS !== 'undefined' && typeof skillCount === 'function') {
     // the highest requirement across all tiers is the bar each skill is measured against
@@ -329,8 +379,60 @@ function renderProgress() {
     }).join('');
   }
 }
+/* THE STREAK CARD.
+   Everything here comes out of ncStreakState() in nova.js — this page does no
+   counting of its own, so the number beside the coins badge and the number in
+   this card cannot disagree. */
+function renderStreak() {
+  if (typeof ncStreakState !== 'function') return;     // nova.js not loaded yet
+  const st = ncStreakState();
+  const card = document.querySelector('.stkcard');
+  const T = (k, f) => (typeof tr === 'function' ? tr(k) : '') || f;
+
+  if (card) card.classList.toggle('on', st.n > 0);
+  const num = document.getElementById('stkNum');
+  if (num) num.textContent = st.n;
+  const lbl = document.getElementById('stkLbl');
+  if (lbl) {
+    lbl.textContent = st.n > 0
+      ? (st.done ? T('ui_st_done', 'Today counts. Come back tomorrow to keep it going.')
+                 : T('ui_st_now', '{n}-day streak').replace('{n}', st.n))
+      : T('ui_st_zero', 'No streak running. Fifteen minutes today starts one.');
+  }
+  const fill = document.getElementById('stkFill');
+  if (fill) fill.style.width = Math.max(2, Math.min(100, st.secs / st.need * 100)) + '%';
+  const today = document.getElementById('stkToday');
+  if (today) {
+    today.textContent = st.done
+      ? T('ui_st_done', 'Today counts. Come back tomorrow to keep it going.')
+      : T('ui_st_today', '{m} of 15 minutes today').replace('{m}', Math.floor(st.secs / 60));
+  }
+  const best = document.getElementById('stkBest');
+  if (best) best.textContent = st.best > 0 ? T('ui_st_best', 'Best so far: {n} days').replace('{n}', st.best) : '';
+
+  /* The fourteen-day strip, out of the same screen-time log. A day with some
+     time on it but under the bar is drawn differently from a day with none:
+     "I was here but not for long" and "I wasn't here" are not the same answer
+     and the strip is the only place that can say so. */
+  const dots = document.getElementById('stkDots');
+  if (dots && typeof ncScreenLog === 'function') {
+    const need = st.need * 1000;
+    dots.innerHTML = ncScreenLog(14).map(d => {
+      const cls = d.ms >= need ? 'full' : (d.ms > 60000 ? 'part' : '');
+      const mins = Math.round(d.ms / 60000);
+      return '<i class="' + cls + '" title="' + d.day + ' — ' + mins + ' min"></i>';
+    }).join('');
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => { renderProgress(); setTimeout(renderProgress, 80); });
 window.onSkillLogged = renderProgress;
+/* The streak moves while this page is open — fifteen minutes can be reached
+   with the page sitting right here — so it repaints when the engine says so,
+   and once a minute regardless for the "{m} of 15 minutes" line. */
+addEventListener('nc-streak', renderStreak);
+addEventListener('nc-lang', renderStreak);
+setInterval(renderStreak, 60000);
 </script>
 <!-- The creator level, read from the channel snapshot Studio saves. The div it
      fills is above this tag and therefore already parsed, so it renders in

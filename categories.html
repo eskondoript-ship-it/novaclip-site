@@ -258,6 +258,28 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
       <div class='ok' id='catSaid'></div>
     </div>
   </div>
+
+  <!-- YOUR OWN EDITED VIDEO, BEHIND EVERYTHING.
+       In this card and not the editor, because this is already the page that
+       decides what is behind the site: a category picks a drawn scene or a
+       photograph, and this is the same decision with your own footage in it.
+       Wired below nova.js — window.ncBgVideo is defined there, and this page
+       loads nova.js last, so the block at the top of the page cannot see it. -->
+  <div class='card wide' style='margin-top:16px'>
+    <h2 data-t='ui_bv_h'>Your own video behind the site</h2>
+    <div class='hint' data-t='ui_bv_p'>Pick a finished edit and it plays, blurred and quiet,
+      behind every page. It stays on this device — nothing is uploaded.</div>
+    <div class='body'>
+      <div class='vidrow'>
+        <!-- A label over a hidden input, so the control matches the Save
+             button next to it rather than being a grey OS file field. -->
+        <label class='catbtn' for='bgVid' data-t='ui_bv_pick'>Choose a video</label>
+        <input type='file' id='bgVid' accept='video/*' hidden>
+        <button class='catbtn ghost' id='bgVidOff' hidden data-t='ui_bv_off'>Remove</button>
+      </div>
+      <div class='hint bgnote' id='bgVidSaid' data-t='ui_bv_none'>No video chosen yet.</div>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -277,6 +299,10 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
 .catbtn{padding:12px 22px;border-radius:12px;border:0;cursor:pointer;font:inherit;font-weight:700;
   color:#04121a;background:linear-gradient(110deg,var(--nc-violet,#7C5CFF),var(--nc-cyan,#00E5FF) 55%,var(--nc-pink,#FF2E97))}
 .ok{color:#6EE7A8;font-size:.88rem;margin-top:11px;min-height:20px}
+.vidrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.vidrow .catbtn{display:inline-block;text-align:center}
+.catbtn.ghost{background:none;color:var(--nc-text,#EAF2FF);
+  border:1px solid var(--nc-line2,rgba(255,255,255,.18))}
 </style>
 
 <!-- Before the script below, not after it. Everything on this page is drawn
@@ -369,6 +395,78 @@ h1 { animation: prIn .6s cubic-bezier(.2,.9,.3,1.15) both; }
 })();
 </script>
 <script src='nova.js'></script>
+<script>
+/* The video background. AFTER nova.js, deliberately — ncBgVideo, ncPaintBgVideo
+   and tr() all live there, and this page loads nova.js at the bottom. */
+(function () {
+  var pick = document.getElementById('bgVid');
+  var off  = document.getElementById('bgVidOff');
+  var said = document.getElementById('bgVidSaid');
+  if (!pick || !window.ncBgVideo) {
+    /* No IndexedDB at all (old browser, or private mode with storage off).
+       The card is hidden rather than left there doing nothing when tapped. */
+    if (pick) {
+      var card = pick.closest('.card');
+      if (card) card.hidden = true;
+    }
+    return;
+  }
+
+  var T = function (k, f) { return (typeof tr === 'function' ? tr(k) : '') || f; };
+  function mb(n) { return (n / 1048576).toFixed(n < 10485760 ? 1 : 0) + ' MB'; }
+
+  /* The text under the buttons is a [data-t] element, so the dictionary pass
+     would put the generic line back over anything written here on the next
+     language or vibe change. Dropping the attribute once a real answer is in
+     it takes it out of that pass; paint() owns it from then on. */
+  function say(txt) { said.removeAttribute('data-t'); said.textContent = txt; }
+
+  function paint() {
+    window.ncBgVideo.get().then(function (blob) {
+      off.hidden = !blob;
+      if (blob) say(T('ui_bv_on', 'Playing behind the site — {n}.').replace('{n}', mb(blob.size)));
+      else { said.setAttribute('data-t', 'ui_bv_none'); said.textContent = T('ui_bv_none', 'No video chosen yet.'); }
+    }).catch(function () {});
+  }
+
+  pick.addEventListener('change', function () {
+    var f = pick.files && pick.files[0];
+    if (!f) return;
+    /* Checked here as well as in put(), so the size can be named back. A
+       rejection that says "too big" without saying how big is a rejection
+       somebody has to guess their way out of. */
+    if (f.size > window.ncBgVideo.max) {
+      say(T('ui_bv_big', 'That one is {n}. The limit is 60 MB, so every page keeps opening fast.')
+            .replace('{n}', mb(f.size)));
+      pick.value = '';
+      return;
+    }
+    window.ncBgVideo.put(f).then(function () {
+      pick.value = '';
+      return window.ncPaintBgVideo();
+    }).then(paint).catch(function () {
+      say(T('ui_bv_fail', 'This browser would not store the video.'));
+      pick.value = '';
+    });
+  });
+
+  off.addEventListener('click', function () {
+    window.ncBgVideo.clear()
+      .then(function () { return window.ncPaintBgVideo(); })
+      /* The category's own scene or photograph comes back on its own — it was
+         only standing down while there was a video to stand down for. */
+      .then(function () { if (typeof ncCategoryVibe === 'function') ncCategoryVibe(); })
+      .then(paint).catch(function () {});
+  });
+
+  paint();
+  /* Re-render the size line when the language changes, since it is the one
+     string on this page the dictionary pass cannot rebuild — the file size is
+     not in the dictionary. (The Vibe toggle reloads the page, so it needs no
+     equivalent here.) */
+  addEventListener('nc-lang', paint);
+})();
+</script>
 <script src='nova-ask.js' defer></script>
 <script src='nova-mascot.js' defer></script>
 <script src='nova-guide.js' defer></script>

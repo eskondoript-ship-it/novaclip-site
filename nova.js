@@ -724,6 +724,24 @@ const PR_T = {
   ui_av_yes: { en:"Buy it", zh:"买下", hi:"ले लो", es:"Comprar", ar:"اشترِ", fr:"Acheter", bn:"কিনে নাও", pt:"Comprar", ru:"Купить", ur:"خریدیں", id:"Beli", de:"Kaufen", ja:"買う", tr:"Al", ko:"구매", fa:"بخر", uk:"Купити", it:"Compra", pl:"Kup", vi:"Mua" },
   ui_av_yours: { en:"Your avatar", zh:"你的头像", hi:"आपका अवतार", es:"Tu avatar", ar:"صورتك الرمزية", fr:"Ton avatar", bn:"তোমার অ্যাভাটার", pt:"O teu avatar", ru:"Твой аватар", ur:"آپ کا اوتار", id:"Avatarmu", de:"Dein Avatar", ja:"あなたのアバター", tr:"Avatarın", ko:"내 아바타", fa:"آواتار تو", uk:"Твій аватар", it:"Il tuo avatar", pl:"Twój awatar", vi:"Avatar của bạn" },
   ui_av_tap: { en:"Tap to change or buy one", zh:"点击更换或购买", hi:"बदलने या खरीदने के लिए टैप करें", es:"Toca para cambiar o comprar", ar:"انقر للتغيير أو الشراء", fr:"Touche pour changer ou en acheter un", bn:"বদলাতে বা কিনতে ট্যাপ করো", pt:"Toca para mudar ou comprar", ru:"Нажми, чтобы сменить или купить", ur:"بدلنے یا خریدنے کے لیے ٹیپ کریں", id:"Ketuk untuk ganti atau beli", de:"Tippen zum Wechseln oder Kaufen", ja:"タップして変更・購入", tr:"Değiştirmek veya almak için dokun", ko:"눌러서 바꾸거나 구매", fa:"برای تغییر یا خرید بزن", uk:"Натисни, щоб змінити чи купити", it:"Tocca per cambiare o comprarne uno", pl:"Dotknij, by zmienić lub kupić", vi:"Chạm để đổi hoặc mua" },
+  /* the video background, chosen in categories.html */
+  ui_bv_h: { en:"Your own video behind the site", zh:"用你自己的视频做网站背景", hi:"साइट के पीछे आपका खुद का वीडियो", es:"Tu propio vídeo detrás del sitio", ar:"فيديوك أنت خلف الموقع", fr:"Ta propre vidéo derrière le site", bn:"সাইটের পিছনে তোমার নিজের ভিডিও", pt:"O teu próprio vídeo atrás do site", ru:"Твоё видео как фон сайта", ur:"سائٹ کے پیچھے آپ کی اپنی ویڈیو", id:"Videomu sendiri sebagai latar situs", de:"Dein eigenes Video hinter der Seite", ja:"サイトの背景にあなたの動画", tr:"Sitenin arkasında kendi videon", ko:"사이트 배경에 내 영상", fa:"ویدیوی خودت پشت سایت", uk:"Твоє відео як тло сайту", it:"Il tuo video dietro al sito", pl:"Twój własny film w tle strony", vi:"Video của bạn làm nền trang" },
+  ui_bv_p: { en:"Pick a finished edit and it plays, blurred and quiet, behind every page. It stays on this device — nothing is uploaded.", zh:"选一个剪好的视频，它会模糊、静音地在每个页面后播放。视频只留在这台设备上，不会上传。", hi:"कोई तैयार एडिट चुनें — वह हर पेज के पीछे धुंधला और बिना आवाज़ चलेगा। वह इसी डिवाइस पर रहता है, कहीं अपलोड नहीं होता।", es:"Elige un montaje terminado y se reproduce, difuminado y en silencio, detrás de cada página. Se queda en este dispositivo: no se sube nada.", ar:"اختر مقطعًا انتهيت من تحريره فيُشغّل خلف كل صفحة، ضبابيًا وبلا صوت. يبقى على هذا الجهاز ولا يُرفع أي شيء.", fr:"Choisis un montage terminé et il tourne, flouté et muet, derrière chaque page. Il reste sur cet appareil — rien n'est envoyé.", bn:"শেষ করা একটা এডিট বেছে নাও — সেটা ঝাপসা আর নিঃশব্দে প্রতিটি পেজের পিছনে চলবে। ফাইলটা এই ডিভাইসেই থাকে, কোথাও আপলোড হয় না।", pt:"Escolhe uma edição acabada e ela toca, desfocada e sem som, atrás de cada página. Fica neste dispositivo — nada é enviado.", ru:"Выбери готовый монтаж — он будет играть за каждой страницей, размытый и без звука. Файл остаётся на этом устройстве, никуда не загружается.", ur:"کوئی مکمل ایڈٹ چنیں، وہ ہر صفحے کے پیچھے دھندلا اور بے آواز چلے گی۔ فائل اسی ڈیوائس پر رہتی ہے، کھیں اپلوڈ نہیں ہوتی۔", id:"Pilih hasil editan yang sudah jadi, lalu videonya diputar — blur dan tanpa suara — di belakang setiap halaman. Filenya tetap di perangkat ini, tidak diunggah ke mana pun.", de:"Wähle einen fertigen Schnitt, und er läuft unscharf und stumm hinter jeder Seite. Er bleibt auf diesem Gerät — nichts wird hochgeladen.", ja:"編集し終えた動画を選ぶと、ぼかして無音で全ヘージの背景に流れます。ファイルはこの端末に残り、どこにもアップロードされません。", tr:"Bitmiş bir kurgu seç; her sayfanın arkasında bulanık ve sessiz oynar. Dosya bu cihazda kalır, hiçbir yere yüklenmez.", ko:"완성한 편집본을 고르면 햬릿하고 소리 없이 모든 페이지 뒤에서 재생됩니다. 파일은 이 기기에만 남고 어디에도 업로드되지 않습니다.", fa:"یک ویدیوی تمام‌شده را انتخاب کن تا پشت همه صفحه‌ها، تار و بی‌صدا، پخش شود. فایل روی همین دستگاه می‌ماند و جایی آپلود نمی‌شود.", uk:"Вибери готовий монтаж — він грає за кожною сторінкою, розмитий і без звуку. Файл лишається на цьому пристрої, нікуди не завантажується.", it:"Scegli un montaggio finito e va in riproduzione, sfocato e muto, dietro ogni pagina. Resta su questo dispositivo: non viene caricato nulla.", pl:"Wybierz gotowy montaż — będzie się odtwarzał, rozmyty i bez dźwięku, w tle każdej strony. Plik zostaje na tym urządzeniu, nigdzie nie jest wysyłany.", vi:"Chọn một bản dựng đã xong, nó sẽ phát — mờ và không tiếng — phía sau mọi trang. Tệp chỉ nằm trên máy này, không tải lên đâu cả." },
+  ui_bv_pick: { en:"Choose a video", zh:"选择视频", hi:"वीडियो चुनें", es:"Elegir un vídeo", ar:"اختر فيديو", fr:"Choisir une vidéo", bn:"ভিডিও বেছে নাও", pt:"Escolher um vídeo", ru:"Выбрать видео", ur:"ویڈیو منتخب کریں", id:"Pilih video", de:"Video auswählen", ja:"動画を選ぶ", tr:"Video seç", ko:"영상 고르기", fa:"انتخاب ویدیو", uk:"Вибрати відео", it:"Scegli un video", pl:"Wybierz film", vi:"Chọn video" },
+  ui_bv_off: { en:"Remove", zh:"移除", hi:"हटाएँ", es:"Quitar", ar:"إزالة", fr:"Retirer", bn:"সরিয়ে দাও", pt:"Remover", ru:"Убрать", ur:"ہٹا دیں", id:"Hapus", de:"Entfernen", ja:"取り消す", tr:"Kaldır", ko:"제거", fa:"حذف", uk:"Прибрати", it:"Rimuovi", pl:"Usuń", vi:"Bỏ" },
+  ui_bv_none: { en:"No video chosen yet.", zh:"还没有选择视频。", hi:"अभी कोई वीडियो नहीं चुना गया।", es:"Aún no has elegido ningún vídeo.", ar:"لم يُختَر أي فيديو بعد.", fr:"Aucune vidéo choisie pour l'instant.", bn:"এখনও কোনো ভিডিও বেছে নেওয়া হয়নি।", pt:"Ainda não escolheste nenhum vídeo.", ru:"Видео пока не выбрано.", ur:"ابھی کوئی ویڈیو منتخب نہیں کی گئی۔", id:"Belum ada video yang dipilih.", de:"Noch kein Video ausgewählt.", ja:"まだ動画が選ばれていません。", tr:"Henüz video seçilmedi.", ko:"아직 고른 영상이 없습니다.", fa:"هنوز ویدیویی انتخاب نشده.", uk:"Відео ще не вибрано.", it:"Nessun video scelto per ora.", pl:"Nie wybrano jeszcze filmu.", vi:"Chưa chọn video nào." },
+  ui_bv_on: { en:"Playing behind the site — {n}.", zh:"正在网站背后播放 — {n}。", hi:"साइट के पीछे चल रहा है — {n}।", es:"Reproduciéndose detrás del sitio: {n}.", ar:"يُشغّل خلف الموقع — {n}.", fr:"En lecture derrière le site — {n}.", bn:"সাইটের পিছনে চলছে — {n}।", pt:"A tocar atrás do site — {n}.", ru:"Играет за сайтом — {n}.", ur:"سائٹ کے پیچھے چل رہی ہے — {n}۔", id:"Diputar di belakang situs — {n}.", de:"Läuft hinter der Seite — {n}.", ja:"サイトの背景で再生中 — {n}。", tr:"Sitenin arkasında oynuyor — {n}.", ko:"사이트 뒤에서 재생 중 — {n}.", fa:"پشت سایت پخش می‌شود — {n}.", uk:"Грає за сайтом — {n}.", it:"In riproduzione dietro al sito — {n}.", pl:"Odtwarza się w tle strony — {n}.", vi:"Đang phát phía sau trang — {n}." },
+  ui_bv_big: { en:"That one is {n}. The limit is 60 MB, so every page keeps opening fast.", zh:"这个文件有 {n}。上限是 60 MB，这样每个页面才能保持快速打开。", hi:"यह फ़ाइल {n} की है। सीमा 60 MB है, ताकि हर पेज तेज़ी से खुलता रहे।", es:"Ese pesa {n}. El límite son 60 MB, para que todas las páginas sigan abriendo rápido.", ar:"هذا الملف حجمه {n}. الحد 60 ميغابايت حتى تظل كل صفحة سريعة الفتح.", fr:"Celle-là pèse {n}. La limite est de 60 Mo, pour que chaque page continue de s'ouvrir vite.", bn:"এই ফাইলটা {n}। সীমা ৬০ MB, যাতে প্রতিটি পেজ দ্রুত খোলে।", pt:"Esse tem {n}. O limite é 60 MB, para que todas as páginas continuem a abrir depressa.", ru:"Этот файл — {n}. Предел 60 МБ, чтобы страницы по-прежнему открывались быстро.", ur:"یہ فائل {n} کی ہے۔ حد 60 MB ہے تاکہ ہر صفحہ تیزی سے کھلتا رہے۔", id:"Yang ini {n}. Batasnya 60 MB, supaya setiap halaman tetap cepat terbuka.", de:"Das hier ist {n} groß. Die Grenze liegt bei 60 MB, damit jede Seite schnell bleibt.", ja:"このファイルは {n} です。上限は 60 MB — どのヘージも速く開くようにするためです。", tr:"Bu dosya {n}. Sınır 60 MB; böylece her sayfa hızlı açılmaya devam eder.", ko:"이 파일은 {n}입니다. 한도는 60 MB로, 모든 페이지가 계속 보다 빠르게 열리도록 한 것입니다.", fa:"این فایل {n} است. سقف ۶۰ مگابایت است تا همه صفحه‌ها سریع باز شوند.", uk:"Цей файл — {n}. Обмеження 60 МБ, щоб сторінки й далі відкривалися швидко.", it:"Questo pesa {n}. Il limite è 60 MB, così ogni pagina resta veloce ad aprirsi.", pl:"Ten plik ma {n}. Limit to 60 MB, żeby każda strona nadal otwierała się szybko.", vi:"Tệp này {n}. Giới hạn là 60 MB để mọi trang vẫn mở nhanh." },
+  ui_bv_fail: { en:"This browser would not store the video.", zh:"这个浏览器不允许保存该视频。", hi:"यह ब्राउज़र वीडियो सेव नहीं करने दे रहा।", es:"Este navegador no ha querido guardar el vídeo.", ar:"هذا المتصفح لم يسمح بتخزين الفيديو.", fr:"Ce navigateur n'a pas voulu enregistrer la vidéo.", bn:"এই ব্রাউজার ভিডিওটা রাখতে দিচ্ছে না।", pt:"Este navegador não quis guardar o vídeo.", ru:"Этот браузер не стал сохранять видео.", ur:"یہ براؤزر ویڈیو محفوظ نہیں کر رہا۔", id:"Browser ini tidak mau menyimpan videonya.", de:"Dieser Browser wollte das Video nicht speichern.", ja:"このブラウザは動画を保存できませんでした。", tr:"Bu tarayıcı videoyu saklamadı.", ko:"이 보라우죀가 영상을 저장하지 못했습니다.", fa:"این مرورگر ویدیو را ذخیره نکرد.", uk:"Цей браузер не зберіг відео.", it:"Questo browser non ha voluto salvare il video.", pl:"Ta przeglądarka nie zapisała filmu.", vi:"Trình duyệt này không lưu được video." },
+  /* the daily streak — fifteen minutes makes a day count */
+  ui_st_h: { en:"Daily streak", zh:"连续打卡", hi:"रोज़ की स्ट्रीक", es:"Racha diaria", ar:"سلسلة الأيام", fr:"Série de jours", bn:"দৈনিক স্ট্রিক", pt:"Sequência diária", ru:"Серия дней", ur:"روزانہ اسٹریک", id:"Rentetan harian", de:"Tagesserie", ja:"連続記録", tr:"Günlük seri", ko:"연속 기록", fa:"زنجیره روزانه", uk:"Серія днів", it:"Serie di giorni", pl:"Seria dni", vi:"Chuỗi ngày" },
+  ui_st_d: { en:"Fifteen minutes on NovaClip makes the day count. Miss a day and the count starts again at one.", zh:"在 NovaClip 上用满 15 分钟，这一天就算数。中断一天，计数就从 1 重新开始。", hi:"NovaClip पर 15 मिनट पूरे करें और वह दिन गिना जाएगा। एक दिन तूटा, तो गिनती फिर 1 से शुरू होगी।", es:"Quince minutos en NovaClip y el día cuenta. Si fallas un día, la cuenta vuelve a empezar en uno.", ar:"خمس عشرة دقيقة على NovaClip تجعل اليوم محسوبًا. وإن فاتك يوم بدأ العدّ من جديد.", fr:"Quinze minutes sur NovaClip et la journée compte. Un jour manqué, et le compte repart à un.", bn:"NovaClip-এ ১৫ মিনিট কাটালেই দিনটা গোনা হবে। একদিন বাদ পড়লে গোনা আবার ১ থেকে শুরু।", pt:"Quinze minutos no NovaClip e o dia conta. Se falhares um dia, a contagem volta ao um.", ru:"Пятнадцать минут в NovaClip — и день зачтён. Пропустишь день — счёт начнётся с одного.", ur:"NovaClip پر پندرہ منٹ گزاریں تو وہ دن گنا جائے گا۔ ایک دن چھوٹا تو گنتی پھر ایک سے شروع ہوگی۔", id:"Lima belas menit di NovaClip membuat hari itu terhitung. Lewat satu hari, hitungannya mulai dari satu lagi.", de:"Fünfzehn Minuten auf NovaClip, und der Tag zählt. Ein verpasster Tag, und die Zählung beginnt wieder bei eins.", ja:"NovaClip を 15 分使うと、その日がカウントされます。1 日休むとカウントは 1 からやり直しです。", tr:"NovaClip'te on beş dakika, o günü saydırır. Bir gün kaçırırsan sayım yeniden birden başlar.", ko:"NovaClip을 15분 사용하면 그날이 기록됩니다. 하루를 빠뜨리면 다시 1일부터 시작합니다.", fa:"پانزده دقیقه در NovaClip آن روز را حساب می‌کند. یک روز را از دست بدهی، شمارش از یک شروع می‌شود.", uk:"П’ятнадцять хвилин у NovaClip — і день зараховано. Пропустиш день — лік починається з одного.", it:"Quindici minuti su NovaClip e la giornata conta. Se salti un giorno, il conto riparte da uno.", pl:"Piętnaście minut w NovaClip i dzień się liczy. Przerwa na jeden dzień i licznik startuje od jednego.", vi:"Mười lăm phút trên NovaClip là ngày đó được tính. Bỏ một ngày là đếm lại từ một." },
+  ui_st_now: { en:"{n}-day streak", zh:"连续 {n} 天", hi:"{n} दिन की स्ट्रीक", es:"Racha de {n} días", ar:"سلسلة {n} يوم", fr:"Série de {n} jours", bn:"{n} দিনের স্ট্রিক", pt:"Sequência de {n} dias", ru:"Серия {n} дней", ur:"{n} دن کی اسٹریک", id:"Rentetan {n} hari", de:"{n}-Tage-Serie", ja:"{n} 日連続", tr:"{n} günlük seri", ko:"{n}일 연속", fa:"زنجیره {n} روزه", uk:"Серія {n} днів", it:"Serie di {n} giorni", pl:"Seria {n} dni", vi:"Chuỗi {n} ngày" },
+  ui_st_zero: { en:"No streak running. Fifteen minutes today starts one.", zh:"目前没有连续记录。今天用满 15 分钟就能开始。", hi:"कोई स्ट्रीक नहीं चल रही। आज 15 मिनट से एक शुरू हो जाएगी।", es:"No hay ninguna racha. Quince minutos hoy empiezan una.", ar:"لا توجد سلسلة جارية. خمس عشرة دقيقة اليوم تبدأ واحدة.", fr:"Aucune série en cours. Quinze minutes aujourd'hui en lancent une.", bn:"কোনো স্ট্রিক চলছে না। আজ ১৫ মিনিট কাটালেই একটা শুরু হবে।", pt:"Não há nenhuma sequência. Quinze minutos hoje começam uma.", ru:"Серии нет. Пятнадцать минут сегодня — и она начнётся.", ur:"کوئی اسٹریک نہیں چل رہی۔ آج پندرہ منٹ سے ایک شروع ہو جائے گی۔", id:"Belum ada rentetan. Lima belas menit hari ini memulainya.", de:"Keine Serie aktiv. Fünfzehn Minuten heute starten eine.", ja:"連続記録はありません。今日 15 分で始まります。", tr:"Devam eden seri yok. Bugün on beş dakika bir tane başlatır.", ko:"진행 중인 기록이 없습니다. 오늘 15분이면 시작됩니다.", fa:"زنجیره‌ای در جریان نیست. پانزده دقیقه امروز یکی را شروع می‌کند.", uk:"Серії немає. П’ятнадцять хвилин сьогодні — і вона почнеться.", it:"Nessuna serie in corso. Quindici minuti oggi ne iniziano una.", pl:"Żadna seria nie trwa. Piętnaście minut dzisiaj ją rozpocznie.", vi:"Chưa có chuỗi nào. Mười lăm phút hôm nay là bắt đầu." },
+  ui_st_today: { en:"{m} of 15 minutes today", zh:"今天已用 {m}／15 分钟", hi:"आज 15 में से {m} मिनट", es:"{m} de 15 minutos hoy", ar:"{m} من 15 دقيقة اليوم", fr:"{m} sur 15 minutes aujourd'hui", bn:"আজ ১৫ মিনিটের মধ্যে {m}", pt:"{m} de 15 minutos hoje", ru:"{m} из 15 минут сегодня", ur:"آج 15 میں سے {m} منٹ", id:"{m} dari 15 menit hari ini", de:"{m} von 15 Minuten heute", ja:"今日は 15 分のうち {m}", tr:"Bugün 15 dakikanın {m} kadarı", ko:"오늘 15분 중 {m}", fa:"امروز {m} از ۱۵ دقیقه", uk:"{m} із 15 хвилин сьогодні", it:"{m} di 15 minuti oggi", pl:"{m} z 15 minut dzisiaj", vi:"{m} trong 15 phút hôm nay" },
+  ui_st_done: { en:"Today counts. Come back tomorrow to keep it going.", zh:"今天已达标。明天再来，连续才能保持。", hi:"आज गिना गया। इसे बनाए रखने के लिए कल फिर आएं।", es:"El día de hoy ya cuenta. Vuelve mañana para mantenerla.", ar:"يوم اليوم محسوب. عُد غدًا للحفاظ عليها.", fr:"La journée est acquise. Reviens demain pour la garder.", bn:"আজকের দিনটা গোনা হয়ে গেছে। ধরে রাখতে কাল আবার এসো।", pt:"O dia de hoje já conta. Volta amanhã para a manter.", ru:"Сегодняшний день зачтён. Возвращайся завтра, чтобы не потерять серию.", ur:"آج کا دن گنا جا چکا ہے۔ اسے قائم رکھنے کے لیے کل پھر آئیں۔", id:"Hari ini sudah terhitung. Datang lagi besok supaya tidak putus.", de:"Der heutige Tag zählt. Komm morgen wieder, um sie zu halten.", ja:"今日はカウントされました。続けるには明日もどうぞ。", tr:"Bugün sayıldı. Seriyi korumak için yarın yine gel.", ko:"오늘은 기록됐습니다. 이어가려면 내일 또 오세요.", fa:"امروز حساب شد. برای حفظ آن فردا هم بیا.", uk:"Сьогоднішній день зараховано. Повертайся завтра, щоб не втратити серію.", it:"La giornata di oggi conta. Torna domani per non perderla.", pl:"Dzisiejszy dzień się liczy. Wróć jutro, żeby ją utrzymać.", vi:"Hôm nay đã được tính. Mai quay lại để giữ chuỗi." },
+  ui_st_best: { en:"Best so far: {n} days", zh:"最佳记录：{n} 天", hi:"अब तक सबसे ज़्यादा: {n} दिन", es:"Mejor hasta ahora: {n} días", ar:"الأفضل حتى الآن: {n} يومًا", fr:"Meilleure série : {n} jours", bn:"এখন পর্যন্ত সেরা: {n} দিন", pt:"Melhor até agora: {n} dias", ru:"Лучший результат: {n} дней", ur:"اب تک بہترین: {n} دن", id:"Terbaik sejauh ini: {n} hari", de:"Bisher beste: {n} Tage", ja:"これまでの最長：{n} 日", tr:"Şimdiye kadarki en iyi: {n} gün", ko:"지금까지 연속 기록: {n}일", fa:"بهترین تا اینجا: {n} روز", uk:"Найкраще: {n} днів", it:"Record attuale: {n} giorni", pl:"Najlepsza dotąd: {n} dni", vi:"Tốt nhất: {n} ngày" },
+  ui_st_got: { en:"{n} days in a row.", zh:"连续 {n} 天达标。", hi:"लगातार {n} दिन।", es:"{n} días seguidos.", ar:"{n} يومًا متتاليًا.", fr:"{n} jours d'affilée.", bn:"টানা {n} দিন।", pt:"{n} dias seguidos.", ru:"{n} дней подряд.", ur:"مسلسل {n} دن۔", id:"{n} hari berturut-turut.", de:"{n} Tage in Folge.", ja:"{n} 日連続です。", tr:"Üst üste {n} gün.", ko:"{n}일 연속입니다.", fa:"{n} روز پیاپی.", uk:"{n} днів підряд.", it:"{n} giorni di fila.", pl:"{n} dni z rzędu.", vi:"{n} ngày liên tiếp." },
   f10: { en:"Family Dashboard included", zh:"含家庭面板", hi:"फैमिली डैशबोर्ड शामिल", es:"Panel familiar incluido", ar:"تشمل لوحة العائلة", fr:"Tableau familial inclus", bn:"ফ্যামিলি ড্যাশবোর্ড অন্তর্ভুক্ত", pt:"Painel familiar incluído", ru:"Семейная панель включена", ur:"فیملی ڈیش بورڈ شامل", id:"Termasuk dasbor keluarga", de:"Familien-Dashboard inklusive", ja:"ファミリーダッシュボード込み", tr:"Aile paneli dahil", ko:"가족 대시보드 포함", fa:"داشبورد خانواده گنجانده شده", uk:"Сімейна панель включена", it:"Pannello famiglia incluso", pl:"Panel rodzinny w zestawie", vi:"Bao gồm bảng điều khiển gia đình" },
   f11: { en:"Kids' Tools Upgrade included", zh:"含孩子工具升级", hi:"किड्स टूल्स अपग्रेड शामिल", es:"Mejora de herramientas para niños incluida", ar:"تشمل ترقية أدوات الأطفال", fr:"Forfait enfants inclus", bn:"কিডস টুলস আপগ্রেড অন্তর্ভুক্ত", pt:"Upgrade de ferramentas incluído", ru:"Детские инструменты Pro включены", ur:"کڈز ٹولز اپ گریڈ شامل", id:"Termasuk upgrade alat anak", de:"Kinder-Tools-Upgrade inklusive", ja:"子供ツールアップグレード込み", tr:"Çocuk araçları yükseltme dahil", ko:"키즈 도구 업그레이드 포함", fa:"ارتقای ابزار کودکان گنجانده شده", uk:"Дитячі інструменти включені", it:"Upgrade strumenti bambini incluso", pl:"Rozszerzenie narzędzi w zestawie", vi:"Bao gồm nâng cấp công cụ trẻ em" },
   f12: { en:"Priority support", zh:"优先支持", hi:"प्रायोरिटी सपोर्ट", es:"Soporte prioritario", ar:"دعم ذو أولوية", fr:"Support prioritaire", bn:"অগ্রাধিকার সাপোর্ট", pt:"Suporte prioritário", ru:"Приоритетная поддержка", ur:"ترجیحی سپورٹ", id:"Dukungan prioritas", de:"Priorisierter Support", ja:"優先サポート", tr:"Öncelikli destek", ko:"우선 지원", fa:"پشتیبانی اولویت‌دار", uk:"Пріоритетна підтримка", it:"Supporto prioritario", pl:"Priorytetowe wsparcie", vi:"Hỗ trợ ưu tiên" },
@@ -943,6 +961,11 @@ function applyLang(code) {
   localStorage.setItem('nc_lang', code);
   applyLangText();
   if (window.__ncPhraseOn) window.__ncPhraseOn();
+  /* For the handful of strings a page builds itself out of a template and a
+     number — "Playing behind the site — 24.6 MB" on categories.html, the
+     streak count — which the dictionary pass cannot rebuild because the
+     number is not in the dictionary. */
+  try { dispatchEvent(new Event('nc-lang')); } catch (e) {}
 }
 
 /* Pages that boot their own UI (React SPAs like editor.html and trends.html)
@@ -1610,6 +1633,114 @@ function ncCategoryPhoto() {
 }
 window.ncCategoryPhoto = ncCategoryPhoto;
 
+/* ============================================================================
+   YOUR OWN EDITED VIDEO, AS THE BACKGROUND OF THE SITE
+   ============================================================================
+   Asked for, and chosen in categories.html because that is already the page
+   that decides what is behind everything — a category sets a drawn scene or a
+   photograph, and this is the same decision with the user's own footage in it.
+
+   WHY INDEXEDDB AND NOT localStorage
+
+   localStorage is about 5MB and holds strings; a finished edit is tens of
+   megabytes of binary. IndexedDB stores the Blob itself, has room, and keeps
+   it on the device — which matters more here than storage mechanics, because
+   the whole product promise is that a video never leaves the machine it was
+   made on. Nothing about this uploads anything. There is no server to upload
+   it to.
+
+   The cap is 60MB. Not a technical limit — a kindness: past that the first
+   paint of every page waits on a read that takes longer than the page does,
+   and a background is not worth that.
+
+   WHERE IT SITS
+
+   The same place the category photograph sits — fixed, behind everything,
+   blurred and dimmed by the same variables — except that html::after is a
+   pseudo-element and cannot hold a <video>, so this is a real element placed
+   against <html> to get the same stacking. Muted, looping and playsinline,
+   because a background that asks permission to play is not a background; and
+   paused outright when the reader has asked for reduced motion.
+   ========================================================================== */
+(function () {
+  var DB = 'novaclip', STORE = 'bg', KEY = 'video';
+  var MAX = 60 * 1024 * 1024;
+
+  function open() {
+    return new Promise(function (ok, no) {
+      var r = indexedDB.open(DB, 1);
+      r.onupgradeneeded = function () {
+        if (!r.result.objectStoreNames.contains(STORE)) r.result.createObjectStore(STORE);
+      };
+      r.onsuccess = function () { ok(r.result); };
+      r.onerror = function () { no(r.error); };
+    });
+  }
+  function tx(mode, fn) {
+    return open().then(function (db) {
+      return new Promise(function (ok, no) {
+        var t = db.transaction(STORE, mode), req = fn(t.objectStore(STORE));
+        req.onsuccess = function () { ok(req.result); };
+        req.onerror = function () { no(req.error); };
+      });
+    });
+  }
+
+  window.ncBgVideo = {
+    max: MAX,
+    put: function (file) {
+      if (!file) return Promise.reject(new Error('no file'));
+      if (file.size > MAX) return Promise.reject(new Error('too big'));
+      return tx('readwrite', function (st) { return st.put(file, KEY); });
+    },
+    get: function () { return tx('readonly', function (st) { return st.get(KEY); }); },
+    clear: function () { return tx('readwrite', function (st) { return st.delete(KEY); }); }
+  };
+
+  var url = null;
+  window.ncPaintBgVideo = function () {
+    var root = document.documentElement;
+    return window.ncBgVideo.get().then(function (blob) {
+      var el = document.getElementById('ncbgvid');
+      if (!blob) {
+        if (el) el.remove();
+        if (url) { URL.revokeObjectURL(url); url = null; }
+        root.removeAttribute('data-bgvideo');
+        return false;
+      }
+      if (!el) {
+        el = document.createElement('video');
+        el.id = 'ncbgvid';
+        el.muted = true; el.loop = true; el.autoplay = true;
+        el.setAttribute('playsinline', '');
+        el.setAttribute('aria-hidden', 'true');
+        el.style.cssText =
+          'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;' +
+          'pointer-events:none;opacity:var(--nc-cat-img-o,.42);' +
+          'filter:blur(6px) saturate(.75)';
+        root.appendChild(el);
+      }
+      if (url) URL.revokeObjectURL(url);
+      url = URL.createObjectURL(blob);
+      el.src = url;
+      /* The drawn scene and the photograph both go, or the two fight each
+         other through the same opacity variable. */
+      root.style.setProperty('--nc-cat-img', 'none');
+      root.style.setProperty('--nc-cat-img-o', root.getAttribute('data-theme') === 'light' ? '.26' : '.40');
+      root.setAttribute('data-bgvideo', '1');
+      var still = false;
+      try { still = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+      if (still) { try { el.pause(); } catch (e) {} }
+      else { var play = el.play(); if (play && play.catch) play.catch(function () {}); }
+      return true;
+    }).catch(function () { return false; });
+  };
+
+  function boot() { try { window.ncPaintBgVideo(); } catch (e) {} }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+
 /* Which file, if any, is behind the site right now. categories.html asks so it
    can tell somebody their drop worked — the alternative is dropping a file in a
    folder and having to take on trust that it landed. */
@@ -1898,8 +2029,15 @@ function ncBuildBar() {
          ran 33px under it, at 480px the language picker 58px. Reserving the
          badge's own width (63px plus its offset) means the scroll stops short
          of it instead. Costs nothing on a desktop, where the controls never
-         reach that far anyway. */
-      'display:flex;align-items:center;gap:14px;padding:0 88px 0 14px;box-sizing:border-box;' +
+         reach that far anyway.
+
+         The width is a variable now rather than a flat 88px, because the badge
+         grew: it carries the streak as well as the coins, so "🪙 1240 🔥 7" is
+         wider than the number the reserve was measured from. ncPaintBadge()
+         measures the live element and writes --nc-badge-res; 88px stays as the
+         fallback for the first paint, before there is anything to measure. */
+      'display:flex;align-items:center;gap:14px;box-sizing:border-box;' +
+      'padding:0 var(--nc-badge-res,88px) 0 14px;' +
       'background:var(--nc-bar-bg,rgba(10,13,24,.72));' +
       'border-bottom:1px solid var(--nc-line2,rgba(255,255,255,.08));' +
       'backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4)}' +
@@ -3944,8 +4082,7 @@ function spendPts(n) {
   if (bal < n) return false;
   try { localStorage.setItem('nc_points', bal - n); } catch (e) {}
   if (typeof ncSyncSoon === 'function') ncSyncSoon();
-  const b = document.getElementById('ncpts');
-  if (b) b.textContent = '\u{1FA99} ' + (bal - n);
+  ncPaintBadge();
   try { refreshPanels(); } catch (e) {}
   try { dispatchEvent(new Event('nc-points')); } catch (e) {}
   return true;
@@ -3959,7 +4096,182 @@ function checkUnlocks(pts) {
 function addPts(n) { const p = getPts() + n; localStorage.setItem('nc_points', p);
   /* Earning raises both; spending (spendPts) lowers only the balance. */
   if (n > 0) { try { localStorage.setItem('nc_points_lifetime', getPtsLifetime() + n); } catch (e) {} }
-  ncSyncSoon(); const b = document.getElementById('ncpts'); if (b) b.textContent = '🪙 ' + p; toast((n >= 0 ? '+' : '') + n + ' 🪙'); checkUnlocks(p); refreshPanels(); }
+  ncSyncSoon(); ncPaintBadge(); toast((n >= 0 ? '+' : '') + n + ' 🪙'); checkUnlocks(p); refreshPanels(); }
+/* ============================================================================
+   THE DAILY STREAK: A DAY COUNTS AT FIFTEEN MINUTES
+   ============================================================================
+   Asked for in exactly those terms — a streak for every day NovaClip is used
+   for at least fifteen minutes.
+
+   IT DOES NOT HAVE A CLOCK OF ITS OWN, AND THAT IS THE DESIGN
+
+   The screen-time limiter further down this file has measured active time for
+   as long as it has existed: one tick a second, counting only while the tab is
+   visible and something has been touched recently, banked per local day in
+   nc_st_log. That is the same measurement a streak needs, so the streak reads
+   that book rather than opening a second one. Two clocks would have meant two
+   definitions of "using NovaClip" and a visible day where one said fourteen
+   minutes and the other sixteen.
+
+   It also means the streak is right on the day it ships: somebody who spent
+   half an hour here yesterday and half an hour today already has a two-day
+   streak, because both days are already in the log.
+
+   WHAT "USED" MEANS
+
+   Active time, not wall-clock. A tab left open on a second monitor overnight
+   earns nothing. See ncActive() — visible, touched within the minute, or
+   playing a video, that last clause added because watching back a four-minute
+   edit is using the editor and used to count as four minutes of idling.
+
+   Fifteen minutes does NOT have to be in one sitting; it is the day's total,
+   so three visits of five minutes earn the day as surely as one visit of
+   fifteen.
+
+   THE DAY IS A LOCAL DAY, from ncStDay() — the same key the screen-time log
+   and the Family Dashboard use. A streak is about a person’s own day:
+   somebody in Tehran using the site at 3:30am would otherwise have it counted
+   as tomorrow.
+
+   A MISSED DAY IS WORKED OUT ON READING, NOT ON A SCHEDULE
+
+   Nothing runs overnight to break a streak. The current streak is counted
+   backwards from today through the log every time it is read, so it needs
+   nothing to have been open at midnight. nc_streak carries only the two things
+   the log cannot answer: the longest run ever held, and which day the daily
+   bonus was last paid for.
+   ========================================================================== */
+var NC_STRK_KEY  = 'nc_streak';
+var NC_STRK_NEED = 15 * 60 * 1000;    /* fifteen minutes of active time, in ms */
+
+function ncStrkRaw() {
+  var r = null;
+  try { r = JSON.parse(localStorage.getItem(NC_STRK_KEY) || 'null'); } catch (e) {}
+  if (!r || typeof r !== 'object') r = {};
+  r.best = parseInt(r.best, 10) || 0;
+  r.paid = typeof r.paid === 'string' ? r.paid : '';   /* day the bonus was paid for */
+  return r;
+}
+
+/* Active milliseconds banked against one local day. */
+function ncStrkMs(key) {
+  var log = ncStRead();
+  var e = log[key];
+  return (e && e.ms) ? e.ms : 0;
+}
+function ncStrkDone(key) { return ncStrkMs(key) >= NC_STRK_NEED; }
+
+/* One day earlier, as a log key. */
+function ncStrkPrev(key) {
+  var p = String(key).split('-');
+  var d = new Date(+p[0], +p[1] - 1, +p[2]);
+  d.setDate(d.getDate() - 1);
+  return ncStDay(d);
+}
+
+/* The longest run of qualifying days anywhere in the retained log. Walked
+   forwards through the sorted keys, with a run broken by any gap in the dates
+   as well as by a day under the bar — two entries either side of a week's
+   absence are consecutive in the key list and are not consecutive days. */
+function ncStrkBest() {
+  var log = ncStRead();
+  var keys = Object.keys(log).sort();
+  var run = 0, best = 0, prev = '';
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    if (!ncStrkDone(k)) { run = 0; prev = k; continue; }
+    run = (prev && ncStrkPrev(k) === prev) ? run + 1 : 1;
+    if (run > best) best = run;
+    prev = k;
+  }
+  return best;
+}
+
+/* What the streak is worth right now.
+   Counted backwards from the most recent day that qualifies — today if today
+   is already earned, otherwise yesterday, which is a streak still standing
+   with today not yet done. Anything older and the chain is broken. */
+function ncStreakState() {
+  var today = ncStDay();
+  var r = ncStrkRaw();
+  var secsToday = Math.round(ncStrkMs(today) / 1000);
+  var head = ncStrkDone(today) ? today : (ncStrkDone(ncStrkPrev(today)) ? ncStrkPrev(today) : '');
+  var n = 0;
+  var k = head;
+  /* The log keeps NC_ST_KEEP days, so the walk ends there at the latest. */
+  while (k && ncStrkDone(k) && n < NC_ST_KEEP + 1) { n++; k = ncStrkPrev(k); }
+  /* The longest run ever held. Taken from the log as well as from the stored
+     figure, and not only from the stored one, because a run that ended while
+     the stored figure was never written — the site not open on the day it
+     broke, or a streak held before this feature existed — is still a run the
+     log can see. The higher of the two is written back, so a run older than
+     the log's retention is not forgotten once it scrolls off. */
+  var best = Math.max(r.best, n, ncStrkBest());
+  if (best !== r.best) { r.best = best; try { localStorage.setItem(NC_STRK_KEY, JSON.stringify(r)); } catch (e) {} }
+  return {
+    n: n,                                   /* 0 once the chain is broken */
+    best: best,
+    secs: secsToday,
+    need: NC_STRK_NEED / 1000,
+    left: Math.max(0, Math.round((NC_STRK_NEED - ncStrkMs(today)) / 1000)),
+    done: ncStrkDone(today),                /* today already counted */
+    alive: !!head
+  };
+}
+window.ncStreakState = ncStreakState;
+
+/* Called from the screen-time tick, which is the only thing that moves the
+   number this watches. It fires the once-a-day reward on the tick that crosses
+   fifteen minutes, and the stored day makes that once — not once per page. */
+function ncStreakCheck() {
+  var today = ncStDay();
+  if (!ncStrkDone(today)) return;
+  var r = ncStrkRaw();
+  if (r.paid === today) return;
+  r.paid = today;
+  var st = ncStreakState();                 /* also updates `best` */
+  r.best = Math.max(r.best, st.n);
+  try { localStorage.setItem(NC_STRK_KEY, JSON.stringify(r)); } catch (e) {}
+  /* The day’s reward, and the reason a streak is worth keeping: a sixth of
+     the cheapest avatar, every day it is held. addPts announces the coins with
+     a toast of its own, so the streak line waits for that one to clear rather
+     than replacing it. */
+  try { addPts(25); } catch (e) {}
+  setTimeout(function () {
+    try { toast('\u{1F525} ' + tr('ui_st_got').replace('{n}', st.n)); } catch (e) {}
+  }, 3200);
+  ncPaintBadge();
+  try { dispatchEvent(new Event('nc-streak')); } catch (e) {}
+}
+window.ncStreakCheck = ncStreakCheck;
+
+/* THE COINS BADGE, WHICH NOW CARRIES TWO NUMBERS.
+   Centralised here because three places used to write the badge’s text by
+   hand, and a streak written in by a fourth would be wiped by the next coin
+   that landed. */
+function ncPaintBadge() {
+  var b = document.getElementById('ncpts');
+  if (!b) return;
+  var txt = '\u{1FA99} ' + getPts();
+  var st = { n: 0 };
+  try { st = ncStreakState(); } catch (e) {}
+  if (st.n > 0) txt += '  \u{1F525} ' + st.n;
+  b.textContent = txt;
+  try { b.title = st.n > 0 ? tr('ui_st_now').replace('{n}', st.n) : tr('ui_st_zero'); } catch (e) {}
+  /* The bar reserves a strip on its right for this badge, and that reserve was
+     a flat 88px measured from the coins alone. The badge is wider now that it
+     carries a streak, and an under-measured reserve is exactly the fault the
+     reserve was added to fix — controls scrolling underneath the badge where
+     they cannot be pressed. Measured off the live element instead of guessed,
+     and published for the bar’s own rule to use. */
+  try {
+    var w = Math.ceil(b.getBoundingClientRect().width);
+    if (w) document.documentElement.style.setProperty('--nc-badge-res', (w + 26) + 'px');
+  } catch (e) {}
+}
+window.ncPaintBadge = ncPaintBadge;
+
+
 /* WHAT COUNTS AS HISTORY.
    This wrote 200 characters of the answer and no time at all, and only
    ai.html ever called it — so the History page was empty for somebody who had
@@ -4126,7 +4438,7 @@ async function ncPull() {
   if (!ncSyncOn() || !ncKey()) return 0;
   const out = await ncApi('/save?key=' + encodeURIComponent(ncKey()));
   const n = ncMerge(out.data);
-  if (n) { refreshPanels(); const b = document.getElementById('ncpts'); if (b) b.textContent = '🪙 ' + getPts(); }
+  if (n) { refreshPanels(); ncPaintBadge(); }
   return n;
 }
 async function ncPush() {
@@ -4379,7 +4691,12 @@ function ncBrand() {
 const NC_ST_BUDGET = 90 * 60 * 1000;   // 1 h 30 m of use
 const NC_ST_BREAK  = 15 * 60 * 1000;   // then locked for 15 minutes
 const NC_ST_IDLE   = 60 * 1000;        // no interaction for this long = not using it
-const NC_ST_KEEP   = 30;               // days of history to keep
+/* 120 days, not 30. The parent dashboard reads a week and a month out of this
+   log, which is what 30 was sized for; the daily streak counts backwards
+   through the same log, and a 30-day ceiling on the history is a 30-day
+   ceiling on the longest streak anybody can be shown to be holding. Four
+   months of {ms,breaks} pairs is about 5KB. */
+const NC_ST_KEEP   = 120;              // days of history to keep
 
 /* ----------------------------------------------------------------------------
    THE DAY BOOK
@@ -4397,6 +4714,26 @@ const NC_ST_KEEP   = 30;               // days of history to keep
    Local dates on purpose: a parent reading "Tuesday" means the Tuesday the
    household had, not a UTC day that ends at 1am in Lisbon.
    ---------------------------------------------------------------------------- */
+/* Is anything actually playing? Used by the clock above to tell watching apart
+   from idling.
+
+   Muted media does not count, and nor does the site's own background video by
+   id. Both for the same reason: a silent loop that plays itself is not somebody
+   watching. pricing.html autoplays a muted clip behind its scanner, and the
+   video background loops forever on every page — either of those would hold
+   the clock open on an empty room, which is the one thing this measurement
+   must never do. Sound playing is a person listening. */
+function ncMediaPlaying() {
+  try {
+    const m = document.querySelectorAll('video,audio');
+    for (let i = 0; i < m.length; i++) {
+      if (m[i].id === 'ncbgvid') continue;
+      if (!m[i].paused && !m[i].ended && m[i].currentTime > 0 && !m[i].muted) return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
 function ncStDay(d) {
   d = d || new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
@@ -4569,8 +4906,16 @@ function ncScreenTime() {
     }
     unlockScreen();
 
-    /* Only bill time that was actually spent using the site. */
-    const active = !document.hidden && (now - lastTouch) < NC_ST_IDLE;
+    /* Only bill time that was actually spent using the site.
+
+       WATCHING COUNTS AS USING. The clause after the idle check is new, and it
+       is here because the daily streak reads this same measurement: somebody
+       watching back a four-minute edit, or a tutorial, touches nothing for
+       four minutes and used to be billed as idle for all of it. That is wrong
+       for the streak and it was always wrong for the limiter too — a teenager
+       watching video on the site is using the site. */
+    const active = !document.hidden &&
+      ((now - lastTouch) < NC_ST_IDLE || ncMediaPlaying());
     const delta = Math.min(now - last, 10000);   // a sleeping laptop must not bill hours
     last = now;
     if (!active) { badge.style.display = 'none'; return; }
@@ -4578,6 +4923,9 @@ function ncScreenTime() {
     const used = get('nc_st_used', 0) + delta;
     set('nc_st_used', used);
     ncStLog(delta, 0);              // banked per day, so a parent can see a week
+    /* The one thing that moves the streak. Checked here rather than on its own
+       interval, so there is exactly one clock on the site. */
+    try { ncStreakCheck(); } catch (e) {}
 
     const left = NC_ST_BUDGET - used;
     if (left <= 0) {
@@ -4982,28 +5330,18 @@ function ncProfile() {
             ncEscape(tr('ui_av_short').replace('{n}', short.toLocaleString())) + '</div>';
           return;
         }
-        /* Affordable: confirm before taking the coins. Spending is the one
-           thing on this page that cannot be undone with another click. */
-        buyBar.style.display = 'block';
-        buyBar.innerHTML =
-          '<div style="font-size:12.5px;margin-bottom:9px;color:#EAF2FF">' +
-          ncEscape(tr('ui_av_buy').replace('{e}', '\u2605'.repeat(row.s))
-                                   .replace('{n}', row.c.toLocaleString() + ' \u{1FA99}')) + '</div>' +
-          '<div style="display:flex;gap:8px">' +
-          '<button id="ncavyes" style="flex:1;padding:9px;border:0;border-radius:10px;cursor:pointer;' +
-          'background:linear-gradient(110deg,#FFD36E,#FF9F45);color:#1a1205;font:inherit;font-weight:700">' +
-          ncEscape(tr('ui_av_yes')) + '</button>' +
-          '<button id="ncavno" style="padding:9px 14px;border:1px solid rgba(255,255,255,0.16);' +
-          'border-radius:10px;cursor:pointer;background:none;color:#EAF2FF;font:inherit">' +
-          ncEscape(tr('ui_cancel')) + '</button></div>';
-        document.getElementById('ncavno').onclick = () => { buyBar.style.display = 'none'; };
-        document.getElementById('ncavyes').onclick = () => {
-          if (!ncBuyAvatar(e)) { buyBar.style.display = 'none'; return; }
-          pick = e;
-          buyBar.style.display = 'none';
-          toast(tr('ui_av_got').replace('{e}', ''));
-          drawAvs(); drawShop(); drawPreview();
-        };
+        /* ONE CLICK BUYS IT. There was a confirm step under the grid, which
+           meant tapping an avatar, scrolling down to a button that had just
+           appeared below the fold, and tapping again. Asked to go, and it
+           should: the sum is NovaCoins, the thing bought is a picture, and the
+           grid shows before you press which ones you can afford. The toast and
+           the balance both change, so a mis-tap is visible immediately. */
+        if (!ncBuyAvatar(e)) return;
+        pick = e;
+        buyBar.style.display = 'none';
+        toast(tr('ui_av_got').replace('{e}', ''));
+        drawAvs(); drawShop(); drawPreview();
+        try { dispatchEvent(new Event('nc-avatar-changed')); } catch (err) {}
       });
     }
 
@@ -6713,6 +7051,9 @@ window.addEventListener('DOMContentLoaded', () => {
      through its own sign-in. Warming a cache for a reader that no longer
      exists is one API call per page load for nobody. */
   const badge = document.createElement('div'); badge.id = 'ncpts'; badge.textContent = '🪙 ' + getPts(); document.body.appendChild(badge);
+  /* Coins and, if one is running, the streak beside them. After the append,
+     because the width is measured off the live element. */
+  ncPaintBadge();
   const t = document.createElement('div'); t.id = 'nctoast'; document.body.appendChild(t);
   const lpick = document.getElementById('langpick');
   if (lpick) { for (const c in LANGS) { const o = document.createElement('option'); o.value = c; o.textContent = LANGS[c]; lpick.appendChild(o); } lpick.value = lang(); lpick.onchange = () => applyLang(lpick.value); }
@@ -7811,10 +8152,62 @@ function ncHeroAvatar() {
     box.append(face, words);
   }
 
+  /* ----------------------------------------------------------------------
+     THE COLLECTION, IN THE ARTWORK
+     ----------------------------------------------------------------------
+     Asked for directly: show the ones that have been bought out in the hero,
+     among the floating marks on the right, rather than only as the single
+     62px one in the card. It is the right place for them — a collection is
+     worth something because other people see it, and the art layer is the only
+     part of that page with room.
+
+     They go in .ytfloat, which is the hero's own floating layer: inset 0,
+     pointer-events none, behind the text. Positions are picked off the same
+     grid the YouTube marks use so the two sets read as one composition.
+
+     Nothing goes left of 64%: the headline reaches about 855px at this width
+     and the first version put a character on top of the word "channel". And
+     nothing is drawn at all until something has been bought. */
+  function paintCollection() {
+    const layer = document.querySelector('.hero .ytfloat');
+    if (!layer) return;
+    layer.querySelectorAll('.ncavfloat').forEach(n => {
+      if (n.__stop) n.__stop();
+      n.remove();
+    });
+    const owned = (typeof ncAvatarsOwned === 'function') ? ncAvatarsOwned() : [];
+    if (!owned.length || !window.NC_AV3D) return;
+    /* top%, left%, size — all clear of the headline and spread around the
+       burst rather than sitting on its bright centre */
+    const SPOTS = [
+      [14, 66, 78], [34, 87, 66], [60, 90, 60], [76, 68, 70],
+      [48, 64, 54], [88, 84, 52], [24, 78, 50], [66, 76, 46]
+    ];
+    owned.slice(0, SPOTS.length).forEach((id, i) => {
+      const [t, l, px] = SPOTS[i];
+      const d = document.createElement('div');
+      d.className = 'ncavfloat';
+      d.style.cssText = 'position:absolute;top:' + t + '%;left:' + l + '%;width:' + px + 'px;' +
+        'height:' + px + 'px;pointer-events:none;' +
+        'animation:ytdrift' + (i % 2 ? '2' : '') + ' ' + (8 + i) + 's ease-in-out infinite;' +
+        'animation-delay:-' + (i * 1.7) + 's;' +
+        'filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))';
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = px;
+      cv.style.cssText = 'width:100%;height:100%;display:block';
+      d.appendChild(cv);
+      layer.appendChild(d);
+      /* Slow, and each at its own rate, so eight of them do not pulse in step
+         like one object. */
+      d.__stop = NC_AV3D.spin(cv, id, 0.004 + i * 0.0014);
+    });
+  }
+
   box.onclick = () => { if (typeof window.ncOpenProfile === 'function') window.ncOpenProfile(); };
-  addEventListener('nc-avatar-3d', paintHero);
-  addEventListener('nc-avatar-changed', paintHero);
-  paintHero();
+  const repaint = () => { paintHero(); paintCollection(); };
+  addEventListener('nc-avatar-3d', repaint);
+  addEventListener('nc-avatar-changed', repaint);
+  repaint();
 }
 
 /* ============================================================
@@ -8056,6 +8449,21 @@ window.ncSlang = function () {
     ui_av_buy:'cop {e} for {n}', ui_av_got:'{e} is urs now.',
     ui_av_short:'{n} more novacoins n its urs.',
     ui_av_free:'free for everyone', ui_av_earned:'earned', ui_av_yes:'cop it',
+
+    /* the video background */
+    ui_bv_h:'ur own vid behind the site',
+    ui_bv_p:'pick a finished edit n it plays blurred n quiet behind every page. stays on this device \u2014 nothing gets uploaded, no cap.',
+    ui_bv_pick:'pick a vid', ui_bv_off:'nah, take it off',
+    ui_bv_none:'no vid picked yet.', ui_bv_on:'vibing behind the site \u2014 {n}.',
+    ui_bv_big:'that ones {n}. cap is 60 MB so every page still loads clean.',
+    ui_bv_fail:'this browser aint storing the vid.',
+
+    /* the daily streak */
+    ui_st_h:'daily streak',
+    ui_st_d:'15 min on novaclip n the day counts. miss a day n ur back to one, no cap.',
+    ui_st_now:'{n} day streak', ui_st_zero:'no streak rn. 15 min today starts one.',
+    ui_st_today:'{m} of 15 min today', ui_st_done:'today counts. pull up tmrw to keep it.',
+    ui_st_best:'personal best: {n} days', ui_st_got:'{n} days straight. lock in.',
 
     /* ---- NOT SLANGED, ON PURPOSE: the 37 par_* keys ----
        The parent dashboard is where somebody sets a 5-digit PIN, picks which

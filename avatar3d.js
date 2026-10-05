@@ -72,6 +72,23 @@
      visor, which are whole small meshes rather than individual faces. */
   function mat(m, k) { for (var i = 0; i < m.f.length; i++) m.f[i][4] = k; return m; }
 
+  /* Shift every face's position in the gradient. The values are centred on
+     zero, NOT all positive: the first version only ever added, so every
+     character came out somewhere between "slightly purple" and "very purple"
+     and the palette's other colour was never used. Negative goes the other
+     way, which is what actually makes eighteen of them tell apart. Eighteen characters built from
+     one body were eighteen of the same character wearing hats — this is what
+     makes them read as different people before you have looked at the hat. The
+     eyes and the visor are skipped: they are fixed materials and a tinted eye
+     is a bruise. */
+  function tint(m, d) {
+    for (var i = 0; i < m.f.length; i++) {
+      if (m.f[i][4]) continue;
+      m.f[i][3] = Math.max(0, Math.min(1, m.f[i][3] + d));
+    }
+    return m;
+  }
+
   /* Rotate about Y. place() only turns about X, which is all most parts need —
      but anything arranged radially (the rocket's fins) has to face outward as
      well as stand in the right place, and without this all three fins came out
@@ -277,16 +294,22 @@
   function guy(opt) {
     opt = opt || {};
     var m = mesh();
-    var headY = 0.34, headR = opt.headR || 0.43;
+    /* Every proportion is an option, and each character sets several of them.
+       Build is as much of the difference as the hat: a tall thin one and a
+       squat wide one are two characters even before either puts anything on. */
+    var headR = opt.headR || 0.43;
+    var bodyR = opt.bodyR || 0.40;
+    var bodyW = opt.bodyW || 1.06;
+    var headY = (opt.headY == null ? 0.34 : opt.headY);
+    var limb  = opt.limb  || 1.0;
+    var armX  = 0.45 * bodyW / 1.06;
 
-    /* body: a squashed ball, wider at the bottom, so it sits rather than floats */
-    merge(m, place(squash(ball(12, 8, 0.40), 1.06, 1.02, 0.96), 1, 0, -0.32, 0));
-    /* feet */
-    merge(m, place(squash(ball(8, 5, 0.15), 1.15, 0.8, 1.3), 1, -0.19, -0.70, 0.02));
-    merge(m, place(squash(ball(8, 5, 0.15), 1.15, 0.8, 1.3), 1, 0.19, -0.70, 0.02));
-    /* arms */
-    merge(m, place(squash(ball(8, 5, 0.135), 0.85, 1.3, 0.85), 1, -0.45, -0.28, 0.02));
-    merge(m, place(squash(ball(8, 5, 0.135), 0.85, 1.3, 0.85), 1, 0.45, -0.28, 0.02));
+    merge(m, place(squash(ball(12, 8, bodyR), bodyW, opt.bodyH || 1.02, 0.96), 1, 0, -0.32, 0));
+    var footY = -0.32 - bodyR * 0.95;
+    merge(m, place(squash(ball(8, 5, 0.15 * limb), 1.15, 0.8, 1.3), 1, -0.19, footY, 0.02));
+    merge(m, place(squash(ball(8, 5, 0.15 * limb), 1.15, 0.8, 1.3), 1, 0.19, footY, 0.02));
+    merge(m, place(squash(ball(8, 5, 0.135 * limb), 0.85, 1.3, 0.85), 1, -armX, -0.28, 0.02));
+    merge(m, place(squash(ball(8, 5, 0.135 * limb), 0.85, 1.3, 0.85), 1, armX, -0.28, 0.02));
 
     /* head */
     if (opt.head === 'cube') {
@@ -306,8 +329,9 @@
     var cube = opt.head === 'cube';
     var ez = -(cube ? headR * 1.02 : headR * 0.80);
     var ex = headR * (cube ? 0.26 : 0.34), ey = headY + headR * 0.10;
-    merge(m, place(mat(ball(7, 5, 0.085), 1), 1, -ex, ey, ez));
-    merge(m, place(mat(ball(7, 5, 0.085), 1), 1, ex, ey, ez));
+    var er = 0.085 * (opt.eye || 1);
+    merge(m, place(mat(ball(7, 5, er), 1), 1, -ex, ey, ez));
+    merge(m, place(mat(ball(7, 5, er), 1), 1, ex, ey, ez));
     merge(m, place(mat(ball(6, 4, 0.034), 2), 1, -ex + 0.03, ey + 0.035, ez - 0.055));
     merge(m, place(mat(ball(6, 4, 0.034), 2), 1, ex + 0.03, ey + 0.035, ez - 0.055));
 
@@ -363,37 +387,53 @@
     } else if (f === 'ring') {
       merge(m, place(annulus(16, 0.11, 0.17, 0.03), 1, -headR * 0.95, headY + 0.04, 0, 1.5708));
     }
+    if (opt.tone) tint(m, opt.tone);
     return m;
   }
 
   var MODELS = {
-    /* 1 star — plain, and told apart by the shape of the head */
-    rookie:  function () { return guy({}); },
-    blocky:  function () { return guy({ head: 'cube' }); },
-    capper:  function () { return guy({ feature: 'cap' }); },
-    horned:  function () { return guy({ feature: 'horn' }); },
+    /* 1 star — four builds, no decoration beyond the head */
+    rookie:  function () { return guy({ tone: -0.38 }); },
+    blocky:  function () { return guy({ head: 'cube', bodyW: 1.22, bodyR: 0.42, tone: -0.08 }); },
+    capper:  function () { return guy({ feature: 'cap', headR: 0.38, bodyH: 1.30, bodyR: 0.36,
+                                        headY: 0.40, tone: +0.17 }); },
+    horned:  function () { return guy({ feature: 'horn', headR: 0.36, bodyR: 0.33, bodyW: 0.92,
+                                        limb: 0.85, headY: 0.36, tone: +0.42 }); },
 
-    /* 2 stars — something on the head */
-    eared:   function () { return guy({ feature: 'ears' }); },
-    antenna: function () { return guy({ feature: 'antenna' }); },
-    hooper:  function () { return guy({ feature: 'ring' }); },
-    sparky:  function () { return guy({ feature: 'bolt' }); },
+    /* 2 stars */
+    eared:   function () { return guy({ feature: 'ears', headR: 0.50, bodyR: 0.33, headY: 0.38,
+                                        eye: 1.15, tone: -0.23 }); },
+    antenna: function () { return guy({ feature: 'antenna', headR: 0.37, bodyH: 1.34, bodyR: 0.34,
+                                        bodyW: 0.90, headY: 0.42, limb: 0.8, tone: +0.07 }); },
+    hooper:  function () { return guy({ feature: 'ring', bodyW: 1.26, bodyR: 0.43, headR: 0.41,
+                                        tone: +0.30 }); },
+    sparky:  function () { return guy({ feature: 'bolt', headR: 0.36, bodyW: 1.18, bodyR: 0.41,
+                                        eye: 0.85, tone: +0.52 }); },
 
-    /* 3 stars — kit, rather than decoration */
-    astro:   function () { return guy({ feature: 'helmet' }); },
-    winger:  function () { return guy({ feature: 'wings' }); },
-    jewel:   function () { return guy({ feature: 'gem' }); },
-    devil:   function () { return guy({ feature: 'horns' }); },
+    /* 3 stars */
+    astro:   function () { return guy({ feature: 'helmet', headR: 0.44, bodyR: 0.38, tone: -0.28 }); },
+    winger:  function () { return guy({ feature: 'wings', headR: 0.39, bodyH: 1.26, bodyR: 0.35,
+                                        limb: 0.9, headY: 0.39, tone: +0.00 }); },
+    jewel:   function () { return guy({ feature: 'gem', bodyW: 1.20, bodyR: 0.42, headR: 0.42,
+                                        eye: 1.1, tone: +0.24 }); },
+    devil:   function () { return guy({ feature: 'horns', headR: 0.40, bodyH: 1.22, bodyR: 0.36,
+                                        eye: 0.9, tone: +0.47 }); },
 
-    /* 4 stars — the ones people will want */
-    caped:   function () { return guy({ feature: 'cape' }); },
-    starlet: function () { return guy({ feature: 'star' }); },
-    haloed:  function () { return guy({ feature: 'halo' }); },
+    /* 4 stars */
+    caped:   function () { return guy({ feature: 'cape', bodyR: 0.45, bodyW: 1.14, headR: 0.44,
+                                        tone: -0.16 }); },
+    starlet: function () { return guy({ feature: 'star', headR: 0.49, bodyR: 0.32, headY: 0.40,
+                                        eye: 1.2, limb: 0.85, tone: +0.12 }); },
+    haloed:  function () { return guy({ feature: 'halo', headR: 0.38, bodyH: 1.30, bodyR: 0.34,
+                                        bodyW: 0.94, headY: 0.41, tone: +0.34 }); },
 
-    /* 5 stars — earned, and meant to look it */
-    king:    function () { return guy({ feature: 'crown' }); },
-    champ:   function () { return guy({ feature: 'trophy' }); },
-    nova:    function () { return guy({ feature: 'nova' }); }
+    /* 5 stars */
+    king:    function () { return guy({ feature: 'crown', bodyW: 1.24, bodyR: 0.44, headR: 0.45,
+                                        tone: -0.33 }); },
+    champ:   function () { return guy({ feature: 'trophy', bodyR: 0.42, headR: 0.42, limb: 1.1,
+                                        tone: +0.04 }); },
+    nova:    function () { return guy({ feature: 'nova', headR: 0.47, bodyR: 0.38, headY: 0.37,
+                                        eye: 1.1, tone: +0.57 }); }
   };
 
   /* Built the first time one is drawn and kept — eighteen meshes is a few

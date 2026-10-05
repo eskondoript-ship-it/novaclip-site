@@ -610,6 +610,40 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v97: your own video behind the site, and a daily streak at fifteen minutes.
+
+   THE BACKGROUND VIDEO. Chosen in categories.html, because that is already the
+   page that decides what is behind everything — a category sets a drawn scene
+   or looks for a photograph, and this is the same decision with the person's
+   own footage in it. The file is held in IndexedDB on the device and nothing
+   uploads it: there is no server here to upload it to. 60MB cap, and a file
+   over it is refused with its own size named rather than a bare "too big".
+   nova.js carries the store and the element; categories.html carries the card.
+
+   THE DAILY STREAK. Fifteen minutes of active use makes the day count, and a
+   missed day starts the count again at one. It has no clock of its own: the
+   screen-time limiter in nova.js has measured active time per local day since
+   it shipped, and the streak reads that same day book — two clocks would have
+   meant two answers to "did today count". The day's reward is 25 NovaCoins,
+   paid once, and the streak rides beside the coins in the top-right badge.
+
+   Two things changed in the files the streak borrows from, and both are
+   reasons this bump matters:
+
+     - nc_st_log keeps 120 days instead of 30. A 30-day history was a 30-day
+       ceiling on the longest streak anybody could be shown to hold.
+     - the screen-time clock now counts a page with audio playing as being
+       used. Somebody watching back a four-minute edit touches nothing for four
+       minutes and was billed as idle for all of it — wrong for the streak, and
+       always wrong for the limiter.
+
+   Also: the coins badge is painted in one place now rather than written by
+   hand in three, and the strip the top bar reserves for it is measured off the
+   live element instead of being a flat 88px — with a streak in it the badge is
+   wider than that, and an under-measured reserve is what let the controls
+   scroll underneath it in the first place.
+
+   nova.js, categories.html, progress.html. */
 /* v96: characters instead of solids, and the shop is reachable at last.
 
    STILL COULD NOT BUY. v95 made the dialog scroll, which was a real fault, but
@@ -1730,7 +1764,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v96';
+const CACHE = 'novaclip-v97';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
