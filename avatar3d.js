@@ -41,21 +41,55 @@
      A mesh is { v: [[x,y,z]...], f: [[a,b,c,shade]...] }. `shade` is 0..1 and
      is what the two palette colours are mixed by, so a model can put its own
      gradient where it wants one rather than taking depth as a proxy for it. */
+  /* ------------------------------------------------------------------- detail
+     TWO BUILDS OF EVERY CHARACTER, and the reason is measured rather than
+     theoretical. The hero draws one of these at 540px and costs 2ms a frame;
+     the collection in the hero draws EIGHT at about 70px, and at full detail
+     that was 17ms — a whole frame at 60fps, spent on eight figures the size of
+     a thumbnail. Cost here is per triangle, not per pixel, so eight small ones
+     cost eight times one big one.
+
+     So anything below 110px gets a coarser mesh: fewer segments round a
+     sphere, fewer points round an eye. At that size the difference is a pixel
+     of silhouette and nobody can see it; the difference in cost is about
+     three times. seg() is read while a model is being built — see get(). */
+  var LOW = false;
+  function seg(hi, lo) { return LOW ? lo : hi; }
+
   function mesh() { return { v: [], f: [] }; }
   function vert(m, x, y, z) { m.v.push([x, y, z]); return m.v.length - 1; }
-  /* A face is [a, b, c, shade, material]. material 0 means "mix the two
-     palette colours by shade", which is everything the solids used. 1 is ink
-     and 2 is near-white — without those two a character has no eyes, and a
-     character with no eyes is a lump. */
-  function face(m, a, b, c, s, mat) { m.f.push([a, b, c, s, mat || 0]); }
+  /* A face is [a, b, c, shade, material, flag].
+
+     MATERIALS
+       0  the two palette colours, mixed by shade — the body, and most of
+          everything else
+       1  ink. Eyes, brows, mouths.
+       2  near-white. The whites of eyes, a visor, a glint.
+       3  the body colour taken down hard: boots, gloves, a belt. Without a
+          second body tone a character is one colour from head to foot, which
+          is most of what "too basic" was.
+       4  the body colour taken up and desaturated towards white: trims,
+          crowns, the parts that should catch the light.
+
+     FLAG
+       1  a facial detail. Two things follow from it, and both are needed —
+          see render(): it is biased towards the camera so a painter's sort
+          cannot let the head's own front triangles cover an eye, and it is
+          dropped entirely once the head turns away. That second half is the
+          fix for the back view: the eyes used to bleed faintly through the
+          back of the skull, because a coarse sphere's triangles are big
+          enough that their AVERAGE depth beats a small eye that is genuinely
+          behind them. */
+  function face(m, a, b, c, s, mat, flag) { m.f.push([a, b, c, s, mat || 0, flag || 0]); }
   /* Quads come out of every ring-shaped builder below, and every one of them
      wants the same two triangles. */
-  function quad(m, a, b, c, d, s, mat) { face(m, a, b, c, s, mat); face(m, a, c, d, s, mat); }
+  function quad(m, a, b, c, d, s, mat, flag) { face(m, a, b, c, s, mat, flag); face(m, a, c, d, s, mat, flag); }
 
   function merge(a, b) {
     var off = a.v.length, i;
     for (i = 0; i < b.v.length; i++) a.v.push(b.v[i]);
-    for (i = 0; i < b.f.length; i++) a.f.push([b.f[i][0] + off, b.f[i][1] + off, b.f[i][2] + off, b.f[i][3], b.f[i][4] || 0]);
+    for (i = 0; i < b.f.length; i++) a.f.push([b.f[i][0] + off, b.f[i][1] + off, b.f[i][2] + off,
+                                               b.f[i][3], b.f[i][4] || 0, b.f[i][5] || 0]);
     return a;
   }
   /* Non-uniform scale, for the parts that are a primitive flattened in one
@@ -71,6 +105,34 @@
   /* Repaint every face of a part. Used for the eyes and the white of a helmet
      visor, which are whole small meshes rather than individual faces. */
   function mat(m, k) { for (var i = 0; i < m.f.length; i++) m.f[i][4] = k; return m; }
+  /* Repaint a sphere's lower RINGS — which is how a character gets shorts
+     rather than a belt. A band around the waist was the first attempt and it
+     never read: a thin ring on a fat sphere is hidden by the arms at the sides
+     and reads as a smudge at the front. Colouring the bottom of the body
+     itself cannot be hidden by anything.
+
+     By ring and not by height, because ball() writes each ring's index into
+     the face's shade: cutting on a height instead sliced through the middle of
+     a band of triangles and left the waistline as a sawtooth. A ring boundary
+     is a circle. */
+  function matRing(m, from, k) {
+    for (var i = 0; i < m.f.length; i++) if (m.f[i][3] >= from - 0.001) m.f[i][4] = k;
+    return m;
+  }
+  function matRingTop(m, upto, k) {
+    for (var i = 0; i < m.f.length; i++) if (m.f[i][3] <= upto + 0.001) m.f[i][4] = k;
+    return m;
+  }
+
+  /* Mark a whole part as facial detail — see the FLAG note on face(). */
+  function faceward(m) { for (var i = 0; i < m.f.length; i++) m.f[i][5] = 1; return m; }
+  /* A flattened ball, which is what most of a character is made of: an eye, a
+     brow, a mouth, a boot, a glove. Saves writing squash(ball(...)) nine times
+     in the builder below and keeps the segment counts in one place. */
+  function blob(r, sx, sy, sz, n) {
+    n = seg(n || 8, Math.max(5, Math.round((n || 8) * 0.62)));
+    return squash(ball(n, n > 8 ? 6 : n > 6 ? 5 : 4, r), sx, sy, sz);
+  }
 
   /* Shift every face's position in the gradient. The values are centred on
      zero, NOT all positive: the first version only ever added, so every
@@ -192,6 +254,56 @@
     return m;
   }
 
+  /* A cylinder WALL, with no end caps — a belt, a collar, a cuff.
+     tube() has caps, and a capped cylinder used as a belt draws a full disc of
+     its own radius across the character: from the camera's slightly-above
+     angle that reads as a dark tabletop stuck through the waist, which is
+     exactly how the first version of the belt looked. */
+  function band(seg, r, h, s) {
+    var m = mesh(), i;
+    for (i = 0; i < seg; i++) {
+      var a = 2 * Math.PI * i / seg;
+      vert(m, Math.cos(a) * r, h / 2, Math.sin(a) * r);
+      vert(m, Math.cos(a) * r, -h / 2, Math.sin(a) * r);
+    }
+    for (i = 0; i < seg; i++) {
+      var t0 = i * 2, b0 = i * 2 + 1;
+      var t1 = ((i + 1) % seg) * 2, b1 = ((i + 1) % seg) * 2 + 1;
+      quad(m, t0, t1, b1, b0, s == null ? 0.5 : s);
+    }
+    return m;
+  }
+
+  /* A SHEET OF CLOTH: a grid of quads whose corners come from a function of
+     (u, v). Capes and wings were cones squashed flat, which is why the cape
+     read as a traffic bollard behind the character and each wing as a single
+     grey triangle. Cloth has a shape that a cone cannot take: it wraps the
+     body, it flares, and it is thin enough to be seen from both sides.
+
+     BOTH WINDINGS ARE EMITTED, which is the two-sided part. Back-face culling
+     is right for a solid, and a cape is not a solid: with one winding it
+     vanished the moment the character turned round, which is precisely the
+     view this was meant to improve. */
+  function sheet(cols, rows, fn, s0, s1) {
+    var m = mesh(), i, j;
+    for (j = 0; j <= rows; j++) {
+      for (i = 0; i <= cols; i++) {
+        var pt = fn(i / cols * 2 - 1, j / rows);
+        vert(m, pt[0], pt[1], pt[2]);
+      }
+    }
+    var W = cols + 1;
+    for (j = 0; j < rows; j++) {
+      for (i = 0; i < cols; i++) {
+        var a = j * W + i, b = j * W + i + 1, c = (j + 1) * W + i + 1, d = (j + 1) * W + i;
+        var sh = (s0 == null ? 0.25 : s0) + ((s1 == null ? 0.8 : s1) - (s0 == null ? 0.25 : s0)) * (j / rows);
+        quad(m, a, b, c, d, sh);
+        quad(m, a, d, c, b, sh * 0.72);     /* the other side, a shade darker */
+      }
+    }
+    return m;
+  }
+
   /* A flat annulus — the ring round a planet, and the brim of the crown. */
   function annulus(seg, rIn, rOut, depth, s) {
     var m = mesh(), i;
@@ -304,18 +416,46 @@
     var limb  = opt.limb  || 1.0;
     var armX  = 0.45 * bodyW / 1.06;
 
-    merge(m, place(squash(ball(12, 8, bodyR), bodyW, opt.bodyH || 1.02, 0.96), 1, 0, -0.32, 0));
+    /* 16x11 rather than 14x9. Not for smoothness — for the painter's sort:
+       the belt is a thin band around a fat sphere, and a sphere made of big
+       triangles has faces whose AVERAGE depth beats the band in front of them,
+       so the belt came out as three or four dashes rather than a ring. Smaller
+       body triangles, and a band that stands further off the body, fix it
+       between them. */
+    var torso = place(squash(ball(seg(16, 10), seg(11, 7), bodyR), bodyW, opt.bodyH || 1.02, 0.96), 1, 0, -0.32, 0);
+    /* shorts: the bottom four rings of eleven, in the darker tone; collar: the
+       top two, in the lighter one.
+
+       Both are painted onto the body's own triangles rather than built as
+       rings around it, and that is the whole lesson of this file: a thin band
+       at the same radius as a fat sphere is a coin toss with the painter's
+       sort, and it lost. As a disc the collar stuck out like a dinner plate,
+       as a cylinder it buried itself in the shoulders and showed as a row of
+       white teeth. Painted, it is exactly a ring, at every angle, forever. */
+    matRing(torso, 7 / 11, 3);
+    matRingTop(torso, 1 / 11, 4);
+    merge(m, torso);
+
+    /* BOOTS AND GLOVES IN A DARKER TONE, which is most of what turned a
+       one-colour dumpling into something with parts. They were the same
+       material as the body, so at 40px a character was a single blob with two
+       eyes on it. */
     var footY = -0.32 - bodyR * 0.95;
-    merge(m, place(squash(ball(8, 5, 0.15 * limb), 1.15, 0.8, 1.3), 1, -0.19, footY, 0.02));
-    merge(m, place(squash(ball(8, 5, 0.15 * limb), 1.15, 0.8, 1.3), 1, 0.19, footY, 0.02));
-    merge(m, place(squash(ball(8, 5, 0.135 * limb), 0.85, 1.3, 0.85), 1, -armX, -0.28, 0.02));
-    merge(m, place(squash(ball(8, 5, 0.135 * limb), 0.85, 1.3, 0.85), 1, armX, -0.28, 0.02));
+    merge(m, place(mat(blob(0.155 * limb, 1.15, 0.82, 1.35), 3), 1, -0.19, footY, 0.03));
+    merge(m, place(mat(blob(0.155 * limb, 1.15, 0.82, 1.35), 3), 1, 0.19, footY, 0.03));
+    merge(m, place(squash(ball(seg(8, 6), seg(5, 4), 0.135 * limb), 0.85, 1.25, 0.85), 1, -armX, -0.26, 0.02));
+    merge(m, place(squash(ball(seg(8, 6), seg(5, 4), 0.135 * limb), 0.85, 1.25, 0.85), 1, armX, -0.26, 0.02));
+    merge(m, place(mat(blob(0.105 * limb, 1, 1, 1), 3), 1, -armX - 0.01, -0.44, 0.02));
+    merge(m, place(mat(blob(0.105 * limb, 1, 1, 1), 3), 1, armX + 0.01, -0.44, 0.02));
+
+
+
 
     /* head */
     if (opt.head === 'cube') {
       merge(m, place(platonic('cube'), headR * 1.12, 0, headY, 0));
     } else {
-      merge(m, place(squash(ball(14, 10, headR), 1.0, 0.94, 1.0), 1, 0, headY, 0));
+      merge(m, place(squash(ball(seg(16, 10), seg(11, 7), headR), 1.0, 0.94, 1.0), 1, 0, headY, 0));
     }
 
     /* eyes — two dark beads and two white glints.
@@ -326,19 +466,130 @@
        rookie's eyes were inside its own skull and only leaked a few pixels at
        the silhouette, and blocky's sat neatly behind an opaque cube. Anything
        meant to face the reader goes to -z; anything behind them, +z. */
+    /* A WHOLE FACE, NOT TWO BLACK BEADS.
+
+       What was here: two ink spheres and two white dots, stuck on the front of
+       the head. Four parts, no mouth, no brows, and the ink read as two holes
+       rather than as eyes — which is the other half of "too basic". What is
+       here now is the arrangement that actually reads at 40 pixels: a white of
+       the eye, a dark pupil sitting in it, one glint, a brow that carries the
+       expression, and a mouth.
+
+       Every one of them is marked faceward() — biased forward so the head
+       cannot cover its own face, and dropped the moment the head turns away,
+       which is what stops the eyes ghosting through the back of the skull. */
+    /* THE FACE SITS ON THE HEAD, which it did not before for the cube one.
+       A cube head is platonic('cube') — half-extent 0.58 — scaled by
+       headR*1.12, so its front plane is at 0.65*headR, and the eyes were being
+       put at 1.02*headR: a third of a head's depth out in front of it, hanging
+       in the air. Measured off the geometry now rather than guessed. */
     var cube = opt.head === 'cube';
-    var ez = -(cube ? headR * 1.02 : headR * 0.80);
-    var ex = headR * (cube ? 0.26 : 0.34), ey = headY + headR * 0.10;
-    var er = 0.085 * (opt.eye || 1);
-    merge(m, place(mat(ball(7, 5, er), 1), 1, -ex, ey, ez));
-    merge(m, place(mat(ball(7, 5, er), 1), 1, ex, ey, ez));
-    merge(m, place(mat(ball(6, 4, 0.034), 2), 1, -ex + 0.03, ey + 0.035, ez - 0.055));
-    merge(m, place(mat(ball(6, 4, 0.034), 2), 1, ex + 0.03, ey + 0.035, ez - 0.055));
+    var ez = -(cube ? headR * 1.12 * 0.58 + 0.012 : headR * 0.88);
+    var ex = headR * (cube ? 0.30 : 0.36), ey = headY + headR * 0.10;
+    var er = 0.105 * (opt.eye || 1);
+
+    /* WHERE THE SKIN IS AT A GIVEN POINT OF THE FACE, which every feature is
+       placed against rather than on one flat plane in front of the head.
+
+       The flat-plane version looked right from the front and wrong from
+       anywhere else: an eye is a blob about a fifth of the head across, and a
+       blob sitting on a plane at the front of a sphere hangs out past the
+       sphere's edge as soon as the head turns. At a three-quarter view the far
+       eye was floating off the side of the head with daylight behind it. On
+       the surface, and sunk into it, it stays on the face at every angle. */
+    function skin(x, y) {
+      if (cube) return ez;
+      var dx = x, dy = y - headY;
+      return -Math.sqrt(Math.max(0.0025, headR * headR - dx * dx - dy * dy));
+    }
+
+    /* A FEATURE IS A DECAL ON THE SKIN, NOT A BLOB STUCK TO THE FRONT.
+
+       Three goes at this. Beads on a flat plane in front of the head looked
+       right from the front and wrong from everywhere else — at a three-quarter
+       turn the far eye floated off the side of the head with daylight behind
+       it, because an eye is a fifth of a head wide and a blob on a plane does
+       not follow a sphere. Projecting the blobs onto the surface put them in
+       the right place but they still crossed the silhouette: half a ball on a
+       ball is still half a ball.
+
+       So a feature is a flat disc whose every vertex sits ON the skin and a
+       hair outside it. It cannot stick out, because it has no depth to stick
+       out with, and it curves with the head all the way round to the profile.
+       `lift` stacks them — white, then pupil, then glint — so they cannot
+       z-fight each other. */
+    function decal(cx2, cy2, rx2, ry2, rot, matK, lift) {
+      var mm2 = mesh(), N2 = seg(12, 7), i2;
+      var c2 = Math.cos(rot || 0), s2 = Math.sin(rot || 0);
+      lift = lift || 1.004;
+      vert(mm2, cx2, cy2, skin(cx2, cy2) * (lift + 0.002));
+      for (i2 = 0; i2 < N2; i2++) {
+        var a2 = 2 * Math.PI * i2 / N2;
+        var ux = Math.cos(a2) * rx2, uy = Math.sin(a2) * ry2;
+        var px = cx2 + ux * c2 - uy * s2, py = cy2 + ux * s2 + uy * c2;
+        vert(mm2, px, py, skin(px, py) * lift);
+      }
+      for (i2 = 0; i2 < N2; i2++) {
+        /* centre, then the rim forwards. Worked out rather than guessed: the
+           screen flips y, so a ring built anticlockwise in model space is
+           clockwise on screen, and the cull keeps the one whose cross product
+           is negative. The other order is an invisible eye, which is exactly
+           what the first version of this drew. */
+        face(mm2, 0, 1 + i2, 1 + (i2 + 1) % N2, 0.5, matK, 1);
+      }
+      return mm2;
+    }
+
+    var side;
+    for (side = -1; side <= 1; side += 2) {
+      /* the white of the eye, a little taller than it is wide */
+      merge(m, decal(side * ex, ey, er * 0.95, er * 1.12, 0, 2, 1.004));
+      /* the pupil in it, looking very slightly inwards */
+      merge(m, decal(side * ex - side * er * 0.10, ey - er * 0.06,
+                     er * 0.52, er * 0.62, 0, 1, 1.010));
+      /* one glint, top outer corner — one, not two: two reads as surprise */
+      merge(m, decal(side * ex + er * 0.30, ey + er * 0.36,
+                     er * 0.22, er * 0.22, 0, 2, 1.017));
+      /* THE BROW, which is where the character is. Down towards the nose for a
+         scowl, up for worry, nearly flat for calm. */
+      if (opt.brow !== 'none') {
+        var tilt = opt.brow === 'angry' ? -0.52 : opt.brow === 'sad' ? 0.40 : 0.14;
+        merge(m, decal(side * ex, ey + er * 1.30, er * 0.98, er * 0.20,
+                       side * tilt, 1, 1.012));
+      }
+    }
+
+    /* THE MOUTH, AS A LINE DRAWN ON THE HEAD, for the same reason: a mouth is
+       a line, and the two earlier attempts at it as geometry were a moustache
+       (one wide flattened ball) and then a jagged smear (five small balls
+       overlapping, each catching the light differently). */
+    var my = headY - headR * (cube ? 0.40 : 0.46);
+    if (opt.mouth !== 0) {
+      var mw = headR * 0.42 * (opt.mouth || 1);        /* half-width */
+      var curve = opt.smile === false ? 0 : headR * 0.30;
+      var thick = headR * 0.058;
+      var mm = mesh(), N = seg(8, 5), iq;
+      for (iq = 0; iq <= N; iq++) {
+        var t3 = iq / N * 2 - 1;                       /* -1 .. 1 */
+        var mx = t3 * mw;
+        var myy = my + curve * t3 * t3;                /* up at the corners */
+        /* thinner towards the corners, which is what makes it a smile rather
+           than a drawn-on rectangle */
+        var th = thick * (1 - 0.45 * t3 * t3);
+        vert(mm, mx, myy + th, skin(mx, myy + th) * 1.006);
+        vert(mm, mx, myy - th, skin(mx, myy - th) * 1.006);
+      }
+      for (iq = 0; iq < N; iq++) {
+        var i0 = iq * 2;
+        quad(mm, i0 + 1, i0 + 3, i0 + 2, i0, 0.5, 1);
+      }
+      merge(m, faceward(mm));
+    }
 
     var top = headY + headR * 0.92, f = opt.feature;
 
     if (f === 'cap') {
-      merge(m, place(squash(ball(12, 6, headR * 0.98), 1, 0.5, 1), 1, 0, top - 0.10, 0));
+      merge(m, place(squash(ball(seg(12, 8), seg(6, 4), headR * 0.98), 1, 0.5, 1), 1, 0, top - 0.10, 0));
       merge(m, place(squash(ball(10, 4, headR * 0.52), 1, 0.28, 1.5), 1, 0, top - 0.16, -headR * 0.72));
     } else if (f === 'horn') {
       merge(m, place(cone(7, 0.11, 0.30), 1, 0, top - 0.04, 0));
@@ -346,8 +597,8 @@
       merge(m, place(cone(6, 0.09, 0.26), 1, -0.26, top - 0.12, 0, 0.42));
       merge(m, place(cone(6, 0.09, 0.26), 1, 0.26, top - 0.12, 0, -0.42));
     } else if (f === 'ears') {
-      merge(m, place(squash(ball(9, 6, 0.19), 0.55, 1.15, 0.9), 1, -headR * 1.00, headY + 0.13, 0));
-      merge(m, place(squash(ball(9, 6, 0.19), 0.55, 1.15, 0.9), 1, headR * 1.00, headY + 0.13, 0));
+      merge(m, place(squash(ball(seg(9, 6), seg(6, 4), 0.19), 0.55, 1.15, 0.9), 1, -headR * 1.00, headY + 0.13, 0));
+      merge(m, place(squash(ball(seg(9, 6), seg(6, 4), 0.19), 0.55, 1.15, 0.9), 1, headR * 1.00, headY + 0.13, 0));
     } else if (f === 'antenna') {
       merge(m, place(tube(5, 0.022, 0.26), 1, 0, top - 0.06, 0));
       merge(m, place(ball(8, 6, 0.085), 1, 0, top + 0.22, 0));
@@ -364,28 +615,74 @@
                        Math.cos(ang) * headR * 0.52, top + 0.04, Math.sin(ang) * headR * 0.52));
       }
     } else if (f === 'helmet') {
-      merge(m, place(squash(ball(14, 8, headR * 1.08), 1, 0.74, 1), 1, 0, headY + 0.07, 0));
-      merge(m, place(mat(squash(ball(12, 5, headR * 0.80), 1, 0.42, 0.55), 2), 1, 0, headY + 0.02, -headR * 0.62));
+      merge(m, place(squash(ball(seg(14, 9), seg(8, 5), headR * 1.08), 1, 0.74, 1), 1, 0, headY + 0.07, 0));
+      /* faceward(): the visor is part of the face. Without it the helmet's own
+         back triangles lost the painter's sort to it and a white jagged shape
+         showed through the back of the astronaut's head. */
+      merge(m, place(faceward(mat(squash(ball(seg(12, 8), seg(5, 4), headR * 0.80), 1, 0.42, 0.55), 2)), 1, 0, headY + 0.02, -headR * 0.62));
     } else if (f === 'wings') {
-      merge(m, place(turn(squash(cone(3, 0.30, 0.42), 1, 1, 0.09), 1.35), 1, -0.34, -0.22, 0.26));
-      merge(m, place(turn(squash(cone(3, 0.30, 0.42), 1, 1, 0.09), -1.35), 1, 0.34, -0.22, 0.26));
+      /* A swept wing per side: longest at the leading edge, scalloped along
+         the trailing one, and tilted back so the pair reads as a V from the
+         front rather than as two plates seen edge-on. */
+      [-1, 1].forEach(function (sd) {
+        merge(m, sheet(4, 3, function (u, v) {
+          var t = (u + 1) / 2;                       /* 0 at the body, 1 at the tip */
+          var span = 0.14 + t * 0.46;
+          var scallop = 0.20 + 0.16 * Math.sin(t * 3.1);
+          /* Swept UP and back. Pointing down they read as two blades hanging
+             off the ribs; lifted, the pair makes a V behind the shoulders. */
+          return [sd * (bodyR * bodyW * 0.70 + span),
+                  -0.06 + t * t * 0.66 - v * scallop,
+                  0.12 + t * 0.14 + v * 0.05];
+        }, 0.55, 0.95));
+      });
     } else if (f === 'cape') {
-      merge(m, place(squash(cone(5, 0.40, 0.72), 1, 1, 0.22), 1, 0, -0.66, 0.26, Math.PI));
+      /* Wrapped round the back and flaring to below the feet, with a wave in
+         the hem. The old one was a flattened cone: a bollard. */
+      merge(m, sheet(7, 5, function (u, v) {
+        var ang = u * 1.30;                          /* round the back */
+        var r = bodyR * bodyW * (1.06 + v * 0.42);
+        return [Math.sin(ang) * r,
+                (headY - headR * 0.95) - v * 1.00 + Math.sin(u * 3.4) * 0.035 * v,
+                Math.cos(ang) * r * 0.92];
+      }, 0.20, 0.72));
     } else if (f === 'star') {
       merge(m, place(star(5, 0.42, 0.05), 0.30, 0, top + 0.16, 0.02));
     } else if (f === 'nova') {
-      merge(m, place(star(8, 0.31, 0.05), 0.36, 0, top + 0.18, 0.02));
-      merge(m, place(annulus(18, 0.22, 0.31, 0.022), 1, 0, top + 0.02, 0, 1.3));
-    } else if (f === 'trophy') {
-      merge(m, place(cone(10, 0.23, 0.27), 1, 0.56, 0.16, -0.16, Math.PI));
-      merge(m, place(tube(8, 0.045, 0.13), 1, 0.56, 0.01, -0.16));
-      merge(m, place(tube(10, 0.17, 0.06), 1, 0.56, -0.07, -0.16));
+      /* A burst BEHIND the head rather than a star and a ring piled on top of
+         it. Stacked, the two fought the head's own outline and the whole thing
+         read as a scribble; behind, the head sits in the middle of it and the
+         five-star one is the only character with a halo of light. */
+      merge(m, place(star(8, 0.34, 0.04), headR * 2.15, 0, headY + headR * 0.10, headR * 0.62));
+      merge(m, place(mat(star(4, 0.22, 0.03), 4), headR * 0.46, 0, top + 0.17, -0.02));
+    } else if (f === 'medal') {
+      /* A medal on the chest, not a cup held out sideways. The cup was three
+         primitives floating off the character's right at arm's length, with
+         nothing holding it: at 40px it read as debris. A medal sits on the
+         body, is the right shape to recognise at any size, and still says the
+         same thing. */
+      var mz2 = -bodyR * 0.99;
+      merge(m, place(mat(blob(0.055, 0.5, 1, 0.3, 6), 4), 1, 0, -0.17, mz2 - 0.01));
+      merge(m, place(mat(blob(0.115, 1, 1, 0.32, 12), 4), 1, 0, -0.31, mz2 - 0.02));
+      merge(m, place(mat(blob(0.062, 1, 1, 0.26, 10), 2), 1, 0, -0.31, mz2 - 0.05));
     } else if (f === 'bolt') {
       merge(m, place(star(4, 0.24, 0.05), 0.26, 0, top + 0.13, 0.02));
     } else if (f === 'gem') {
-      merge(m, place(gem(8), 0.27, 0, top + 0.16, 0.02));
-    } else if (f === 'ring') {
-      merge(m, place(annulus(16, 0.11, 0.17, 0.03), 1, -headR * 0.95, headY + 0.04, 0, 1.5708));
+      /* Set into the forehead, like a stone in a circlet — it used to hover a
+         sixth of a head above the skull with nothing holding it up. */
+      merge(m, place(mat(band(14, headR * 0.86, 0.075, 0.9), 4), 1, 0, headY + headR * 0.42, 0));
+      merge(m, place(gem(8), 0.20, 0, headY + headR * 0.52, -headR * 0.66, -0.5));
+    } else if (f === 'cans') {
+      /* Headphones. The old 'ring' was a hoop floating beside the ear with
+         nothing attaching it to anything. A band over the head and a cup on
+         each side is the same silhouette cue and is actually worn. */
+      merge(m, sheet(8, 1, function (u, v) {
+        var ang = u * 1.15;
+        var r = headR * (1.06 + v * 0.05);
+        return [Math.sin(ang) * r, headY + Math.cos(ang) * r, (v - 0.5) * headR * 0.30];
+      }, 0.1, 0.35));
+      merge(m, place(mat(blob(0.165, 0.40, 1.05, 1.0, 10), 3), 1, -headR * 1.02, headY + 0.01, 0));
+      merge(m, place(mat(blob(0.165, 0.40, 1.05, 1.0, 10), 3), 1, headR * 1.02, headY + 0.01, 0));
     }
     if (opt.tone) tint(m, opt.tone);
     return m;
@@ -405,7 +702,7 @@
                                         eye: 1.15, tone: -0.23 }); },
     antenna: function () { return guy({ feature: 'antenna', headR: 0.37, bodyH: 1.34, bodyR: 0.34,
                                         bodyW: 0.90, headY: 0.42, limb: 0.8, tone: +0.07 }); },
-    hooper:  function () { return guy({ feature: 'ring', bodyW: 1.26, bodyR: 0.43, headR: 0.41,
+    hooper:  function () { return guy({ feature: 'cans', bodyW: 1.26, bodyR: 0.43, headR: 0.41,
                                         tone: +0.30 }); },
     sparky:  function () { return guy({ feature: 'bolt', headR: 0.36, bodyW: 1.18, bodyR: 0.41,
                                         eye: 0.85, tone: +0.52 }); },
@@ -430,7 +727,7 @@
     /* 5 stars */
     king:    function () { return guy({ feature: 'crown', bodyW: 1.24, bodyR: 0.44, headR: 0.45,
                                         tone: -0.33 }); },
-    champ:   function () { return guy({ feature: 'trophy', bodyR: 0.42, headR: 0.42, limb: 1.1,
+    champ:   function () { return guy({ feature: 'medal', bodyR: 0.42, headR: 0.42, limb: 1.1,
                                         tone: +0.04 }); },
     nova:    function () { return guy({ feature: 'nova', headR: 0.47, bodyR: 0.38, headY: 0.37,
                                         eye: 1.1, tone: +0.57 }); }
@@ -440,9 +737,12 @@
      thousand numbers, and rebuilding one per frame would be the only expensive
      thing in this file. */
   var cache = {};
-  function get(id) {
-    if (!cache[id]) {
-      var m = MODELS[id] ? MODELS[id]() : MODELS.cube();
+  function get(id, low) {
+    var key = low ? id + '|lo' : id;
+    if (!cache[key]) {
+      LOW = !!low;
+      var m = MODELS[id] ? MODELS[id]() : MODELS.rookie();
+      LOW = false;
       /* Its own size, measured once and kept with it. The eighteen are not one
          size: a rocket with fins and a king with a crown are much taller than a
          cube with ears, and 'nova' is taller again. Anything drawing one big
@@ -460,9 +760,29 @@
       /* The half-size that has to fit: the taller of its height and width, so
          a wide model is not pushed off the sides to make a tall one fit. */
       m.half = Math.max((hi[1] - lo[1]) / 2, (hi[0] - lo[0]) / 2, 0.1);
-      cache[id] = m;
+      m.foot = lo[1];                       /* where the contact shadow goes */
+
+      /* ONE NORMAL PER FACE, COMPUTED ONCE.
+         The old shading used depth as a stand-in for light, which is why every
+         character looked like a flat gradient with a face printed on it: the
+         top of a head and the front of a belly got the same brightness because
+         they were the same distance away. With a real normal there is a key
+         light, a shadow side and a rim, and the same geometry reads as a solid
+         object. Model space, so the per-frame cost is one dot product — the
+         light is rotated into the model's frame instead of the normals being
+         rotated into the camera's. */
+      m.n = new Array(m.f.length);
+      for (i = 0; i < m.f.length; i++) {
+        var A = m.v[m.f[i][0]], B = m.v[m.f[i][1]], C = m.v[m.f[i][2]];
+        var ux = B[0] - A[0], uy = B[1] - A[1], uz = B[2] - A[2];
+        var vx = C[0] - A[0], vy = C[1] - A[1], vz = C[2] - A[2];
+        var nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+        var len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+        m.n[i] = [nx / len, ny / len, nz / len];
+      }
+      cache[key] = m;
     }
-    return cache[id];
+    return cache[key];
   }
 
   /* ------------------------------------------------------------------ colour
@@ -489,7 +809,11 @@
      One function, called both by the animation loop and by the sprite baker.
      `ry` is the only thing that changes between frames. */
   function render(ctx, w, h, id, ry, cols, rx, zoom) {
-    var m = get(id), i;
+    /* Below 110px the coarse build, above it the fine one — the same threshold
+       the outline uses, and for the same reason: at that size neither is
+       visible and both are expensive. */
+    var small = Math.min(w, h) < 110;
+    var m = get(id, small), i;
     ctx.clearRect(0, 0, w, h);
     /* rx and zoom are optional and exist for one caller: the hero on the home
        page, which draws the chosen character where the turning logo used to be
@@ -518,21 +842,97 @@
       var k = d / (d + z2);
       pts[i] = [w / 2 + x2 * s * k, h / 2 - y1 * s * k, z2];
     }
+    /* THE LIGHT, AND THE CAMERA, IN THE MODEL'S OWN FRAME.
+       Rotating two vectors once per frame rather than a normal per triangle:
+       the same arithmetic, done 1,800 times less often. The transform applied
+       above is Ry·Rx, so the inverse applied here is Rxᵀ·Ryᵀ. */
+    function unrot(vx, vy, vz) {
+      var ax = vx * cy - vz * sy, ay = vy, az = vx * sy + vz * cy;   /* Ryᵀ */
+      return [ax, ay * cx + az * sx, -ay * sx + az * cx];             /* Rxᵀ */
+    }
+    /* Up, to the left and in front of the reader — the direction a toy on a
+       shelf is lit from, and the one that puts the shadow under the chin. */
+    var L = unrot(-0.44, 0.80, -0.41);
+    var V = unrot(0, 0, -1);                /* towards the camera */
+    /* Does the head face the reader? Characters are built looking down -z, so
+       this is that direction's depth. Facial detail is dropped once it goes
+       past the profile — see the FLAG note on face(). */
+    var faceSeen = -V[2] > 0.06;
+
     var order = [];
     for (i = 0; i < m.f.length; i++) {
       var f = m.f[i], A = pts[f[0]], B = pts[f[1]], C = pts[f[2]];
-      order.push([(A[2] + B[2] + C[2]) / 3, A, B, C, f[3], f[4] || 0]);
+      var detail = f[5] === 1;
+      if (detail && !faceSeen) continue;
+      /* A face sits 0.3 towards the camera in the sort, and nothing else is
+         within that of it. Without the bias the head's own front triangles —
+         which are large, and whose average depth can beat a small eye in front
+         of them — covered the eyes at some angles and not at others. */
+      order.push([(A[2] + B[2] + C[2]) / 3 - (detail ? 0.3 : 0), A, B, C, f[3], f[4] || 0, m.n[i]]);
     }
     order.sort(function (a, b) { return b[0] - a[0]; });
+
+    /* THE OUTLINE, and it is drawn first because it is the silhouette.
+       Every back-facing triangle, blown up a few per cent about the middle of
+       the figure and filled in ink: the inside-out hull trick, which gives a
+       vinyl-toy edge for one extra pass and no per-pixel work. Only above
+       110px — at 40 the line is most of the character, and the collection in
+       the hero draws eight of these at once. */
+    var big = !small;
+    if (big) {
+      var ox = w / 2, oy = h / 2, k2 = 1.022;
+      ctx.fillStyle = 'rgba(18,16,30,0.92)';
+      ctx.beginPath();
+      for (i = 0; i < order.length; i++) {
+        var q = order[i], qa = q[1], qb = q[2], qc = q[3];
+        /* BODY PARTS ONLY. The hull is scaled about the middle of the picture,
+           so a small part away from that middle is not only grown but shifted —
+           which around an eye or a mouth bead drew a black smear a pixel to one
+           side of it rather than an outline around it. The face looked scribbled
+           on. The silhouette is made of body, so only body is expanded. */
+        if (q[5] === 1 || q[5] === 2) continue;
+        if ((qb[0] - qa[0]) * (qc[1] - qa[1]) - (qc[0] - qa[0]) * (qb[1] - qa[1]) < 0) continue;
+        ctx.moveTo(ox + (qa[0] - ox) * k2, oy + (qa[1] - oy) * k2);
+        ctx.lineTo(ox + (qb[0] - ox) * k2, oy + (qb[1] - oy) * k2);
+        ctx.lineTo(ox + (qc[0] - ox) * k2, oy + (qc[1] - oy) * k2);
+      }
+      ctx.fill();
+    }
+
     for (i = 0; i < order.length; i++) {
-      var o = order[i], a = o[1], b = o[2], c = o[3];
+      var o = order[i], a = o[1], b = o[2], c = o[3], n = o[6];
       /* Back-face culling by winding in screen space — the same two lines the
          logo uses, and the reason a painter's sort is enough for solids. */
       if ((b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1]) >= 0) continue;
-      var lit = 0.52 + 0.62 * Math.max(0, Math.min(1, (o[0] + 1.3) / 2.6));
-      var col = o[5] === 1 ? [26, 24, 38] : o[5] === 2 ? [246, 248, 255]
-                                           : mix(cols[0], cols[1], o[4]);
-      ctx.fillStyle = 'rgb(' + (col[0] * lit | 0) + ',' + (col[1] * lit | 0) + ',' + (col[2] * lit | 0) + ')';
+      /* The normal is flipped to face the reader where a part was built with
+         its winding the other way round. Cheaper than auditing eighteen
+         models' triangle order, and it cannot be wrong: this face survived the
+         cull, so it IS pointing at the camera. */
+      var nv = n[0] * V[0] + n[1] * V[1] + n[2] * V[2];
+      var sgn = nv < 0 ? -1 : 1;
+      var lam = (n[0] * L[0] + n[1] * L[1] + n[2] * L[2]) * sgn;
+      if (lam < 0) lam = 0;
+      /* A rim, from how edge-on the face is. It is what separates a dark
+         shoulder from the dark page behind it. */
+      var rim = 1 - (nv < 0 ? -nv : nv);
+      rim = rim * rim * rim;
+      var lit = 0.46 + 0.74 * lam + 0.30 * rim;
+
+      var col;
+      if (o[5] === 1) { col = [22, 20, 32]; lit = 0.9 + 0.35 * lam; }
+      else if (o[5] === 2) { col = [247, 249, 255]; lit = 0.86 + 0.20 * lam; }
+      else {
+        col = mix(cols[0], cols[1], o[4]);
+        /* 3 is the darker tone the boots, gloves and belt are in; 4 is the
+           lighter one the trims take. One body colour, two treatments of it,
+           so a character has parts without needing a second palette. */
+        if (o[5] === 3) col = [col[0] * 0.40, col[1] * 0.40, col[2] * 0.46];
+        else if (o[5] === 4) col = mix(col, [255, 255, 255], 0.55);
+      }
+      var R = col[0] * lit, G = col[1] * lit, Bl = col[2] * lit;
+      ctx.fillStyle = 'rgb(' + (R > 255 ? 255 : R | 0) + ',' +
+                               (G > 255 ? 255 : G | 0) + ',' +
+                               (Bl > 255 ? 255 : Bl | 0) + ')';
       ctx.beginPath();
       ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]);
       ctx.closePath();

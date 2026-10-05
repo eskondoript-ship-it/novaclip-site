@@ -610,6 +610,56 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v99: the characters, properly made.
+
+   "Too basic, all of them, and the back looks bad." Both halves were fair, and
+   the second one was a bug rather than a shortcoming.
+
+   THE BACK. The eyes ghosted faintly through the back of the skull. A painter's
+   sort works on a triangle's AVERAGE depth, and a sphere made of big triangles
+   has faces whose average beats a small eye that is genuinely behind them. The
+   face is now flagged: biased towards the camera so the head cannot cover its
+   own eyes, and dropped outright once the head turns past the profile. The
+   astronaut's visor had the same fault and now carries the same flag.
+
+   LIGHT. Shading was depth — the further away, the darker — so the top of a
+   head and the front of a belly came out the same and every character read as
+   a flat gradient with a face printed on it. Each face now carries its own
+   normal, computed once when the model is built, and takes a key light, a
+   shadow side and a rim. The light is rotated into the model's frame once a
+   frame rather than the normals into the camera's, which is the same
+   arithmetic done 1,800 times less often.
+
+   A FACE. Two ink beads and two white dots became a white of the eye, a pupil,
+   a glint, a brow that carries the expression, and a smile — each one a flat
+   decal lying ON the skin. Three goes at that: blobs on a flat plane in front
+   of the head hung off the side as soon as it turned, blobs projected onto the
+   surface still crossed the silhouette, and a mouth made of five small balls
+   came out as a jagged black smear. A decal has no depth to stick out with.
+
+   CLOTHES. Dark boots, dark gloves, dark shorts and a light collar, the last
+   two painted onto the body's own rings rather than built as bands around it.
+   A thin ring at the same radius as a fat sphere loses the painter's sort: as
+   a disc the collar stuck out like a dinner plate, as a cylinder it buried
+   itself in the shoulders and showed as a row of white teeth.
+
+   AND AN OUTLINE, the inside-out hull trick — back faces blown up 2% and
+   filled in ink — which is what gives them a vinyl-toy edge. Body only: scaled
+   about the middle of the picture, it drew a smear beside every eye.
+
+   Four features were rebuilt because they were the worst of the "basic": the
+   cape (a flattened cone, i.e. a bollard) and the wings (one triangle each)
+   are cloth now, two-sided; the trophy held out at arm's length with nothing
+   holding it is a medal on the chest; the hoop floating beside an ear is a
+   pair of headphones.
+
+   COST, measured rather than assumed. The hero went from 1.5ms a frame to
+   3.3ms, which is a fifth of a frame at 60fps. The eight small figures in the
+   hero's artwork went the other way, 10.0ms to 8.6ms, because anything under
+   110px now builds from a coarser mesh — the cost is per triangle, not per
+   pixel, so eight thumbnails cost eight times one big one.
+
+   avatar3d.js. */
 /* v98: the character you wear turns in the hero, and the streak is on the
    front page.
 
@@ -1794,7 +1844,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v98';
+const CACHE = 'novaclip-v99';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
