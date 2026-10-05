@@ -8203,8 +8203,61 @@ function ncHeroAvatar() {
     });
   }
 
+  /* ----------------------------------------------------------------------
+     THE STREAK, ON THE FRONT PAGE
+     ----------------------------------------------------------------------
+     Asked for: the streak shows here too, not only on Your progress. It sits
+     beside the avatar card rather than inside it, because the card is about
+     the character and this is about turning up — one card saying both would
+     be a card about nothing.
+
+     A link, not a button: it goes to the page that explains what fifteen
+     minutes means, which is the first question the number raises.
+
+     It is drawn even with no streak running, because "fifteen minutes today
+     starts one" is the only thing that would ever start one. What it must
+     never do is nag, so there is one line of it and it says what is true. */
+  function paintStreak() {
+    if (typeof ncStreakState !== 'function') return;
+    const st = ncStreakState();
+    let a = document.getElementById('ncherostk');
+    if (!a) {
+      a = document.createElement('a');
+      a.id = 'ncherostk';
+      a.href = 'progress.html';
+      a.style.cssText =
+        'display:inline-flex;align-items:center;gap:9px;margin:12px 0 0;padding:8px 14px;' +
+        'border-radius:999px;text-decoration:none;color:inherit;font:inherit;' +
+        'background:var(--nc-card,rgba(255,255,255,0.05));' +
+        'border:1px solid var(--nc-line2,rgba(255,255,255,0.14));' +
+        'animation:fadeSlide 1s 1.15s both;align-self:flex-start;width:fit-content;' +
+        'max-width:min(100%,330px)';
+      box.insertAdjacentElement('afterend', a);
+    }
+    const mins = Math.min(15, Math.floor(st.secs / 60));
+    a.innerHTML =
+      '<span style="font-size:1.15rem;filter:' + (st.n ? 'none' : 'grayscale(1) opacity(.5)') +
+        '">\u{1F525}</span>' +
+      '<span style="font-weight:800;font-size:1.02rem;letter-spacing:-.01em">' +
+        (st.n || '') + '</span>' +
+      '<span style="font-size:0.78rem;opacity:.78">' + ncEscape(st.n
+        ? (st.done ? tr('ui_st_done') : tr('ui_st_today').replace('{m}', mins))
+        : tr('ui_st_zero')) + '</span>';
+    /* The sentence is long in several languages and this is a pill on a hero,
+       so it is one line with an ellipsis and the whole of it in the tooltip
+       rather than a pill that grows into three lines of small print. */
+    a.title = st.n ? tr('ui_st_now').replace('{n}', st.n) + ' · ' +
+      tr('ui_st_today').replace('{m}', mins) : tr('ui_st_zero');
+    a.lastChild.style.cssText += ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+  }
+
   box.onclick = () => { if (typeof window.ncOpenProfile === 'function') window.ncOpenProfile(); };
-  const repaint = () => { paintHero(); paintCollection(); };
+  const repaint = () => { paintHero(); paintCollection(); paintStreak(); };
+  /* The minute count moves while the page is open — the hero is exactly where
+     somebody sits for the first fifteen minutes. */
+  addEventListener('nc-streak', paintStreak);
+  addEventListener('nc-lang', paintStreak);
+  setInterval(paintStreak, 60000);
   addEventListener('nc-avatar-3d', repaint);
   addEventListener('nc-avatar-changed', repaint);
   repaint();

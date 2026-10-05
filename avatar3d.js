@@ -441,7 +441,27 @@
      thing in this file. */
   var cache = {};
   function get(id) {
-    if (!cache[id]) cache[id] = MODELS[id] ? MODELS[id]() : MODELS.cube();
+    if (!cache[id]) {
+      var m = MODELS[id] ? MODELS[id]() : MODELS.cube();
+      /* Its own size, measured once and kept with it. The eighteen are not one
+         size: a rocket with fins and a king with a crown are much taller than a
+         cube with ears, and 'nova' is taller again. Anything drawing one big
+         enough to see — the hero does — has to scale and centre per model or
+         the tall ones come out with their heads cut off, which is exactly what
+         the first version of the hero did. */
+      var i, lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+      for (i = 0; i < m.v.length; i++) {
+        for (var a = 0; a < 3; a++) {
+          if (m.v[i][a] < lo[a]) lo[a] = m.v[i][a];
+          if (m.v[i][a] > hi[a]) hi[a] = m.v[i][a];
+        }
+      }
+      m.mid = (lo[1] + hi[1]) / 2;
+      /* The half-size that has to fit: the taller of its height and width, so
+         a wide model is not pushed off the sides to make a tall one fit. */
+      m.half = Math.max((hi[1] - lo[1]) / 2, (hi[0] - lo[0]) / 2, 0.1);
+      cache[id] = m;
+    }
     return cache[id];
   }
 
@@ -468,16 +488,32 @@
   /* ------------------------------------------------------------------ render
      One function, called both by the animation loop and by the sprite baker.
      `ry` is the only thing that changes between frames. */
-  function render(ctx, w, h, id, ry, cols) {
+  function render(ctx, w, h, id, ry, cols, rx, zoom) {
     var m = get(id), i;
     ctx.clearRect(0, 0, w, h);
-    var rx = -0.32, cx = Math.cos(rx), sx = Math.sin(rx);
+    /* rx and zoom are optional and exist for one caller: the hero on the home
+       page, which draws the chosen character where the turning logo used to be
+       and lets a reader drag it. Everywhere else takes the fixed three-quarter
+       view the picker and the rail cards use. */
+    if (rx == null) rx = -0.32;
+    var cx = Math.cos(rx), sx = Math.sin(rx);
     var cy = Math.cos(ry), sy = Math.sin(ry);
-    var d = 3.4, s = Math.min(w, h) * 0.40;
+    var d = 3.4, s, off = 0;
+    if (zoom === 'fit' || (zoom && zoom.fit)) {
+      /* As large as it goes with a margin, centred on its own middle rather
+         than on the origin. 0.44 of the shorter side leaves about an eighth of
+         the box as air, which is what stops a crown or a rocket fin touching
+         the edge as it turns. {fit: k} asks for k of that — the hero uses it to
+         leave the headline alone. */
+      s = Math.min(w, h) * 0.44 * (zoom.fit || 1) / m.half;
+      off = m.mid;
+    } else {
+      s = Math.min(w, h) * 0.40 * (zoom || 1);
+    }
     var pts = new Array(m.v.length);
     for (i = 0; i < m.v.length; i++) {
       var p = m.v[i];
-      var y1 = p[1] * cx - p[2] * sx, z1 = p[1] * sx + p[2] * cx;
+      var y1 = (p[1] - off) * cx - p[2] * sx, z1 = (p[1] - off) * sx + p[2] * cx;
       var x2 = p[0] * cy + z1 * sy, z2 = -p[0] * sy + z1 * cy;
       var k = d / (d + z2);
       pts[i] = [w / 2 + x2 * s * k, h / 2 - y1 * s * k, z2];
@@ -518,6 +554,7 @@
      place that shows an avatar as a small image uses — a rail card, a
      leaderboard row — so those do not each need a live canvas. */
   var sprites = {};
+  var drawCols = null;        /* the live-draw palette, see draw() below */
   function sprite(id, px) {
     var cols = palette();
     var key = id + '@' + px + '#' + cols[0].join(',') + cols[1].join(',');
@@ -562,8 +599,22 @@
     has: function (id) { return !!MODELS[id]; },
     sprite: sprite,
     spin: spin,
+    /* One frame into a canvas somebody else owns the loop for. nova-logo3d.js
+       already has a loop, a drag, a pause-when-hidden and a resize — handing it
+       a frame is far less code than giving the hero a second renderer, and it
+       means the character answers a drag exactly as the logo did. */
+    draw: function (ctx, w, h, id, ry, rx, zoom) {
+      /* The palette is cached across frames on purpose. palette() reads a
+         custom property off <html> through getComputedStyle and a probe
+         element, which forces a style recalculation — once is nothing, sixty
+         times a second behind a hero is a frame budget spent on two colours
+         that change when the category does and never otherwise. Cleared by the
+         nc-category listener at the foot of this file. */
+      if (!drawCols) drawCols = palette();
+      render(ctx, w, h, id, ry, drawCols, rx, zoom);
+    },
     /* The palette changes with the category, so the bakes have to go. */
     forget: function () { sprites = {}; }
   };
-  addEventListener('nc-category', function () { sprites = {}; });
+  addEventListener('nc-category', function () { sprites = {}; drawCols = null; });
 })();

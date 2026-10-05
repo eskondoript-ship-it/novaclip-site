@@ -610,6 +610,36 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v98: the character you wear turns in the hero, and the streak is on the
+   front page.
+
+   THE HERO MARK IS YOUR AVATAR WHEN YOU HAVE ONE. The spinning logo stays for
+   everybody who has not bought a character — and for the first few frames of
+   every load, since avatar3d.js is side-loaded and cannot be there yet. When
+   one is worn, nova-logo3d.js hands its frame to avatar3d.js instead of
+   drawing the star: one loop, one drag, one pause-when-hidden, two geometries.
+
+   Two things that had to be measured rather than chosen:
+
+     - the eighteen are not one size. A fixed multiplier put the astronaut's
+       head through the top of the box and cut its boots off. avatar3d.js now
+       measures each model once and fills the box with a margin, centred on the
+       model's own middle rather than on the origin.
+     - and then at 0.8 of that, because the mark is a sparse star a headline
+       can run past and a character is solid. At a full fit the astronaut's
+       shoulder was level with the end of the word "channel".
+
+   The palette for the live draw is cached across frames. palette() reads a
+   custom property through getComputedStyle and a probe element, which forces a
+   style recalculation — sixty of those a second behind the hero, for two
+   colours that change when the category does and never otherwise.
+
+   THE STREAK IS ON THE HOME PAGE TOO, as a pill under the avatar card, linking
+   to the page that explains what fifteen minutes means. It is drawn with no
+   streak running as well, saying what would start one — one line, and never
+   more than one line, because a hero is not the place for small print.
+
+   avatar3d.js, nova-logo3d.js, nova.js. */
 /* v97: your own video behind the site, and a daily streak at fifteen minutes.
 
    THE BACKGROUND VIDEO. Chosen in categories.html, because that is already the
@@ -1764,7 +1794,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v97';
+const CACHE = 'novaclip-v98';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

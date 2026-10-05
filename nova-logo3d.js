@@ -214,10 +214,60 @@
     return [W / 2 + x2 * s * k, H / 2 + y1 * s * k, z2];
   }
 
+  /* ------------------------------------------------------- the chosen avatar
+     Asked for: when a character has been bought and is being worn, the hero
+     shows THAT turning, not the mark. It is the same arrangement the floating
+     collection uses — avatar3d.js owns the geometry, this file owns the loop,
+     the drag and the pausing — so there is one renderer for characters on the
+     site and one place that decides when the hero is spinning at all.
+
+     Falls back to the mark whenever there is no character to draw: nothing
+     bought, a photograph or an emoji chosen instead, or avatar3d.js not landed
+     yet (it is side-loaded by nova.js, so on a cold load the first few frames
+     here are always the logo). */
+  var avId = '', avFresh = false;
+  function heroAvatar() {
+    /* Cached, because this is read once a frame and the answer is a
+       localStorage lookup — which is synchronous, and at 60fps on a phone that
+       is 60 of them a second for a value that changes about twice a year. The
+       two events below are the only things that can change it. */
+    if (avFresh) return avId;
+    avFresh = true;
+    avId = '';
+    try {
+      if (!window.NC_AV3D || !NC_AV3D.draw || !NC_AV3D.has) { avFresh = false; return ''; }
+      var v = window.ncAvatarRaw ? ncAvatarRaw() : '';
+      if (NC_AV3D.has(v)) avId = v;
+    } catch (e) {}
+    return avId;
+  }
+  function avChanged() {
+    avFresh = false;
+    /* Drawn at once rather than waiting for the next frame, because under
+       prefers-reduced-motion there is no next frame. */
+    draw();
+  }
+
   function draw() {
     if (!ctx) return;
     ctx.clearRect(0, 0, W, H);
     if (!COLS) COLS = palette();
+
+    var av = heroAvatar();
+    if (av) {
+      /* 'fit', not a number. The first version asked for 1.5 and the astronaut
+         came out with its head through the top of the box and its boots cut
+         off — the eighteen characters are not one size, and a fixed multiplier
+         can only be right for one of them. avatar3d.js measures each model and
+         fills the box with a margin. */
+      /* 0.8 of what would fit, and the fifth of the box that gives back is
+         not decoration: the mark is a sparse star that the headline can run
+         past, and a character is solid. At a full fit the astronaut's shoulder
+         was level with the end of the word "channel". */
+      NC_AV3D.draw(ctx, W, H, av, rotY, rotX, { fit: 0.8 });
+      sparks();                       /* the five travelling stars stay */
+      return;
+    }
 
     var i, j, pts = new Array(verts.length);
     for (i = 0; i < verts.length; i++) pts[i] = project(verts[i]);
@@ -281,9 +331,18 @@
       ctx.fill();
     }
 
-    /* The five travelling stars, as flat four-point sparkles that always face
-       the camera. They are billboards on purpose: a sparkle seen edge-on
-       disappears, and these are meant to read at any angle. */
+    sparks();
+  }
+
+  /* The five travelling stars, as flat four-point sparkles that always face
+     the camera. They are billboards on purpose: a sparkle seen edge-on
+     disappears, and these are meant to read at any angle.
+
+     Lifted out of draw() so the avatar can keep them: they belong to the hero's
+     composition rather than to the mark, and a character turning in an empty
+     corner of the page looked like a mistake next to one surrounded by them. */
+  function sparks() {
+    var i, j;
     for (i = 0; i < SPARKS.length; i++) {
       var sp = SPARKS[i], P = project(sp.p);
       var k = Math.min(W, H) * sp.s * (3.2 / (3.2 + P[2]));
@@ -379,6 +438,11 @@
         if (visible) start(); else stop();
       }, { threshold: 0.01 }).observe(layer);
     } catch (e) {}
+
+    /* The avatar is side-loaded after this file runs, and can be changed from
+       the profile dialog on this very page, so both are listened for. */
+    addEventListener('nc-avatar-3d', avChanged);
+    addEventListener('nc-avatar-changed', avChanged);
 
     /* The category is what it is drawn in, so a change repaints it. */
     addEventListener('nc-category', function () { COLS = null; draw(); });
