@@ -362,6 +362,14 @@ async function rateLimited(env, bucket, ms) {
    long random string. Without it this worker refuses to issue rather than
    signing with a default, because a signature everybody can compute is not a
    signature — /health says which state it is in.
+
+   SET IT ONCE AND DO NOT CHANGE IT. Every number already issued was derived
+   from the key that was in place at the time, and verification recomputes it:
+   replace the key and every certificate ever issued stops verifying, with no
+   way to re-sign the documents already in people's hands. That is true of any
+   signing key and it is worth knowing before rather than after. If it is ever
+   genuinely compromised, changing it IS the right move — it invalidates the
+   forgeries too — but it is a decision about every certificate at once.
    ========================================================================== */
 
 /* The same three tiers nova.js checks in CERT_REQS, and the same numbers.
