@@ -610,6 +610,22 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v100: the face back as it was, the body as it now is.
+
+   Asked for in one line: the face like before, keep the body. So the whites of
+   the eyes, the brows and the smile are gone again and the eyes are two dark
+   ovals with a glint each, at the spacing they always had. Everything v99 did
+   below the neck stays — the light, the shorts, the boots and gloves, the
+   collar, the outline.
+
+   What is kept from the rewrite is how the two eyes are BUILT, because that
+   part was fixing faults rather than changing the look: each is a flat disc
+   lying on the skin, so it cannot hang off the side of the head as it turns,
+   and it is flagged as facial detail, so it clears the head's own triangles
+   from the front and is dropped once the head turns past the profile. That
+   flag is the fix for the eyes ghosting through the back of the skull.
+
+   avatar3d.js. */
 /* v99: the characters, properly made.
 
    "Too basic, all of them, and the back looks bad." Both halves were fair, and
@@ -1844,7 +1860,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v99';
+const CACHE = 'novaclip-v100';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

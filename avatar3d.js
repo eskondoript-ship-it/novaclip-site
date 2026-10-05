@@ -485,8 +485,10 @@
        in the air. Measured off the geometry now rather than guessed. */
     var cube = opt.head === 'cube';
     var ez = -(cube ? headR * 1.12 * 0.58 + 0.012 : headR * 0.88);
-    var ex = headR * (cube ? 0.30 : 0.36), ey = headY + headR * 0.10;
-    var er = 0.105 * (opt.eye || 1);
+    /* The spacing and the size the eyes always had, back to the number: 0.34
+       of a head apart and 0.085 across. */
+    var ex = headR * (cube ? 0.28 : 0.34), ey = headY + headR * 0.10;
+    var er = 0.092 * (opt.eye || 1);
 
     /* WHERE THE SKIN IS AT A GIVEN POINT OF THE FACE, which every feature is
        placed against rather than on one flat plane in front of the head.
@@ -540,50 +542,23 @@
       return mm2;
     }
 
+    /* THE FACE IS BACK TO THE ONE IT HAD: two dark eyes and a glint in each,
+       and nothing else. Asked for in those words — the whites, the brows and
+       the smile went, the body stayed.
+
+       What is kept from the rewrite is the way they are BUILT, because that
+       part was fixing real faults rather than changing the look: each one is a
+       flat disc lying on the skin, so it cannot hang off the side of the head
+       when it turns, and it is flagged as facial detail, so it is biased clear
+       of the head's own triangles from the front and dropped entirely once the
+       head turns past the profile. That flag is what stopped the eyes ghosting
+       faintly through the back of the skull. Same face, drawn properly. */
     var side;
     for (side = -1; side <= 1; side += 2) {
-      /* the white of the eye, a little taller than it is wide */
-      merge(m, decal(side * ex, ey, er * 0.95, er * 1.12, 0, 2, 1.004));
-      /* the pupil in it, looking very slightly inwards */
-      merge(m, decal(side * ex - side * er * 0.10, ey - er * 0.06,
-                     er * 0.52, er * 0.62, 0, 1, 1.010));
-      /* one glint, top outer corner — one, not two: two reads as surprise */
-      merge(m, decal(side * ex + er * 0.30, ey + er * 0.36,
-                     er * 0.22, er * 0.22, 0, 2, 1.017));
-      /* THE BROW, which is where the character is. Down towards the nose for a
-         scowl, up for worry, nearly flat for calm. */
-      if (opt.brow !== 'none') {
-        var tilt = opt.brow === 'angry' ? -0.52 : opt.brow === 'sad' ? 0.40 : 0.14;
-        merge(m, decal(side * ex, ey + er * 1.30, er * 0.98, er * 0.20,
-                       side * tilt, 1, 1.012));
-      }
-    }
-
-    /* THE MOUTH, AS A LINE DRAWN ON THE HEAD, for the same reason: a mouth is
-       a line, and the two earlier attempts at it as geometry were a moustache
-       (one wide flattened ball) and then a jagged smear (five small balls
-       overlapping, each catching the light differently). */
-    var my = headY - headR * (cube ? 0.40 : 0.46);
-    if (opt.mouth !== 0) {
-      var mw = headR * 0.42 * (opt.mouth || 1);        /* half-width */
-      var curve = opt.smile === false ? 0 : headR * 0.30;
-      var thick = headR * 0.058;
-      var mm = mesh(), N = seg(8, 5), iq;
-      for (iq = 0; iq <= N; iq++) {
-        var t3 = iq / N * 2 - 1;                       /* -1 .. 1 */
-        var mx = t3 * mw;
-        var myy = my + curve * t3 * t3;                /* up at the corners */
-        /* thinner towards the corners, which is what makes it a smile rather
-           than a drawn-on rectangle */
-        var th = thick * (1 - 0.45 * t3 * t3);
-        vert(mm, mx, myy + th, skin(mx, myy + th) * 1.006);
-        vert(mm, mx, myy - th, skin(mx, myy - th) * 1.006);
-      }
-      for (iq = 0; iq < N; iq++) {
-        var i0 = iq * 2;
-        quad(mm, i0 + 1, i0 + 3, i0 + 2, i0, 0.5, 1);
-      }
-      merge(m, faceward(mm));
+      merge(m, decal(side * ex, ey, er, er * 1.06, 0, 1, 1.004));
+      /* the glint, up and out, exactly where it used to sit */
+      merge(m, decal(side * ex + er * 0.34, ey + er * 0.40,
+                     er * 0.34, er * 0.34, 0, 2, 1.012));
     }
 
     var top = headY + headR * 0.92, f = opt.feature;
