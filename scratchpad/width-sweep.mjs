@@ -44,8 +44,38 @@ const SIZES = [
 const CHECK = () => {
   const de = document.documentElement;
   const vw = de.clientWidth;
-  const out = { bleed: 0, offscreen: [], covered: [] };
+  const out = { bleed: 0, offscreen: [], covered: [], squeezed: -1 };
   if (de.scrollWidth > vw + 1) out.bleed = de.scrollWidth - vw;
+
+  /* A COLUMN TOO NARROW TO READ, which is the one that got away.
+     verify.html shipped with its sidebar div unclosed, so the whole page was
+     nested inside a fixed 200px rail and the heading came out one word per
+     line. Nothing bled, nothing was off screen, nothing was covered and there
+     was a way off the page, so all four existing checks passed it — and a
+     human looked at it for one second and saw it immediately.
+
+     Measured off the first paragraph of real prose rather than off a
+     container: a container can be any width for good reasons, but a line of
+     body text in a column under 220px on a screen 760px wide is a layout
+     fault every time. */
+  if (vw >= 760) {
+    const para = [...document.querySelectorAll('p, li')].find((el) => {
+      const t = (el.textContent || '').trim();
+      if (t.length < 60) return false;
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      return r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none';
+    });
+    if (para) {
+      const w = Math.round(para.getBoundingClientRect().width);
+      /* -1 is "nothing to report", NOT 0. The first version of this used 0 for
+         that and then failed to fire on the very page it was written for:
+         verify.html's column was not narrow, it was COLLAPSED, and a width of
+         exactly zero read as no finding. A check that cannot report the worst
+         case is not a check. */
+      if (w < 220) out.squeezed = w;
+    }
+  }
 
   /* Two things that are always wrong at any width: a control whose box is
      entirely off the side of the screen (you cannot scroll sideways to it if
@@ -199,6 +229,11 @@ for (const s of SIZES) {
       const f = [];
       if (r.bleed) f.push('BLEED +' + r.bleed);
       if (r.trapped) f.push('TRAPPED (no way off this page)');
+      if (r.squeezed >= 0) {
+        f.push(r.squeezed === 0
+          ? 'COLLAPSED text column has no width at all'
+          : 'SQUEEZED text column is only ' + r.squeezed + 'px wide');
+      }
       r.offscreen.slice(0, 4).forEach((o) => f.push('OFFSCREEN ' + o));
       r.covered.forEach((c) => f.push('COVERED ' + c));
       errs.slice(0, 2).forEach((e) => f.push('JS ' + e));

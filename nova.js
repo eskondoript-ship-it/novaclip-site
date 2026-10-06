@@ -1714,10 +1714,20 @@ window.ncCategoryPhoto = ncCategoryPhoto;
         el.muted = true; el.loop = true; el.autoplay = true;
         el.setAttribute('playsinline', '');
         el.setAttribute('aria-hidden', 'true');
+        /* BLURRED SMALL AND THEN BLOWN UP, which is not a trick for its own
+           sake. blur(6px) across a full-screen video is the browser filtering
+           every pixel of every frame, forever, behind every page — on a laptop
+           that is the whole site feeling slow, which is what it did.
+
+           A transform is applied AFTER the filter, so a quarter-size element
+           blurred by 2px and scaled by four looks like an 8px blur over the
+           whole screen and costs a sixteenth of the pixels. object-fit keeps
+           the framing right in the small box before it is scaled. */
         el.style.cssText =
-          'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;' +
+          'position:fixed;top:0;left:0;width:25%;height:25%;object-fit:cover;z-index:0;' +
+          'transform:scale(4);transform-origin:0 0;' +
           'pointer-events:none;opacity:var(--nc-cat-img-o,.42);' +
-          'filter:blur(6px) saturate(.75)';
+          'filter:blur(2px) saturate(.75)';
         root.appendChild(el);
       }
       if (url) URL.revokeObjectURL(url);
@@ -1732,6 +1742,18 @@ window.ncCategoryPhoto = ncCategoryPhoto;
       try { still = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
       if (still) { try { el.pause(); } catch (e) {} }
       else { var play = el.play(); if (play && play.catch) play.catch(function () {}); }
+      /* A video decoding behind a tab nobody is looking at is a battery being
+         spent on nothing — the same rule the hero's 3D mark follows. Browsers
+         throttle a hidden tab's rendering but go on decoding the stream. */
+      if (!el.__ncVis) {
+        el.__ncVis = 1;
+        document.addEventListener('visibilitychange', function () {
+          var v = document.getElementById('ncbgvid');
+          if (!v) return;
+          if (document.hidden) { try { v.pause(); } catch (e) {} }
+          else if (!still) { var pl = v.play(); if (pl && pl.catch) pl.catch(function () {}); }
+        });
+      }
       return true;
     }).catch(function () { return false; });
   };

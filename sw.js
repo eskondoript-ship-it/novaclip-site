@@ -610,6 +610,37 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v102: verify.html was nested inside its own sidebar, and the video
+   background was blurring the whole screen every frame.
+
+   THE PAGE. verify.html was built from history.html's shell by a script, and
+   the script took the sidebar up to the wrong </div> — the one closing the
+   language picker rather than the rail itself. The rail was therefore never
+   closed, so the orbs and the entire page were children of a fixed 200px
+   column: the heading came out one word per line. One closing tag.
+
+   The width sweep passed it at all seven widths, which is the more useful half
+   of this. Nothing bled, nothing was off screen, nothing was covered and there
+   was a way off the page — and a person looking at it for one second saw it
+   immediately. The sweep now measures the first real paragraph of prose and
+   reports a text column under 220px on a screen wider than 760. Written, then
+   tested against the broken page, where it did NOT fire: a collapsed column is
+   zero pixels wide and the reporting line treated 0 as "nothing found". The
+   sentinel is -1 now and zero has its own wording.
+
+   THE LAG. The background video was a full-screen element with filter:
+   blur(6px) on it, which is the browser blurring every pixel of every frame,
+   behind every page, for as long as the tab is open. A transform is applied
+   after the filter, so it is drawn at a quarter size with a 2px blur and
+   scaled up by four: the same picture, a sixteenth of the pixels. It also
+   pauses now when the tab is hidden — browsers throttle a hidden tab's
+   rendering but go on decoding the stream.
+
+   And the number field on verify.html gets a light-theme rule. A dark field is
+   right on a dark page and a grey slab on a white one, and that page is the
+   one most likely to be opened by somebody who has never been here before.
+
+   verify.html, nova.js. */
 /* v101: certificates that can be checked, and a page for checking them.
 
    Asked for in one line — put the learner's name on the certificate, and make
@@ -1899,7 +1930,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v101';
+const CACHE = 'novaclip-v102';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
