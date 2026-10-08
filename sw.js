@@ -610,6 +610,34 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v103: the meme captions. Three complaints about the same dialog — it lagged,
+   the words landed on faces, and nothing could be moved afterwards — and all
+   three are answered by two new shell files, meme-boxes.js and meme-fix.js,
+   plus the two lines in editor.html that load them.
+
+   THE LAG WAS THE BLUR, NOT THE TYPING. 169ms a letter, measured. Taking the
+   captions off React entirely changed nothing: the cost is a full-screen
+   backdrop-filter over a column of a hundred remote thumbnails 7417px tall,
+   re-read on every frame a caret blinks in. meme-fix.js turns the backdrop
+   filters off for as long as the caption editor is open and puts them back
+   when it closes: 169ms to 33ms.
+
+   WHERE THE WORDS GO. meme-boxes.js downscales the template to 64 cells,
+   builds summed-area tables of brightness, brightness squared and edge
+   energy, and picks the flattest large box no caption is already using —
+   Drake's white panels, the buttons in Two Buttons, the speech bubbles in
+   Batman. Where there is genuinely nowhere flat (Gru's Plan) it falls back to
+   the classic top and bottom bands, all of them or none, because a band is
+   the full width of the picture and cannot share one with a box.
+
+   AND THEY MOVE. The captions are now textareas sitting on the picture in the
+   font and at the size they will be drawn, draggable and resizable, and the
+   colour flips to black over a pale panel as one is dragged onto it.
+
+   Both files are cached because editor.html asks for both and a cache holding
+   the page without them is a meme dialog with no captions at all.
+
+   editor.html, meme-boxes.js (NEW), meme-fix.js (NEW). */
 /* v102: verify.html was nested inside its own sidebar, and the video
    background was blurring the whole screen every frame.
 
@@ -1930,7 +1958,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v102';
+const CACHE = 'novaclip-v103';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2076,6 +2104,12 @@ const SHELL = [
   '/verify.html',
   '/ai-edit.js',
   '/ai-edit-panel.js',
+  /* THESE TWO GO TOGETHER, here and in editor.html. meme-boxes.js finds the
+     blank patch of a template and does the drawing; meme-fix.js is the caption
+     editor that calls it. One without the other is a dialog that cannot
+     caption anything. */
+  '/meme-boxes.js',
+  '/meme-fix.js',
   /* Sends the Trend Spotter's rail to the real pages. Without it that rail
      offers four features this site already has as though they were unbuilt. */
   '/trends-nav.js',

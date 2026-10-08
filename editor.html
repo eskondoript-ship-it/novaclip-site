@@ -2014,5 +2014,12 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      store the bundle creates. -->
 <script src='ai-edit.js' defer></script>
 <script src='ai-edit-panel.js' defer></script>
+<!-- THESE TWO GO TOGETHER. meme-boxes.js finds the blank patch of a meme
+     template and does the drawing; meme-fix.js is the caption editor in the
+     meme dialog, and it calls nothing but meme-boxes.js. Pasting one without
+     the other leaves the dialog with no captions at all, so they ship as a
+     pair, in this order. -->
+<script src='meme-boxes.js' defer></script>
+<script src='meme-fix.js' defer></script>
   </body>
 </html>
