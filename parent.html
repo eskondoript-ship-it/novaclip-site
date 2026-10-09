@@ -482,6 +482,36 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
          The clock that enforces the limit only ever knew about the stretch in
          front of it. This is the same clock's day book: what was actually used,
          and the breaks it forced, over a fortnight. -->
+    <div class='card' id='teachcard'>
+      <h3><span>Teaching and earning</span>
+        <small>The Academy lets your child sell a lesson pack to other NovaClip creators. It is off
+        until you turn it on here, and it stays off if you never do.</small></h3>
+
+      <p class='sthint' style='margin-top:0'>Three things worth knowing before you decide.
+        <b>There is no contact.</b> A lesson is a written pack somebody buys and keeps — there are no
+        calls, no messages and no way for a buyer to reach your child.
+        <b>The money is yours, not theirs.</b> Under 18 nobody can hold a payout account or sign the
+        contract behind one, so earnings are paid to the name and email you give below.
+        <b>Under 16 there is no money at all.</b> Portugal sets the working age at 16; below it the
+        Academy pays in NovaCoins, which are ours and buy things inside NovaClip.</p>
+
+      <div class='field'>
+        <label for='teachAge'>Your child's age</label>
+        <input type='number' id='teachAge' min='13' max='19' placeholder='15'>
+      </div>
+      <div class='field'>
+        <label for='teachName'>Your name — the person the money goes to</label>
+        <input type='text' id='teachName' maxlength='60' placeholder='Maria Silva'>
+      </div>
+      <div class='field'>
+        <label for='teachEmail'>Your email</label>
+        <input type='email' id='teachEmail' maxlength='90' placeholder='maria@example.com'>
+      </div>
+      <button class='btn' id='teachOn'>Turn teaching on</button>
+      <button class='btn' id='teachOff' style='background:transparent;border:1px solid rgba(255,46,151,0.5);color:#FF2E97'>Turn it off</button>
+      <p class='sthint' id='teachOut'></p>
+    </div>
+
     <div class='card'>
       <h3><span>Screen time and breaks</span>
         <small>Time spent actually using NovaClip on this device — idle tabs and
@@ -1861,6 +1891,42 @@ function fShieldNote() {
 <script src='family-filter.js'></script>
 <script src='category-scene.js'></script>
 <script src='categories.js'></script>
+<script>
+/* The parent's switch for the Academy. It writes to the worker, not to this
+   device: the rule it carries — who may be paid, and who the money goes to —
+   has to be true on every device the child signs in on, and a localStorage
+   flag is true only on this one. */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function who() {
+    return { key: localStorage.getItem('nc_key') || '', code: localStorage.getItem('nc_code') || '' };
+  }
+  function say(t) { var o = $('teachOut'); if (o) o.textContent = t; }
+  function send(body) {
+    if (!window.ncApi) return say('The community server is not configured yet.');
+    var w = who();
+    if (!w.key || !w.code) return say('Your child needs to be signed in on this device first.');
+    window.ncApi('/academy/consent', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({}, w, body))
+    }).then(function (r) {
+      if (r.consent === false) return say('Teaching is off. Anything already up has been left alone — '
+        + 'your child can take those down from the Academy page.');
+      say(r.mayCharge
+        ? 'Teaching is on, and lessons may carry a price of up to €20. The money goes to you.'
+        : 'Teaching is on. Under 16, so lessons earn NovaCoins rather than money.');
+    }).catch(function (e) { say(e.message); });
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!$('teachOn')) return;
+    $('teachOn').onclick = function () {
+      send({ allow: true, age: $('teachAge').value,
+             parentName: $('teachName').value, parentEmail: $('teachEmail').value });
+    };
+    $('teachOff').onclick = function () { send({ allow: false }); };
+  });
+})();
+</script>
 <script src='nova.js'></script>
 <script src='nova-ask.js' defer></script>
 </body>

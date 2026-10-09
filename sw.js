@@ -610,6 +610,33 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v105: the Academy — teenagers selling lesson packs to other teenagers.
+
+   WHY THE RULES ARE IN THE WORKER AND NOT THE PAGE. Who may teach, who may
+   charge, and where money goes are decided in leaderboard-worker.js, because a
+   page can be edited by whoever is looking at it. Setting mayCharge to true in
+   the console changes nothing: the next publish still comes back priced at
+   zero with a sentence saying why, since the server read the age off the
+   parent's own consent record.
+
+   WORK, NOT TIME. A lesson is a pack somebody buys and keeps. No calls, no
+   scheduling, no messages, no way for a buyer to reach the child who wrote it
+   — so there is no session for anybody to be harmed in. That is the design,
+   not a stage of it.
+
+   UNDER 16 THERE IS NO MONEY. Portugal sets the working age at 16 and the
+   customer being a child does not change the seller's position, so below it a
+   price is turned into NovaCoins rather than refused — refusing just teaches
+   somebody to lie about their age. Above it a price is allowed and is paid to
+   the PARENT, because nobody under 18 can hold a payout account or sign for
+   one.
+
+   NOTHING MOVES MONEY YET AND THE CODE SAYS SO. A priced lesson answers 503
+   naming what is missing. Coin-priced lessons work today, because coins are
+   ours and need no processor and nobody's age.
+
+   parent.html (the switch), academy.html (NEW), academy.js (NEW),
+   leaderboard-worker.js (deploy it — a push does not), every page's rail. */
 /* v104: captions, beats and reframe — the three things the editor could not do
    that the one teenagers already use can.
 
@@ -1983,7 +2010,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v104';
+const CACHE = 'novaclip-v105';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2143,6 +2170,11 @@ const SHELL = [
   '/captions.js',
   '/beats.js',
   '/reframe.js',
+  /* The Academy. The page and its script go together — academy.html is markup
+     with no behaviour of its own, so shipping it without academy.js offline
+     would give somebody an empty shelf and three dead buttons. */
+  '/academy.html',
+  '/academy.js',
   /* Sends the Trend Spotter's rail to the real pages. Without it that rail
      offers four features this site already has as though they were unbuilt. */
   '/trends-nav.js',

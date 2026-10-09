@@ -10,7 +10,7 @@ const BASE = 'http://localhost:8099';
    modules were deleted (Article 9 data, on a site for children). The sweep is
    what caught the stale entry: a deleted page 404s, and a 404 has no links on
    it, so it reported as TRAPPED at all seven widths. */
-const PAGES = ['index.html', 'tools.html', 'socials.html', 'editor.html',
+const PAGES = ['academy.html', 'index.html', 'tools.html', 'socials.html', 'editor.html',
   'pricing.html', 'game.html', 'analytics.html', 'study.html', 'photo.html',
   'community.html', 'typing.html', 'parent.html', 'trends.html', 'ai.html', 'progress.html', 'shield.html', 'pro.html', 'app.html', 'gift.html', 'coder.html', 'publish.html', 'studio-ai.html',
   'hype.html',

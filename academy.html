@@ -87,7 +87,7 @@ if(b){r.style.background=b;r.setAttribute('data-skin',s);}}catch(e){}})();</scri
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#050505">
-<title>Check a certificate — NovaClip</title>
+<title>Academy — NovaClip</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',-apple-system,sans-serif; }
 body { background:var(--nc-bg,#060608); color:var(--nc-text,#f4f4f6); }
@@ -133,6 +133,46 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
 .out .k { color:var(--nc-dim,#7E8AA6); font-size:.82rem; letter-spacing:1px; text-transform:uppercase; }
 .note { color:var(--nc-dim,#7E8AA6); font-size:.88rem; line-height:1.8; }
 .note b { color:var(--nc-text,#EAF2FF); }
+
+/* ---- the Academy ---------------------------------------------------- */
+.tabs { display:flex; gap:8px; margin:0 0 18px; flex-wrap:wrap; }
+.tabs button { border:1px solid var(--line,rgba(255,255,255,.14)); background:transparent;
+  color:inherit; border-radius:999px; padding:8px 16px; font:inherit; font-size:.9rem;
+  cursor:pointer; opacity:.72; }
+.tabs button.on { opacity:1; border-color:#7C5CFF; background:color-mix(in srgb, #7C5CFF 14%, transparent); }
+.shelf { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; }
+.lesson { border:1px solid var(--line,rgba(255,255,255,.12)); border-radius:14px; padding:15px 16px;
+  display:flex; flex-direction:column; gap:7px; background:color-mix(in srgb, currentColor 4%, transparent); }
+.lesson h3 { margin:0; font-size:1rem; line-height:1.3; }
+.lesson .who { font-size:.78rem; opacity:.62; }
+.lesson .blurb { font-size:.86rem; line-height:1.5; opacity:.84; margin:0; }
+.lesson .foot { display:flex; align-items:center; gap:8px; margin-top:auto; padding-top:8px; }
+.pill { font-size:.72rem; padding:3px 9px; border-radius:999px; border:1px solid currentColor; opacity:.72; }
+.price { font-weight:700; font-size:1rem; }
+.price.coins { color:#B6FF3C; }
+.lesson button { margin-left:auto; border:0; border-radius:9px; padding:7px 13px; font:inherit;
+  font-size:.82rem; font-weight:700; cursor:pointer; color:#04121a;
+  background:linear-gradient(110deg,#7C5CFF,#00F0FF 60%); }
+.gate { border:1px solid #FFB443; border-radius:14px; padding:14px 16px; margin:0 0 18px;
+  font-size:.9rem; line-height:1.6; background:color-mix(in srgb,#FFB443 10%,transparent); }
+.gate b { display:block; margin-bottom:4px; }
+.field { margin:0 0 12px; }
+.field label { display:block; font-size:.78rem; opacity:.66; margin-bottom:5px; }
+.field input, .field select, .field textarea { width:100%; box-sizing:border-box; font:inherit;
+  font-size:.92rem; padding:9px 11px; border-radius:10px; color:inherit;
+  border:1px solid var(--line,rgba(255,255,255,.16)); background:color-mix(in srgb,currentColor 5%,transparent); }
+.field textarea { min-height:190px; resize:vertical; line-height:1.55; }
+.two { display:flex; gap:12px; flex-wrap:wrap; }
+.two > .field { flex:1; min-width:150px; }
+.mine { display:flex; align-items:center; gap:10px; padding:10px 0;
+  border-top:1px solid var(--line,rgba(255,255,255,.1)); font-size:.9rem; flex-wrap:wrap; }
+.mine .grow { flex:1; min-width:120px; }
+.mine button { border:1px solid var(--line,rgba(255,255,255,.18)); background:transparent; color:inherit;
+  border-radius:8px; padding:5px 11px; font:inherit; font-size:.78rem; cursor:pointer; }
+.earn { display:flex; gap:22px; flex-wrap:wrap; margin:14px 0 0; font-size:.88rem; }
+.earn b { font-size:1.3rem; display:block; }
+.readout { white-space:pre-wrap; line-height:1.65; font-size:.95rem; }
+.muted { opacity:.62; font-size:.85rem; line-height:1.6; }
 </style>
 </head>
 <body>
@@ -154,98 +194,97 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
 <div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
 
 <div class='wrap'>
-  <h1><span class='grad'>Check a certificate</span></h1>
-  <p class='sub'>Every NovaClip certificate carries a number. Type it in and this page says who it
-     was issued to, which certificate it is, and the day it was issued — straight from our own
-     records. If what comes back does not match the document in front of you, the document is not
-     one of ours.</p>
+  <h1><span class='grad' data-t='ac_title'>The Academy</span></h1>
+  <p class='sub' data-t='ac_sub'>Lesson packs made by NovaClip creators, for NovaClip creators. Everything
+     here was written by somebody who earned the certificate first — and everything here is a thing you
+     read and keep, not a call you book. There are no live sessions and no messages, by design.</p>
 
-  <div class='card'>
-    <div class='row'>
-      <input id='code' placeholder='NC-BA-XXXX-XXXX-XXXX' autocomplete='off' spellcheck='false'
-             aria-label='Certificate number'>
-      <button class='go' id='go'>Check it</button>
-    </div>
-    <div class='out' id='out'></div>
+  <div class='tabs'>
+    <button id='tab-learn' class='on' data-t='ac_learn'>Learn</button>
+    <button id='tab-teach' data-t='ac_teach'>Teach</button>
   </div>
 
-  <div class='card'>
-    <p class='note'>
-      <b>Why a number and not a seal.</b> A certificate is a document, and any document can be
-      copied or edited. What cannot be copied is the number: it is calculated from the holder’s
-      name, the certificate and the date, using a key that exists only on our server. Change the
-      name on a certificate and its number stops matching it. Invent a number and it belongs to
-      nobody. Neither can be worked out from the certificate itself.<br><br>
-      <b>What this page does not tell you.</b> Only the three things printed on the certificate.
-      No points, no history, no account. And it cannot tell you that the person holding a
-      certificate is the person named on it — no certificate ever could.
-    </p>
+  <section id='pane-learn'>
+    <div class='field' style='max-width:260px'>
+      <label data-t='ac_filter'>What do you want to get better at</label>
+      <select id='cat'>
+        <option value='' data-t='ac_all'>Everything</option>
+        <option value='editing'>Editing</option>
+        <option value='thumbnails'>Thumbnails</option>
+        <option value='titles'>Titles</option>
+        <option value='growth'>Growth</option>
+        <option value='filming'>Filming</option>
+        <option value='sound'>Sound</option>
+        <option value='other'>Other</option>
+      </select>
+    </div>
+    <div class='shelf' id='shelf'></div>
+    <p class='muted' id='shelfnote'></p>
+  </section>
+
+  <section id='pane-teach' hidden>
+    <div id='gate'></div>
+    <div class='card' id='makecard' hidden>
+      <div class='field'>
+        <label data-t='ac_t_title'>What does this teach? Say it the way somebody would search for it</label>
+        <input id='t-title' maxlength='70' placeholder='Cut to the beat without counting frames'>
+      </div>
+      <div class='field'>
+        <label data-t='ac_t_blurb'>One line about what they get</label>
+        <input id='t-blurb' maxlength='160' placeholder='The three-step way I cut all my gaming edits'>
+      </div>
+      <div class='two'>
+        <div class='field'>
+          <label data-t='ac_t_cat'>Category</label>
+          <select id='t-cat'>
+            <option value='editing'>Editing</option><option value='thumbnails'>Thumbnails</option>
+            <option value='titles'>Titles</option><option value='growth'>Growth</option>
+            <option value='filming'>Filming</option><option value='sound'>Sound</option>
+            <option value='other'>Other</option>
+          </select>
+        </div>
+        <div class='field'>
+          <label data-t='ac_t_level'>Who is it for</label>
+          <select id='t-level'>
+            <option value='starter'>Starting out</option>
+            <option value='getting-there'>Getting there</option>
+            <option value='advanced'>Already good</option>
+          </select>
+        </div>
+        <div class='field' id='pricefield'>
+          <label data-t='ac_t_price'>Price</label>
+          <input id='t-price' type='number' min='0' max='20' step='0.5' value='0'>
+        </div>
+        <div class='field'>
+          <label data-t='ac_t_coins'>Or NovaCoins</label>
+          <input id='t-coins' type='number' min='0' max='500' step='5' value='25'>
+        </div>
+      </div>
+      <div class='field'>
+        <label data-t='ac_t_body'>The lesson itself. Steps, in order, in your own words.</label>
+        <textarea id='t-body' maxlength='6000'></textarea>
+      </div>
+      <button class='go' id='publish' data-t='ac_publish'>Put it up</button>
+      <div class='out' id='t-out'></div>
+    </div>
+
+    <div class='card' id='minecard' hidden>
+      <h2 style='margin:0 0 4px;font-size:1.05rem' data-t='ac_yours'>Your lessons</h2>
+      <div id='mine'></div>
+      <div class='earn' id='earn'></div>
+    </div>
+  </section>
+
+  <div class='card' id='readcard' hidden>
+    <h2 id='r-title' style='margin:0 0 4px;font-size:1.1rem'></h2>
+    <p class='who' id='r-who' style='margin:0 0 12px;opacity:.65;font-size:.82rem'></p>
+    <div class='readout' id='r-body'></div>
+    <div class='out' id='r-out'></div>
+    <button class='go' id='r-close' style='margin-top:14px'>Close</button>
   </div>
 </div>
 
-<script>
-/* The check itself. No account, no key, nothing stored: whoever is holding the
-   certificate is the person who needs to check it, and they have no reason to
-   have one of our accounts. */
-(function () {
-  var box = document.getElementById('out');
-  var inp = document.getElementById('code');
-
-  function show(html, cls) { box.className = 'out ' + (cls || ''); box.innerHTML = html; }
-
-  /* Its own escape rather than nova.js's. Everything printed below comes off
-     the wire, and nova.js loads at the end of the page — a helper that is not
-     there yet is a helper that is not escaping anything. */
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
-    });
-  }
-
-  function pretty(iso) {
-    try {
-      var d = new Date(iso + 'T00:00:00Z');
-      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-    } catch (e) { return iso; }
-  }
-
-  function check() {
-    var c = (inp.value || '').trim();
-    if (!c) { show('Type the number from the certificate.', 'bad'); return; }
-    show('Checking\u2026');
-    /* ncApi is nova.js's wrapper round the same worker the rest of the site
-       uses, so this page cannot drift to a different address. */
-    if (typeof ncApi !== 'function') {
-      show('This page could not reach the NovaClip server. Reload and try again.', 'bad');
-      return;
-    }
-    ncApi('/cert/verify?c=' + encodeURIComponent(c)).then(function (r) {
-      if (!r || !r.valid) {
-        show('<div class="k">Not valid</div><div class="big">No match</div>' +
-             esc((r && r.reason) || 'That number is not one of ours.') +
-             '<br><br>If this number is printed on a document somebody has given you, that ' +
-             'document was not issued by NovaClip.', 'bad');
-        return;
-      }
-      show('<div class="k">Valid certificate</div>' +
-           '<div class="big">' + esc(r.name) + '</div>' +
-           esc(r.tier) + '<br>Issued ' + esc(pretty(r.issued)) +
-           '<br><br><span class="k">Number</span><br>' + esc(c.toUpperCase()), 'good');
-    }).catch(function (e) {
-      show('Could not reach the NovaClip server just now. Try again in a moment.<br>' +
-           '<span class="k">' + esc(String(e.message || e)) + '</span>', 'bad');
-    });
-  }
-
-  document.getElementById('go').onclick = check;
-  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') check(); });
-
-  /* ?c= on the address is what the QR code on a certificate points at, so a
-     phone camera lands here with the answer already on screen. */
-  var q = new URLSearchParams(location.search).get('c');
-  if (q) { inp.value = q.toUpperCase(); addEventListener('load', check); }
-})();
-</script>
+<script src='academy.js'></script>
 <script src='category-scene.js'></script>
 <script src='categories.js'></script>
 <script src='nova.js'></script>

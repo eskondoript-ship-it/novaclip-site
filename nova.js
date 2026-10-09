@@ -24,6 +24,10 @@ const T = {
   /* MISSING, AND IT SHOWED. NC_NAV looks its labels up by these keys, and
      'games' was never here — so nine rail entries translated and one sat in
      English on every page in every language. */
+  /* The Academy: lesson packs other creators wrote. The word is kept close to
+     "academy" in most of these because it is the one every language already
+     uses for a place you go to learn a craft. */
+  academy: { en:"Academy", zh:"学院", hi:"अकादमी", es:"Academia", ar:"الأكاديمية", fr:"Académie", bn:"অ্যাকাডেমি", pt:"Academia", ru:"Академия", ur:"اکیڈمی", id:"Akademi", de:"Akademie", ja:"アカデミー", tr:"Akademi", ko:"아카데미", fa:"آکادمی", uk:"Академія", it:"Accademia", pl:"Akademia", vi:"Học viện" },
   games: { en:"Games", zh:"游戏", hi:"गेम्स", es:"Juegos", ar:"الألعاب", fr:"Jeux", bn:"গেমস", pt:"Jogos", ru:"Игры", ur:"گیمز", id:"Game", de:"Spiele", ja:"ゲーム", tr:"Oyunlar", ko:"게임", fa:"بازی‌ها", uk:"Ігри", it:"Giochi", pl:"Gry", vi:"Trò chơi" },
   /* The second line of the profile card when no channel is connected. It was
      the string 'Creator', written straight into the markup. */
@@ -5533,6 +5537,11 @@ const NC_NAV = [
   { name: 'Create', key: 'nav_create', icon: 'editor', items: [
       ['studio-ai.html', 'AI', 'ai', 'ai']] },
   { name: 'Learn', key: 'nav_learn', icon: 'life', items: [
+      /* The Academy sits in Learn rather than in Create, because that is what
+         somebody arrives for: they want to get better at a thing, and another
+         creator has written down how. Teaching is the other half of the same
+         page and the people who do it come in through Profile anyway. */
+      ['academy.html', 'Academy', 'academy', 'ai'],
       ['game.html', 'Games', 'games', 'games']] },
   { items: [['socials.html', 'Socials', 'socials', 'socials']] },
   { name: 'You', key: 'nav_you', icon: 'progress', items: [

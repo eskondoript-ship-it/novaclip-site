@@ -584,6 +584,87 @@ async function gate(env, body) {
   return { code };
 }
 
+
+/* ===========================================================================
+   THE ACADEMY — teenagers selling what they know to other teenagers
+   ===========================================================================
+   A marketplace where a young creator sells a lesson pack and another one buys
+   it. The rules below are the whole point of the feature living on the server
+   rather than in the page: a page can be edited by whoever is looking at it,
+   and these are the rules that keep a child-to-child marketplace lawful.
+
+   WHO MAY SELL
+     · an account in good standing (not suspended), and
+     · a NovaClip certificate on that account — the credential is the supply
+       filter, so teaching is something earned rather than switched on, and
+     · a parent on file who has turned earning on for this child and named
+       themselves as the person the money goes to.
+
+   WHAT MAY BE SOLD
+     Work, not time. A lesson pack is a thing somebody made, delivered when it
+     is bought. There is no scheduling, no call, no private channel between two
+     children, and therefore no session for anybody to be harmed in. That is a
+     deliberate choice and not a limitation to be lifted quietly later.
+
+   MONEY AND AGE
+     Under 16 an account may publish, but the price is forced to zero and it
+     earns NovaCoins instead. Portugal sets the working age at 16 and the
+     customer being a child does not change the seller's position. Over 16 a
+     price is allowed, and it is paid to the PARENT's account — a minor cannot
+     hold a payout account at any processor we could use, and cannot sign the
+     contract that would let them.
+
+   WHAT THIS FILE DOES NOT DO
+     It does not move money. There is no payout processor wired in and the buy
+     endpoint says so in plain words rather than pretending. Orders are
+     recorded so that the day one is connected, the history is already there.
+   ========================================================================= */
+const ACADEMY_CATS = ['editing', 'thumbnails', 'titles', 'growth', 'filming', 'sound', 'other'];
+const ACADEMY_LEVELS = ['starter', 'getting-there', 'advanced'];
+const ACADEMY_MAX_PRICE = 20;          /* euros. A lesson pack, not a course. */
+const ACADEMY_WORK_AGE = 16;           /* below this: coins, never cash */
+const ACADEMY_MAX_LISTINGS = 12;       /* per account, so nobody floods the shelf */
+
+const cleanLine = (v, n) => String(v == null ? '' : v)
+  .replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+const cleanText = (v, n) => String(v == null ? '' : v)
+  .replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/[ \t]+/g, ' ')
+  .replace(/\n{3,}/g, '\n\n').trim().slice(0, n);
+const cleanCat = (v) => ACADEMY_CATS.includes(String(v)) ? String(v) : 'other';
+const cleanLevel = (v) => ACADEMY_LEVELS.includes(String(v)) ? String(v) : 'starter';
+
+/* An age band, never a birthday. The Academy needs to know which side of the
+   working age somebody is and nothing else, so that is all that is stored. */
+function cleanAge(v) {
+  const n = parseInt(v, 10);
+  if (!Number.isFinite(n) || n < 13 || n > 19) return 0;
+  return n;
+}
+
+function listingId() {
+  return 'L' + Date.now().toString(36) + randomFrom(CODE_ALPHABET, 5);
+}
+
+/* Everything the publish rules need, read from storage rather than from the
+   request. The client is told WHY it cannot publish, because "no" with no
+   reason is how a teenager decides a feature is broken. */
+async function teachStanding(env, code, key) {
+  const consent = await env.DB.get('teach:' + code, 'json');
+  const cert = validKey(key) ? await env.DB.get('certof:' + key, 'json') : null;
+  const age = consent ? cleanAge(consent.age) : 0;
+  return {
+    consent: !!(consent && consent.ok),
+    payee: consent && consent.payee ? consent.payee : null,
+    age,
+    cert: cert || null,
+    mayPublish: !!(consent && consent.ok && cert),
+    mayCharge: !!(consent && consent.ok && cert && age >= ACADEMY_WORK_AGE),
+    why: !consent || !consent.ok
+      ? 'a parent has to turn earning on from the Family Dashboard first'
+      : (!cert ? 'you need a NovaClip certificate before you can teach' : '')
+  };
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
@@ -797,6 +878,10 @@ export default {
       const tc = CERT_TIERS[tier].code;
       const serial = certSerial(tc, await hmacHex(env.CERT_SECRET, name + '|' + tc + '|' + iso));
       await env.DB.put('cert:' + serial, JSON.stringify({ name, tier, iso, key, at: Date.now() }));
+      /* The other way round as well. The Academy has to ask "does this account
+         hold a certificate" on every publish, and scanning every certificate
+         ever issued to answer it is not a question you can ask twice. */
+      await env.DB.put('certof:' + key, JSON.stringify({ serial, tier, iso, name }));
       return json({ serial, name, tier, issued: iso });
     }
 
@@ -818,6 +903,204 @@ export default {
         if (again !== c) return json({ valid: false, reason: 'the details do not match the number' });
       }
       return json({ valid: true, name: rec.name, tier: rec.tier, issued: rec.iso });
+    }
+
+    // ---------- the Academy ----------
+    /* What the account is allowed to do, and why not when it is not. */
+    if (path === '/academy/standing' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const st = await teachStanding(env, g.code, body.key);
+      return json({
+        consent: st.consent, cert: st.cert, age: st.age,
+        mayPublish: st.mayPublish, mayCharge: st.mayCharge,
+        workAge: ACADEMY_WORK_AGE, maxPrice: ACADEMY_MAX_PRICE, why: st.why,
+        payouts: false
+      });
+    }
+
+    /* The parent's switch. It carries the parent's own name and email because
+       they are the person the money would be paid to and the person who
+       answers for the account — and the age, because the parent is a better
+       source for it than the child. */
+    if (path === '/academy/consent' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const on = body.allow !== false;
+      if (!on) {
+        await env.DB.delete('teach:' + g.code);
+        return json({ ok: true, consent: false });
+      }
+      const name = cleanLine(body.parentName, 60);
+      const email = cleanLine(body.parentEmail, 90).toLowerCase();
+      const age = cleanAge(body.age);
+      if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) {
+        return json({ error: 'the parent\'s name and email are both needed' }, 400);
+      }
+      if (!age) return json({ error: 'the age has to be between 13 and 19' }, 400);
+      /* CHECKED BEFORE THE RATE LIMIT, ON PURPOSE. The limiter spends its slot
+         on whatever arrives, so validating afterwards means a parent who
+         mistypes their email is told "slow down" when they correct it three
+         seconds later. A rejected field costs no storage, so it costs no
+         allowance either. */
+      if (await rateLimited(env, 'teach:' + g.code, 3000)) return json({ error: 'slow down' }, 429);
+      await env.DB.put('teach:' + g.code, JSON.stringify({
+        ok: true, age, payee: { name, email }, at: Date.now()
+      }));
+      return json({ ok: true, consent: true, age, mayCharge: age >= ACADEMY_WORK_AGE });
+    }
+
+    if (path === '/academy/publish' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const st = await teachStanding(env, g.code, body.key);
+      if (!st.mayPublish) return json({ error: st.why || 'not allowed to publish yet' }, 403);
+
+      const title = cleanLine(body.title, 70);
+      const blurb = cleanLine(body.blurb, 160);
+      const content = cleanText(body.content, 6000);
+      if (title.length < 6) return json({ error: 'the title needs to say what it teaches' }, 400);
+      if (content.length < 80) return json({ error: 'there is not enough in the lesson yet' }, 400);
+      for (const field of [title, blurb, content]) {
+        const seen = screen(field);
+        if (!seen.ok) return json({ error: 'that wording will not pass — ' + seen.kind }, 400);
+      }
+      /* After the checks, for the same reason as the consent endpoint: being
+         throttled for fixing a typo teaches people the feature is broken. */
+      if (await rateLimited(env, 'pub:' + g.code, 4000)) return json({ error: 'slow down' }, 429);
+
+      /* THE AGE RULE, APPLIED HERE AND NOWHERE ELSE. A price from an account
+         under the working age is not refused, it is turned into coins, because
+         refusing would just teach somebody to lie about their age. */
+      let price = Math.round(Number(body.price) * 100) / 100;
+      if (!Number.isFinite(price) || price < 0) price = 0;
+      if (price > ACADEMY_MAX_PRICE) price = ACADEMY_MAX_PRICE;
+      const coinsOnly = !st.mayCharge;
+      if (coinsOnly) price = 0;
+      const coins = Math.max(0, Math.min(500, Math.round(Number(body.coins) || 0)));
+
+      const mine = (await env.DB.get('mine:' + g.code, 'json')) || [];
+      const id = cleanLine(body.id, 24) && mine.includes(cleanLine(body.id, 24))
+        ? cleanLine(body.id, 24) : listingId();
+      if (!mine.includes(id)) {
+        if (mine.length >= ACADEMY_MAX_LISTINGS) {
+          return json({ error: 'that is as many lessons as one account can have up at once' }, 403);
+        }
+        mine.push(id);
+        await env.DB.put('mine:' + g.code, JSON.stringify(mine));
+        const idx = (await env.DB.get('lstidx', 'json')) || [];
+        idx.unshift(id);
+        await env.DB.put('lstidx', JSON.stringify(idx.slice(0, 500)));
+      }
+      const row = {
+        id, code: g.code, title, blurb, content,
+        cat: cleanCat(body.cat), level: cleanLevel(body.level),
+        price, coins, coinsOnly,
+        by: cleanLine(st.cert && st.cert.name, 48) || 'A NovaClip creator',
+        tier: (st.cert && st.cert.tier) || '', serial: (st.cert && st.cert.serial) || '',
+        at: Date.now(), hidden: false
+      };
+      await env.DB.put('lst:' + id, JSON.stringify(row));
+      return json({ ok: true, id, price, coinsOnly,
+        note: coinsOnly ? 'under ' + ACADEMY_WORK_AGE + ', so this earns coins rather than money' : '' });
+    }
+
+    if (path === '/academy/unpublish' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const id = cleanLine(body.id, 24);
+      const row = await env.DB.get('lst:' + id, 'json');
+      if (!row || row.code !== g.code) return json({ error: 'not yours' }, 403);
+      row.hidden = true;
+      await env.DB.put('lst:' + id, JSON.stringify(row));
+      return json({ ok: true });
+    }
+
+    /* The shelf. Public, and deliberately without the lesson itself in it:
+       a browse answer that carried every lesson would be a shop that gives
+       its stock away. */
+    if (path === '/academy/list' && request.method === 'GET') {
+      const idx = (await env.DB.get('lstidx', 'json')) || [];
+      const cat = url.searchParams.get('cat');
+      const out = [];
+      for (const id of idx.slice(0, 120)) {
+        const row = await env.DB.get('lst:' + id, 'json');
+        if (!row || row.hidden) continue;
+        if (cat && ACADEMY_CATS.includes(cat) && row.cat !== cat) continue;
+        out.push({ id: row.id, title: row.title, blurb: row.blurb, cat: row.cat, level: row.level,
+                   price: row.price, coins: row.coins, coinsOnly: row.coinsOnly,
+                   by: row.by, tier: row.tier, at: row.at,
+                   length: row.content ? row.content.length : 0 });
+        if (out.length >= 60) break;
+      }
+      return json(out);
+    }
+
+    /* One lesson. The content comes back only for the person who made it or
+       somebody who has an order against it. */
+    if (path === '/academy/item' && request.method === 'POST') {
+      const id = cleanLine(body.id, 24);
+      const row = await env.DB.get('lst:' + id, 'json');
+      if (!row || row.hidden) return json({ error: 'no such lesson' }, 404);
+      const code = cleanCode(body.code || '');
+      const owner = code && code === row.code;
+      const bought = code ? !!(await env.DB.get('ord:' + code + ':' + id)) : false;
+      const free = !row.price && !row.coins;
+      const open = owner || bought || free;
+      return json({
+        id: row.id, title: row.title, blurb: row.blurb, cat: row.cat, level: row.level,
+        price: row.price, coins: row.coins, coinsOnly: row.coinsOnly, by: row.by, tier: row.tier,
+        at: row.at, owner, bought, open,
+        content: open ? row.content : row.content.slice(0, 220) + '\u2026'
+      });
+    }
+
+    /* AN ORDER, NOT A PAYMENT. Nothing here moves money and nothing here
+       pretends to: a priced lesson answers 503 and says what is missing, and a
+       coin-priced one goes through, because coins are this site's own and need
+       no processor, no payout account and nobody's age. */
+    if (path === '/academy/buy' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const id = cleanLine(body.id, 24);
+      const row = await env.DB.get('lst:' + id, 'json');
+      if (!row || row.hidden) return json({ error: 'no such lesson' }, 404);
+      if (row.code === g.code) return json({ error: 'that is your own lesson' }, 400);
+      if (await env.DB.get('ord:' + g.code + ':' + id)) return json({ ok: true, already: true });
+      if (row.price > 0) {
+        return json({
+          error: 'paid lessons are not switched on yet',
+          detail: 'the money would go to the seller\'s parent account, and no payout processor is '
+                + 'connected to this worker',
+          price: row.price
+        }, 503);
+      }
+      /* The allowance is spent here, where something is actually written. An
+         attempt that bounced off the "not switched on" wall above has cost
+         nothing and should not stop the next real purchase two seconds later —
+         which is exactly what it did on the first run of the tests. */
+      if (await rateLimited(env, 'buy:' + g.code, 2000)) return json({ error: 'slow down' }, 429);
+      await env.DB.put('ord:' + g.code + ':' + id,
+        JSON.stringify({ at: Date.now(), coins: row.coins, price: 0 }));
+      /* The seller's running total, for the day payouts exist. */
+      const earned = (await env.DB.get('earn:' + row.code, 'json')) || { coins: 0, money: 0, sales: 0 };
+      earned.coins += row.coins; earned.sales += 1;
+      await env.DB.put('earn:' + row.code, JSON.stringify(earned));
+      return json({ ok: true, coins: row.coins });
+    }
+
+    if (path === '/academy/mine' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const mine = (await env.DB.get('mine:' + g.code, 'json')) || [];
+      const rows = [];
+      for (const id of mine) {
+        const row = await env.DB.get('lst:' + id, 'json');
+        if (row) rows.push({ id: row.id, title: row.title, price: row.price, coins: row.coins,
+                             coinsOnly: row.coinsOnly, cat: row.cat, hidden: !!row.hidden, at: row.at });
+      }
+      const earned = (await env.DB.get('earn:' + g.code, 'json')) || { coins: 0, money: 0, sales: 0 };
+      return json({ listings: rows, earned });
     }
 
     // ---------- leaderboard ----------
