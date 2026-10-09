@@ -202,6 +202,7 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
   <div class='tabs'>
     <button id='tab-learn' class='on' data-t='ac_learn'>Learn</button>
     <button id='tab-teach' data-t='ac_teach'>Teach</button>
+    <button id='tab-coins' data-t='ac_coins'>NovaCoins</button>
   </div>
 
   <section id='pane-learn'>
@@ -220,6 +221,14 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
     </div>
     <div class='shelf' id='shelf'></div>
     <p class='muted' id='shelfnote'></p>
+  </section>
+
+  <section id='pane-coins' hidden>
+    <p class='sub' style='margin-top:0'>NovaCoins are what the Academy runs on. You earn them by doing
+       things on NovaClip, and you can buy them if you would rather not wait. They are spent inside
+       NovaClip and they do not turn back into money.</p>
+    <p class='muted'>Your balance: <b id='balance'>—</b></p>
+    <div id='coinshop'></div>
   </section>
 
   <section id='pane-teach' hidden>

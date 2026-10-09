@@ -153,15 +153,25 @@
           'below the age anybody may be paid for work. So your lessons earn NovaCoins instead of money. ' +
           'On your ' + st.workAge + 'th birthday your parent can set a price.');
       }
+      if (st.consent && st.cert && st.age >= st.workAge && !st.ageVerified) {
+        bits.push('<b>One more step before money</b>A parent saying you are ' + st.age + ' is enough to ' +
+          'teach for coins. To be paid actual money your age has to be checked properly &mdash; a quick ' +
+          'face scan with the service that does it, which takes seconds. <u>NovaClip never sees the ' +
+          'picture</u>: the scan happens at the checking service and all that comes back here is a yes ' +
+          'or a no. <button class="agego" style="margin-top:8px">Check my age</button>');
+      }
       if (st.mayCharge) {
-        bits.push('<b>You can set a price</b>Up to &euro;' + st.maxPrice + ' a lesson. It is paid to ' +
-          'your parent&rsquo;s account, not yours. Payouts are not connected yet, so money prices will not ' +
-          'go through until they are &mdash; coins work today.');
+        bits.push('<b>You can set a price</b>Up to &euro;' + st.maxPrice + ' a lesson, and NovaClip keeps ' +
+          Math.round((st.fee || 0.2) * 100) + '% of it &mdash; you keep the rest. It is paid to your ' +
+          'parent&rsquo;s account, not yours. Payouts are not connected yet, so money prices will not go ' +
+          'through until they are &mdash; coins work today.');
       }
       g.innerHTML = '<div class="gate">' + bits.join('</div><div class="gate">') + '</div>';
       $('makecard').hidden = !st.mayPublish;
       $('minecard').hidden = !st.mayPublish;
       $('pricefield').style.display = st.mayCharge ? '' : 'none';
+      var go = g.querySelector('.agego');
+      if (go) go.onclick = startAgeCheck;
       if (st.mayPublish) mine();
     }).catch(function (e) {
       g.innerHTML = '<div class="gate"><b>Could not check</b>' + esc(e.message) + '</div>';
@@ -198,9 +208,61 @@
       });
       $('earn').innerHTML =
         '<div><b>' + r.earned.sales + '</b>lessons taken</div>' +
-        '<div><b>' + r.earned.coins + '</b>coins earned</div>' +
+        '<div><b>' + r.earned.coins + '</b>coins kept</div>' +
+        '<div><b>' + (r.earned.fee || 0) + '</b>coins to NovaClip (' +
+          Math.round((r.fee || 0.2) * 100) + '%)</div>' +
         '<div><b>&euro;' + (r.earned.money || 0).toFixed(2) + '</b>to your parent&rsquo;s account</div>';
     }).catch(function () {});
+  }
+
+  /* THE FACE SCAN THAT THIS SITE NEVER SEES.
+     The check runs at a certified age assurance service. We send nobody there
+     but the account reference; they do the scan, they estimate the age, and
+     they send back a signed yes or no. A photograph of a child's face is
+     biometric data under GDPR Article 9, and the safest place for one is
+     nowhere near us — so there is no camera code in this file at all, which is
+     the point rather than an omission. */
+  function startAgeCheck() {
+    api('/age/start', {}).then(function (r) {
+      location.href = r.url;
+    }).catch(function (e) {
+      var g = $('gate');
+      g.insertAdjacentHTML('beforeend', '<div class="gate"><b>Age checking is not connected yet</b>' +
+        esc(e.message) + '. Until it is, lessons here earn NovaCoins rather than money &mdash; which ' +
+        'needs nobody\'s age and nobody\'s face.</div>');
+    });
+  }
+
+  /* ---------------------------------------------------------------- the coins */
+  function coins() {
+    var box = $('coinshop');
+    if (!box) return;
+    window.ncApi('/coins/packs').then(function (r) {
+      var packs = r.packs.map(function (p) {
+        return '<div class="lesson"><h3>' + p.coins + ' NovaCoins</h3>' +
+          '<p class="blurb">Spend them on lessons in the Academy.</p>' +
+          '<div class="foot"><span class="price">&euro;' + p.eur.toFixed(2) + '</span>' +
+          '<button data-pack="' + p.id + '">Buy</button></div></div>';
+      }).join('');
+      box.innerHTML = '<div class="shelf">' + packs + '</div>' +
+        '<p class="muted">A parent pays for these, and it is their card that is asked for. ' +
+        'Coins are spent inside NovaClip and cannot be turned back into money.</p>';
+      [].forEach.call(box.querySelectorAll('button[data-pack]'), function (b) {
+        b.onclick = function () {
+          api('/coins/checkout', { pack: b.getAttribute('data-pack') }).then(function (r) {
+            location.href = r.url;
+          }).catch(function (e) {
+            box.insertAdjacentHTML('beforeend', '<p class="muted">' + esc(e.message) + '.</p>');
+          });
+        };
+      });
+    }).catch(function () {});
+    if (signedIn()) {
+      api('/coins/balance', {}).then(function (w) {
+        var el = $('balance');
+        if (el) el.textContent = w.bal + ' NovaCoins';
+      }).catch(function () {});
+    }
   }
 
   /* ------------------------------------------------------------------- wiring */
@@ -208,13 +270,23 @@
     $('tab-learn').onclick = function () {
       $('tab-learn').classList.add('on'); $('tab-teach').classList.remove('on');
       $('pane-learn').hidden = false; $('pane-teach').hidden = true;
+      if ($('pane-coins')) $('pane-coins').hidden = true;
+      if ($('tab-coins')) $('tab-coins').classList.remove('on');
     };
     $('tab-teach').onclick = function () {
       $('tab-teach').classList.add('on'); $('tab-learn').classList.remove('on');
       $('pane-teach').hidden = false; $('pane-learn').hidden = true;
+      if ($('pane-coins')) $('pane-coins').hidden = true;
+      if ($('tab-coins')) $('tab-coins').classList.remove('on');
       gate();
     };
     $('cat').onchange = shelf;
+    if ($('tab-coins')) $('tab-coins').onclick = function () {
+      $('tab-coins').classList.add('on');
+      $('tab-learn').classList.remove('on'); $('tab-teach').classList.remove('on');
+      $('pane-coins').hidden = false; $('pane-learn').hidden = true; $('pane-teach').hidden = true;
+      coins();
+    };
     $('publish').onclick = publish;
     $('r-close').onclick = function () { $('readcard').hidden = true; };
     shelf();

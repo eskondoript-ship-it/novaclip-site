@@ -610,6 +610,38 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v106: NovaCoins you can buy, a 20% fee, and proving sixteen.
+
+   THE WALLET MOVED TO THE SERVER, AND IT HAD TO. Coins were earned and kept in
+   nc_points, which is fine while they are a score. The moment they can be
+   bought with a card they are money, and money in localStorage is a number
+   anybody can edit from the console. Bought coins and everything spent in the
+   Academy now live in the Worker. Earned coins stay where they are: forging a
+   score is cheating at a game, forging a balance is theft from whoever gets
+   paid out of it.
+
+   COINS ARE ONLY EVER CREATED BY A SIGNED MESSAGE from the payment processor,
+   checked against a COIN_SECRET, and a retried webhook credits once rather
+   than twice.
+
+   THE FEE is taken where the sale happens and recorded on the order, so the
+   seller's page shows arithmetic they can check: 100 coins in, 80 to them, 20
+   to NovaClip.
+
+   THE FACE SCAN IS SOMEBODY ELSE'S JOB. A photograph of a child's face is
+   biometric data under GDPR Article 9, and a picture of a fifteen-year-old
+   proving they are not fifteen is the worst thing in the building to be
+   holding. Doing the estimate in the browser is worse — it is a number the
+   browser reports, and a browser can report anything. So the scan happens at a
+   certified age assurance service; what is stored here is a boolean, a date
+   and their reference. No image, no estimate, no face. With no provider
+   configured nobody passes and nobody may charge, which is the correct
+   failure.
+
+   A parent's word still opens teaching for coins. Only money needs the check.
+
+   academy.html, academy.js, parent.html, privacy.html,
+   leaderboard-worker.js (deploy it — a push does not). */
 /* v105: the Academy — teenagers selling lesson packs to other teenagers.
 
    WHY THE RULES ARE IN THE WORKER AND NOT THE PAGE. Who may teach, who may
@@ -2010,7 +2042,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v105';
+const CACHE = 'novaclip-v106';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

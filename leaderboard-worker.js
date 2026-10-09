@@ -619,6 +619,59 @@ async function gate(env, body) {
      endpoint says so in plain words rather than pretending. Orders are
      recorded so that the day one is connected, the history is already there.
    ========================================================================= */
+/* ===========================================================================
+   COINS THAT COST MONEY, A FEE, AND PROVING AN AGE
+   ===========================================================================
+   THE WALLET MOVED, AND IT HAD TO. NovaCoins were earned and kept in the
+   browser, in nc_points, which was fine while they were a score. The moment
+   they can be bought with a card they are money, and money in localStorage is
+   a number anybody can edit from the console. Bought coins and anything spent
+   in the Academy therefore live here, where the client cannot reach them.
+   Earned coins stay where they are — forging a score is cheating at a game,
+   forging a balance is theft from whoever gets paid out of it.
+
+   THE FEE. NovaClip keeps ACADEMY_FEE of what a lesson sells for and the
+   seller keeps the rest. It is applied where the sale happens and recorded on
+   the order, so the number on the seller's page is arithmetic they can check
+   rather than a figure we assert.
+
+   PROVING SIXTEEN. A face scan is the right instinct and the wrong thing to
+   build ourselves. A photograph of a child's face is biometric data: special
+   category under GDPR Article 9, and storing one of a fifteen-year-old to
+   prove they are not fifteen is a liability nobody here can carry. Doing the
+   estimate in the browser instead is worse — it is a number the browser
+   reports, and a browser can report anything.
+
+   So this file never sees a face. AGE_PROVIDER names a certified age
+   assurance service; the scan happens there, and what comes back is a signed
+   statement that this account cleared the threshold. What is stored is a
+   boolean, a date and the provider's reference. No image, no estimate, no
+   face. Without a provider configured nobody passes, and nobody may charge
+   money — which is the correct failure, because the alternative is trusting
+   the page.
+   ========================================================================= */
+const ACADEMY_FEE = 0.20;              /* NovaClip's share of a sale */
+const COIN_PACKS = [
+  { id: 'c300',  coins: 300,  eur: 2.99 },
+  { id: 'c800',  coins: 800,  eur: 6.99 },
+  { id: 'c2000', coins: 2000, eur: 14.99 }
+];
+
+async function wallet(env, code) {
+  return (await env.DB.get('wal:' + code, 'json')) ||
+         { bal: 0, bought: 0, earned: 0, spent: 0 };
+}
+async function walletPut(env, code, w) {
+  await env.DB.put('wal:' + code, JSON.stringify(w));
+  return w;
+}
+
+/* Whether this account has cleared the age threshold, and how. */
+async function ageProof(env, code) {
+  const row = await env.DB.get('age:' + code, 'json');
+  return row && row.ok ? row : null;
+}
+
 const ACADEMY_CATS = ['editing', 'thumbnails', 'titles', 'growth', 'filming', 'sound', 'other'];
 const ACADEMY_LEVELS = ['starter', 'getting-there', 'advanced'];
 const ACADEMY_MAX_PRICE = 20;          /* euros. A lesson pack, not a course. */
@@ -652,16 +705,24 @@ async function teachStanding(env, code, key) {
   const consent = await env.DB.get('teach:' + code, 'json');
   const cert = validKey(key) ? await env.DB.get('certof:' + key, 'json') : null;
   const age = consent ? cleanAge(consent.age) : 0;
+  const proof = await ageProof(env, code);
+  /* A PARENT SAYING SIXTEEN IS NOT PROOF OF SIXTEEN. It is enough to publish
+     for coins — nothing is being paid, so nothing turns on the number — and it
+     is not enough to be paid. Money needs the age checked by somebody whose
+     job that is. */
+  const mayPublish = !!(consent && consent.ok && cert);
+  const mayCharge = !!(mayPublish && age >= ACADEMY_WORK_AGE && proof);
   return {
     consent: !!(consent && consent.ok),
     payee: consent && consent.payee ? consent.payee : null,
-    age,
-    cert: cert || null,
-    mayPublish: !!(consent && consent.ok && cert),
-    mayCharge: !!(consent && consent.ok && cert && age >= ACADEMY_WORK_AGE),
+    age, cert: cert || null, proof: proof ? { at: proof.at, by: proof.by } : null,
+    mayPublish, mayCharge,
     why: !consent || !consent.ok
       ? 'a parent has to turn earning on from the Family Dashboard first'
-      : (!cert ? 'you need a NovaClip certificate before you can teach' : '')
+      : (!cert ? 'you need a NovaClip certificate before you can teach'
+               : (age < ACADEMY_WORK_AGE
+                  ? ''
+                  : (!proof ? 'to be paid rather than earn coins, your age has to be checked' : '')))
   };
 }
 
@@ -915,7 +976,8 @@ export default {
         consent: st.consent, cert: st.cert, age: st.age,
         mayPublish: st.mayPublish, mayCharge: st.mayCharge,
         workAge: ACADEMY_WORK_AGE, maxPrice: ACADEMY_MAX_PRICE, why: st.why,
-        payouts: false
+        ageVerified: !!st.proof, ageConfigured: !!env.AGE_PROVIDER,
+        fee: ACADEMY_FEE, payouts: false
       });
     }
 
@@ -1079,14 +1141,151 @@ export default {
          attempt that bounced off the "not switched on" wall above has cost
          nothing and should not stop the next real purchase two seconds later —
          which is exactly what it did on the first run of the tests. */
+      /* SPENT FROM THE SERVER'S WALLET, NOT THE BROWSER'S. Coins can be bought
+         with a card now, so a balance the client reports is a balance the
+         client can invent. */
+      const buyerW = await wallet(env, g.code);
+      if (row.coins > 0 && buyerW.bal < row.coins) {
+        /* Checked before the limiter, like every other refusal in this file:
+           somebody who cannot afford a lesson has bought nothing, so they have
+           spent none of their allowance either. */
+        return json({ error: 'not enough NovaCoins', need: row.coins, have: buyerW.bal }, 402);
+      }
       if (await rateLimited(env, 'buy:' + g.code, 2000)) return json({ error: 'slow down' }, 429);
+      if (row.coins > 0) {
+        buyerW.bal -= row.coins;
+        buyerW.spent += row.coins;
+        await walletPut(env, g.code, buyerW);
+      }
+
+      /* The fee, taken where the sale happens so the seller's page can show
+         arithmetic rather than an assertion. */
+      const fee = Math.round(row.coins * ACADEMY_FEE);
+      const net = row.coins - fee;
       await env.DB.put('ord:' + g.code + ':' + id,
-        JSON.stringify({ at: Date.now(), coins: row.coins, price: 0 }));
-      /* The seller's running total, for the day payouts exist. */
-      const earned = (await env.DB.get('earn:' + row.code, 'json')) || { coins: 0, money: 0, sales: 0 };
-      earned.coins += row.coins; earned.sales += 1;
+        JSON.stringify({ at: Date.now(), coins: row.coins, fee, net, price: 0 }));
+      if (net > 0) {
+        const sellerW = await wallet(env, row.code);
+        sellerW.bal += net;
+        sellerW.earned += net;
+        await walletPut(env, row.code, sellerW);
+      }
+      const earned = (await env.DB.get('earn:' + row.code, 'json')) ||
+                     { coins: 0, fee: 0, money: 0, sales: 0 };
+      earned.coins += net; earned.fee = (earned.fee || 0) + fee; earned.sales += 1;
       await env.DB.put('earn:' + row.code, JSON.stringify(earned));
-      return json({ ok: true, coins: row.coins });
+      return json({ ok: true, coins: row.coins, toSeller: net, fee });
+    }
+
+    /* ---------- NovaCoins you can buy ---------- */
+    if (path === '/coins/packs' && request.method === 'GET') {
+      return json({ packs: COIN_PACKS, fee: ACADEMY_FEE, buyable: !!env.COIN_LINKS });
+    }
+
+    if (path === '/coins/balance' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      return json(await wallet(env, g.code));
+    }
+
+    /* Where to send somebody who wants to buy coins. COIN_LINKS is a JSON map
+       of pack id to a payment link, set as a Worker secret — the links are not
+       in the repo because the repo is public, and a payment link in a public
+       file is somebody else's checkout page. */
+    if (path === '/coins/checkout' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const pack = COIN_PACKS.filter(p => p.id === String(body.pack))[0];
+      if (!pack) return json({ error: 'no such pack' }, 400);
+      let links = null;
+      try { links = env.COIN_LINKS ? JSON.parse(env.COIN_LINKS) : null; } catch (e) {}
+      if (!links || !links[pack.id]) {
+        return json({
+          error: 'buying coins is not switched on yet',
+          detail: 'set a Worker secret called COIN_LINKS holding {"' + pack.id + '":"<payment link>"}'
+        }, 503);
+      }
+      /* The account travels with the payment so the webhook knows who to
+         credit. It is the recovery code, which is not a password and cannot
+         sign in on its own. */
+      const sep = links[pack.id].indexOf('?') === -1 ? '?' : '&';
+      return json({ url: links[pack.id] + sep + 'client_reference_id=' + encodeURIComponent(g.code),
+                    pack });
+    }
+
+    /* The payment processor says a pack was paid for. THIS IS THE ONLY WAY
+       COINS ARE CREATED: a request from the browser cannot mint anything, and
+       a request that cannot be verified is refused rather than trusted. */
+    if (path === '/coins/paid' && request.method === 'POST') {
+      if (!env.COIN_SECRET) return json({ error: 'no COIN_SECRET set on this worker' }, 503);
+      const given = String(body.sig || '');
+      const code = cleanCode(body.code || '');
+      const packId = String(body.pack || '');
+      const ref = cleanLine(body.ref, 64);
+      const pack = COIN_PACKS.filter(p => p.id === packId)[0];
+      if (!code || !pack || !ref) return json({ error: 'bad call' }, 400);
+      const want = await hmacHex(env.COIN_SECRET, code + '|' + packId + '|' + ref);
+      if (!sameSecret(given, want)) return json({ error: 'signature does not match' }, 403);
+      /* Paid twice is credited once: the processor retries webhooks, and a
+         retry that credits again is free coins for anybody who notices. */
+      if (await env.DB.get('paid:' + ref)) return json({ ok: true, already: true });
+      await env.DB.put('paid:' + ref, String(Date.now()));
+      const w = await wallet(env, code);
+      w.bal += pack.coins;
+      w.bought += pack.coins;
+      await walletPut(env, code, w);
+      return json({ ok: true, coins: pack.coins, balance: w.bal });
+    }
+
+    /* ---------- proving sixteen ---------- */
+    /* Starts a check with the age assurance provider. This worker never sees a
+       face: the scan happens at the provider, and what comes back here is a
+       signed yes or no. */
+    if (path === '/age/start' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      if (!env.AGE_PROVIDER) {
+        return json({
+          error: 'age checks are not switched on yet',
+          detail: 'set AGE_PROVIDER to a certified age assurance service. NovaClip must never take or '
+                + 'keep the photograph itself: a face is biometric data under GDPR Article 9, and a '
+                + 'picture of a child proving they are not a child is the worst thing in the building '
+                + 'to be holding.'
+        }, 503);
+      }
+      const sep = env.AGE_PROVIDER.indexOf('?') === -1 ? '?' : '&';
+      return json({ url: env.AGE_PROVIDER + sep + 'ref=' + encodeURIComponent(g.code) +
+                         '&threshold=' + ACADEMY_WORK_AGE });
+    }
+
+    /* The provider's answer. Signed, because this is the thing that decides
+       whether somebody may be paid. */
+    if (path === '/age/result' && request.method === 'POST') {
+      if (!env.AGE_SECRET) return json({ error: 'no AGE_SECRET set on this worker' }, 503);
+      const code = cleanCode(body.code || '');
+      const pass = body.pass === true;
+      const ref = cleanLine(body.ref, 64);
+      if (!code || !ref) return json({ error: 'bad call' }, 400);
+      const want = await hmacHex(env.AGE_SECRET, code + '|' + (pass ? 'pass' : 'fail') + '|' + ref);
+      if (!sameSecret(String(body.sig || ''), want)) return json({ error: 'signature does not match' }, 403);
+      if (!pass) {
+        await env.DB.delete('age:' + code);
+        return json({ ok: true, verified: false });
+      }
+      /* A boolean, a date and the provider's reference. No image, no estimate,
+         no face — none of it is here to be leaked. */
+      await env.DB.put('age:' + code, JSON.stringify({
+        ok: true, at: Date.now(), by: cleanLine(body.by, 40) || 'provider', ref
+      }));
+      return json({ ok: true, verified: true });
+    }
+
+    if (path === '/age/standing' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const proof = await ageProof(env, g.code);
+      return json({ verified: !!proof, at: proof ? proof.at : 0, by: proof ? proof.by : '',
+                    configured: !!env.AGE_PROVIDER, threshold: ACADEMY_WORK_AGE });
     }
 
     if (path === '/academy/mine' && request.method === 'POST') {
@@ -1099,8 +1298,9 @@ export default {
         if (row) rows.push({ id: row.id, title: row.title, price: row.price, coins: row.coins,
                              coinsOnly: row.coinsOnly, cat: row.cat, hidden: !!row.hidden, at: row.at });
       }
-      const earned = (await env.DB.get('earn:' + g.code, 'json')) || { coins: 0, money: 0, sales: 0 };
-      return json({ listings: rows, earned });
+      const earned = (await env.DB.get('earn:' + g.code, 'json')) ||
+                     { coins: 0, fee: 0, money: 0, sales: 0 };
+      return json({ listings: rows, earned, wallet: await wallet(env, g.code), fee: ACADEMY_FEE });
     }
 
     // ---------- leaderboard ----------
