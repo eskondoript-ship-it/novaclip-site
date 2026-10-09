@@ -610,6 +610,37 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v107: the under-13 bar and the parent's rules now live on the account.
+
+   BOTH OF THESE EXISTED AND BOTH LIVED IN ONE BROWSER. The age gate was a
+   careful piece of work — a neutral wheel that hints nothing, no retry button,
+   a report form rather than a way back in — and all of it was localStorage,
+   which a twelve-year-old defeats with a private window. The comment under it
+   said so honestly, because until there was an account nothing could follow
+   anybody. The parent's PIN and limits were the same: real on the laptop they
+   were set on, absent on the phone.
+
+   So the answer to the age wheel is written to the account, and under 13 bars
+   the ACCOUNT. The check sits inside gate(), which every write already passes
+   through, so there is no endpoint to remember to protect: consent, posting,
+   the wallet, all of it refuses. Answering again older does not lift it —
+   that would be the retry button the gate deliberately does not have, moved
+   somewhere nobody can see it.
+
+   The parent's rules travel the same way: a daily limit, quiet hours that may
+   cross midnight, and locks on the AI, the Academy, games, socials and the
+   editor. Changing them needs the hash of the PIN the parent already set, and
+   the account remembers the first hash it was given, so a child cannot
+   replace it with one of their own. A child who KNOWS the PIN can undo their
+   own limits — that was true before any of this and the page says so rather
+   than pretending.
+
+   Verified across three separate browser profiles: a rule set on one locks a
+   page on a second, and a third with freshly cleared storage claiming to be
+   15 is barred anyway.
+
+   nova.js, parent.html, privacy.html,
+   leaderboard-worker.js (deploy it — a push does not). */
 /* v106: NovaCoins you can buy, a 20% fee, and proving sixteen.
 
    THE WALLET MOVED TO THE SERVER, AND IT HAD TO. Coins were earned and kept in
@@ -2042,7 +2073,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v106';
+const CACHE = 'novaclip-v107';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

@@ -482,6 +482,45 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
          The clock that enforces the limit only ever knew about the stretch in
          front of it. This is the same clock's day book: what was actually used,
          and the breaks it forced, over a fortnight. -->
+    <div class='card' id='rulescard'>
+      <h3><span>Rules that follow them</span>
+        <small>Everything else on this page describes this device. These four settings live on your
+        child's account, so they apply on their phone, their school laptop and anywhere else they
+        sign in.</small></h3>
+
+      <div class='field'>
+        <label for='ruleMins'>Daily limit, in minutes — 0 for no limit</label>
+        <input type='number' id='ruleMins' min='0' max='600' step='15' placeholder='90'>
+      </div>
+      <div class='two' style='display:flex;gap:12px;flex-wrap:wrap'>
+        <div class='field' style='flex:1;min-width:120px'>
+          <label for='ruleFrom'>Quiet from</label>
+          <input type='number' id='ruleFrom' min='0' max='23' placeholder='22'>
+        </div>
+        <div class='field' style='flex:1;min-width:120px'>
+          <label for='ruleTo'>Quiet until</label>
+          <input type='number' id='ruleTo' min='0' max='23' placeholder='7'>
+        </div>
+      </div>
+      <p class='sthint' style='margin-top:0'>Quiet hours may cross midnight — 22 to 7 is the usual one.
+         Leave both empty for none.</p>
+
+      <div class='field'>
+        <label>Switch parts of NovaClip off</label>
+        <label style='display:block;margin:6px 0'><input type='checkbox' id='lockAi'> NovaClip AI and the AI tutors</label>
+        <label style='display:block;margin:6px 0'><input type='checkbox' id='lockAcademy'> The Academy — buying and selling lessons</label>
+        <label style='display:block;margin:6px 0'><input type='checkbox' id='lockGames'> Games</label>
+        <label style='display:block;margin:6px 0'><input type='checkbox' id='lockCommunity'> Socials and the community feed</label>
+        <label style='display:block;margin:6px 0'><input type='checkbox' id='lockEditor'> The editor and the photo tools</label>
+      </div>
+
+      <button class='btn' id='rulesSave'>Save these to the account</button>
+      <p class='sthint' id='rulesOut'></p>
+      <p class='sthint'>Saving asks for the PIN at the top of this page, and the account remembers which
+         PIN it answers to. A child who knows the PIN can undo these — that was true before this page
+         existed, and it is worth knowing rather than being surprised by.</p>
+    </div>
+
     <div class='card' id='teachcard'>
       <h3><span>Teaching and earning</span>
         <small>The Academy lets your child sell a lesson pack to other NovaClip creators. It is off
@@ -1930,6 +1969,61 @@ function fShieldNote() {
              parentName: $('teachName').value, parentEmail: $('teachEmail').value });
     };
     $('teachOff').onclick = function () { send({ allow: false }); };
+  });
+})();
+</script>
+<script>
+/* The rules that live on the account rather than on this laptop. The PIN never
+   travels: what goes to the worker is the same hash this page already stores,
+   and the account remembers the first one it was given. */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function who() {
+    return { key: localStorage.getItem('nc_key') || '', code: localStorage.getItem('nc_code') || '' };
+  }
+  function say(t) { var o = $('rulesOut'); if (o) o.textContent = t; }
+  function fill(r) {
+    if (!r) return;
+    $('ruleMins').value = r.dailyMinutes || '';
+    $('ruleFrom').value = r.quietFrom === null || r.quietFrom === undefined ? '' : r.quietFrom;
+    $('ruleTo').value = r.quietTo === null || r.quietTo === undefined ? '' : r.quietTo;
+    ['ai', 'academy', 'games', 'community', 'editor'].forEach(function (k) {
+      var el = $('lock' + k.charAt(0).toUpperCase() + k.slice(1));
+      if (el) el.checked = !!(r.locks && r.locks[k]);
+    });
+  }
+  function load() {
+    var w = who();
+    if (!w.key || !w.code || !window.ncApi) return;
+    window.ncApi('/account/state', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(w) }).then(function (st) { fill(st.rules); }).catch(function () {});
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!$('rulesSave')) return;
+    load();
+    $('rulesSave').onclick = async function () {
+      var w = who();
+      if (!w.key || !w.code) return say('Your child needs to be signed in on this device first.');
+      var pin = prompt('Your Family Dashboard PIN');
+      if (!pin) return;
+      var rules = {
+        dailyMinutes: parseInt($('ruleMins').value, 10) || 0,
+        quietFrom: $('ruleFrom').value === '' ? null : parseInt($('ruleFrom').value, 10),
+        quietTo: $('ruleTo').value === '' ? null : parseInt($('ruleTo').value, 10),
+        locks: {
+          ai: $('lockAi').checked, academy: $('lockAcademy').checked, games: $('lockGames').checked,
+          community: $('lockCommunity').checked, editor: $('lockEditor').checked
+        }
+      };
+      try {
+        var r = await window.ncApi('/parent/rules', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.assign({}, w, { pinHash: await hashPin(pin), rules: rules }))
+        });
+        fill(r.rules);
+        say('Saved to the account. It applies on every device they sign in on, next time a page opens.');
+      } catch (e) { say(e.message); }
+    };
   });
 })();
 </script>

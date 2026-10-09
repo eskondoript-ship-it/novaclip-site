@@ -581,6 +581,13 @@ async function gate(env, body) {
     error: 'suspended', until,
     why: (await env.DB.get('suspwhy:' + code)) || 'community guidelines'
   }, 403) };
+  /* TOO YOUNG TO BE HERE AT ALL. Checked in the one place every write already
+     passes through, so there is no endpoint to remember to protect and no new
+     browser to start again in: the account is barred, wherever it signs in. */
+  const minor = await env.DB.get('minor:' + code, 'json');
+  if (minor && minor.blocked) {
+    return { stop: json({ error: 'under-13', why: 'NovaClip is for 13 and over' }, 403) };
+  }
   return { code };
 }
 
@@ -650,6 +657,49 @@ async function gate(env, body) {
    money — which is the correct failure, because the alternative is trusting
    the page.
    ========================================================================= */
+/* ===========================================================================
+   THE PARENT'S RULES, AND THE UNDER-13 DOOR
+   ===========================================================================
+   Both of these already existed and both lived in one browser. The age gate
+   was a careful piece of work — a neutral wheel that hints nothing, no retry
+   button, a report form instead of a way back in — and it was all kept in
+   localStorage, which a twelve-year-old defeats by opening a private window.
+   The parent's PIN and limits were the same: real on the laptop they were set
+   on and absent on the phone.
+
+   So the rules moved to the account. An account carries them to every device
+   it signs in on, and the worker refuses to act for an account that is barred
+   — not as a second line of defence behind the page, but as the only line
+   that cannot be edited by the person it applies to.
+
+   THE PIN IS WHAT MAKES A PARENT A PARENT. There is no separate parent login
+   here and inventing one would mean asking families to keep another password.
+   What the worker holds is a hash of the PIN the parent already set. Changing
+   a rule needs it; reading the rules does not. A child who knows the PIN can
+   undo their own limits, which was true before any of this and is a thing to
+   tell parents plainly rather than pretend away.
+   ========================================================================= */
+const MIN_AGE = 13;
+const LOCKABLE = ['ai', 'academy', 'games', 'community', 'editor'];
+
+function cleanRules(v) {
+  const r = v && typeof v === 'object' ? v : {};
+  const mins = parseInt(r.dailyMinutes, 10);
+  const hour = (h) => {
+    const n = parseInt(h, 10);
+    return Number.isFinite(n) && n >= 0 && n <= 23 ? n : null;
+  };
+  const locks = {};
+  LOCKABLE.forEach(k => { locks[k] = !!(r.locks && r.locks[k]); });
+  return {
+    dailyMinutes: Number.isFinite(mins) && mins > 0 ? Math.min(600, mins) : 0,
+    quietFrom: hour(r.quietFrom),
+    quietTo: hour(r.quietTo),
+    locks,
+    at: Date.now()
+  };
+}
+
 const ACADEMY_FEE = 0.20;              /* NovaClip's share of a sale */
 const COIN_PACKS = [
   { id: 'c300',  coins: 300,  eur: 2.99 },
@@ -1175,6 +1225,67 @@ export default {
       earned.coins += net; earned.fee = (earned.fee || 0) + fee; earned.sales += 1;
       await env.DB.put('earn:' + row.code, JSON.stringify(earned));
       return json({ ok: true, coins: row.coins, toSeller: net, fee });
+    }
+
+    /* ---------- the age on the account, and the parent's rules ---------- */
+    /* The browser reports what the age wheel was told, once. Under 13 bars the
+       account rather than this browser — which is the whole point, because the
+       browser was never the thing that was too young. */
+    if (path === '/account/age' && request.method === 'POST') {
+      const code = cleanCode(body.code || '');
+      const key = String(body.key || '');
+      if (!code || !key) return json({ error: 'sign in first' }, 401);
+      const owner = await env.DB.get('code:' + code);
+      if (!owner || owner !== key) return json({ error: 'that code and key do not match' }, 403);
+      const age = parseInt(body.age, 10);
+      if (!Number.isFinite(age) || age < 1 || age > 120) return json({ error: 'bad age' }, 400);
+      const had = await env.DB.get('minor:' + code, 'json');
+      /* A BARRED ACCOUNT CANNOT ARGUE ITSELF OLDER. Once it is set, a second
+         answer does not lift it: that would be the retry button the age gate
+         deliberately does not have, moved to where nobody can see it. */
+      if (had && had.blocked) return json({ ok: true, blocked: true, locked: true });
+      await env.DB.put('minor:' + code, JSON.stringify({
+        age, blocked: age < MIN_AGE, at: Date.now()
+      }));
+      return json({ ok: true, blocked: age < MIN_AGE });
+    }
+
+    /* What this account is, everywhere. The page asks on load, so a block or a
+       rule set on one device is true on the next one. */
+    if (path === '/account/state' && request.method === 'POST') {
+      const code = cleanCode(body.code || '');
+      const key = String(body.key || '');
+      if (!code || !key) return json({ error: 'sign in first' }, 401);
+      const owner = await env.DB.get('code:' + code);
+      if (!owner || owner !== key) return json({ error: 'that code and key do not match' }, 403);
+      const minor = await env.DB.get('minor:' + code, 'json');
+      const rules = await env.DB.get('rules:' + code, 'json');
+      return json({
+        blocked: !!(minor && minor.blocked),
+        age: minor ? minor.age : 0,
+        rules: rules || null,
+        hasPin: !!(await env.DB.get('rpin:' + code))
+      });
+    }
+
+    /* Setting the rules needs the PIN a parent already keeps. The hash is sent
+       by the page — the PIN itself never travels, the same way it never leaves
+       the device on the Family Dashboard today. */
+    if (path === '/parent/rules' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const pin = String(body.pinHash || '');
+      if (!/^[a-f0-9]{64}$/.test(pin)) return json({ error: 'the Family Dashboard PIN is needed' }, 400);
+      const have = await env.DB.get('rpin:' + g.code);
+      /* First use sets the PIN this account answers to; after that it has to
+         match, so a child who never knew it cannot replace it with one they
+         chose. */
+      if (!have) await env.DB.put('rpin:' + g.code, pin);
+      else if (!sameSecret(have, pin)) return json({ error: 'that PIN does not match this account' }, 403);
+      if (await rateLimited(env, 'rules:' + g.code, 1500)) return json({ error: 'slow down' }, 429);
+      const rules = cleanRules(body.rules);
+      await env.DB.put('rules:' + g.code, JSON.stringify(rules));
+      return json({ ok: true, rules });
     }
 
     /* ---------- NovaCoins you can buy ---------- */

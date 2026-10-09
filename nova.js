@@ -28,6 +28,14 @@ const T = {
      "academy" in most of these because it is the one every language already
      uses for a place you go to learn a craft. */
   academy: { en:"Academy", zh:"学院", hi:"अकादमी", es:"Academia", ar:"الأكاديمية", fr:"Académie", bn:"অ্যাকাডেমি", pt:"Academia", ru:"Академия", ur:"اکیڈمی", id:"Akademi", de:"Akademie", ja:"アカデミー", tr:"Akademi", ko:"아카데미", fa:"آکادمی", uk:"Академія", it:"Accademia", pl:"Akademia", vi:"Học viện" },
+  /* The three walls a parent's rules can put up. Said in the child's language,
+     because being stopped in a language you do not read is just a broken page. */
+  ui_lock_t: { en:"A parent locked this", zh:"家长锁定了这里", hi:"अभिभावक ने इसे लॉक किया है", es:"Un adulto bloqueó esto", ar:"أحد الوالدين أقفل هذا", fr:"Un parent a verrouillé ceci", bn:"একজন অভিভাবক এটি লক করেছেন", pt:"Um adulto bloqueou isto", ru:"Родитель закрыл этот раздел", ur:"والدین نے اسے لاک کیا ہے", id:"Orang tua mengunci ini", de:"Ein Elternteil hat das gesperrt", ja:"保護者がロックしました", tr:"Bir veli burayı kilitledi", ko:"보호자가 잠갔습니다", fa:"یکی از والدین این را قفل کرده", uk:"Батьки закрили цей розділ", it:"Un genitore ha bloccato questa parte", pl:"Rodzic to zablokował", vi:"Phụ huynh đã khoá phần này" },
+  ui_lock_b: { en:"This part of NovaClip is switched off for your account. Ask whoever set up the Family Dashboard if you think it should be on.", zh:"你的账号已关闭 NovaClip 的这一部分。如果你认为应该开启，请询问设置家庭面板的人。", hi:"आपके अकाउंट के लिए NovaClip का यह हिस्सा बंद है। अगर आपको लगता है कि यह चालू होना चाहिए, तो फैमिली डैशबोर्ड सेट करने वाले से पूछें।", es:"Esta parte de NovaClip está desactivada en tu cuenta. Habla con quien configuró el Panel Familiar si crees que debería estar activa.", ar:"هذا الجزء من NovaClip مُعطَّل لحسابك. اسأل من أعدّ لوحة العائلة إن كنت ترى أنه يجب تفعيله.", fr:"Cette partie de NovaClip est désactivée pour ton compte. Demande à la personne qui a configuré le Tableau de bord familial si tu penses qu'elle devrait être active.", bn:"আপনার অ্যাকাউন্টের জন্য NovaClip-এর এই অংশটি বন্ধ। চালু হওয়া উচিত মনে করলে যিনি ফ্যামিলি ড্যাশবোর্ড সেট করেছেন তাঁকে বলুন।", pt:"Esta parte do NovaClip está desligada para a tua conta. Fala com quem configurou o Painel da Família se achas que devia estar ligada.", ru:"Этот раздел NovaClip отключён для твоего аккаунта. Поговори с тем, кто настраивал семейную панель.", ur:"آپ کے اکاؤنٹ کے لیے NovaClip کا یہ حصہ بند ہے۔ اگر آپ سمجھتے ہیں کہ یہ کھلا ہونا چاہیے تو فیملی ڈیش بورڈ سیٹ کرنے والے سے بات کریں۔", id:"Bagian NovaClip ini dimatikan untuk akunmu. Tanya orang yang mengatur Dasbor Keluarga kalau menurutmu harus menyala.", de:"Dieser Teil von NovaClip ist für dein Konto abgeschaltet. Frag die Person, die das Familie-Dashboard eingerichtet hat.", ja:"このアカウントではNovaClipのこの部分がオフです。ファミリーダッシュボードを設定した人に相談してください。", tr:"NovaClip'in bu bölümü hesabın için kapalı. Açık olması gerektiğini düşünüyorsan Aile Panosunu kuran kişiye sor.", ko:"이 계정에서는 NovaClip의 이 부분이 꺼져 있습니다. 가족 대시보드를 설정한 분에게 문의하세요.", fa:"این بخش از NovaClip برای حساب تو خاموش است. اگر فکر می‌کنی باید روشن باشد، با کسی که داشبورد خانواده را تنظیم کرده صحبت کن.", uk:"Цей розділ NovaClip вимкнено для твого акаунта. Запитай того, хто налаштовував сімейну панель.", it:"Questa parte di NovaClip è disattivata per il tuo account. Parla con chi ha configurato il Pannello Famiglia.", pl:"Ta część NovaClip jest wyłączona dla twojego konta. Porozmawiaj z osobą, która ustawiła Panel Rodzinny.", vi:"Phần này của NovaClip đang tắt với tài khoản của bạn. Hãy hỏi người đã thiết lập Bảng điều khiển Gia đình." },
+  ui_quiet_t: { en:"Not right now", zh:"现在不行", hi:"अभी नहीं", es:"Ahora no", ar:"ليس الآن", fr:"Pas maintenant", bn:"এখন নয়", pt:"Agora não", ru:"Не сейчас", ur:"ابھی نہیں", id:"Tidak sekarang", de:"Gerade nicht", ja:"いまは使えません", tr:"Şimdi değil", ko:"지금은 안 됩니다", fa:"الان نه", uk:"Не зараз", it:"Non adesso", pl:"Nie teraz", vi:"Không phải lúc này" },
+  ui_quiet_b: { en:"These are the quiet hours set on your account. NovaClip opens again afterwards — nothing you made has gone anywhere.", zh:"这是你账号设置的安静时段。之后 NovaClip 会再次打开——你做的东西都还在。", hi:"ये आपके अकाउंट पर तय शांत घंटे हैं। बाद में NovaClip फिर खुलेगा — आपका बनाया कुछ भी कहीं नहीं गया।", es:"Son las horas de silencio configuradas en tu cuenta. NovaClip vuelve a abrirse después; nada de lo que hiciste se ha perdido.", ar:"هذه ساعات الهدوء المحددة لحسابك. سيفتح NovaClip بعدها — ولم يضع شيء مما صنعته.", fr:"Ce sont les heures calmes définies sur ton compte. NovaClip rouvre après : rien de ce que tu as fait n'a disparu.", bn:"এগুলো আপনার অ্যাকাউন্টে সেট করা নীরব সময়। পরে NovaClip আবার খুলবে — আপনার বানানো কিছুই হারায়নি।", pt:"São as horas de silêncio definidas na tua conta. O NovaClip volta a abrir depois — nada do que fizeste se perdeu.", ru:"Это тихие часы, заданные для твоего аккаунта. Потом NovaClip снова откроется — всё сделанное на месте.", ur:"یہ آپ کے اکاؤنٹ پر مقرر خاموش اوقات ہیں۔ بعد میں NovaClip دوبارہ کھل جائے گا — آپ کا بنایا ہوا کچھ ضائع نہیں ہوا۔", id:"Ini jam tenang yang diatur di akunmu. NovaClip terbuka lagi setelahnya — tidak ada karyamu yang hilang.", de:"Das sind die Ruhezeiten für dein Konto. Danach öffnet NovaClip wieder — nichts von dem, was du gemacht hast, ist weg.", ja:"アカウントに設定された静かな時間帯です。あとでまた開けます。作ったものは残っています。", tr:"Bunlar hesabın için ayarlanan sessiz saatler. NovaClip sonra yeniden açılır — yaptığın hiçbir şey kaybolmadı.", ko:"계정에 설정된 조용한 시간입니다. 이후에 다시 열립니다 — 만든 것은 그대로 있습니다.", fa:"این ساعت‌های سکوت تنظیم‌شده روی حساب توست. بعداً دوباره باز می‌شود — هیچ‌چیزی که ساخته‌ای از بین نرفته.", uk:"Це тихі години, задані для твого акаунта. Потім NovaClip знову відкриється — усе створене на місці.", it:"Sono le ore di silenzio impostate sul tuo account. NovaClip riapre dopo: niente di ciò che hai fatto è andato perso.", pl:"To ciche godziny ustawione na twoim koncie. NovaClip otworzy się później — nic, co zrobiłeś, nie zniknęło.", vi:"Đây là giờ yên lặng đặt cho tài khoản của bạn. NovaClip sẽ mở lại sau — những gì bạn làm vẫn còn." },
+  ui_capped_t: { en:"That is today's time", zh:"今天的时间用完了", hi:"आज का समय पूरा हुआ", es:"Se acabó el tiempo de hoy", ar:"انتهى وقت اليوم", fr:"C'est le temps d'aujourd'hui", bn:"আজকের সময় শেষ", pt:"Acabou o tempo de hoje", ru:"На сегодня время вышло", ur:"آج کا وقت ختم", id:"Waktu hari ini habis", de:"Das war die Zeit für heute", ja:"今日の時間は終わりです", tr:"Bugünlük süre doldu", ko:"오늘 시간이 끝났습니다", fa:"وقت امروز تمام شد", uk:"На сьогодні час вичерпано", it:"Il tempo di oggi è finito", pl:"To tyle czasu na dziś", vi:"Hết thời gian hôm nay" },
+  ui_capped_b: { en:"Your account has a daily limit and you have reached it. It starts again tomorrow.", zh:"你的账号设有每日上限，今天已达到。明天重新开始。", hi:"आपके अकाउंट पर रोज़ की सीमा है और वह पूरी हो गई। कल फिर शुरू होगी।", es:"Tu cuenta tiene un límite diario y lo has alcanzado. Vuelve a empezar mañana.", ar:"لحسابك حد يومي وقد بلغته. يبدأ من جديد غدًا.", fr:"Ton compte a une limite quotidienne et tu l'as atteinte. Elle repart demain.", bn:"আপনার অ্যাকাউন্টে দৈনিক সীমা আছে এবং সেটি শেষ। কাল আবার শুরু হবে।", pt:"A tua conta tem um limite diário e chegaste a ele. Recomeça amanhã.", ru:"У аккаунта есть дневной лимит, и он исчерпан. Завтра всё начнётся заново.", ur:"آپ کے اکاؤنٹ پر روزانہ کی حد ہے جو پوری ہو چکی۔ کل دوبارہ شروع ہوگی۔", id:"Akunmu punya batas harian dan sudah tercapai. Mulai lagi besok.", de:"Dein Konto hat ein Tageslimit und das ist erreicht. Morgen geht es wieder los.", ja:"アカウントの1日の上限に達しました。明日またリセットされます。", tr:"Hesabının günlük sınırı doldu. Yarın yeniden başlıyor.", ko:"계정의 하루 사용 한도에 도달했습니다. 내일 다시 시작됩니다.", fa:"حساب تو محدودیت روزانه دارد و به آن رسیده‌ای. فردا دوباره شروع می‌شود.", uk:"У твого акаунта є денний ліміт, і його вичерпано. Завтра почнеться знову.", it:"Il tuo account ha un limite giornaliero e l'hai raggiunto. Riparte domani.", pl:"Twoje konto ma dzienny limit i został osiągnięty. Jutro zaczyna się od nowa.", vi:"Tài khoản của bạn có giới hạn mỗi ngày và bạn đã dùng hết. Ngày mai bắt đầu lại." },
   games: { en:"Games", zh:"游戏", hi:"गेम्स", es:"Juegos", ar:"الألعاب", fr:"Jeux", bn:"গেমস", pt:"Jogos", ru:"Игры", ur:"گیمز", id:"Game", de:"Spiele", ja:"ゲーム", tr:"Oyunlar", ko:"게임", fa:"بازی‌ها", uk:"Ігри", it:"Giochi", pl:"Gry", vi:"Trò chơi" },
   /* The second line of the profile card when no channel is connected. It was
      the string 'Creator', written straight into the markup. */
@@ -7517,7 +7525,130 @@ window.addEventListener('DOMContentLoaded', () => {
      accidental arrival and the casual one, which is what an age gate is for;
      the Family Dashboard and the Family Shield are what a parent uses when
      more than that is needed. */
+  /* ==========================================================================
+     THE RULES THE ACCOUNT CARRIES
+     ==========================================================================
+     The age gate below is careful and it is still only a browser: the comment
+     under it says so, and said so honestly, because until now nothing could
+     follow a child into a private window.
+
+     An account can. The answer to the age wheel is now written to the account
+     as well as to this device; under 13 bars the ACCOUNT, and the worker
+     refuses every write for it wherever it signs in. The same journey carries
+     the parent's rules — a daily limit, quiet hours and locks on parts of the
+     site — so a limit set on the kitchen laptop is a limit on the phone.
+
+     WHAT THIS STILL IS NOT. A signed-out browser is a signed-out browser. The
+     local gate is what meets somebody there, exactly as before. What has
+     changed is that signing in no longer washes the answer away, and that a
+     parent's settings are not stuck on one machine.
+     ========================================================================= */
+  const NC_LOCK_PAGES = {
+    ai: /(^|\/)(ai|studio-ai)\.html$/i,
+    academy: /(^|\/)academy\.html$/i,
+    games: /(^|\/)(game|aim|flap|reaction|typing|coder|study)\.html$/i,
+    community: /(^|\/)(socials|community)\.html$/i,
+    editor: /(^|\/)(editor|photo|hype)\.html$/i
+  };
+
+  function ncRules() {
+    try { return JSON.parse(localStorage.getItem('nc_rules') || 'null'); }
+    catch (e) { return null; }
+  }
+
+  /* One card, filling the screen, saying who set this and how to ask them.
+     Deliberately not a redirect: a child sent back to the home page learns
+     nothing except that the site is broken. */
+  function ncRuleWall(title, body) {
+    if (document.getElementById('ncRuleWall')) return;
+    const o = document.createElement('div');
+    o.id = 'ncRuleWall';
+    o.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(5,6,10,0.97);color:#EAF2FF;' +
+      'display:flex;align-items:center;justify-content:center;padding:24px;' +
+      'font-family:Segoe UI,system-ui,sans-serif;backdrop-filter:blur(8px)';
+    o.innerHTML = '<div style="width:100%;max-width:420px;text-align:center;background:rgba(255,255,255,0.04);' +
+      'border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px 26px">' +
+      '<h2 style="margin-bottom:10px;font-size:1.35rem">' + title + '</h2>' +
+      '<p style="color:#7E8AA6;font-size:0.94rem;line-height:1.7">' + body + '</p>' +
+      '<a href="index.html" style="display:inline-block;margin-top:18px;padding:12px 26px;border-radius:30px;' +
+      'font-weight:800;text-decoration:none;background:linear-gradient(90deg,#00F0FF,#4CC9F0);color:#04121a">' +
+      tr('ui_got_it') + '</a></div>';
+    document.body.appendChild(o);
+    try { document.body.style.overflow = 'hidden'; } catch (e) {}
+  }
+
+  function ncRulesApply() {
+    const r = ncRules();
+    if (!r) return;
+    if (NC_AGE_EXEMPT.test(location.pathname)) return;     /* never lock the way to a parent */
+
+    for (const k in NC_LOCK_PAGES) {
+      if (r.locks && r.locks[k] && NC_LOCK_PAGES[k].test(location.pathname)) {
+        return ncRuleWall(tr('ui_lock_t'), tr('ui_lock_b'));
+      }
+    }
+
+    /* Quiet hours, which may run through midnight — 22 to 7 is the normal
+       case and is the one a naive from<now<to gets wrong every night. */
+    if (r.quietFrom !== null && r.quietTo !== null && r.quietFrom !== undefined) {
+      const h = new Date().getHours();
+      const inside = r.quietFrom <= r.quietTo
+        ? (h >= r.quietFrom && h < r.quietTo)
+        : (h >= r.quietFrom || h < r.quietTo);
+      if (inside) return ncRuleWall(tr('ui_quiet_t'), tr('ui_quiet_b'));
+    }
+
+    if (r.dailyMinutes > 0) {
+      const today = (ncStRead()[ncStDay()] || { ms: 0 }).ms || 0;
+      if (today >= r.dailyMinutes * 60000) {
+        return ncRuleWall(tr('ui_capped_t'), tr('ui_capped_b'));
+      }
+    }
+  }
+
+  /* Asks the account what it is: barred, and what the parent has set. Runs on
+     every page, quietly, and never blocks the paint — a network that is down
+     must not be a site that will not open. */
+  function ncGuardSync() {
+    const key = localStorage.getItem('nc_key'), code = localStorage.getItem('nc_code');
+    if (!key || !code || !window.ncApi) return;
+    const post = (path, extra) => ncApi(path, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({ key, code }, extra))
+    });
+
+    /* The age answer follows the account, once. */
+    const age = ncAge();
+    if (age && localStorage.getItem('nc_age_sent') !== String(age)) {
+      post('/account/age', { age })
+        .then(() => localStorage.setItem('nc_age_sent', String(age)))
+        .catch(() => {});
+    }
+
+    post('/account/state', {}).then((st) => {
+      if (st.blocked) {
+        /* The account is barred, so this browser is too — including a browser
+           that has just been cleared, which is the whole reason this exists. */
+        localStorage.setItem('nc_user_age', String(Math.min(ncAge() || 12, 12)));
+        if (!NC_AGE_EXEMPT.test(location.pathname) && window.ncAgeBlocked) ncAgeBlocked();
+        return;
+      }
+      if (st.rules) {
+        try { localStorage.setItem('nc_rules', JSON.stringify(st.rules)); } catch (e) {}
+      } else {
+        localStorage.removeItem('nc_rules');
+      }
+      ncRulesApply();
+    }).catch(() => {});
+  }
+  window.ncRulesApply = ncRulesApply;
+  window.ncGuardSync = ncGuardSync;
+
   function ncAgeBoot() {
+    /* The rules the account carries are applied from the cache first, so a
+       locked page is locked before the network answers, and then refreshed. */
+    ncRulesApply();
+    ncGuardSync();
     if (NC_AGE_EXEMPT.test(location.pathname)) return;
     if (window.ncAgeGate) ncAgeGate();
     ncSignupGate();
