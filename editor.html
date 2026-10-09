@@ -2019,6 +2019,11 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      meme dialog, and it calls nothing but meme-boxes.js. Pasting one without
      the other leaves the dialog with no captions at all, so they ship as a
      pair, in this order. -->
+<!-- Captions. Times a pasted script against the clip's own audio and writes
+     the lines onto the text track as real text clips — no transcription, no
+     upload, nothing leaves the device. Loaded after the bundle because it
+     drives the store the bundle creates. -->
+<script src='captions.js' defer></script>
 <script src='meme-boxes.js' defer></script>
 <script src='meme-fix.js' defer></script>
   </body>
