@@ -610,6 +610,31 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v104: captions, beats and reframe — the three things the editor could not do
+   that the one teenagers already use can.
+
+   CAPTIONS. Paste the script; the timing is measured off the clip's own audio
+   in the tab. It does not transcribe and says so: speech recognition in a
+   browser is either a 75MB download or somebody's server, and nothing anybody
+   records here leaves the device. Lines are built inside a sentence and never
+   across one, because dealing raw words across the speech runs produced
+   "stop. Here is the" — arithmetically right and obviously machine-made.
+
+   BEATS. A beat is a jump in loudness, not loudness, so the curve is
+   differentiated and peaks are judged against the half second around them.
+   Marks the ruler or cuts the video on every beat — defaulting to every second
+   beat, because cutting on every onset put 43 cuts into 12 seconds, which is
+   not an edit.
+
+   REFRAME. Wide footage into a tall post, cropped to the subject rather than
+   to the middle, by sampling nine frames and scoring columns on detail and
+   movement. On a test clip whose subject sits a quarter of the way across, a
+   centre crop loses it completely and this keeps it.
+
+   All three are new shell files and editor.html loads all three, so a cache
+   holding the old page would serve a page asking for files it does not have.
+
+   editor.html, captions.js (NEW), beats.js (NEW), reframe.js (NEW). */
 /* v103: the meme captions. Three complaints about the same dialog — it lagged,
    the words landed on faces, and nothing could be moved afterwards — and all
    three are answered by two new shell files, meme-boxes.js and meme-fix.js,
@@ -1958,7 +1983,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v103';
+const CACHE = 'novaclip-v104';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2110,6 +2135,14 @@ const SHELL = [
      caption anything. */
   '/meme-boxes.js',
   '/meme-fix.js',
+  /* The three that close the gap against the editor teenagers already use:
+     captions timed off the audio, beat detection that can cut the video on the
+     beat, and reframing wide footage into a tall post. All three decode media
+     in the tab and send nothing anywhere, which is why they can be cached and
+     used with no network at all. */
+  '/captions.js',
+  '/beats.js',
+  '/reframe.js',
   /* Sends the Trend Spotter's rail to the real pages. Without it that rail
      offers four features this site already has as though they were unbuilt. */
   '/trends-nav.js',
