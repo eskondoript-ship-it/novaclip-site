@@ -610,6 +610,16 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v109: the earn rates retuned. Editing goes from 300 a day to 600 — twenty
+   exports rather than ten — and games from a fifth of the old rate to a tenth,
+   with a ceiling of six coins a day instead of fifteen. Two or three rounds
+   and that is the lot.
+
+   The ceiling over everything went to 700 with it: a day cap below the biggest
+   source cap silently makes that source smaller than it claims to be, and
+   350 would have capped editing at half of its own number.
+
+   nova.js. */
 /* v108: coins got hard to earn, got a new face, and stopped paying for a whole
    lesson. And the one button on this site that takes money could not be
    pressed.
@@ -2104,7 +2114,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v108';
+const CACHE = 'novaclip-v109';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

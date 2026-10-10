@@ -4107,8 +4107,11 @@ window.toast = toast;   /* editor.html calls this for a missing tool script */
                   everything else here put together, because it is the only
                   one of these that produces a finished video.
      Making       publishing, ideas, trend work — real but small.
-     Games        a fifth of what they paid, and a hard daily ceiling. They
-                  are there to be fun, not to be a coin machine.
+     Games        a tenth of what they paid, and a ceiling of six a day —
+                  two or three rounds and that is the lot. They are there to
+                  be fun, not to be a coin machine, and anybody grinding them
+                  for coins is doing the one thing on this site that produces
+                  nothing.
 
    EVERY SOURCE HAS A DAILY CEILING and there is one over all of them. A
    ceiling is the only thing that works: a multiplier alone just means playing
@@ -4118,12 +4121,15 @@ window.toast = toast;   /* editor.html calls this for a missing tool script */
    including from the two game bundles nothing here can edit. A chokepoint is
    worth more than a rule everybody has to remember. */
 const NC_EARN = {
-  edit:  { mult: 1,    cap: 300, label: 'editing' },
+  edit:  { mult: 1,    cap: 600, label: 'editing' },
   make:  { mult: 0.6,  cap: 80,  label: 'making' },
-  game:  { mult: 0.2,  cap: 15,  label: 'games' },
+  game:  { mult: 0.1,  cap: 6,   label: 'games' },
   other: { mult: 0.5,  cap: 40,  label: 'the rest' }
 };
-const NC_EARN_DAY_CAP = 350;
+/* The ceiling over everything has to clear the editing ceiling, or editing
+   could never reach its own: a day cap below the biggest source cap silently
+   makes that source smaller than it says it is. */
+const NC_EARN_DAY_CAP = 700;
 
 const NC_EARN_PAGES = [
   [/(^|\/)(editor|photo|hype)\.html$/i, 'edit'],
