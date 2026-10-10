@@ -166,7 +166,16 @@ html[data-device="phone-s"] .btsave { display: none; }
 .cosub { color: var(--nc-dim,#9fb0cc); font-size: .9rem; margin-bottom: 14px; text-align: center; }
 .cosummary { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 14px; font-size: .86rem; color: var(--nc-dim,#b8bccb); margin-bottom: 16px; line-height: 1.9; }
 
-#cartbtn { position: fixed; top: 16px; right: 120px; z-index: 90; background: rgba(0,0,0,0.5);
+/* BELOW THE BAR, NOT ON IT. This floated in the top-right corner, which is
+   the corner the site's own bar already uses for the coins pill, the trial
+   pill, Ask Nova and the help button. At right:120px it sat underneath the
+   trial badge — z-index 995 against 90 — so the one control on this site that
+   takes money could be seen and not pressed. Moving it left only pushed it
+   onto the help button instead: four things wanted one corner.
+
+   The bar is 52px, so the cart sits just under it. That is where the phone
+   layout has always put it, and the phone layout was right. */
+#cartbtn { position: fixed; top: calc(52px + 10px); right: 16px; z-index: 996; background: rgba(0,0,0,0.5);
   border: 1px solid rgba(0,240,255,0.4); color: var(--nc-cyan,#00F0FF); padding: 9px 18px; border-radius: 30px;
   font-weight: 800; cursor: pointer; font-family: inherit; backdrop-filter: blur(8px); transition: .2s; font-size: .9rem; }
 #cartbtn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,240,255,0.28); }
@@ -372,6 +381,19 @@ html[data-device="phone-s"] .btsave { display: none; }
 
   <!-- shown only once you are enrolled in a certificate -->
   <div id='myTraining' style='display:none'></div>
+
+<!-- NovaCoins. Asked for here rather than only in the Academy, because this is
+     the page somebody is already on with a card in their hand. -->
+<section id='coinpacks' style='max-width:980px;margin:0 auto 34px;text-align:center'>
+  <h2 style='font-size:1.35rem;margin:0 0 6px'><span id='coinmark' style='vertical-align:-6px'></span> NovaCoins</h2>
+  <p class='sub' style='margin:0 auto 16px;max-width:60ch'>Coins are earned by making things — an export
+     from the Editor is worth more than everything else on the site put together — and they can be bought
+     if somebody would rather not wait. They pay for up to <b>40%</b> of a lesson in the Academy; the rest
+     is paid for. They never turn back into money.</p>
+  <div id='coingrid' style='display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px'></div>
+  <p class='sub' style='margin:12px auto 0;max-width:60ch;font-size:.84rem'>A parent pays for these, and it
+     is their card that is asked for.</p>
+</section>
 
 <div class='billtoggle'>
   <button class='bt active' data-cycle='month'><span data-t='monthly'>Monthly</span></button>
@@ -1414,6 +1436,42 @@ else initCheckout();
   if (document.readyState === 'loading')
     document.addEventListener('DOMContentLoaded', function () { setTimeout(paint, 80); });
   else setTimeout(paint, 80);
+})();
+</script>
+<script>
+/* The coin shop. Packs and the rate come from the worker so this page and the
+   Academy can never quote different numbers. */
+(function () {
+  function money(n) { return '\u20ac' + n.toFixed(2); }
+  document.addEventListener('DOMContentLoaded', function () {
+    var mark = document.getElementById('coinmark');
+    if (mark && window.ncCoinMark) mark.innerHTML = window.ncCoinMark(26);
+    var grid = document.getElementById('coingrid');
+    if (!grid || !window.ncApi) return;
+    window.ncApi('/coins/packs').then(function (r) {
+      grid.innerHTML = r.packs.map(function (p) {
+        var per = Math.round(p.coins / p.eur);
+        return '<div class="plan" style="padding:16px"><h3 style="margin:0 0 6px">' +
+          p.coins.toLocaleString() + '</h3>' +
+          '<div style="font-size:1.4rem;font-weight:800;margin-bottom:4px">' + money(p.eur) + '</div>' +
+          '<p style="font-size:.8rem;opacity:.7;margin:0 0 10px">' + per + ' coins per euro</p>' +
+          '<button class="cta" data-pack="' + p.id + '">Buy</button></div>';
+      }).join('');
+      [].forEach.call(grid.querySelectorAll('button[data-pack]'), function (b) {
+        b.onclick = function () {
+          var key = localStorage.getItem('nc_key'), code = localStorage.getItem('nc_code');
+          if (!key || !code) { alert('Sign in on the Profile page first, so the coins reach your account.'); return; }
+          window.ncApi('/coins/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: key, code: code, pack: b.getAttribute('data-pack') }) })
+            .then(function (out) { location.href = out.url; })
+            .catch(function (e) { alert(e.message); });
+        };
+      });
+    }).catch(function () {
+      grid.innerHTML = '<p class="sub">The coin shop needs the community server, which is not reachable ' +
+        'from here right now.</p>';
+    });
+  });
 })();
 </script>
 </body>

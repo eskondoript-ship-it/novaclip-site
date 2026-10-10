@@ -610,6 +610,37 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v108: coins got hard to earn, got a new face, and stopped paying for a whole
+   lesson. And the one button on this site that takes money could not be
+   pressed.
+
+   THE CHECKOUT BUTTON. #cartbtn floated at top:16px right:120px, which is the
+   corner nova.js already uses for the coins pill, the trial pill, Ask Nova and
+   the help button. The trial badge is pinned at a hard-coded right:96px with
+   z-index 995 against the cart's 90, so it sat exactly on top of it: visible,
+   and unpressable. Moving the cart left only put it on the help button —
+   four things wanted one corner. It now sits under the 52px bar, which is
+   where the phone layout always put it, and nova.js publishes one reserve
+   covering both pills instead of measuring only the coins.
+
+   EARNING IS NOW DELIBERATELY HARD, because coins can be bought and a score
+   you can also buy is a price list. Every coin is created in addPts, so the
+   policy lives at that chokepoint and catches the two game bundles nothing
+   here can edit: editing pays full rate to 300 a day, making 60% to 80, games
+   a fifth to 15, and 350 a day over everything.
+
+   AND EXPORTING PAID NOTHING. Worse: nothing on the site called
+   logSkill('edit_export'), which every certificate requires — three for
+   Basic, twenty-five for Master — so the requirement at the centre of the
+   credential could not be met by doing the thing it names. earn.js watches
+   the download anchor the editor clicks, which is a finished file rather than
+   a pressed button.
+
+   COINS COVER 40% OF A PRICED LESSON, computed on the server at 100 coins to
+   the euro and shown before anybody commits. Coins-only lessons are untouched.
+
+   nova.js, pricing.html, academy.js, earn.js (NEW), editor.html,
+   leaderboard-worker.js (deploy it — a push does not). */
 /* v107: the under-13 bar and the parent's rules now live on the account.
 
    BOTH OF THESE EXISTED AND BOTH LIVED IN ONE BROWSER. The age gate was a
@@ -2073,7 +2104,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v107';
+const CACHE = 'novaclip-v108';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2230,6 +2261,7 @@ const SHELL = [
      beat, and reframing wide footage into a tall post. All three decode media
      in the tab and send nothing anywhere, which is why they can be cached and
      used with no network at all. */
+  '/earn.js',
   '/captions.js',
   '/beats.js',
   '/reframe.js',

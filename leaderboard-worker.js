@@ -701,6 +701,28 @@ function cleanRules(v) {
 }
 
 const ACADEMY_FEE = 0.20;              /* NovaClip's share of a sale */
+
+/* HOW MUCH OF A PRICE COINS MAY COVER.
+   Coins can be bought, so letting them pay for a whole lesson would make the
+   Academy a shop that sells its own currency to buy its own stock — and would
+   let somebody with a card skip the part where a lesson is earned. Four tenths
+   is the share: enough that saved coins visibly take money off the price,
+   not enough that the money stops mattering.
+
+   A lesson priced only in coins — which is what every seller under the working
+   age has — is untouched by this. There is no money in that sale to split. */
+const COIN_SHARE = 0.40;
+const COINS_PER_EUR = 100;             /* the floor rate; the packs beat it in bulk */
+
+/* What a priced lesson actually costs, split. Returned to the page so the
+   split is shown before anybody commits, and recomputed on the server when
+   they do, because a price the client worked out is a price the client chose. */
+function priceSplit(price, haveCoins) {
+  const coinPart = Math.round(price * COIN_SHARE * COINS_PER_EUR);
+  const useCoins = Math.max(0, Math.min(coinPart, Math.floor(haveCoins || 0)));
+  const money = Math.max(0, Math.round((price - useCoins / COINS_PER_EUR) * 100) / 100);
+  return { price, coinPart, useCoins, money, shortCoins: coinPart - useCoins };
+}
 const COIN_PACKS = [
   { id: 'c300',  coins: 300,  eur: 2.99 },
   { id: 'c800',  coins: 800,  eur: 6.99 },
@@ -1163,6 +1185,11 @@ export default {
         id: row.id, title: row.title, blurb: row.blurb, cat: row.cat, level: row.level,
         price: row.price, coins: row.coins, coinsOnly: row.coinsOnly, by: row.by, tier: row.tier,
         at: row.at, owner, bought, open,
+        /* For a priced lesson: how far the buyer's coins go towards it. */
+        split: row.price > 0
+          ? priceSplit(row.price, code ? ((await wallet(env, code)).bal) : 0)
+          : null,
+        coinShare: COIN_SHARE, coinsPerEur: COINS_PER_EUR,
         content: open ? row.content : row.content.slice(0, 220) + '\u2026'
       });
     }
@@ -1180,11 +1207,14 @@ export default {
       if (row.code === g.code) return json({ error: 'that is your own lesson' }, 400);
       if (await env.DB.get('ord:' + g.code + ':' + id)) return json({ ok: true, already: true });
       if (row.price > 0) {
+        const w = await wallet(env, g.code);
+        const split = priceSplit(row.price, w.bal);
         return json({
           error: 'paid lessons are not switched on yet',
-          detail: 'the money would go to the seller\'s parent account, and no payout processor is '
-                + 'connected to this worker',
-          price: row.price
+          detail: 'NovaCoins cover ' + Math.round(COIN_SHARE * 100) + '% of a priced lesson and the rest '
+                + 'is paid for. The money half would go to the seller\'s parent account, and no payout '
+                + 'processor is connected to this worker yet',
+          price: row.price, split
         }, 503);
       }
       /* The allowance is spent here, where something is actually written. An
@@ -1290,7 +1320,8 @@ export default {
 
     /* ---------- NovaCoins you can buy ---------- */
     if (path === '/coins/packs' && request.method === 'GET') {
-      return json({ packs: COIN_PACKS, fee: ACADEMY_FEE, buyable: !!env.COIN_LINKS });
+      return json({ packs: COIN_PACKS, fee: ACADEMY_FEE, buyable: !!env.COIN_LINKS,
+                    coinShare: COIN_SHARE, coinsPerEur: COINS_PER_EUR });
     }
 
     if (path === '/coins/balance' && request.method === 'POST') {

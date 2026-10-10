@@ -36,6 +36,9 @@ const T = {
   ui_quiet_b: { en:"These are the quiet hours set on your account. NovaClip opens again afterwards — nothing you made has gone anywhere.", zh:"这是你账号设置的安静时段。之后 NovaClip 会再次打开——你做的东西都还在。", hi:"ये आपके अकाउंट पर तय शांत घंटे हैं। बाद में NovaClip फिर खुलेगा — आपका बनाया कुछ भी कहीं नहीं गया।", es:"Son las horas de silencio configuradas en tu cuenta. NovaClip vuelve a abrirse después; nada de lo que hiciste se ha perdido.", ar:"هذه ساعات الهدوء المحددة لحسابك. سيفتح NovaClip بعدها — ولم يضع شيء مما صنعته.", fr:"Ce sont les heures calmes définies sur ton compte. NovaClip rouvre après : rien de ce que tu as fait n'a disparu.", bn:"এগুলো আপনার অ্যাকাউন্টে সেট করা নীরব সময়। পরে NovaClip আবার খুলবে — আপনার বানানো কিছুই হারায়নি।", pt:"São as horas de silêncio definidas na tua conta. O NovaClip volta a abrir depois — nada do que fizeste se perdeu.", ru:"Это тихие часы, заданные для твоего аккаунта. Потом NovaClip снова откроется — всё сделанное на месте.", ur:"یہ آپ کے اکاؤنٹ پر مقرر خاموش اوقات ہیں۔ بعد میں NovaClip دوبارہ کھل جائے گا — آپ کا بنایا ہوا کچھ ضائع نہیں ہوا۔", id:"Ini jam tenang yang diatur di akunmu. NovaClip terbuka lagi setelahnya — tidak ada karyamu yang hilang.", de:"Das sind die Ruhezeiten für dein Konto. Danach öffnet NovaClip wieder — nichts von dem, was du gemacht hast, ist weg.", ja:"アカウントに設定された静かな時間帯です。あとでまた開けます。作ったものは残っています。", tr:"Bunlar hesabın için ayarlanan sessiz saatler. NovaClip sonra yeniden açılır — yaptığın hiçbir şey kaybolmadı.", ko:"계정에 설정된 조용한 시간입니다. 이후에 다시 열립니다 — 만든 것은 그대로 있습니다.", fa:"این ساعت‌های سکوت تنظیم‌شده روی حساب توست. بعداً دوباره باز می‌شود — هیچ‌چیزی که ساخته‌ای از بین نرفته.", uk:"Це тихі години, задані для твого акаунта. Потім NovaClip знову відкриється — усе створене на місці.", it:"Sono le ore di silenzio impostate sul tuo account. NovaClip riapre dopo: niente di ciò che hai fatto è andato perso.", pl:"To ciche godziny ustawione na twoim koncie. NovaClip otworzy się później — nic, co zrobiłeś, nie zniknęło.", vi:"Đây là giờ yên lặng đặt cho tài khoản của bạn. NovaClip sẽ mở lại sau — những gì bạn làm vẫn còn." },
   ui_capped_t: { en:"That is today's time", zh:"今天的时间用完了", hi:"आज का समय पूरा हुआ", es:"Se acabó el tiempo de hoy", ar:"انتهى وقت اليوم", fr:"C'est le temps d'aujourd'hui", bn:"আজকের সময় শেষ", pt:"Acabou o tempo de hoje", ru:"На сегодня время вышло", ur:"آج کا وقت ختم", id:"Waktu hari ini habis", de:"Das war die Zeit für heute", ja:"今日の時間は終わりです", tr:"Bugünlük süre doldu", ko:"오늘 시간이 끝났습니다", fa:"وقت امروز تمام شد", uk:"На сьогодні час вичерпано", it:"Il tempo di oggi è finito", pl:"To tyle czasu na dziś", vi:"Hết thời gian hôm nay" },
   ui_capped_b: { en:"Your account has a daily limit and you have reached it. It starts again tomorrow.", zh:"你的账号设有每日上限，今天已达到。明天重新开始。", hi:"आपके अकाउंट पर रोज़ की सीमा है और वह पूरी हो गई। कल फिर शुरू होगी।", es:"Tu cuenta tiene un límite diario y lo has alcanzado. Vuelve a empezar mañana.", ar:"لحسابك حد يومي وقد بلغته. يبدأ من جديد غدًا.", fr:"Ton compte a une limite quotidienne et tu l'as atteinte. Elle repart demain.", bn:"আপনার অ্যাকাউন্টে দৈনিক সীমা আছে এবং সেটি শেষ। কাল আবার শুরু হবে।", pt:"A tua conta tem um limite diário e chegaste a ele. Recomeça amanhã.", ru:"У аккаунта есть дневной лимит, и он исчерпан. Завтра всё начнётся заново.", ur:"آپ کے اکاؤنٹ پر روزانہ کی حد ہے جو پوری ہو چکی۔ کل دوبارہ شروع ہوگی۔", id:"Akunmu punya batas harian dan sudah tercapai. Mulai lagi besok.", de:"Dein Konto hat ein Tageslimit und das ist erreicht. Morgen geht es wieder los.", ja:"アカウントの1日の上限に達しました。明日またリセットされます。", tr:"Hesabının günlük sınırı doldu. Yarın yeniden başlıyor.", ko:"계정의 하루 사용 한도에 도달했습니다. 내일 다시 시작됩니다.", fa:"حساب تو محدودیت روزانه دارد و به آن رسیده‌ای. فردا دوباره شروع می‌شود.", uk:"У твого акаунта є денний ліміт, і його вичерпано. Завтра почнеться знову.", it:"Il tuo account ha un limite giornaliero e l'hai raggiunto. Riparte domani.", pl:"Twoje konto ma dzienny limit i został osiągnięty. Jutro zaczyna się od nowa.", vi:"Tài khoản của bạn có giới hạn mỗi ngày và bạn đã dùng hết. Ngày mai bắt đầu lại." },
+  /* Said when a daily ceiling has been reached. Names which one, because "no"
+     with no reason reads as a bug. */
+  ui_earn_capped: { en:"That is today's NovaCoins from {what}", zh:"今天从{what}能拿的 NovaCoins 已满", hi:"{what} से आज के NovaCoins पूरे", es:"Ya son todas las NovaCoins de hoy por {what}", ar:"هذا كل ما يمكن كسبه اليوم من {what}", fr:"C'est tout pour aujourd'hui côté {what}", bn:"{what} থেকে আজকের NovaCoins শেষ", pt:"São todas as NovaMoedas de hoje por {what}", ru:"На сегодня монеты за {what} закончились", ur:"{what} سے آج کے NovaCoins مکمل", id:"Itu NovaKoin hari ini dari {what}", de:"Das waren die NovaMünzen für heute aus {what}", ja:"{what}で今日もらえる分は終わりです", tr:"{what} için bugünlük bu kadar", ko:"오늘 {what}에서 받을 수 있는 코인은 끝났습니다", fa:"سهم امروز از {what} تمام شد", uk:"На сьогодні монети за {what} вичерпано", it:"Sono tutte le NovaMonete di oggi da {what}", pl:"To wszystkie dzisiejsze NovaMonety z {what}", vi:"Hết NovaXu hôm nay từ {what}" },
   games: { en:"Games", zh:"游戏", hi:"गेम्स", es:"Juegos", ar:"الألعاب", fr:"Jeux", bn:"গেমস", pt:"Jogos", ru:"Игры", ur:"گیمز", id:"Game", de:"Spiele", ja:"ゲーム", tr:"Oyunlar", ko:"게임", fa:"بازی‌ها", uk:"Ігри", it:"Giochi", pl:"Gry", vi:"Trò chơi" },
   /* The second line of the profile card when no channel is connected. It was
      the string 'Creator', written straight into the markup. */
@@ -2071,7 +2074,7 @@ function ncBuildBar() {
          measures the live element and writes --nc-badge-res; 88px stays as the
          fallback for the first paint, before there is anything to measure. */
       'display:flex;align-items:center;gap:14px;box-sizing:border-box;' +
-      'padding:0 var(--nc-badge-res,88px) 0 14px;' +
+      'padding:0 var(--nc-corner-res,var(--nc-badge-res,88px)) 0 14px;' +
       'background:var(--nc-bar-bg,rgba(10,13,24,.72));' +
       'border-bottom:1px solid var(--nc-line2,rgba(255,255,255,.08));' +
       'backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4)}' +
@@ -4090,6 +4093,105 @@ function applyTheme(name) {
 }
 function toast(msg) { const t = document.getElementById('nctoast'); if (!t) return; t.textContent = msg; t.style.display = 'block'; clearTimeout(t.hideTimer); t.hideTimer = setTimeout(() => { t.style.display = 'none'; }, 3000); }
 window.toast = toast;   /* editor.html calls this for a missing tool script */
+/* ============================================================================
+   WHERE NOVACOINS COME FROM, AND HOW SLOWLY
+   ============================================================================
+   Coins can be bought now, which changes what they are. A score you can also
+   buy is a price list, and anything handing them out quickly is handing out
+   money. So earning them is deliberately hard, and hardest where it should be:
+   playing a game is not work, and the games were the fastest way to a balance.
+
+   THE ORDER OF THINGS, DECIDED ON PURPOSE:
+
+     Editing      the whole point of the site. An export is worth more than
+                  everything else here put together, because it is the only
+                  one of these that produces a finished video.
+     Making       publishing, ideas, trend work — real but small.
+     Games        a fifth of what they paid, and a hard daily ceiling. They
+                  are there to be fun, not to be a coin machine.
+
+   EVERY SOURCE HAS A DAILY CEILING and there is one over all of them. A
+   ceiling is the only thing that works: a multiplier alone just means playing
+   for longer, and somebody with an afternoon will always out-grind a number.
+
+   Applied inside addPts, which is the single place coins are ever created —
+   including from the two game bundles nothing here can edit. A chokepoint is
+   worth more than a rule everybody has to remember. */
+const NC_EARN = {
+  edit:  { mult: 1,    cap: 300, label: 'editing' },
+  make:  { mult: 0.6,  cap: 80,  label: 'making' },
+  game:  { mult: 0.2,  cap: 15,  label: 'games' },
+  other: { mult: 0.5,  cap: 40,  label: 'the rest' }
+};
+const NC_EARN_DAY_CAP = 350;
+
+const NC_EARN_PAGES = [
+  [/(^|\/)(editor|photo|hype)\.html$/i, 'edit'],
+  [/(^|\/)(publish|trends|analytics|studio-ai|ai)\.html$/i, 'make'],
+  [/(^|\/)(game|aim|flap|reaction|typing|coder|study)\.html$/i, 'game']
+];
+
+function ncEarnSource() {
+  for (const [re, id] of NC_EARN_PAGES) if (re.test(location.pathname)) return id;
+  return 'other';
+}
+
+function ncEarnLog() {
+  try { return JSON.parse(localStorage.getItem('nc_earn_log') || '{}') || {}; }
+  catch (e) { return {}; }
+}
+
+/* How much of `n` this source is still allowed to pay out today. */
+function ncEarnAllow(source, n) {
+  const rule = NC_EARN[source] || NC_EARN.other;
+  const day = ncStDay();
+  const log = ncEarnLog();
+  const today = log[day] || {};
+  const used = today[source] || 0;
+  const all = Object.keys(today).reduce((t, k) => t + (today[k] || 0), 0);
+
+  let give = Math.floor(n * rule.mult);
+  /* A reward that rounds to nothing still pays one coin, so the smallest win
+     is not silently worth zero — but only while there is room under the cap. */
+  if (give < 1 && n > 0) give = 1;
+  give = Math.min(give, Math.max(0, rule.cap - used), Math.max(0, NC_EARN_DAY_CAP - all));
+  if (give <= 0) return { give: 0, rule, used, all };
+
+  today[source] = used + give;
+  log[day] = today;
+  const days = Object.keys(log).sort();
+  while (days.length > 14) delete log[days.shift()];
+  try { localStorage.setItem('nc_earn_log', JSON.stringify(log)); } catch (e) {}
+  return { give, rule, used: used + give, all: all + give };
+}
+
+/* THE COIN: AN EXPLODING STAR.
+   It was a circle with a dollar-ish squiggle in it, which is what every coin
+   in every app looks like and said nothing about this place. A NovaCoin is a
+   burst — twelve points, long and short alternating, with a bright core — and
+   it is drawn filled rather than stroked so it reads at the 16px it spends
+   most of its life at. One definition, used by the rail, the shop and the
+   Academy, so the three can never drift apart. */
+const NC_COIN_CHAR = '\u2726';       /* the four-pointed star, for text and toasts */
+function ncCoinMark(size) {
+  const pts = [];
+  for (let i = 0; i < 12; i++) {
+    const a = (Math.PI * 2 * i) / 12 - Math.PI / 2;
+    const r = i % 2 ? 4.6 : 11;
+    pts.push((12 + Math.cos(a) * r).toFixed(2) + ',' + (12 + Math.sin(a) * r).toFixed(2));
+  }
+  return '<svg viewBox="0 0 24 24" width="' + (size || 24) + '" height="' + (size || 24) + '" ' +
+    'aria-hidden="true" focusable="false">' +
+    '<defs><radialGradient id="ncCoinG" cx="38%" cy="32%">' +
+      '<stop offset="0%" stop-color="#FFF7C2"/><stop offset="45%" stop-color="#FFC83D"/>' +
+      '<stop offset="100%" stop-color="#FF7A1A"/></radialGradient></defs>' +
+    '<polygon points="' + pts.join(' ') + '" fill="url(#ncCoinG)"/>' +
+    '<circle cx="12" cy="12" r="4.1" fill="#FFF3B0" opacity=".92"/>' +
+    '<circle cx="10.6" cy="10.6" r="1.25" fill="#fff" opacity=".95"/>' +
+    '</svg>';
+}
+window.ncCoinMark = ncCoinMark;
+
 function getPts() { return parseInt(localStorage.getItem('nc_points') || '0'); }
 
 /* WHAT WAS EVER EARNED, as opposed to what is left to spend.
@@ -4127,10 +4229,26 @@ function checkUnlocks(pts) {
   /* Milestones are passed once and stay passed, so they read lifetime too —
      otherwise spending could re-lock one and announce it again later. */
   pts = getPtsLifetime(); const u = JSON.parse(localStorage.getItem('nc_unlocked') || '[]'); for (const [need,name] of QUESTS.concat(ACHIEVEMENTS)) { if (pts >= need && !u.includes(name)) { u.push(name); setTimeout(() => toast(tr('ui_unlocked') + qName(name)), 1200); } } localStorage.setItem('nc_unlocked', JSON.stringify(u)); }
-function addPts(n) { const p = getPts() + n; localStorage.setItem('nc_points', p);
+function addPts(n, source) {
+  /* THE ONE PLACE COINS ARE MADE, so it is the one place the rules live. The
+     game pages call this from bundles nothing here can edit; routing the
+     policy through the chokepoint catches them anyway. */
+  if (n > 0) {
+    const out = ncEarnAllow(source || ncEarnSource(), n);
+    if (out.give <= 0) {
+      toast(tr('ui_earn_capped').replace('{what}', out.rule.label));
+      return 0;
+    }
+    n = out.give;
+  }
+  const p = getPts() + n; localStorage.setItem('nc_points', p);
   /* Earning raises both; spending (spendPts) lowers only the balance. */
   if (n > 0) { try { localStorage.setItem('nc_points_lifetime', getPtsLifetime() + n); } catch (e) {} }
-  ncSyncSoon(); ncPaintBadge(); toast((n >= 0 ? '+' : '') + n + ' 🪙'); checkUnlocks(p); refreshPanels(); }
+  ncSyncSoon(); ncPaintBadge(); toast((n >= 0 ? '+' : '') + n + ' ' + NC_COIN_CHAR); checkUnlocks(p); refreshPanels();
+  return n;
+}
+window.addPts = addPts;
+window.ncEarnSource = ncEarnSource;
 /* ============================================================================
    THE DAILY STREAK: A DAY COUNTS AT FIFTEEN MINUTES
    ============================================================================
@@ -4301,6 +4419,17 @@ function ncPaintBadge() {
   try {
     var w = Math.ceil(b.getBoundingClientRect().width);
     if (w) document.documentElement.style.setProperty('--nc-badge-res', (w + 26) + 'px');
+    /* AND THE SECOND BADGE, WHICH NOTHING WAS MEASURING. The trial/plan pill
+       is a separate fixed element pinned at a hard-coded right:96px, and
+       96px stopped being far enough the moment anything else wanted that
+       corner. On the pricing page it landed exactly on top of the cart
+       button — z-index 995 over 90 — so the one control on the site that
+       takes money could not be pressed, and neither could Ask Nova or the
+       help button beside it. One reserve covering both pills is what the
+       other corner controls can now sit clear of. */
+    var pro = document.getElementById('ncprobadge');
+    var pw = pro ? Math.ceil(pro.getBoundingClientRect().width) + 12 : 0;
+    document.documentElement.style.setProperty('--nc-corner-res', ((w || 88) + 26 + pw) + 'px');
   } catch (e) {}
 }
 window.ncPaintBadge = ncPaintBadge;
@@ -5119,11 +5248,7 @@ function ncProfile() {
 
   function paintCoins() {
     coins.innerHTML =
-      '<span class="ncfi">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
-        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-        '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 010 3.6h-3a1.8 1.8 0 000 3.6h4"/>' +
-        '</svg></span>' +
+      '<span class="ncfi">' + ncCoinMark(22) + '</span>' +
       /* Translated now. It was left in English on the grounds that it is the
          product's own name for them — but it is the label under a number
          somebody is reading, not a logo, and it was the last English word in
@@ -8923,7 +9048,8 @@ window.ncSlang = function () {
          a product since the plans became the Family Dashboard, the Teen Tools
          and the Bundle, and it was being printed right next to their names. */
       : 'Your plan: ' + (p.plans || []).join(', ');
-    b.style.cssText = 'position:fixed;top:14px;right:96px;z-index:995;padding:5px 12px;border-radius:20px;' +
+    b.style.cssText = 'position:fixed;top:14px;right:var(--nc-badge-res,96px);z-index:995;' +
+      'padding:5px 12px;border-radius:20px;' +
       'font:800 0.7rem/1 system-ui,sans-serif;letter-spacing:2px;text-decoration:none;color:#04121a;' +
       'background:linear-gradient(90deg,#B6FF3C,#00F0FF);box-shadow:0 4px 16px rgba(0,240,255,0.3);';
     document.body.appendChild(b);

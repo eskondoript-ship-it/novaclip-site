@@ -96,9 +96,27 @@
       } else {
         var b = document.createElement('button');
         b.className = 'go';
-        b.textContent = row.price > 0
-          ? 'Get it for €' + row.price.toFixed(2)
-          : 'Get it for ' + row.coins + ' coins';
+        if (row.price > 0 && row.split) {
+          /* THE SPLIT, SHOWN BEFORE ANYBODY COMMITS. Coins cover 40% of a
+             priced lesson and no more, so the number on the button is the
+             money that will actually be asked for — not the sticker price
+             with a surprise underneath it. */
+          var sp = row.split;
+          out.insertAdjacentHTML('beforeend',
+            '<p class="muted">€' + row.price.toFixed(2) + ' &middot; your ' + sp.useCoins +
+            ' NovaCoins take off €' + (sp.useCoins / (row.coinsPerEur || 100)).toFixed(2) +
+            (sp.shortCoins > 0
+              ? ' &mdash; ' + sp.shortCoins + ' more coins would take off the full ' +
+                Math.round((row.coinShare || 0.4) * 100) + '%'
+              : ' &mdash; that is the full ' + Math.round((row.coinShare || 0.4) * 100) + '%') +
+            '</p>');
+          b.textContent = 'Get it for €' + sp.money.toFixed(2) +
+            (sp.useCoins ? ' + ' + sp.useCoins + ' coins' : '');
+        } else {
+          b.textContent = row.price > 0
+            ? 'Get it for €' + row.price.toFixed(2)
+            : 'Get it for ' + row.coins + ' coins';
+        }
         b.onclick = function () { buy(id, b); };
         out.appendChild(b);
       }
