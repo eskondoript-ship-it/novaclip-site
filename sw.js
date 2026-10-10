@@ -610,6 +610,25 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v110: "Sign in first" was the wrong thing to say, on a site nobody signs in
+   to.
+
+   ncSyncBoot() makes an account in the background on the first visit and
+   quietly gives up when the worker cannot be reached — "staying local", in
+   its own words. So somebody can be signed in by every visible sign, with
+   their name and their coins in the rail, and still have no account key,
+   through no act of theirs. The Academy then told them to go and sign in on
+   the Profile page, which is a door that was never there: that page does not
+   create accounts either.
+
+   It makes the account itself now. One call, no form. And when that fails,
+   the reason given is the real one — a worker that is down, a worker that has
+   never heard of /academy (which means leaderboard-worker.js has not been
+   deployed, a thing pushing to GitHub does not do), or a rate limiter asking
+   for five seconds, which is not a connection failure and should not be
+   reported as one.
+
+   academy.js. */
 /* v109: the earn rates retuned. Editing goes from 300 a day to 600 — twenty
    exports rather than ten — and games from a fifth of the old rate to a tenth,
    with a ceiling of six coins a day instead of fifteen. Two or three rounds
@@ -2114,7 +2133,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v109';
+const CACHE = 'novaclip-v110';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

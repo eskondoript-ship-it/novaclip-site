@@ -92,7 +92,8 @@
       if (row.open) {
         out.innerHTML = '<p class="muted">' + (row.owner ? 'This is yours.' : 'Yours to keep.') + '</p>';
       } else if (!signedIn()) {
-        out.innerHTML = '<p class="muted">Sign in on the Profile page to get this lesson.</p>';
+        out.innerHTML = '<p class="muted">Open the Teach tab once — it sets your account up — then ' +
+          'this lesson can be yours.</p>';
       } else {
         var b = document.createElement('button');
         b.className = 'go';
@@ -146,13 +147,47 @@
   }
 
   /* ------------------------------------------------------------- the teaching */
+  /* "SIGN IN FIRST" WAS THE WRONG THING TO SAY, and it sent people to a page
+     that could not help them. Nobody signs in to this site: ncSyncBoot()
+     creates an account in the background on the first visit and quietly gives
+     up if the worker cannot be reached — "staying local", in its own words.
+     So somebody can be signed in by every visible sign, with a name and a
+     coin balance in the rail, and still have no account key, through no act
+     of theirs. Telling them to go and sign in is sending them to look for a
+     door that was never there.
+
+     The Academy makes the account itself instead. One call, no form, and if
+     it fails the reason it gives is the real one. */
+  function makeAccount() {
+    var g = $('gate');
+    if (!window.ncSyncOn || !window.ncSyncOn()) {
+      g.innerHTML = '<div class="gate"><b>No community server</b>The Academy needs the NovaClip server, ' +
+        'and this copy of the site has not been pointed at one.</div>';
+      return;
+    }
+    g.innerHTML = '<p class="muted">Setting your account up…</p>';
+    window.ncCreateAccount().then(function () { gate(); }).catch(function (e) {
+      /* "slow down" is the server's rate limiter, not a server that is down,
+         and telling somebody their connection failed when it did not is how a
+         five-second wait turns into a bug report. */
+      var busy = /slow down|429/i.test(e.message || '');
+      g.innerHTML = '<div class="gate"><b>' +
+        (busy ? 'The server asked us to wait a moment' : 'Could not reach the NovaClip server') +
+        '</b>' + (busy ? 'Give it a few seconds and press the button' : esc(e.message)) +
+        '. Your work is safe on this device — the Academy is the part that needs the server, because a ' +
+        'lesson has to live somewhere other people can see it. <button class="retry" ' +
+        'style="margin-top:8px">Try again</button></div>';
+      var r = g.querySelector('.retry');
+      if (r) r.onclick = makeAccount;
+    });
+  }
+
   function gate() {
     var g = $('gate');
     if (!signedIn()) {
-      g.innerHTML = '<div class="gate"><b>Sign in first</b>The Academy needs to know whose lesson it is. ' +
-        'Your account lives on the Profile page.</div>';
       $('makecard').hidden = true;
       $('minecard').hidden = true;
+      makeAccount();
       return;
     }
     g.innerHTML = '<p class="muted">Checking what you are allowed to do…</p>';
@@ -192,7 +227,14 @@
       if (go) go.onclick = startAgeCheck;
       if (st.mayPublish) mine();
     }).catch(function (e) {
-      g.innerHTML = '<div class="gate"><b>Could not check</b>' + esc(e.message) + '</div>';
+      /* A worker that answers but has never heard of /academy is a worker that
+         has not been redeployed, which is a different problem from a worker
+         that is down — and the one somebody can actually fix. */
+      var old = /404|not found/i.test(e.message || '');
+      g.innerHTML = '<div class="gate"><b>' +
+        (old ? 'The server does not have the Academy yet' : 'Could not check') + '</b>' +
+        esc(e.message) + (old ? '. leaderboard-worker.js needs deploying — pushing it to GitHub does '
+          + 'not deploy it.' : '') + '</div>';
     });
   }
 
