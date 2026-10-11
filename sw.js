@@ -610,6 +610,41 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v114: the parent's confirmation is a real email, and the break screen has
+   a link.
+
+   THE CODE THAT GUARDED THE PARENTAL CONTROLS WAS PRINTED ON THE SCREEN.
+   parent.html invented a six-digit number in the page, kept it in a variable
+   and showed it with "(Demo)" in front of it. The person that step exists to
+   keep out is the person holding the device, so the PIN, the daily limit, the
+   under-13 block, the locks and consent to earn money teaching all rested on
+   a number the child could read off their own screen.
+
+   The worker makes the code now, keeps a hash of it for twenty minutes and
+   sends it to the address through an email provider. The browser is never
+   told what it is, and there is no fallback that shows it: with no provider
+   configured the dashboard says so and stops, because that fallback IS the
+   bug. Five wrong guesses kill the code; one send a minute per account and
+   per address, six a day, so an endpoint that emails anybody cannot be used
+   to email everybody. The body is fixed — no field in it is written by the
+   caller. A confirmation now belongs to the account rather than to one
+   browser, so setting up on the phone after the laptop does not ask twice.
+
+   Needs two Worker secrets: MAIL_KEY (an email provider API key) and
+   MAIL_FROM (a verified sender). MAIL_PROVIDER is "resend" unless set to
+   "postmark". /health reports which.
+
+   AND THE BREAK SCREEN HAS A DOOR. It appears after 1 h 30 m of real use,
+   which makes it the hardest thing on the site to look at and one of the
+   first things anybody asks to see. novaclip.org/index.html?lock=preview puts
+   it up on any page, counting down, saying on its face that it is a preview;
+   it closes on a click or Escape and never writes to the real lock. The
+   Family Dashboard has a "See the break screen" button beside the screen-time
+   rule.
+
+   leaderboard-worker.js (deploy it again — this adds /parent/email/start,
+   /parent/email/check and /parent/email/state), parent.html, nova.js,
+   privacy.html. */
 /* v113: the whole rail is on the screen now.
 
    THE NAV WAS HIDING ITS OWN END. The rail's link column scrolls inside
@@ -2233,7 +2268,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v113';
+const CACHE = 'novaclip-v114';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

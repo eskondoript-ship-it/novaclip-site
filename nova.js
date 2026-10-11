@@ -5048,7 +5048,20 @@ function ncScreenTime() {
   document.body.appendChild(badge);
 
   let veil = null;
-  function lockScreen(until) {
+  /* A LINK TO A SCREEN NOBODY CAN SUMMON ON PURPOSE.
+     The break screen only appears after ninety minutes of real use, which
+     makes it the hardest thing on the site to look at — and it is one of the
+     first things a parent, a reviewer or anybody being shown the product asks
+     to see. ?lock=preview puts it up on any page.
+
+     A preview and not a lock: it never writes nc_st_lock, so nobody's budget
+     is spent and nobody is shut out of the site by following a link. It says
+     it is a preview on its face and it closes on a click or on Escape, both
+     of which the real one deliberately does not do. */
+  const PREVIEW = /[?&](?:lock|screenlock)=(?:1|preview|on)\b/i.test(location.search);
+  let preview = false, previewUntil = 0;
+
+  function lockScreen(until, isPreview) {
     if (veil) return;
     veil = document.createElement('div');
     veil.id = 'ncstlock';
@@ -5064,9 +5077,26 @@ function ncScreenTime() {
       '<div id="ncstcd" style="margin-top:22px;font:700 34px/1 ui-monospace,monospace;' +
       'background:linear-gradient(110deg,#7C5CFF,#00E5FF);-webkit-background-clip:text;' +
       'background-clip:text;color:transparent">15:00</div>' +
+      (isPreview
+        ? '<p style="margin-top:26px;color:#5D6A88;font-size:12.5px;line-height:1.7">' +
+          'Preview. The real one appears after <b>1 h 30 m</b> of use and cannot be closed ' +
+          'until the fifteen minutes are up.<br><button id="ncstclose" style="margin-top:12px;' +
+          'padding:9px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.2);' +
+          'background:transparent;color:#EAF2FF;font:600 13px system-ui,sans-serif;cursor:pointer">' +
+          'Close the preview</button></p>'
+        : '') +
       '</div>';
     document.body.appendChild(veil);
     document.body.style.overflow = 'hidden';
+    if (isPreview) {
+      const shut = () => { preview = false; unlockScreen(); };
+      const btn = veil.querySelector('#ncstclose');
+      if (btn) btn.onclick = shut;
+      veil.addEventListener('click', (e) => { if (e.target === veil) shut(); });
+      addEventListener('keydown', function esc(e) {
+        if (e.key === 'Escape') { shut(); removeEventListener('keydown', esc); }
+      });
+    }
   }
   function unlockScreen() {
     if (!veil) return;
@@ -5082,6 +5112,19 @@ function ncScreenTime() {
   let last = Date.now();
   function tick() {
     const now = Date.now();
+
+    /* The preview runs its own countdown and bills nothing. It is checked
+       first because the line below this block would otherwise take the veil
+       straight back down again — tick() removes any lock the clock did not
+       ask for, which is correct for the real one and wrong for this. */
+    if (preview) {
+      const cd = document.getElementById('ncstcd');
+      if (cd) cd.textContent = mmss(previewUntil - now);
+      if (now >= previewUntil) { preview = false; unlockScreen(); }
+      last = now;
+      return;
+    }
+
     const lockUntil = get('nc_st_lock', 0);
 
     if (now < lockUntil) {
@@ -5133,10 +5176,23 @@ function ncScreenTime() {
     }
   }
 
+  if (PREVIEW) {
+    preview = true;
+    previewUntil = Date.now() + NC_ST_BREAK;
+    lockScreen(previewUntil, true);
+  }
   tick();
   setInterval(tick, 1000);
   window.ncScreenTimeReset = function () {   // for the parent page
+    preview = false;
     set('nc_st_used', 0); set('nc_st_lock', 0); unlockScreen();
+  };
+  /* Same screen, from the console or from a button on the Family Dashboard,
+     for anybody who would rather not edit the address. */
+  window.ncScreenTimePreview = function () {
+    preview = true;
+    previewUntil = Date.now() + NC_ST_BREAK;
+    lockScreen(previewUntil, true);
   };
 }
 

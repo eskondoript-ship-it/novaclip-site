@@ -967,6 +967,151 @@ async function publicTeacher(env, code, fallbackName) {
    tstats.sales, because sales are what levels and prices are earned with and
    giving something away is not evidence that it was worth paying for.
    ========================================================================= */
+/* ===========================================================================
+   THE EMAIL TO THE PARENT, WHICH IS NOW AN EMAIL
+   ===========================================================================
+   The Family Dashboard asked for a parent's address, made up a six-digit code
+   IN THE PAGE, and then printed it on the screen with "(Demo)" in front of it.
+   That is not a weak check, it is the absence of one: the person it is meant
+   to keep out is the person holding the device, and the code was being handed
+   to them. Every parental control behind it — the PIN, the daily limit, the
+   locks, the teaching consent — rested on a number the child could read.
+
+   So the code is made here, stored here as a hash, and sent to the address by
+   an email provider. The browser is never told what it is. That single change
+   is the whole point: the only way to learn the code is to have the inbox,
+   which is exactly what "confirm the parent's email" was always supposed to
+   mean.
+
+   WHAT STOPS THIS BEING A WAY TO SEND MAIL TO STRANGERS. An endpoint that
+   emails anybody is an endpoint somebody will use to email everybody. The
+   body is fixed — there is no field in it that the caller writes, not even a
+   name — so the worst it can carry is NovaClip's own sentence. On top of
+   that: one send a minute per account, one a minute per address, and six a
+   day per account, counted here rather than taken on trust.
+
+   THE KEY LIVES ON THE WORKER. MAIL_KEY is a Worker secret, like every other
+   key this project has; nothing about it reaches a browser. Without it this
+   refuses and says which secret is missing, because the alternative is going
+   back to printing the code on the screen, and that is the bug.
+   ========================================================================= */
+const MAIL_CODE_TTL = 20 * 60;          /* seconds a code is good for */
+const MAIL_MAX_TRIES = 5;               /* wrong guesses before it dies */
+const MAIL_DAY_CAP = 6;                 /* sends per account per day */
+
+function sixDigits() {
+  /* crypto.getRandomValues rather than Math.random: this is the thing that
+     stands between a child and their own parental controls. */
+  const a = new Uint32Array(1);
+  crypto.getRandomValues(a);
+  return String(100000 + (a[0] % 900000));
+}
+
+/* An address, shown back the way a bank shows one: enough to recognise, not
+   enough to learn. The page prints this, so the child confirming the parent's
+   address sees that it went somewhere plausible without being told where. */
+function maskEmail(e) {
+  const at = String(e || '').indexOf('@');
+  if (at < 1) return '';
+  const user = e.slice(0, at), host = e.slice(at + 1);
+  const head = user.slice(0, 1);
+  const dot = host.lastIndexOf('.');
+  const hhead = host.slice(0, 1), tail = dot > 0 ? host.slice(dot) : '';
+  return head + '•••@' + hhead + '•••' + tail;
+}
+
+const validEmail = (v) => /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(String(v || ''));
+
+/* The code is kept as a hash, so a dump of the store is not a list of live
+   codes. The salt is whichever long secret this worker already has. */
+async function codeHash(env, code, account) {
+  const secret = env.MAIL_SECRET || env.CERT_SECRET || env.PEPPER || 'novaclip-unpeppered';
+  return hmacHex(secret, account + '|parent-email|' + code);
+}
+
+/* Two providers, both of them a single JSON POST. Named rather than
+   generalised: a "any provider" adapter that guesses at the request shape is
+   a thing that fails at the one moment it matters. */
+const mailReady = (env) => !!(env.MAIL_KEY && env.MAIL_FROM);
+
+/* The refusal when there is no provider, kept in one place because it is
+   given twice: once by the route before it spends anybody's allowance, and
+   once by the sender, which must never assume the route checked. */
+function mailNotSetUp() {
+  return { ok: false, status: 503,
+      error: 'email is not switched on for this worker yet',
+      detail: 'set two Worker secrets: MAIL_KEY (the API key from an email provider) and '
+            + 'MAIL_FROM (a verified sender, for example "NovaClip <noreply@novaclip.org>"). '
+            + 'MAIL_PROVIDER is "resend" unless set to "postmark". Nothing is emailed and no '
+            + 'code is issued until those exist — and the code is never shown on screen, '
+            + 'because showing it to the child is what this replaced' };
+}
+
+async function sendMail(env, to, subject, text, html) {
+  const from = env.MAIL_FROM || '';
+  const key = env.MAIL_KEY || '';
+  const who = String(env.MAIL_PROVIDER || 'resend').toLowerCase();
+  if (!key || !from) return mailNotSetUp();
+  let url, headers, payload;
+  if (who === 'postmark') {
+    url = 'https://api.postmarkapp.com/email';
+    headers = { 'Content-Type': 'application/json', 'Accept': 'application/json',
+                'X-Postmark-Server-Token': key };
+    payload = { From: from, To: to, Subject: subject, TextBody: text, HtmlBody: html,
+                MessageStream: env.MAIL_STREAM || 'outbound' };
+  } else {
+    url = 'https://api.resend.com/emails';
+    headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };
+    payload = { from, to: [to], subject, text, html };
+  }
+  let res, bodyText = '';
+  try {
+    res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload) });
+    bodyText = await res.text();
+  } catch (e) {
+    return { ok: false, status: 502, error: 'the email provider could not be reached',
+             detail: String(e && e.message || e) };
+  }
+  if (!res.ok) {
+    /* The provider's own words, trimmed. "Sent" when nothing was sent is the
+       failure mode that makes this whole feature a lie, so a refusal is
+       reported rather than swallowed. */
+    return { ok: false, status: 502, error: 'the email provider refused to send it',
+             detail: bodyText.slice(0, 300) };
+  }
+  return { ok: true };
+}
+
+function parentCodeMail(code) {
+  const text = [
+    'Somebody is setting up the NovaClip Family Dashboard and gave this address as the parent',
+    'or guardian.',
+    '',
+    'Your confirmation code is ' + code,
+    '',
+    'It is good for 20 minutes. Type it on the Family Dashboard to set the PIN that protects',
+    'daily limits, the under-13 block, what your child can reach, and whether they may earn',
+    'money teaching.',
+    '',
+    'If this was not you, ignore this email. Nothing changes until the code is typed in, and',
+    'this address is not added to any list.',
+    '',
+    'NovaClip · novaclip.org'
+  ].join('\n');
+  const html = '<div style="font:15px/1.6 -apple-system,Segoe UI,sans-serif;color:#12141c;max-width:520px">'
+    + '<p>Somebody is setting up the <b>NovaClip Family Dashboard</b> and gave this address as the '
+    + 'parent or guardian.</p>'
+    + '<p style="font:800 30px/1.2 ui-monospace,Consolas,monospace;letter-spacing:6px;margin:22px 0">'
+    + code + '</p>'
+    + '<p>It is good for 20 minutes. Type it on the Family Dashboard to set the PIN that protects '
+    + 'daily limits, the under-13 block, what your child can reach, and whether they may earn money '
+    + 'teaching.</p>'
+    + '<p style="color:#5a6478">If this was not you, ignore this email. Nothing changes until the '
+    + 'code is typed in, and this address is not added to any list.</p>'
+    + '<p style="color:#5a6478">NovaClip · novaclip.org</p></div>';
+  return { subject: 'Your NovaClip parent code: ' + code, text, html };
+}
+
 async function firstLessonOf(env, sellerCode) {
   const mine = (await env.DB.get('mine:' + sellerCode, 'json')) || [];
   for (const id of mine) {
@@ -1008,6 +1153,11 @@ export default {
           : 'not set — add a Worker secret called PEPPER (any long random string) ' +
             'so an unused username cannot be told apart from a taken one, and so ' +
             'the stored visitor tags cannot be walked back to IP addresses',
+        parentEmail: (env.MAIL_KEY && env.MAIL_FROM)
+          ? 'ready — sending through ' + String(env.MAIL_PROVIDER || 'resend')
+          : 'not set — add Worker secrets MAIL_KEY (an email provider API key) and MAIL_FROM '
+            + '(a verified sender). Until then the Family Dashboard cannot confirm a parent, '
+            + 'and it will say so rather than showing the code on screen',
         hint: env.DB ? 'Put this address in NC_SERVER in nova.js.'
                      : 'The community pages stay offline until DB is bound.'
       }, env.DB ? 200 : 500);
@@ -1570,6 +1720,106 @@ export default {
     /* Setting the rules needs the PIN a parent already keeps. The hash is sent
        by the page — the PIN itself never travels, the same way it never leaves
        the device on the Family Dashboard today. */
+    /* ---------- confirming the parent's email, for real ---------- */
+    /* Issues a code and EMAILS it. What comes back to the browser is that it
+       was sent and a masked address — never the code, which is the entire
+       difference between this and what it replaced. */
+    if (path === '/parent/email/start' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const email = cleanLine(body.email, 90).toLowerCase();
+      if (!validEmail(email)) return json({ error: 'that does not look like an email address' }, 400);
+      /* ASKED FIRST, BECAUSE IT IS THE ANSWER THAT CANNOT CHANGE. The caps and
+         the limiters below are about volume; this is about whether the feature
+         exists at all. Checked after them, a worker with no mail key tells a
+         parent to "give it a minute before asking for another" — which is the
+         wrong sentence, and one they would keep following. */
+      if (!mailReady(env)) {
+        const no = mailNotSetUp();
+        return json({ error: no.error, detail: no.detail }, no.status);
+      }
+
+      /* A DAY'S WORTH, COUNTED HERE. Six is enough for a parent who mistypes
+         their address twice and still cannot find the message; it is not
+         enough to be worth using this as a way to bother somebody. */
+      const dayKey = 'pmailday:' + g.code + ':' + new Date().toISOString().slice(0, 10);
+      const sent = parseInt((await env.DB.get(dayKey)) || '0', 10);
+      if (sent >= MAIL_DAY_CAP) {
+        return json({ error: 'that is as many codes as one account can send in a day',
+          detail: 'wait until tomorrow, or use the code already in the inbox — it lasts twenty '
+                + 'minutes from when it was sent' }, 429);
+      }
+      /* Checked before the limiter and before the provider is called, like
+         every other refusal in this file: a rejected address costs nothing, so
+         it should cost no allowance either. */
+      if (await rateLimited(env, 'pmail:' + g.code, 60000)) {
+        return json({ error: 'a code was just sent', detail: 'give it a minute before asking for another' }, 429);
+      }
+      /* And per ADDRESS as well as per account, so a pile of accounts cannot
+         be pointed at one inbox. */
+      if (await rateLimited(env, 'pmailto:' + (await hmacHex(env.PEPPER || 'p', email)).slice(0, 24), 60000)) {
+        return json({ error: 'a code was just sent to that address',
+                      detail: 'give it a minute before asking for another' }, 429);
+      }
+
+      const code = sixDigits();
+      const mail = parentCodeMail(code);
+      const out = await sendMail(env, email, mail.subject, mail.text, mail.html);
+      if (!out.ok) return json({ error: out.error, detail: out.detail }, out.status);
+
+      /* Only once the provider has actually accepted it. Storing first and
+         sending second gives you a code that works for an email nobody got. */
+      await env.DB.put('pmail:' + g.code, JSON.stringify({
+        hash: await codeHash(env, code, g.code), email, at: Date.now(), tries: 0
+      }), { expirationTtl: MAIL_CODE_TTL + 60 });
+      await env.DB.put(dayKey, String(sent + 1), { expirationTtl: 60 * 60 * 26 });
+      return json({ sent: true, to: maskEmail(email), minutes: Math.round(MAIL_CODE_TTL / 60) });
+    }
+
+    /* The six digits coming back. */
+    if (path === '/parent/email/check' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const given = String(body.code6 || '').replace(/\D/g, '');
+      const row = await env.DB.get('pmail:' + g.code, 'json');
+      if (!row) {
+        return json({ error: 'that code has expired', detail: 'ask for a new one' }, 410);
+      }
+      if (!/^\d{6}$/.test(given)) return json({ error: 'the code is six digits' }, 400);
+      if (row.tries >= MAIL_MAX_TRIES) {
+        await env.DB.delete('pmail:' + g.code);
+        return json({ error: 'too many wrong tries', detail: 'that code is dead — ask for a new one' }, 429);
+      }
+      const want = await codeHash(env, given, g.code);
+      if (!sameSecret(row.hash, want)) {
+        row.tries += 1;
+        await env.DB.put('pmail:' + g.code, JSON.stringify(row), { expirationTtl: MAIL_CODE_TTL + 60 });
+        return json({ error: 'that code does not match',
+                      left: Math.max(0, MAIL_MAX_TRIES - row.tries) }, 403);
+      }
+      await env.DB.delete('pmail:' + g.code);
+      /* The address is kept because it is the one the dashboard writes to
+         afterwards — a weekly summary, an alert — and because "which
+         address was confirmed" is the question a parent asks later. */
+      await env.DB.put('pmailok:' + g.code, JSON.stringify({ email: row.email, at: Date.now() }));
+      return json({ verified: true, email: row.email });
+    }
+
+    /* Has this account's parent email been confirmed, and which one. Read by
+       the dashboard on load so a confirmation survives a new device, which the
+       browser-only version never did. */
+    if (path === '/parent/email/state' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const ok = await env.DB.get('pmailok:' + g.code, 'json');
+      const live = await env.DB.get('pmail:' + g.code, 'json');
+      return json({
+        verified: !!ok, email: ok ? ok.email : '', at: ok ? ok.at : 0,
+        pending: !!live, to: live ? maskEmail(live.email) : '',
+        configured: !!(env.MAIL_KEY && env.MAIL_FROM)
+      });
+    }
+
     if (path === '/parent/rules' && request.method === 'POST') {
       const g = await gate(env, body);
       if (g.stop) return g.stop;

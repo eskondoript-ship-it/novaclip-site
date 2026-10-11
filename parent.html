@@ -580,6 +580,10 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
           <span id='stRule'>—</span>
         </div>
         <button class='btn' id='stReset' style='width:auto'>Reset today's clock</button>
+        <!-- A parent is being told their child will be stopped after an hour
+             and a half. Being able to look at the thing that stops them, in
+             one click, is the difference between a promise and a feature. -->
+        <button class='btn' id='stShow' style='width:auto'>See the break screen</button>
       </div>
       <div class='notice'>Screen time is measured on this device only. A phone
         or a second computer keeps its own count — there is no account behind
@@ -748,9 +752,13 @@ function isSetUp() { return !!localStorage.getItem('nc_parent_pin_h'); }
        address, saved nowhere at all — retyped for every scan
 
    One key now, read and written at both ends, plus the half-finished
-   confirmation surviving a reload for twenty minutes. Nothing about the demo
-   code changes: it is already printed on screen, so keeping it beside the email
-   it was issued for gives away nothing that was not already visible. */
+   confirmation surviving a reload for twenty minutes.
+
+   WHAT IS NO LONGER KEPT HERE IS THE CODE ITSELF. It used to be in this
+   record, because it was already printed on the screen and hiding it from
+   localStorage would have been theatre. The code is made on the worker now
+   and emailed; this browser never learns it, so what is left in here is the
+   address and the fact that something was sent. */
 const PEND = 'nc_parent_setup_pending';
 const PEND_MS = 20 * 60 * 1000;
 
@@ -759,9 +767,32 @@ function saveParentEmail(v) { try { localStorage.setItem('nc_parent_email', v); 
 function pending() {
   try {
     const p = JSON.parse(localStorage.getItem(PEND) || 'null');
-    if (p && p.code && Date.now() - p.at < PEND_MS) return p;
+    if (p && p.email && Date.now() - p.at < PEND_MS) return p;
   } catch (e) {}
   return null;
+}
+/* The account this device belongs to, which is what the worker issues the
+   code against. nova.js makes one on the first visit without anybody signing
+   in, so this is normally already there. */
+function acct() {
+  try {
+    return { code: localStorage.getItem('nc_code') || '', key: localStorage.getItem('nc_key') || '' };
+  } catch (e) { return { code: '', key: '' }; }
+}
+function mailApi(path, extra) {
+  const a = acct();
+  if (!a.code || !a.key) {
+    return Promise.reject(new Error('This device has no NovaClip account on it yet, so there is ' +
+      'nothing to attach parental controls to. Open any other page on the site once \u2014 it makes ' +
+      'one \u2014 then come back.'));
+  }
+  if (!window.ncApi) return Promise.reject(new Error('The NovaClip server is not configured.'));
+  return window.ncApi(path, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ code: a.code, key: a.key }, extra || {})) });
+}
+function sayErr(e) {
+  return (e && e.message ? e.message : 'something went wrong') +
+         (e && e.detail ? ' \u2014 ' + e.detail : '') + '.';
 }
 function clearPending() { try { localStorage.removeItem(PEND); } catch (e) {} }
 
@@ -784,18 +815,64 @@ window.addEventListener('DOMContentLoaded', () => {
     if (saved) document.getElementById('parentSetupEmail').value = saved;
     const p = pending();
     if (p && p.email === saved) {
-      CONF_CODE = p.code;
       document.getElementById('codebox').style.display = 'block';
       // the MutationObserver above un-hides the box when it gets content
       document.getElementById('pinmsg').innerHTML =
-        '(Demo) Your confirmation code is still <b style="color:#00F0FF">' + p.code +
-        '</b> — in the real product this is emailed to the parent, not shown here.';
+        'We sent a code to <b>' + (p.to || 'the parent address') + '</b>. It is good for twenty ' +
+        'minutes \u2014 type it in above.';
     }
+    /* And the worker's own answer, which outlasts this browser: a parent who
+       confirmed on the laptop and is now on the phone has already done this
+       step, and being asked to do it again on every device was never the
+       intention. */
+    mailApi('/parent/email/state', {}).then(function (st) {
+      if (st.verified) {
+        emailConfirmed = true;
+        document.getElementById('setuponly').style.display = 'none';
+        document.getElementById('pin').style.display = 'block';
+        document.getElementById('setuponly2').style.display = 'block';
+        document.getElementById('pinbtn').style.display = 'inline-block';
+        document.getElementById('pinbtn').textContent = 'Set up & unlock';
+        document.getElementById('pinmsg').innerHTML =
+          '<b>' + esc2(st.email) + '</b> is already confirmed for this account. Set the parent PIN ' +
+          'and a security question.';
+        document.getElementById('pinmsg').style.display = 'block';
+      } else if (!st.configured) {
+        /* Said once, here, rather than when the button is pressed: a dashboard
+           that cannot confirm anybody should say so before a parent types
+           their address into it. */
+        document.getElementById('pinmsg').style.display = 'block';
+        document.getElementById('pinmsg').innerHTML =
+          '<b>Email is not switched on for this NovaClip server yet.</b> The confirmation code is ' +
+          'emailed to the parent &mdash; it is never shown on this screen, because the person it ' +
+          'is meant to keep out is holding the device. Set the Worker secrets <code>MAIL_KEY</code> ' +
+          'and <code>MAIL_FROM</code> and this works.';
+      }
+    }).catch(function () {});
   }
 });
 
-// simulated email confirmation (real email requires a backend; demo generates a code)
-let CONF_CODE = null;
+/* THE CONFIRMATION IS A REAL EMAIL NOW.
+
+   What was here: the page invented a six-digit number, kept it in a variable,
+   and printed it on the screen under the word "(Demo)". The person that step
+   exists to keep out is the person holding the device, and the code was being
+   handed to them. Every control behind this gate — the PIN, the daily limit,
+   the under-13 block, the locks, consent to earn money teaching — rested on a
+   number the child could read off their own screen.
+
+   What is here instead: the worker makes the code, stores a hash of it, and
+   sends it to the address. This page never learns it. The only way to get it
+   is to open the inbox, which is what "confirm the parent's email" was always
+   supposed to mean. There is no fallback that shows it on screen, because
+   that fallback IS the bug — when email is not configured the page says so
+   and stops. */
+let emailConfirmed = false;
+function esc2(t) {
+  return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
 
 // read the kid's connected YouTube channel email/title, if Studio connected one
 async function kidChannelInfo() {
@@ -831,24 +908,59 @@ document.getElementById('sendcodebtn').onclick = async () => {
     return;
   }
 
-  CONF_CODE = String(Math.floor(100000 + Math.random()*900000));
-  saveParentEmail(email);
-  try { localStorage.setItem(PEND, JSON.stringify({ email: email, code: CONF_CODE, at: Date.now() })); } catch (e) {}
-  document.getElementById('codebox').style.display = 'block';
-  // DEMO: show the code on screen. In production this is emailed and never shown.
-  msg.innerHTML = '(Demo) Your confirmation code is <b style="color:#00F0FF">' + CONF_CODE + '</b> — in the real product this is emailed to the parent, not shown here.';
+  const btn = document.getElementById('sendcodebtn');
+  const was = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Sending\u2026';
+  msg.style.display = 'block';
+  msg.textContent = 'Sending the code\u2026';
+  try {
+    const out = await mailApi('/parent/email/start', { email: email });
+    saveParentEmail(email);
+    try { localStorage.setItem(PEND, JSON.stringify({ email: email, to: out.to, at: Date.now() })); } catch (e) {}
+    document.getElementById('codebox').style.display = 'block';
+    /* The masked address, not the code. It is enough for a parent to see the
+       message went where they meant it to, and it tells a child nothing. */
+    msg.innerHTML = 'Code sent to <b>' + esc2(out.to || email) + '</b>. It is good for ' +
+      (out.minutes || 20) + ' minutes \u2014 check the inbox, and the spam folder.';
+    document.getElementById('confcode').focus();
+  } catch (e) {
+    msg.innerHTML = esc2(sayErr(e));
+  }
+  btn.disabled = false;
+  btn.textContent = was;
 };
 
-document.getElementById('confcode').oninput = (e) => {
-  if (CONF_CODE && e.target.value === CONF_CODE) {
-    // code correct — reveal PIN + security question setup
+/* Six digits typed: ask the worker, which is the only thing that knows. The
+   page cannot check this itself any more, and that is the point. */
+let checking = false;
+document.getElementById('confcode').oninput = async (e) => {
+  const v = String(e.target.value || '').replace(/\D/g, '').slice(0, 6);
+  if (v !== e.target.value) e.target.value = v;
+  if (v.length !== 6 || checking) return;
+  const msg = document.getElementById('pinmsg');
+  checking = true;
+  msg.style.display = 'block';
+  msg.textContent = 'Checking\u2026';
+  try {
+    await mailApi('/parent/email/check', { code6: v });
+    emailConfirmed = true;
+    clearPending();
     document.getElementById('setuponly').style.display = 'none';
     document.getElementById('pin').style.display = 'block';
     document.getElementById('setuponly2').style.display = 'block';
     document.getElementById('pinbtn').style.display = 'inline-block';
     document.getElementById('pinbtn').textContent = 'Set up & unlock';
-    document.getElementById('pinmsg').innerHTML = 'Email confirmed. Now set your parent PIN and security question.';
+    msg.innerHTML = 'Email confirmed. Now set your parent PIN and security question.';
+  } catch (err) {
+    /* The worker counts the wrong guesses and says how many are left, because
+       five silent failures followed by a dead code is a thing people report as
+       "it stopped working". */
+    const left = err && err.body && typeof err.body.left === 'number' ? err.body.left : null;
+    msg.innerHTML = esc2(sayErr(err)) +
+      (left !== null ? ' ' + left + (left === 1 ? ' try left.' : ' tries left.') : '');
   }
+  checking = false;
 };
 
 document.getElementById('pinbtn').onclick = async () => {
@@ -860,7 +972,7 @@ document.getElementById('pinbtn').onclick = async () => {
 
   // first-time setup — requires confirmed email code
   if (!isSetUp()) {
-    if (!CONF_CODE || document.getElementById('confcode').value !== CONF_CODE) {
+    if (!emailConfirmed) {
       msg.textContent = 'Please confirm the parent email code first.'; return;
     }
     /* 13 and over, with no upper bound — the site no longer has one, and a
@@ -1310,6 +1422,14 @@ function renderScreenTime() {
     if (typeof ncScreenTimeReset === 'function') ncScreenTimeReset();
     this.textContent = 'Clock reset';
     setTimeout(() => { this.textContent = "Reset today's clock"; }, 2200);
+  };
+
+  /* The preview, which closes on a click or on Escape. The real one does
+     neither, and says so on its face so nobody mistakes one for the other. */
+  const show = document.getElementById('stShow');
+  if (show) show.onclick = function () {
+    if (typeof ncScreenTimePreview === 'function') ncScreenTimePreview();
+    else location.href = 'index.html?lock=preview';
   };
 }
 
