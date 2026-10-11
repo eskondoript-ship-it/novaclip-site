@@ -610,6 +610,51 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v112: a checkout for lessons, a teacher who is somebody, and a free first
+   one.
+
+   BUYING A LESSON NOW GOES WHERE EVERYTHING ELSE BOUGHT HERE GOES. The button
+   in the Academy puts the lesson in nc_cart and opens pricing.html#lesson, so
+   a lesson passes the Family Dashboard PIN like any other purchase and the
+   price, the coins coming off it and the total are all shown before anybody is
+   asked for anything. A lesson priced in coins still completes in place: the
+   coins are already on the account and a card page with nothing to charge is a
+   dead end with a Pay button on it. Lessons check out one at a time and never
+   share a cart with a plan — a plan is sold by NovaClip, a lesson by another
+   teenager, and the money goes to different people.
+
+   THE SHELF WAS PUBLISHING CHILDREN'S REAL NAMES. The name on a lesson came
+   off the certificate, and a certificate carries a real name because that is
+   what makes it a credential. A teaching name now replaces it everywhere a
+   stranger can see; the certificate number stays on the lesson so anybody can
+   still check it on the verify page; the real name is only ever sent back to
+   the account it belongs to. A name belongs to one account, as on the
+   leaderboard and for a worse reason — here it is sold on.
+
+   AND NOTHING IN A PROFILE OR A LESSON MAY CARRY A CONTACT DETAIL. No email,
+   link, domain, handle, phone number or messaging app, refused with the kind
+   named, because there is no messaging in the Academy on purpose and a bio
+   that says "add me on discord" is the private channel this whole marketplace
+   was built not to have. "tiktok" and "youtube" are deliberately allowed —
+   they are what the lessons are about — and the phone-number check is off for
+   the body of a lesson, where a list of timecodes is twelve digits in a row.
+
+   THE FIRST LESSON IS FREE: every teacher's earliest listing, claimable for
+   nothing, one per learner for ever, locked to the one creator they spend it
+   on. Pinned to the creator's first lesson rather than any lesson, or the only
+   rational move is to spend it on the dearest thing on the shelf. A claim is
+   an order and not a sale — it opens the lesson and can be rated, and it buys
+   the teacher no level and no price.
+
+   Also: a lesson now has a description, which everybody can read. The preview
+   used to be the first 220 characters of the lesson itself, which sold nothing
+   and gave away the opening of the thing being sold. And ncApi now carries the
+   worker's `detail` on the Error it throws — "your free lesson is already
+   spent" without "you took it from RuiEdits" is the half that helps nobody.
+
+   academy.html, academy.js (they go together), pricing.html, nova.js,
+   leaderboard-worker.js (deploy it again — this adds /academy/profile,
+   /academy/profile/save and /academy/free). */
 /* v111: stars, teacher levels, and a price that has to be earned.
 
    A marketplace where anybody may ask twenty euros on their first day is a
@@ -2154,7 +2199,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v111';
+const CACHE = 'novaclip-v112';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

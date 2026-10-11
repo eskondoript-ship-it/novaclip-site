@@ -202,7 +202,16 @@ html[data-device="phone-s"] .btsave { display: none; }
   background: rgba(255,255,255,0.06); color: #fff; cursor: pointer; font-weight: 800; font-family: inherit; }
 .cqty span { min-width: 20px; text-align: center; font-weight: 800; }
 .cprice { font-weight: 800; color: var(--nc-cyan,#00F0FF); min-width: 74px; text-align: right; font-size: .92rem; }
-.crm { background: none; border: none; color: var(--nc-pink,#FF2E97); cursor: pointer; font-size: 1rem; padding: 0 2px; }
+/* THIS BUTTON HAD NOTHING IN IT. An empty <button> with no content and no
+   generated content is about four pixels wide and none high, so the only way
+   to take something out of the cart could not be clicked — Playwright put it
+   plainly: "element is not visible". It matters more now that a cart can hold
+   an Academy lesson, because taking the lesson out is the only way past a
+   mixed cart. */
+.crm { background: none; border: none; color: var(--nc-pink,#FF2E97); cursor: pointer;
+  font-size: 1.1rem; line-height: 1; padding: 6px 8px; border-radius: 8px; flex: none; }
+.crm::before { content: '\00d7'; }
+.crm:hover { background: rgba(255,46,151,0.14); }
 .carttotal { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 6px; font-size: 1.05rem; }
 .carttotal b { font-size: 1.5rem; color: var(--nc-cyan,#00F0FF); }
 .cempty { color: var(--nc-dim,#7E8AA6); text-align: center; padding: 26px 0; font-size: .9rem; }
@@ -605,6 +614,17 @@ try {
   localStorage.setItem('nc_pay_mode', anyLive ? 'stripe' : 'demo');
 } catch (e) {}
 
+/* The cart used to hold only plan names read out of this page's own markup, so
+   it never needed escaping. It now also holds Academy lesson titles, which are
+   written by another teenager — screened and stripped of angle brackets by the
+   worker, and escaped here as well, because "the server already cleaned it" is
+   the sentence that precedes every injection. */
+function esc(t) {
+  return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
+
 let CART = [];
 try { CART = JSON.parse(localStorage.getItem('nc_cart') || '[]'); } catch (e) { CART = []; }
 function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(CART)); updateCartCount(); }
@@ -656,23 +676,60 @@ function renderCart() {
   document.getElementById('cartpay').style.display = 'block';
   box.innerHTML = CART.map((it, i) =>
     '<div class="citem">' +
-      '<div class="cinfo"><b>' + it.name + '</b><small>' +
-        (it.sub ? (it.cycle === 'year' ? 'Billed yearly' : 'Billed monthly') : 'One-time payment') + '</small></div>' +
+      '<div class="cinfo"><b>' + esc(it.name) + '</b><small>' +
+        (it.kind === 'lesson'
+          /* AN ACADEMY LESSON IN THE CART. It is one thing, written by one
+             person, and there is no second copy of it to buy — the server
+             records one order per lesson per account — so it carries no
+             quantity buttons. */
+          ? 'Academy lesson' + (it.lesson && it.lesson.by ? ' · ' + esc(it.lesson.by) : '') +
+            (it.lesson && it.lesson.useCoins
+              ? ' · ' + it.lesson.useCoins + ' NovaCoins off' : '')
+          : (it.sub ? (it.cycle === 'year' ? 'Billed yearly' : 'Billed monthly') : 'One-time payment')) +
+        '</small></div>' +
+      (it.kind === 'lesson' ? '<div class="cqty"></div>' :
       '<div class="cqty">' +
         '<button onclick="cartQty(' + i + ',-1)">−</button>' +
         '<span>' + it.qty + '</span>' +
         '<button onclick="cartQty(' + i + ',1)">+</button>' +
-      '</div>' +
-      '<div class="cprice">' + fmt(cur, Math.round(it.unit * it.qty * 100) / 100) + '</div>' +
-      '<button class="crm" onclick="cartRemove(' + i + ')"></button>' +
+      '</div>') +
+      '<div class="cprice">' + itemPrice(it, cur, it.unit * it.qty) + '</div>' +
+      '<button class="crm" aria-label="Remove ' + esc(it.name) + ' from the cart" ' +
+        'onclick="cartRemove(' + i + ')"></button>' +
     '</div>').join('');
   const total = CART.reduce((s, i) => s + i.unit * i.qty, 0);
-  document.getElementById('carttotal').textContent = fmt(cur, Math.round(total * 100) / 100);
+  /* All-lesson carts total in euros, for the reason above. A mixed cart cannot
+     be checked out at all, so it never has to be totalled in two currencies at
+     once. */
+  document.getElementById('carttotal').textContent =
+    CART.every(it => it.kind === 'lesson')
+      ? '\u20ac' + (Math.round(total * 100) / 100).toFixed(2)
+      : fmt(cur, Math.round(total * 100) / 100);
 
   // can this cart be paid for real?
   const paid = CART.filter(it => stripeLinkFor(it));
   const note = document.getElementById('cartnote');
-  if (!paid.length) {
+  const lessons = CART.filter(it => it.kind === 'lesson');
+  if (lessons.length && (lessons.length > 1 || CART.length > lessons.length)) {
+    /* SAID HERE RATHER THAN AT THE PAY BUTTON. It used to be checked after
+       requireParent(), which meant a parent typed their PIN and only then was
+       told the cart could not be bought at all. A cart that cannot go through
+       is a thing to say while it is being looked at. */
+    note.innerHTML = '<b>One at a time.</b> An Academy lesson is bought on its own &mdash; it is sold ' +
+      'by another creator, not by NovaClip, and the money goes somewhere else. Take the rest out of ' +
+      'the cart and check out again.';
+  } else if (lessons.length) {
+    /* A LESSON IS NOT A PLAN AND DOES NOT GO THROUGH THE SAME TILL. A plan is
+       sold by NovaClip; a lesson is sold by another teenager, and the money
+       has to reach their parent's account rather than ours. That payout does
+       not exist yet and the worker refuses the sale in so many words, so the
+       cart says so here rather than at the end of a flow. */
+    note.innerHTML = 'This is an Academy lesson, written by another NovaClip creator. A parent approves it the same ' +
+        'way they approve everything else here, and the money goes to the creator&rsquo;s parent — ' +
+        'NovaClip keeps 20%.' +
+        (lessons[0].lesson && lessons[0].lesson.useCoins
+          ? ' Your ' + lessons[0].lesson.useCoins + ' NovaCoins come off it.' : '');
+  } else if (!paid.length) {
     note.innerHTML = '<b>Demo mode.</b> No Stripe links are configured yet, so checkout is a simulation. Add your Stripe Payment Links in the code to take real payments.';
   } else if (CART.length === 1) {
     note.innerHTML = 'Secure payment handled by <b>Stripe</b>. You will be redirected to complete it.';
@@ -681,7 +738,23 @@ function renderCart() {
   }
 }
 
+/* A LESSON IS PRICED IN EUROS AND ONLY IN EUROS, so it is never run through
+   fmt(). The plan cards carry a figure per currency and fmt picks one; a
+   lesson has one price, set by a teenager in euros and capped in euros by the
+   worker, and putting a dollar sign in front of it does not convert it — it
+   just tells somebody the wrong price. Until there is a real conversion with a
+   rate behind it, the symbol stays the one the number is actually in. */
+function itemPrice(it, cur, amount) {
+  return it.kind === 'lesson' ? '\u20ac' + (Math.round(amount * 100) / 100).toFixed(2)
+                              : fmt(cur, Math.round(amount * 100) / 100);
+}
+
 function stripeLinkFor(item) {
+  /* A lesson has no payment link and must never match one by name. It is not
+     in the product catalogue, it is somebody else's work, and a lesson called
+     "Family Bundle" would otherwise find the bundle's link and charge for the
+     wrong thing. */
+  if (item.kind === 'lesson') return '';
   const entry = STRIPE_LINKS[item.name];
   if (!entry) return '';
   const key = item.sub ? item.cycle : 'once';
@@ -701,9 +774,29 @@ function wireCartPay() {
   if (!cp) return;
   cp.onclick = () => {
   if (!CART.length) return;
+  /* Checked before the PIN, for the same reason the worker checks a field
+     before it spends a rate-limit slot: being asked to approve something that
+     was never going to go through is worse than being told no. */
+  const lessons = CART.filter(it => it.kind === 'lesson');
+  if (lessons.length && (lessons.length > 1 || CART.length > lessons.length)) { renderCart(); return; }
   requireParent(() => doCheckout());
   };
   function doCheckout() {
+  /* Lessons first and alone: they do not share a till with the plans, and a
+     mixed cart would otherwise send somebody to Stripe for a bundle while the
+     lesson they came for sat in the basket. */
+  const lessons = CART.filter(it => it.kind === 'lesson');
+  if (lessons.length) {
+    if (CART.length > lessons.length || lessons.length > 1) {
+      document.getElementById('cartnote').innerHTML =
+        '<b>One at a time.</b> An Academy lesson is bought on its own — it is sold by another creator, ' +
+        'not by NovaClip. Take everything else out of the cart and check out again.';
+      return;
+    }
+    closeCart();
+    openLessonCheckout(lessons[0]);
+    return;
+  }
   const withLinks = CART.filter(it => stripeLinkFor(it));
   if (withLinks.length) {
     // real payment: send them to Stripe for the first item
@@ -1111,6 +1204,16 @@ window.addEventListener('DOMContentLoaded', () => { issueEarned(); renderMyTrain
 let coCurrent = null;
 function openCheckout(planName, priceText, cycle) {
   coCurrent = { plan: planName, price: priceText, cycle: cycle };
+  /* Whatever this modal was last used for, it is a plan now. The Pay button is
+     shared and the two things it can do are not interchangeable: paying for a
+     plan through the lesson path would call the Academy with no lesson, and
+     paying for a lesson through the plan path would look up a Stripe link by
+     the lesson's title. */
+  coLesson = null;
+  document.getElementById('coStep3').style.display = 'none';
+  const payBtn = document.getElementById('coPay');
+  if (payBtn) { payBtn.onclick = startStripeCheckout; payBtn.disabled = false;
+                payBtn.textContent = payBtn.dataset.was || payBtn.textContent; }
   document.getElementById('coName').textContent = planName;
   document.getElementById('coCycle').textContent = cycle;
   document.getElementById('coPrice').textContent = priceText;
@@ -1120,6 +1223,91 @@ function openCheckout(planName, priceText, cycle) {
   document.getElementById('checkout').classList.add('show');
 }
 window.closeCheckout = function () { document.getElementById('checkout').classList.remove('show'); };
+
+/* ---------------------------------------------------------------------------
+   THE ACADEMY LESSON AT THE CHECKOUT
+   ---------------------------------------------------------------------------
+   Clicking "get it" in the Academy now lands here, which is the whole point:
+   buying a lesson is buying something, and everything else that is bought on
+   this site goes through this page — the parent's PIN in front of it, the
+   price and what it covers in the middle, and a processor at the end that this
+   page never hands a card to.
+
+   The last step is honest about where it stops. The sale is recorded by
+   leaderboard-worker.js and the worker refuses a money price until a payout
+   processor exists, because the money has to reach the SELLER'S PARENT: a
+   fifteen-year-old cannot hold a payout account or sign the contract behind
+   one. So the button reports exactly that instead of pretending, and the coin
+   half — which needs no processor, no payout account and nobody's age — is
+   already working.
+   --------------------------------------------------------------------------- */
+let coLesson = null;
+function openLessonCheckout(item) {
+  const cur = localStorage.getItem('nc_currency') || 'eur';
+  const shown = itemPrice(item, cur, item.unit);
+  coLesson = item;
+  coCurrent = { plan: item.name, price: shown, cycle: 'Academy lesson' };
+  document.getElementById('coName').textContent = item.name;
+  document.getElementById('coCycle').textContent =
+    'Academy lesson' + (item.lesson && item.lesson.by ? ' · ' + item.lesson.by : '');
+  document.getElementById('coPrice').textContent = shown;
+  document.getElementById('coStep1').style.display = 'block';
+  document.getElementById('coStep2').style.display = 'none';
+  document.getElementById('coStep3').style.display = 'none';
+  const payBtn = document.getElementById('coPay');
+  if (payBtn) {
+    if (!payBtn.dataset.was) payBtn.dataset.was = payBtn.textContent;
+    payBtn.onclick = payForLesson;
+    payBtn.disabled = false;
+    payBtn.textContent = 'Buy the lesson';
+  }
+  const err = document.getElementById('coErr');
+  err.textContent = '';
+  if (item.lesson && item.lesson.useCoins) {
+    err.innerHTML = '<span style="opacity:.75">Sticker price €' +
+      Number(item.lesson.price || 0).toFixed(2) + '. Your ' + item.lesson.useCoins +
+      ' NovaCoins take off €' +
+      (item.lesson.useCoins / (item.lesson.coinsPerEur || 100)).toFixed(2) +
+      ' — coins cover 40% of a lesson and no more.</span>';
+  }
+  document.getElementById('checkout').classList.add('show');
+}
+
+async function payForLesson() {
+  const err = document.getElementById('coErr');
+  const btn = document.getElementById('coPay');
+  const id = coLesson && coLesson.lesson && coLesson.lesson.id;
+  err.textContent = '';
+  if (!id) { err.textContent = 'Could not work out which lesson this is.'; return; }
+  const code = localStorage.getItem('nc_code') || '';
+  const key = localStorage.getItem('nc_key') || '';
+  if (!code || !key || !window.ncApi) {
+    err.innerHTML = 'This device has no NovaClip account on it yet, and a lesson is delivered to an ' +
+      'account rather than to a browser. Open the <a href="academy.html" style="color:inherit">' +
+      'Academy</a> once — it makes one — then come back.';
+    return;
+  }
+  btn.disabled = true;
+  const was = btn.textContent;
+  btn.textContent = 'One moment…';
+  try {
+    await window.ncApi('/academy/buy', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, key: key, id: id })
+    });
+    /* Paid for. Out of the cart, and said in the one place that matters —
+       the lesson itself is read in the Academy, not here. */
+    CART = CART.filter(it => !(it.lesson && it.lesson.id === id));
+    saveCart();
+    document.getElementById('coStep1').style.display = 'none';
+    document.getElementById('coStep3').style.display = 'block';
+    err.textContent = '';
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = was;
+    err.innerHTML = esc(e.message) + (e.detail ? ' — ' + esc(e.detail) : '') + '.';
+  }
+}
 
 /* The card scanner and the Luhn check used to live here — about 250 lines that
    pulled a Tesseract OCR build from a CDN so somebody could point a camera at a
@@ -1167,6 +1355,19 @@ function initCheckout() {
     if (!btn) return;
     btn.onclick = (e) => { e.preventDefault(); addToCart(card); };
   });
+
+  /* ARRIVING FROM THE ACADEMY. academy.js puts the lesson in the cart and
+     comes here with #lesson on the address, which is the whole of "clicking
+     buy takes you to the checkout". The cart opens rather than the card step,
+     because the cart is where the parent gate sits and because it shows the
+     lesson, the coins coming off it and the total before anybody is asked for
+     anything. */
+  if (location.hash === '#lesson' && CART.some(it => it.kind === 'lesson')) {
+    openCart();
+    /* The hash is dropped so a refresh, or a back button later, does not
+       reopen a cart somebody has already dealt with. */
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  }
 }
 
 async function startStripeCheckout() {
@@ -1320,6 +1521,19 @@ else initCheckout();
       <button class='cobtn' id='coPay'>Continue to secure payment</button>
       <div class='coerr' id='coErr'></div>
     </div>
+    <!-- A lesson's own "done" panel. The plan one next to it says "a
+         confirmation has been sent to" and carries the certificate progress,
+         and neither sentence is true of a lesson bought from another
+         creator. -->
+    <div class='costep' id='coStep3' style='display:none'>
+      <div class='cotick'></div>
+      <h2>It is yours</h2>
+      <p class='cosub'>The lesson is on your NovaClip account. It is read in the Academy &mdash; this
+         page never holds it.</p>
+      <a class='cobtn' href='academy.html'
+         style='display:block;text-align:center;text-decoration:none;line-height:1.2'>Open it in the Academy</a>
+    </div>
+
     <div class='costep' id='coStep2' style='display:none'>
       <div class='cotick'></div>
       <h2>Payment confirmed</h2>

@@ -188,6 +188,17 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
   font-weight:700; border:1px solid var(--line,rgba(255,255,255,.18)); background:transparent;
   color:inherit; }
 .rateme .starbtn:hover { border-color:#FFC83D; color:#FFC83D; }
+/* The free first lesson. Loud on purpose — it is the one thing on the shelf
+   that costs nothing, and a badge nobody notices is a badge that does not
+   work. */
+.freepill { font-size:.72rem; font-weight:800; letter-spacing:.3px; padding:3px 9px;
+  border-radius:999px; color:#04121a; background:linear-gradient(110deg,#B6FF3C,#00F0FF); }
+.lesson .freepill { align-self:flex-start; }
+.tagline { font-size:.78rem; opacity:.62; font-style:italic; }
+.bio { font-size:.88rem; line-height:1.6; opacity:.86; white-space:pre-wrap; margin:8px 0 0;
+  padding:10px 12px; border-left:2px solid color-mix(in srgb,currentColor 25%,transparent); }
+.hint { font-size:.76rem; opacity:.55; margin-top:4px; line-height:1.5; }
+.saved { color:#6EE7A8; font-size:.84rem; }
 </style>
 </head>
 <body>
@@ -248,6 +259,36 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
 
   <section id='pane-teach' hidden>
     <div id='gate'></div>
+
+    <!-- WHO IS TEACHING. Until this card existed the name on every lesson was
+         the name on the certificate — which is the child's real one, published
+         to anybody who opened the shelf. A teaching name replaces it
+         everywhere, and the certificate number stays on the lesson so the
+         credential is still checkable without naming anybody. -->
+    <div class='card' id='profcard' hidden>
+      <h2 style='margin:0 0 4px;font-size:1.05rem' data-t='ac_prof'>Your teaching profile</h2>
+      <p class='muted' style='margin:0 0 14px'>This is what a learner sees before they decide. There is
+         no messaging in the Academy and no way for anybody to reach you, so nothing here may carry an
+         email, a link, a number or a handle &mdash; the server refuses it and says which one it found.</p>
+      <div class='two'>
+        <div class='field'>
+          <label data-t='ac_p_name'>The name you teach under</label>
+          <input id='p-name' maxlength='40' placeholder='RuiEdits'>
+          <div class='hint' id='p-certname'></div>
+        </div>
+        <div class='field'>
+          <label data-t='ac_p_tag'>One line under your name</label>
+          <input id='p-tag' maxlength='90' placeholder='Gaming edits, three years of them'>
+        </div>
+      </div>
+      <div class='field'>
+        <label data-t='ac_p_bio'>About you. What you make, how you learnt it, what you are good at.</label>
+        <textarea id='p-bio' maxlength='600' style='min-height:120px'></textarea>
+      </div>
+      <button class='go' id='p-save' data-t='ac_p_save'>Save profile</button>
+      <div class='out' id='p-out'></div>
+    </div>
+
     <div class='card' id='makecard' hidden>
       <div class='field'>
         <label data-t='ac_t_title'>What does this teach? Say it the way somebody would search for it</label>
@@ -256,6 +297,15 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
       <div class='field'>
         <label data-t='ac_t_blurb'>One line about what they get</label>
         <input id='t-blurb' maxlength='160' placeholder='The three-step way I cut all my gaming edits'>
+      </div>
+      <!-- THE DESCRIPTION, WHICH IS WHAT ANYBODY ACTUALLY READS BEFORE PAYING.
+           Before this field existed the preview was the first 220 characters
+           of the lesson itself: it sold nothing and gave away the opening of
+           the thing being sold. -->
+      <div class='field'>
+        <label data-t='ac_t_desc'>What is inside it. Everybody can read this part &mdash; it is what sells it.</label>
+        <textarea id='t-desc' maxlength='1200' style='min-height:110px'
+          placeholder='Three steps, the four shortcuts I use for all of it, and the two mistakes that cost me a year.'></textarea>
       </div>
       <div class='two'>
         <div class='field'>
@@ -301,7 +351,8 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
 
   <div class='card' id='readcard' hidden>
     <h2 id='r-title' style='margin:0 0 4px;font-size:1.1rem'></h2>
-    <p class='who' id='r-who' style='margin:0 0 12px;opacity:.65;font-size:.82rem'></p>
+    <p class='who' id='r-who' style='margin:0 0 6px;opacity:.65;font-size:.82rem'></p>
+    <div id='r-teacher' style='margin:0 0 12px'></div>
     <div class='readout' id='r-body'></div>
     <div class='out' id='r-out'></div>
     <button class='go' id='r-close' style='margin-top:14px'>Close</button>

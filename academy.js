@@ -64,6 +64,19 @@
 
   var LEVEL_NAMES = ['New teacher', 'Rated teacher', 'Trusted teacher', 'Master teacher'];
 
+  /* WHETHER THIS READER STILL HAS THEIR FREE LESSON. Read once on the way in,
+     because the shelf has to say "free" or "free, but not for you any more"
+     and the difference is the whole offer. The shelf itself is public and
+     carries no account with it, so this is the only place the answer can come
+     from. */
+  var FREE = { used: false, left: true, on: null };
+  /* AND WHETHER THE SERVER EVEN HAS THE RULE YET. A worker that has not been
+     redeployed answers 404 to /academy/free, and a shelf full of "free" badges
+     that cannot be claimed is worse than no badges: the offer is the thing
+     being promised. So a 404 here takes the badges down and says why on the
+     Teach tab, which is the same thing gate() already does. */
+  var FREE_ON = true;
+
   function money(row) {
     if (row.price > 0) return '<span class="price">&euro;' + row.price.toFixed(2) + '</span>';
     if (row.coins > 0) return '<span class="price coins">' + row.coins + ' coins</span>';
@@ -85,11 +98,17 @@
         note.textContent = '';
         $('shelf').innerHTML = rows.map(function (r) {
           return '<article class="lesson">' +
+            (r.firstFree && FREE_ON
+              ? (FREE.used
+                  ? '<span class="pill">First lesson &mdash; free, and yours is spent</span>'
+                  : '<span class="freepill">First lesson &mdash; free</span>')
+              : '') +
             '<h3>' + esc(r.title) + '</h3>' +
             '<div class="who">' + esc(r.by) +
               (r.teacherLevelName ? ' &middot; <b class="lvl lvl' + (r.teacherLevel || 0) + '">' +
                 esc(r.teacherLevelName) + '</b>' : '') +
               (r.teacherSales ? ' &middot; ' + r.teacherSales + ' sold' : '') + '</div>' +
+            (r.teacherTagline ? '<div class="tagline">' + esc(r.teacherTagline) + '</div>' : '') +
             stars(r.stars || 0, r.ratings || 0) +
             '<p class="blurb">' + esc(r.blurb || '') + '</p>' +
             '<div class="foot"><span class="pill">' + esc(LEVELS[r.level] || r.level) + '</span>' +
@@ -110,10 +129,20 @@
       $('r-title').textContent = row.title;
       $('r-who').innerHTML = esc(row.by) +
         (row.teacher ? ' &middot; <b class="lvl lvl' + row.teacher.level + '">' +
-          esc(row.teacher.name) + '</b>' +
-          (row.teacher.sales ? ' &middot; ' + row.teacher.sales + ' lessons sold' : '') +
-          (row.teacher.ratings === 0 && !row.teacher.stars ? '' : '') : '') +
+          esc(row.teacher.levelName || row.teacher.name) + '</b>' +
+          (row.teacher.sales ? ' &middot; ' + row.teacher.sales + ' lessons sold' : '') : '') +
         ' &middot; ' + stars(row.stars || 0, row.ratings || 0);
+      /* WHO WROTE IT, which is most of what somebody decides on. The
+         certificate serial is here and the name on the certificate is not:
+         anybody can check the credential on the verify page without being
+         told a child's real name. */
+      var t = row.teacher || {};
+      $('r-teacher').innerHTML =
+        (t.tagline ? '<div class="tagline">' + esc(t.tagline) + '</div>' : '') +
+        (t.bio ? '<p class="bio">' + esc(t.bio) + '</p>' : '') +
+        (row.serial ? '<p class="hint">' + esc(TIERS[row.tier] || row.tier) +
+          ' certificate &middot; <a href="verify.html?c=' + encodeURIComponent(row.serial) +
+          '" style="color:inherit">' + esc(row.serial) + '</a></p>' : '');
       $('r-body').textContent = row.content;
       var out = $('r-out');
       out.innerHTML = '';
@@ -146,32 +175,34 @@
       } else if (!signedIn()) {
         out.innerHTML = '<p class="muted">Open the Teach tab once — it sets your account up — then ' +
           'this lesson can be yours.</p>';
-      } else {
-        var b = document.createElement('button');
-        b.className = 'go';
-        if (row.price > 0 && row.split) {
-          /* THE SPLIT, SHOWN BEFORE ANYBODY COMMITS. Coins cover 40% of a
-             priced lesson and no more, so the number on the button is the
-             money that will actually be asked for — not the sticker price
-             with a surprise underneath it. */
-          var sp = row.split;
+      } else if (row.firstFree && row.freeLeft && FREE_ON) {
+        /* THE FREE FIRST LESSON, AND WHAT IT COSTS TO TAKE IT. It costs the
+           chance to take anybody else's, so that is said on the button's own
+           line rather than discovered afterwards. */
+        out.insertAdjacentHTML('beforeend',
+          '<p class="muted">This is <b>' + esc(row.by) + '&rsquo;s first lesson</b>, so it is free. ' +
+          'You get one free first lesson and it locks to one creator &mdash; take this one and ' +
+          '' + esc(row.by) + ' is who you spent it on.' +
+          (row.price > 0 ? ' It is priced at &euro;' + row.price.toFixed(2) + ' for everybody who ' +
+            'has used theirs.' : '') + '</p>');
+        var fb = document.createElement('button');
+        fb.className = 'go';
+        fb.textContent = 'Take it free';
+        fb.onclick = function () { claimFree(id, fb); };
+        out.appendChild(fb);
+        if (row.price > 0 || row.coins > 0) {
           out.insertAdjacentHTML('beforeend',
-            '<p class="muted">€' + row.price.toFixed(2) + ' &middot; your ' + sp.useCoins +
-            ' NovaCoins take off €' + (sp.useCoins / (row.coinsPerEur || 100)).toFixed(2) +
-            (sp.shortCoins > 0
-              ? ' &mdash; ' + sp.shortCoins + ' more coins would take off the full ' +
-                Math.round((row.coinShare || 0.4) * 100) + '%'
-              : ' &mdash; that is the full ' + Math.round((row.coinShare || 0.4) * 100) + '%') +
-            '</p>');
-          b.textContent = 'Get it for €' + sp.money.toFixed(2) +
-            (sp.useCoins ? ' + ' + sp.useCoins + ' coins' : '');
-        } else {
-          b.textContent = row.price > 0
-            ? 'Get it for €' + row.price.toFixed(2)
-            : 'Get it for ' + row.coins + ' coins';
+            '<p class="hint" style="margin-top:8px">Or pay for it and keep your free one for ' +
+            'somebody else.</p>');
+          out.appendChild(payButton(row, id));
         }
-        b.onclick = function () { buy(id, b); };
-        out.appendChild(b);
+      } else {
+        if (row.claimedOn && row.claimedOn.by) {
+          out.insertAdjacentHTML('beforeend',
+            '<p class="muted">Your free first lesson went to <b>' + esc(row.claimedOn.by) + '</b>' +
+            (row.claimedOn.title ? ' — ' + esc(row.claimedOn.title) : '') + '.</p>');
+        }
+        out.appendChild(payButton(row, id));
       }
       $('readcard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }).catch(function (e) {
@@ -180,21 +211,108 @@
     });
   }
 
-  function buy(id, btn) {
+  /* The button that costs something, and the sentence that goes above it. */
+  function payButton(row, id) {
+    var out = $('r-out');
+    var b = document.createElement('button');
+    b.className = 'go';
+    if (row.price > 0 && row.split) {
+      /* THE SPLIT, SHOWN BEFORE ANYBODY COMMITS. Coins cover 40% of a
+         priced lesson and no more, so the number on the button is the
+         money that will actually be asked for — not the sticker price
+         with a surprise underneath it. */
+      var sp = row.split;
+      out.insertAdjacentHTML('beforeend',
+        '<p class="muted">€' + row.price.toFixed(2) + ' &middot; your ' + sp.useCoins +
+        ' NovaCoins take off €' + (sp.useCoins / (row.coinsPerEur || 100)).toFixed(2) +
+        (sp.shortCoins > 0
+          ? ' &mdash; ' + sp.shortCoins + ' more coins would take off the full ' +
+            Math.round((row.coinShare || 0.4) * 100) + '%'
+          : ' &mdash; that is the full ' + Math.round((row.coinShare || 0.4) * 100) + '%') +
+        '</p>');
+      b.textContent = 'Go to checkout — €' + sp.money.toFixed(2) +
+        (sp.useCoins ? ' + ' + sp.useCoins + ' coins' : '');
+    } else {
+      b.textContent = 'Get it for ' + row.coins + ' coins';
+    }
+    b.onclick = function () { buy(row, id, b); };
+    return b;
+  }
+
+  /* WHERE A PURCHASE GOES, AND WHY THE TWO KINDS GO TO DIFFERENT PLACES.
+     A lesson priced in money needs a card and a parent's approval, and both of
+     those already exist on the pricing page: the cart, the Family Dashboard
+     PIN gate in front of it, and Stripe's own page after it. So a priced
+     lesson is put in that cart and the checkout is opened on it.
+
+     A lesson priced in coins needs neither. The coins are already on the
+     account, the server spends them, and sending somebody to a card page to
+     spend money they are not spending would be a dead end with a Pay button
+     on it. That one completes here, as it always did. */
+  function buy(row, id, btn) {
+    if (row.price > 0) return toCheckout(row, id, btn);
     btn.disabled = true;
     btn.textContent = 'One moment…';
     api('/academy/buy', { id: id }).then(function () {
       read(id);
     }).catch(function (e) {
-      /* THE HONEST FAILURE. Paid lessons answer 503 until a payout processor
-         exists, and saying so plainly is the point: a button that looks like it
-         worked and did nothing is worse than one that explains itself. */
       btn.disabled = false;
       btn.textContent = 'Try again';
-      $('r-out').insertAdjacentHTML('beforeend',
-        '<p class="muted" style="margin-top:10px">' + esc(e.message) +
-        '. Lessons priced in coins work now; money is waiting on the payout side, ' +
-        'which pays the seller&rsquo;s parent rather than the seller.</p>');
+      $('r-out').insertAdjacentHTML('beforeend', why(e));
+    });
+  }
+
+  /* Both halves of a refusal, which is what the worker sends and what
+     ncApi now carries: the line, and the sentence that says what to do. */
+  function why(e) {
+    return '<p class="muted" style="margin-top:10px">' + esc(e.message) +
+      (e.detail ? ' &mdash; ' + esc(e.detail) : '') + '.</p>';
+  }
+
+  /* The cart is the same localStorage key the pricing page has always used, so
+     a lesson sits in it next to a plan and goes through the same parent gate.
+     nc_cart is a shopping list and not an entitlement — nothing in it is worth
+     anything until the server says a sale happened — so writing to it from
+     here gives away nothing. */
+  var CART_KEY = 'nc_cart';
+  function toCheckout(row, id, btn) {
+    var sp = row.split || { money: row.price, useCoins: 0 };
+    var cart = [];
+    try { cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch (e) { cart = []; }
+    cart = cart.filter(function (it) { return !(it.lesson && it.lesson.id === id); });
+    cart.push({
+      name: row.title, cycle: 'once', unit: sp.money, qty: 1, sub: false, kind: 'lesson',
+      lesson: { id: id, by: row.by, title: row.title, price: row.price,
+                useCoins: sp.useCoins || 0, coinsPerEur: row.coinsPerEur || 100 }
+    });
+    try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {
+      if (btn) {
+        btn.textContent = 'Could not open the checkout';
+        $('r-out').insertAdjacentHTML('beforeend', '<p class="muted">This browser will not let the ' +
+          'page remember a basket, which is what the checkout reads. Private browsing usually does ' +
+          'that.</p>');
+      }
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = 'Opening the checkout…'; }
+    location.href = 'pricing.html#lesson';
+  }
+
+  /* The free first lesson. The refusals come back from the server with the
+     reason in them — above all "you already spent it, and here is where" —
+     because that is the one thing somebody will want to know. */
+  function claimFree(id, btn) {
+    btn.disabled = true;
+    btn.textContent = 'One moment…';
+    api('/academy/free', { id: id }).then(function () {
+      /* Spent, so every other card on the shelf has to stop saying "free"
+         before the reader scrolls back to one. */
+      FREE = { used: true, left: false, on: { id: id } };
+      read(id); shelf();
+    }).catch(function (e) {
+      btn.disabled = false;
+      btn.textContent = 'Try again';
+      $('r-out').insertAdjacentHTML('beforeend', why(e));
     });
   }
 
@@ -239,6 +357,7 @@
     if (!signedIn()) {
       $('makecard').hidden = true;
       $('minecard').hidden = true;
+      $('profcard').hidden = true;
       makeAccount();
       return;
     }
@@ -288,6 +407,7 @@
       g.innerHTML = '<div class="gate">' + bits.join('</div><div class="gate">') + '</div>';
       $('makecard').hidden = !st.mayPublish;
       $('minecard').hidden = !st.mayPublish;
+      $('profcard').hidden = !st.mayPublish;
       $('pricefield').style.display = st.mayCharge ? '' : 'none';
       var pf = $('t-price');
       if (pf && st.maxPrice) {
@@ -297,7 +417,7 @@
       }
       var go = g.querySelector('.agego');
       if (go) go.onclick = startAgeCheck;
-      if (st.mayPublish) mine();
+      if (st.mayPublish) { mine(); profile(); }
     }).catch(function (e) {
       /* A worker that answers but has never heard of /academy is a worker that
          has not been redeployed, which is a different problem from a worker
@@ -314,37 +434,95 @@
     var out = $('t-out');
     out.textContent = 'Putting it up…';
     api('/academy/publish', {
-      title: $('t-title').value, blurb: $('t-blurb').value, content: $('t-body').value,
+      title: $('t-title').value, blurb: $('t-blurb').value, desc: $('t-desc').value,
+      content: $('t-body').value,
       cat: $('t-cat').value, level: $('t-level').value,
       price: parseFloat($('t-price').value) || 0, coins: parseInt($('t-coins').value, 10) || 0
     }).then(function (r) {
       out.innerHTML = '<p class="muted">Up on the shelf.' + (r.note ? ' ' + esc(r.note) + '.' : '') + '</p>';
-      $('t-title').value = ''; $('t-blurb').value = ''; $('t-body').value = '';
+      $('t-title').value = ''; $('t-blurb').value = ''; $('t-desc').value = ''; $('t-body').value = '';
       mine(); shelf();
-    }).catch(function (e) { out.innerHTML = '<p class="muted">' + esc(e.message) + '</p>'; });
+    }).catch(function (e) { out.innerHTML = why(e); });
   }
 
   function mine() {
     api('/academy/mine', {}).then(function (r) {
       $('mine').innerHTML = r.listings.length ? r.listings.map(function (l) {
-        return '<div class="mine"><span class="grow">' + esc(l.title) + '</span>' +
+        return '<div class="mine"><span class="grow">' + esc(l.title) +
+          (l.firstFree && !l.hidden ? ' <span class="freepill">free first lesson</span>' : '') +
+          '</span>' +
           (l.hidden ? '<span class="pill">taken down</span>'
                     : '<button data-off="' + esc(l.id) + '">Take it down</button>') +
           '<span class="pill">' + (l.price > 0 ? '&euro;' + l.price.toFixed(2) : l.coins + ' coins') +
           '</span></div>';
       }).join('') : '<p class="muted">Nothing up yet.</p>';
+      /* WHICH ONE IS THE WINDOW, said in words as well as on a badge. It is
+         decided by what was published first rather than chosen, and somebody
+         who does not know that will wonder why one of their lessons is being
+         given away. */
+      if (r.listings.filter(function (l) { return !l.hidden; }).length) {
+        $('mine').insertAdjacentHTML('beforeend',
+          '<p class="hint">Your first lesson that is still up is free for anybody who has not used ' +
+          'their one free lesson yet. Take it down and the next one becomes the free one.</p>');
+      }
       [].forEach.call($('mine').querySelectorAll('button[data-off]'), function (b) {
         b.onclick = function () {
           api('/academy/unpublish', { id: b.getAttribute('data-off') }).then(function () { mine(); shelf(); });
         };
       });
       $('earn').innerHTML =
-        '<div><b>' + r.earned.sales + '</b>lessons taken</div>' +
+        '<div><b>' + r.earned.sales + '</b>lessons sold</div>' +
+        '<div><b>' + (r.earned.free || 0) + '</b>given free</div>' +
         '<div><b>' + r.earned.coins + '</b>coins kept</div>' +
         '<div><b>' + (r.earned.fee || 0) + '</b>coins to NovaClip (' +
           Math.round((r.fee || 0.2) * 100) + '%)</div>' +
         '<div><b>&euro;' + (r.earned.money || 0).toFixed(2) + '</b>to your parent&rsquo;s account</div>';
     }).catch(function () {});
+  }
+
+  /* ------------------------------------------------------------ the profile */
+  /* THE NAME THAT WAS NEVER MEANT TO BE PUBLISHED. Every lesson on the shelf
+     carried the name off the certificate, and a certificate carries a real
+     name because that is what makes it a credential. So the shelf has been
+     publishing children's real names. A teaching name replaces it everywhere a
+     stranger can see, the certificate number stays on the lesson so anybody
+     can still check it on the verify page, and the real name comes back to
+     this page only — the account it belongs to. */
+  function profile() {
+    api('/academy/profile', {}).then(function (r) {
+      var p = r.profile || {};
+      if (!$('p-name').value) $('p-name').value = p.name || '';
+      if (!$('p-tag').value) $('p-tag').value = p.tagline || '';
+      if (!$('p-bio').value) $('p-bio').value = p.bio || '';
+      /* Deliberately NOT clearing #p-out here. This function is called again
+         right after a save, and clearing it wiped the word "Saved" off the
+         screen a quarter of a second after it appeared — which is exactly how
+         somebody concludes the button does nothing. */
+      $('p-certname').innerHTML = r.certName
+        ? (p.name
+            ? 'Your lessons show <b>' + esc(p.name) + '</b>. The name on your certificate, ' +
+              esc(r.certName) + ', is not shown to anybody.'
+            : 'Your lessons currently show <b>' + esc(r.certName) + '</b> &mdash; the name on your ' +
+              'certificate, which is your real one. Put a teaching name here and it is used instead.')
+        : '';
+    }).catch(function (e) {
+      if (/404|not found/i.test(e.message || '')) {
+        $('p-out').innerHTML = '<p class="muted">The server does not have profiles yet &mdash; ' +
+          'leaderboard-worker.js needs deploying again. Pushing it to GitHub does not deploy it.</p>';
+      }
+    });
+  }
+
+  function saveProfile() {
+    var out = $('p-out');
+    out.textContent = 'Saving…';
+    api('/academy/profile/save', {
+      name: $('p-name').value, tagline: $('p-tag').value, bio: $('p-bio').value
+    }).then(function () {
+      out.innerHTML = '<p class="saved">Saved. Every lesson of yours shows it, including the ones ' +
+        'already up.</p>';
+      profile(); shelf();
+    }).catch(function (e) { out.innerHTML = why(e); });
   }
 
   /* THE FACE SCAN THAT THIS SITE NEVER SEES.
@@ -413,6 +591,14 @@
       gate();
     };
     $('cat').onchange = shelf;
+    /* The free-lesson state before the first shelf, so no card has to be
+       redrawn and nobody is told something is free when it is not. */
+    function start() { shelf(); }
+    if (signedIn()) {
+      api('/academy/free', {}).then(function (f) { FREE = f || FREE; })
+        .catch(function (e) { if (/404|not found/i.test(e.message || '')) FREE_ON = false; })
+        .then(start);
+    } else { start(); }
     if ($('tab-coins')) $('tab-coins').onclick = function () {
       $('tab-coins').classList.add('on');
       $('tab-learn').classList.remove('on'); $('tab-teach').classList.remove('on');
@@ -420,8 +606,8 @@
       coins();
     };
     $('publish').onclick = publish;
+    $('p-save').onclick = saveProfile;
     $('r-close').onclick = function () { $('readcard').hidden = true; };
-    shelf();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

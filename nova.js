@@ -4546,7 +4546,19 @@ async function ncApi(path, opts) {
     "or run localStorage.setItem('nc_server','https://your-worker.workers.dev') to try one.");
   const r = await fetch(base + path, opts);
   const body = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
+  if (!r.ok) {
+    /* THE SECOND SENTENCE WAS BEING THROWN AWAY. The worker answers a refusal
+       with `error` — a short line — and often a `detail` that says what to do
+       about it, and this wrapper kept only the first. "Your free lesson is
+       already spent" without "you took it from RuiEdits" is the half that
+       helps nobody. Carried on the Error so any caller can use it, and
+       ignored by every caller that does not. */
+    const err = new Error(body.error || ('HTTP ' + r.status));
+    err.status = r.status;
+    err.detail = body.detail || '';
+    err.body = body;
+    throw err;
+  }
   return body;
 }
 

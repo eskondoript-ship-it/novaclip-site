@@ -848,6 +848,134 @@ async function teachStanding(env, code, key) {
   };
 }
 
+/* ===========================================================================
+   WHO THE TEACHER IS — AND THE ONE THING A PROFILE MAY NOT CARRY
+   ===========================================================================
+   Until now the name on a lesson came straight off the certificate, which
+   means it was the child's REAL NAME, published to anybody who opened the
+   shelf. A teaching name fixes that: the profile name is what the shelf shows,
+   the certificate serial stays on the row so the credential is still checkable
+   on the verify page, and the real name is only ever sent back to the account
+   it belongs to.
+
+   A NAME BELONGS TO ONE ACCOUNT, the same rule the leaderboard needed for the
+   same reason: without it, anybody can teach under a name somebody else is
+   known by. tname:<lowercased> is the index that enforces it.
+
+   AND NOW THE PART THAT MATTERS MORE THAN ANY OF IT. A profile is the first
+   place on this site where one child writes prose that another child reads and
+   then acts on. It is therefore the exact place somebody writes "add me on
+   discord" — and a private channel between two children is the one thing the
+   Academy was designed not to have. There is no messaging here, no way to
+   reach a seller, and no profile link out, because the moment there is, this
+   stops being a shelf and becomes something that needs moderators, reporting
+   flows and a duty of care nobody here can staff.
+
+   So a contact detail in a profile is REFUSED, and the refusal says which kind
+   was found. Stripping it silently would be worse: the teacher would think the
+   feature was broken, and would try again in a form the stripper missed.
+   ========================================================================= */
+const PROF_NAME_MAX = 40;
+const PROF_TAG_MAX  = 90;
+const PROF_BIO_MAX  = 600;
+const LESSON_DESC_MAX = 1200;
+
+/* The platform names are deliberately only the ones that exist to carry
+   private messages. "tiktok", "instagram" and "youtube" are left out on
+   purpose: they are what these lessons are ABOUT, and refusing a bio for
+   saying "I edit TikToks" is a false accusation that teaches somebody the
+   check is nonsense. */
+const CONTACT_TESTS = [
+  [/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,                        'an email address'],
+  [/\b(?:https?:\/\/|www\.)\S+/i,                                   'a link'],
+  [/\b[a-z0-9-]{2,}\.(?:com|net|org|io|gg|me|tv|co|pt|es|uk|br|app|xyz|link|to)\b/i,
+                                                                    'a web address'],
+  [/(?:^|[\s(])@[a-z0-9._]{3,}/i,                                   'an @ handle'],
+  [/\b(?:discord|snapchat|snap\s?chat|telegram|whatsapp|whats\s?app|kik|skype|wickr|viber)\b/i,
+                                                                    'somewhere to be messaged privately'],
+  [/\b(?:add|dm|message|msg|text|call|ring)\s+me\b/i,               'a way to be contacted off NovaClip']
+];
+
+/* A phone number, found by how many digits are in a run rather than by shape,
+   because every country writes them differently. Nine to fifteen is a phone;
+   a subscriber count, a year and a frame rate are all shorter. */
+function digitRunLooksLikePhone(text) {
+  const runs = String(text || '').match(/[+()\d][\d\s().\-+]{6,}\d/g) || [];
+  return runs.some(r => {
+    const d = r.replace(/\D/g, '').length;
+    return d >= 9 && d <= 15;
+  });
+}
+
+/* checkDigits is off for the body of a lesson, and only there. A lesson about
+   editing is full of numbers — timecodes, bitrates, resolutions — and a list
+   of cut points written "00 01 30 00 02 45" is twelve digits in a row. In a
+   one-line profile or a sales blurb a twelve-digit run is a phone number; in
+   six thousand words of instructions it is the instructions. The patterns
+   that actually matter — an address, a handle, a messaging app — are checked
+   everywhere. */
+function contactIn(text, checkDigits) {
+  const t = String(text || '');
+  if (!t) return '';
+  for (const [re, what] of CONTACT_TESTS) if (re.test(t)) return what;
+  if (checkDigits !== false && digitRunLooksLikePhone(t)) return 'a phone number';
+  return '';
+}
+
+async function profileOf(env, code) {
+  return (await env.DB.get('prof:' + code, 'json')) || null;
+}
+
+/* What strangers are allowed to know about a teacher: the name they teach
+   under, what they say about themselves, and the level they have earned.
+   Not the certificate name — see the block above. */
+async function publicTeacher(env, code, fallbackName) {
+  const [prof, stats] = await Promise.all([profileOf(env, code), teacherStats(env, code)]);
+  return {
+    by: (prof && prof.name) || fallbackName || 'A NovaClip creator',
+    named: !!(prof && prof.name),
+    tagline: (prof && prof.tagline) || '',
+    bio: (prof && prof.bio) || '',
+    level: stats.level, levelName: stats.levelName,
+    stars: stats.stars, ratings: stats.ratings, sales: stats.sales
+  };
+}
+
+/* ===========================================================================
+   THE FIRST LESSON IS FREE — ONCE, FROM ONE CREATOR, EVER
+   ===========================================================================
+   Every teacher's first lesson — the earliest one they still have up — is
+   claimable for nothing. A learner gets exactly one of those, from one
+   creator, for as long as the account exists, and choosing it spends it.
+
+   WHY THE CREATOR'S FIRST AND NOT ANY OF THEM. If the freebie could be spent
+   on anything, the only rational move is to spend it on the most expensive
+   lesson on the shelf, and the teacher who wrote it gets nothing for the one
+   sale that mattered most. Pinning it to the creator's own first listing
+   leaves the choice where it belongs: the teacher decides what goes in the
+   shop window by deciding what to publish first, and the learner decides which
+   window to walk into.
+
+   WHY THE LIMIT IS ONE PER ACCOUNT AND NOT ONE PER CREATOR. One per creator is
+   a free Academy: twelve creators, twelve free lessons, nobody paid. It is
+   also how a rating ring would be built, since a claim opens the lesson and an
+   opened lesson can be rated — at one claim per account, a fake five-star
+   needs a fresh account, which is the cost that makes it not worth doing.
+
+   A CLAIM IS NOT A SALE. It is recorded as an order, so the lesson opens and
+   can be rated, and counted on the teacher as a freebie — never into
+   tstats.sales, because sales are what levels and prices are earned with and
+   giving something away is not evidence that it was worth paying for.
+   ========================================================================= */
+async function firstLessonOf(env, sellerCode) {
+  const mine = (await env.DB.get('mine:' + sellerCode, 'json')) || [];
+  for (const id of mine) {
+    const row = await env.DB.get('lst:' + id, 'json');
+    if (row && !row.hidden) return id;
+  }
+  return '';
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
@@ -1143,12 +1271,35 @@ export default {
 
       const title = cleanLine(body.title, 70);
       const blurb = cleanLine(body.blurb, 160);
+      /* THE DESCRIPTION, WHICH IS WHAT A BUYER ACTUALLY READS BEFORE PAYING.
+         Before this existed the preview was the first 220 characters of the
+         lesson itself, which managed to be both bad selling and a giveaway: it
+         told the buyer nothing about what was inside and handed over the
+         opening of the thing they were being asked to buy. */
+      const desc = cleanText(body.desc, LESSON_DESC_MAX);
       const content = cleanText(body.content, 6000);
       if (title.length < 6) return json({ error: 'the title needs to say what it teaches' }, 400);
       if (content.length < 80) return json({ error: 'there is not enough in the lesson yet' }, 400);
-      for (const field of [title, blurb, content]) {
+      for (const field of [title, blurb, desc, content]) {
         const seen = screen(field);
         if (!seen.ok) return json({ error: 'that wording will not pass — ' + seen.kind }, 400);
+      }
+      /* The lesson itself is read by somebody who has bought it, but the
+         title, the blurb and the description are read by everybody — so they
+         are held to the same no-contact rule as a profile. A lesson whose
+         description says "message me for the rest" is the private channel
+         again, wearing a different hat. */
+      /* And the lesson body with it, which matters more rather than less: a
+         contact detail hidden inside something only buyers can read is the
+         same private channel with nobody watching it. */
+      for (const field of [[title, true], [blurb, true], [desc, true], [content, false]]) {
+        const c = contactIn(field[0], field[1]);
+        if (c) {
+          return json({ error: 'a lesson cannot carry ' + c,
+            detail: 'there is no messaging in the Academy on purpose. What is sold here is the lesson '
+                  + 'itself, delivered when it is bought, and nothing that sends a buyer somewhere '
+                  + 'else to be contacted can go on the shelf' }, 400);
+        }
       }
       /* After the checks, for the same reason as the consent endpoint: being
          throttled for fixing a typo teaches people the feature is broken. */
@@ -1184,9 +1335,13 @@ export default {
         await env.DB.put('lstidx', JSON.stringify(idx.slice(0, 500)));
       }
       const row = {
-        id, code: g.code, title, blurb, content,
+        id, code: g.code, title, blurb, desc, content,
         cat: cleanCat(body.cat), level: cleanLevel(body.level),
         price, coins, coinsOnly,
+        /* The fallback when there is no teaching name yet, and the reason
+           setting one is worth doing: this is the name off the certificate,
+           which is the child's real one. It is never sent to anybody but the
+           account it belongs to once a profile name exists. */
         by: cleanLine(st.cert && st.cert.name, 48) || 'A NovaClip creator',
         tier: (st.cert && st.cert.tier) || '', serial: (st.cert && st.cert.serial) || '',
         at: Date.now(), hidden: false,
@@ -1223,17 +1378,26 @@ export default {
       const idx = (await env.DB.get('lstidx', 'json')) || [];
       const cat = url.searchParams.get('cat');
       const out = [];
+      /* One lookup per teacher rather than one per card. A shelf of sixty
+         lessons from six teachers used to be sixty reads of the same two
+         records; now it is six. */
+      const seen = new Map(), firsts = new Map();
       for (const id of idx.slice(0, 120)) {
         const row = await env.DB.get('lst:' + id, 'json');
         if (!row || row.hidden) continue;
         if (cat && ACADEMY_CATS.includes(cat) && row.cat !== cat) continue;
-        const t = await teacherStats(env, row.code);
+        if (!seen.has(row.code)) seen.set(row.code, await publicTeacher(env, row.code, row.by));
+        if (!firsts.has(row.code)) firsts.set(row.code, await firstLessonOf(env, row.code));
+        const t = seen.get(row.code);
         out.push({ id: row.id, title: row.title, blurb: row.blurb, cat: row.cat, level: row.level,
                    price: row.price, coins: row.coins, coinsOnly: row.coinsOnly,
-                   by: row.by, tier: row.tier, at: row.at,
+                   by: t.by, tier: row.tier, at: row.at,
                    stars: row.n ? Math.round((row.sum / row.n) * 10) / 10 : 0, ratings: row.n || 0,
                    teacherLevel: t.level, teacherLevelName: t.levelName, teacherStars: t.stars,
-                   teacherSales: t.sales,
+                   teacherSales: t.sales, teacherTagline: t.tagline,
+                   /* Whether this is the one lesson of this teacher's that
+                      anybody may take for nothing. */
+                   firstFree: firsts.get(row.code) === row.id,
                    length: row.content ? row.content.length : 0 });
         if (out.length >= 60) break;
       }
@@ -1248,24 +1412,49 @@ export default {
       if (!row || row.hidden) return json({ error: 'no such lesson' }, 404);
       const code = cleanCode(body.code || '');
       const owner = code && code === row.code;
-      const bought = code ? !!(await env.DB.get('ord:' + code + ':' + id)) : false;
+      const ord = code ? await env.DB.get('ord:' + code + ':' + id, 'json') : null;
+      const bought = !!ord;
       const mine = code ? await env.DB.get('rate:' + code + ':' + id, 'json') : null;
-      const teach = await teacherStats(env, row.code);
+      const teach = await publicTeacher(env, row.code, row.by);
       const free = !row.price && !row.coins;
       const open = owner || bought || free;
+      /* The free first lesson, from both ends: whether THIS lesson is the one
+         this teacher gives away, and whether the reader still has their one
+         claim to spend. Both come from storage, because both are rules. */
+      const firstFree = (await firstLessonOf(env, row.code)) === row.id;
+      const claim = code ? await env.DB.get('free:' + code, 'json') : null;
+      let claimedOn = null;
+      if (claim) {
+        const was = claim.id === row.id ? row : await env.DB.get('lst:' + claim.id, 'json');
+        claimedOn = { id: claim.id, title: was ? was.title : '',
+                      by: was ? (await publicTeacher(env, claim.seller, was.by)).by : '', at: claim.at };
+      }
       return json({
-        id: row.id, title: row.title, blurb: row.blurb, cat: row.cat, level: row.level,
-        price: row.price, coins: row.coins, coinsOnly: row.coinsOnly, by: row.by, tier: row.tier,
-        at: row.at, owner, bought, open,
+        id: row.id, title: row.title, blurb: row.blurb, desc: row.desc || '',
+        cat: row.cat, level: row.level,
+        price: row.price, coins: row.coins, coinsOnly: row.coinsOnly, by: teach.by, tier: row.tier,
+        at: row.at, owner, bought, open, wasFree: !!(ord && ord.free),
+        firstFree, freeLeft: !claim, claimedOn,
+        /* Only the owner is ever told the name on the certificate. Everybody
+           else gets the teaching name and the serial, which is enough to check
+           the certificate on the verify page without naming a child. */
+        certName: owner ? row.by : '',
+        serial: row.serial || '',
         stars: row.n ? Math.round((row.sum / row.n) * 10) / 10 : 0, ratings: row.n || 0,
         myStars: mine ? mine.stars : 0,
-        teacher: { level: teach.level, name: teach.levelName, stars: teach.stars, sales: teach.sales },
+        teacher: { level: teach.level, name: teach.levelName, levelName: teach.levelName,
+                   by: teach.by, named: teach.named, tagline: teach.tagline, bio: teach.bio,
+                   stars: teach.stars, ratings: teach.ratings, sales: teach.sales },
         /* For a priced lesson: how far the buyer's coins go towards it. */
         split: row.price > 0
           ? priceSplit(row.price, code ? ((await wallet(env, code)).bal) : 0)
           : null,
         coinShare: COIN_SHARE, coinsPerEur: COINS_PER_EUR,
-        content: open ? row.content : row.content.slice(0, 220) + '\u2026'
+        /* Before it is bought, what comes back is the teacher's own
+           description of it \u2014 and only a slice of the lesson when there is no
+           description, which is what every lesson published before this
+           existed looks like. */
+        content: open ? row.content : (row.desc || (row.content.slice(0, 220) + '\u2026'))
       });
     }
 
@@ -1539,19 +1728,145 @@ export default {
       return json({ ok: true, stars, lesson: { stars: Math.round((row.sum / row.n) * 10) / 10, n: row.n } });
     }
 
+    /* ---------- the teacher's own profile ---------- */
+    /* Read: only ever your own, and it is the one answer that carries the name
+       off the certificate, because that is the account it belongs to. */
+    if (path === '/academy/profile' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const st = await teachStanding(env, g.code, body.key);
+      const prof = await profileOf(env, g.code);
+      return json({
+        profile: prof || { name: '', tagline: '', bio: '' },
+        certName: st.cert ? st.cert.name : '',
+        tier: st.cert ? st.cert.tier : '', serial: st.cert ? st.cert.serial : '',
+        stats: st.stats,
+        limits: { name: PROF_NAME_MAX, tagline: PROF_TAG_MAX, bio: PROF_BIO_MAX, desc: LESSON_DESC_MAX }
+      });
+    }
+
+    if (path === '/academy/profile/save' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const st = await teachStanding(env, g.code, body.key);
+      if (!st.mayPublish) return json({ error: st.why || 'not allowed to teach yet' }, 403);
+
+      const name = cleanLine(body.name, PROF_NAME_MAX);
+      const tagline = cleanLine(body.tagline, PROF_TAG_MAX);
+      const bio = cleanText(body.bio, PROF_BIO_MAX);
+      if (name && name.length < 3) return json({ error: 'a teaching name needs at least three characters' }, 400);
+      for (const field of [name, tagline, bio]) {
+        const seen = screen(field);
+        if (!seen.ok) return json({ error: 'that wording will not pass — ' + seen.kind }, 400);
+        const c = contactIn(field);
+        if (c) {
+          return json({ error: 'a profile cannot carry ' + c,
+            detail: 'there is no messaging in the Academy and no way to reach a teacher, on purpose. '
+                  + 'Two children arranging to talk privately on the back of a sale is the thing this '
+                  + 'marketplace was built not to have' }, 400);
+        }
+      }
+
+      const prev = await profileOf(env, g.code);
+      const lower = name.toLowerCase();
+      /* A NAME BELONGS TO ONE ACCOUNT — the leaderboard learned this the hard
+         way, where two people called the same thing were one row. Here it is
+         worse than a collision: a teaching name somebody else is known by is
+         an impersonation, and the lesson is sold on the strength of it. */
+      if (name && (!prev || prev.name !== name)) {
+        const taken = await env.DB.get('tname:' + lower);
+        if (taken && taken !== g.code) {
+          return json({ error: 'somebody else already teaches under that name' }, 409);
+        }
+      }
+      if (await rateLimited(env, 'prof:' + g.code, 3000)) return json({ error: 'slow down' }, 429);
+
+      const prof = { name, tagline, bio, at: Date.now(),
+                     since: (prev && prev.since) || Date.now() };
+      await env.DB.put('prof:' + g.code, JSON.stringify(prof));
+      if (name) await env.DB.put('tname:' + lower, g.code);
+      /* The old name is released, or nobody could ever change their mind about
+         one and it would sit there blocking the name for everybody. */
+      if (prev && prev.name && prev.name.toLowerCase() !== lower) {
+        const held = await env.DB.get('tname:' + prev.name.toLowerCase());
+        if (held === g.code) await env.DB.delete('tname:' + prev.name.toLowerCase());
+      }
+      return json({ ok: true, profile: prof });
+    }
+
+    /* ---------- the free first lesson ---------- */
+    /* With no id, this only answers "have I still got mine, and if not where
+       did it go". With an id, it spends it. */
+    if (path === '/academy/free' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const claim = await env.DB.get('free:' + g.code, 'json');
+      const id = cleanLine(body.id, 24);
+
+      if (!id) {
+        let on = null;
+        if (claim) {
+          const was = await env.DB.get('lst:' + claim.id, 'json');
+          on = { id: claim.id, title: was ? was.title : '',
+                 by: was ? (await publicTeacher(env, claim.seller, was.by)).by : '', at: claim.at };
+        }
+        return json({ used: !!claim, left: !claim, on });
+      }
+
+      const row = await env.DB.get('lst:' + id, 'json');
+      if (!row || row.hidden) return json({ error: 'no such lesson' }, 404);
+      if (row.code === g.code) return json({ error: 'that is your own lesson' }, 400);
+      if (await env.DB.get('ord:' + g.code + ':' + id)) return json({ ok: true, already: true });
+      if ((await firstLessonOf(env, row.code)) !== id) {
+        return json({ error: 'that is not this creator\'s first lesson',
+          detail: 'what is free is the first lesson a teacher put up. This one is not it' }, 403);
+      }
+      if (claim) {
+        const was = await env.DB.get('lst:' + claim.id, 'json');
+        const who = was ? (await publicTeacher(env, claim.seller, was.by)).by : 'another creator';
+        return json({
+          error: 'your free lesson is already spent',
+          detail: 'you took it from ' + who + (was ? ' — ' + was.title : '') + '. One free first '
+                + 'lesson, from one creator, is the whole offer',
+          on: { id: claim.id, title: was ? was.title : '', by: who }
+        }, 409);
+      }
+      if (await rateLimited(env, 'free:' + g.code, 2000)) return json({ error: 'slow down' }, 429);
+
+      await env.DB.put('free:' + g.code, JSON.stringify({ seller: row.code, id, at: Date.now() }));
+      /* An order, so the lesson opens and can be rated — and marked free, so
+         the seller's page can tell the difference between a sale and a
+         sample. */
+      await env.DB.put('ord:' + g.code + ':' + id,
+        JSON.stringify({ at: Date.now(), coins: 0, fee: 0, net: 0, price: 0, free: true }));
+      const earned = (await env.DB.get('earn:' + row.code, 'json')) ||
+                     { coins: 0, fee: 0, money: 0, sales: 0 };
+      earned.free = (earned.free || 0) + 1;
+      await env.DB.put('earn:' + row.code, JSON.stringify(earned));
+      /* And deliberately nothing written to tstats: a lesson given away is not
+         a sale, so it buys no level and unlocks no price. */
+      return json({ ok: true, free: true, id, title: row.title });
+    }
+
     if (path === '/academy/mine' && request.method === 'POST') {
       const g = await gate(env, body);
       if (g.stop) return g.stop;
       const mine = (await env.DB.get('mine:' + g.code, 'json')) || [];
+      const first = await firstLessonOf(env, g.code);
       const rows = [];
       for (const id of mine) {
         const row = await env.DB.get('lst:' + id, 'json');
         if (row) rows.push({ id: row.id, title: row.title, price: row.price, coins: row.coins,
-                             coinsOnly: row.coinsOnly, cat: row.cat, hidden: !!row.hidden, at: row.at });
+                             coinsOnly: row.coinsOnly, cat: row.cat, hidden: !!row.hidden, at: row.at,
+                             /* Which one of yours is the shop window. Worth
+                                saying out loud, because it is decided by what
+                                you published first rather than chosen. */
+                             firstFree: row.id === first });
       }
       const earned = (await env.DB.get('earn:' + g.code, 'json')) ||
                      { coins: 0, fee: 0, money: 0, sales: 0 };
-      return json({ listings: rows, earned, wallet: await wallet(env, g.code), fee: ACADEMY_FEE });
+      return json({ listings: rows, earned, wallet: await wallet(env, g.code), fee: ACADEMY_FEE,
+                    profile: await profileOf(env, g.code) });
     }
 
     // ---------- leaderboard ----------
