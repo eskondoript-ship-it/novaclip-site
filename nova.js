@@ -4831,10 +4831,17 @@ function ncBrand() {
   a.href = 'index.html';
   /* Not a nav link: it sits above them and must not pick up the hover slide
      and the cyan underline the links have, or it reads as another page. */
-  a.style.cssText = 'display:flex;align-items:center;gap:9px;padding:4px 20px 16px;text-decoration:none;';
+  /* The padding and the logo ride the rail's fit scale — see ncRailFit(). The
+     brand is 50px of a 600px-tall rail, which is a whole navigation link, and
+     a rail that shrinks everything except its own name looks like a mistake
+     rather than a decision. */
+  a.style.cssText = 'display:flex;align-items:center;gap:9px;text-decoration:none;' +
+    'padding:calc(4px * var(--ncz,1)) 20px calc(16px * var(--ncz,1));';
   a.innerHTML =
-    '<img src="logo.svg" alt="" width="30" height="30" style="flex:0 0 auto;filter:drop-shadow(0 0 10px rgba(0,240,255,0.35))">' +
-    '<span style="font-size:1.18rem;font-weight:800;letter-spacing:-0.5px;color:var(--nc-text,#EAF2FF);' +
+    '<img src="logo.svg" alt="" width="30" height="30" style="flex:0 0 auto;' +
+      'width:calc(30px * var(--nct,1));height:calc(30px * var(--nct,1));' +
+      'filter:drop-shadow(0 0 10px rgba(0,240,255,0.35))">' +
+    '<span style="font-size:calc(1.18rem * var(--nct,1));font-weight:800;letter-spacing:-0.5px;color:var(--nc-text,#EAF2FF);' +
     'font-family:Segoe UI,-apple-system,sans-serif">Nova<span style="color:var(--nc-cyan,#00F0FF)">Clip</span></span>';
   bar.insertBefore(a, bar.firstChild);
 }
@@ -5334,6 +5341,13 @@ function ncProfile() {
   foot.append(cat, coins, box);
   sb.appendChild(foot);
   box.onclick = openProfile;
+  /* These three cards are the biggest block in the rail and their contents
+     change while the page is open — a coin balance, a category, a name that
+     might wrap to two lines. Any of those changes how much room the nav has,
+     so the fit pass watches them rather than being called from each of the
+     five places that repaint them. */
+  ncRailWatch();
+  ncRailFit();
   /* categories.js fires this when the answer changes, including from the
      first-run dialog — so the rail is right without a reload. */
   addEventListener('nc-category', paintCat);
@@ -5852,8 +5866,58 @@ function ncNav() {
          of rail. min-height:0 is the part that is easy to miss: a flex item
          will not shrink below its content without it, so overflow-y would
          never have engaged. */
-      '#ncnav{display:flex;flex-direction:column;gap:2px;padding:2px 10px 6px;',
+      /* ------------------------------------------------------------------
+         THE WHOLE RAIL FITS, OR IT SHRINKS UNTIL IT DOES
+         ------------------------------------------------------------------
+         --ncz scales everything that decides HEIGHT — row heights, paddings,
+         gaps, card sizes — and --nct scales the things that decide how
+         READABLE it is, at half the rate, so text and icons do not shrink as
+         fast as the boxes around them. Both default to 1 and are set by
+         ncRailFit() below, which measures rather than guesses.
+
+         Why this exists: #ncnav scrolls inside itself, so when the list is
+         taller than the column the last links are simply not there. On a
+         1280x800 laptop — the commonest size there is — the nav wanted 518px
+         and had 476, and Pricing was the link nobody could see. A nav with a
+         hidden half is the one thing a nav must never be.
+         ------------------------------------------------------------------ */
+      '#ncnav{display:flex;flex-direction:column;gap:calc(2px * var(--ncz,1));',
+      'padding:calc(2px * var(--ncz,1)) 10px calc(6px * var(--ncz,1));',
       'flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin}',
+      /* Only when even the smallest size does not fit: say so at the edge.
+         A column that scrolls with no sign that it scrolls is the same hidden
+         half with a thinner scrollbar. */
+      '.sidebar.nc-rail-cut #ncnav{-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 26px),transparent);',
+      'mask-image:linear-gradient(180deg,#000 calc(100% - 26px),transparent)}',
+      /* MEASURING WITH THE ANIMATIONS SWITCHED OFF, which is the difference
+         between this working and this being a coin toss.
+
+         index.html styles its rail links `transition:.25s` — that is
+         `transition: all`, so changing a row's height ANIMATES it, and
+         getComputedStyle during an animation returns the half-way value. The
+         fit pass would set a size, ask how tall things were, and be told what
+         they used to be. On that page it settled on 1 or on the 0.68 floor
+         more or less at random, while academy.html — which transitions only
+         its background — was exact every time. Four pages behaved and two did
+         not, from one word in one unrelated stylesheet.
+
+         So the rail is frozen for the handful of microseconds the measuring
+         takes. It also removes the visible stepping, since the intermediate
+         sizes are never painted. */
+      '.sidebar.nc-rail-fit,.sidebar.nc-rail-fit *{transition:none !important;animation:none !important}',
+      /* WHEN SHRINKING IS NOT ENOUGH, WHAT GOES IS THE DECORATION.
+         On a 600px-tall window ten links, four group captions, the brand and
+         three cards do not fit at any size that is still clickable. The
+         captions go first — CHANNEL, CREATE, LEARN, YOU are labels, not
+         destinations, and losing them costs nothing anybody came to the rail
+         for. Every LINK stays, which is the whole point of the exercise.
+         The cards go to one line before any link is given up. */
+      '.sidebar.nc-rail-tight #ncnav .ncgh{min-height:0;padding:3px 10px 0;font-size:9px;opacity:.7}',
+      '.sidebar.nc-rail-tight #ncfoot .ncfb i{display:none}',
+      '.sidebar.nc-rail-tight #ncfoot #nccat,.sidebar.nc-rail-tight #ncfoot #nccoins,',
+      '.sidebar.nc-rail-tight #ncfoot #ncprof{padding:7px 12px;border-radius:14px;gap:9px}',
+      '.sidebar.nc-rail-tighter #ncnav .ncgh{display:none}',
+      '.sidebar.nc-rail-tighter #ncnav .ncg{gap:0}',
 
       /* Group header, styled as Trend Spotter's .nc-nav-label: a quiet
          uppercase caption rather than a ruled divider. The gradient line that
@@ -5861,9 +5925,10 @@ function ncNav() {
          and it was the loudest thing in a column of otherwise soft rows.
          The chevron stays, smaller and fainter: these groups collapse, and a
          header that collapses with nothing to say so is a trap. */
-      '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;min-height:30px;',
-      'padding:clamp(7px,1.15vh,14px) 10px clamp(3px,.55vh,7px);background:none;border:0;cursor:pointer;text-align:left;',
-      'font:800 10.5px/1 Segoe UI,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;',
+      '#ncnav .ncgh{display:flex;align-items:center;gap:7px;width:100%;min-height:calc(30px * var(--ncz,1));',
+      'padding:calc(clamp(7px,1.15vh,14px) * var(--ncz,1)) 10px calc(clamp(3px,.55vh,7px) * var(--ncz,1));',
+      'background:none;border:0;cursor:pointer;text-align:left;',
+      'font:800 calc(10.5px * var(--nct,1))/1 Segoe UI,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;',
       'color:var(--nc-navhead,#5D6A88);transition:color .18s}',
       '#ncnav .ncgh:hover{color:var(--nc-navhover,#A8B8D8)}',
       '#ncnav .ncgh .ncgl{flex:1}',
@@ -5871,7 +5936,7 @@ function ncNav() {
       '#ncnav .ncg.shut .ncar{transform:rotate(-90deg)}',
       /* The layout lives here, not in an inline style. An inline display:flex
          beats any stylesheet rule, so collapsing would silently do nothing. */
-      '#ncnav .ncgi{display:flex;flex-direction:column;gap:2px}',
+      '#ncnav .ncgi{display:flex;flex-direction:column;gap:calc(2px * var(--ncz,1))}',
       '#ncnav .ncg.shut .ncgi{display:none}',
 
       /* the row. position:relative for the active rail; the gradient sits in a
@@ -5881,7 +5946,8 @@ function ncNav() {
          734px and read as mostly empty space, which was the next thing
          reported. 38 is still well above the 24px minimum the guidelines
          ask for, and sixteen rows fit without the column feeling padded. */
-      '.sidebar #ncnav a.ncl{position:relative;display:flex;align-items:center;gap:11px;margin:0;min-height:38px;',
+      '.sidebar #ncnav a.ncl{position:relative;display:flex;align-items:center;',
+      'gap:calc(11px * var(--nct,1));margin:0;min-height:calc(38px * var(--ncz,1));',
       /* Sixteen links at a fixed 50px each, plus six group headers and the
          brand and profile blocks, is 1112px of nav. That fits a 1280x800
          laptop only because the groups collapse below 820px tall — between
@@ -5895,7 +5961,8 @@ function ncNav() {
          welded to the left edge — softer, and it does not shift the row when
          it turns on. The border is transparent when idle so nothing moves by
          a pixel between states. */
-      'padding:clamp(5px,.8vh,10px) 12px;border-radius:11px;font:700 14px/1.2 Segoe UI,system-ui,sans-serif;',
+      'padding:calc(clamp(5px,.8vh,10px) * var(--ncz,1)) 12px;border-radius:11px;',
+      'font:700 calc(14px * var(--nct,1))/1.2 Segoe UI,system-ui,sans-serif;',
       'color:var(--nc-navlink,#98A6C4);text-decoration:none;border:1px solid transparent;',
       'background:none;transition:background .15s,color .15s,border-color .15s,transform .12s}',
       '.sidebar #ncnav a.ncl:hover{color:var(--nc-navon,#EAF2FF);background:var(--nc-navhoverbg,rgba(255,255,255,.04))}',
@@ -5910,7 +5977,8 @@ function ncNav() {
 
       /* 19px icons that answer the state: muted at rest, blue on hover,
          violet when the row is the page you are on. */
-      '.sidebar #ncnav a.ncl .nci{width:19px;height:19px;flex:0 0 auto;color:var(--nc-navhead,#5D6A88);',
+      '.sidebar #ncnav a.ncl .nci{width:calc(19px * var(--nct,1));height:calc(19px * var(--nct,1));',
+      'flex:0 0 auto;color:var(--nc-navhead,#5D6A88);',
       'opacity:1;transition:color .15s,transform .18s}',
       '.sidebar #ncnav a.ncl:hover .nci{color:var(--nc-navicohover,#38BDF8)}',
       '.sidebar #ncnav a.ncl.on .nci{color:var(--nc-navicoon,#A78BFA)}',
@@ -5924,9 +5992,10 @@ function ncNav() {
          over a small uppercase caption — so the two pages stop looking like
          two products.
          ------------------------------------------------------------------ */
-      '.sidebar #ncfoot{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding:12px 2px 4px}',
+      '.sidebar #ncfoot{margin-top:auto;display:flex;flex-direction:column;gap:calc(10px * var(--ncz,1));',
+      'padding:calc(12px * var(--ncz,1)) 2px calc(4px * var(--ncz,1))}',
       '.sidebar #ncfoot #nccat,.sidebar #ncfoot #nccoins,.sidebar #ncfoot #ncprof{display:flex;align-items:center;gap:12px;',
-      'width:100%;margin:0;padding:12px 14px;border-radius:18px;text-align:left;cursor:pointer;',
+      'width:100%;margin:0;padding:calc(12px * var(--ncz,1)) 14px;border-radius:18px;text-align:left;cursor:pointer;',
       'border:1px solid var(--nc-railline,rgba(255,255,255,.08));color:inherit;font:inherit;',
       'text-decoration:none;transition:background .15s,border-color .15s,transform .12s}',
       '.sidebar #ncfoot #nccoins{background:var(--nc-coinbg,linear-gradient(135deg,rgba(167,139,250,.12),rgba(244,114,182,.08)))}',
@@ -5935,20 +6004,22 @@ function ncNav() {
       '.sidebar #ncfoot #nccoins:active,.sidebar #ncfoot #ncprof:active{transform:scale(.985)}',
       '.sidebar #ncfoot #nccoins:focus-visible,.sidebar #ncfoot #ncprof:focus-visible{outline:2px solid #00E5FF;outline-offset:2px}',
       /* the gradient tile the coin icon sits in */
-      '.sidebar #ncfoot .ncfi{width:38px;height:38px;border-radius:12px;flex:0 0 auto;display:grid;',
+      '.sidebar #ncfoot .ncfi{width:calc(38px * var(--nct,1));height:calc(38px * var(--nct,1));',
+      'border-radius:12px;flex:0 0 auto;display:grid;',
       'place-items:center;color:#fff;background:linear-gradient(135deg,#F72585,#7C5CFF,#00E5FF);',
       'box-shadow:0 4px 16px rgba(124,92,255,.35)}',
-      '.sidebar #ncfoot .ncfi svg{width:19px;height:19px}',
+      '.sidebar #ncfoot .ncfi svg{width:calc(19px * var(--nct,1));height:calc(19px * var(--nct,1))}',
       /* the avatar, square-cornered like Trend Spotter's rather than a circle */
-      '.sidebar #ncfoot .ncav{width:40px;height:40px;border-radius:12px;flex:0 0 auto;object-fit:cover}',
+      '.sidebar #ncfoot .ncav{width:calc(40px * var(--nct,1));height:calc(40px * var(--nct,1));',
+      'border-radius:12px;flex:0 0 auto;object-fit:cover}',
       '.sidebar #ncfoot .ncave{display:grid;place-items:center;font-size:19px;',
       'background:linear-gradient(135deg,var(--nc-rail1,#0E1220),var(--nc-rail3,#080B14));',
       'border:1px solid var(--nc-railline,rgba(255,255,255,.12))}',
       /* value over caption */
       '.sidebar #ncfoot .ncfb{display:flex;flex-direction:column;min-width:0;line-height:1.2}',
-      '.sidebar #ncfoot .ncfb b{font-weight:900;font-size:.95rem;letter-spacing:-.01em;',
+      '.sidebar #ncfoot .ncfb b{font-weight:900;font-size:calc(.95rem * var(--nct,1));letter-spacing:-.01em;',
       'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--nc-navon,#EAF2FF)}',
-      '.sidebar #ncfoot #nccoins .ncfb b{font-size:1.05rem;font-family:ui-monospace,Consolas,monospace}',
+      '.sidebar #ncfoot #nccoins .ncfb b{font-size:calc(1.05rem * var(--nct,1));font-family:ui-monospace,Consolas,monospace}',
       '.sidebar #ncfoot .ncfb i{font-style:normal;font-size:.66rem;font-weight:800;letter-spacing:.1em;',
       'text-transform:uppercase;color:var(--nc-navhead,#5D6A88);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
 
@@ -5959,7 +6030,11 @@ function ncNav() {
 
       /* phones: a horizontal strip, icons above labels so it stays readable */
       '@media (max-width:760px){',
-      '.sidebar{background:var(--nc-rail1,rgba(10,13,24,.96)) !important;box-shadow:0 -8px 30px var(--nc-shadow,rgba(0,0,0,.6))}',
+      /* The strip is horizontal, so height is not what runs out — width is,
+         and that is solved by scrolling sideways. The fit pass is switched
+         off here and the two scales go back to 1. */
+      '.sidebar{--ncz:1;--nct:1;background:var(--nc-rail1,rgba(10,13,24,.96)) !important;box-shadow:0 -8px 30px var(--nc-shadow,rgba(0,0,0,.6))}',
+      '.sidebar.nc-rail-cut #ncnav{-webkit-mask-image:none;mask-image:none}',
       '#ncnav{flex-direction:row;padding:0;gap:0}',
       '#ncnav .ncgh{display:none}#ncnav .ncg{display:flex}#ncnav .ncg.shut .ncgi{display:flex}',
       '#ncnav .ncgi{flex-direction:row}',
@@ -6044,23 +6119,25 @@ function ncNav() {
   const nav = document.createElement('nav');
   nav.id = 'ncnav';
 
-  /* On a short screen, only the group you are in is open.
+  /* EVERY GROUP IS OPEN, AND STAYS OPEN.
 
-     This used to be `innerHeight >= 820`, a number picked when the list had
-     eleven rows. It has sixteen now, so between roughly 860 and 1130 tall
-     nothing collapsed and nothing fitted either: the rail scrolled and the
-     last links sat under the fold, which is the one thing a nav must never
-     do. Guessing a new number would just move the broken band somewhere else.
+     There was a `roomy` flag here meant to shut every group but the one you
+     are in on a short screen. It was initialised to true and never set to
+     false by anything, so it had shut nothing, ever — the measuring step its
+     own comment described was never written. The rail scrolled instead, and
+     the links past the fold were invisible with no sign they existed.
 
-     So it is measured instead. Build it open, and if it does not fit, shut
-     every group except the one you are in and measure again. The threshold
-     is "does this fit", which is the actual question. */
-  let roomy = true;
+     Collapsing was the wrong answer anyway: a shut group hides links, which
+     is the problem rather than the fix. ncRailFit() below shrinks the rail
+     until the whole of it is on screen, which is what "I want to see all of
+     it" actually asks for. The groups still collapse when somebody clicks a
+     header — that is theirs to choose, and the fit runs again after it. */
 
   NC_NAV.forEach(group => {
-    const mine = group.items.some(it => it[0].toLowerCase() === here);
     const g = document.createElement('div');
-    g.className = 'ncg' + (group.name && !mine && !roomy ? ' shut' : '');
+    /* Every group is built open. Which one you are in is shown by the active
+       row inside it, not by which ones are shut. */
+    g.className = 'ncg';
 
     if (group.name) {
       const h = document.createElement('button');
@@ -6073,6 +6150,9 @@ function ncNav() {
       h.onclick = () => {
         g.classList.toggle('shut');
         h.setAttribute('aria-expanded', String(!g.classList.contains('shut')));
+        /* Closing a group frees height; opening one takes it. Either way the
+           rail can now be sized differently, so measure again. */
+        ncRailFit();
       };
       g.appendChild(h);
     }
@@ -6099,6 +6179,156 @@ function ncNav() {
   const tail = bar.querySelector('.themewrap');
   tail ? bar.insertBefore(nav, tail) : bar.appendChild(nav);
 
+  ncRailFit();
+  /* Web fonts land after this runs and change every row's height with them,
+     so the first measurement is taken on fallback metrics. Measuring again
+     when the fonts are ready costs nothing and is the difference between
+     "nearly fits" and "fits". */
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(ncRailFit).catch(() => {});
+  requestAnimationFrame(ncRailFit);
+}
+
+/* ============================================================================
+   MAKING THE WHOLE RAIL VISIBLE — THE FIT PASS
+   ============================================================================
+   The rail is a fixed column with its own scrollbar, which means it can be
+   taller than the screen and simply hide its own end. Measured on a 1280x800
+   laptop before this existed: the nav column was 476px tall holding 518px of
+   links, so Pricing — the last one — was not on screen at all, with nothing to
+   say that it was there. Shorter windows hid Profile, History and Family too.
+
+   The fix is to shrink rather than to scroll. --ncz scales the heights and
+   --nct the type, at half the rate, so the rail reads as the same rail a
+   little tighter rather than as a different, smaller design. The floor is
+   0.68: past that the rows stop being comfortably clickable, and at that point
+   scrolling with a visible fade at the edge is the honest answer.
+
+   IT IS MEASURED, NOT CALCULATED. Row heights depend on fonts, language,
+   zoom, the Gen Z pass rewriting labels, and how many links the account can
+   see — there is no formula. Each pass asks the browser what it got and
+   adjusts; three or four passes converge, and the loop stops the moment it
+   fits. The foot cards shrink too, which gives the nav back more room than
+   the nav's own shrinking does, so the two have to be measured together.
+   ============================================================================ */
+const NC_RAIL_MIN = 0.68;
+let ncRailZ = 1;
+
+function ncRailFit() {
+  const bar = document.querySelector('.sidebar');
+  const nav = document.getElementById('ncnav');
+  if (!bar || !nav) return;
+
+  /* The phone strip scrolls sideways and has no vertical fit to do. Reset,
+     because the window can be resized across the boundary. */
+  if (innerWidth <= 760 || getComputedStyle(nav).flexDirection === 'row') {
+    ncRailZ = 1;
+    bar.style.removeProperty('--ncz');
+    bar.style.removeProperty('--nct');
+    bar.classList.remove('nc-rail-cut');
+    return;
+  }
+
+  /* HOW MUCH DOES NOT FIT, MEASURED FROM THE BOXES THEMSELVES.
+
+     scrollHeight was the obvious thing to ask and it is wrong here: on a flex
+     column Chrome leaves the bottom padding out of it, so a nav with six
+     pixels of padding reports that it fits while its last link is six pixels
+     under the fold. That is precisely the bug being fixed, reintroduced by
+     the instrument used to measure it — and it showed up as "Pricing is
+     hidden" on pages the loop had already declared finished.
+
+     So the question is asked of the geometry: where does the lowest child
+     end, and where does the column's content box end. */
+  const over = () => {
+    nav.scrollTop = 0;
+    const nb = nav.getBoundingClientRect();
+    const cs = getComputedStyle(nav);
+    const padB = parseFloat(cs.paddingBottom) || 0;
+    const borderB = parseFloat(cs.borderBottomWidth) || 0;
+    let bottom = nb.top;
+    for (const c of nav.children) {
+      const r = c.getBoundingClientRect();
+      if (r.height && r.bottom > bottom) bottom = r.bottom;
+    }
+    return (bottom + padB + borderB) - nb.bottom;
+  };
+
+  const apply = (z) => {
+    ncRailZ = z;
+    bar.style.setProperty('--ncz', String(Math.round(z * 1000) / 1000));
+    /* Type and icons shrink at half the rate of the boxes. At the 0.68 floor
+       that is 14px text at 11.9 rather than at 9.5, which is the difference
+       between tight and unreadable. */
+    bar.style.setProperty('--nct', String(Math.round((1 - (1 - z) * 0.5) * 1000) / 1000));
+  };
+
+  /* Frozen while it is measured — see the stylesheet note above. */
+  bar.classList.add('nc-rail-fit');
+  bar.classList.remove('nc-rail-tight', 'nc-rail-tighter');
+
+  const shrink = () => {
+    /* Always from the top, so this is the same answer whether it is the first
+       call or the fortieth — a fit that depends on what the last one left
+       behind drifts a little smaller every time the window is nudged. */
+    apply(1);
+    for (let pass = 0; pass < 8; pass++) {
+      const spill = over();
+      if (spill <= 0.5) break;
+      const have = nav.getBoundingClientRect().height;
+      const need = have + spill;
+      /* A hair under the ratio, because each pass shrinks the foot as well and
+         the column grows back a little underneath — aiming exactly at the
+         ratio converges from above and takes twice as many passes to land. */
+      const next = Math.max(NC_RAIL_MIN, ncRailZ * (have / need) - 0.004);
+      if (next >= ncRailZ - 0.0005) { apply(next); break; }
+      apply(next);
+    }
+    /* Give the size back: if the first guess went further than it had to — or
+       the window grew — step up again while it still fits. */
+    for (let pass = 0; pass < 10 && ncRailZ < 1; pass++) {
+      const was = ncRailZ;
+      apply(Math.min(1, ncRailZ + 0.02));
+      if (over() > 0.5) { apply(was); break; }
+    }
+    return over() <= 0.5;
+  };
+
+  /* Three stages, each one only reached because the one before it was not
+     enough: shrink everything, then thin the captions and the cards, then
+     drop the captions altogether. A link is never given up. */
+  if (!shrink()) { bar.classList.add('nc-rail-tight'); if (!shrink()) {
+    bar.classList.add('nc-rail-tighter'); shrink();
+  } }
+
+  bar.classList.toggle('nc-rail-cut', over() > 0.5);
+  /* Thawed on the next frame. By then the size it ends on has already been
+     through a style resolution with transitions off, so nothing animates
+     from where it used to be. */
+  requestAnimationFrame(() => bar.classList.remove('nc-rail-fit'));
+}
+window.ncRailFit = ncRailFit;
+
+/* The window changing shape is the whole reason this is measured and not
+   written down. Debounced, because a drag fires it by the hundred. */
+let ncRailFitT = null;
+addEventListener('resize', () => {
+  clearTimeout(ncRailFitT);
+  ncRailFitT = setTimeout(ncRailFit, 120);
+}, { passive: true });
+
+/* The foot cards carry a coin balance, a category and a name, all of which
+   change while the page is open and any of which can change the rail's
+   height — a two-line name where there was one. Watching the foot is cheaper
+   and more reliable than remembering to call the fit from every place that
+   writes to it. */
+window.ncRailWatch = ncRailWatch;
+function ncRailWatch() {
+  const foot = document.getElementById('ncfoot');
+  if (!foot || !window.MutationObserver || foot.__ncFitWatched) return;
+  foot.__ncFitWatched = true;
+  let t = null;
+  new MutationObserver(() => { clearTimeout(t); t = setTimeout(ncRailFit, 60); })
+    .observe(foot, { childList: true, subtree: true, characterData: true });
 }
 
 

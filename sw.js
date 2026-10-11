@@ -610,6 +610,40 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v113: the whole rail is on the screen now.
+
+   THE NAV WAS HIDING ITS OWN END. The rail's link column scrolls inside
+   itself, so when the list is taller than the column the last links are
+   simply not there — no fold, no hint, nothing. Measured on a 1280x800
+   laptop, the commonest size there is: the column was 476px tall holding
+   518px of links, and Pricing was a link nobody could see. At 1366x640 it was
+   Profile, History, Family and Pricing.
+
+   There was a flag in ncNav() meant to handle this by collapsing groups on a
+   short screen. It was initialised to true and never set to false by
+   anything, so it had collapsed nothing, ever; the measuring step its own
+   comment described was never written. Collapsing was the wrong answer in any
+   case — a shut group hides links, which is the problem rather than the fix.
+
+   So the rail shrinks until all of it fits. --ncz scales the heights and
+   --nct the type at half that rate, both set by ncRailFit(), which measures
+   and re-measures rather than guessing: row heights depend on fonts,
+   language, zoom and how many links the account can see, and there is no
+   formula for that. Three stages, and a link is never given up — shrink
+   everything to a 0.68 floor; then thin the group captions and put the foot
+   cards on one line; then drop the captions, which are labels rather than
+   destinations. A 1024x600 window now shows all ten links, the brand and all
+   three cards.
+
+   MEASURED WITH THE ANIMATIONS OFF, which is the difference between this
+   working and this being a coin toss. index.html styles its rail links
+   `transition:.25s` — that is `transition: all` — so changing a row's height
+   animates it, and getComputedStyle during an animation returns the half-way
+   value. The fit pass was setting a size, asking how tall things were, and
+   being told what they used to be. Four pages behaved and two did not, from
+   one word in one unrelated stylesheet.
+
+   nova.js. Nothing else changed, and the worker is untouched. */
 /* v112: a checkout for lessons, a teacher who is somebody, and a free first
    one.
 
@@ -2199,7 +2233,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v112';
+const CACHE = 'novaclip-v113';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
