@@ -45,6 +45,25 @@
     });
   }
 
+  /* Stars drawn rather than typed. The text star renders as an emoji on some
+     phones and a glyph on others, at two different sizes, and a rating that
+     changes size between devices looks like a bug. */
+  function stars(score, n) {
+    var full = Math.round(score);
+    var row = '';
+    for (var i = 1; i <= 5; i++) {
+      row += '<span class="st' + (i <= full ? ' on' : '') + '">' +
+        '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">' +
+        '<polygon points="12,2.6 14.9,9.1 22,9.8 16.7,14.5 18.2,21.4 12,17.8 5.8,21.4 7.3,14.5 2,9.8 9.1,9.1" ' +
+        'fill="currentColor"/></svg></span>';
+    }
+    return '<span class="stars" title="' + (n ? score + ' out of 5, from ' + n + '' +
+      (n === 1 ? ' person' : ' people') : 'not rated yet') + '">' + row +
+      '<i>' + (n ? score.toFixed(1) + ' · ' + n : 'new') + '</i></span>';
+  }
+
+  var LEVEL_NAMES = ['New teacher', 'Rated teacher', 'Trusted teacher', 'Master teacher'];
+
   function money(row) {
     if (row.price > 0) return '<span class="price">&euro;' + row.price.toFixed(2) + '</span>';
     if (row.coins > 0) return '<span class="price coins">' + row.coins + ' coins</span>';
@@ -67,7 +86,11 @@
         $('shelf').innerHTML = rows.map(function (r) {
           return '<article class="lesson">' +
             '<h3>' + esc(r.title) + '</h3>' +
-            '<div class="who">' + esc(r.by) + (r.tier ? ' &middot; ' + (TIERS[r.tier] || r.tier) + ' certificate' : '') + '</div>' +
+            '<div class="who">' + esc(r.by) +
+              (r.teacherLevelName ? ' &middot; <b class="lvl lvl' + (r.teacherLevel || 0) + '">' +
+                esc(r.teacherLevelName) + '</b>' : '') +
+              (r.teacherSales ? ' &middot; ' + r.teacherSales + ' sold' : '') + '</div>' +
+            stars(r.stars || 0, r.ratings || 0) +
             '<p class="blurb">' + esc(r.blurb || '') + '</p>' +
             '<div class="foot"><span class="pill">' + esc(LEVELS[r.level] || r.level) + '</span>' +
             money(r) + '<button data-id="' + esc(r.id) + '">Open</button></div>' +
@@ -85,12 +108,41 @@
     api('/academy/item', { id: id }).then(function (row) {
       $('readcard').hidden = false;
       $('r-title').textContent = row.title;
-      $('r-who').textContent = row.by + (row.tier ? ' · ' + (TIERS[row.tier] || row.tier) + ' certificate' : '');
+      $('r-who').innerHTML = esc(row.by) +
+        (row.teacher ? ' &middot; <b class="lvl lvl' + row.teacher.level + '">' +
+          esc(row.teacher.name) + '</b>' +
+          (row.teacher.sales ? ' &middot; ' + row.teacher.sales + ' lessons sold' : '') +
+          (row.teacher.ratings === 0 && !row.teacher.stars ? '' : '') : '') +
+        ' &middot; ' + stars(row.stars || 0, row.ratings || 0);
       $('r-body').textContent = row.content;
       var out = $('r-out');
       out.innerHTML = '';
       if (row.open) {
         out.innerHTML = '<p class="muted">' + (row.owner ? 'This is yours.' : 'Yours to keep.') + '</p>';
+        /* Rating belongs to the person who has the lesson, and belongs here,
+           where they have just read it. */
+        if (!row.owner && row.bought) {
+          if (row.myStars) {
+            out.insertAdjacentHTML('beforeend',
+              '<p class="muted">You gave it ' + stars(row.myStars, 1) + '</p>');
+          } else {
+            out.insertAdjacentHTML('beforeend',
+              '<div class="rateme"><span>Was it any good?</span>' +
+              [1, 2, 3, 4, 5].map(function (n) {
+                return '<button class="starbtn" data-stars="' + n + '" aria-label="' + n +
+                  ' out of 5">' + n + '</button>';
+              }).join('') + '</div>');
+            [].forEach.call(out.querySelectorAll('.starbtn'), function (b) {
+              b.onclick = function () {
+                api('/academy/rate', { id: id, stars: +b.getAttribute('data-stars') })
+                  .then(function () { read(id); shelf(); })
+                  .catch(function (e) {
+                    out.insertAdjacentHTML('beforeend', '<p class="muted">' + esc(e.message) + '</p>');
+                  });
+              };
+            });
+          }
+        }
       } else if (!signedIn()) {
         out.innerHTML = '<p class="muted">Open the Teach tab once — it sets your account up — then ' +
           'this lesson can be yours.</p>';
@@ -213,6 +265,20 @@
           'picture</u>: the scan happens at the checking service and all that comes back here is a yes ' +
           'or a no. <button class="agego" style="margin-top:8px">Check my age</button>');
       }
+      if (st.stats && st.mayPublish) {
+        var sx = st.stats;
+        bits.push('<b>' + esc(sx.levelName) + '</b>' +
+          (sx.ratings
+            ? sx.stars + ' stars from ' + sx.ratings + (sx.ratings === 1 ? ' person' : ' people') +
+              ', ' + sx.sales + ' lessons sold. '
+            : 'No ratings yet &mdash; your first buyers decide this. ') +
+          'You can ask up to <b>&euro;' + sx.maxPrice + '</b> a lesson.' +
+          (sx.next
+            ? ' <br>Next: <b>' + esc(sx.next.name) + '</b> at ' + sx.next.sales + ' sales and ' +
+              sx.next.stars + ' stars, which lets you ask &euro;' + sx.next.maxPrice + '.' +
+              (sx.next.salesToGo ? ' ' + sx.next.salesToGo + ' sales to go.' : '')
+            : ' That is the top level.'));
+      }
       if (st.mayCharge) {
         bits.push('<b>You can set a price</b>Up to &euro;' + st.maxPrice + ' a lesson, and NovaClip keeps ' +
           Math.round((st.fee || 0.2) * 100) + '% of it &mdash; you keep the rest. It is paid to your ' +
@@ -223,6 +289,12 @@
       $('makecard').hidden = !st.mayPublish;
       $('minecard').hidden = !st.mayPublish;
       $('pricefield').style.display = st.mayCharge ? '' : 'none';
+      var pf = $('t-price');
+      if (pf && st.maxPrice) {
+        pf.max = st.maxPrice;
+        var lab = $('pricefield').querySelector('label');
+        if (lab) lab.textContent = 'Price — up to €' + st.maxPrice + ' at your level';
+      }
       var go = g.querySelector('.agego');
       if (go) go.onclick = startAgeCheck;
       if (st.mayPublish) mine();

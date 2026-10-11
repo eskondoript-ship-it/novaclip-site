@@ -173,6 +173,21 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
 .earn b { font-size:1.3rem; display:block; }
 .readout { white-space:pre-wrap; line-height:1.65; font-size:.95rem; }
 .muted { opacity:.62; font-size:.85rem; line-height:1.6; }
+.stars { display:inline-flex; align-items:center; gap:1px; }
+.stars .st { color:color-mix(in srgb, currentColor 22%, transparent); display:inline-flex; }
+.stars .st.on { color:#FFC83D; }
+.stars i { font-style:normal; font-size:.76rem; opacity:.68; margin-left:6px;
+           font-variant-numeric:tabular-nums; }
+.lvl { font-weight:700; }
+.lvl0 { opacity:.7; }
+.lvl1 { color:#2E9E6B; }
+.lvl2 { color:#7C5CFF; }
+.lvl3 { color:#D98200; }
+.rateme { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:10px; font-size:.86rem; }
+.rateme .starbtn { width:34px; height:34px; border-radius:9px; cursor:pointer; font:inherit;
+  font-weight:700; border:1px solid var(--line,rgba(255,255,255,.18)); background:transparent;
+  color:inherit; }
+.rateme .starbtn:hover { border-color:#FFC83D; color:#FFC83D; }
 </style>
 </head>
 <body>

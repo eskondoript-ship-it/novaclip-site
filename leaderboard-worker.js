@@ -744,6 +744,55 @@ async function ageProof(env, code) {
   return row && row.ok ? row : null;
 }
 
+/* ===========================================================================
+   STARS, LEVELS, AND WHAT A TEACHER MAY CHARGE
+   ===========================================================================
+   A marketplace where anybody may ask twenty euros on their first day is a
+   marketplace nobody trusts twice. So the price a teacher may set is earned,
+   the same way the right to teach at all is earned, and it is earned from the
+   only thing that is evidence: people who bought a lesson saying whether it
+   was any good.
+
+   ONLY BUYERS RATE, AND ONLY ONCE. A rating from somebody who never had the
+   lesson is not information. A rating that can be repeated is a vote counted
+   twice. Both are checked here rather than in the page, because a page is
+   something anybody can edit.
+
+   THE LEVELS ARE DELIBERATELY SLOW. Three sales and a decent average gets a
+   new teacher to six euros; fifty sales at four and a half stars is what
+   twenty takes. A level that arrives quickly is a level that means nothing,
+   and the number it unlocks is what somebody else pays.
+   ========================================================================= */
+const TEACH_LEVELS = [
+  { id: 0, name: 'New teacher',    sales: 0,  stars: 0,   maxPrice: 3  },
+  { id: 1, name: 'Rated teacher',  sales: 3,  stars: 3.5, maxPrice: 6  },
+  { id: 2, name: 'Trusted teacher',sales: 15, stars: 4.0, maxPrice: 12 },
+  { id: 3, name: 'Master teacher', sales: 50, stars: 4.5, maxPrice: 20 }
+];
+
+async function teacherStats(env, code) {
+  const t = (await env.DB.get('tstats:' + code, 'json')) || { sales: 0, sum: 0, n: 0 };
+  const avg = t.n ? Math.round((t.sum / t.n) * 10) / 10 : 0;
+  /* A teacher with no ratings yet is level 0 whatever their sales say: the
+     level is a statement about how it went, not about how much was shifted. */
+  let level = TEACH_LEVELS[0];
+  for (const L of TEACH_LEVELS) {
+    if (t.sales >= L.sales && (L.stars === 0 || avg >= L.stars)) level = L;
+  }
+  const next = TEACH_LEVELS[level.id + 1] || null;
+  return {
+    sales: t.sales, ratings: t.n, stars: avg,
+    level: level.id, levelName: level.name, maxPrice: level.maxPrice,
+    next: next ? { name: next.name, sales: next.sales, stars: next.stars, maxPrice: next.maxPrice,
+                   salesToGo: Math.max(0, next.sales - t.sales) } : null
+  };
+}
+
+function cleanStars(v) {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n >= 1 && n <= 5 ? n : 0;
+}
+
 const ACADEMY_CATS = ['editing', 'thumbnails', 'titles', 'growth', 'filming', 'sound', 'other'];
 const ACADEMY_LEVELS = ['starter', 'getting-there', 'advanced'];
 const ACADEMY_MAX_PRICE = 20;          /* euros. A lesson pack, not a course. */
@@ -778,6 +827,7 @@ async function teachStanding(env, code, key) {
   const cert = validKey(key) ? await env.DB.get('certof:' + key, 'json') : null;
   const age = consent ? cleanAge(consent.age) : 0;
   const proof = await ageProof(env, code);
+  const stats = await teacherStats(env, code);
   /* A PARENT SAYING SIXTEEN IS NOT PROOF OF SIXTEEN. It is enough to publish
      for coins — nothing is being paid, so nothing turns on the number — and it
      is not enough to be paid. Money needs the age checked by somebody whose
@@ -788,7 +838,7 @@ async function teachStanding(env, code, key) {
     consent: !!(consent && consent.ok),
     payee: consent && consent.payee ? consent.payee : null,
     age, cert: cert || null, proof: proof ? { at: proof.at, by: proof.by } : null,
-    mayPublish, mayCharge,
+    mayPublish, mayCharge, stats,
     why: !consent || !consent.ok
       ? 'a parent has to turn earning on from the Family Dashboard first'
       : (!cert ? 'you need a NovaClip certificate before you can teach'
@@ -1046,8 +1096,9 @@ export default {
       const st = await teachStanding(env, g.code, body.key);
       return json({
         consent: st.consent, cert: st.cert, age: st.age,
-        mayPublish: st.mayPublish, mayCharge: st.mayCharge,
-        workAge: ACADEMY_WORK_AGE, maxPrice: ACADEMY_MAX_PRICE, why: st.why,
+        mayPublish: st.mayPublish, mayCharge: st.mayCharge, stats: st.stats,
+        workAge: ACADEMY_WORK_AGE, maxPrice: st.stats.maxPrice, hardMax: ACADEMY_MAX_PRICE,
+        levels: TEACH_LEVELS, why: st.why,
         ageVerified: !!st.proof, ageConfigured: !!env.AGE_PROVIDER,
         fee: ACADEMY_FEE, payouts: false
       });
@@ -1108,7 +1159,13 @@ export default {
          refusing would just teach somebody to lie about their age. */
       let price = Math.round(Number(body.price) * 100) / 100;
       if (!Number.isFinite(price) || price < 0) price = 0;
-      if (price > ACADEMY_MAX_PRICE) price = ACADEMY_MAX_PRICE;
+      /* THE CEILING IS THE ONE THIS TEACHER HAS EARNED. Clamped rather than
+         refused, and the answer says what the cap was, so somebody who asks
+         for twelve on their first day gets three and is told why rather than
+         getting an error they have to guess at. */
+      const levelMax = Math.min(st.stats.maxPrice, ACADEMY_MAX_PRICE);
+      const asked = price;
+      if (price > levelMax) price = levelMax;
       const coinsOnly = !st.mayCharge;
       if (coinsOnly) price = 0;
       const coins = Math.max(0, Math.min(500, Math.round(Number(body.coins) || 0)));
@@ -1132,11 +1189,20 @@ export default {
         price, coins, coinsOnly,
         by: cleanLine(st.cert && st.cert.name, 48) || 'A NovaClip creator',
         tier: (st.cert && st.cert.tier) || '', serial: (st.cert && st.cert.serial) || '',
-        at: Date.now(), hidden: false
+        at: Date.now(), hidden: false,
+        /* The lesson's own stars, kept on the row so the shelf does not have to
+           read a second record for every card it draws. */
+        sum: (await env.DB.get('lst:' + id, 'json') || {}).sum || 0,
+        n: (await env.DB.get('lst:' + id, 'json') || {}).n || 0
       };
       await env.DB.put('lst:' + id, JSON.stringify(row));
-      return json({ ok: true, id, price, coinsOnly,
-        note: coinsOnly ? 'under ' + ACADEMY_WORK_AGE + ', so this earns coins rather than money' : '' });
+      return json({ ok: true, id, price, coinsOnly, level: st.stats.level, levelMax,
+        note: coinsOnly
+          ? 'under ' + ACADEMY_WORK_AGE + ', so this earns coins rather than money'
+          : (asked > levelMax
+             ? 'a ' + st.stats.levelName.toLowerCase() + ' can ask up to \u20ac' + levelMax +
+               ', so the price was set to that'
+             : '') });
     }
 
     if (path === '/academy/unpublish' && request.method === 'POST') {
@@ -1161,9 +1227,13 @@ export default {
         const row = await env.DB.get('lst:' + id, 'json');
         if (!row || row.hidden) continue;
         if (cat && ACADEMY_CATS.includes(cat) && row.cat !== cat) continue;
+        const t = await teacherStats(env, row.code);
         out.push({ id: row.id, title: row.title, blurb: row.blurb, cat: row.cat, level: row.level,
                    price: row.price, coins: row.coins, coinsOnly: row.coinsOnly,
                    by: row.by, tier: row.tier, at: row.at,
+                   stars: row.n ? Math.round((row.sum / row.n) * 10) / 10 : 0, ratings: row.n || 0,
+                   teacherLevel: t.level, teacherLevelName: t.levelName, teacherStars: t.stars,
+                   teacherSales: t.sales,
                    length: row.content ? row.content.length : 0 });
         if (out.length >= 60) break;
       }
@@ -1179,12 +1249,17 @@ export default {
       const code = cleanCode(body.code || '');
       const owner = code && code === row.code;
       const bought = code ? !!(await env.DB.get('ord:' + code + ':' + id)) : false;
+      const mine = code ? await env.DB.get('rate:' + code + ':' + id, 'json') : null;
+      const teach = await teacherStats(env, row.code);
       const free = !row.price && !row.coins;
       const open = owner || bought || free;
       return json({
         id: row.id, title: row.title, blurb: row.blurb, cat: row.cat, level: row.level,
         price: row.price, coins: row.coins, coinsOnly: row.coinsOnly, by: row.by, tier: row.tier,
         at: row.at, owner, bought, open,
+        stars: row.n ? Math.round((row.sum / row.n) * 10) / 10 : 0, ratings: row.n || 0,
+        myStars: mine ? mine.stars : 0,
+        teacher: { level: teach.level, name: teach.levelName, stars: teach.stars, sales: teach.sales },
         /* For a priced lesson: how far the buyer's coins go towards it. */
         split: row.price > 0
           ? priceSplit(row.price, code ? ((await wallet(env, code)).bal) : 0)
@@ -1254,6 +1329,11 @@ export default {
                      { coins: 0, fee: 0, money: 0, sales: 0 };
       earned.coins += net; earned.fee = (earned.fee || 0) + fee; earned.sales += 1;
       await env.DB.put('earn:' + row.code, JSON.stringify(earned));
+      /* Sales are half of what a level is made of; the stars are the other
+         half and arrive later, if the buyer thinks it was worth saying. */
+      const t = (await env.DB.get('tstats:' + row.code, 'json')) || { sales: 0, sum: 0, n: 0 };
+      t.sales += 1;
+      await env.DB.put('tstats:' + row.code, JSON.stringify(t));
       return json({ ok: true, coins: row.coins, toSeller: net, fee });
     }
 
@@ -1428,6 +1508,35 @@ export default {
       const proof = await ageProof(env, g.code);
       return json({ verified: !!proof, at: proof ? proof.at : 0, by: proof ? proof.by : '',
                     configured: !!env.AGE_PROVIDER, threshold: ACADEMY_WORK_AGE });
+    }
+
+    /* A rating, from somebody who actually had the lesson. Checked here and
+       nowhere else: the page can be edited by whoever is reading it. */
+    if (path === '/academy/rate' && request.method === 'POST') {
+      const g = await gate(env, body);
+      if (g.stop) return g.stop;
+      const id = cleanLine(body.id, 24);
+      const stars = cleanStars(body.stars);
+      if (!stars) return json({ error: 'a rating is one to five stars' }, 400);
+      const row = await env.DB.get('lst:' + id, 'json');
+      if (!row) return json({ error: 'no such lesson' }, 404);
+      if (row.code === g.code) return json({ error: 'you cannot rate your own lesson' }, 400);
+      if (!(await env.DB.get('ord:' + g.code + ':' + id))) {
+        return json({ error: 'only somebody who has the lesson can rate it' }, 403);
+      }
+      const had = await env.DB.get('rate:' + g.code + ':' + id, 'json');
+      if (had) return json({ error: 'you have already rated this one', stars: had.stars }, 409);
+      if (await rateLimited(env, 'rate:' + g.code, 1500)) return json({ error: 'slow down' }, 429);
+
+      await env.DB.put('rate:' + g.code + ':' + id, JSON.stringify({ stars, at: Date.now() }));
+      row.sum = (row.sum || 0) + stars;
+      row.n = (row.n || 0) + 1;
+      await env.DB.put('lst:' + id, JSON.stringify(row));
+      /* And on the teacher, which is what the level is read from. */
+      const t = (await env.DB.get('tstats:' + row.code, 'json')) || { sales: 0, sum: 0, n: 0 };
+      t.sum += stars; t.n += 1;
+      await env.DB.put('tstats:' + row.code, JSON.stringify(t));
+      return json({ ok: true, stars, lesson: { stars: Math.round((row.sum / row.n) * 10) / 10, n: row.n } });
     }
 
     if (path === '/academy/mine' && request.method === 'POST') {

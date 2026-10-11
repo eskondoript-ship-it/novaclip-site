@@ -610,6 +610,27 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v111: stars, teacher levels, and a price that has to be earned.
+
+   A marketplace where anybody may ask twenty euros on their first day is a
+   marketplace nobody trusts twice. So the price a teacher may set comes from
+   the only evidence there is: people who bought a lesson saying whether it was
+   any good. New teacher €3, rated €6 at three sales and 3.5 stars, trusted €12
+   at fifteen and 4.0, master €20 at fifty and 4.5. A price above the level is
+   clamped rather than refused, and the answer says what the cap was.
+
+   ONLY BUYERS RATE, AND ONLY ONCE, checked in the worker because a page is
+   something anybody can edit. Not your own lesson either.
+
+   AND STARS ALONE DO NOT MAKE A LEVEL — forty sales at two stars is still a
+   new teacher, which is the case the tests were written around.
+
+   Stars are drawn as SVG rather than typed: the text star is an emoji on some
+   phones and a glyph on others, at two different sizes, and a rating that
+   changes size between devices looks like a fault.
+
+   academy.html, academy.js,
+   leaderboard-worker.js (deploy it again — this adds /academy/rate). */
 /* v110: "Sign in first" was the wrong thing to say, on a site nobody signs in
    to.
 
@@ -2133,7 +2154,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v110';
+const CACHE = 'novaclip-v111';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
