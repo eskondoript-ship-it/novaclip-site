@@ -791,8 +791,20 @@ function mailApi(path, extra) {
     body: JSON.stringify(Object.assign({ code: a.code, key: a.key }, extra || {})) });
 }
 function sayErr(e) {
-  return (e && e.message ? e.message : 'something went wrong') +
-         (e && e.detail ? ' \u2014 ' + e.detail : '') + '.';
+  const msg = (e && e.message) ? e.message : 'something went wrong';
+  /* A WORKER THAT ANSWERS BUT HAS NEVER HEARD OF THIS ROUTE is a worker that
+     has not been redeployed, which is a completely different problem from a
+     worker that is down — and the only one somebody can actually fix. Without
+     this the dashboard said "Not Found." and stopped, which is the whole of
+     what a parent was told. academy.js has said the useful version of this
+     for weeks; this is the same sentence. */
+  if (/404|not found/i.test(msg)) {
+    return 'The NovaClip server does not have the parent-email step yet. ' +
+      '<code>leaderboard-worker.js</code> needs deploying again \u2014 pushing it to GitHub does ' +
+      'not deploy it. Until then the confirmation code cannot be sent, and it is deliberately ' +
+      'never shown on this screen instead.';
+  }
+  return esc2(msg) + (e && e.detail ? ' \u2014 ' + esc2(e.detail) : '') + '.';
 }
 function clearPending() { try { localStorage.removeItem(PEND); } catch (e) {} }
 
@@ -837,7 +849,7 @@ window.addEventListener('DOMContentLoaded', () => {
           '<b>' + esc2(st.email) + '</b> is already confirmed for this account. Set the parent PIN ' +
           'and a security question.';
         document.getElementById('pinmsg').style.display = 'block';
-      } else if (!st.configured) {
+      } else if (st.configured === false) {
         /* Said once, here, rather than when the button is pressed: a dashboard
            that cannot confirm anybody should say so before a parent types
            their address into it. */
@@ -848,7 +860,14 @@ window.addEventListener('DOMContentLoaded', () => {
           'is meant to keep out is holding the device. Set the Worker secrets <code>MAIL_KEY</code> ' +
           'and <code>MAIL_FROM</code> and this works.';
       }
-    }).catch(function () {});
+    }).catch(function (e) {
+      /* Said on arrival rather than discovered at the button. */
+      if (/404|not found/i.test((e && e.message) || '')) {
+        const box = document.getElementById('pinmsg');
+        box.style.display = 'block';
+        box.innerHTML = sayErr(e);
+      }
+    });
   }
 });
 
@@ -925,7 +944,7 @@ document.getElementById('sendcodebtn').onclick = async () => {
       (out.minutes || 20) + ' minutes \u2014 check the inbox, and the spam folder.';
     document.getElementById('confcode').focus();
   } catch (e) {
-    msg.innerHTML = esc2(sayErr(e));
+    msg.innerHTML = sayErr(e);
   }
   btn.disabled = false;
   btn.textContent = was;
@@ -957,7 +976,7 @@ document.getElementById('confcode').oninput = async (e) => {
        five silent failures followed by a dead code is a thing people report as
        "it stopped working". */
     const left = err && err.body && typeof err.body.left === 'number' ? err.body.left : null;
-    msg.innerHTML = esc2(sayErr(err)) +
+    msg.innerHTML = sayErr(err) +
       (left !== null ? ' ' + left + (left === 1 ? ' try left.' : ' tries left.') : '');
   }
   checking = false;
