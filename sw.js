@@ -610,6 +610,37 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v116: the editor's keyboard, and the card that had been eating it.
+
+   THE ASK CARD WAS KILLING EVERY SHORTCUT IN THE EDITOR. nova-ask.js opens
+   itself three seconds into a page and focused its text box. On the editor
+   that is not a nuisance, it is the end of the keyboard: from the next
+   keystroke on, S no longer split, Space no longer played, Delete no longer
+   deleted, and every letter went quietly into a prompt box in the corner. It
+   was found by building the keyboard layer below and watching twelve keys do
+   nothing — the focus moved to INPUT#ncaIn after exactly one keypress, every
+   time. The card no longer takes focus when it opened itself, on any screen;
+   pressing Ask Nova still does, because then the text box is the thing that
+   was asked for. The file already had this instinct for phones and the reason
+   was never about phones.
+
+   AND THE EDITOR HAS A KEYBOARD NOW. Not one new capability: thirty-seven
+   effects, fifteen colour controls, speed, reverse, keyframes and transitions
+   were all already there. What was missing was the speed of driving them, and
+   for short-form that is the same thing as power — a sixty-second edit is
+   forty cuts. , and . step a frame, J K L shuttle, I and O trim to the
+   playhead, [ and ] nudge, C and V copy and drop, D duplicates, X removes and
+   closes the gap, Shift 1-5 set the speed, R reverses, P punches, F fits the
+   project on screen, and ? lists all of it, because a shortcut nobody knows
+   about is worth nothing.
+
+   Trimming is split-then-delete, so the app does its own arithmetic on the
+   source window rather than this file keeping a second copy of that rule.
+   Nothing takes a key the app already uses — the ones it claims were measured
+   by asking the running app, not read off the bundle — and Ctrl, Cmd and Alt
+   are passed straight through.
+
+   nova-ask.js, editor.html, editor-keys.js (NEW — the two go together). */
 /* v115: two bugs found by driving the deployed site, not the repo.
 
    THE FAMILY DASHBOARD SAID NOTHING ON A FIRST VISIT. It asks the worker what
@@ -2298,7 +2329,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v115';
+const CACHE = 'novaclip-v116';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2459,6 +2490,11 @@ const SHELL = [
   '/captions.js',
   '/beats.js',
   '/reframe.js',
+  /* The keyboard. It adds no capability — every key drives something the
+     editor could already do — so it is cached with the rest of the editor
+     rather than treated as a feature of its own. Offline is exactly when
+     somebody is working fast on a train. */
+  '/editor-keys.js',
   /* The Academy. The page and its script go together — academy.html is markup
      with no behaviour of its own, so shipping it without academy.js offline
      would give somebody an empty shelf and three dead buttons. */

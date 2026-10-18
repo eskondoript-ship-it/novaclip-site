@@ -320,11 +320,24 @@
     return out;
   }
 
+  function focusInput() {
+    var i = document.getElementById('ncaIn');
+    if (!i) return;
+    try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); }
+  }
+
   /* `auto` is true only when the three-second timer opened it. A press is a
      question already being asked; a timer is an interruption, and the two do
      not deserve the same behaviour from the keyboard. */
   function open(auto) {
-    if (el) return;
+    if (el) {
+      /* Already on screen because the timer put it there. A press is still a
+         question being asked, so it gets the keyboard even though there is
+         nothing to build — without this, the card that opened itself could
+         never be typed into without a second click into the box. */
+      if (!auto) focusInput();
+      return;
+    }
     markSeen();          /* claimed by the document that actually shows it */
     css();
     el = document.createElement('div');
@@ -396,9 +409,21 @@
        costs the page. */
     var small = false;
     try { small = window.matchMedia('(max-width: 900px)').matches; } catch (e) {}
-    if (!(small && auto)) {
-      try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
-    }
+    /* AND NOT WHEN IT OPENED ITSELF AT ALL, ON ANY SCREEN.
+
+       The phone rule above was right for a reason that is not about phones:
+       somebody who did not ask for a text box should not have one take their
+       keyboard. On the editor that is not a nuisance, it is the end of the
+       keyboard — measured: three seconds into the page this card opens, takes
+       focus, and from the next keystroke on, S no longer splits, Space no
+       longer plays, Delete no longer deletes, and every letter goes quietly
+       into a prompt box in the corner. The editor's own shortcuts, killed by
+       a card nobody opened.
+
+       Clicking Ask Nova still focuses it, because then the text box is the
+       thing that was asked for. */
+    if (!auto) focusInput();
+    void small;
   }
 
   /* THE MARK GOES DOWN WHEN THE CARD OPENS, NOT WHEN THE TIMER IS SET.
