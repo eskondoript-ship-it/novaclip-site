@@ -610,6 +610,45 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v117: the editor on a phone, and three things that were wrong on one.
+
+   THE ORDER DOWN THE PAGE WAS THE WHOLE PROBLEM. The editor already had a
+   phone block — the panels stacked, the page scrolled, the header wrapped —
+   and measured at 390x844 it produced a 1755px page in the order tools (371)
+   · preview (388) · properties (231) · timeline (422). The video in the
+   middle. Touch the timeline and the picture has scrolled off the top; look
+   at the picture and the timeline is off the bottom, and editing is watching
+   a change and judging it. Now it is preview · timeline · properties ·
+   tools, done with `display: contents` on two wrappers rather than by moving
+   any node, because the app is React and moved nodes come back. With the
+   header down from 234px to 100px the preview sits at 208-461 and the
+   timeline starts at 461, so both are on screen with nothing scrolled.
+
+   THE HEADER LOST WHAT IT DID NOT NEED on a phone: a second NovaClip
+   wordmark directly under the site bar's own, the project name printed twice
+   (the field and the project button), the Simple/Complex toggle that changes
+   one tab out of fourteen, and a timecode that says what the playhead shows.
+   The fourteen-tab rail lies down into two rows of seven instead of a 64px
+   column, and the floating clip finder goes — its whole job is in the Media
+   tab's search.
+
+   THE PROJECT BUTTON WAS OFF THE SIDE OF THE SCREEN, and had been. It is
+   fixed, positioned from script, and at 390px its left edge measured x=473:
+   the project name and the way into the project list, both simply gone on a
+   phone. The timeline's Video/Audio/Text filter row was overflowing too —
+   «Text» at x=380 on a 360px screen — which never showed up before because
+   the timeline was the fourth thing down the page and nobody could see it.
+
+   AND THE ASK CARD NO LONGER OPENS ITSELF OVER THE EDITOR. It is 340px wide
+   and lands three seconds in on top of the preview and the tools. The button
+   in the header still opens it, which is the version somebody asked for.
+
+   Captions, Beats and Reframe each picked their own left offset — 18, 140,
+   240 — which on a phone is three blobs across the bottom of the work; they
+   are thirds of the width now, and Help and the trial message step up above
+   them.
+
+   nova-ask.js, editor.html, editor-phone.js (NEW — the two go together). */
 /* v116: the editor's keyboard, and the card that had been eating it.
 
    THE ASK CARD WAS KILLING EVERY SHORTCUT IN THE EDITOR. nova-ask.js opens
@@ -2329,7 +2368,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v116';
+const CACHE = 'novaclip-v117';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2495,6 +2534,7 @@ const SHELL = [
      rather than treated as a feature of its own. Offline is exactly when
      somebody is working fast on a train. */
   '/editor-keys.js',
+  '/editor-phone.js',
   /* The Academy. The page and its script go together — academy.html is markup
      with no behaviour of its own, so shipping it without academy.js offline
      would give somebody an empty shelf and three dead buttons. */

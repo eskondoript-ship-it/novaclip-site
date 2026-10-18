@@ -59,8 +59,14 @@
   var DELAY = 3000;
 
   /* Pages a first-time visitor should not be interrupted on: the parent's own
-     pages, the policies, and the ones that are already a conversation. */
-  var SKIP = /(^|\/)(parent|shield|report|privacy|terms|offline|pay-return)\.html$/i;
+     pages, the policies, and the ones that are already a conversation.
+
+     The editor joined them. It is a tool, not a page to be read: the card is
+     340px wide and opens three seconds in over the preview, the tool panel
+     and the top of the timeline, and on a phone that is most of the screen
+     covered while somebody is in the middle of a cut. The button in the
+     header still opens it, which is the version somebody asked for. */
+  var SKIP = /(^|\/)(parent|shield|report|privacy|terms|offline|pay-return|editor)\.html$/i;
 
   /* ---------------------------------------------------------------------
      WHERE IT CAN TAKE YOU
