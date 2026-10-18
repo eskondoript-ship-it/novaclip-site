@@ -610,6 +610,36 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v115: two bugs found by driving the deployed site, not the repo.
+
+   THE FAMILY DASHBOARD SAID NOTHING ON A FIRST VISIT. It asks the worker what
+   the parent-email state is as soon as the page loads — but nova.js creates
+   the account in the background, and on a device that had never been here
+   that round trip had not finished yet. The read rejected with "no account on
+   this device", the catch swallowed it, and a parent arrived at a dashboard
+   with no message at all. The first visit is the only visit this screen is
+   for. It waits for the account now, and makes one itself if nova.js has not
+   — which is what academy.js already does, for the same reason: nobody signs
+   in to this site, so a page that needs an account has to be willing to
+   produce one.
+
+   THE TRIAL BAR WAS SITTING ON THE EDITOR'S DROP ZONE. A status bar pinned to
+   the bottom of the screen lands on whatever happens to be at the bottom of
+   the page. Measured on a 360px phone: 175px tall, over "Drop media here",
+   swallowing every click for twelve seconds; on tools.html, over the heading;
+   and the end-of-trial one never went away at all. It is a notice, so it now
+   behaves like one — transparent to the pointer except for its own close
+   button and link, clamped to three lines (175px became 69px), gone on the
+   first scroll, tap or key, and the end-of-trial one capped at 45 seconds
+   rather than for ever.
+
+   The width sweep reports all clean at all seven sizes for the first time:
+   the two #nctrialbar findings that have been in every run for weeks are the
+   ones that just went.
+
+   nova.js, parent.html. The worker is unchanged — and it is deployed now,
+   so /academy/free, /academy/profile and /parent/email/* answer for real. Set
+   MAIL_KEY and MAIL_FROM and the parent email works. */
 /* v114: the parent's confirmation is a real email, and the break screen has
    a link.
 
@@ -2268,7 +2298,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v114';
+const CACHE = 'novaclip-v115';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

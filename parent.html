@@ -779,16 +779,47 @@ function acct() {
     return { code: localStorage.getItem('nc_code') || '', key: localStorage.getItem('nc_key') || '' };
   } catch (e) { return { code: '', key: '' }; }
 }
+/* WAIT FOR THE ACCOUNT, THEN ASK. nova.js creates one in the background on
+   the first visit, and this page used to ask the worker before that round
+   trip had finished — so on a device that had never been here, the read on
+   load rejected with "no account on this device", the catch below swallowed
+   it, and the parent arrived at a dashboard that said nothing at all. It is
+   the first visit, which is the only visit this screen is for.
+
+   So: give nova.js a moment to finish, and if there is still no account,
+   make one here. That is what academy.js does, for the same reason — nobody
+   signs in to this site, so a page that needs an account has to be willing
+   to produce one. */
+function waitForAccount(ms) {
+  const started = Date.now();
+  return new Promise(function (resolve, reject) {
+    (function tick() {
+      const a = acct();
+      if (a.code && a.key) return resolve(a);
+      if (Date.now() - started > ms) {
+        /* nova.js either failed or is not syncing. Make one, rather than
+           telling a parent to go and visit some other page first. */
+        if (window.ncSyncOn && window.ncSyncOn() && window.ncCreateAccount) {
+          return window.ncCreateAccount().then(function () {
+            const b = acct();
+            if (b.code && b.key) resolve(b);
+            else reject(new Error('Could not set an account up on this device.'));
+          }, reject);
+        }
+        return reject(new Error('This device has no NovaClip account on it yet and the NovaClip ' +
+          'server is not configured, so there is nothing to attach parental controls to.'));
+      }
+      setTimeout(tick, 250);
+    })();
+  });
+}
+
 function mailApi(path, extra) {
-  const a = acct();
-  if (!a.code || !a.key) {
-    return Promise.reject(new Error('This device has no NovaClip account on it yet, so there is ' +
-      'nothing to attach parental controls to. Open any other page on the site once \u2014 it makes ' +
-      'one \u2014 then come back.'));
-  }
   if (!window.ncApi) return Promise.reject(new Error('The NovaClip server is not configured.'));
-  return window.ncApi(path, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(Object.assign({ code: a.code, key: a.key }, extra || {})) });
+  return waitForAccount(4000).then(function (a) {
+    return window.ncApi(path, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({ code: a.code, key: a.key }, extra || {})) });
+  });
 }
 function sayErr(e) {
   const msg = (e && e.message) ? e.message : 'something went wrong';
@@ -861,12 +892,12 @@ window.addEventListener('DOMContentLoaded', () => {
           'and <code>MAIL_FROM</code> and this works.';
       }
     }).catch(function (e) {
-      /* Said on arrival rather than discovered at the button. */
-      if (/404|not found/i.test((e && e.message) || '')) {
-        const box = document.getElementById('pinmsg');
-        box.style.display = 'block';
-        box.innerHTML = sayErr(e);
-      }
+      /* Said on arrival rather than discovered at the button. A dashboard
+         that cannot confirm anybody should say so before a parent types
+         their address into it. */
+      const box = document.getElementById('pinmsg');
+      box.style.display = 'block';
+      box.innerHTML = sayErr(e);
     });
   }
 });

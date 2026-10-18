@@ -9279,18 +9279,34 @@ window.ncSlang = function () {
     const bar = document.createElement('div');
     bar.id = 'nctrialbar';
     bar.setAttribute('role', 'status');
+    /* IT DOES NOT TAKE CLICKS. A bar pinned to the bottom of the screen lands
+       on whatever happens to be at the bottom of the page, and on a 360px
+       phone that was the editor's "Drop media here" zone — measured, with the
+       bar 175px tall and the drop zone underneath it, unclickable for twelve
+       seconds. A status message must never be in the way of the thing it is
+       reporting on, so the bar itself is transparent to the pointer and only
+       its own controls take it back. */
+    const narrow = innerWidth < 420;
     bar.style.cssText =
       'position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:996;' +
-      'max-width:min(680px,calc(100vw - 28px));box-sizing:border-box;' +
-      'display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;' +
-      'font:600 0.86rem/1.35 system-ui,-apple-system,sans-serif;color:#0F172A;' +
+      'max-width:min(680px,calc(100vw - 28px));box-sizing:border-box;pointer-events:none;' +
+      'display:flex;gap:' + (narrow ? '8px' : '12px') + ';align-items:center;' +
+      'padding:' + (narrow ? '9px 11px' : '12px 14px') + ';border-radius:14px;' +
+      'font:600 ' + (narrow ? '0.78rem' : '0.86rem') + '/1.3 system-ui,-apple-system,sans-serif;' +
+      'color:#0F172A;' +
       'background:#fff;border:1px solid ' + (kind === 'end' ? '#FECACA' : '#C7D2FE') + ';' +
       'box-shadow:0 10px 30px rgba(15,23,42,0.16);';
     const dot = document.createElement('span');
     dot.style.cssText = 'flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:' +
       (kind === 'end' ? '#B91C1C' : '#4F46E5') + ';';
     const txt = document.createElement('span');
-    txt.style.cssText = 'flex:1 1 auto';
+    /* Clamped, because this is a notice and not a document. At 360px the
+       sentence wrapped to five lines and the bar became a 175px slab across
+       the bottom fifth of a phone — measured on the editor, where it landed
+       on the drop zone. Three lines is the whole message at any width the
+       site supports, and the clamp is the guard rather than the plan. */
+    txt.style.cssText = 'flex:1 1 auto;min-width:0;display:-webkit-box;-webkit-box-orient:vertical;' +
+      '-webkit-line-clamp:3;overflow:hidden;';
     txt.textContent = msg + (kind !== 'end' && left != null
       ? ' · ' + left + ' ' + tr('tr_days') : '');
     bar.appendChild(dot);
@@ -9300,7 +9316,7 @@ window.ncSlang = function () {
       a.href = 'pricing.html';
       a.textContent = tr('tr_see');
       a.style.cssText = 'flex:0 0 auto;text-decoration:none;color:#fff;background:#4F46E5;' +
-        'padding:7px 12px;border-radius:9px;font-weight:700;';
+        'padding:7px 12px;border-radius:9px;font-weight:700;pointer-events:auto;';
       bar.appendChild(a);
     }
     const x = document.createElement('button');
@@ -9308,11 +9324,32 @@ window.ncSlang = function () {
     x.setAttribute('aria-label', 'Close');
     x.textContent = '×';
     x.style.cssText = 'flex:0 0 auto;border:0;background:transparent;cursor:pointer;' +
-      'font-size:20px;line-height:1;color:#64748B;padding:0 2px;';
+      'font-size:20px;line-height:1;color:#64748B;padding:2px 6px;pointer-events:auto;';
     x.onclick = function () { bar.remove(); };
     bar.appendChild(x);
     document.body.appendChild(bar);
-    if (kind !== 'end') setTimeout(function () { if (bar.isConnected) bar.remove(); }, 12000);
+
+    /* AND IT GETS OUT OF THE WAY THE MOMENT SOMEBODY DOES ANYTHING. Reading
+       the message is what the first seconds are for; after that the person is
+       working, and a notice that outstays its welcome is the thing people
+       remember about a product. Any scroll, tap or key takes it down.
+
+       The 'end' one used to stay until it was dismissed, which on a page where
+       it happened to sit over a heading meant forever. It is still the one
+       with something to say, so it gets much longer than the others — but not
+       the rest of the session. */
+    const gone = function () { if (bar.isConnected) bar.remove(); off(); };
+    const off = function () {
+      ['scroll', 'pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
+        removeEventListener(ev, gone, true);
+      });
+    };
+    setTimeout(function () {
+      ['scroll', 'pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
+        addEventListener(ev, gone, { capture: true, passive: true });
+      });
+    }, 1200);          /* a moment to read it before the first move kills it */
+    setTimeout(gone, kind === 'end' ? 45000 : 12000);
   }
 
   window.ncTrialBoot = function () {
