@@ -610,6 +610,35 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v118: two bugs found by auditing the site rather than by using it.
+
+   THE ACADEMY WAS THE ONE PAGE IN ENGLISH ONLY. Every data-t key on the site
+   was listed and checked against the translation table: 195 keys across 25
+   pages, and the 22 with no entry anywhere were all of them academy.html's.
+   tr() answers '' for a key it does not know and the apply loop treats an
+   empty answer as "nothing to write", so the markup stayed — which means a
+   reader in Portuguese, Arabic or Japanese got the whole Academy in English
+   while the rail and every other page around it turned over. The Academy is
+   also the one page where somebody is deciding whether to spend money. 22
+   keys x 20 languages added, and the page checked at 360px in German and
+   Russian (the long ones) and Arabic, because a translation that overflows
+   its box is a different bug rather than a fix.
+
+   AND EVERY NOVACOIN ON A PAGE SHARED ONE GRADIENT ID. ncCoinMark() wrote
+   id="ncCoinG" into every coin it drew, so two coins on a page — the rail and
+   the shop, the shelf and the price — meant two elements with the same id and
+   a second coin filled from the first one's gradient. Nothing looks wrong
+   today because the two gradients are identical; the day one of them is
+   re-rendered or removed, the other one's fill goes with it. Counted per call
+   now. Found by loading all 36 pages and listing duplicate ids, which is also
+   how it was confirmed gone.
+
+   Everything else the audit looked at came back clean: every local src and
+   href resolves, the precache list matches the disk, nothing throws on load
+   or on pressing some 500 controls across the site, and the deployed bytes
+   still match the repo.
+
+   nova.js. */
 /* v117: the editor on a phone, and three things that were wrong on one.
 
    THE ORDER DOWN THE PAGE WAS THE WHOLE PROBLEM. The editor already had a
@@ -2368,7 +2397,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v117';
+const CACHE = 'novaclip-v118';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
