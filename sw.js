@@ -610,6 +610,49 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v120: the pages the Portuguese pass never reached, and the theme bug under
+   a cyber theme.
+
+   PROFILE.HTML WAS NEVER READ. The three earlier Portuguese passes walked the
+   site signed out, so every page behind an account was invisible to them and
+   "Change password", "Sign out on this device" and the recovery-code note sat
+   in English under a Portuguese top bar — on the one page somebody opens when
+   something has already gone wrong. The sweep seeds an account now.
+
+   AND THE WORD LIST WAS THE WRONG INSTRUMENT. Those passes decided a string
+   was English by looking for an English word in it, which only ever found text
+   that happened to contain one. Rendering each page twice — once in English,
+   once in Portuguese — and collecting every text node, placeholder, title and
+   aria-label byte-identical in both measures it instead: a translated string
+   differs, one with no entry does not. That found 804 more phrases, among them
+   the twelve title and aria-label strings on the top bar of all thirty-five
+   pages, English in all nineteen languages, with no way around them for anyone
+   using a screen reader.
+
+   DROPDOWNS WERE SKIPPED ON PURPOSE AND IT COST TWENTY-ONE LABELS. The phrase
+   walker excluded OPTION, so the security questions, the report reasons and
+   the two analytics sort orders were English everywhere while their
+   translations sat in the table. The exclusion was guarding the language and
+   theme pickers, whose options are names; neither set is a key in either
+   table, checked rather than assumed, so both are passed over anyway.
+
+   A PHRASE WITH A COUNT IN IT CANNOT BE KEYED ON. "0 of 11", "Showing 60 of
+   10,003", "Picked for Gaming", the trial pill and its tooltip: thirteen
+   pattern rules now cover them, and a captured group is looked up in the table
+   before it goes in, so the category comes through translated too.
+
+   HALF BLACK, HALF LIGHT. The snippet in every page's <head> paints a cyber
+   theme's background before the first frame, with an inline style, because at
+   that moment there is no sheet to put it in. Nothing ever cleared it. Switch
+   light to dark with any of the twelve skins on and the palette, the cards,
+   the bar and the text turned over while the page's own background stayed
+   where it was — an inline style beats every sheet. Every page, both
+   directions, every skin, and never without one, which is why it took a skin
+   to reproduce. ncPaintSkin repaints that inline style now, and clears it when
+   the skin is removed.
+
+   nova.js and i18n-ui.js go together — the pattern rules live in the second
+   and are read by the first. */
 /* v119: Portuguese, and two bugs under it that were never about Portuguese.
 
    THE TRANSLATION PASS COULD BE STARVED, AND WAS. nova.js re-runs the pass
@@ -2439,7 +2482,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v119';
+const CACHE = 'novaclip-v120';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

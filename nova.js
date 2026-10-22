@@ -1223,6 +1223,10 @@ function ncPaintSkin(id, theme) {
     if (tag) tag.remove();
     try { localStorage.removeItem(NC_SKIN_KEY); localStorage.removeItem(NC_SKIN_KEY_L); } catch (e) {}
     document.documentElement.removeAttribute('data-skin');
+    /* And the inline background the head snippet painted, or choosing "no
+       theme" leaves the skin's backdrop behind on a page that no longer has a
+       skin. See the note below for why an inline style is involved at all. */
+    document.documentElement.style.background = '';
     return null;
   }
   if (!tag) {
@@ -1273,6 +1277,27 @@ function ncPaintSkin(id, theme) {
     '}';
   try { localStorage.setItem(NC_SKIN_KEY_L, bgL); } catch (e) {}
   document.documentElement.setAttribute('data-skin', skin.id);
+  /* HALF BLACK, HALF LIGHT — AND WHY IT ONLY HAPPENED WITH A CYBER THEME ON.
+
+     The snippet in every page's <head> paints the skin's background before the
+     first frame, and it does it with r.style.background — an inline style,
+     because at that moment there is no stylesheet to put it in. It reads the
+     cache for whichever side the page is loading on.
+
+     An inline style beats every sheet, including the --nc-bg rule below. So
+     when a reader loaded a page in light mode with a skin on and then pressed
+     Dark, the palette, the cards, the bar and the text all turned over and the
+     page's own background did not: it was still the light backdrop painted at
+     load, with nothing able to override it. Reported as "most of the pages get
+     half black half light", which is exactly what it looks like — and it
+     happened on every page, in both directions, with any of the twelve skins,
+     and never without one, which is why it took a skin to reproduce.
+
+     Repainting the inline style here puts it back in step. It stays inline
+     rather than being cleared so the head snippet and this function keep
+     writing the same property, and the first paint after a navigation is still
+     the skin's own background. */
+  document.documentElement.style.background = bg;
   /* Stored so the snippet in each page's <head> can paint the background
      before the first frame. Without it a cyber skin flashes the default dark
      on every navigation. */
@@ -3393,6 +3418,38 @@ function ncLookup(key) {
   return (X && X[key]) || null;
 }
 
+/* A PHRASE WITH A COUNT IN IT CANNOT BE KEYED ON.
+
+   "0 of 11", "Showing 60 of 10,003", "Picked for Gaming", "Right now: Jogos" —
+   the page builds these by gluing a number or a category name onto a label, so
+   the string on screen is one of thousands and no dictionary can hold them
+   all. They were the last English left on four pages after the exact table had
+   grown to 679 phrases.
+
+   i18n-ui.js carries a short list of regular expressions for them instead.
+   Each captured group is run back through the exact table before it is put
+   into the translation, which is what turns "Picked for Gaming" into
+   "Escolhido para Jogos" rather than leaving the category in English. The
+   exact lookup is always tried first, so a sentence that merely starts like a
+   pattern keeps its own full translation. */
+function ncPatternPhrase(key, cur) {
+  const PA = window.NC_PHRASE_PATTERNS;
+  if (!PA) return null;
+  for (let i = 0; i < PA.length; i++) {
+    const m = key.match(PA[i].re);
+    if (!m) continue;
+    const t = PA[i][cur];
+    if (!t) return null;
+    return t.replace(/\$(\d)/g, (s, d) => {
+      const g = m[+d];
+      if (g == null) return s;
+      const inner = ncLookup(g);
+      return (inner && inner[cur]) || g;
+    });
+  }
+  return null;
+}
+
 function ncPhrase() {
   const cur = lang();
   if (cur === 'en') return;
@@ -3400,7 +3457,20 @@ function ncPhrase() {
   let n;
   while ((n = w.nextNode())) {
     const p = n.parentNode;
-    if (!p || p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE' || p.nodeName === 'OPTION') continue;
+    /* OPTION used to be excluded here with the other two, and that is why
+       every dropdown on the site was English in all nineteen languages: the
+       security questions on parent.html, the report reasons on report.html,
+       "Newest first" and "Best first" on both analytics pages, "A full
+       YouTube video" on ai.html. Twenty-one labels sitting in the dictionary,
+       in every language, never looked up.
+
+       It is safe to walk into them because the lookup is exact and whole-node.
+       The language picker's own options are the names of languages and the
+       theme picker's are the names of themes, and neither set is a key in
+       either table — checked, not assumed — so both are passed over untouched,
+       which is what the exclusion was protecting. A dropdown's value attribute
+       is never read here, so the page's own logic is unaffected either way. */
+    if (!p || p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE') continue;
     const raw = n.nodeValue || '';
     /* THE KEY IS THE WORDS, NOT THE WHITESPACE BETWEEN THEM.
 
@@ -3426,10 +3496,11 @@ function ncPhrase() {
        than that is prose, and prose is not translated by lookup. */
     if (!key || key.length > 400) continue;
     const ph = ncLookup(key);
-    if (ph && ph[cur]) {
+    const val = (ph && ph[cur]) || ncPatternPhrase(key, cur);
+    if (val) {
       const lead = (raw.match(/^\s*/) || [''])[0];
       const tail = (raw.match(/\s*$/) || [''])[0];
-      n.nodeValue = lead + ph[cur] + tail;
+      n.nodeValue = lead + val + tail;
     }
   }
   /* A LABEL IS NOT ALWAYS A TEXT NODE.
@@ -3443,7 +3514,14 @@ function ncPhrase() {
       const key = (el.getAttribute(a) || '').trim();
       if (!key || key.length > 120) return;
       const ph = ncLookup(key);
-      if (ph && ph[cur]) el.setAttribute(a, ph[cur]);
+      /* The pattern rules belong here too. The trial pill's tooltip is
+         "NovaClip free trial — 14 days left" and the editor's first track is
+         titled "Timeline 1 — double-click to rename": both count down or up,
+         so both are reachable only by pattern, and leaving the attribute path
+         on exact matches alone left them English while the visible text beside
+         them had already turned over. */
+      const val = (ph && ph[cur]) || ncPatternPhrase(key, cur);
+      if (val) el.setAttribute(a, val);
     });
   }
 }
