@@ -198,7 +198,7 @@ const T = {
   sh_tutorial: { en:"How-to", zh:"教程", hi:"कैसे करें", es:"Tutorial", ar:"شرح خطوة بخطوة", fr:"Tuto", bn:"কীভাবে করবেন", pt:"Tutorial", ru:"Инструкция", ur:"کیسے کریں", id:"Cara melakukan", de:"Anleitung", ja:"ハウツー", tr:"Nasıl yapılır", ko:"하우투", fa:"آموزش گام‌به‌گام", uk:"Інструкція", it:"Tutorial", pl:"Poradnik", vi:"Hướng dẫn" },
   sh_react: { en:"Reaction", zh:"反应视频", hi:"रिएक्शन", es:"Reacción", ar:"ردّ فعل", fr:"Réaction", bn:"রিঅ্যাকশন", pt:"Reação", ru:"Реакция", ur:"ری ایکشن", id:"Reaksi", de:"Reaction", ja:"リアクション", tr:"Tepki", ko:"리액션", fa:"واکنش", uk:"Реакція", it:"Reaction", pl:"Reakcja", vi:"Phản ứng" },
   sh_day: { en:"Day in the life", zh:"一天的生活", hi:"दिन भर की ज़िंदगी", es:"Un día en mi vida", ar:"يوم في حياتي", fr:"Une journée avec moi", bn:"একদিনের জীবন", pt:"Um dia na minha vida", ru:"День из жизни", ur:"ایک دن کی زندگی", id:"Sehari dalam hidupku", de:"Ein Tag im Leben", ja:"一日の密着", tr:"Bir günüm", ko:"브이로그 하루", fa:"یک روز از زندگی", uk:"День із життя", it:"Un giorno della mia vita", pl:"Dzień z życia", vi:"Một ngày của tôi" },
-  sh_story: { en:"Story time", zh:"讲个故事", hi:"स्टोरी टाइम", es:"Story time", ar:"حكاية", fr:"Story time", bn:"গল্প বলা", pt:"Story time", ru:"История", ur:"کہانی", id:"Cerita", de:"Story Time", ja:"ストーリー", tr:"Bir hikâye", ko:"스토리텔링", fa:"قصه‌گویی", uk:"Історія", it:"Story time", pl:"Opowieść", vi:"Kể chuyện" },
+  sh_story: { en:"Story time", zh:"讲个故事", hi:"स्टोरी टाइम", es:"Story time", ar:"حكاية", fr:"Story time", bn:"গল্প বলা", pt:"Hora da história", ru:"История", ur:"کہانی", id:"Cerita", de:"Story Time", ja:"ストーリー", tr:"Bir hikâye", ko:"스토리텔링", fa:"قصه‌گویی", uk:"Історія", it:"Story time", pl:"Opowieść", vi:"Kể chuyện" },
   sh_ba: { en:"Before and after", zh:"前后对比", hi:"पहले और बाद", es:"Antes y después", ar:"قبل وبعد", fr:"Avant / après", bn:"আগে আর পরে", pt:"Antes e depois", ru:"До и после", ur:"پہلے اور بعد", id:"Sebelum dan sesudah", de:"Vorher / nachher", ja:"ビフォーアフター", tr:"Öncesi ve sonrası", ko:"비포 애프터", fa:"قبل و بعد", uk:"До і після", it:"Prima e dopo", pl:"Przed i po", vi:"Trước và sau" },
   sh_challenge: { en:"Challenge", zh:"挑战", hi:"चैलेंज", es:"Reto", ar:"تحدٍّ", fr:"Défi", bn:"চ্যালেঞ্জ", pt:"Desafio", ru:"Челлендж", ur:"چیلنج", id:"Tantangan", de:"Challenge", ja:"チャレンジ", tr:"Meydan okuma", ko:"챌린지", fa:"چالش", uk:"Челендж", it:"Sfida", pl:"Wyzwanie", vi:"Thử thách" },
   sh_tier: { en:"Tier list", zh:"梯度排行", hi:"टियर लिस्ट", es:"Tier list", ar:"قائمة تصنيف", fr:"Tier list", bn:"টিয়ার লিস্ট", pt:"Tier list", ru:"Тир-лист", ur:"ٹیئر لسٹ", id:"Tier list", de:"Tier-Liste", ja:"ティアリスト", tr:"Tier list", ko:"티어 리스트", fa:"فهرست رده‌بندی", uk:"Тір-лист", it:"Tier list", pl:"Tier lista", vi:"Bảng xếp hạng tier" },
@@ -491,7 +491,7 @@ const T = {
   coach1d: { en:"Titles, hooks, growth that actually works", zh:"标题、钩子和真正有效的增长", hi:"टाइटल, हुक और असली ग्रोथ", es:"Títulos, ganchos y crecimiento real", ar:"عناوين وجذب ونمو حقيقي", fr:"Titres, accroches et croissance réelle", bn:"টাইটেল, হুক ও প্রকৃত গ্রোথ", pt:"Títulos, ganchos e crescimento real", ru:"Заголовки, хуки и реальный рост", ur:"ٹائٹل، ہکس اور اصل گروتھ", id:"Judul, hook, dan pertumbuhan nyata", de:"Titel, Hooks und echtes Wachstum", ja:"タイトル・フック・実際に伸びる方法", tr:"Başlıklar, kancalar ve gerçek büyüme", ko:"제목, 후킹, 진짜 성장", fa:"عنوان، قلاب و رشد واقعی", uk:"Заголовки, гачки та реальне зростання", it:"Titoli, hook e crescita reale", pl:"Tytuły, haczyki i realny wzrost", vi:"Tiêu đề, mồi câu và tăng trưởng thật" },
   coach2d: { en:"Turn curiosity into content people watch", zh:"把好奇心变成有人看的内容", hi:"जिज्ञासा को देखने लायक कंटेंट बनाएँ", es:"Convierte la curiosidad en contenido", ar:"حوّل الفضول إلى محتوى يُشاهد", fr:"Transformez la curiosité en contenu", bn:"কৌতূহলকে দর্শনীয় কনটেন্টে বদলান", pt:"Transforme curiosidade em conteúdo", ru:"Преврати любопытство в контент", ur:"تجسس کو دیکھنے لائق مواد بنائیں", id:"Ubah rasa ingin tahu jadi konten", de:"Neugier in sehenswerte Inhalte verwandeln", ja:"好奇心を見られる動画に", tr:"Merakı izlenen içeriğe dönüştür", ko:"호기심을 볼만한 콘텐츠로", fa:"کنجکاوی را به محتوا تبدیل کن", uk:"Перетвори цікавість на контент", it:"Trasforma la curiosità in contenuti", pl:"Zamień ciekawość w treści", vi:"Biến tò mò thành nội dung" },
   coach3d: { en:"Side hustles and smart moves, explained simply", zh:"副业与聪明理财，简单讲解", hi:"साइड हसल और स्मार्ट मूव्स, आसान भाषा में", es:"Ingresos extra explicados simple", ar:"مشاريع جانبية بشرح بسيط", fr:"Revenus complémentaires expliqués simplement", bn:"সাইড হাসল ও স্মার্ট মুভ, সহজ ভাষায়", pt:"Rendas extra explicadas de forma simples", ru:"Подработки и умные шаги, просто", ur:"سائیڈ ہسل اور سمارٹ اقدامات، آسان", id:"Sampingan dan langkah cerdas, sederhana", de:"Nebenverdienste einfach erklärt", ja:"副業とお金の知恵をわかりやすく", tr:"Ek gelir ve akıllı adımlar, basitçe", ko:"부업과 현명한 선택, 쉽게", fa:"کسب درآمد جانبی، ساده", uk:"Підробітки та розумні кроки, просто", it:"Entrate extra spiegate semplicemente", pl:"Dodatkowe dochody, prosto", vi:"Nghề tay trái, giải thích đơn giản" },
-  vs_you: { en:"YOU", zh:"你", hi:"आप", es:"TÚ", ar:"أنت", fr:"VOUS", bn:"আপনি", pt:"VOCÊ", ru:"ТЫ", ur:"آپ", id:"ANDA", de:"DU", ja:"あなた", tr:"SEN", ko:"당신", fa:"شما", uk:"ТИ", it:"TU", pl:"TY", vi:"BẠN" },
+  vs_you: { en:"YOU", zh:"你", hi:"आप", es:"TÚ", ar:"أنت", fr:"VOUS", bn:"আপনি", pt:"TU", ru:"ТЫ", ur:"آپ", id:"ANDA", de:"DU", ja:"あなた", tr:"SEN", ko:"당신", fa:"شما", uk:"ТИ", it:"TU", pl:"TY", vi:"BẠN" },
   vs_rival: { en:"RIVAL", zh:"对手", hi:"प्रतिद्वंद्वी", es:"RIVAL", ar:"منافس", fr:"RIVAL", bn:"প্রতিদ্বন্দ্বী", pt:"RIVAL", ru:"СОПЕРНИК", ur:"حریف", id:"SAINGAN", de:"RIVALE", ja:"ライバル", tr:"RAKİP", ko:"라이벌", fa:"رقیب", uk:"СУПЕРНИК", it:"RIVALE", pl:"RYWAL", vi:"ĐỐI THỦ" },
   e_media: { en:"Media", zh:"媒体", hi:"मीडिया", es:"Medios", ar:"الوسائط", fr:"Médias", bn:"মিডিয়া", pt:"Média", ru:"Медиа", ur:"میڈیا", id:"Media", de:"Medien", ja:"メディア", tr:"Medya", ko:"미디어", fa:"رسانه", uk:"Медіа", it:"Media", pl:"Media", vi:"Phương tiện" },
   e_effects: { en:"Effects", zh:"特效", hi:"प्रभाव", es:"Efectos", ar:"التأثيرات", fr:"Effets", bn:"ইফেক্ট", pt:"Efeitos", ru:"Эффекты", ur:"ایفیکٹس", id:"Efek", de:"Effekte", ja:"エフェクト", tr:"Efektler", ko:"효과", fa:"جلوه‌ها", uk:"Ефекти", it:"Effetti", pl:"Efekty", vi:"Hiệu ứng" },
@@ -617,7 +617,7 @@ const T = {
   categories: { en:"Categories", zh:"分类", hi:"श्रेणियाँ", es:"Categorías", ar:"الفئات", fr:"Catégories", bn:"বিভাগ", pt:"Categorias", ru:"Категории", ur:"زمرے", id:"Kategori", de:"Kategorien", ja:"カテゴリ", tr:"Kategoriler", ko:"카테고리", fa:"دسته‌ها", uk:"Категорії", it:"Categorie", pl:"Kategorie", vi:"Danh mục" },
   history: { en:"History", zh:"历史", hi:"इतिहास", es:"Historial", ar:"السجل", fr:"Historique", bn:"ইতিহাস", pt:"Histórico", ru:"История", ur:"تاریخ", id:"Riwayat", de:"Verlauf", ja:"履歴", tr:"Geçmiş", ko:"기록", fa:"تاریخچه", uk:"Історія", it:"Cronologia", pl:"Historia", vi:"Lịch sử" },
   ask: { en:"Ask", zh:"提问", hi:"पूछें", es:"Preguntar", ar:"اسأل", fr:"Demander", bn:"জিজ্ঞাসা", pt:"Perguntar", ru:"Спросить", ur:"پوچھیں", id:"Tanya", de:"Fragen", ja:"質問", tr:"Sor", ko:"질문", fa:"بپرس", uk:"Запитати", it:"Chiedi", pl:"Zapytaj", vi:"Hỏi" },
-  thumb: { en:"Thumbnail", zh:"缩略图", hi:"थंबनेल", es:"Miniatura", ar:"صورة مصغرة", fr:"Miniature", bn:"থাম্বনেইল", pt:"Thumbnail", ru:"Превью", ur:"تھمب نیل", id:"Thumbnail", de:"Thumbnail", ja:"サムネイル", tr:"Küçük resim", ko:"썸네일", fa:"تصویر بندانگشتی", uk:"Прев’ю", it:"Miniatura", pl:"Miniatura", vi:"Ảnh thu nhỏ" },
+  thumb: { en:"Thumbnail", zh:"缩略图", hi:"थंबनेल", es:"Miniatura", ar:"صورة مصغرة", fr:"Miniature", bn:"থাম্বনেইল", pt:"Miniatura", ru:"Превью", ur:"تھمب نیل", id:"Thumbnail", de:"Thumbnail", ja:"サムネイル", tr:"Küçük resim", ko:"썸네일", fa:"تصویر بندانگشتی", uk:"Прев’ю", it:"Miniatura", pl:"Miniatura", vi:"Ảnh thu nhỏ" },
   coach: { en:"Coach", zh:"教练", hi:"कोच", es:"Entrenador", ar:"مدرب", fr:"Coach", bn:"কোচ", pt:"Treinador", ru:"Наставник", ur:"کوچ", id:"Pelatih", de:"Coach", ja:"コーチ", tr:"Koç", ko:"코치", fa:"مربی", uk:"Тренер", it:"Coach", pl:"Trener", vi:"Huấn luyện" },
   director: { en:"Video director", zh:"视频导演", hi:"वीडियो निर्देशक", es:"Director de vídeo", ar:"مخرج الفيديو", fr:"Réalisateur vidéo", bn:"ভিডিও পরিচালক", pt:"Diretor de vídeo", ru:"Видеорежиссёр", ur:"ویڈیو ڈائریکٹر", id:"Sutradara video", de:"Video-Regisseur", ja:"ビデオディレクター", tr:"Video yönetmeni", ko:"영상 감독", fa:"کارگردان ویدیو", uk:"Відеорежисер", it:"Regista video", pl:"Reżyser wideo", vi:"Đạo diễn video" },
   clips: { en:"Clip finder", zh:"片段查找", hi:"क्लिप फाइंडर", es:"Buscador de clips", ar:"البحث عن المقاطع", fr:"Recherche de clips", bn:"ক্লিপ ফাইন্ডার", pt:"Localizador de clips", ru:"Поиск клипов", ur:"کلپ فائنڈر", id:"Pencari klip", de:"Clip-Finder", ja:"クリップ検索", tr:"Kesit bulucu", ko:"클립 찾기", fa:"یابنده کلیپ", uk:"Пошук кліпів", it:"Trova clip", pl:"Wyszukiwarka klipów", vi:"Tìm clip" },
@@ -1019,12 +1019,29 @@ function applyLang(code) {
    stay in English. A cheap observer re-runs the translation pass whenever the
    DOM grows — debounced so React's mount burst is one sweep, not hundreds. */
 let __ncTransTimer = null;
+let __ncTransFirst = 0;
 function ncWatchLang() {
   if (window.__ncLangWatch) return;
   window.__ncLangWatch = true;
   const mo = new MutationObserver(() => {
+    /* A PLAIN DEBOUNCE STARVES ON A PAGE THAT NEVER STOPS MOVING.
+       Every mutation cleared the timer and set a new one 120ms out, so a page
+       whose DOM changes more often than that — a game writing a score, a
+       counter ticking, anything animated — pushed the translation pass ahead
+       of itself forever and it never ran once. Measured: adding a node whose
+       exact text is in the dictionary got it translated on aim.html, where
+       the game is all canvas, and left in English on flap.html and
+       index.html, where something in the page moves constantly. Both had the
+       observer installed and the phrase in the table; the pass simply never
+       arrived, in every language at once.
+       So the debounce keeps its 120ms for the quiet case, and gives up
+       waiting after 600ms of continuous movement. */
+    const now = Date.now();
+    if (!__ncTransFirst) __ncTransFirst = now;
+    const run = () => { __ncTransFirst = 0; applyLangText(); };
     clearTimeout(__ncTransTimer);
-    __ncTransTimer = setTimeout(applyLangText, 120);
+    if (now - __ncTransFirst >= 600) run();
+    else __ncTransTimer = setTimeout(run, 120);
   });
   mo.observe(document.body, { childList: true, subtree: true });
 }
@@ -3337,7 +3354,7 @@ function ncEnsureLangPick() {
    any visible label that matches a phrase below. It's cheap and idempotent,
    and the MutationObserver re-runs it when React re-renders. */
 const P = {
-  Media: { en:"Media", zh:"媒体", hi:"मीडिया", es:"Medios", ar:"وسائط", fr:"Médias", bn:"মিডিয়া", pt:"Mídia", ru:"Медиа", ur:"میڈیا", id:"Media", de:"Medien", ja:"メディア", tr:"Medya", ko:"미디어", fa:"رسانه", uk:"Медіа", it:"Media", pl:"Media", vi:"Phương tiện" },
+  Media: { en:"Media", zh:"媒体", hi:"मीडिया", es:"Medios", ar:"وسائط", fr:"Médias", bn:"মিডিয়া", pt:"Multimédia", ru:"Медиа", ur:"میڈیا", id:"Media", de:"Medien", ja:"メディア", tr:"Medya", ko:"미디어", fa:"رسانه", uk:"Медіа", it:"Media", pl:"Media", vi:"Phương tiện" },
   Text: { en:"Text", zh:"文字", hi:"टेक्स्ट", es:"Texto", ar:"نص", fr:"Texte", bn:"টেক্সট", pt:"Texto", ru:"Текст", ur:"ٹیکسٹ", id:"Teks", de:"Text", ja:"テキスト", tr:"Metin", ko:"텍스트", fa:"متن", uk:"Текст", it:"Testo", pl:"Tekst", vi:"Chữ" },
   Transitions: { en:"Transitions", zh:"转场", hi:"ट्रांज़िशन", es:"Transiciones", ar:"انتقالات", fr:"Transitions", bn:"ট্রানজিশন", pt:"Transições", ru:"Переходы", ur:"ٹرانزیشنز", id:"Transisi", de:"Übergänge", ja:"トランジション", tr:"Geçişler", ko:"전환", fa:"انتقال‌ها", uk:"Переходи", it:"Transizioni", pl:"Przejścia", vi:"Chuyển cảnh" },
   Effects: { en:"Effects", zh:"特效", hi:"इफ़ेक्ट", es:"Efectos", ar:"مؤثرات", fr:"Effets", bn:"ইফেক্ট", pt:"Efeitos", ru:"Эффекты", ur:"افیکٹس", id:"Efek", de:"Effekte", ja:"エフェクト", tr:"Efektler", ko:"효과", fa:"افکت‌ها", uk:"Ефекти", it:"Effetti", pl:"Efekty", vi:"Hiệu ứng" },
@@ -3351,13 +3368,13 @@ const P = {
   Trends: { en:"Trends", zh:"趋势", hi:"ट्रेंड्स", es:"Tendencias", ar:"اتجاهات", fr:"Tendances", bn:"ট্রেন্ড", pt:"Tendências", ru:"Тренды", ur:"ٹرینڈز", id:"Tren", de:"Trends", ja:"トレンド", tr:"Trendler", ko:"트렌드", fa:"ترندها", uk:"Тренди", it:"Tendenze", pl:"Trendy", vi:"Xu hướng" },
   Export: { en:"Export", zh:"导出", hi:"एक्सपोर्ट", es:"Exportar", ar:"تصدير", fr:"Exporter", bn:"এক্সপোর্ট", pt:"Exportar", ru:"Экспорт", ur:"ایکسپورٹ", id:"Ekspor", de:"Exportieren", ja:"書き出し", tr:"Dışa aktar", ko:"내보내기", fa:"خروجی", uk:"Експорт", it:"Esporta", pl:"Eksport", vi:"Xuất" },
   Preview: { en:"Preview", zh:"预览", hi:"प्रीव्यू", es:"Vista previa", ar:"معاينة", fr:"Aperçu", bn:"প্রিভিউ", pt:"Pré-visualização", ru:"Предпросмотр", ur:"پیش منظر", id:"Pratinjau", de:"Vorschau", ja:"プレビュー", tr:"Önizleme", ko:"미리보기", fa:"پیش‌نمایش", uk:"Попередній перегляд", it:"Anteprima", pl:"Podgląd", vi:"Xem trước" },
-  Save: { en:"Save", zh:"保存", hi:"सेव", es:"Guardar", ar:"حفظ", fr:"Enregistrer", bn:"সেভ", pt:"Salvar", ru:"Сохранить", ur:"سیو", id:"Simpan", de:"Speichern", ja:"保存", tr:"Kaydet", ko:"저장", fa:"ذخیره", uk:"Зберегти", it:"Salva", pl:"Zapisz", vi:"Lưu" },
+  Save: { en:"Save", zh:"保存", hi:"सेव", es:"Guardar", ar:"حفظ", fr:"Enregistrer", bn:"সেভ", pt:"Guardar", ru:"Сохранить", ur:"سیو", id:"Simpan", de:"Speichern", ja:"保存", tr:"Kaydet", ko:"저장", fa:"ذخیره", uk:"Зберегти", it:"Salva", pl:"Zapisz", vi:"Lưu" },
   Publish: { en:"Publish", zh:"发布", hi:"पब्लिश", es:"Publicar", ar:"نشر", fr:"Publier", bn:"পাবলিশ", pt:"Publicar", ru:"Опубликовать", ur:"پبلش", id:"Terbitkan", de:"Veröffentlichen", ja:"公開", tr:"Yayınla", ko:"게시", fa:"انتشار", uk:"Опублікувати", it:"Pubblica", pl:"Opublikuj", vi:"Xuất bản" },
   Undo: { en:"Undo", zh:"撤销", hi:"अनडू", es:"Deshacer", ar:"تراجع", fr:"Annuler", bn:"আনডু", pt:"Desfazer", ru:"Отменить", ur:"انڈو", id:"Urungkan", de:"Rückgängig", ja:"元に戻す", tr:"Geri al", ko:"실행 취소", fa:"بازگردانی", uk:"Скасувати", it:"Annulla", pl:"Cofnij", vi:"Hoàn tác" },
   Redo: { en:"Redo", zh:"重做", hi:"रीडू", es:"Rehacer", ar:"إعادة", fr:"Rétablir", bn:"রিডু", pt:"Refazer", ru:"Повторить", ur:"ریڈو", id:"Ulangi", de:"Wiederholen", ja:"やり直す", tr:"Yinele", ko:"다시 실행", fa:"انجام دوباره", uk:"Повторити", it:"Ripeti", pl:"Ponów", vi:"Làm lại" },
   Duplicate: { en:"Duplicate", zh:"复制", hi:"डुप्लीकेट", es:"Duplicar", ar:"تكرار", fr:"Dupliquer", bn:"ডুপ্লিকেট", pt:"Duplicar", ru:"Дублировать", ur:"ڈپلیکیٹ", id:"Gandakan", de:"Duplizieren", ja:"複製", tr:"Çoğalt", ko:"복제", fa:"تکراری‌سازی", uk:"Дублювати", it:"Duplica", pl:"Duplikuj", vi:"Nhân bản" },
   Delete: { en:"Delete", zh:"删除", hi:"डिलीट", es:"Eliminar", ar:"حذف", fr:"Supprimer", bn:"ডিলিট", pt:"Excluir", ru:"Удалить", ur:"ڈیلیٹ", id:"Hapus", de:"Löschen", ja:"削除", tr:"Sil", ko:"삭제", fa:"حذف", uk:"Видалити", it:"Elimina", pl:"Usuń", vi:"Xoá" },
-  Download: { en:"Download", zh:"下载", hi:"डाउनलोड", es:"Descargar", ar:"تنزيل", fr:"Télécharger", bn:"ডাউনলোড", pt:"Baixar", ru:"Скачать", ur:"ڈاؤن لوڈ", id:"Unduh", de:"Herunterladen", ja:"ダウンロード", tr:"İndir", ko:"다운로드", fa:"دانلود", uk:"Завантажити", it:"Scarica", pl:"Pobierz", vi:"Tải xuống" },
+  Download: { en:"Download", zh:"下载", hi:"डाउनलोड", es:"Descargar", ar:"تنزيل", fr:"Télécharger", bn:"ডাউনলোড", pt:"Transferir", ru:"Скачать", ur:"ڈاؤن لوڈ", id:"Unduh", de:"Herunterladen", ja:"ダウンロード", tr:"İndir", ko:"다운로드", fa:"دانلود", uk:"Завантажити", it:"Scarica", pl:"Pobierz", vi:"Tải xuống" },
   Add: { en:"Add", zh:"添加", hi:"जोड़ें", es:"Añadir", ar:"إضافة", fr:"Ajouter", bn:"যোগ", pt:"Adicionar", ru:"Добавить", ur:"شامل کریں", id:"Tambah", de:"Hinzufügen", ja:"追加", tr:"Ekle", ko:"추가", fa:"افزودن", uk:"Додати", it:"Aggiungi", pl:"Dodaj", vi:"Thêm" },
   Settings: { en:"Settings", zh:"设置", hi:"सेटिंग्स", es:"Ajustes", ar:"الإعدادات", fr:"Paramètres", bn:"সেটিংস", pt:"Definições", ru:"Настройки", ur:"سیٹنگز", id:"Pengaturan", de:"Einstellungen", ja:"設定", tr:"Ayarlar", ko:"설정", fa:"تنظیمات", uk:"Налаштування", it:"Impostazioni", pl:"Ustawienia", vi:"Cài đặt" },
   "Project Name": { en:"Project Name", zh:"项目名称", hi:"प्रोजेक्ट नाम", es:"Nombre del proyecto", ar:"اسم المشروع", fr:"Nom du projet", bn:"প্রজেক্টের নাম", pt:"Nome do projeto", ru:"Название проекта", ur:"پروجیکٹ کا نام", id:"Nama proyek", de:"Projektname", ja:"プロジェクト名", tr:"Proje adı", ko:"프로젝트 이름", fa:"نام پروژه", uk:"Назва проєкту", it:"Nome del progetto", pl:"Nazwa projektu", vi:"Tên dự án" },
@@ -3385,13 +3402,35 @@ function ncPhrase() {
     const p = n.parentNode;
     if (!p || p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE' || p.nodeName === 'OPTION') continue;
     const raw = n.nodeValue || '';
-    const key = raw.trim();
-    /* 44 was too short for anything but a button. The longest phrase in
-       i18n-ui.js is 46 characters and several sit in the forties, so they were
-       all being skipped before they were ever looked up. */
-    if (!key || key.length > 120) continue;
+    /* THE KEY IS THE WORDS, NOT THE WHITESPACE BETWEEN THEM.
+
+       A paragraph written across three lines of HTML arrives here as one
+       text node with the newlines and the indentation still in it, so
+       raw.trim() produced "…for one friend — a note,\n       a doodle…"
+       and matched nothing: the phrase was in the dictionary, in all twenty
+       languages, and was never found. Measured on the Portuguese pass, forty
+       lines across fourteen pages failed this way, and they failed in every
+       other language too — which is why pages could look half-translated
+       with nothing missing from the file.
+
+       Collapsing runs of whitespace to single spaces is what the dictionary
+       is keyed on, and the leading and trailing whitespace is put back
+       around the translation so the page's own spacing is untouched. */
+    const key = raw.trim().replace(/\s+/g, ' ');
+    /* 44 was too short for anything but a button, and 120 was too short for
+       a sentence. The phrase layer now carries whole lines of page copy —
+       the longest is 314 characters — and at 120 the twenty-nine longest of
+       them were skipped before they were ever looked up, which is why a page
+       could look half-translated with every line sitting in the dictionary.
+       400 covers every phrase in the file with room left; a text node longer
+       than that is prose, and prose is not translated by lookup. */
+    if (!key || key.length > 400) continue;
     const ph = ncLookup(key);
-    if (ph && ph[cur]) n.nodeValue = raw.replace(key, ph[cur]);
+    if (ph && ph[cur]) {
+      const lead = (raw.match(/^\s*/) || [''])[0];
+      const tail = (raw.match(/\s*$/) || [''])[0];
+      n.nodeValue = lead + ph[cur] + tail;
+    }
   }
   /* A LABEL IS NOT ALWAYS A TEXT NODE.
      "Search media…", "Type a channel name…" and the rest live in a placeholder

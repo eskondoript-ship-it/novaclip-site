@@ -610,6 +610,48 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v119: Portuguese, and two bugs under it that were never about Portuguese.
+
+   THE TRANSLATION PASS COULD BE STARVED, AND WAS. nova.js re-runs the pass
+   when the DOM grows, debounced 120ms so a React mount is one sweep. A plain
+   debounce has no ceiling: a page whose DOM changes more often than every
+   120ms — a game writing a score, a counter, anything animated — pushed the
+   pass ahead of itself forever and it never ran once. Measured by adding a
+   node whose exact text is in the dictionary: translated on aim.html, where
+   the game is all canvas; left in English on flap.html and index.html, where
+   something always moves. Both had the observer and the phrase. It now gives
+   up waiting after 600ms of continuous movement, which fixed it in all
+   twenty languages at once.
+
+   A PARAGRAPH WRITTEN ACROSS THREE LINES OF HTML COULD NEVER MATCH. The
+   phrase layer keys on the text node, and a node carries the newlines and
+   the indentation of the source. raw.trim() left those inside the key, so a
+   line of copy wrapped in the markup looked up nothing — in every language.
+   Forty lines across fourteen pages failed this way. The key is the words
+   now, whitespace collapsed, with the node's own leading and trailing space
+   put back around the translation.
+
+   AND THE CAP WAS 120 CHARACTERS. The phrase layer carries whole lines of
+   page copy now; the longest is 314. Twenty-nine phrases sat in the file and
+   were skipped before they were ever looked up. 400 covers them.
+
+   PORTUGUESE ITSELF. Walking all 34 pages with the site set to pt and reading
+   every text node the walker reads: 159 lines of English at the start, 0 at
+   the end, outside the legal prose on terms.html and privacy.html that
+   i18n-ui.js deliberately leaves to a translator. 214 phrases added, European
+   Portuguese throughout — ficheiro not arquivo, ecrã not tela, guardar not
+   salvar, transferir not baixar. Each row carries its nineteen slots with one
+   filled; nova.js reads an empty slot as "nothing to say", so the other
+   eighteen languages are exactly where they were and the rows are ready for
+   them. Three Brazilian forms in nova.js's own tables went too (Mídia,
+   Salvar, Baixar), with two strings nobody had translated at all.
+
+   offline.html translates itself now, in a dozen lines at the bottom of the
+   page: it loads no scripts on purpose, so it was the one page that could not
+   be reached by any of the above — English at the one moment the site has
+   already failed somebody once.
+
+   nova.js, i18n-ui.js, offline.html. */
 /* v118: two bugs found by auditing the site rather than by using it.
 
    THE ACADEMY WAS THE ONE PAGE IN ENGLISH ONLY. Every data-t key on the site
@@ -2397,7 +2439,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v118';
+const CACHE = 'novaclip-v119';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

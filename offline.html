@@ -73,5 +73,44 @@
          even from here. -->
     <p class='out'><a href='/index.html'>Go to the home page</a></p>
   </div>
+  <!-- ======================================================================
+       THIS PAGE TRANSLATES ITSELF, BECAUSE NOTHING ELSE CAN
+
+       Every other page gets its language from nova.js and the phrase layer in
+       i18n-ui.js. This one deliberately loads no scripts at all — it is the
+       page shown when the network is gone, and the fewer things it depends on
+       the better. The cost of that was four lines of English shown to a reader
+       in any of the other nineteen languages, at the one moment the site has
+       already failed them once.
+
+       So the four strings live here, keyed by the same nc_lang value nova.js
+       writes. Portuguese is filled in; the other eighteen are not, and the
+       lookup leaves anything it has no entry for exactly as the markup has it,
+       so adding a language later is adding a line.
+       ====================================================================== -->
+  <script>
+  (function () {
+    var S = {
+      pt: ['Estás offline',
+           'O NovaClip não conseguiu chegar à rede, por isso esta página não foi carregada.',
+           'As páginas que já abriste continuam a funcionar. O que estavas a fazer fica guardado neste aparelho e estará lá quando voltares.',
+           'Tentar outra vez',
+           'Ir para a página inicial']
+    };
+    var lang = '';
+    try { lang = localStorage.getItem('nc_lang') || ''; } catch (e) {}
+    var t = S[lang];
+    if (!t) return;
+    var el = [
+      document.querySelector('h1'),
+      document.querySelectorAll('p')[0],
+      document.querySelectorAll('p')[1],
+      document.querySelector('button'),
+      document.querySelector('.out a')
+    ];
+    for (var i = 0; i < el.length; i++) if (el[i] && t[i]) el[i].textContent = t[i];
+    document.documentElement.lang = lang;
+  }());
+  </script>
 </body>
 </html>
