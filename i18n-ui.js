@@ -1234,7 +1234,26 @@
     "♪ Beats": ["", "", "", "", "", "", "♪ Batidas", "", "", "", "", "", "", "", "", "", "", "", ""],
     "✦ Stickers": ["", "", "", "", "", "", "✦ Autocolantes", "", "", "", "", "", "", "", "", "", "", "", ""],
     "⤢ Reframe": ["", "", "", "", "", "", "⤢ Reenquadrar", "", "", "", "", "", "", "", "", "", "", "", ""],
-    "🕘 Recent scans": ["", "", "", "", "", "", "🕘 Análises recentes", "", "", "", "", "", "", "", "", "", "", "", ""]
+    "🕘 Recent scans": ["", "", "", "", "", "", "🕘 Análises recentes", "", "", "", "", "", "", "", "", "", "", "", ""],
+
+    /* ---- the Family Dashboard setup, rebuilt into three visible steps --- */
+    "Confirm it's you": ["", "", "", "", "", "", "Confirma que és tu", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "About you": ["", "", "", "", "", "", "Sobre ti", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Set a PIN": ["", "", "", "", "", "", "Define um PIN", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Your email address": ["", "", "", "", "", "", "O teu endereço de email", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "The code goes here, and alerts about your child's account go here later. Nothing else is sent to it.": ["", "", "", "", "", "", "O código vai para aqui, e os alertas sobre a conta do teu filho também vêm para aqui mais tarde. Mais nada é enviado para este endereço.", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Confirmation code": ["", "", "", "", "", "", "Código de confirmação", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Your name": ["", "", "", "", "", "", "O teu nome", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "You are their": ["", "", "", "", "", "", "És o/a", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Parent": ["", "", "", "", "", "", "Pai ou mãe", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Guardian": ["", "", "", "", "", "", "Tutor", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Carer": ["", "", "", "", "", "", "Cuidador", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Someone else responsible": ["", "", "", "", "", "", "Outra pessoa responsável", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Security question": ["", "", "", "", "", "", "Pergunta de segurança", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "This is how you get back in if you forget the PIN. Nobody can reset it for you — there is no account behind this page.": ["", "", "", "", "", "", "É assim que voltas a entrar se te esqueceres do PIN. Ninguém to pode repor — não há conta nenhuma por trás desta página.", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "The PIN, your name and your answer stay on this device. They are not sent anywhere, and NovaClip cannot read them.": ["", "", "", "", "", "", "O PIN, o teu nome e a tua resposta ficam neste aparelho. Não são enviados para lado nenhum, e o NovaClip não os consegue ler.", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "e.g. Maria Silva": ["", "", "", "", "", "", "ex.: Maria Silva", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Please put your name in — the dashboard uses it, and the alerts are addressed to it.": ["", "", "", "", "", "", "Põe aqui o teu nome — o painel usa-o, e é a ele que os alertas são endereçados.", "", "", "", "", "", "", "", "", "", "", "", ""]
   };
 
   /* ------------------------------------------------------------------

@@ -116,6 +116,85 @@ input[type=password], input[type=text], input[type=email] { padding: 14px; borde
 .ok { color: var(--nc-lime,#B6FF3C); }
 .notice { border-left: 3px solid var(--nc-cyan,#00F0FF); padding: 10px 14px; background: rgba(0,240,255,0.05); font-size: 0.85rem; color: var(--nc-dim,#b8bccb); border-radius: 0 10px 10px 0; margin-top: 10px; line-height: 1.6; }
 
+/* ===========================================================================
+   THE WAY IN
+   ===========================================================================
+   The gate was one flat card with six fields stacked in it, left-aligned in a
+   1000px column, so the first thing a parent saw was a wide grey slab and a
+   wall of inputs — on a site whose other pages are centred, spaced and lit.
+   It read as a form to get past rather than as the front door of the thing
+   they came for.
+
+   So: centred and narrowed to the width of the thing being read, a badge at
+   the top so there is something to look at before there is something to type,
+   and the three stages the flow already had made visible instead of implied.
+   The stages were always there — email, then PIN and details, then in — they
+   were simply never drawn, so each one arrived as a surprise.
+   ========================================================================= */
+.gatewrap { max-width: 560px; margin: 0 auto 28px; }
+.card.gate { padding: 34px 32px 30px; text-align: center; }
+
+/* The badge. Same shield the dashboard header uses, so the page that asks for
+   the PIN and the page behind it are visibly the same place. */
+.gatemark { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 20px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--nc-cyan,#00F0FF), var(--nc-violet2,#7209B7));
+  box-shadow: 0 10px 34px rgba(0,240,255,.22); }
+.gatemark svg { width: 30px; height: 30px; color: #04121a; }
+.card.gate h3 { font-size: 1.5rem; margin-bottom: 6px; }
+.card.gate h3 small { font-size: .95rem; margin-top: 8px; }
+
+/* Three pips. The current one is lit, the done ones are filled, and the rest
+   wait — the same shape as the flow, so "what happens after this" is answered
+   before it is asked. */
+.gsteps { display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 18px 0 22px; }
+.gstep { display: flex; align-items: center; gap: 7px; font-size: .78rem; font-weight: 700;
+  color: var(--nc-dim,#7E8AA6); letter-spacing: .01em; }
+.gstep i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  font-style: normal; font-size: .72rem; border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.05); }
+.gstep.on { color: var(--nc-text,#EAF2FF); }
+.gstep.on i { background: linear-gradient(135deg,var(--nc-cyan,#00F0FF),var(--nc-blue,#4CC9F0));
+  color: #04121a; border-color: transparent; }
+.gstep.done i { background: rgba(0,240,255,.16); color: var(--nc-cyan,#00F0FF);
+  border-color: rgba(0,240,255,.35); }
+.gsep { width: 16px; height: 1px; background: rgba(255,255,255,.16); }
+
+/* A label above its field, left-aligned inside a centred card, because a
+   placeholder is not a label: it leaves as soon as somebody types and takes
+   the only description of the field with it. */
+.field { text-align: left; margin-bottom: 14px; }
+.field > label { display: block; font-size: .82rem; font-weight: 700; letter-spacing: .02em;
+  color: var(--nc-dim,#7E8AA6); margin: 0 0 6px 2px; text-transform: uppercase; }
+.field input, .field select { margin-bottom: 0; }
+.field .hint { display: block; font-size: .78rem; color: var(--nc-dim,#7E8AA6);
+  margin: 6px 0 0 2px; line-height: 1.5; }
+.frow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .frow { grid-template-columns: 1fr; gap: 0; } }
+
+/* The security question's colours were typed inline — background:#0A0C14,
+   color:#EAF2FF. Checked before claiming that broke light mode, and it did
+   not: nova.js styles every select on the site from --nc-sel-bg with
+   !important, and measured it comes out white on a light page and dark on a
+   dark one either way. So the inline pair was dead code that merely looked
+   like a bug, and it is gone because two places describing one control is how
+   a real one starts. What is below is layout; nova.js keeps the colours.
+
+   The light-mode line for inputs underneath is NOT redundant: nova.js's rule
+   covers select and not input, and the base input background here is
+   rgba(255,255,255,.05), which on a near-white card is nothing at all. */
+.card.gate select, select.ncsel {
+  width: 100%; padding: 14px; border-radius: 10px; font-size: 1rem;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.05); color: var(--nc-text,#EAF2FF); }
+html[data-theme="light"] .card.gate select,
+html[data-theme="light"] select.ncsel,
+html[data-theme="light"] .card.gate input { background: rgba(10,12,20,.04); border-color: rgba(10,12,20,.16); }
+.card.gate .btn { width: 100%; margin-top: 4px; }
+.card.gate .btn + .btn { margin-top: 10px; }
+.gfoot { margin-top: 16px; font-size: .8rem; color: var(--nc-dim,#7E8AA6); line-height: 1.6; }
+
 /* ---- screen time ---- */
 .sttop { display: flex; flex-wrap: wrap; gap: 30px; margin: 4px 0 20px; }
 .stbig b { display: block; font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em;
@@ -389,49 +468,115 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
   <p class='sub' data-t='par_sub'>Parental controls for NovaClip. See what your kid is working on, get alerts if harassment shows up in their YouTube comments, and keep ads away from them — ads and offers only ever appear here, on the parent side, never in the kid's tools.</p>
 
   <!-- PIN GATE -->
-  <div class='card' id='gate'>
+  <div class='gatewrap'>
+  <div class='card gate' id='gate'>
+    <div class='gatemark' aria-hidden='true'>
+      <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'
+           stroke-linecap='round' stroke-linejoin='round'>
+        <path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/>
+      </svg>
+    </div>
     <h3><span data-t='par_access'>Parent access</span> <small data-t='par_access_s'>First time: set a 5-digit PIN and a security question. You'll need the PIN every visit; the question recovers access if you forget it. The kid's pages never show this dashboard.</small></h3>
+
+    <!-- The three stages the flow always had, drawn. gstep() in the script
+         below lights the right one; nothing here decides anything. -->
+    <div class='gsteps' id='gsteps' aria-hidden='true'>
+      <span class='gstep on' data-step='1'><i>1</i><span data-t='par_step1'>Confirm it's you</span></span>
+      <span class='gsep'></span>
+      <span class='gstep' data-step='2'><i>2</i><span data-t='par_step2'>About you</span></span>
+      <span class='gsep'></span>
+      <span class='gstep' data-step='3'><i>3</i><span data-t='par_step3'>Set a PIN</span></span>
+    </div>
+
     <div id='setupfields'>
       <div id='setuponly'>
-        <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06); margin-bottom:14px;'><b data-t='par_only'>Parents only.</b> <span data-t='par_setup_note'>This one-time setup confirms it's really you — not your child — before parental controls are created.</span></div>
-        <input type='email' id='parentSetupEmail' placeholder='Parent email address'>
-        <button class='btn' id='sendcodebtn' style='margin-bottom:12px;' data-t='par_sendcode'>Send confirmation code</button>
-        <div id='codebox' style='display:none;'>
-          <input type='text' id='confcode' placeholder='6-digit code from your email' maxlength='6' inputmode='numeric'>
+        <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06); margin-bottom:16px; text-align:left;'><b data-t='par_only'>Parents only.</b> <span data-t='par_setup_note'>This one-time setup confirms it's really you — not your child — before parental controls are created.</span></div>
+        <div class='field'>
+          <label for='parentSetupEmail' data-t='par_f_email'>Your email address</label>
+          <input type='email' id='parentSetupEmail' placeholder='you@example.com'>
+          <span class='hint' data-t='par_f_email_h'>The code goes here, and alerts about your child's account go here later. Nothing else is sent to it.</span>
+        </div>
+        <button class='btn' id='sendcodebtn' data-t='par_sendcode'>Send confirmation code</button>
+        <div id='codebox' style='display:none; margin-top:14px;'>
+          <div class='field'>
+            <label for='confcode' data-t='par_f_code'>Confirmation code</label>
+            <input type='text' id='confcode' placeholder='6-digit code from your email' maxlength='6' inputmode='numeric'>
+          </div>
         </div>
       </div>
-      <input type='password' id='pin' placeholder='5-digit PIN' maxlength='5' inputmode='numeric' style='display:none;'>
+
       <div id='setuponly2' style='display:none;'>
-        <!-- The child's age used to sit up in #setuponly, beside the email
-             confirmation. That whole block is hidden the moment the code is
-             confirmed — which is the same moment this one appears — so the
-             field was taken off the screen and then required by the button.
-             Setting a PIN did nothing, printed the "ages 13 and over" line,
-             and looked for all the world like a dead button. It belongs with
-             the other two things being set up. -->
-        <label class='sm' style='display:block; font-size:0.85rem; color:#7E8AA6; margin:6px 0 3px;' data-t='par_age'>Your child's age</label>
-        <input type='text' id='kidage' placeholder="Child's age (13 or over)" maxlength='3' inputmode='numeric'>
-        <select id='secq' style='width:100%; padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:#0A0C14; color:#EAF2FF; margin-bottom:12px; font-size:1rem;'>
-          <option value=''>Choose a security question…</option>
-          <option>What was the name of your first pet?</option>
-          <option>What city were you born in?</option>
-          <option>What is your mother's maiden name?</option>
-          <option>What was your first school's name?</option>
-          <option>What is your favorite book?</option>
-        </select>
-        <input type='text' id='seca' placeholder='Answer to your security question'>
+        <!-- WHO IS SETTING THIS UP. The dashboard knew a PIN, an email and a
+             child's age, and nothing about the person holding it — so every
+             sentence on it had to say "the parent" and the alert emails went
+             out addressed to nobody. A name and a relationship are two fields
+             and they change every one of those sentences.
+
+             Both stay on this device, with the PIN. They are not sent to the
+             server and there is no account behind this page; privacy.html
+             says the same, in the same commit as this. -->
+        <div class='frow'>
+          <div class='field'>
+            <label for='parentName' data-t='par_f_name'>Your name</label>
+            <input type='text' id='parentName' placeholder='e.g. Maria Silva' maxlength='60'>
+          </div>
+          <div class='field'>
+            <label for='parentRel' data-t='par_f_rel'>You are their</label>
+            <select id='parentRel'>
+              <option value='parent' data-t='par_rel_parent'>Parent</option>
+              <option value='guardian' data-t='par_rel_guardian'>Guardian</option>
+              <option value='carer' data-t='par_rel_carer'>Carer</option>
+              <option value='other' data-t='par_rel_other'>Someone else responsible</option>
+            </select>
+          </div>
+        </div>
+        <div class='field'>
+          <label for='kidage' data-t='par_age'>Your child's age</label>
+          <input type='text' id='kidage' placeholder="Child's age (13 or over)" maxlength='3' inputmode='numeric'>
+        </div>
+        <div class='field'>
+          <label for='secq' data-t='par_f_secq'>Security question</label>
+          <select id='secq'>
+            <option value=''>Choose a security question…</option>
+            <option>What was the name of your first pet?</option>
+            <option>What city were you born in?</option>
+            <option>What is your mother's maiden name?</option>
+            <option>What was your first school's name?</option>
+            <option>What is your favorite book?</option>
+          </select>
+          <span class='hint' data-t='par_f_secq_h'>This is how you get back in if you forget the PIN. Nobody can reset it for you — there is no account behind this page.</span>
+        </div>
+        <div class='field'>
+          <label for='seca' data-t='par_f_seca'>Your answer</label>
+          <input type='text' id='seca' placeholder='Answer to your security question'>
+        </div>
+      </div>
+
+      <div class='field' id='pinfield' style='display:none;'>
+        <label for='pin' data-t='par_f_pin'>5-digit PIN</label>
+        <input type='password' id='pin' placeholder='5-digit PIN' maxlength='5' inputmode='numeric'>
       </div>
     </div>
+
     <button class='btn' id='pinbtn' style='display:none;' data-t='par_unlock'>Unlock</button>
-    <button class='btn' id='forgotbtn' style='background:transparent; border:1px solid rgba(255,255,255,0.2); color:#7E8AA6; margin-left:8px; display:none;' data-t='par_forgot'>Forgot PIN?</button>
-    <div class='notice' id='pinmsg' style='display:none;'></div>
+    <button class='btn' id='forgotbtn' style='background:transparent; border:1px solid rgba(255,255,255,0.2); color:#7E8AA6; display:none;' data-t='par_forgot'>Forgot PIN?</button>
+    <div class='notice' id='pinmsg' style='display:none; text-align:left;'></div>
 
     <div id='recoverbox' style='display:none; margin-top:14px;'>
-      <div id='secqlabel' style='color:#00F0FF; font-weight:700; margin-bottom:8px;'></div>
-      <input type='text' id='recanswer' placeholder='Your answer'>
-      <input type='password' id='newpin' placeholder='New 5-digit PIN' maxlength='5' inputmode='numeric'>
+      <div id='secqlabel' style='color:var(--nc-cyan,#00F0FF); font-weight:700; margin-bottom:8px; text-align:left;'></div>
+      <div class='field'>
+        <label for='recanswer' data-t='par_f_ans'>Your answer</label>
+        <input type='text' id='recanswer' placeholder='Your answer'>
+      </div>
+      <div class='field'>
+        <label for='newpin' data-t='par_f_newpin'>New 5-digit PIN</label>
+        <input type='password' id='newpin' placeholder='New 5-digit PIN' maxlength='5' inputmode='numeric'>
+      </div>
       <button class='btn' id='resetbtn' data-t='par_reset'>Reset PIN</button>
     </div>
+
+    <p class='gfoot' data-t='par_gfoot'>The PIN, your name and your answer stay on this device. They are not sent anywhere, and NovaClip cannot read them.</p>
+  </div>
   </div>
 
   <div id='dash'>
@@ -740,6 +885,31 @@ function lockState() { try { return JSON.parse(localStorage.getItem('nc_pin_lock
 function setLock(s) { localStorage.setItem('nc_pin_lock', JSON.stringify(s)); }
 function isSetUp() { return !!localStorage.getItem('nc_parent_pin_h'); }
 
+/* Which pip is lit. 0 hides the row — a returning parent types a PIN and is
+   not walking three steps, and drawing them anyway would describe a journey
+   they are not on. */
+function gsteps(n) {
+  const row = document.getElementById('gsteps');
+  if (!row) return;
+  if (!n) { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  row.querySelectorAll('.gstep').forEach(function (el) {
+    const i = parseInt(el.getAttribute('data-step'), 10);
+    el.classList.toggle('on', i === n);
+    el.classList.toggle('done', i < n);
+  });
+}
+
+/* WHO IS HOLDING THIS PAGE. Kept beside the PIN, on the device, for the same
+   reason: there is no account behind this dashboard, and a parent's name is
+   not something to start sending to a server in order to print a greeting. */
+function parentProfile() {
+  try { return JSON.parse(localStorage.getItem('nc_parent_profile') || 'null'); } catch (e) { return null; }
+}
+function saveParentProfile(p) {
+  try { localStorage.setItem('nc_parent_profile', JSON.stringify(p)); } catch (e) {}
+}
+
 /* THE PARENT EMAIL, KEPT.
 
    It was written to nc_parent_email once, on "Send confirmation code", and then
@@ -846,10 +1016,13 @@ window.addEventListener('DOMContentLoaded', () => {
     // returning parent — just show PIN + unlock
     document.getElementById('setuponly').style.display = 'none';
     document.getElementById('setuponly2').style.display = 'none';
-    document.getElementById('pin').style.display = 'block';
+    document.getElementById('pinfield').style.display = 'block';
     document.getElementById('pinbtn').style.display = 'inline-block';
     document.getElementById('pinbtn').textContent = 'Unlock';
     document.getElementById('forgotbtn').style.display = 'inline-block';
+    /* A parent who is already set up is not doing a three-step setup, so the
+       pips would be three lies. Hidden rather than faked. */
+    gsteps(0);
   } else {
     // first-time — must confirm parent email code first
     document.getElementById('setuponly').style.display = 'block';
@@ -872,10 +1045,11 @@ window.addEventListener('DOMContentLoaded', () => {
       if (st.verified) {
         emailConfirmed = true;
         document.getElementById('setuponly').style.display = 'none';
-        document.getElementById('pin').style.display = 'block';
+        document.getElementById('pinfield').style.display = 'block';
         document.getElementById('setuponly2').style.display = 'block';
         document.getElementById('pinbtn').style.display = 'inline-block';
         document.getElementById('pinbtn').textContent = 'Set up & unlock';
+    gsteps(2);
         document.getElementById('pinmsg').innerHTML =
           '<b>' + esc2(st.email) + '</b> is already confirmed for this account. Set the parent PIN ' +
           'and a security question.';
@@ -997,10 +1171,11 @@ document.getElementById('confcode').oninput = async (e) => {
     emailConfirmed = true;
     clearPending();
     document.getElementById('setuponly').style.display = 'none';
-    document.getElementById('pin').style.display = 'block';
+    document.getElementById('pinfield').style.display = 'block';
     document.getElementById('setuponly2').style.display = 'block';
     document.getElementById('pinbtn').style.display = 'inline-block';
     document.getElementById('pinbtn').textContent = 'Set up & unlock';
+    gsteps(2);
     msg.innerHTML = 'Email confirmed. Now set your parent PIN and security question.';
   } catch (err) {
     /* The worker counts the wrong guesses and says how many are left, because
@@ -1042,6 +1217,18 @@ document.getElementById('pinbtn').onclick = async () => {
     const a = document.getElementById('seca').value.trim();
     if (!q) { msg.textContent = 'Please choose a security question.'; return; }
     if (a.length < 2) { msg.textContent = 'Please answer your security question.'; return; }
+    /* The name is asked for, so it is required — an optional field in a
+       three-field form is a field nobody fills in, and then every sentence on
+       the dashboard goes back to saying "the parent". The relationship has a
+       default, so it cannot be the thing that blocks anybody. */
+    const pname = (document.getElementById('parentName').value || '').trim();
+    if (pname.length < 2) { msg.textContent = 'Please put your name in — the dashboard uses it, and the alerts are addressed to it.'; return; }
+    saveParentProfile({
+      name: pname.slice(0, 60),
+      rel: document.getElementById('parentRel').value || 'parent',
+      email: (document.getElementById('parentSetupEmail').value || '').trim().slice(0, 120),
+      at: Date.now()
+    });
     localStorage.setItem('nc_parent_pin_h', await hashPin(v));
     localStorage.setItem('nc_secq', q);
     localStorage.setItem('nc_seca_h', await hashAns(a));
@@ -1091,6 +1278,16 @@ document.getElementById('resetbtn').onclick = async () => {
 };
 function unlock() {
   gate.style.display = 'none'; dash.style.display = 'block';
+  /* GREET THE PERSON WHO IS ACTUALLY HERE. The header said "Digital wellbeing
+     and protection for this device" to everybody, which is true and says
+     nothing — and the page had no way of knowing who it was talking to,
+     because it had never asked. Now it has. */
+  const who = parentProfile();
+  const sub = document.getElementById('pdSub');
+  if (who && who.name && sub) {
+    const rel = { parent: 'Parent', guardian: 'Guardian', carer: 'Carer', other: 'Responsible adult' }[who.rel] || 'Parent';
+    sub.textContent = rel + ' \u00b7 ' + who.name + ' \u00b7 this device';
+  }
   /* The alert email is the same parent address that was confirmed at setup, so
      it starts filled in rather than blank, and anything typed over it is kept.
      Before this it was a box that forgot itself the moment the page reloaded,

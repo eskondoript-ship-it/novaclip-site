@@ -610,6 +610,44 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v124: the Family Dashboard's front door, and who is standing at it.
+
+   The gate was one flat card with six fields stacked in it, left-aligned in a
+   1000px column, so the first thing a parent saw was a wide grey slab and a
+   wall of inputs — on a site whose other pages are centred, spaced and lit. It
+   read as a form to get past rather than as the front door of the thing they
+   came for. Reported, fairly, as ugly.
+
+   Centred and narrowed to the width of the thing being read. A shield badge
+   at the top, the same one the dashboard header carries, so the page asking
+   for the PIN and the page behind it are visibly the same place. And the three
+   stages the flow already had — confirm the email, your details, set a PIN —
+   drawn instead of implied: they were always there, they were simply never
+   shown, so each one arrived as a surprise. Labels above the fields, because a
+   placeholder leaves as soon as somebody types and takes the only description
+   of the field with it.
+
+   AND IT NOW ASKS WHO THE PARENT IS. The dashboard knew a PIN, an email and a
+   child's age, and nothing about the person holding it — so every sentence on
+   it said "the parent" and the alert emails were addressed to nobody. A name
+   and a relationship are two fields, and the header greets them instead:
+   "Guardian - Maria Silva - this device".
+
+   Both stay on the device with the PIN. There is no account behind this
+   dashboard, and a parent's name is not a thing to start sending to a server
+   in order to print a greeting. privacy.html says exactly that, in this same
+   commit, and distinguishes it from the name a parent gives when they switch
+   on teaching, which does go to the server because money is paid to it.
+
+   One thing checked rather than assumed: the security question had its colours
+   typed inline, and it looked like a light-mode bug. It was not — nova.js
+   styles every select from --nc-sel-bg with !important, and measured it comes
+   out white on a light page either way. The inline pair was dead code that
+   merely looked like a bug. Removed so one control is described in one place.
+
+   parent.html, privacy.html and i18n-ui.js go together: the first collects it,
+   the second says so, and the third is the only reason the new labels are not
+   English in twenty languages. */
 /* v123: three bugs on the payment screen, two of them in front of a buyer.
 
    NO WAY OUT OF THE DIALOG. Four modals on pricing.html — the PIN gate, the
@@ -2577,7 +2615,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v123';
+const CACHE = 'novaclip-v124';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
