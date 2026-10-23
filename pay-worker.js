@@ -50,8 +50,31 @@
         Test mode works for everything below without that, using a key that
         starts sk_test_ and card 4242 4242 4242 4242.
 
-     2  wrangler secret put STRIPE_SECRET_KEY        (paste the sk_ key)
+     2  wrangler secret put STRIPE_SECRET_KEY        (paste the key)
         wrangler secret put STRIPE_WEBHOOK_SECRET    (see step 5)
+
+        MAKE IT A RESTRICTED KEY. Stripe issues two kinds: a secret key (sk_)
+        which can do everything the account can do, and a restricted key (rk_)
+        which can do only what you tick. This worker calls exactly one resource
+        — Checkout Sessions, create and retrieve — so the key it needs is a
+        restricted key with:
+
+            Checkout Sessions .................... Write
+            everything else ...................... None
+
+        That key cannot issue a refund, read a customer list, change a price or
+        move a payout, which is the whole point: the blast radius of a leak is
+        one checkout, not the business. Dashboard → Developers → API keys →
+        Create restricted key.
+
+        Start in test mode. A test key is the same shape with _test_ in it, and
+        card 4242 4242 4242 4242 takes the whole flow end to end. Swap in the
+        live key only once the webhook in step 5 is landing.
+
+        The key is pasted into wrangler, which stores it encrypted on
+        Cloudflare. It is never typed into a file in this repo, never sent to
+        anybody, and never shown by /health — which reports only whether a key
+        is present, which mode it is in, and whether it is restricted.
 
      3  Set SITE_ORIGIN in wrangler.toml [vars] to https://novaclip.org — this
         is where Stripe sends the buyer back. It is a var and not a secret
@@ -152,8 +175,19 @@ export default {
         ok: true,
         configured: !!env.STRIPE_SECRET_KEY,
         webhook: !!env.STRIPE_WEBHOOK_SECRET,
-        mode: (env.STRIPE_SECRET_KEY || '').startsWith('sk_live_') ? 'live'
-            : (env.STRIPE_SECRET_KEY || '').startsWith('sk_test_') ? 'test' : 'unset',
+        /* Both prefixes, because the key this should be given is a RESTRICTED
+           one. Stripe's own advice is a restricted key (rk_) over a secret key
+           (sk_) wherever possible: it carries only the permissions you tick,
+           so a leaked one cannot refund, read customers or move a payout — it
+           can do the one job this worker has. The two prefixes are otherwise
+           interchangeable in use, and matching only sk_ here reported a
+           perfectly good rk_ key as "unset", which reads as a broken deploy
+           and invites somebody to replace a restricted key with a full one. */
+        mode: /^[sr]k_live_/.test(env.STRIPE_SECRET_KEY || '') ? 'live'
+            : /^[sr]k_test_/.test(env.STRIPE_SECRET_KEY || '') ? 'test' : 'unset',
+        keyKind: /^rk_/.test(env.STRIPE_SECRET_KEY || '') ? 'restricted'
+               : /^sk_/.test(env.STRIPE_SECRET_KEY || '') ? 'secret — a restricted key (rk_) is safer'
+               : 'none',
         plans: Object.keys(PLANS)
       });
     }
