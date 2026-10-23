@@ -173,7 +173,12 @@ export default {
          browser; echoing it from a health check would undo that. */
       return json({
         ok: true,
-        configured: !!env.STRIPE_SECRET_KEY,
+        /* USABLE, NOT MERELY PRESENT. This reported true for a placeholder
+           that happened to be non-empty, so the one line anybody reads to
+           check a deploy said the worker was configured while /checkout
+           could only ever return a Stripe 401. keyKind and mode below say
+           what is wrong with it; this says whether it can be used. */
+        configured: stripeKeyOK(env.STRIPE_SECRET_KEY),
         webhook: !!env.STRIPE_WEBHOOK_SECRET,
         /* Both prefixes, because the key this should be given is a RESTRICTED
            one. Stripe's own advice is a restricted key (rk_) over a secret key
@@ -203,12 +208,30 @@ export default {
 /* ---------------------------------------------------------------------------
    POST /checkout   { plan, currency, email? }  ->  { url }
    ------------------------------------------------------------------------- */
+/* PRESENT IS NOT THE SAME AS VALID, AND THE DIFFERENCE SHOWS UP AT THE TILL.
+
+   This used to ask only whether the key was non-empty. A placeholder is
+   non-empty — the setup notes said to store `<the Stripe key>` and that exact
+   text, angle brackets and all, is what reached the worker on the first real
+   deploy. It sailed through the check, /checkout called Stripe with it, and
+   Stripe answered 401. So the failure surfaced as a payment error at the
+   moment a parent pressed Pay, rather than as a configuration error at the
+   moment somebody could still fix it.
+
+   Every Stripe key begins sk_ or rk_ followed by test_ or live_. Nothing else
+   is one, so nothing else is worth a round trip to Stripe to find out. */
+const stripeKeyOK = (k) => /^[sr]k_(test|live)_[A-Za-z0-9]/.test(k || '');
+
 async function checkout(request, env) {
-  if (!env.STRIPE_SECRET_KEY) {
+  if (!stripeKeyOK(env.STRIPE_SECRET_KEY)) {
     return json({
       error: 'not_configured',
-      message: 'Payments are not switched on yet. The Stripe key has not been set on the ' +
-               'payment worker, so nothing can be charged — see DEPLOYING in pay-worker.js.'
+      message: env.STRIPE_SECRET_KEY
+        ? 'Payments are not switched on yet. The value set as STRIPE_SECRET_KEY on the ' +
+          'payment worker is not a Stripe key — a real one starts sk_ or rk_ followed by ' +
+          'test_ or live_. Check /health, which reports its shape without revealing it.'
+        : 'Payments are not switched on yet. The Stripe key has not been set on the ' +
+          'payment worker, so nothing can be charged — see DEPLOYING in pay-worker.js.'
     }, 503);
   }
 
@@ -280,7 +303,7 @@ async function checkout(request, env) {
    This is a convenience, NOT the source of truth. The webhook below is.
    ------------------------------------------------------------------------- */
 async function verify(url, env) {
-  if (!env.STRIPE_SECRET_KEY) return json({ error: 'not_configured' }, 503);
+  if (!stripeKeyOK(env.STRIPE_SECRET_KEY)) return json({ error: 'not_configured' }, 503);
   const id = url.searchParams.get('session_id') || '';
   if (!/^cs_[A-Za-z0-9_]+$/.test(id)) return json({ error: 'bad_session_id' }, 400);
 

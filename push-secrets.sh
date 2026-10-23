@@ -24,8 +24,11 @@
 #  A secret cannot be put on a worker that does not exist yet, and the Stripe
 #  webhook cannot be created until the worker has a URL. So:
 #
-#    1  CLOUDFLARE_API_TOKEN in the environment, then a NEW session — an
-#       existing one does not pick up a variable added after it started.
+#    1  CLOUDFLARE_API_TOKEN in the environment. A change to it is picked up
+#       by the session that is already running — this was first written here
+#       as "start a new session", which was wrong, and measured to be wrong:
+#       a replaced token was visible immediately. If a value does read as
+#       stale, a new session is the thing to try, not the thing to do first.
 #    2  wrangler deploy -c wrangler.pay.toml        (creates novaclip-pay)
 #    3  this script                                 (puts STRIPE_SECRET_KEY on it)
 #    4  take the worker's URL to the Stripe dashboard, add a webhook at
@@ -48,11 +51,61 @@ PAY_WORKER="${PAY_WORKER:-novaclip-pay}"
 skipped=()
 done_=()
 
+#  WHAT EACH SECRET HAS TO LOOK LIKE, CHECKED BEFORE IT IS STORED.
+#
+#  Twice now a placeholder has been saved into the environment verbatim —
+#  `<the Cloudflare token>`, then `<the Stripe key>` — because that is how the
+#  setup instructions wrote them. Both are non-empty, so an emptiness check
+#  passes both, and the second one travelled all the way onto a live worker
+#  and sat there reporting configured:true. The first anybody would have known
+#  was a parent pressing Pay and getting a Stripe 401.
+#
+#  A wrong value is cheap to fix here and expensive to fix once stored, so the
+#  shape is checked on this side of the wire. Anything with angle brackets or
+#  whitespace is a placeholder, whatever else it is. Beyond that, the formats
+#  that are documented and stable are asserted; the rest are only checked for
+#  being placeholder-shaped, because inventing a pattern for a value whose
+#  format is not published is how a correct secret gets rejected.
+shape_of() {
+  case "$1" in
+    STRIPE_SECRET_KEY)     echo '^[sr]k_(test|live)_[A-Za-z0-9]' ;;
+    STRIPE_WEBHOOK_SECRET) echo '^whsec_[A-Za-z0-9]' ;;
+    MAIL_FROM)             echo '@' ;;
+    COIN_LINKS)            echo '^\{' ;;
+    *)                     echo '' ;;
+  esac
+}
+
 # put <worker> <secret-name> <env-var-name>
 put() {
   local worker="$1" name="$2" var="$3" val="${!3:-}"
   if [ -z "$val" ]; then
     skipped+=("$name  (env var \$$var is not set)")
+    return 0
+  fi
+
+  #  A placeholder, in any variable. This is the check that was missing.
+  #
+  #  MAIL_FROM is the one exception and it is not a quibble: a sender is
+  #  written `NovaClip <noreply@novaclip.org>`, which is angle brackets AND a
+  #  space, so the placeholder rule would reject the single correct form of
+  #  the only value here that is supposed to look like that. Its own check
+  #  below — it must contain an address — is what catches a placeholder for
+  #  it, since `<your sender>` has no @ in it.
+  if [ "$name" != "MAIL_FROM" ] && printf '%s' "$val" | grep -qE '[<>]|[[:space:]]'; then
+    skipped+=("$name  (looks like a placeholder — it has angle brackets or spaces. \
+Replace \$$var in the environment settings with the real value.)")
+    return 0
+  fi
+
+  local want; want="$(shape_of "$name")"
+  if [ -n "$want" ] && ! printf '%s' "$val" | grep -qE "$want"; then
+    case "$name" in
+      STRIPE_SECRET_KEY)     skipped+=("$name  (not a Stripe key — a real one starts sk_ or rk_ then test_ or live_)") ;;
+      STRIPE_WEBHOOK_SECRET) skipped+=("$name  (not a signing secret — Stripe's start whsec_)") ;;
+      MAIL_FROM)             skipped+=("$name  (should contain an address, e.g. NovaClip <noreply@novaclip.org>)") ;;
+      COIN_LINKS)            skipped+=("$name  (should be JSON, e.g. {\"c300\":\"https://…\"})") ;;
+    esac
     return 0
   fi
   # --- the only line that touches the value, and it goes to a pipe ----------
