@@ -64,19 +64,63 @@ put() {
 }
 
 echo "Checking the token first, so a bad one fails here and not halfway through."
-#  READ THE WORDS, NOT THE EXIT CODE. `wrangler whoami` exits 0 whether or not
-#  there is a token — measured, with no token set, it prints "You are not
-#  authenticated" and still returns 0. Guarding on $? therefore passed cleanly
-#  with no credential at all and left every line below to fail one at a time,
-#  which reads as nine broken workers rather than one missing token.
-who="$(wrangler whoami 2>&1 | sed 's/\x1b\[[0-9;]*m//g')"
-if printf '%s' "$who" | grep -qi "not authenticated"; then
-  echo "  no token. Add CLOUDFLARE_API_TOKEN to the environment's secrets," >&2
-  echo "  then start a NEW session — an existing one does not pick it up." >&2
+
+#  THREE CHECKS, BECAUSE A TOKEN FAILS IN THREE DIFFERENT WAYS AND THEY LOOK
+#  NOTHING ALIKE FROM DOWN HERE.
+#
+#    missing    — nothing in the environment
+#    a placeholder — the instructions said `<the Cloudflare token>` and that is
+#                  what got saved, angle brackets and all. It is 55 characters
+#                  of perfectly ordinary text, so every length or emptiness
+#                  check passes and Cloudflare answers 6111, "invalid format
+#                  for Authorization header", nine times in a row.
+#    real but wrong — right shape, lacks Workers Scripts: Edit, or expired.
+#
+#  The first version of this guard asked `wrangler whoami` and looked for the
+#  words "not authenticated". That caught the first case only: a malformed
+#  token fails on the wire, with a different message, so the guard passed it
+#  through and let all nine secrets fail one at a time — which reads as nine
+#  broken workers rather than one bad string.
+#
+#  So: shape first, locally, because that is where a pasted placeholder dies;
+#  then ask Cloudflare, which is the only thing that can tell real from wrong.
+#  The token is never printed, only described.
+
+tok="${CLOUDFLARE_API_TOKEN:-}"
+
+if [ -z "$tok" ]; then
+  echo "  CLOUDFLARE_API_TOKEN is not set in this session." >&2
+  echo "  Add it in the environment settings, then start a NEW session —" >&2
+  echo "  a session only ever sees the variables that existed when it began." >&2
   exit 1
 fi
-printf '%s\n' "$who" | grep -iE "account|email" | head -2 | sed 's/^/  /'
-echo "  ok"
+
+if printf '%s' "$tok" | grep -qE '[<>[:space:]]'; then
+  echo "  CLOUDFLARE_API_TOKEN looks like a placeholder, not a token." >&2
+  echo "  It contains angle brackets or spaces; a real one has neither." >&2
+  echo "  A Cloudflare API token is about 40 characters of letters, digits," >&2
+  echo "  underscores and dashes. If the stored value still reads like" >&2
+  echo "  <the Cloudflare token>, that literal text was saved by mistake." >&2
+  exit 1
+fi
+
+#  Ask Cloudflare itself. /user/tokens/verify is the endpoint whose entire job
+#  is this question, it needs no account id, and it works for any token.
+ver="$(curl -s --max-time 20 \
+        -H "Authorization: Bearer $tok" \
+        https://api.cloudflare.com/client/v4/user/tokens/verify 2>/dev/null)"
+
+if ! printf '%s' "$ver" | grep -q '"success":true'; then
+  echo "  Cloudflare rejected the token." >&2
+  #  Its own words, which name the problem better than any guess here. The
+  #  reply describes the token; it never contains it.
+  printf '%s' "$ver" | grep -oE '"(code|message)":[^,}]*' | head -4 | sed 's/^/    /' >&2
+  echo "  The token needs Workers Scripts: Edit — the 'Edit Cloudflare Workers'" >&2
+  echo "  template covers it. Replace it in the environment settings and start" >&2
+  echo "  a new session." >&2
+  exit 1
+fi
+echo "  token is valid and active"
 echo
 
 #  Checkout.
