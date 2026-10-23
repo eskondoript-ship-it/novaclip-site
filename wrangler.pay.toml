@@ -1,0 +1,41 @@
+# =============================================================================
+#  novaclip-pay — the checkout worker
+# =============================================================================
+#  ONE CONFIG PER WORKER, AND THE NAME IS IN THE FILENAME. There are three
+#  workers in this repo and they are not interchangeable:
+#
+#      pay-worker.js          novaclip-pay      STRIPE_SECRET_KEY   <- this one
+#      leaderboard-worker.js  novaclip-server   the DB KV binding
+#      ai-worker.js           novaclip-ai       GEMINI_API_KEY
+#
+#  A single wrangler.toml at the root would deploy whichever one it happened to
+#  point at, and deploying one of these at another's address is what made every
+#  AI feature answer 500 once already. So this file is named for its worker and
+#  is passed explicitly:
+#
+#      wrangler deploy -c wrangler.pay.toml
+#
+#  NO SECRETS IN HERE. This file is in a public repo. SITE_ORIGIN is a var
+#  because a URL is not a secret; STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET
+#  are set with `wrangler secret put` and are stored encrypted on Cloudflare,
+#  never written down here. `wrangler secret put` does not touch this file.
+# =============================================================================
+
+name = "novaclip-pay"
+main = "pay-worker.js"
+
+#  Pinned, not "today". A compatibility date decides which version of the
+#  Workers runtime this code gets. Left floating, a future runtime change could
+#  alter behaviour on a deploy that changed no code — on the one worker where
+#  that means money.
+compatibility_date = "2026-10-01"
+
+[vars]
+#  Where Stripe sends the buyer back after paying. A var rather than a secret
+#  because it is a public URL, and the worker refuses to redirect anywhere it
+#  does not recognise.
+SITE_ORIGIN = "https://novaclip.org"
+
+#  Nothing else belongs here. In particular there is no KV binding and no
+#  Gemini key: this worker talks to Stripe and to nobody else, which is what
+#  keeps the blast radius of its token to one checkout.
