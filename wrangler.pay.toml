@@ -36,6 +36,18 @@ compatibility_date = "2026-10-01"
 #  does not recognise.
 SITE_ORIGIN = "https://novaclip.org"
 
+#  Where this worker tells the account server what somebody bought. Also a
+#  public URL and also not a secret — what makes the call trustworthy is
+#  GRANT_SECRET, which is set with `wrangler secret put` on both workers and
+#  appears in neither file.
+#
+#  Missing this is a quiet failure, which is why /health names it: with the
+#  secret and no address there is nothing to call, so checkout works, Stripe
+#  gets its 200, and nothing is ever granted. The first deploy of this worker
+#  did exactly that, and /health said "HALF SET" rather than "ready", which is
+#  how it was caught before any money moved.
+GRANT_URL = "https://novaclip-server.eskondori-pt.workers.dev"
+
 #  Nothing else belongs here. In particular there is no KV binding and no
 #  Gemini key: this worker talks to Stripe and to nobody else, which is what
 #  keeps the blast radius of its token to one checkout.
