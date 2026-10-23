@@ -8226,6 +8226,35 @@ window.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('nc_rules');
       }
       ncRulesApply();
+
+      /* WHAT THEY PAID FOR, ON WHATEVER DEVICE THEY ARE ON NOW.
+
+         nc_pro used to be written in exactly one place: the return page, by
+         the browser that came back from Stripe. So a purchase lived on the
+         device that made it. Pay on a phone and the laptop never knew; pay and
+         close the tab before the return page loaded and nothing knew at all,
+         including the account.
+
+         The pay worker's webhook now writes the plan against the account, and
+         this is where it arrives. Added to, never subtracted from: a grant
+         that has not reached the account yet — the return page has just run,
+         the webhook is a second behind — must not be undone by a sync that
+         happens to land first, so a missing `pro` leaves what is here alone.
+         Nothing on this site reads a plan it was never given, and a stale
+         extra plan is a far smaller harm than deleting one somebody bought. */
+      if (st.pro && st.pro.plans && st.pro.plans.length) {
+        try {
+          const have = JSON.parse(localStorage.getItem('nc_pro') || '{}');
+          const plans = Array.isArray(have.plans) ? have.plans.slice() : [];
+          let added = 0;
+          st.pro.plans.forEach((p) => { if (plans.indexOf(p) < 0) { plans.push(p); added++; } });
+          if (added) {
+            have.plans = plans;
+            have.from = 'account';
+            localStorage.setItem('nc_pro', JSON.stringify(have));
+          }
+        } catch (e) {}
+      }
     }).catch(() => {});
   }
   window.ncRulesApply = ncRulesApply;

@@ -193,6 +193,13 @@ export default {
         keyKind: /^rk_/.test(env.STRIPE_SECRET_KEY || '') ? 'restricted'
                : /^sk_/.test(env.STRIPE_SECRET_KEY || '') ? 'secret — a restricted key (rk_) is safer'
                : 'none',
+        /* Granting needs both halves: somewhere to call and a secret to sign
+           with. Reported together because one without the other is the state
+           that looks configured and silently never grants. */
+        grant: (env.GRANT_URL && env.GRANT_SECRET) ? 'ready'
+             : !env.GRANT_URL && !env.GRANT_SECRET ? 'not set — the return page grants on the device only'
+             : env.GRANT_URL ? 'HALF SET — GRANT_URL without GRANT_SECRET, so nothing will be granted'
+             : 'HALF SET — GRANT_SECRET without GRANT_URL, so nothing will be granted',
         plans: Object.keys(PLANS)
       });
     }
@@ -221,6 +228,20 @@ export default {
    Every Stripe key begins sk_ or rk_ followed by test_ or live_. Nothing else
    is one, so nothing else is worth a round trip to Stripe to find out. */
 const stripeKeyOK = (k) => /^[sr]k_(test|live)_[A-Za-z0-9]/.test(k || '');
+
+/* HMAC-SHA256 as lowercase hex. Used to sign a grant for the server worker,
+   which verifies it with the identical function over the identical string —
+   the two must stay byte for byte the same or every grant is refused. Separate
+   from the Stripe signature check further down, which verifies rather than
+   signs and has its own constant-time compare to do. */
+async function hmacHex(secret, msg) {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(String(secret)),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(String(msg)));
+  return [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 async function checkout(request, env) {
   if (!stripeKeyOK(env.STRIPE_SECRET_KEY)) {
@@ -263,6 +284,18 @@ async function checkout(request, env) {
     form.set('line_items[0][price_data][recurring][interval]', plan.interval);
   }
   form.set('metadata[plan]', body.plan);
+  /* THE ONLY THING ABOUT THE BUYER THAT GOES TO STRIPE. A ticket is a random
+     string the server worker issued against the account a moment ago; it
+     expires in a day and buys nothing by itself. The NovaClip code is not sent
+     and must never be: it is the password reset, the second device and the
+     recovery route in one string, and a third party's logs are no place for
+     it. Without a ticket the checkout still works — the buyer is simply
+     granted on the device by the return page, as before. */
+  const ticket = String(body.ticket || '');
+  if (/^tkt_[a-z0-9]{20,64}$/.test(ticket)) {
+    form.set('metadata[nc_ticket]', ticket);
+    form.set('client_reference_id', ticket);
+  }
   /* An email is optional. If one is given Stripe prefills it and sends the
      receipt there; if not, Stripe asks. Either way it is Stripe holding it. */
   if (body.email && /.+@.+\..+/.test(String(body.email))) {
@@ -345,13 +378,42 @@ async function webhook(request, env) {
 
   if (event.type === 'checkout.session.completed') {
     const s = event.data.object;
-    /* Where an entitlement would be written. NovaClip's accounts live in the
-       LEADERBOARD worker's KV, which this worker deliberately does not have a
-       binding to — wiring that up means giving this worker DB access, and that
-       is a decision to make on purpose rather than by accident. Until then the
-       return page grants it on the device, which is where every other
-       entitlement on this site already lives. */
-    console.log('paid', s.id, s.metadata && s.metadata.plan, s.customer_details && s.customer_details.email);
+    /* NovaClip's accounts live in the LEADERBOARD worker's KV, and this worker
+       still has no binding to it — that part of the old note stands, and
+       deliberately. Giving the worker that holds a payment key direct write
+       access to every account is a larger door than this needs.
+
+       It asks instead. One signed call to one endpoint that can do exactly one
+       thing: add a plan to the account a ticket names. If this worker were
+       taken over tomorrow, what the attacker gains is the ability to give
+       NovaClip plans away, not the ability to read or change accounts.
+
+       Everything below is best-effort by design. The buyer has already paid at
+       this point; if the grant cannot be delivered, the right outcome is to
+       let the return page grant on the device as it always did, not to fail
+       the webhook and have Stripe redeliver it forever. */
+    const ticket = (s.metadata && s.metadata.nc_ticket) || s.client_reference_id || '';
+    const plan = (s.metadata && s.metadata.plan) || '';
+    if (ticket && plan && env.GRANT_URL && env.GRANT_SECRET) {
+      const ts = Date.now();
+      const sig = await hmacHex(env.GRANT_SECRET, [ticket, plan, s.id, ts].join('|'));
+      try {
+        const r = await fetch(String(env.GRANT_URL).replace(/\/+$/, '') + '/entitlement/grant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticket, plan, session: s.id, ts, sig })
+        });
+        /* Logged either way, and without the ticket in it: a log line is the
+           only trace of this that anybody will ever look at, and a ticket in
+           a log is a ticket outside the two places it belongs. */
+        console.log('grant', s.id, plan, r.status, (await r.text()).slice(0, 120));
+      } catch (e) {
+        console.log('grant failed', s.id, plan, String(e).slice(0, 120));
+      }
+    } else {
+      console.log('paid, not granted', s.id, plan,
+        !ticket ? 'no ticket on the session' : 'GRANT_URL or GRANT_SECRET missing');
+    }
   }
 
   return json({ received: true });

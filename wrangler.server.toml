@@ -1,0 +1,46 @@
+# =============================================================================
+#  novaclip-server — accounts, scores, the community, and now entitlement
+# =============================================================================
+#  Named for its worker, like wrangler.pay.toml, because the three workers in
+#  this repo are not interchangeable:
+#
+#      leaderboard-worker.js  novaclip-server   the DB KV binding   <- this one
+#      pay-worker.js          novaclip-pay      STRIPE_SECRET_KEY
+#      ai-worker.js           novaclip-ai       GEMINI_API_KEY
+#
+#      wrangler deploy -c wrangler.server.toml --keep-vars
+#
+#  THE KV BINDING IS DECLARED HERE AND THAT IS NOT OPTIONAL. A deploy replaces
+#  the worker's bindings with what the config says. Deploy this without the
+#  block below and the live worker comes back with no DB at all — every
+#  account call, every board and every community page answering 500, which is
+#  the exact failure mode this repo has already had once. The id is the live
+#  namespace, read back from the deployed worker rather than typed from
+#  memory.
+#
+#  --keep-vars IS ALSO NOT OPTIONAL, and for the same reason one step along.
+#  PEPPER is a plain_text var on the live worker, not a secret, so it is NOT
+#  preserved automatically the way secrets are — and its value is not in this
+#  repo and must not be, since it salts the visitor hashes and the username
+#  salts. --keep-vars tells wrangler to leave vars it does not know about
+#  alone. Without it, one deploy silently drops PEPPER and every hash derived
+#  from it stops matching.
+#
+#  (Worth changing one day: PEPPER would be better as a secret than a var,
+#  which would make it survive on its own and stop it being readable from the
+#  dashboard. That is a migration, not a config line, because the value has to
+#  be carried across without a gap.)
+# =============================================================================
+
+name = "novaclip-server"
+main = "leaderboard-worker.js"
+compatibility_date = "2026-10-01"
+
+[[kv_namespaces]]
+binding = "DB"
+id = "b180c6d1b2a948af90d7252f029c6463"
+
+#  No [vars] block on purpose. SITE_ORIGIN belongs to the pay worker; PEPPER
+#  is handled by --keep-vars above; CERT_SECRET, GRANT_SECRET, MAIL_KEY and
+#  the rest are secrets, set with `wrangler secret put` (see push-secrets.sh)
+#  and preserved across deploys without being written down anywhere.

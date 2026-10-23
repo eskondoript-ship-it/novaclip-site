@@ -71,6 +71,7 @@ shape_of() {
     STRIPE_SECRET_KEY)     echo '^[sr]k_(test|live)_[A-Za-z0-9]' ;;
     STRIPE_WEBHOOK_SECRET) echo '^whsec_[A-Za-z0-9]' ;;
     MAIL_FROM)             echo '@' ;;
+    GRANT_SECRET)          echo '^.{24,}$' ;;   # long enough to be a secret
     COIN_LINKS)            echo '^\{' ;;
     *)                     echo '' ;;
   esac
@@ -104,6 +105,7 @@ Replace \$$var in the environment settings with the real value.)")
       STRIPE_SECRET_KEY)     skipped+=("$name  (not a Stripe key — a real one starts sk_ or rk_ then test_ or live_)") ;;
       STRIPE_WEBHOOK_SECRET) skipped+=("$name  (not a signing secret — Stripe's start whsec_)") ;;
       MAIL_FROM)             skipped+=("$name  (should contain an address, e.g. NovaClip <noreply@novaclip.org>)") ;;
+      GRANT_SECRET)          skipped+=("$name  (too short — use at least 24 random characters; it is what stops a stranger granting themselves a paid plan)") ;;
       COIN_LINKS)            skipped+=("$name  (should be JSON, e.g. {\"c300\":\"https://…\"})") ;;
     esac
     return 0
@@ -192,6 +194,15 @@ put "$SERVER_WORKER" AGE_SECRET            AGE_SECRET
 
 #  Gemini. Its own worker, and nothing else's.
 put "$AI_WORKER"     GEMINI_API_KEY        GEMINI_API_KEY
+
+#  THE ONE SECRET THAT GOES ON TWO WORKERS, AND MUST BE THE SAME ON BOTH.
+#  The pay worker signs a grant with it; the server worker checks the
+#  signature with it. Different values on the two is the failure that looks
+#  like nothing at all: checkout works, the webhook returns 200 to Stripe, and
+#  every grant is silently refused as a bad signature. Set from one variable
+#  here precisely so the two cannot drift apart.
+put "$PAY_WORKER"    GRANT_SECRET          GRANT_SECRET
+put "$SERVER_WORKER" GRANT_SECRET          GRANT_SECRET
 
 echo "Set:"
 if [ ${#done_[@]} -eq 0 ]; then echo "  (nothing)"; else printf '  %s\n' "${done_[@]}"; fi

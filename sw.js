@@ -610,6 +610,42 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v122: a purchase that survives the tab being closed.
+
+   Entitlement was written in exactly one place — the return page, by the
+   browser coming back from Stripe. So a purchase lived on the device that
+   made it. Pay on a phone and the laptop never knew. Pay and close the tab
+   before the return page loaded and nothing knew at all, including the
+   account, and the only record was in Stripe. With a live key that is a
+   parent charged real money for nothing.
+
+   The pay worker's webhook writes it against the account now, and
+   /account/state delivers it to any device that signs in. The webhook fires
+   whether or not anybody is looking at a page, which is the whole point of it.
+
+   A TICKET, NOT THE ACCOUNT CODE. The obvious wiring sends the NovaClip code
+   to the pay worker and on into Stripe's session metadata. That code is the
+   password reset, the second device and the recovery route in one string, so
+   putting it in a third party's logs and exports hands out account access in
+   order to sell a subscription. What travels instead is a random ticket, good
+   for a day, that means nothing except "a checkout was started for this
+   account" — issued by the server worker against code and key, resolved by it
+   on the way back, and useless to anybody who intercepts it.
+
+   And the pay worker still has no KV binding, deliberately. It asks over one
+   signed endpoint that can do exactly one thing: add a plan to the account a
+   ticket names. The worker holding a payment key does not also get read and
+   write over every account.
+
+   GRANT_SECRET is the one secret that goes on BOTH workers and must match:
+   the pay worker signs with it, the server worker checks with it. Two
+   different values is the failure that looks like success — checkout works,
+   Stripe gets its 200, and every grant is silently refused.
+
+   nova.js, pricing.html, pay-worker.js, leaderboard-worker.js and
+   push-secrets.sh go together. Deploy BOTH workers: the browser half without
+   the server half asks for a ticket that nothing issues, and carries on
+   without one. */
 /* v121: Looks — a grade in one press, and a word is not a request for a
    preview of that word.
 
@@ -2508,7 +2544,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v121';
+const CACHE = 'novaclip-v122';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

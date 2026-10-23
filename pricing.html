@@ -1401,10 +1401,36 @@ async function startStripeCheckout() {
   const was = btn.textContent;
   btn.textContent = 'Opening Stripe…';
   try {
+    /* A TICKET, SO THE PURCHASE SURVIVES THIS BROWSER.
+       Without one the buyer is granted here, on this device, by the return
+       page — which is nothing at all if they close the tab after paying. With
+       one, the pay worker's webhook can tell the account server what was
+       bought, and it arrives on every device they sign in on.
+
+       Deliberately best-effort: not everybody buying is signed in, the server
+       may be down, and neither is a reason to refuse somebody's money. If
+       there is no ticket the checkout goes ahead exactly as it did before.
+
+       It is a ticket and not the account code because the code is the one
+       string that moves an account, and this one travels into Stripe's
+       metadata. A ticket expires in a day and buys nothing by itself. */
+    let ticket = '';
+    try {
+      const code = localStorage.getItem('nc_code'), key = localStorage.getItem('nc_key');
+      if (code && key && window.ncApi) {
+        const t = await window.ncApi('/entitlement/ticket', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code, key: key })
+        });
+        ticket = t && t.ticket ? t.ticket : '';
+      }
+    } catch (e) { /* carry on without one */ }
+
     const res = await fetch(NC_PAY.replace(/\/$/, '') + '/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: plan, currency: (CUR || 'eur'), email: email || undefined })
+      body: JSON.stringify({ plan: plan, currency: (CUR || 'eur'),
+                             email: email || undefined, ticket: ticket || undefined })
     });
     const out = await res.json();
     if (!res.ok || !out.url) {

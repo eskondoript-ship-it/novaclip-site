@@ -1701,6 +1701,94 @@ export default {
 
     /* What this account is, everywhere. The page asks on load, so a block or a
        rule set on one device is true on the next one. */
+    /* ======================================================================
+       ENTITLEMENT — WHAT SOMEBODY PAID FOR, WRITTEN DOWN WHERE IT SURVIVES
+       ======================================================================
+       Until now a purchase was granted by the return page: Stripe sent the
+       buyer back, the page asked the pay worker to confirm the session, and
+       the browser wrote nc_pro. A parent who paid and closed the tab before
+       that page loaded was charged and got nothing, and the only record of it
+       was in Stripe.
+
+       So the pay worker tells this one, from its webhook, which fires whether
+       or not anybody is looking at a page.
+
+       WHY A TICKET AND NOT THE ACCOUNT CODE. The obvious design sends the
+       NovaClip code to the pay worker and on into Stripe's session metadata.
+       That code is the one thing that moves an account — it is the password
+       reset, the second device and the recovery route in one string — so
+       putting it in a third party's database, where it sits in logs and
+       exports and support tools, hands out account access to buy a
+       subscription. A ticket is a random string that means nothing except
+       "the holder started a checkout for this account", expires in a day, and
+       is useless for anything else. That is what travels.
+       ====================================================================== */
+    const GRANT_TTL = 86400;               /* a ticket is good for a day */
+    const GRANT_SKEW = 10 * 60 * 1000;     /* how stale a signed call may be */
+
+    /* The browser asks for one of these just before it sends somebody to
+       Stripe. Same proof as any other account call: the code and its key. */
+    if (path === '/entitlement/ticket' && request.method === 'POST') {
+      const code = cleanCode(body.code || '');
+      const key = String(body.key || '');
+      if (!code || !key) return json({ error: 'sign in first' }, 401);
+      const owner = await env.DB.get('code:' + code);
+      if (!owner || owner !== key) return json({ error: 'that code and key do not match' }, 403);
+      const ticket = 'tkt_' + randomFrom('abcdefghijklmnopqrstuvwxyz0123456789', 32);
+      await env.DB.put('tkt:' + ticket, code, { expirationTtl: GRANT_TTL });
+      return json({ ticket, expires: GRANT_TTL });
+    }
+
+    /* Called by the pay worker, never by a browser.
+
+       THE SIGNATURE IS THE WHOLE DOOR. This endpoint hands out paid plans for
+       free to anybody who can call it, so it is not enough that the caller
+       knows a ticket — a ticket travels through Stripe and is not a secret.
+       The caller must hold GRANT_SECRET, which only the two workers have, and
+       must have signed this exact ticket, plan and session with it.
+
+       It is also replay-proof twice over: the timestamp must be recent, and a
+       Stripe session that has already been granted is accepted and ignored
+       rather than granted again, because Stripe retries a webhook it did not
+       get a 200 from and a retry must not become a second purchase. */
+    if (path === '/entitlement/grant' && request.method === 'POST') {
+      if (!env.GRANT_SECRET) {
+        return json({ error: 'entitlement granting is not switched on',
+          detail: 'set a Worker secret called GRANT_SECRET on this worker AND on the pay '
+                + 'worker, with the same value — it is what proves a grant came from the '
+                + 'pay worker and not from a stranger' }, 503);
+      }
+      const ticket = String(body.ticket || '');
+      const plan = cleanLine(body.plan, 40);
+      const session = cleanLine(body.session, 90);
+      const ts = parseInt(body.ts, 10) || 0;
+      const sig = String(body.sig || '');
+      if (!ticket || !plan || !session || !ts || !sig) return json({ error: 'incomplete' }, 400);
+
+      if (Math.abs(Date.now() - ts) > GRANT_SKEW) return json({ error: 'stale' }, 400);
+
+      const want = await hmacHex(env.GRANT_SECRET, [ticket, plan, session, ts].join('|'));
+      /* Compared whole, not prefix: a length-leaking compare on a signature is
+         how a signature stops being one. */
+      if (want.length !== sig.length || want !== sig) return json({ error: 'bad signature' }, 403);
+
+      /* Already done? Say so and stop — a Stripe retry is not a second sale. */
+      if (await env.DB.get('gsess:' + session)) return json({ ok: true, already: true });
+
+      const code = await env.DB.get('tkt:' + ticket);
+      /* An expired or unknown ticket is not an error worth retrying: the
+         purchase happened, there is simply nobody here to give it to. 200 so
+         Stripe stops redelivering, and said plainly so it shows up in a log.  */
+      if (!code) return json({ ok: true, granted: false, reason: 'ticket expired or unknown' });
+
+      const pro = (await env.DB.get('pro:' + code, 'json')) || { plans: [], updated: 0 };
+      if (pro.plans.indexOf(plan) < 0) pro.plans.push(plan);
+      pro.updated = Date.now();
+      await env.DB.put('pro:' + code, JSON.stringify(pro));
+      await env.DB.put('gsess:' + session, '1', { expirationTtl: 60 * 60 * 24 * 90 });
+      return json({ ok: true, granted: true, plans: pro.plans });
+    }
+
     if (path === '/account/state' && request.method === 'POST') {
       const code = cleanCode(body.code || '');
       const key = String(body.key || '');
@@ -1713,7 +1801,15 @@ export default {
         blocked: !!(minor && minor.blocked),
         age: minor ? minor.age : 0,
         rules: rules || null,
-        hasPin: !!(await env.DB.get('rpin:' + code))
+        hasPin: !!(await env.DB.get('rpin:' + code)),
+        /* WHAT THEY PAID FOR, ON WHATEVER DEVICE THEY SIGN IN FROM. This is
+           the half of the webhook that the buyer actually feels: the grant is
+           written against the account, and this is where any device picks it
+           up — including the one that was closed before the return page ever
+           loaded, and including a second device that was never used to buy
+           anything. Null when nothing has been bought, so a page can tell
+           "free" from "could not reach the server". */
+        pro: (await env.DB.get('pro:' + code, 'json')) || null
       });
     }
 
