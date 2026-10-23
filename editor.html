@@ -2050,5 +2050,18 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      the page changed to match what a thumb reaches for. Goes with
      editor-phone.js. -->
 <script src='editor-phone.js' defer></script>
+
+<!-- THE LOOKS. Thirty-six effects and fifteen colour controls is a lot of
+     dials and no starting points, which is the gap between having the parts
+     and getting a look: somebody who knows what they want their clip to feel
+     like still has to know which four sliders add up to it. Twenty-four
+     presets name the feeling and set the sliders, and because they go through
+     the store the editor's own undo takes them back.
+
+     AFTER editor-fx.js, and that is not a preference: the tiles are painted
+     through NC_FX.filterFor and NC_FX.PAINT, so the thumbnails show the real
+     effect rather than a picture of one. Loaded first it would find no NC_FX
+     and every tile would be the bare test card. Goes with editor-looks.js. -->
+<script src='editor-looks.js' defer></script>
   </body>
 </html>

@@ -479,6 +479,14 @@
          so its thumbnail is the thing that will actually happen rather than a
          stand-in; two previews of one effect in one tile is one too many. */
       if (n.closest && n.closest('.nc-fx-tile')) continue;
+      /* And the Looks panel, for the same reason and with a sharper edge to
+         it. Its tiles are canvases painted through NC_FX, so a second preview
+         inside one is the same duplication as above — but the bug that found
+         this was in the category chips, not the tiles. Three of them are named
+         Retro, Glow and Glitch, which are effect names, so each was handed a
+         48px moving thumbnail and grew to twice the width of the chips beside
+         it. A word is not a request for a preview of that word. */
+      if (n.closest && n.closest('.nclk')) continue;
       /* leaf: no descendant carries text of its own */
       var kid = n.querySelector('*');
       if (kid && (kid.textContent || '').trim()) continue;

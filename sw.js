@@ -610,6 +610,32 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v121: Looks — a grade in one press, and a word is not a request for a
+   preview of that word.
+
+   Thirty-six effects and fifteen colour controls is a lot of dials and no
+   starting points. Twenty-four presets name the feeling and set the sliders,
+   and every tile is drawn through NC_FX with the effects it applies, so the
+   thumbnail is the thing that will happen rather than a picture of it.
+
+   TWO BUGS FOUND BY DRIVING IT RATHER THAN BY READING IT.
+
+   Undo ate the clip. updateClipEffects and its three siblings change a clip
+   without recording anything — right for a slider being dragged, wrong for a
+   look, which is one decision moving up to four groups of fields at once.
+   Without an entry of its own the next Ctrl+Z stepped past the look to the
+   entry before it, which was the clip being created, and the clip vanished.
+   editor-looks.js pushes history once before the four calls.
+
+   And three category chips grew to twice the width of the others. The chips
+   are named Retro, Glow and Glitch; studio-kit.js decorates any leaf element
+   whose text is an effect name with a 48px moving thumbnail, and a chip is a
+   button, which is in its scan. It already skips the panel editor-fx.js owns,
+   for the same reason — two previews of one effect in one tile — so the Looks
+   panel is skipped there now too.
+
+   editor.html, editor-looks.js (NEW) and studio-kit.js go together: the first
+   loads the file, and without the third the chips come back decorated. */
 /* v120: the pages the Portuguese pass never reached, and the theme bug under
    a cyber theme.
 
@@ -2482,7 +2508,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v120';
+const CACHE = 'novaclip-v121';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2649,6 +2675,7 @@ const SHELL = [
      somebody is working fast on a train. */
   '/editor-keys.js',
   '/editor-phone.js',
+  '/editor-looks.js',
   /* The Academy. The page and its script go together — academy.html is markup
      with no behaviour of its own, so shipping it without academy.js offline
      would give somebody an empty shelf and three dead buttons. */
