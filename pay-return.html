@@ -87,7 +87,10 @@ a.b.alt,button.b.alt{background:transparent;color:var(--nc-text,#EAF2FF);
   var qs = new URLSearchParams(location.search);
   var sid = qs.get('session_id') || '';
   var NC_PAY = '';
-  try { NC_PAY = localStorage.getItem('nc_pay_worker') || ''; } catch (e) {}
+  /* Same default as pricing.html, and it has to be: this page confirms the
+     session the other page started. One with an address and one without
+     means a buyer pays and comes back to a page that cannot check it. */
+  try { NC_PAY = localStorage.getItem('nc_pay_worker') || 'https://novaclip-pay.eskondori-pt.workers.dev'; } catch (e) { NC_PAY = 'https://novaclip-pay.eskondori-pt.workers.dev'; }
 
   var IC = {
     ok:   "<svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='10'/><path d='M8 12l3 3 5-6'/></svg>",

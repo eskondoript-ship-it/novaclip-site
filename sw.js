@@ -610,6 +610,39 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v123: three bugs on the payment screen, two of them in front of a buyer.
+
+   NO WAY OUT OF THE DIALOG. Four modals on pricing.html — the PIN gate, the
+   card scanner, the cart and the checkout — each had <button class="coclose">
+   with nothing inside it. The CSS positioned the button and gave it a font
+   size; an empty button is 0x0, so there was nothing to click. Reported as
+   "cant exit this page", from the payment screen, which is the worst place on
+   the site to be stuck. The x is content now rather than CSS, the box is a
+   44px touch target, and Escape closes it — which is the first thing anybody
+   tries.
+
+   "COULD NOT WORK OUT WHICH PLAN THIS IS." The cart stored the heading text
+   and checkout found the plan by matching that text against the headings on
+   the page. The same string, until the page is re-rendered in another
+   language or in Gen Z mode — then the stored copy matches nothing and a
+   correctly filled cart cannot be paid for. Reproduced by adding in English
+   and returning in Portuguese. The cart carries data-plan now, which does not
+   move; the name match is kept only for carts saved before this.
+
+   AND EVERY CHECKOUT WOULD HAVE FAILED ANYWAY. The request sent
+   `currency: CUR`, and CUR is the TABLE of currencies, not the selected one.
+   The worker stringified it to "[object object]" and looked for a price under
+   that key. Found by watching what the page actually sent rather than by
+   reading the line, which is the only way this one shows up.
+
+   And the pay worker's address is in the page at last. It was read from
+   localStorage alone, so every visitor would have had to run a setItem in
+   their own console first — which is what "payments are not switched on yet"
+   was really reporting, while the worker sat deployed and healthy.
+
+   pricing.html and pay-return.html go together: one starts the session, the
+   other confirms it, and one with an address and one without means a buyer
+   pays and comes back to a page that cannot check it. */
 /* v122: a purchase that survives the tab being closed.
 
    Entitlement was written in exactly one place — the return page, by the
@@ -2544,7 +2577,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v122';
+const CACHE = 'novaclip-v123';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

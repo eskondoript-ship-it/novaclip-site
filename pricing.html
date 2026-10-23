@@ -145,7 +145,12 @@ html[data-device="phone-s"] .btsave { display: none; }
 #checkout.show { display: flex; }
 .cobox { background: var(--nc-bg2,#101725); border: 1px solid rgba(0,240,255,0.32); border-radius: 22px; padding: 28px;
   width: min(460px, 96vw); position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
-.coclose { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--nc-dim,#7E8AA6); font-size: 1.2rem; cursor: pointer; }
+.coclose { position: absolute; top: 6px; right: 8px; background: none; border: none;
+  color: var(--nc-dim,#7E8AA6); font-size: 1.5rem; line-height: 1; cursor: pointer;
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; }
+.coclose:hover { color: var(--nc-text,#EAF2FF); background: rgba(255,255,255,.08); }
+.coclose:focus-visible { outline: 2px solid var(--nc-cyan,#00F0FF); outline-offset: 2px; }
 .cobox h2 { margin-bottom: 16px; font-size: 1.35rem; }
 .coplan { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 13px 15px; margin-bottom: 16px; }
@@ -655,7 +660,14 @@ function addToCart(card) {
   const unit = planUnitPrice(card);
   const found = CART.find(i => i.name === name && i.cycle === cycle);
   if (found) found.qty++;
-  else CART.push({ name: name, cycle: cycle, unit: unit, qty: 1, sub: isSub });
+  /* THE ID, NOT ONLY THE NAME. The cart used to carry the heading text and
+     nothing else, and checkout found the plan by matching that text against
+     the headings on the page. Both are the same string right up until the
+     page is re-rendered in another language or in Gen Z mode, at which point
+     the stored copy matches nothing and the buyer is told "Could not work
+     out which plan this is" on a cart they filled correctly. Reproduced by
+     adding in English and returning in Portuguese. data-plan never moves. */
+  else CART.push({ id: card.dataset.plan || '', name: name, cycle: cycle, unit: unit, qty: 1, sub: isSub });
   saveCart();
   openCart();
 }
@@ -814,7 +826,8 @@ function wireCartPay() {
   openCheckout(
     CART.length === 1 ? CART[0].name : CART.length + ' items',
     fmt(cur, Math.round(total * 100) / 100),
-    CART.some(i => i.sub) ? (billCycle === 'year' ? 'Yearly' : 'Monthly') : 'One-time payment'
+    CART.some(i => i.sub) ? (billCycle === 'year' ? 'Yearly' : 'Monthly') : 'One-time payment',
+    CART.length === 1 ? (CART[0].id || '') : ''
   );
   };
 }
@@ -1202,8 +1215,8 @@ window.addEventListener('DOMContentLoaded', () => { issueEarned(); renderMyTrain
 
 // ---------- CHECKOUT ----------
 let coCurrent = null;
-function openCheckout(planName, priceText, cycle) {
-  coCurrent = { plan: planName, price: priceText, cycle: cycle };
+function openCheckout(planName, priceText, cycle, planId) {
+  coCurrent = { plan: planName, price: priceText, cycle: cycle, id: planId || '' };
   /* Whatever this modal was last used for, it is a plan now. The Pay button is
      shared and the two things it can do are not interchangeable: paying for a
      plan through the lesson path would call the Academy with no lesson, and
@@ -1223,6 +1236,18 @@ function openCheckout(planName, priceText, cycle) {
   document.getElementById('checkout').classList.add('show');
 }
 window.closeCheckout = function () { document.getElementById('checkout').classList.remove('show'); };
+
+/* AND THE KEY EVERYBODY ALREADY TRIES. The x is back and is a 44px target,
+   but a dialog covering the page should also close the way every other dialog
+   closes — the first thing somebody does when they feel stuck is press Escape,
+   and until now that did nothing here. Bound once, on the document, and it
+   only acts when the dialog is actually open so it cannot swallow the key
+   from anything else on the page. */
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  var box = document.getElementById('checkout');
+  if (box && box.classList.contains('show')) { window.closeCheckout(); }
+});
 
 /* ---------------------------------------------------------------------------
    THE ACADEMY LESSON AT THE CHECKOUT
@@ -1328,7 +1353,19 @@ async function payForLesson() {
 
    Left empty on purpose until the worker is deployed. Empty means the button
    says so plainly rather than throwing at a blank address. */
-const NC_PAY = localStorage.getItem('nc_pay_worker') || '';
+/* The deployed pay worker. A URL, not a key — the Stripe secret lives on the
+   worker and nothing on this page has ever seen it.
+
+   This was read from localStorage alone, which meant every visitor had to run
+   a setItem in their own console before checkout would appear. That is fine
+   as a way to test a worker before it exists and useless as a way to ship one,
+   and it is what the "payments are not switched on yet" message was really
+   reporting: the worker was deployed and healthy, the page simply had no
+   address for it.
+
+   localStorage still wins when it is set, so a different worker can be
+   pointed at from one browser without touching the site. */
+const NC_PAY = localStorage.getItem('nc_pay_worker') || 'https://novaclip-pay.eskondori-pt.workers.dev';
 
 function planIdFor(name) {
   /* The cart carries display names; the worker knows ids. The plan cards
@@ -1381,7 +1418,13 @@ async function startStripeCheckout() {
     return;
   }
 
-  const plan = planIdFor(coCurrent && coCurrent.plan) ||
+  /* The id first, every time. The name lookups behind it are kept only for a
+     cart that was saved before ids were stored — those entries have no id and
+     would otherwise be unbuyable until the buyer emptied the cart, which is a
+     fix nobody would guess at. */
+  const plan = (coCurrent && coCurrent.id) ||
+               (CART.length === 1 && CART[0].id) ||
+               planIdFor(coCurrent && coCurrent.plan) ||
                (CART.length === 1 ? planIdFor(CART[0].name) : null);
   if (!plan) {
     err.textContent = 'Could not work out which plan this is. Pick one plan at a time for now.';
@@ -1429,7 +1472,15 @@ async function startStripeCheckout() {
     const res = await fetch(NC_PAY.replace(/\/$/, '') + '/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: plan, currency: (CUR || 'eur'),
+      /* CUR is the TABLE of currencies — { eur: {sym,dec}, usd: … } — not the
+         one that is selected. Sending it put the whole object in the request,
+         the worker stringified it to "[object object]", and looked for a price
+         under that key in a table that has six real ones. Every checkout would
+         have failed at the worker with an unsupported currency, after the
+         buyer had already pressed Pay. The chosen currency is in nc_currency,
+         which is where the rest of this page reads it from. */
+      body: JSON.stringify({ plan: plan,
+                             currency: (localStorage.getItem('nc_currency') || 'eur'),
                              email: email || undefined, ticket: ticket || undefined })
     });
     const out = await res.json();
@@ -1460,7 +1511,7 @@ else initCheckout();
 </script>
 <div id='pingate'>
   <div class='pinbox'>
-    <button class='coclose' onclick='closePinGate()'></button>
+    <button class='coclose' type='button' onclick='closePinGate()' aria-label='Close' title='Close'>×</button>
     <div id='pinHasPin'>
       <div class='pinicon'></div>
       <h2>Parent approval needed</h2>
@@ -1488,7 +1539,7 @@ else initCheckout();
 
 <div id='scanner'>
   <div class='scanbox'>
-    <button class='coclose' onclick='closeScanner()'></button>
+    <button class='coclose' type='button' onclick='closeScanner()' aria-label='Close' title='Close'>×</button>
     <h2>Scan your card</h2>
     <p class='scansub'>Hold the front of the card inside the frame. We will read the <b>number, expiry and name</b> — keep it flat and well lit.</p>
     <div class='scanview'>
@@ -1504,7 +1555,7 @@ else initCheckout();
 
 <div id='cart'>
   <div class='cartbox'>
-    <button class='coclose' onclick='closeCart()'></button>
+    <button class='coclose' type='button' onclick='closeCart()' aria-label='Close' title='Close'>×</button>
     <h2>Your cart</h2>
     <div id='cartitems'></div>
     <div class='carttotal'><span>Total</span><b id='carttotal'>—</b></div>
@@ -1516,7 +1567,16 @@ else initCheckout();
 
 <div id='checkout'>
   <div class='cobox'>
-    <button class='coclose' onclick='closeCheckout()'></button>
+    <!-- THE WAY OUT. This was an empty <button>, so it rendered 0x0: the CSS
+         positioned it and gave it a font size, and there was nothing inside
+         to make it occupy a pixel. A modal over the whole page with no
+         reachable close is a page a buyer cannot leave — reported exactly
+         that way, from the payment screen, which is the worst place on the
+         site to be stuck. The x is content rather than CSS so it cannot
+         vanish again the same way, and the box is a 44px touch target
+         because that is the size a thumb needs. -->
+    <button class='coclose' type='button' onclick='closeCheckout()'
+            aria-label='Close' title='Close'>×</button>
     <div class='costep' id='coStep1'>
       <h2>Checkout</h2>
       <div class='coplan'>
