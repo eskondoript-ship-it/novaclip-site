@@ -610,6 +610,32 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v126: the Portuguese sounds like somebody from here wrote it.
+
+   The translation was correct European Portuguese and slightly stiff: right
+   words, no warmth, the register of an instruction manual on pages that are
+   meant to be fun. Twenty-three lines rewritten in the way teenagers in
+   Portugal actually talk — "Ainda não há nada por aqui!", "bora, sê o
+   primeiro", "o que está mesmo a bombar no teu nicho", "Partilha uma cena
+   nova".
+
+   WHERE IT WAS NOT APPLIED, WHICH MATTERS MORE THAN WHERE IT WAS. Nothing on
+   safety, privacy, moderation, payment or the parental controls was touched,
+   and that is checked rather than intended: the suspension rules, the
+   personal-details rule, the crisis line, the card-scanner notice and the
+   Stripe line are asserted to contain none of it. A sentence telling a
+   thirteen-year-old what gets their account suspended, or a parent where
+   their card details go, is not a place to be chummy — and the brief this
+   came from says so itself.
+
+   Two phrases in the list were not in the table. They were skipped rather
+   than invented: one is a dictionary key in nova.js that already reads well,
+   the other is a pattern rule. Adding rows that nothing looks up would have
+   counted as done and changed nothing on screen.
+
+   Feature names are untouched. Renaming Feed, Studio or Editor is a
+   consistency change across nova.js, the rail and twenty pages, not a
+   translation, and half-done it would leave one feature with two names. */
 /* v125: a cart that can hold more than one thing, and a banner that stopped
    being true.
 
@@ -2647,7 +2673,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v125';
+const CACHE = 'novaclip-v126';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
