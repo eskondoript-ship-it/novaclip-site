@@ -259,14 +259,55 @@ async function checkout(request, env) {
   let body;
   try { body = await request.json(); } catch (e) { return json({ error: 'bad_json' }, 400); }
 
-  const plan = PLANS[String(body.plan || '')];
-  if (!plan) return json({ error: 'unknown_plan' }, 400);
+  /* A CART, NOT A PLAN.
+     This took one plan id and nothing else, so a cart with a certificate and a
+     subscription in it could not be paid for at all — the page gave up before
+     it called, with "Could not work out which plan this is", on a cart the
+     buyer had filled correctly.
+
+     A Checkout Session is ONE mode. Stripe has no session that is part
+     subscription and part one-off purchase, so a mixed cart is genuinely two
+     sessions and no amount of code here makes it one. What this can do, and
+     now does, is take any number of items that share a mode: three
+     certificates are one checkout. A mixed cart is refused by name, so the
+     page can say which half to buy first instead of guessing. */
+  const want = Array.isArray(body.items) && body.items.length
+    ? body.items
+    : [{ plan: body.plan, qty: 1 }];
+  if (want.length > 20) return json({ error: 'too_many_items' }, 400);
+
+  const lines = [];
+  for (const it of want) {
+    const p = PLANS[String((it && it.plan) || '')];
+    if (!p) return json({ error: 'unknown_plan', detail: String((it && it.plan) || '') }, 400);
+    const qty = Math.min(Math.max(parseInt(it.qty, 10) || 1, 1), 20);
+    lines.push({ id: String(it.plan), plan: p, qty });
+  }
+  const modes = [...new Set(lines.map((l) => l.plan.mode))];
+  if (modes.length > 1) {
+    return json({
+      error: 'mixed_cart',
+      message: 'A subscription and a one-time purchase cannot go through the same Stripe '
+             + 'checkout — Stripe sessions are one or the other. Buy them one after the other.'
+    }, 400);
+  }
+  /* Two subscriptions on different intervals are the same problem one level
+     down: one session bills on one cycle. */
+  if (lines[0].plan.mode === 'subscription'
+      && [...new Set(lines.map((l) => l.plan.interval))].length > 1) {
+    return json({ error: 'mixed_interval',
+      message: 'A monthly and a yearly plan bill on different cycles and cannot share one checkout.' }, 400);
+  }
+  const plan = lines[0].plan;
 
   const currency = String(body.currency || 'eur').toLowerCase();
   if (!CURRENCIES.includes(currency)) return json({ error: 'unsupported_currency' }, 400);
 
-  const amount = plan.price[currency];
-  if (!amount) return json({ error: 'no_price_for_currency' }, 400);
+  /* Every item, not just the first. This checked one price and then priced
+     the whole cart, so a currency that one plan happens to carry and another
+     does not would have sent Stripe a line with no amount. */
+  const missing = lines.filter((l) => !l.plan.price[currency]).map((l) => l.id);
+  if (missing.length) return json({ error: 'no_price_for_currency', detail: missing.join(',') }, 400);
 
   const origin = env.SITE_ORIGIN || 'https://novaclip.org';
 
@@ -276,14 +317,24 @@ async function checkout(request, env) {
   form.set('mode', plan.mode);
   form.set('success_url', `${origin}/pay-return.html?session_id={CHECKOUT_SESSION_ID}`);
   form.set('cancel_url', `${origin}/pricing.html?checkout=cancelled`);
-  form.set('line_items[0][quantity]', '1');
-  form.set('line_items[0][price_data][currency]', currency);
-  form.set('line_items[0][price_data][unit_amount]', String(amount));
-  form.set('line_items[0][price_data][product_data][name]', plan.name);
-  if (plan.mode === 'subscription') {
-    form.set('line_items[0][price_data][recurring][interval]', plan.interval);
-  }
-  form.set('metadata[plan]', body.plan);
+  /* One line per item, priced here and not by the browser. The amounts come
+     from the table above in every case, so a cart that says 0.01 on the way
+     in is still charged the real price. */
+  lines.forEach((l, i) => {
+    const a = l.plan.price[currency];
+    form.set(`line_items[${i}][quantity]`, String(l.qty));
+    form.set(`line_items[${i}][price_data][currency]`, currency);
+    form.set(`line_items[${i}][price_data][unit_amount]`, String(a));
+    form.set(`line_items[${i}][price_data][product_data][name]`, l.plan.name);
+    if (l.plan.mode === 'subscription') {
+      form.set(`line_items[${i}][price_data][recurring][interval]`, l.plan.interval);
+    }
+  });
+  /* The webhook grants what this names, so it names all of them. The first is
+     kept under `plan` as well because that is the key the grant call and the
+     return page already read. */
+  form.set('metadata[plan]', lines[0].id);
+  if (lines.length > 1) form.set('metadata[plans]', lines.map((l) => l.id).join(','));
   /* THE ONLY THING ABOUT THE BUYER THAT GOES TO STRIPE. A ticket is a random
      string the server worker issued against the account a moment ago; it
      expires in a day and buys nothing by itself. The NovaClip code is not sent

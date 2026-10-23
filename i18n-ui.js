@@ -1253,7 +1253,16 @@
     "This is how you get back in if you forget the PIN. Nobody can reset it for you — there is no account behind this page.": ["", "", "", "", "", "", "É assim que voltas a entrar se te esqueceres do PIN. Ninguém to pode repor — não há conta nenhuma por trás desta página.", "", "", "", "", "", "", "", "", "", "", "", ""],
     "The PIN, your name and your answer stay on this device. They are not sent anywhere, and NovaClip cannot read them.": ["", "", "", "", "", "", "O PIN, o teu nome e a tua resposta ficam neste aparelho. Não são enviados para lado nenhum, e o NovaClip não os consegue ler.", "", "", "", "", "", "", "", "", "", "", "", ""],
     "e.g. Maria Silva": ["", "", "", "", "", "", "ex.: Maria Silva", "", "", "", "", "", "", "", "", "", "", "", ""],
-    "Please put your name in — the dashboard uses it, and the alerts are addressed to it.": ["", "", "", "", "", "", "Põe aqui o teu nome — o painel usa-o, e é a ele que os alertas são endereçados.", "", "", "", "", "", "", "", "", "", "", "", ""]
+    "Please put your name in — the dashboard uses it, and the alerts are addressed to it.": ["", "", "", "", "", "", "Põe aqui o teu nome — o painel usa-o, e é a ele que os alertas são endereçados.", "", "", "", "", "", "", "", "", "", "", "", ""],
+
+    /* ---- the cart, once it could hold more than one thing ------------- */
+    "Two checkouts.": ["", "", "", "", "", "", "Dois pagamentos.", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "A subscription and a one-time purchase cannot go through the same Stripe checkout. Take one out, buy the other, then put it back — the cart remembers.": ["", "", "", "", "", "", "Uma subscrição e uma compra única não podem ir no mesmo pagamento da Stripe. Tira uma do carrinho, compra a outra, e volta a pô-la — o carrinho lembra-se.", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "A subscription and a one-time purchase cannot go through the same Stripe checkout. Take one out of the cart, buy the other, then put it back.": ["", "", "", "", "", "", "Uma subscrição e uma compra única não podem ir no mesmo pagamento da Stripe. Tira uma do carrinho, compra a outra, e volta a pô-la.", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Demo mode.": ["", "", "", "", "", "", "Modo de demonstração.", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Payments are not switched on for this site yet, so checkout is a simulation.": ["", "", "", "", "", "", "Os pagamentos ainda não estão ligados neste site, por isso a compra é uma simulação.", "", "", "", "", "", "", "", "", "", "", "", ""],
+    "Secure payment handled by": ["", "", "", "", "", "", "Pagamento seguro tratado pela", "", "", "", "", "", "", "", "", "", "", "", ""],
+    ". You will be redirected to complete it.": ["", "", "", "", "", "", ". Vais ser reencaminhado para o concluir.", "", "", "", "", "", "", "", "", "", "", "", ""]
   };
 
   /* ------------------------------------------------------------------
@@ -1286,6 +1295,8 @@
      instead of being half-caught by the rule below them.
      ========================================================================= */
   var PAT = [
+    { re: /^\. All (\d+) items are paid for in one checkout\.$/,
+      pt: ". Os $1 artigos são pagos num único pagamento." },
     { re: /^(\d+) \/ (\d+) characters$/,
       pt: "$1 / $2 caracteres" },
     { re: /^(\d+) game modes$/,

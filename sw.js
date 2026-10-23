@@ -610,6 +610,38 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v125: a cart that can hold more than one thing, and a banner that stopped
+   being true.
+
+   "DEMO MODE. NO STRIPE LINKS ARE CONFIGURED YET, SO CHECKOUT IS A
+   SIMULATION." The cart said that whenever the Payment Links table was empty
+   — and that table stays empty on purpose now, because the pay worker is the
+   other way of taking money and the better one. So the cart told every buyer
+   that their real payment was a simulation. The line is kept for the case it
+   actually describes, no worker AND no links, and shows in no other.
+
+   "COULD NOT WORK OUT WHICH PLAN THIS IS." The checkout took one plan id, so
+   any cart with two things in it was refused — and refused with a sentence
+   that blamed the cart. It knew perfectly well what was in it; it had nowhere
+   to send more than one. The worker takes a list now: three certificates are
+   one checkout, with a line each and quantities, priced from the worker's own
+   table so a cart that says 0.01 on the way in is still charged the real
+   price.
+
+   ONE THING IT STILL CANNOT DO, AND SAYS SO. A Stripe Checkout Session is one
+   mode: subscription or one-off, never both. A plan and a certificate
+   together are genuinely two checkouts and no amount of code here makes them
+   one. That is now said in the cart, before the buyer commits to anything,
+   instead of at the end as if they had filled the cart wrong. Two
+   subscriptions on different intervals are the same problem and get the same
+   treatment.
+
+   The per-item price check moved with it. It read the first item's price and
+   then priced the whole cart, so a currency one plan carries and another does
+   not would have sent Stripe a line with no amount.
+
+   pay-worker.js has to be DEPLOYED for any of this — a push does not deploy
+   it. pricing.html and i18n-ui.js go with it. */
 /* v124: the Family Dashboard's front door, and who is standing at it.
 
    The gate was one flat card with six fields stacked in it, left-aligned in a
@@ -2615,7 +2647,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v124';
+const CACHE = 'novaclip-v125';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
