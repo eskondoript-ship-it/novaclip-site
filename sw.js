@@ -610,6 +610,32 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v127: a panel that could not be closed, and an AI check that could not run.
+
+   THE CLOSE BUTTON WAS 332 PIXELS OUTSIDE THE PANEL. moderate.js puts its
+   result over the editor with an x in the header, and the header title is the
+   clip's filename. A filename off a download site is one unbreakable
+   45-character token, and a flex item defaults to min-width:auto — it refuses
+   to shrink below its own content. So the title laid out at its natural width
+   and shoved the button along with it.
+
+   Measured, with the filename from the report: the panel is 400px, the title
+   took 677px, and the x ended 332px past the panel's right edge where
+   .ncmod{overflow:hidden} painted it out of existence. The button was always
+   in the markup and always had its handler; there was nothing on screen to
+   click. min-width:0 and an ellipsis fix it, the full name moves to the
+   tooltip, and Escape closes it too — the reflex when something is in the way.
+
+   AND "COULD NOT ASK THE AI — THAT PROMPT IS TOO LONG" WAS NOT THIS CODE.
+   Reproduced against the deployed worker with a payload shaped exactly like
+   the one moderate.js sends, then run against ai-worker.js in this repo: the
+   repo accepts it and the deployed worker refuses it. The worker was simply
+   older than the file. Deploying it turned the refusal into a real Gemini
+   response, which is the whole fix — no code here changed for it.
+
+   That is the second time a worker has been behind its file in this repo, so
+   wrangler.ai.toml is new and joins the other two: one config per worker,
+   named for it, --keep-vars for the same reason as the server one. */
 /* v126: the Portuguese sounds like somebody from here wrote it.
 
    The translation was correct European Portuguese and slightly stiff: right
@@ -2673,7 +2699,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v126';
+const CACHE = 'novaclip-v127';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

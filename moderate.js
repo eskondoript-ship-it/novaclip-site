@@ -565,7 +565,22 @@
         'font:400 13px/1.55 Inter,system-ui,sans-serif}',
       '.ncmod-h{display:flex;align-items:center;gap:9px;padding:12px 13px;',
         'border-bottom:1px solid var(--nc-line,rgba(255,255,255,.1))}',
-      '.ncmod-h b{flex:1 1 auto;font-size:.9rem}',
+      /* min-width:0 IS WHAT KEEPS THE CLOSE BUTTON ON THE PANEL.
+
+         A flex item defaults to min-width:auto, which means it refuses to
+         shrink below the width of its own content. The title here is the
+         clip's filename, and a filename off a download site is one unbreakable
+         45-character token — so the title laid itself out at its natural width
+         and shoved everything after it along.
+
+         Measured, with a real one: the panel is 400px, the title took 677px,
+         and the close button ended 332px past the panel's right edge, where
+         .ncmod{overflow:hidden} painted it out of existence. The button was
+         always in the markup and always had its handler. There was simply
+         nothing on screen to click, so the panel could not be dismissed at
+         all — reported, correctly, as a thing that cannot be removed. */
+      '.ncmod-h b{flex:1 1 auto;min-width:0;font-size:.9rem;',
+        'overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.ncmod-x{width:32px;height:32px;flex:0 0 auto;border-radius:9px;cursor:pointer;font-size:17px;line-height:1;',
         'background:transparent;border:1px solid var(--nc-line2,rgba(255,255,255,.14));color:inherit}',
       '.ncmod-b{flex:1 1 auto;min-height:0;overflow-y:auto;padding:11px 13px}',
@@ -573,7 +588,10 @@
         'background:var(--nc-bg3,rgba(255,255,255,.05));border-left:3px solid var(--c,#8c96ad)}',
       '.ncmod-i.high{--c:#fb7185}.ncmod-i.check{--c:#fbbf24}.ncmod-i.low{--c:#8c96ad}.ncmod-i.ok{--c:#34d399}',
       '.ncmod-i b{display:block;margin-bottom:3px;font-size:.86rem}',
-      '.ncmod-i p{margin:0;font-size:.79rem;color:var(--nc-dim,#8c96ad)}',
+      '.ncmod-i p{margin:0;font-size:.79rem;color:var(--nc-dim,#8c96ad);'
+        /* the same filename appears in the body of the Checking… line, and
+           an unbreakable token there widens the panel instead. */
+        + 'overflow-wrap:anywhere}',
       '.ncmod-i i{display:block;margin-top:6px;font-style:normal;font-size:.72rem;opacity:.75}',
       '.ncmod-f{padding:10px 13px;border-top:1px solid var(--nc-line,rgba(255,255,255,.1));',
         'font-size:.72rem;color:var(--nc-dim,#8c96ad)}',
@@ -606,9 +624,11 @@
   /* The object URL of the clip the open panel is about, so the AI button can
      reopen it. Released when the panel closes — see check(). */
   var revokeOnClose = null;
+  var escBound = null;
   function close() {
     if (panel && panel.parentNode) panel.parentNode.removeChild(panel);
     panel = null;
+    if (escBound) { document.removeEventListener('keydown', escBound); escBound = null; }
     if (revokeOnClose) { try { URL.revokeObjectURL(revokeOnClose); } catch (e) {} revokeOnClose = null; }
   }
 
@@ -639,13 +659,25 @@
     }
 
     panel.innerHTML =
-      '<div class="ncmod-h"><b>' + esc(name || 'This clip') + '</b>' +
+      '<div class="ncmod-h"><b title="' + esc(name || 'This clip') + '">' +
+          esc(name || 'This clip') + '</b>' +
         '<button class="ncmod-x" type="button" aria-label="Close">&times;</button></div>' +
       '<div class="ncmod-b">' + items + '</div>' +
       (busy || !src ? '' : '<div class="ncmod-ai" id="ncmodAi"></div>') +
       '<div class="ncmod-f">' + footer + '</div>';
     panel.querySelector('.ncmod-x').onclick = close;
     document.body.appendChild(panel);
+    /* AND THE KEY ANYBODY TRIES FIRST. The x is back on the panel where it
+       belongs, but this sits over the timeline in the editor, and the reflex
+       when something is in the way is Escape. Bound once per panel and taken
+       off with it, so it cannot pile up or swallow the key from the editor
+       when nothing is open. */
+    if (!escBound) {
+      escBound = function (e) {
+        if (e.key === 'Escape' && panel) { close(); }
+      };
+      document.addEventListener('keydown', escBound);
+    }
     if (!busy && src) aiRow(src, name);
 
     /* A clean result is information, not an event — it goes away on its own.

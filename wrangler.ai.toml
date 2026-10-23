@@ -1,0 +1,28 @@
+# =============================================================================
+#  novaclip-ai — the Gemini worker
+# =============================================================================
+#  Named for its worker, like the other two, because they are not
+#  interchangeable:
+#
+#      ai-worker.js           novaclip-ai       GEMINI_API_KEY      <- this one
+#      leaderboard-worker.js  novaclip-server   the DB KV binding
+#      pay-worker.js          novaclip-pay      STRIPE_SECRET_KEY
+#
+#      wrangler deploy -c wrangler.ai.toml --keep-vars
+#
+#  ONLY SECRETS, SO THERE IS NO BINDING BLOCK HERE. Read back from the live
+#  worker rather than assumed: it carries one binding, GEMINI_API_KEY, and it
+#  is a secret — and secrets survive a deploy on their own. The optional keys
+#  this file also reads (YOUTUBE_API_KEY, SEARCH_API_KEY, GOOGLE_MAPS_KEY,
+#  OPENAI_API_KEY, OPENROUTER_API_KEY) are secrets too when they are set at
+#  all, and env.RL is an optional rate-limit binding this worker does without.
+#
+#  --keep-vars anyway, for the same reason wrangler.server.toml needs it: a
+#  deploy replaces the vars with what the config says, and this config says
+#  nothing. Anything set as a plain var in the dashboard would be dropped
+#  silently without it.
+# =============================================================================
+
+name = "novaclip-ai"
+main = "ai-worker.js"
+compatibility_date = "2026-10-01"
