@@ -487,6 +487,14 @@
          48px moving thumbnail and grew to twice the width of the chips beside
          it. A word is not a request for a preview of that word. */
       if (n.closest && n.closest('.nclk')) continue;
+      /* And the transitions browser, which is the sharpest version of this
+         yet. Its tiles are named "Slice glitch", "Liquid warp", "Film burn" —
+         every one of them contains an effect name, so the matcher below claims
+         them, and artSlot() then empties the element it decorates. Measured:
+         every label in the panel disappeared and a category chip grew a
+         thumbnail. The panel draws its own previews, running, from the same
+         painters this file would be imitating. */
+      if (n.closest && n.closest('.nctr')) continue;
       /* leaf: no descendant carries text of its own */
       var kid = n.querySelector('*');
       if (kid && (kid.textContent || '').trim()) continue;

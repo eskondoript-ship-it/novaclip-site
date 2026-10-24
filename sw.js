@@ -610,6 +610,45 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v128: transitions that rewrite the frame instead of sliding it.
+
+   WHY THEY LOOKED LIKE A SLIDE DECK. Every transition in editor-fx.js
+   returned the same kind of thing: a transform of the whole clip. Move the
+   rectangle, scale it, fade it, clip it to a shape. That is exactly the
+   vocabulary a presentation tool has, and a cut between two shots came out as
+   two rectangles sliding past each other with a hard edge down the middle.
+
+   What a real editor does during the handover is rewrite pixels: the seam is
+   soft and irregular, the frame smears in the direction it is leaving, the
+   channels come apart and back together, light blooms across the cut. None of
+   that is expressible as translate/scale/rotate, so none of it was there.
+
+   The machinery already existed and was wired only to effects. The draw loop's
+   last act for a clip is one drawImage; installPainter borrows it, renders the
+   frame to a scratch canvas and lets painters rewrite it. A transition is the
+   same shape of problem, so it now gets the same stage — nine of them: a
+   feathered luma sweep, a directional whip smear, a zoom-blur punch, real
+   per-channel RGB separation, slice displacement, a film burn drawn as a
+   screen composite, a liquid row warp, a soft clock wipe and a grain
+   dissolve. Measured: each changes the frame, each progresses with the
+   transition, and no two of the thirty-five render alike across a cycle.
+
+   AND A PLACE TO CHOOSE THEM, WHICH IS HALF THE WORK. The editor's own
+   Transitions panel is drawn by the React bundle from a list inside the
+   bundle, so a transition added to editor-fx.js is one the renderer will
+   happily run and nothing can select. Nine invisible transitions are nine
+   transitions that do not exist. editor-trans.js is a browser for all
+   thirty-five, each tile running the real thing over two frames, applied
+   through the store so undo takes it back.
+
+   studio-kit.js had to learn about the panel, and this was the sharpest case
+   yet: the tiles are named "Slice glitch", "Liquid warp", "Film burn" — every
+   one contains an effect name, so its matcher claimed them and artSlot()
+   emptied the element it decorated. Every label in the panel vanished and a
+   category chip grew a thumbnail of itself.
+
+   editor-fx.js, editor-trans.js (NEW), editor.html and studio-kit.js go
+   together. */
 /* v127: a panel that could not be closed, and an AI check that could not run.
 
    THE CLOSE BUTTON WAS 332 PIXELS OUTSIDE THE PANEL. moderate.js puts its
@@ -2699,7 +2738,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v127';
+const CACHE = 'novaclip-v128';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2867,6 +2906,7 @@ const SHELL = [
   '/editor-keys.js',
   '/editor-phone.js',
   '/editor-looks.js',
+  '/editor-trans.js',
   /* The Academy. The page and its script go together — academy.html is markup
      with no behaviour of its own, so shipping it without academy.js offline
      would give somebody an empty shelf and three dead buttons. */

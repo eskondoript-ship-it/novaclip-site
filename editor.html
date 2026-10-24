@@ -2063,5 +2063,14 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      effect rather than a picture of one. Loaded first it would find no NC_FX
      and every tile would be the bare test card. Goes with editor-looks.js. -->
 <script src='editor-looks.js' defer></script>
+
+<!-- THE TRANSITIONS BROWSER. The editor's own Transitions panel is drawn by
+     the bundle from a list inside the bundle, so a transition added to
+     editor-fx.js is one the renderer will happily run and nothing can select.
+     The nine painter-based ones would have been invisible. This lists them
+     all, running, and applies them through the store so undo works.
+     AFTER editor-fx.js, which owns the painters it previews. Goes with
+     editor-trans.js. -->
+<script src='editor-trans.js' defer></script>
   </body>
 </html>

@@ -689,9 +689,285 @@
      It is also cleared at the top of every hook call, because a clip that
      never reaches drawImage — a text clip, a frame that throws — would
      otherwise leave it armed for whatever is drawn next. */
-  function installPainter(ctx, clip, t) {
+  /* ==========================================================================
+     TRANSITION PAINTERS — WHY THE OLD ONES LOOKED LIKE A SLIDE DECK
+     ==========================================================================
+     Every transition in this file returned the same kind of thing: a transform
+     for the whole clip. Move the rectangle, scale the rectangle, fade the
+     rectangle, maybe clip it to a shape. That is precisely the vocabulary a
+     presentation tool has, and it is why the result looked like one — a cut
+     between two shots was two rectangles sliding past each other with a hard
+     edge down the middle.
+
+     What an editor people actually like does instead is rewrite the pixels
+     during the handover: the edge between the two shots is soft and
+     irregular, the frame smears in the direction it is leaving, the channels
+     come apart and back together, light blooms across the seam. None of that
+     is expressible as translate/scale/rotate, so none of it existed here.
+
+     The machinery was already in the file and was only wired to effects. The
+     draw loop's last act for a clip is one drawImage; installPainter borrows
+     it, renders the frame to a scratch canvas and lets painters rewrite it.
+     A transition is the same shape of problem, so it gets the same stage.
+
+     Each painter is (g, w, h, p, dir) where p runs 0 -> 1 across the
+     transition and dir is 'in' for the clip arriving or 'out' for the one
+     leaving. They work on the clip's OWN frame; the other clip is drawn by
+     its own pass, so a soft edge here reveals whatever is behind it, which is
+     what makes these read as one shot becoming another rather than two
+     rectangles taking turns.
+     ========================================================================== */
+
+  /* Fade an alpha mask over the frame. Everything below is some version of
+     this: build a gradient whose alpha goes 1 -> 0 across a moving band, then
+     keep only the part of the frame the mask covers. The band has width, and
+     that width is the whole difference between a wipe and a dissolve. */
+  function maskWith(g, w, h, make) {
+    var m = scratch(2, w, h), mg = m.getContext('2d');
+    mg.setTransform(1, 0, 0, 1, 0, 0);
+    mg.clearRect(0, 0, w, h);
+    make(mg);
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'destination-in';
+    g.drawImage(m, 0, 0);
+    g.restore();
+  }
+
+  /* How much of this clip should still be on screen. An outgoing clip is
+     leaving, so its mask runs the other way. */
+  function cover(p, dir) { return dir === 'out' ? 1 - p : p; }
+
+  /* Smear the frame along a vector by drawing it over itself. Cheap, and much
+     closer to motion blur than a CSS blur, because it is directional — a whip
+     pan smears sideways, not into a fog. */
+  function smear(g, w, h, dx, dy, steps) {
+    if (Math.abs(dx) < .4 && Math.abs(dy) < .4) return;
+    var n = Math.max(2, Math.min(18, steps || 12));
+    var src = scratch(3, w, h), sg = src.getContext('2d');
+    sg.setTransform(1, 0, 0, 1, 0, 0);
+    sg.clearRect(0, 0, w, h);
+    sg.drawImage(g.canvas, 0, 0);
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalAlpha = 1 / n;
+    for (var i = 1; i <= n; i++) {
+      g.drawImage(src, dx * (i / n), dy * (i / n));
+      g.drawImage(src, -dx * (i / n), -dy * (i / n));
+    }
+    g.restore();
+  }
+
+  var TPAINT = {
+    /* THE ONE THAT MATTERS MOST. A soft directional sweep: the seam is a band
+       of gradient rather than a line, so the two shots interleave across it.
+       This is the transition most cuts in a real edit actually use. */
+    luma: function (g, w, h, p, dir) {
+      var c = cover(p, dir), band = 0.34;
+      var x0 = -band + c * (1 + band * 2);
+      maskWith(g, w, h, function (mg) {
+        var gr = mg.createLinearGradient((x0 - band) * w, 0, (x0 + band) * w, 0);
+        if (dir === 'out') { gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, '#000'); }
+        else { gr.addColorStop(0, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)'); }
+        mg.fillStyle = gr; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* A whip pan. The frame smears hard in the direction of travel and the
+       smear falls off as it settles — the blur IS the transition, the slide
+       underneath it is almost incidental. */
+    whip: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      smear(g, w, h, (dir === 'out' ? 1 : -1) * k * w * 0.42, 0, 14);
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.7));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* Punch in. Scaled copies stacked outward give the streaks a zoom blur
+       has, which a uniform blur cannot — the centre stays sharp and the edges
+       tear outward. */
+    zoomblur: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      if (k > .02) {
+        var src = scratch(3, w, h), sg = src.getContext('2d');
+        sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, w, h);
+        sg.drawImage(g.canvas, 0, 0);
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = .13;
+        for (var i = 1; i <= 7; i++) {
+          var s = 1 + k * .5 * (i / 7);
+          g.drawImage(src, (w - w * s) / 2, (h - h * s) / 2, w * s, h * s);
+        }
+        g.restore();
+      }
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.6));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* The channels come apart and back together. Done with real per-channel
+       compositing, not a hue rotate pretending to be one. */
+    rgbsplit: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      var off = k * w * 0.06;
+      if (off > .5) {
+        var src = scratch(3, w, h), sg = src.getContext('2d');
+        sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, w, h);
+        sg.drawImage(g.canvas, 0, 0);
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+        g.clearRect(0, 0, w, h);
+        g.globalCompositeOperation = 'lighter';
+        var chans = [['rgb(255,0,0)', -off], ['rgb(0,255,0)', 0], ['rgb(0,0,255)', off]];
+        for (var i = 0; i < 3; i++) {
+          var t2 = scratch(4 + i, w, h), tg = t2.getContext('2d');
+          tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, w, h);
+          tg.drawImage(src, 0, 0);
+          tg.globalCompositeOperation = 'multiply';
+          tg.fillStyle = chans[i][0]; tg.fillRect(0, 0, w, h);
+          tg.globalCompositeOperation = 'destination-in';
+          tg.drawImage(src, 0, 0);
+          g.drawImage(t2, chans[i][1], 0);
+        }
+        g.restore();
+      }
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.8));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* Horizontal slices thrown sideways. The randomness is seeded off the row
+       so it is the same every playback — a transition that looks different on
+       each export is not a transition, it is a fault. */
+    slices: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      if (k < .02) return;
+      var src = scratch(3, w, h), sg = src.getContext('2d');
+      sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, w, h);
+      sg.drawImage(g.canvas, 0, 0);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+      var rows = 14, rh = h / rows;
+      for (var i = 0; i < rows; i++) {
+        var seed = Math.sin(i * 12.9898) * 43758.5453;
+        var jitter = (seed - Math.floor(seed)) * 2 - 1;
+        g.drawImage(src, 0, i * rh, w, rh + 1, jitter * k * w * .25, i * rh, w, rh + 1);
+      }
+      g.restore();
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.9));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* Film burn. A warm bloom crosses the frame and takes it with it. Drawn as
+       a real screen composite so it lifts the highlights rather than just
+       turning the brightness up. */
+    burn: function (g, w, h, p, dir) {
+      var c = cover(p, dir);
+      var x = (dir === 'out' ? p : 1 - p);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      g.globalCompositeOperation = 'screen';
+      var gr = g.createRadialGradient(x * w, h * .45, 0, x * w, h * .45, w * .75);
+      var a = Math.sin(Math.min(1, x * 1.15) * Math.PI);
+      gr.addColorStop(0, 'rgba(255,214,150,' + (a * .95).toFixed(3) + ')');
+      gr.addColorStop(.45, 'rgba(255,138,76,' + (a * .5).toFixed(3) + ')');
+      gr.addColorStop(1, 'rgba(255,90,40,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.restore();
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, c * 1.5));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* Liquid warp. Rows are displaced along a travelling sine, so the frame
+       ripples apart instead of shrinking. */
+    warp: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      if (k < .02) return;
+      var src = scratch(3, w, h), sg = src.getContext('2d');
+      sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, w, h);
+      sg.drawImage(g.canvas, 0, 0);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+      var step = Math.max(2, Math.round(h / 90));
+      for (var y = 0; y < h; y += step) {
+        var dx = Math.sin((y / h) * Math.PI * 6 + k * 9) * k * w * .14;
+        g.drawImage(src, 0, y, w, step + 1, dx, y, w, step + 1);
+      }
+      g.restore();
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.6));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* A clock wipe with a soft edge. The shape is a sweep, the softness is a
+       second pass — a hard-edged one is the slide-deck version of this. */
+    radial: function (g, w, h, p, dir) {
+      var c = cover(p, dir);
+      maskWith(g, w, h, function (mg) {
+        mg.fillStyle = '#000';
+        mg.beginPath();
+        mg.moveTo(w / 2, h / 2);
+        mg.arc(w / 2, h / 2, Math.sqrt(w * w + h * h), -Math.PI / 2,
+               -Math.PI / 2 + Math.max(0.0001, c) * Math.PI * 2);
+        mg.closePath(); mg.fill();
+        /* feather: the same wedge again, slightly ahead, at low alpha */
+        mg.globalAlpha = .5;
+        mg.beginPath();
+        mg.moveTo(w / 2, h / 2);
+        mg.arc(w / 2, h / 2, Math.sqrt(w * w + h * h), -Math.PI / 2 + Math.max(0.0001, c) * Math.PI * 2,
+               -Math.PI / 2 + Math.min(1, c + .06) * Math.PI * 2);
+        mg.closePath(); mg.fill();
+      });
+    },
+
+    /* Grain dissolve. A noise threshold rather than a flat fade, which is how
+       film actually goes away and reads far less like an opacity slider. */
+    grain: function (g, w, h, p, dir) {
+      var c = cover(p, dir);
+      maskWith(g, w, h, function (mg) {
+        var cell = Math.max(3, Math.round(Math.min(w, h) / 42));
+        mg.fillStyle = '#000';
+        for (var y = 0; y < h; y += cell) {
+          for (var x = 0; x < w; x += cell) {
+            var s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+            if ((s - Math.floor(s)) < c) mg.fillRect(x, y, cell, cell);
+          }
+        }
+        /* a soft pass over the top so the squares are not squares */
+        mg.globalAlpha = Math.max(0, c - .25);
+        mg.fillRect(0, 0, w, h);
+      });
+    }
+  };
+
+  /* The ids above are transitions in their own right, and the renderer asks
+     TRANS for a transform for every one of them. These contribute little or no
+     movement on purpose: the painter is doing the work, and a slide underneath
+     it would put the slide deck back. */
+  TRANS.luma     = function () { return { a: 1 }; };
+  TRANS.whip     = function (p, d) { var k = d === 'out' ? p : 1 - p;
+                     return { a: 1, tx: k * (d === 'out' ? .22 : -.22) }; };
+  TRANS.zoomblur = function (p, d) { var k = d === 'out' ? p : 1 - p;
+                     return { a: 1, sx: 1 + k * .14, sy: 1 + k * .14 }; };
+  TRANS.rgbsplit = function () { return { a: 1 }; };
+  TRANS.slices   = function () { return { a: 1 }; };
+  TRANS.burn     = function () { return { a: 1 }; };
+  TRANS.warp     = function () { return { a: 1 }; };
+  TRANS.radial   = function () { return { a: 1 }; };
+  TRANS.grain    = function () { return { a: 1 }; };
+
+  function installPainter(ctx, clip, t, act) {
     var fx = clip && clip.effects;
-    if (!activePainters(fx).length) return;
+    /* A TRANSITION IS A REASON TO PAINT TOO. This returned early unless an
+       effect painter was switched on, so the one call the frame passes
+       through was never borrowed during a transition — which is why every
+       transition in this file was a transform and nothing else. */
+    var tp = act && act.id && TPAINT[act.id] ? act : null;
+    if (!activePainters(fx).length && !tp) return;
     var orig = ctx.drawImage;
     ctx.__ncPaint = true;
     ctx.drawImage = function (img, a, b, c, d) {
@@ -710,6 +986,10 @@
         og.drawImage(img, 0, 0, W2, H2);
         og.filter = 'none';
         runPaint(og, W2, H2, fx, t);
+        /* After the effects, never before: a transition hands over the frame
+           as it will actually look, grade and all. Wrapped on its own so a
+           transition that throws cannot take the effects down with it. */
+        if (tp) { try { TPAINT[tp.id](og, W2, H2, tp.p, tp.dir); } catch (e) {} }
         var keep = ctx.filter;
         ctx.filter = 'none';
         orig.call(ctx, off, a, b, c, d);
@@ -770,7 +1050,10 @@
         var at = parts.indexOf(dead);
         if (at > -1) parts.splice(at, 1);
       }
-      installPainter(ctx, clip, t);
+      /* Worked out here rather than inside, because the hook below needs the
+         same answer and asking twice is how the two drift apart. */
+      var actNow = activeTransition(clip, t);
+      installPainter(ctx, clip, t, actNow);
 
       /* The two effects that are movement rather than colour. Time-based, so
          they only actually move while the playhead does. */
@@ -789,7 +1072,7 @@
         if (fx[key] > 0) parts.push(FX[key](fx[key]));
       }
 
-      var act = activeTransition(clip, t);
+      var act = actNow;
       /* THE CANVAS, NOT THE PROJECT SETTINGS.
          The draw loop hands the image to drawImage in the preview canvas's own
          units — P is the canvas width, not 1920 — so a translation expressed
@@ -1208,6 +1491,6 @@
      the first render even if the observer above missed it. */
   setTimeout(boot, 1500);
 
-  window.NC_FX = { FX: FX, TRANS: TRANS, MOTION: MOTION, PAINT: PAINT, stepFor: stepFor,
+  window.NC_FX = { FX: FX, TRANS: TRANS, MOTION: MOTION, PAINT: PAINT, TPAINT: TPAINT, stepFor: stepFor,
                    filterFor: filterFor, applyStep: applyStep, runPaint: runPaint, scan: scan };
 })();
