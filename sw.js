@@ -610,6 +610,53 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v129: the CapCut arrangement, nine more transitions, eight real effects.
+
+   THE LAYOUT. Measured at 1600px, the timeline was 1244 wide: it lived inside
+   the centre column, so it stopped where the media panel started and the
+   bottom-left of the window was a media browser nobody looks at while
+   cutting. Every editor built for this job runs the timeline the full width
+   along the bottom, because its usable length is how many seconds you can see
+   at once. It is 1600 now — about four more seconds in view at the default
+   zoom.
+
+   And the tabs lie down. Fourteen tools were a vertical strip of icons down
+   the far left edge, each a 14px glyph with a 9px word under it. CapCut and
+   everything like it puts them as a row across the TOP of the panel they
+   open. That was the thing that actually made this not look like CapCut, and
+   it was the answer when asked which part was missing.
+
+   Done with a grid over the bundle's own elements — no markup moves — and the
+   centre column dissolved with display:contents so the timeline can span
+   every column. It is a toggle in the header and the answer is kept per
+   device, because a layout that cannot be turned off is one somebody is stuck
+   in.
+
+   Six floating pills from six different files all anchor to the bottom-left
+   of the window, which used to be below the timeline and is now on top of the
+   tracks. They get one shelf along the bottom of the preview.
+
+   NINE MORE TRANSITIONS, all painters: swirl, pixelise, soft bars, bloom out,
+   camera shake, stretch, soft circle, roll up and a negative hit. Eighteen
+   painters now, forty-four transitions in the browser, and no two of them
+   render alike across a cycle.
+
+   EIGHT EFFECTS THAT A FILTER STRING CANNOT DO: duotone through a real
+   luminance map, tilt-shift that blurs only the top and bottom, chromatic
+   aberration that scales with distance from centre, fisheye, thresholded
+   bloom, god rays, soft focus and a real kaleidoscope.
+
+   A SCRATCH CANVAS REMEMBERS WHAT THE LAST PAINTER DID TO IT. Three of the
+   eight drew nothing at all, and the duplicate check reported them as
+   identical to each other — which is what "all three drew nothing" looks like
+   from outside. scratch() hands back the same canvas and a 2D context keeps
+   its state, so a painter finishing with globalCompositeOperation at
+   destination-in hands that to whoever asks next. It never showed up before
+   because the older painters all change canvas size, and resizing resets the
+   context. fresh() is scratch() with the state put back.
+
+   editor-fx.js, editor-trans.js, editor-layout.js (NEW), editor.html and
+   studio-kit.js go together. */
 /* v128: transitions that rewrite the frame instead of sliding it.
 
    WHY THEY LOOKED LIKE A SLIDE DECK. Every transition in editor-fx.js
@@ -2738,7 +2785,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v128';
+const CACHE = 'novaclip-v129';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2907,6 +2954,7 @@ const SHELL = [
   '/editor-phone.js',
   '/editor-looks.js',
   '/editor-trans.js',
+  '/editor-layout.js',
   /* The Academy. The page and its script go together — academy.html is markup
      with no behaviour of its own, so shipping it without academy.js offline
      would give somebody an empty shelf and three dead buttons. */

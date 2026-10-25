@@ -2072,5 +2072,15 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      AFTER editor-fx.js, which owns the painters it previews. Goes with
      editor-trans.js. -->
 <script src='editor-trans.js' defer></script>
+
+<!-- THE LAYOUT. The timeline shipped inside the centre column, so it stopped
+     where the media panel started and the bottom-left of the window was a
+     media browser nobody looks at while cutting. Every editor built for this
+     job runs the timeline the full width along the bottom, because its usable
+     length is how many seconds you can see at once. Done with a grid over the
+     bundle's own elements — no markup moves — and it is a toggle in the
+     header, because a layout that cannot be turned off is one somebody is
+     stuck in. Goes with editor-layout.js. -->
+<script src='editor-layout.js' defer></script>
   </body>
 </html>

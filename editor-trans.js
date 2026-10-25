@@ -46,6 +46,15 @@
     warp:      ['Liquid warp',     'Motion', 1, 'The frame ripples apart along a travelling wave.'],
     radial:    ['Clock wipe',      'Shape',  1, 'A soft wedge sweeps around from the top.'],
     grain:     ['Grain dissolve',  'Smooth', 1, 'Breaks up into grain rather than fading flat.'],
+    swirl:     ['Swirl',           'Motion', 1, 'Winds the frame up around its centre.'],
+    pixelize:  ['Pixelise',        'Glitch', 1, 'Blocks grow until there is nothing left.'],
+    bars:      ['Soft bars',       'Shape',  1, 'Nine bars close one after another, each one feathered.'],
+    glow:      ['Bloom out',       'Light',  1, 'Highlights bleed before the frame goes.'],
+    shake:     ['Camera shake',    'Motion', 1, 'Handheld knock with the smear that comes with it.'],
+    stretch:   ['Stretch',         'Motion', 1, 'Edges pull away while the middle holds.'],
+    circle:    ['Soft circle',     'Shape',  1, 'Opens from the centre with a soft rim.'],
+    rollup:    ['Roll up',         'Smooth', 1, 'The soft sweep, running down the frame.'],
+    invert:    ['Negative hit',    'Glitch', 1, 'One hard negative flash at the midpoint.'],
 
     fade:      ['Fade',            'Smooth', 0, 'Straight opacity. Always right, never interesting.'],
     dissolve:  ['Dissolve',        'Smooth', 0, 'Fade with a little softening on the way.'],
@@ -75,6 +84,24 @@
     pageCurl:  ['Page turn',       'Shape',  0, 'Peels away at an angle.']
   };
   var CATS = ['All', 'New', 'Smooth', 'Motion', 'Glitch', 'Light', 'Shape'];
+
+  /* THE EFFECTS HAVE THE SAME PROBLEM THE TRANSITIONS HAD. The editor's
+     Effects panel is drawn by the bundle from a list inside the bundle, so the
+     eight painters added to editor-fx.js — duotone, tilt-shift, chromatic
+     aberration, fisheye, bloom, god rays, soft focus and kaleidoscope — are
+     eight things the renderer will apply and nothing can ask for. Same answer:
+     list them here, with a strength, applied through the store. */
+  var FXCAT = {
+    bloom:     ['Bloom',        'The bright parts bleed into what is beside them.'],
+    rays:      ['God rays',     'Shafts thrown out from the highlights.'],
+    dreamy:    ['Soft focus',   'The portrait look — soft, without losing the midtones.'],
+    chroma:    ['Lens fringe',  'Channels separate towards the corners, like a real lens.'],
+    tiltshift: ['Tilt-shift',   'Top and bottom go soft; the middle stays sharp.'],
+    duotone:   ['Duotone',      'Shadows one colour, highlights another.'],
+    fisheye:   ['Fisheye',      'Barrel distortion out from the centre.'],
+    kaleid:    ['Kaleidoscope', 'Wedges mirrored around the middle.']
+  };
+  var STRENGTHS = [0.35, 0.7, 1];
 
   function fx() { return window.NC_FX || null; }
   function store() {
@@ -152,7 +179,7 @@
   /* ==========================================================================
      THE PANEL
      ========================================================================== */
-  var panel = null, state = { q: '', cat: 'All' }, raf = 0, tiles = [];
+  var panel = null, state = { q: '', cat: 'All', mode: 'Transitions' }, raf = 0, tiles = [];
 
   function css() {
     if (document.getElementById('nctr-css')) return;
@@ -236,7 +263,72 @@
     } catch (e) { say('That clip would not take it.'); }
   }
 
+  /* An effect tile is a still, not a loop: an effect does not have a
+     beginning and an end to run through, it has a strength. Three of them,
+     because one preview cannot tell you what a slider does. */
+  function fillEffects() {
+    var grid = panel.querySelector('.grid');
+    grid.textContent = '';
+    tiles = [];
+    var F = fx();
+    var q = state.q.trim().toLowerCase();
+    var ids = Object.keys(FXCAT).filter(function (id) {
+      if (!F || !F.PAINT || !F.PAINT[id]) return false;
+      if (!q) return true;
+      return (FXCAT[id][0] + ' ' + FXCAT[id][1] + ' ' + id).toLowerCase().indexOf(q) >= 0;
+    });
+    if (!ids.length) {
+      var n = document.createElement('p');
+      n.className = 'sub';
+      n.textContent = 'Nothing matches that.';
+      grid.appendChild(n);
+      return;
+    }
+    var W = 186, H = 104, A = card(0, W, H);
+    ids.forEach(function (id) {
+      var meta = FXCAT[id];
+      var tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = 'tile';
+      tile.setAttribute('data-fx', id);
+      var cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      cv.setAttribute('aria-hidden', 'true');
+      var g = cv.getContext('2d');
+      g.drawImage(A, 0, 0, W, H);
+      try { F.PAINT[id](g, W, H, 0.7, 0); } catch (e) {}
+      tile.appendChild(cv);
+      var m = document.createElement('div');
+      m.className = 'm';
+      m.innerHTML = '<b></b><span></span>';
+      m.querySelector('b').textContent = meta[0];
+      var tag = document.createElement('i');
+      tag.className = 'new'; tag.style.fontStyle = 'normal'; tag.textContent = 'NEW';
+      m.querySelector('b').appendChild(tag);
+      m.querySelector('span').textContent = meta[1];
+      tile.appendChild(m);
+      tile.title = 'Click: 70% · Shift-click: full · Alt-click: subtle';
+      tile.onclick = function (e) {
+        applyFx(id, e.shiftKey ? STRENGTHS[2] : e.altKey ? STRENGTHS[0] : STRENGTHS[1]);
+      };
+      grid.appendChild(tile);
+    });
+  }
+
+  function applyFx(id, v) {
+    var g = store(), clip = selected();
+    if (!g || !clip) { say('Pick a clip on the timeline first.'); return; }
+    try { if (typeof g.pushHistory === 'function') g.pushHistory(); } catch (e) {}
+    var one = {};
+    one[id] = v;
+    try {
+      g.updateClipEffects(clip.id, one);
+      say(FXCAT[id][0] + ' at ' + Math.round(v * 100) + '%. Ctrl+Z undoes it.');
+    } catch (e) { say('That clip would not take it.'); }
+  }
+
   function fill() {
+    if (state.mode === 'Effects') { if (raf) { cancelAnimationFrame(raf); raf = 0; } return fillEffects(); }
     var grid = panel.querySelector('.grid');
     grid.textContent = '';
     tiles = [];
@@ -338,6 +430,28 @@
     hd.innerHTML = '<h4>⇄ Transitions</h4>'
       + '<p class="sub">Every tile is running the real transition, on two frames. '
       + 'Click to set it at the end of the selected clip; shift-click for the start.</p>';
+    /* Two things in one panel rather than a third pill in the corner: they
+       are both "pick a look and put it on the clip", and the editor's bottom
+       edge is crowded enough. */
+    var modes = document.createElement('div');
+    modes.className = 'cats';
+    modes.style.margin = '10px 0 0';
+    ['Transitions', 'Effects'].forEach(function (m) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cat' + (state.mode === m ? ' on' : '');
+      b.textContent = m;
+      b.onclick = function () {
+        state.mode = m;
+        modes.querySelectorAll('.cat').forEach(function (x) { x.className = 'cat'; });
+        b.className = 'cat on';
+        panel.querySelector('.cats.sub-cats').style.display = m === 'Transitions' ? '' : 'none';
+        fill();
+      };
+      modes.appendChild(b);
+    });
+    hd.appendChild(modes);
+
     var q = document.createElement('input');
     q.className = 'q';
     q.type = 'search';
@@ -346,7 +460,7 @@
     hd.appendChild(q);
 
     var cats = document.createElement('div');
-    cats.className = 'cats';
+    cats.className = 'cats sub-cats';
     CATS.forEach(function (c) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -399,7 +513,7 @@
     document.body.appendChild(b);
   }
 
-  window.NC_TRANS_UI = { version: VERSION, open: open, close: close, cats: CATS, list: CAT };
+  window.NC_TRANS_UI = { version: VERSION, open: open, close: close, cats: CATS, list: CAT, effects: FXCAT };
 
   function boot() {
     var tries = 0;

@@ -392,6 +392,31 @@
     if (c.height !== h) c.height = h;
     return c;
   }
+  /* A SCRATCH CANVAS REMEMBERS WHAT THE LAST PAINTER DID TO IT.
+     scratch() hands back the same canvas every time, and a 2D context keeps
+     its state — so a painter that finishes with globalCompositeOperation set
+     to 'destination-in', or globalAlpha at .16, hands that to whoever asks
+     next. Measured: three of the eight painters added here produced a
+     completely unchanged frame, and the duplicate check reported them as
+     identical to each other, which is exactly what "all three drew nothing"
+     looks like from outside.
+
+     Resizing a canvas resets its context, which is why this never showed up
+     before — the older painters all change size. These do not, so they get
+     the same canvas back with the previous settings still on it.
+
+     fresh() is scratch() with the state put back. Everything added below uses
+     it, and nothing has to remember to clean up after itself. */
+  function fresh(n, w, h) {
+    var c = scratch(n, w, h), g = c.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'source-over';
+    g.globalAlpha = 1;
+    g.filter = 'none';
+    g.clearRect(0, 0, w, h);
+    return c;
+  }
+
   /* A copy of what is currently on g, to read from while g is being redrawn. */
   function snapshot(g, w, h) {
     var t = scratch(1, w, h), tg = t.getContext('2d');
@@ -634,8 +659,16 @@
   /* Geometry first, then tone, then the screens that replace the picture
      entirely, then the overlay. Running a halftone before a mirror would
      mirror the dots rather than the image. */
+  /* The eight added at the end are new. They are drawn rather than filtered
+     for the same reason the ten before them are: a CSS filter cannot bleed a
+     highlight, cannot separate channels by distance from centre, cannot blur
+     only the top and bottom of a frame, and cannot throw a ray. Order matters
+     — bloom and rays read as light and belong on top of the grade, so they go
+     last; tiltshift is lens behaviour and goes before them. */
   var PAINT_ORDER = ['mirror', 'wave', 'pixelate', 'vintage', 'posterize',
-                     'ascii', 'dots', 'halftone', 'crosshatch', 'scanlines'];
+                     'ascii', 'dots', 'halftone', 'crosshatch', 'scanlines',
+                     'duotone', 'tiltshift', 'chroma', 'fisheye', 'bloom',
+                     'rays', 'dreamy', 'kaleid'];
 
   /* The exact string the bundle's own filter builder pushes for each of these,
      so it can be taken back out. Leaving it in would apply a contrast bump on
@@ -652,6 +685,193 @@
     mirror:     function (v) { return 'saturate(' + (1 + v * .1) + ')'; },
     wave:       function (v) { return 'saturate(' + (1 + v * .1) + ')'; },
     vintage:    function (v) { return 'sepia(' + v + ')'; }
+  };
+
+  /* ==========================================================================
+     EIGHT MORE, ALL DRAWN
+     ==========================================================================
+     The ten above were written because eleven of the editor's effects were
+     duplicate CSS filter strings doing almost nothing. These eight are the
+     other half of that problem: looks people actually ask for, that a filter
+     string has no way to express at all.
+     ========================================================================== */
+
+  /* Two-tone. Shadows take one colour, highlights the other, through a real
+     luminance map — not a hue rotate, which keeps the original relationships
+     and so never looks like duotone. */
+  PAINT.duotone = function (g, w, h, v) {
+    if (v <= 0) return;
+    var src = fresh(3, w, h), sg = src.getContext('2d');
+    sg.filter = 'grayscale(1) contrast(1.15)';
+    sg.drawImage(g.canvas, 0, 0);
+    sg.filter = 'none';
+    var tint = fresh(4, w, h), tg = tint.getContext('2d');
+    tg.drawImage(src, 0, 0);
+    tg.globalCompositeOperation = 'multiply';
+    tg.fillStyle = '#2a1b5e'; tg.fillRect(0, 0, w, h);        /* shadow end */
+    tg.globalCompositeOperation = 'screen';
+    tg.fillStyle = '#1b3a2a'; tg.fillRect(0, 0, w, h);
+    tg.globalCompositeOperation = 'lighter';
+    tg.globalAlpha = .55;
+    tg.drawImage(src, 0, 0);                                   /* highlight end */
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalAlpha = Math.min(1, v);
+    g.drawImage(tint, 0, 0);
+    g.restore();
+  };
+
+  /* Tilt-shift. The top and bottom go soft and the middle stays sharp, which
+     is a depth-of-field cue and the reason this reads as miniature. A uniform
+     blur is the thing it is not. */
+  PAINT.tiltshift = function (g, w, h, v) {
+    if (v <= 0) return;
+    var src = fresh(3, w, h), sg = src.getContext('2d');
+    sg.filter = 'blur(' + (v * 9).toFixed(2) + 'px)';
+    sg.drawImage(g.canvas, 0, 0);
+    sg.filter = 'none';
+    var m = fresh(4, w, h), mg = m.getContext('2d');
+    mg.drawImage(src, 0, 0);
+    mg.globalCompositeOperation = 'destination-in';
+    var gr = mg.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, '#000'); gr.addColorStop(.30, 'rgba(0,0,0,0)');
+    gr.addColorStop(.70, 'rgba(0,0,0,0)'); gr.addColorStop(1, '#000');
+    mg.fillStyle = gr; mg.fillRect(0, 0, w, h);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.drawImage(m, 0, 0);
+    g.restore();
+  };
+
+  /* Chromatic aberration. The channels are offset by distance from the
+     centre, so the middle stays clean and the corners fringe — which is what
+     a lens does, and what a flat RGB shift does not. */
+  PAINT.chroma = function (g, w, h, v) {
+    if (v <= 0) return;
+    var src = fresh(3, w, h), sg = src.getContext('2d');
+    sg.drawImage(g.canvas, 0, 0);
+    /* .012 put the whole visible range in the bottom third of the slider —
+       measured, 0.7 and 1.0 came out pixel-identical. A slider whose top does
+       nothing is the bug this file already has a long note about. */
+    var s = 1 + v * .035;
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'lighter';
+    var chans = [['rgb(255,0,0)', s], ['rgb(0,255,0)', 1], ['rgb(0,0,255)', 2 - s]];
+    g.clearRect(0, 0, w, h);
+    for (var i = 0; i < 3; i++) {
+      var t = scratch(4 + i, w, h), tg = t.getContext('2d');
+      tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, w, h);
+      tg.drawImage(src, 0, 0);
+      tg.globalCompositeOperation = 'multiply';
+      tg.fillStyle = chans[i][0]; tg.fillRect(0, 0, w, h);
+      tg.globalCompositeOperation = 'destination-in';
+      tg.drawImage(src, 0, 0);
+      var k = chans[i][1];
+      g.drawImage(t, (w - w * k) / 2, (h - h * k) / 2, w * k, h * k);
+    }
+    g.restore();
+  };
+
+  /* Barrel distortion, drawn as nested rings scaled by radius. A per-pixel
+     remap is the textbook way and is far too slow for a draw loop; sixteen
+     rings is indistinguishable at playback size. */
+  PAINT.fisheye = function (g, w, h, v) {
+    if (v <= 0) return;
+    var src = fresh(3, w, h), sg = src.getContext('2d');
+    sg.drawImage(g.canvas, 0, 0);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+    var cx = w / 2, cy = h / 2, max = Math.sqrt(cx * cx + cy * cy), rings = 16;
+    for (var i = rings; i >= 1; i--) {
+      var f = i / rings;
+      var k = 1 + v * .45 * (1 - f * f);
+      g.save();
+      g.beginPath(); g.arc(cx, cy, max * f, 0, 7); g.clip();
+      g.drawImage(src, cx - cx * k, cy - cy * k, w * k, h * k);
+      g.restore();
+    }
+    g.restore();
+  };
+
+  /* Bloom. The bright parts bleed into what is next to them. Thresholded
+     first, or it is just a blur laid over the picture. */
+  PAINT.bloom = function (g, w, h, v) {
+    if (v <= 0) return;
+    var src = fresh(3, w, h), sg = src.getContext('2d');
+    /* brightness + contrast is a cheap threshold: it crushes the midtones to
+       black and leaves the highlights, which is the part meant to glow */
+    sg.filter = 'brightness(1.6) contrast(2.4) blur(' + (6 + v * 20).toFixed(1) + 'px)';
+    sg.drawImage(g.canvas, 0, 0);
+    sg.filter = 'none';
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'screen';
+    g.globalAlpha = Math.min(1, v * .85);
+    g.drawImage(src, 0, 0);
+    g.restore();
+  };
+
+  /* God rays. The thresholded highlights are smeared outward from a point in
+     steps, which is the standard radial-blur build and the only way to get
+     shafts rather than a glow. */
+  PAINT.rays = function (g, w, h, v) {
+    if (v <= 0) return;
+    var src = fresh(3, w, h), sg = src.getContext('2d');
+    sg.filter = 'brightness(1.5) contrast(3)';
+    sg.drawImage(g.canvas, 0, 0);
+    sg.filter = 'none';
+    var acc = fresh(4, w, h), ag = acc.getContext('2d');
+    ag.globalAlpha = .16;
+    for (var i = 1; i <= 8; i++) {
+      var k = 1 + (i / 8) * v * .5;
+      ag.drawImage(src, (w - w * k) / 2, (h - h * k) * .18, w * k, h * k);
+    }
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'screen';
+    g.globalAlpha = Math.min(1, v);
+    g.drawImage(acc, 0, 0);
+    g.restore();
+  };
+
+  /* Soft focus. A blurred copy screened back over the sharp one — the
+     portrait look, and distinct from bloom because it keeps the midtones. */
+  PAINT.dreamy = function (g, w, h, v) {
+    if (v <= 0) return;
+    var src = fresh(3, w, h), sg = src.getContext('2d');
+    sg.filter = 'blur(' + (v * 14).toFixed(2) + 'px) saturate(1.1)';
+    sg.drawImage(g.canvas, 0, 0);
+    sg.filter = 'none';
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'lighten';
+    g.globalAlpha = Math.min(1, v * .7);
+    g.drawImage(src, 0, 0);
+    g.restore();
+  };
+
+  /* Kaleidoscope. Wedges of the frame mirrored around the centre. The
+     editor's "mirror" flips one half; this is the thing people mean when they
+     ask for a kaleidoscope. */
+  PAINT.kaleid = function (g, w, h, v) {
+    if (v <= 0) return;
+    var src = fresh(3, w, h), sg = src.getContext('2d');
+    sg.drawImage(g.canvas, 0, 0);
+    var seg = Math.max(3, Math.round(3 + v * 5));
+    var out = fresh(4, w, h), og = out.getContext('2d');
+    var cx = w / 2, cy = h / 2, R = Math.sqrt(cx * cx + cy * cy);
+    for (var i = 0; i < seg; i++) {
+      og.save();
+      og.translate(cx, cy);
+      og.rotate((i / seg) * Math.PI * 2);
+      if (i % 2) og.scale(1, -1);
+      og.beginPath();
+      og.moveTo(0, 0);
+      og.arc(0, 0, R, -Math.PI / seg, Math.PI / seg);
+      og.closePath();
+      og.clip();
+      og.translate(-cx, -cy);
+      og.drawImage(src, 0, 0);
+      og.restore();
+    }
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalAlpha = Math.min(1, v);
+    g.drawImage(out, 0, 0);
+    g.restore();
   };
 
   function activePainters(fx) {
@@ -924,6 +1144,182 @@
       });
     },
 
+    /* Swirl. Concentric rings rotated by how far out they are, so the frame
+       winds up rather than simply spinning — a spin moves the rectangle, this
+       bends it. Drawn as rings because a per-pixel polar warp in JS at 1080p
+       is not something to put in a draw loop. */
+    swirl: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      if (k < .02) return;
+      var src = scratch(3, w, h), sg = src.getContext('2d');
+      sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, w, h);
+      sg.drawImage(g.canvas, 0, 0);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+      var cx = w / 2, cy = h / 2, max = Math.sqrt(cx * cx + cy * cy), rings = 16;
+      for (var i = rings; i >= 1; i--) {
+        var r = max * (i / rings);
+        g.save();
+        g.beginPath(); g.arc(cx, cy, r, 0, 7); g.clip();
+        g.translate(cx, cy);
+        g.rotate(k * 2.1 * (1 - i / rings));
+        g.translate(-cx, -cy);
+        g.drawImage(src, 0, 0);
+        g.restore();
+      }
+      g.restore();
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.6));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* Pixelise out. The blocks grow as it goes, which is the one dissolve that
+       reads as digital rather than as film. */
+    pixelize: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      if (k > .02) {
+        var s = Math.max(.02, 1 - k * .96);
+        var sw = Math.max(2, Math.round(w * s)), sh = Math.max(2, Math.round(h * s));
+        var t = scratch(3, sw, sh), tg = t.getContext('2d');
+        tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, sw, sh);
+        tg.imageSmoothingEnabled = true;
+        tg.drawImage(g.canvas, 0, 0, sw, sh);
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+        g.imageSmoothingEnabled = false;
+        g.drawImage(t, 0, 0, sw, sh, 0, 0, w, h);
+        g.imageSmoothingEnabled = true;
+        g.restore();
+      }
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.5));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* Vertical bars that close in sequence, each with a feathered edge. The
+       shutter this replaces had hard edges and all the bars moved together. */
+    bars: function (g, w, h, p, dir) {
+      var c = cover(p, dir), n = 9;
+      maskWith(g, w, h, function (mg) {
+        for (var i = 0; i < n; i++) {
+          /* each bar starts a little after the one before it */
+          var local = Math.max(0, Math.min(1, (c - (i / n) * .35) / (1 - .35)));
+          var bw = w / n, x = i * bw;
+          var gr = mg.createLinearGradient(x, 0, x + bw, 0);
+          gr.addColorStop(0, 'rgba(0,0,0,' + local.toFixed(3) + ')');
+          gr.addColorStop(1, 'rgba(0,0,0,' + Math.max(0, local - .35).toFixed(3) + ')');
+          mg.fillStyle = gr; mg.fillRect(x, 0, bw + 1, h);
+        }
+      });
+    },
+
+    /* Bloom out. The highlights bleed before the frame goes, which is what a
+       light-struck cut actually does — a brightness ramp only makes it paler. */
+    glow: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      if (k > .02) {
+        var src = scratch(3, w, h), sg = src.getContext('2d');
+        sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, w, h);
+        sg.filter = 'blur(' + (k * 22).toFixed(1) + 'px) brightness(1.5)';
+        sg.drawImage(g.canvas, 0, 0);
+        sg.filter = 'none';
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+        g.globalCompositeOperation = 'screen';
+        g.globalAlpha = Math.min(1, k * 1.3);
+        g.drawImage(src, 0, 0);
+        g.restore();
+      }
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.45));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* Handheld shake with the smear that comes with it. The offsets are a
+       seeded sine of p, so the same cut shakes the same way every time. */
+    shake: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      if (k < .02) return;
+      var dx = Math.sin(p * 47) * k * w * .06, dy = Math.cos(p * 39) * k * h * .05;
+      var src = scratch(3, w, h), sg = src.getContext('2d');
+      sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, w, h);
+      sg.drawImage(g.canvas, 0, 0);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+      g.drawImage(src, dx, dy);
+      g.restore();
+      smear(g, w, h, dx * .6, dy * .6, 6);
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.7));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* Stretched out of frame. Columns are scaled away from the centre, which
+       smears the edges while the middle holds — a scale moves everything
+       together and loses that. */
+    stretch: function (g, w, h, p, dir) {
+      var k = dir === 'out' ? p : 1 - p;
+      if (k < .02) return;
+      var src = scratch(3, w, h), sg = src.getContext('2d');
+      sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, w, h);
+      sg.drawImage(g.canvas, 0, 0);
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+      var cols = Math.max(8, Math.round(w / 24));
+      for (var i = 0; i < cols; i++) {
+        var cw = w / cols, x = i * cw;
+        var off = (x + cw / 2 - w / 2) / (w / 2);
+        g.drawImage(src, x, 0, cw + 1, h, x + off * k * w * .35, 0, cw + 1, h);
+      }
+      g.restore();
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.6));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* A circle that opens with a soft rim. The iris already here has a hard
+       edge, which is the whole difference between a shape wipe and this. */
+    circle: function (g, w, h, p, dir) {
+      var c = cover(p, dir);
+      var max = Math.sqrt(w * w + h * h) / 2;
+      maskWith(g, w, h, function (mg) {
+        var r = Math.max(0.001, c) * max * 1.08;
+        var gr = mg.createRadialGradient(w / 2, h / 2, Math.max(0, r - max * .22), w / 2, h / 2, r);
+        gr.addColorStop(0, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+        mg.fillStyle = gr; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* The soft sweep, downwards. Vertical cuts read differently from
+       horizontal ones and an editor should have both. */
+    rollup: function (g, w, h, p, dir) {
+      var c = cover(p, dir), band = 0.3;
+      var y0 = -band + c * (1 + band * 2);
+      maskWith(g, w, h, function (mg) {
+        var gr = mg.createLinearGradient(0, (y0 - band) * h, 0, (y0 + band) * h);
+        if (dir === 'out') { gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, '#000'); }
+        else { gr.addColorStop(0, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)'); }
+        mg.fillStyle = gr; mg.fillRect(0, 0, w, h);
+      });
+    },
+
+    /* A one-frame negative at the midpoint. Harsh on purpose, and the only
+       one here that is a punctuation mark rather than a blend. */
+    invert: function (g, w, h, p, dir) {
+      var k = 1 - Math.abs(cover(p, dir) * 2 - 1);      /* peaks halfway */
+      if (k > .04) {
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+        g.globalCompositeOperation = 'difference';
+        g.globalAlpha = Math.min(1, k * 1.4);
+        g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
+        g.restore();
+      }
+      maskWith(g, w, h, function (mg) {
+        mg.globalAlpha = Math.max(0, Math.min(1, cover(p, dir) * 1.9));
+        mg.fillStyle = '#000'; mg.fillRect(0, 0, w, h);
+      });
+    },
+
     /* Grain dissolve. A noise threshold rather than a flat fade, which is how
        film actually goes away and reads far less like an opacity slider. */
     grain: function (g, w, h, p, dir) {
@@ -959,6 +1355,16 @@
   TRANS.warp     = function () { return { a: 1 }; };
   TRANS.radial   = function () { return { a: 1 }; };
   TRANS.grain    = function () { return { a: 1 }; };
+  TRANS.swirl    = function () { return { a: 1 }; };
+  TRANS.pixelize = function () { return { a: 1 }; };
+  TRANS.bars     = function () { return { a: 1 }; };
+  TRANS.glow     = function () { return { a: 1 }; };
+  TRANS.shake    = function () { return { a: 1 }; };
+  TRANS.stretch  = function (p, d) { var k = d === 'out' ? p : 1 - p;
+                     return { a: 1, sx: 1 + k * .08 }; };
+  TRANS.circle   = function () { return { a: 1 }; };
+  TRANS.rollup   = function () { return { a: 1 }; };
+  TRANS.invert   = function () { return { a: 1 }; };
 
   function installPainter(ctx, clip, t, act) {
     var fx = clip && clip.effects;
