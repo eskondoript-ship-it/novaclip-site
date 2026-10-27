@@ -135,6 +135,41 @@
       'html[data-nclay="wide"] ' + LEFT + ' nav button span{font-size:10.5px;line-height:1.25}',
       'html[data-nclay="wide"] ' + LEFT + ' nav button svg{width:17px;height:17px}',
 
+      /* ---- THE TRANSPORT GOES UNDER THE PLAYER -------------------------
+         The last thing that still read as "not CapCut". Play, jump-to-start,
+         jump-to-end and the timecode were up in the top bar with the project
+         name and the export button — which is where a document app puts its
+         chrome, not where a video app puts its transport. Every editor of
+         this kind has them directly beneath the picture, centred, because
+         that is where your eye already is while you scrub.
+
+         Moved with position:fixed rather than by relocating the nodes. The
+         header is React's and its children are reconciled on every render;
+         taking them out of the DOM is how a bundle starts putting them back
+         in the wrong place or losing them. Out of flow, they leave the header
+         with room to spare — which is also why the Export button stopped
+         being pushed off the edge.
+
+         :has() is what tells the two identical "flex items-center gap-1"
+         groups apart — one holds Undo/Redo/Save, the other holds the
+         transport, and they are indistinguishable by class alone. */
+      'html[data-nclay="wide"] ' + SHELL + ' > header > div:has(> button[title^="Play/Pause"]){',
+        'position:fixed;z-index:60;left:calc(352px + (100vw - 352px) / 2);',
+        'transform:translateX(-50%);',
+        'bottom:calc(min(42vh,340px) + 58px);',
+        'background:rgba(10,13,24,.82);backdrop-filter:blur(10px);',
+        'border:1px solid rgba(255,255,255,.12);border-radius:999px;',
+        'padding:4px 8px;gap:4px}',
+      'html[data-nclay="wide"] ' + SHELL + ' > header > div[class*="font-mono"]{',
+        'position:fixed;z-index:60;left:calc(352px + (100vw - 352px) / 2);',
+        'transform:translateX(-50%);',
+        'bottom:calc(min(42vh,340px) + 20px);',
+        'margin:0;font-size:12px;opacity:.85;',
+        'background:rgba(10,13,24,.72);border-radius:999px;padding:3px 12px}',
+      /* The divider that used to sit beside the transport now separates
+         nothing, so it goes. */
+      'html[data-nclay="wide"] ' + SHELL + ' > header > div.w-px:last-of-type{display:none}',
+
       /* The floating pills this site adds sit above the timeline; with the
          timeline taller they need to come up with it. */
       /* ---- THE PILLS GET A SHELF ---------------------------------------
@@ -163,14 +198,30 @@
         'html[data-nclay="wide"] .ncrf-btn{left:688px}',
         'html[data-nclay="wide"] .nclk-btn{left:792px}',
         'html[data-nclay="wide"] .nctr-btn{left:874px}}',
-      'html[data-nclay="wide"] #nccf-launch{bottom:calc(min(42vh,340px) + 12px) !important}',
+      'html[data-nclay="wide"] #nccf-launch{bottom:calc(min(42vh,340px) + 104px) !important}',
       'html[data-nclay="wide"] .nccap-btn,html[data-nclay="wide"] .ncbeat-btn,',
       'html[data-nclay="wide"] .ncrf-btn,html[data-nclay="wide"] .nclk-btn,',
-      'html[data-nclay="wide"] .nctr-btn{bottom:calc(min(42vh,340px) + 12px)}',
+      'html[data-nclay="wide"] .nctr-btn{bottom:calc(min(42vh,340px) + 104px)}',
       /* and the panels they open sit on top of the shelf, not under it */
       'html[data-nclay="wide"] .nclk,html[data-nclay="wide"] .nctr,',
       'html[data-nclay="wide"] .nccap,html[data-nclay="wide"] .ncbeat,',
-      'html[data-nclay="wide"] .ncrf{bottom:calc(min(42vh,340px) + 56px)}',
+      'html[data-nclay="wide"] .ncrf{bottom:calc(min(42vh,340px) + 56px);',
+        /* AND A CEILING, OR THEY GO THROUGH IT.
+           These panels carry their own max-height — 660px for the browsers —
+           chosen before the timeline took 340px off the bottom of the window.
+           Measured with the browser open at 1040px tall: the panel's top came
+           out at -16, sixteen pixels above the screen.
+
+           The part that made it worth chasing is what it did to the tiles.
+           A panel that does not fit does not scroll, so its grid never
+           overflowed, so every one of the forty-four previews counted as
+           on-screen and was redrawn on every pass — the culling added to stop
+           exactly that was culling nothing. Two bugs wearing each other's
+           clothes: the layout fault hid the performance fault.
+
+           The ceiling is the window minus the timeline, minus the header, so
+           the panel always ends below the top bar and its grid scrolls. */
+        'max-height:calc(100vh - min(42vh,340px) - 172px)}',
 
       '}',   /* end of the min-width:1360 block */
 

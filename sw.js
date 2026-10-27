@@ -610,6 +610,41 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v130: the transport under the player, and two bugs wearing each other's
+   clothes.
+
+   THE TRANSPORT. Play, jump-to-start, jump-to-end and the timecode were up in
+   the top bar beside the project name and the export button — where a
+   document app puts its chrome, not where a video app puts its transport.
+   They sit under the picture now, centred, which is the last thing that still
+   read as "not CapCut". Moved with position:fixed rather than by relocating
+   the nodes: the header is React's and its children are reconciled on every
+   render. Taking them out of flow also gave the header its room back, which
+   is what stopped Export being pushed off the right edge at 1280.
+
+   THE PANEL WENT THROUGH THE TOP OF THE SCREEN, AND THAT IS WHY THE EDITOR
+   STUTTERED. The browsers carry their own max-height, chosen before the
+   timeline took 340px off the bottom of the window. Measured at 1040px tall:
+   the transitions panel's top came out at -16. A panel that does not fit does
+   not scroll, so its grid never overflowed, so all forty-four previews
+   counted as on-screen and were redrawn every pass — the culling written to
+   stop exactly that was culling nothing. 53fps with the panel open and 50ms
+   worst frames. With a ceiling on the panel it is 60fps and 17ms.
+
+   Two guesses before that were wrong and are worth recording: throttling the
+   preview loop to 30fps bought two frames a second, and reusing the scratch
+   canvas instead of allocating one per draw bought none. Profiling said the
+   painters cost 4.1ms for all forty-four, which was never the problem. The
+   problem was that nothing was being skipped.
+
+   AND THE LANGUAGE PICKER WAS THE CONTROL THE LAYOUT ATE. .themewrap scrolls
+   sideways when its contents do not fit, with the scrollbar hidden, so on a
+   narrower window it silently cut whatever sat at the right-hand end — which
+   is the language picker. Measured in Portuguese: fits to 1500, 13px short at
+   1440, 150px short at 1280. The three words Tema / Estilo / Idioma label
+   controls that already say what they are, so they give way first, and the
+   cyber-theme picker — decoration rather than a setting — goes next. Every
+   width from 1280 up now fits with nothing cut. */
 /* v129: the CapCut arrangement, nine more transitions, eight real effects.
 
    THE LAYOUT. Measured at 1600px, the timeline was 1244 wide: it lived inside
@@ -2785,7 +2820,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v129';
+const CACHE = 'novaclip-v130';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

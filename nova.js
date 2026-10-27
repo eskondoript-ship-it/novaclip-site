@@ -2195,6 +2195,29 @@ function ncBuildBar() {
       'align-items:center;gap:8px}' +
     '#ncbar .themewrap label{margin:0 !important;font-size:.72rem;opacity:.55;' +
       'white-space:nowrap;letter-spacing:.02em}' +
+    /* WHAT GIVES WAY FIRST WHEN THE BAR RUNS OUT OF ROOM.
+
+       .themewrap scrolls sideways when its contents do not fit, with the
+       scrollbar hidden — which on a wide screen is invisible and on a
+       narrower one silently cuts whatever is at the right-hand end. Measured
+       in Portuguese: it fits down to 1500px, is 13px short at 1440, and 150px
+       short at 1280, and the thing sitting at that end is the language
+       picker. So the control for choosing a language was the one control the
+       layout ate, and it was reported exactly that way — "the language button
+       is not full".
+
+       The three words Tema / Estilo / Idioma cost about 150px with their
+       gaps, and every one of them labels a control that already says what it
+       is: a sun and a moon, a Normal/Gen Z pair, and a list of languages
+       written in their own alphabets. So they are what gives way. Below
+       1500px the labels go and the controls stay whole, which is the right
+       way round. */
+    '@media (max-width:1500px){#ncbar .themewrap label{display:none}' +
+      '#ncbar .themewrap{gap:10px}}' +
+    /* And below that, the cyber-theme picker — the one control here that is
+       decoration rather than a setting — goes too, rather than letting the
+       scroll eat something that is not. */
+    '@media (max-width:1400px){#ncbar #nc-skinpick{display:none}}' +
     '#ncbar #nc-themerow .nc-themerow{margin-top:0;width:104px}' +
     '#ncbar #nc-themerow .nc-themebtn{padding:5px 4px;min-height:44px}' +
     '#ncbar #genzToggle{width:148px}' +
