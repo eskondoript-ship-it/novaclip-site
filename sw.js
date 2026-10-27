@@ -610,6 +610,25 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v132: a scan keeps its own language when the site changes language.
+   Reported as the Trend Spotter results not being translated, with a
+   Portuguese page whose results were English. Scanning IN Portuguese was
+   never broken — the prompt has always carried langNote(). Scanning first and
+   switching the language after was, and it reproduces exactly: the subtitle
+   and the metric labels translated because they carry a data-t, while "Rising
+   in {niche}" and the HOT / GAP pills are built from a template and kept the
+   language they were built in; the radar line was worse, still carrying
+   data-t="ts_radar_idle" from before the scan, so the dictionary pass wrote
+   "idle" back over "2 signals in football" while the results sat underneath.
+   And the trend names are the model's own sentences, which no dictionary can
+   reach. trends-nav.js now listens to nc-lang — the event applyLang() fires
+   for exactly this case — rebuilds everything it owns from the scan in hand,
+   and asks for the model's sentences once, keeping the originals so going
+   back is free and exact. The scan cache is keyed by language too: without
+   that, re-scanning after a switch replayed the old language and never
+   reached the model.
+
+   trends-nav.js. Cached, so without the bump the fix never arrives. */
 /* v131: the trend scan takes the screen.
    Pressing Scan ran the radar at 470px under the form, the chips and the two
    selects — on a 1280x800 screen its top edge was at y=789, so the whole scan
@@ -2835,7 +2854,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v131';
+const CACHE = 'novaclip-v132';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

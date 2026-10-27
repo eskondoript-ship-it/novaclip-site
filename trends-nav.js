@@ -902,6 +902,22 @@
 
   var scanCache = {};      /* in memory only — see the note above */
   var lastScan = null;     /* what is on screen, for the modal and the radar */
+  var lastNiche = '';      /* and what was asked for, to rebuild the headings */
+  /* WHICH LANGUAGE THE WORDS ON SCREEN ARE IN, which is not the same question
+     as which language the site is in. A scan is somebody else's sentences —
+     the model wrote them, in whatever language it was asked in — so switching
+     the site to Portuguese cannot translate them the way it translates a
+     label. This records what was asked for, so the language change below
+     knows whether there is anything to do. */
+  var lastScanLang = '';
+  var langHook = null;     /* the nc-lang listener, so a rebuild can replace it */
+
+  function nowLang() {
+    try { return localStorage.getItem('nc_lang') || 'en'; } catch (e) { return 'en'; }
+  }
+  function langNameOf(code) {
+    return code === 'en' ? 'English' : LANG_NAMES[code];
+  }
 
   function recentNiches() {
     try { return JSON.parse(localStorage.getItem('nc_trend_recent') || '[]') || []; }
@@ -1220,7 +1236,13 @@
       if (!t) { err(tr('st_scan_need')); niche.focus(); return; }
       if (typeof window.ncAsk !== 'function') { err(tr('st_no_ai')); return; }
       var when = $('#ncxWhen', box).value, size = $('#ncxSize', box).value;
-      var key = t.toLowerCase() + '|' + when + '|' + size;
+      /* THE LANGUAGE IS PART OF WHAT WAS ASKED FOR.
+         Without it in the key, scanning "football" in English and then
+         switching to Portuguese and scanning the same niche again replayed
+         the English answer out of this cache and never reached the model —
+         so the one action that should obviously have fixed the language
+         was the one action guaranteed not to. */
+      var key = t.toLowerCase() + '|' + when + '|' + size + '|' + nowLang();
       err('');
       var btn = this;
 
@@ -1228,6 +1250,11 @@
 
       btn.disabled = true;
       setAi('scanning', 'ts_ai_scanning');
+      /* Both of these put the attribute back, because both are a plain key
+         with nothing to interpolate — so the dictionary pass re-translating
+         them on a language change is exactly right, and is cheaper than this
+         file noticing. Only the line with a count in it opts out. */
+      radarHint.setAttribute('data-t', 'ts_radar_scanning');
       radarHint.textContent = tr('ts_radar_scanning');
       /* Before the meter, so the first step is painted on the stage rather
          than into the page and then moved a frame later. */
@@ -1243,7 +1270,10 @@
         var extra = null;
         try { extra = await passTwo(t, found); } catch (e2) { extra = null; }
         meter(100, 'ts_step3');
-        var res = { trends: found, extra: extra, at: Date.now() };
+        /* The language goes on the result, not in a variable beside it, so a
+           replay out of scanCache knows what language the words it is handing
+           back are in. */
+        var res = { trends: found, extra: extra, at: Date.now(), lang: nowLang() };
         scanCache[key] = res;
         rememberNiche(t);
         draw(res, t);
@@ -1270,12 +1300,164 @@
       } catch (e) {
         err((e && e.message) || tr('st_no_reach'));
         setAi('error', 'ts_ai_error');
+        radarHint.setAttribute('data-t', 'ts_radar_idle');
         radarHint.textContent = tr('ts_radar_idle');
       }
       meter(-1);
       stageClose();
       btn.disabled = false;
     });
+
+    /* ---- THE RESULTS, WHEN THE LANGUAGE CHANGES UNDERNEATH THEM -----------
+       Reported as "you didn't translate the results of the Trend Spotter
+       page", with a screenshot of a Portuguese page whose results were in
+       English. Scanning in Portuguese was never the problem — the prompt has
+       carried langNote() all along and the model answers in the right
+       language. The problem is scanning FIRST and switching the language
+       AFTER, which is what the screenshot showed, and what reproduces it
+       exactly:
+
+         the subtitle, "Impulso", "Encaixa-te", "Abrir"   translated
+         "Rising in Football", the HOT / GAP pills         still English
+         the trend names and categories                    still English
+         the radar line                                    reset to "idle"
+
+       Three different causes wearing one coat. The ones that worked carry a
+       data-t and the dictionary pass rewrites them. The heading and the
+       pills are built from a template — tr('ts_found') with the niche
+       substituted in, tr('ts_b_' + badge) with a key that only exists at
+       runtime — so there is no attribute for the pass to act on and they
+       keep whatever language they were built in. The radar line was the
+       opposite failure and is fixed where it is set, above.
+
+       And the trend names are not ours at all. They are the model's
+       sentences, so no dictionary can touch them.
+
+       applyLang() fires nc-lang for exactly this case — its own comment says
+       so, "for the handful of strings a page builds itself out of a template
+       and a number, which the dictionary pass cannot rebuild". This file
+       never listened. Now it rebuilds everything it owns from the scan it
+       already has, which is free and instant, and then asks for the model's
+       sentences to be translated, which is one small call with no search
+       behind it. A re-scan would also have produced the right language, but
+       it would have produced DIFFERENT TRENDS: the cards and the signals on
+       the radar would all change places because somebody picked a language,
+       which is not what "translate this" means. */
+    function scanText(res, put) {
+      var i = 0, got = [];
+      function slot(get, set) {
+        var v = get();
+        if (typeof v !== 'string' || !v) return;
+        if (put) { if (typeof put[i] === 'string' && put[i]) set(put[i]); }
+        else got.push(v);
+        i++;
+      }
+      (res.trends || []).forEach(function (it) {
+        ['name', 'category', 'why', 'angle'].forEach(function (k) {
+          slot(function () { return it[k]; }, function (v) { it[k] = v; });
+        });
+      });
+      var x = res.extra || {};
+      /* .name on a platform is "YouTube", and .platform on a trend is too —
+         neither is a word anybody translates. .badge is worse than untouchable:
+         the code switches on it to pick the pill's colour, and the prompt
+         already says it stays English for that reason. */
+      (x.platforms || []).forEach(function (p) {
+        slot(function () { return p.note; }, function (v) { p.note = v; });
+      });
+      (x.hooks || []).forEach(function (h, n) {
+        slot(function () { return x.hooks[n]; }, function (v) { x.hooks[n] = v; });
+      });
+      (x.opps || []).forEach(function (o) {
+        ['title', 'why'].forEach(function (k) {
+          slot(function () { return o[k]; }, function (v) { o[k] = v; });
+        });
+      });
+      return got;
+    }
+
+    var langBusy = false;
+    async function retranslate() {
+      var code = nowLang(), name = langNameOf(code);
+      if (!lastScan || langBusy || !name || code === lastScanLang) return;
+
+      /* The furniture first, and without asking anybody. Headings, pills and
+         the radar line are this file's own strings; rebuilding them from the
+         scan already in hand costs nothing and happens on the same frame the
+         language changed. Whatever the model says below, this much is right
+         immediately. */
+      draw(lastScan, lastNiche);
+
+      /* ALWAYS TRANSLATE FROM WHAT THE MODEL ACTUALLY WROTE, never from the
+         last translation. The original strings ride along on the result from
+         the first time this runs, which buys two things: going back to the
+         language of the scan restores its exact words for free and without a
+         call, and going English to Portuguese to French is one translation
+         rather than a translation of a translation. Measured before this was
+         here: en, then pt, then back to en came back as the Portuguese put
+         through the model a second time, not as the sentences it started
+         with. */
+      var base = lastScan.base, baseLang = lastScan.baseLang || lastScan.lang;
+      if (base && baseLang === code) {
+        var back = JSON.parse(JSON.stringify(lastScan));
+        scanText(back, base);
+        back.lang = code;
+        draw(back, lastNiche);
+        return;
+      }
+
+      if (typeof window.ncAsk !== 'function') return;
+      var src = base || scanText(lastScan);
+      if (!src.length) return;
+
+      langBusy = true;
+      setAi('scanning', 'ts_ai_scanning');
+      try {
+        var raw = await window.ncAsk(
+          'Translate each string in this JSON array into ' + name + '. ' +
+          'Keep the array the same length and the same order. Leave names of ' +
+          'people, places, teams, games, channels and platforms as they are. ' +
+          'Translate the words around them. Do not explain and do not add ' +
+          'anything.\n\n' +
+          'Answer with ONE line of JSON and nothing else:\n' +
+          '{"out":[<the strings, translated, in the same order>]}\n\n' +
+          JSON.stringify(src),
+          { maxTokens: 1800 });
+        var body = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
+        var m = body.match(/\{[\s\S]*\}/);
+        var out = m && JSON.parse(m[0]).out;
+        /* Same length or nothing. scanText writes back by position, so a short
+           answer would put a trend's category into the next trend's name and
+           quietly scramble every card after the one the model dropped. */
+        if (out && out.length === src.length) {
+          /* ON A COPY. lastScan is the very object sitting in scanCache under
+             a key that now ends in the language it was fetched in, so
+             translating it in place would leave the English key holding
+             Portuguese words — and scanning that niche again in English would
+             replay them. The cache keeps what the model actually said; the
+             screen gets the translation. */
+          var copy = JSON.parse(JSON.stringify(lastScan));
+          if (!copy.base) { copy.base = src; copy.baseLang = baseLang || lastScanLang; }
+          scanText(copy, out);
+          copy.lang = code;
+          draw(copy, lastNiche);
+        }
+        setAi('done', 'ts_ai_done');
+      } catch (e) {
+        /* A translation that did not arrive leaves readable results in the
+           language they were written in, which is the state this started in
+           and is not worth an error box over. */
+        setAi('done', 'ts_ai_done');
+      }
+      langBusy = false;
+    }
+
+    /* Replaced rather than added, because this panel is rebuilt on every
+       visit to the route and each rebuild closes over a new draw(). Left to
+       accumulate, the fifth visit would translate five times. */
+    removeEventListener('nc-lang', langHook);
+    langHook = retranslate;
+    addEventListener('nc-lang', langHook);
 
     /* ---- PASS ONE: what is rising, grounded in live search ---------------- */
     async function passOne(t, when, size) {
@@ -1358,6 +1540,8 @@
     /* ---- DRAW ------------------------------------------------------------- */
     function draw(res, t) {
       lastScan = res;
+      lastNiche = t;
+      lastScanLang = res.lang || nowLang();
       var list = res.trends, extra = res.extra || {};
 
       /* the radar, repopulated */
@@ -1376,6 +1560,19 @@
         el.addEventListener('click', function () { openModal(it); });
         radar.appendChild(el);
       });
+      /* THE data-t HAS TO GO, and leaving it on is how the count disappeared.
+         This element is built carrying data-t="ts_radar_idle", and the
+         dictionary pass re-runs on every language change and whenever the DOM
+         grows — so it wrote "idle · waiting for a niche" straight back over
+         "2 signals in football" the moment anything else on the page moved.
+         Reported as the radar saying it was idle while a full set of results
+         sat underneath it.
+
+         Removing it rather than setting it to ts_radar_found, because that
+         value is a template: the pass does not know {n} or {q} and would
+         print the placeholders. The language change below rebuilds this line
+         instead, which is the only thing that can fill them in. */
+      radarHint.removeAttribute('data-t');
       radarHint.textContent = tr('ts_radar_found').replace('{n}', list.length).replace('{q}', t);
 
       var html =
