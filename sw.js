@@ -610,6 +610,21 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v131: the trend scan takes the screen.
+   Pressing Scan ran the radar at 470px under the form, the chips and the two
+   selects — on a 1280x800 screen its top edge was at y=789, so the whole scan
+   happened below the fold while the AI passes took their fifteen seconds. And
+   the sweep never moved: the markup was copied from the bundle but the
+   rotation lives in the bundle's own rAF loop, so what was there was a frozen
+   cone. For the length of a scan the radar, the hint and the step meter now
+   move into one fixed stage, the cone turns, and the signals land on a radar
+   filling the window before it gives the page back. The range rings and the
+   crosshairs are new too — the bundle draws those from an inline SVG that did
+   not come across either, and one thin circle at 870px reads as unfinished.
+
+   trends-nav.js, and only trends-nav.js. The radar on trends.html itself is
+   this file's, not the bundle's: the bundle renders its own copy at 0x0 on
+   that page. Cached, so without the bump a scan keeps happening off-screen. */
 /* v130: the transport under the player, and two bugs wearing each other's
    clothes.
 
@@ -2820,7 +2835,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v130';
+const CACHE = 'novaclip-v131';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

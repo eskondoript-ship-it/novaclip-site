@@ -443,10 +443,152 @@
          rounded box with its name in it. The bundle's .nc-radar-dot and
          .nc-radar-label do all the drawing; the button underneath has to be
          nothing at all. */
-      '.ncx-wide .nc-radar-point{background:none;border:0;padding:0;margin:0;',
-      '  font:inherit;color:inherit;-webkit-appearance:none;appearance:none}',
-      '.ncx-wide .nc-radar-point:focus-visible{outline:2px solid var(--nc-cyan);',
-      '  outline-offset:4px;border-radius:8px}',
+      /* BOTH ANCESTORS, FOR EVERY RULE THAT DRESSES THE RADAR ITSELF.
+         The scan stage below lifts this radar out of .ncx-wide and into a
+         fixed element on body, so for the length of a scan .ncx-wide is not
+         an ancestor of it and every rule scoped that way quietly stops
+         applying. That is invisible for most of them and loud for this one:
+         the signals are <button>s, and the moment this rule stopped reaching
+         them each one came back as a grey rounded box with its name in it —
+         the exact bug the comment above describes, except on the copy
+         filling the whole screen. */
+      '.ncx-wide .nc-radar-point,#ncxScanStage .nc-radar-point{background:none;border:0;',
+      '  padding:0;margin:0;font:inherit;color:inherit;-webkit-appearance:none;appearance:none}',
+      '.ncx-wide .nc-radar-point:focus-visible,#ncxScanStage .nc-radar-point:focus-visible{',
+      '  outline:2px solid var(--nc-cyan);outline-offset:4px;border-radius:8px}',
+      /* The range rings, under the sweep and under the signals. currentColor
+         rather than a fixed cyan, so the one rule works on both themes: the
+         radar sits on --nc-text in each, and a fraction of it is the same
+         weight as .nc-radar-ring-outer's own border.
+
+         position:absolute is not decoration here. An <svg> is inline by
+         default, so in the flow it sits on a text baseline and takes the
+         descender gap with it — six pixels of height on a wrap whose whole
+         job is to be a square, which is how this was caught. */
+      '.ncx-wide .nc-radar-grid,#ncxScanStage .nc-radar-grid{position:absolute;inset:0;',
+      '  width:100%;height:100%;z-index:1;pointer-events:none;color:var(--nc-text);opacity:.5}',
+      '.ncx-wide .nc-radar-grid circle,.ncx-wide .nc-radar-grid line,',
+      '#ncxScanStage .nc-radar-grid circle,#ncxScanStage .nc-radar-grid line{fill:none;',
+      '  stroke:currentColor;stroke-opacity:.28;stroke-width:.6;vector-effect:non-scaling-stroke}',
+
+      /* ---- THE SCAN TAKES THE SCREEN ------------------------------------
+         Two things were wrong with this radar during a scan, and they are
+         both the same mistake: the markup was copied from the bundle and the
+         behaviour was not.
+
+         It sat at 470px in a 1180px column, under the form, the chips, the
+         two selects and the section heading — which on a 1280x800 screen put
+         its top edge at y=789. The scan ran entirely below the fold. You
+         pressed Scan and nothing visible happened for the fifteen or twenty
+         seconds two AI passes take.
+
+         And the cone never moved. .nc-radar-sweep is a conic-gradient
+         carrying will-change:transform, and nothing in this file or that
+         stylesheet ever set a transform on it: the bundle rotates its own
+         copy from a requestAnimationFrame loop in its component, which did
+         not come across with the HTML. A frozen cone is not a scan.
+
+         So for as long as a scan is running the radar leaves the page and
+         takes the screen, and the cone turns. The sweep and the beam are
+         rotated by CSS rather than a rAF loop because there is nothing here
+         to synchronise them to — one animation on the shared wrapper keeps
+         the beam welded to the leading edge of the cone for free, and it
+         runs off the compositor instead of the main thread, which is the
+         thread the AI passes are parsing JSON on. */
+      '@keyframes ncxRadarSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}',
+      /* inset:0 and the same 99990 layer as a full-screen tool above, for the
+         reason written out up there: #ncbar is at 990 and is offset to the
+         right of the rail, so stopping underneath it would leave the rail's
+         logo block sitting in the corner of a scan. The whole viewport, or
+         none of it. */
+      '#ncxScanStage{position:fixed;inset:0;z-index:99980;display:flex;flex-direction:column;',
+      '  align-items:center;justify-content:center;gap:16px;padding:20px;',
+      /* Mixed from the theme's own background, not a fixed black: this panel
+         follows the site theme, and rgba(0,0,0,.6) over the light theme is a
+         dark box with dark text on it. The same reasoning as .ncx's own fill
+         a few rules up.
+
+         Opaque, and it took two goes to get there. At 86% with a blur behind
+         it the hero, the chips and the whole form were still legible through
+         the glass; at 96% they were still there as ghosts, because 4% of
+         near-black text on the light theme is exactly the pale grey this
+         page uses for its own captions. A page showing through a radar reads
+         as a z-index bug, not as depth. So the fill is solid, the glow in
+         the middle gives the depth the transparency was supposed to, and
+         there is no backdrop-filter left to blur a layer nobody can see. */
+      '  background:radial-gradient(circle at 50% 46%,',
+      '    color-mix(in srgb,var(--nc-purple) 11%,var(--nc-bg)) 0%,var(--nc-bg) 62%);',
+      '  animation:ncFadeIn .22s ease both}',
+      /* THREE CAPS, AND THE MIDDLE ONE IS THE ONE THAT MATTERS.
+         vmin keeps the circle inside the SHORTER side of the window, so it is
+         never clipped — the signals sit at up to 40% of the radius, which on
+         a phone in portrait leaves them well inside the glass.
+
+         But vmin alone was wrong on a laptop: 84vmin of an 800px-tall window
+         is 672px, and with the niche label over it and the hint and the step
+         meter under it the column came to more than 800, so the step text —
+         the one line saying what the scan is actually doing — was cut off by
+         the bottom of the screen. The 100vh term reserves the ~200px that
+         chrome needs. The 900px term is for a desktop monitor, where 84vmin
+         is most of a metre of radar. */
+      '#ncxScanStage #ncxRadar{width:min(84vmin,calc(100vh - 210px),900px);',
+      '  max-width:none;margin:0;flex:0 0 auto}',
+      '#ncxScanStage .nc-radar-sweep-wrap{animation:ncxRadarSpin 3.4s linear infinite}',
+      /* THE BEAM GOES ON THE EDGE OF THE CONE, WHICH IS NOT WHERE IT STARTS.
+         .nc-radar-beam points due east and the cone is a conic-gradient
+         running from 12 o'clock clockwise, fading out at 46deg — so sitting
+         them in the same wrapper and turning the wrapper left the bright
+         line trailing 44 degrees behind the sweep it is supposed to be the
+         leading edge of. Visible immediately at this size: a cone pointing
+         one way and a laser pointing another.
+
+         The bundle does not have this problem because it never shares a
+         wrapper — it rotates the two from its rAF loop with the 46 already
+         added to the beam's angle. One wrapper and one offset is the same
+         arrangement with one animation instead of two. */
+      '#ncxScanStage .nc-radar-beam{transform:rotate(-44deg)}',
+      '#ncxScanStage .nc-radar-hint{margin:0;font-size:.95rem;font-weight:700;',
+      '  color:var(--nc-text);text-align:center}',
+      /* margin:0 because .nc-scan-status carries its own spacing for the spot
+         it normally sits in, under the form — which inside a centred column
+         with its own gap put sixty-odd pixels between the hint and the step
+         it belongs to and left the two reading as unrelated. */
+      '#ncxScanStage .nc-scan-status{width:min(420px,86vw);margin:0}',
+      '#ncxScanStage .ncxs-niche{font-size:.78rem;font-weight:800;letter-spacing:.1em;',
+      '  text-transform:uppercase;color:var(--nc-cyan);text-align:center}',
+      '#ncxScanStage .ncxs-out{position:absolute;top:18px;right:18px;display:inline-flex;',
+      '  align-items:center;gap:7px;padding:8px 14px;border-radius:999px;font:inherit;',
+      '  font-size:.8rem;font-weight:800;color:var(--nc-soft);cursor:pointer;',
+      '  background:var(--nc-panel);border:1px solid var(--nc-border-strong)}',
+      '#ncxScanStage .ncxs-out:hover{color:var(--nc-text)}',
+      'html[data-ncxscan] body{overflow:hidden}',
+      /* THE RADAR IS DRAWN FOR THE DARK THEME AND ONLY FOR IT.
+         Every colour in it is a low-alpha cyan or violet meant to glow on
+         #070a13 — .nc-radar-ring-outer is a 1px border at 14% and the sweep
+         cone tops out at 22%. On the light theme at 470px in the page that
+         is faint but legible as decoration; blown up to most of the screen
+         it was a pale grey circle with a pink smudge in it. The page's own
+         stylesheet already patches two of these for light mode, so this
+         carries the same idea the rest of the way, and only inside the
+         stage, where the thing is big enough for it to matter. */
+      'html[data-theme="light"] #ncxScanStage .nc-radar-ring-outer{',
+      '  border-color:rgba(109,40,217,.28);',
+      '  background:radial-gradient(circle at 50% 50%,rgba(56,189,248,.16),',
+      '    rgba(167,139,250,.1) 40%,transparent 68%);',
+      '  box-shadow:0 0 60px rgba(109,40,217,.1),inset 0 0 70px rgba(167,139,250,.12)}',
+      'html[data-theme="light"] #ncxScanStage .nc-radar-sweep{',
+      '  background:conic-gradient(from 0deg,transparent 0deg,rgba(14,165,233,.06) 12deg,',
+      '    rgba(14,165,233,.3) 30deg,rgba(124,58,237,.38) 42deg,transparent 46deg)}',
+      'html[data-theme="light"] #ncxScanStage .nc-radar-beam{',
+      '  background:linear-gradient(90deg,rgba(14,165,233,.95),transparent);',
+      '  filter:drop-shadow(0 0 6px rgba(14,165,233,.7))}',
+      /* A scan is the one moment this page is allowed to be loud, but not to
+         somebody who asked it not to be. The radar still arrives full screen
+         and still reads as the thing that is happening — it just holds
+         still, the way the bundle's own radar does under the same query. */
+      '@media (prefers-reduced-motion:reduce){',
+      '  #ncxScanStage{animation:none}',
+      '  #ncxScanStage .nc-radar-sweep-wrap{animation:none;transform:rotate(38deg)}}',
       '.ncx-wide .nc-modal-head{display:flex;align-items:center;gap:13px;margin-bottom:6px}',
       '.ncx-wide .nc-modal-head .nc-modal-title{font-weight:900;font-size:1.2rem;line-height:1.25}',
       '.ncx-wide .nc-modal-section{margin-top:18px}',
@@ -879,6 +1021,21 @@
         '</div>' +
         '<div class="nc-radar-wrap" id="ncxRadar">' +
           '<div class="nc-radar-ring-outer"></div>' +
+          /* The range rings. The bundle draws these from an array of four
+             radii into an inline SVG; that SVG did not come across with the
+             rest of the markup, so this radar has always been one thin
+             circle with a cone in it. At 470px in the page you read that as
+             plain; at 870px filling a monitor you read it as unfinished, and
+             it is also the only thing on the dial that says what "closer to
+             the middle means moving faster" is measuring against. Same four
+             radii as the bundle, same dashed innermost. */
+          '<svg class="nc-radar-grid" viewBox="0 0 200 200" aria-hidden="true">' +
+            '<circle cx="100" cy="100" r="74"/>' +
+            '<circle cx="100" cy="100" r="50"/>' +
+            '<circle cx="100" cy="100" r="26" stroke-dasharray="3 5"/>' +
+            '<line x1="100" y1="2" x2="100" y2="198"/>' +
+            '<line x1="2" y1="100" x2="198" y2="100"/>' +
+          '</svg>' +
           '<div class="nc-radar-sweep-wrap"><div class="nc-radar-sweep"></div>' +
             '<div class="nc-radar-beam"></div></div>' +
           '<div class="nc-radar-center"></div>' +
@@ -929,6 +1086,96 @@
           '<div class="nc-scan-message"><span class="nc-spinner"></span>' + esc(tr(key)) + '</div>' +
           '<div class="nc-scan-track"><div class="nc-scan-fill" style="width:' + step + '%"></div></div>' +
         '</div>';
+    }
+
+    /* ---- THE SCAN, FULL SCREEN --------------------------------------------
+       The radar, the hint under it and the step meter move into one fixed
+       stage for the length of a scan, and go back where they came from
+       afterwards.
+
+       MOVED, not copied. draw() repopulates this exact radar node by
+       reference — `radar` is captured once, above — so a clone would mean the
+       signals landing on the copy that is no longer on screen while the one
+       filling the window stayed empty.
+
+       Moving nodes is safe here in a way it would not be fifty lines either
+       side of this file: the whole .ncx-wide panel is innerHTML written by
+       this file, so these are our own three divs. Nothing in the bundle holds
+       a ref to them, and the three variables above hold them by reference and
+       go on working from wherever they are.
+
+       Each one is marked with a comment node where it used to be, rather than
+       its old parent and index being written down. "Put it back at the end of
+       its old parent" is wrong for all three — the hint has #ncxOut after it
+       and the meter sits between the form and the cards — and remembering a
+       nextSibling is wrong too, because the radar's nextSibling IS the hint,
+       so restoring in the order they were taken would try to insert the radar
+       before a node that is not back in the document yet. A marker cannot get
+       that wrong: whatever happens in between, it is still sitting in the
+       exact gap the node left. */
+    var stage = null, stageBack = [], stageScroll = 0;
+
+    function stageKey(e) { if (e.key === 'Escape') stageClose(); }
+
+    function stageOpen(what) {
+      if (stage) return;
+      stageScroll = window.scrollY || window.pageYOffset || 0;
+
+      stage = document.createElement('div');
+      stage.id = 'ncxScanStage';
+      stage.setAttribute('role', 'dialog');
+      stage.setAttribute('aria-modal', 'true');
+      stage.setAttribute('aria-label', tr('ts_radar'));
+
+      /* A way out of a full-screen thing, always. The scan behind it keeps
+         running and still draws into the page when it lands — this hands the
+         screen back, it does not cancel the work. */
+      var exit = document.createElement('button');
+      exit.type = 'button';
+      exit.className = 'ncxs-out';
+      exit.textContent = tr('ts_close');
+      exit.addEventListener('click', stageClose);
+
+      var tag = document.createElement('div');
+      tag.className = 'ncxs-niche';
+      tag.textContent = what;
+
+      stage.appendChild(exit);
+      stage.appendChild(tag);
+
+      stageBack = [radar, radarHint, barHost].map(function (n) {
+        var mark = document.createComment('ncx-scan-stage');
+        n.parentNode.insertBefore(mark, n);
+        stage.appendChild(n);
+        return { node: n, mark: mark };
+      });
+
+      document.body.appendChild(stage);
+      document.documentElement.setAttribute('data-ncxscan', '1');
+      document.addEventListener('keydown', stageKey);
+      exit.focus();
+    }
+
+    function stageClose() {
+      if (!stage) return;
+      stageBack.forEach(function (s) {
+        /* Guarded because the marker can legitimately be gone: anything that
+           rewrote the innerHTML of a parent while the stage was up took its
+           marker with it, and putting the node back is then not possible.
+           Dropping it is better than throwing halfway through and leaving
+           the rest of the page's furniture inside a stage that is about to
+           be removed. */
+        if (s.mark.parentNode) s.mark.parentNode.replaceChild(s.node, s.mark);
+      });
+      stageBack = [];
+      document.removeEventListener('keydown', stageKey);
+      document.documentElement.removeAttribute('data-ncxscan');
+      stage.remove();
+      stage = null;
+      /* overflow:hidden on html while the stage was up collapsed the page's
+         scroll range, which drops the offset. Put it back, or pressing Close
+         lands you at the top of the page you were halfway down. */
+      window.scrollTo(0, stageScroll);
     }
 
     function paintRecent() {
@@ -982,6 +1229,9 @@
       btn.disabled = true;
       setAi('scanning', 'ts_ai_scanning');
       radarHint.textContent = tr('ts_radar_scanning');
+      /* Before the meter, so the first step is painted on the stage rather
+         than into the page and then moved a frame later. */
+      stageOpen(t);
       meter(30, 'ts_step1');
       try {
         var found = await passOne(t, when, size);
@@ -998,6 +1248,13 @@
         rememberNiche(t);
         draw(res, t);
         setAi('done', 'ts_ai_done');
+        /* draw() has just put the signals on the radar that is still filling
+           the window, and the landing is the one moment on this screen worth
+           watching — .nc-radar-point-enter is a half-second pop per signal.
+           Handing the page back on the same frame would throw it away. Held
+           only if the stage is still up: pressing Close during the scan has
+           already given the screen back, and this must not take it again. */
+        if (stage) await new Promise(function (r) { setTimeout(r, 1600); });
         /* Counted HERE, on an answer that arrived, rather than on the press.
            A scan that failed is not a scan, and paying for it would be the
            counter lying in the other direction. */
@@ -1016,6 +1273,7 @@
         radarHint.textContent = tr('ts_radar_idle');
       }
       meter(-1);
+      stageClose();
       btn.disabled = false;
     });
 
