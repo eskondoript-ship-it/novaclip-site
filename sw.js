@@ -610,6 +610,25 @@
    instructions around it.
 
    ai-worker.js (deploy it — a push does not), nova.js, trends-nav.js. */
+/* v133: the editor's AI tools answer back, and the long one can be stopped.
+   Reported as "the AI tools lag or do nothing". Driven in a browser against a
+   generated clip, that is three faults and only one is slowness. Every answer
+   the panel gives — results and refusals alike — went into a span measured at
+   133x28 and 10px, so "Select a clip on the timeline first", far and away the
+   most common outcome, was a whisper in the corner of a row, and a result
+   fifty characters long was cut off mid-sentence. "Time the Captions" ended
+   by adding caption cards, which selects one, so the very next tool answered
+   "That clip has no media file behind it" about a video in plain view. And
+   "Find the Scenes" seeked the WHOLE asset every 0.25s — measured at 764ms
+   for 6s of video and 3287ms for 30s, about 110ms a second — with no progress
+   and no way to stop, so a five-minute source was half a minute of a
+   thumbnail-sized spinner. It also scanned from the start of the file
+   whatever the clip was trimmed to: on a clip showing 10s-18s of a source it
+   split at 3.25s and 7.25s, two cuts that are not in the clip at all.
+
+   editor-ai.js is NEW and editor.html loads it — they go together. Also in
+   sw.js's SHELL, so it is there offline, which is where the tools refuse most
+   and the refusal is the only explanation. */
 /* v132: a scan keeps its own language when the site changes language.
    Reported as the Trend Spotter results not being translated, with a
    Portuguese page whose results were English. Scanning IN Portuguese was
@@ -2854,7 +2873,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v132';
+const CACHE = 'novaclip-v133';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3024,6 +3043,11 @@ const SHELL = [
   '/editor-looks.js',
   '/editor-trans.js',
   '/editor-layout.js',
+  /* The AI panel's manners. Without it the panel still runs every tool, and
+     answers each one in a 10px box that cuts the sentence off — so offline is
+     the worst place to be missing it, because offline is where the tools fail
+     most often and the refusal is the only thing that explains why. */
+  '/editor-ai.js',
   /* The Academy. The page and its script go together — academy.html is markup
      with no behaviour of its own, so shipping it without academy.js offline
      would give somebody an empty shelf and three dead buttons. */

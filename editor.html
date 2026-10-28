@@ -2082,5 +2082,17 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      header, because a layout that cannot be turned off is one somebody is
      stuck in. Goes with editor-layout.js. -->
 <script src='editor-layout.js' defer></script>
+
+<!-- THE AI TOOLS PANEL. Measured in a browser, "the AI tools lag or do
+     nothing" is three faults: every answer the panel gives goes into a 133x28
+     box at 10px and is cut off mid-sentence, so a refusal reads as nothing
+     happening; "Time the Captions" leaves one of its new caption cards
+     selected, so the next tool says "That clip has no media file behind it"
+     about a video in plain view; and "Find the Scenes" seeks the WHOLE asset
+     every 0.25s — 110ms per second of video, measured — with no progress and
+     no way to stop. This makes the answers readable, puts the selection back,
+     and swaps the scan for one that reads only the part of the file the clip
+     uses and can be called off. Goes with editor-ai.js. -->
+<script src='editor-ai.js' defer></script>
   </body>
 </html>
