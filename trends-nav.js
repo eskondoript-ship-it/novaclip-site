@@ -177,6 +177,14 @@
     '/photo':      { label: 'Photo', key: 'photo', full: true,
                      icon: 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6M8.5 9.5a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4z',
                      why: 'Crop, retouch and export a still — the same tool as photo.html' },
+    /* The fifth tool, and it sits with the research rather than with the
+       applications: it does not cut anything. You paste a long video, Gemini
+       watches it at Google's end, and what comes back is which moments are
+       worth a short and why. clipper.js renders it; this file only routes to
+       it, the same arrangement as the panels above. */
+    '/clipper':    { label: 'AI Clipper', key: 'st_clipper_h',
+                     icon: 'M6 3v12M18 3v12M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM18 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+                     why: 'Paste a long video and find the moments worth cutting' },
     '/trends':     { label: 'Trend Spotter', key: 'st_trends_h',
                      icon: 'M3 17l6-6 4 4 7-7M14 8h7v7',
                      why: 'Find what is actually rising in your niche' },
@@ -371,6 +379,9 @@
     addItem(nav, 'photo', PANELS['/photo'], '#/photo',
             railItem(side, '#/publish') || railItem(side, '#/editor'));
     addItem(nav, 'hype', PANELS['/hype'], '#/hype');
+    /* Before Studio, after Hype Lab: the rail reads as make, then measure, and
+       the clipper is still making. */
+    addItem(nav, 'clipper', PANELS['/clipper'], '#/clipper');
     addItem(nav, 'studio', PANELS['/studio'], '#/studio');
   }
 
@@ -2639,6 +2650,23 @@
   /* ==========================================================================
      STUDIO — a snapshot, honestly labelled
      ========================================================================== */
+  /* clipper.js draws this one. It is a separate file because it is the only
+     panel here that is also the answer to a legal question, and the reasoning
+     belongs next to the code rather than buried in the middle of this one.
+     If the file did not load, say so rather than showing an empty card. */
+  function clipperPanel(box) {
+    if (window.NC_CLIPPER && typeof window.NC_CLIPPER.mount === 'function') {
+      window.NC_CLIPPER.mount(box);
+      return;
+    }
+    if (box.dataset.view === 'clipper-missing') return;
+    box.dataset.view = 'clipper-missing';
+    box.innerHTML =
+      '<h1>AI clipper</h1>' +
+      '<p class="lede">clipper.js did not load, so there is nothing to show. ' +
+      'Reload the page; if it keeps happening the file is missing from the server.</p>';
+  }
+
   function studioPanel(box) {
     if (box.dataset.view === 'studio') return;
     box.dataset.view = 'studio';
@@ -2838,6 +2866,7 @@
       else if (h === '/editor') editorPanel(box);
       else if (h === '/publish') aiEditPanel(box);
       else if (h === '/photo') photoPanel(box);
+      else if (h === '/clipper') clipperPanel(box);
       else studioPanel(box);
       /* A panel opened from halfway down the trends list should start at the
          top of itself, not wherever the last screen was scrolled to. */

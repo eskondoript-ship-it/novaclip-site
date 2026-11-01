@@ -321,6 +321,7 @@ const T = {
   st_pic: { en:"Your own picture (optional)", zh:"你自己的图片（可选）", hi:"आपकी अपनी तस्वीर (वैकल्पिक)", es:"Tu propia imagen (opcional)", ar:"صورتك الخاصة (اختياري)", fr:"Ta propre image (facultatif)", bn:"আপনার নিজের ছবি (ঐচ্ছিক)", pt:"A tua própria imagem (opcional)", ru:"Своя картинка (не обязательно)", ur:"آپ کی اپنی تصویر (اختیاری)", id:"Gambarmu sendiri (opsional)", de:"Dein eigenes Bild (optional)", ja:"自分の画像（任意）", tr:"Kendi resmin (isteğe bağlı)", ko:"직접 고른 사진 (선택)", fa:"تصویر خودت (اختیاری)", uk:"Власне зображення (необов’язково)", it:"Una tua immagine (facoltativo)", pl:"Własne zdjęcie (opcjonalnie)", vi:"Ảnh của bạn (tuỳ chọn)" },
   st_savepng: { en:"Save the PNG", zh:"保存 PNG", hi:"PNG सेव करें", es:"Guardar el PNG", ar:"احفظ ملف PNG", fr:"Enregistrer le PNG", bn:"PNG সেভ করুন", pt:"Guardar o PNG", ru:"Сохранить PNG", ur:"PNG محفوظ کریں", id:"Simpan PNG", de:"PNG speichern", ja:"PNGを保存", tr:"PNG’yi kaydet", ko:"PNG 저장", fa:"ذخیرهٔ PNG", uk:"Зберегти PNG", it:"Salva il PNG", pl:"Zapisz PNG", vi:"Lưu PNG" },
   st_preview: { en:"Preview", zh:"预览", hi:"प्रीव्यू", es:"Vista previa", ar:"معاينة", fr:"Aperçu", bn:"প্রিভিউ", pt:"Pré-visualização", ru:"Предпросмотр", ur:"پیش منظر", id:"Pratinjau", de:"Vorschau", ja:"プレビュー", tr:"Önizleme", ko:"미리보기", fa:"پیش‌نمایش", uk:"Перегляд", it:"Anteprima", pl:"Podgląd", vi:"Xem trước" },
+  st_clipper_h: { en:"AI Clipper", zh:"AI 切片", hi:"AI क्लिपर", es:"Clipper IA", ar:"مقصّ الذكاء الاصطناعي", fr:"Clipper IA", bn:"AI ক্লিপার", pt:"Clipper IA", ru:"ИИ-нарезка", ur:"اے آئی کلپر", id:"Clipper AI", de:"KI-Clipper", ja:"AIクリッパー", tr:"AI Klipleyici", ko:"AI 클리퍼", fa:"کلیپر هوش مصنوعی", uk:"ШІ-нарізка", it:"Clipper IA", pl:"Clipper AI", vi:"Clipper AI" },
   st_studio_h: { en:"Studio", zh:"工作室", hi:"स्टूडियो", es:"Estudio", ar:"الاستوديو", fr:"Studio", bn:"স্টুডিও", pt:"Estúdio", ru:"Студия", ur:"اسٹوڈیو", id:"Studio", de:"Studio", ja:"スタジオ", tr:"Stüdyo", ko:"스튜디오", fa:"استودیو", uk:"Студія", it:"Studio", pl:"Studio", vi:"Studio" },
   st_studio_p: { en:"What this device already knows about your channel. The charts — watch time, retention, where viewers come from — need a YouTube sign-in and live on the full Studio page.", zh:"这台设备已经知道的关于你频道的信息。图表——观看时长、留存、观众来源——需要登录 YouTube，放在完整的工作室页面里。", hi:"आपके चैनल के बारे में जो यह डिवाइस पहले से जानता है। चार्ट — वॉच टाइम, रिटेंशन, दर्शक कहाँ से आते हैं — के लिए YouTube साइन-इन चाहिए और वे पूरे स्टूडियो पेज पर हैं।", es:"Lo que este dispositivo ya sabe de tu canal. Las gráficas —tiempo de visualización, retención, de dónde vienen— necesitan iniciar sesión en YouTube y están en la página completa de Estudio.", ar:"ما يعرفه هذا الجهاز أصلًا عن قناتك. أما الرسوم البيانية — وقت المشاهدة والاستبقاء ومن أين يأتي المشاهدون — فتحتاج تسجيل دخول يوتيوب وتوجد في صفحة الاستوديو الكاملة.", fr:"Ce que cet appareil sait déjà de ta chaîne. Les graphiques — durée de visionnage, rétention, provenance des spectateurs — demandent une connexion YouTube et vivent sur la page Studio complète.", bn:"আপনার চ্যানেল সম্পর্কে এই ডিভাইস যা আগে থেকেই জানে। চার্ট — ওয়াচ টাইম, রিটেনশন, দর্শক কোথা থেকে আসে — এর জন্য YouTube সাইন-ইন লাগে, আর সেগুলো পুরো স্টুডিও পেজে আছে।", pt:"O que este dispositivo já sabe sobre o teu canal. Os gráficos — tempo de visualização, retenção, de onde vêm os espectadores — precisam de sessão iniciada no YouTube e estão na página completa do Estúdio.", ru:"Что это устройство уже знает о твоём канале. Графики — время просмотра, удержание, откуда приходят зрители — требуют входа в YouTube и живут на полной странице Студии.", ur:"آپ کے چینل کے بارے میں یہ ڈیوائس جو پہلے سے جانتی ہے۔ چارٹس — واچ ٹائم، ریٹینشن، ناظرین کہاں سے آتے ہیں — کے لیے یوٹیوب سائن اِن چاہیے اور وہ مکمل اسٹوڈیو صفحے پر ہیں۔", id:"Apa yang sudah diketahui perangkat ini tentang kanalmu. Grafiknya — waktu tonton, retensi, asal penonton — perlu masuk YouTube dan ada di halaman Studio lengkap.", de:"Was dieses Gerät schon über deinen Kanal weiß. Die Diagramme — Wiedergabezeit, Bindung, Herkunft der Zuschauer — brauchen eine YouTube-Anmeldung und stehen auf der vollen Studio-Seite.", ja:"この端末がすでに知っているあなたのチャンネルの情報です。グラフ（視聴時間、維持率、視聴者の流入元）はYouTubeのログインが必要で、完全なスタジオページにあります。", tr:"Bu cihazın kanalın hakkında zaten bildikleri. Grafikler — izlenme süresi, tutma, izleyicinin nereden geldiği — YouTube girişi ister ve tam Stüdyo sayfasında durur.", ko:"이 기기가 이미 알고 있는 채널 정보입니다. 차트(시청 시간, 유지율, 시청자 유입)는 YouTube 로그인이 필요하며 전체 스튜디오 페이지에 있습니다.", fa:"آنچه این دستگاه از پیش دربارهٔ کانالت می‌داند. نمودارها — زمان تماشا، ماندگاری، اینکه بیننده‌ها از کجا می‌آیند — به ورود به یوتیوب نیاز دارند و در صفحهٔ کامل استودیو هستند.", uk:"Те, що цей пристрій уже знає про твій канал. Графіки — час перегляду, утримання, звідки приходять глядачі — потребують входу в YouTube і живуть на повній сторінці Студії.", it:"Quello che questo dispositivo sa già del tuo canale. I grafici — tempo di visualizzazione, retention, da dove arrivano gli spettatori — richiedono l’accesso a YouTube e stanno nella pagina Studio completa.", pl:"To, co to urządzenie już wie o twoim kanale. Wykresy — czas oglądania, utrzymanie, skąd przychodzą widzowie — wymagają logowania do YouTube i są na pełnej stronie Studia.", vi:"Những gì thiết bị này đã biết về kênh của bạn. Các biểu đồ — thời gian xem, giữ chân, người xem đến từ đâu — cần đăng nhập YouTube và nằm ở trang Studio đầy đủ." },
   st_fact_ch: { en:"Connected channel", zh:"已连接的频道", hi:"कनेक्टेड चैनल", es:"Canal conectado", ar:"القناة المتصلة", fr:"Chaîne connectée", bn:"সংযুক্ত চ্যানেল", pt:"Canal ligado", ru:"Подключённый канал", ur:"منسلک چینل", id:"Kanal terhubung", de:"Verbundener Kanal", ja:"接続中のチャンネル", tr:"Bağlı kanal", ko:"연결된 채널", fa:"کانال متصل", uk:"Під’єднаний канал", it:"Canale collegato", pl:"Połączony kanał", vi:"Kênh đã kết nối" },
@@ -6908,7 +6909,12 @@ function ncRoutes(provider, model, opts) {
     /* Offline last, and only if Ollama has actually answered here before —
        and never for a request that needs the live web or draws a picture,
        neither of which a small text model can do at all. */
-    const needsGoogle = !!opts.search || /image|imagen|vision/i.test(String(model || ''));
+    /* Watching a video is Google-only too. A small text model on your laptop
+       cannot open a YouTube link at all, and falling over to one would turn
+       "Google could not reach that video" into an answer invented from the
+       URL — which reads like it worked. */
+    const needsGoogle = !!opts.search || !!opts.video ||
+                        /image|imagen|vision/i.test(String(model || ''));
     if (!needsGoogle && ncLocalReady()) want.push(here);
   }
 
@@ -6930,6 +6936,25 @@ async function ncAsk(prompt, opts) {
   };
   if (opts.maxTokens) body.generationConfig.maxOutputTokens = opts.maxTokens;
   if (opts.search) body.tools = [{ google_search: {} }];
+
+  /* A PUBLIC YouTube URL that Gemini watches for itself.
+     The file is never downloaded, never reaches this browser and never reaches
+     the worker — Google fetches it at their end, which is the only way any of
+     this is allowed to work. Unlisted and private videos are refused by them,
+     not by us, and the sentence that comes back says so.
+
+     videoFrom/videoTo trim what gets watched. They are what stops a two-hour
+     video being billed like a two-hour video, so pass them whenever the answer
+     only needs part of it. */
+  if (opts.video) {
+    const vp = { file_data: { file_uri: opts.video } };
+    if (opts.videoFrom != null || opts.videoTo != null) {
+      vp.video_metadata = {};
+      if (opts.videoFrom != null) vp.video_metadata.start_offset = Math.round(opts.videoFrom) + 's';
+      if (opts.videoTo != null) vp.video_metadata.end_offset = Math.round(opts.videoTo) + 's';
+    }
+    body.contents[0].parts.push(vp);
+  }
 
   /* THINKING TOKENS COUNT AGAINST maxOutputTokens.
      A thinking Gemini reasons before it answers, and that reasoning is billed
