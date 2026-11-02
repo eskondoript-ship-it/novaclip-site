@@ -155,6 +155,35 @@ html[data-device="phone-s"] .btsave { display: none; }
 .coplan { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 13px 15px; margin-bottom: 16px; }
 .coplan small { display: block; color: var(--nc-dim,#7E8AA6); font-size: .74rem; margin-top: 2px; }
+/* THE AI TIER, PICKED BEFORE STRIPE AND NOT AFTER.
+   Asked for directly: the monthly plan should ask which AI you want before
+   the redirect, with Basic leaving the price alone and the two above it
+   raising it. It goes in step 1 under the plan line, because once the buyer
+   is on Stripe's page the amount is fixed and the only way back is to
+   abandon the checkout. */
+.cotier { margin: 14px 0 4px; }
+.cotier > .colab { margin-bottom: 8px; }
+.cotier-opt { display: block; width: 100%; text-align: left; cursor: pointer;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 13px; padding: 12px 14px; margin-bottom: 8px; color: inherit;
+  font: inherit; transition: border-color .15s, background .15s; }
+.cotier-opt:hover { border-color: rgba(0,240,255,0.45); }
+.cotier-opt[aria-pressed="true"] { border-color: var(--nc-cyan,#00F0FF);
+  background: rgba(0,240,255,0.08); }
+.cotier-top { display: flex; align-items: baseline; gap: 8px; }
+.cotier-top b { font-size: .96rem; }
+.cotier-add { margin-left: auto; font-weight: 800; font-size: .9rem;
+  color: var(--nc-cyan,#00F0FF); white-space: nowrap; }
+.cotier-add.free { color: var(--nc-lime,#B6FF3C); }
+.cotier-opt ul { list-style: none; margin: 8px 0 0; padding: 0; }
+.cotier-opt li { font-size: .79rem; color: var(--nc-dim,#b8bccb); padding: 2px 0;
+  line-height: 1.45; padding-left: 15px; position: relative; }
+.cotier-opt li::before { content: '\2713'; position: absolute; left: 0;
+  color: var(--nc-lime,#B6FF3C); font-weight: 800; }
+.cotier-tot { display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.12);
+  font-size: .88rem; }
+.cotier-tot b { font-size: 1.15rem; color: var(--nc-cyan,#00F0FF); }
 .coprice { font-size: 1.35rem; font-weight: 900; color: var(--nc-cyan,#00F0FF); }
 .colab { display: block; font-size: .74rem; color: var(--nc-dim,#7E8AA6); margin: 10px 0 5px; letter-spacing: .5px; }
 #checkout input { width: 100%; padding: 11px 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.16);
@@ -1232,6 +1261,115 @@ window.addEventListener('DOMContentLoaded', () => { issueEarned(); renderMyTrain
 
 // ---------- CHECKOUT ----------
 let coCurrent = null;
+/* ===========================================================================
+   THE AI TIER
+   ===========================================================================
+   Which AI the subscription comes with, chosen at the checkout before the
+   redirect rather than on a page afterwards — once the buyer is on Stripe the
+   amount is fixed and the only way back is to abandon the payment.
+
+   WHY THE TIERS SPLIT WHERE THEY DO. They are drawn straight off what each
+   feature actually costs to run, measured from the token caps in this repo:
+   text answers are fractions of a cent, images are about 3.6 cents each, and
+   video generation is the one that cannot be given away — modelled out, video
+   for every free user needs sixty-three machines where customers-only needs
+   eight. So video and character animation sit in Pro, images sit in Premium,
+   and everything made of text is in Basic for nothing extra.
+
+   BASIC DOES NOT CHANGE THE PRICE. That is the point of it: the plan costs
+   what the plan costs, and the two above it are additions somebody opts into.
+
+   The surcharge is monthly. The yearly cycle multiplies by ten, the same two-
+   months-free arithmetic the plan cards use, so the tier cannot quietly be a
+   better or worse deal than the plan it is attached to. */
+const AI_TIERS = [
+  { id: 'basic', name: 'Basic AI', add: 0,
+    blurb: 'Everything made of words. No extra cost.',
+    feats: ['Ask Nova, scripts, titles and video ideas',
+            'Editor suggestions and the help cards',
+            'Three trend scans a month',
+            'AI Clipper on videos up to 20 minutes'] },
+  { id: 'premium', name: 'Premium AI', add: 2.99,
+    blurb: 'The pictures, and the limits come off.',
+    feats: ['Everything in Basic',
+            'Unlimited trend scans',
+            'AI Clipper on the full two hours',
+            'Thumbnail and image generation',
+            'Hype Lab retention analysis'] },
+  { id: 'pro', name: 'Pro AI', add: 6.99,
+    blurb: 'The things that need a graphics card to themselves.',
+    feats: ['Everything in Premium',
+            'Video generation',
+            'Character animation',
+            'The Coder, with the long context',
+            'Your jobs skip the evening queue'] }
+];
+
+let coTier = 'basic';
+
+/* The plan's own price, as a number, out of whatever the card printed. The
+   page writes prices in several currencies and this has to survive all of
+   them, so it takes the digits and nothing else. */
+function coBasePrice(text) {
+  const m = String(text || '').replace(/[^0-9.,]/g, '').replace(/,(\d{2})$/, '.$1').replace(/,/g, '');
+  const n = parseFloat(m);
+  return isFinite(n) ? n : 0;
+}
+function coCurrencySymbol(text) {
+  const m = String(text || '').match(/[^\d\s.,]+/);
+  return m ? m[0] : '\u20ac';
+}
+
+function coTierAdd(id, cycle) {
+  const t = AI_TIERS.find(x => x.id === id) || AI_TIERS[0];
+  /* Yearly is ten months, like every other price on this page. */
+  return /year/i.test(cycle || '') ? t.add * 10 : t.add;
+}
+
+function coPaintTiers() {
+  const box = document.getElementById('coTierOpts');
+  if (!box) return;
+  const cycle = (coCurrent && coCurrent.cycle) || '';
+  const sym = coCurrencySymbol(coCurrent && coCurrent.price);
+  const per = /year/i.test(cycle) ? '/year' : '/month';
+  box.innerHTML = '';
+  AI_TIERS.forEach(t => {
+    const add = coTierAdd(t.id, cycle);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cotier-opt';
+    b.setAttribute('aria-pressed', t.id === coTier ? 'true' : 'false');
+    b.innerHTML =
+      '<div class="cotier-top"><b>' + t.name + '</b>' +
+      '<span class="cotier-add' + (add ? '' : ' free') + '">' +
+        (add ? '+' + sym + add.toFixed(2) + per : 'included') + '</span></div>' +
+      '<div style="font-size:.79rem;color:var(--nc-dim,#7E8AA6);margin-top:3px">' + t.blurb + '</div>' +
+      '<ul>' + t.feats.map(f => '<li>' + f + '</li>').join('') + '</ul>';
+    b.onclick = function () { coTier = t.id; coPaintTiers(); };
+    box.appendChild(b);
+  });
+
+  const base = coBasePrice(coCurrent && coCurrent.price);
+  const add = coTierAdd(coTier, cycle);
+  const what = document.getElementById('coTierWhat');
+  const tot = document.getElementById('coTierTot');
+  if (what) what.textContent = add
+    ? ((coCurrent && coCurrent.plan) || 'Plan') + ' + ' +
+      (AI_TIERS.find(x => x.id === coTier) || {}).name
+    : ((coCurrent && coCurrent.plan) || 'Plan');
+  if (tot) tot.textContent = sym + (base + add).toFixed(2) + per;
+  /* The headline price at the top of the dialog moves too. Leaving it on the
+     plan-only figure while the total underneath says something else is how a
+     buyer arrives at Stripe surprised, which is the thing this step exists to
+     prevent. */
+  const head = document.getElementById('coPrice');
+  if (head) head.textContent = sym + (base + add).toFixed(2) + per;
+}
+
+/* What the worker is told. Sent with the checkout so the amount is decided
+   server-side from the tier id, never from a number this page hands over. */
+window.ncAiTier = function () { return coTier; };
+
 function openCheckout(planName, priceText, cycle, planId) {
   coCurrent = { plan: planName, price: priceText, cycle: cycle, id: planId || '' };
   /* Whatever this modal was last used for, it is a plan now. The Pay button is
@@ -1250,6 +1388,17 @@ function openCheckout(planName, priceText, cycle, planId) {
   document.getElementById('coStep1').style.display = 'block';
   document.getElementById('coStep2').style.display = 'none';
   document.getElementById('coErr').textContent = '';
+
+  /* A subscription has a monthly AI to choose; a certificate does not. The
+     cycle is the only thing that tells them apart here, and it is the string
+     the card printed, so it is matched rather than compared. */
+  const tierBox = document.getElementById('coTier');
+  const isSub = /month|year/i.test(cycle || '');
+  if (tierBox) {
+    tierBox.style.display = isSub ? 'block' : 'none';
+    if (isSub) { coTier = 'basic'; coPaintTiers(); }
+  }
+
   document.getElementById('checkout').classList.add('show');
 }
 window.closeCheckout = function () { document.getElementById('checkout').classList.remove('show'); };
@@ -1289,6 +1438,8 @@ function openLessonCheckout(item) {
   const shown = itemPrice(item, cur, item.unit);
   coLesson = item;
   coCurrent = { plan: item.name, price: shown, cycle: 'Academy lesson' };
+  const tierBox = document.getElementById('coTier');
+  if (tierBox) tierBox.style.display = 'none';
   document.getElementById('coName').textContent = item.name;
   document.getElementById('coCycle').textContent =
     'Academy lesson' + (item.lesson && item.lesson.by ? ' · ' + item.lesson.by : '');
@@ -1524,6 +1675,13 @@ async function startStripeCheckout() {
                                return { plan: i.id || planIdFor(i.name), qty: i.qty || 1 };
                              }).filter(function (i) { return !!i.plan; }),
                              currency: (localStorage.getItem('nc_currency') || 'eur'),
+                             /* The tier ID, never the surcharge. The page knows what the
+                                extra costs because it has to print it, but a browser that
+                                sends an amount is a browser that can send 0.01 — the
+                                worker looks the figure up from this id. Only meaningful on
+                                a subscription; it is sent as 'basic' otherwise and the
+                                worker adds nothing for that. */
+                             aiTier: (typeof window.ncAiTier === 'function' ? window.ncAiTier() : 'basic'),
                              email: email || undefined, ticket: ticket || undefined })
     });
     const out = await res.json();
@@ -1536,6 +1694,8 @@ async function startStripeCheckout() {
        session id in the URL is what proves it was paid for; this is only the
        shopping list. */
     try {
+      localStorage.setItem('nc_ai_tier', (typeof window.ncAiTier === 'function'
+                                          ? window.ncAiTier() : 'basic'));
       localStorage.setItem('nc_pending_order', JSON.stringify({
         plan: plan, cart: CART.slice(), cycle: coCurrent ? coCurrent.cycle : '',
         price: coCurrent ? coCurrent.price : '', at: Date.now()
@@ -1626,6 +1786,14 @@ else initCheckout();
         <div><b id='coName'>Plan</b><small id='coCycle'>Monthly</small></div>
         <div class='coprice' id='coPrice'>—</div>
       </div>
+      <!-- Hidden for certificates and Academy lessons: a one-off purchase has
+           no monthly AI to choose. openCheckout() decides. -->
+      <div class='cotier' id='coTier' style='display:none'>
+        <label class='colab'>Which AI do you want with it?</label>
+        <div id='coTierOpts'></div>
+        <div class='cotier-tot'><span id='coTierWhat'>Total</span><b id='coTierTot'>—</b></div>
+      </div>
+
       <label class='colab'>Parent / guardian email</label>
       <input type='email' id='coEmail' name='email' autocomplete='email' placeholder='parent@example.com'>
 

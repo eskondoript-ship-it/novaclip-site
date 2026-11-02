@@ -165,9 +165,6 @@
     '/editor':     { label: 'Editor', key: 'editor', full: true,
                      icon: 'M4 6h16M4 12h10M4 18h7M17 11l4 4-4 4v-8z',
                      why: 'Cut, trim and finish a video, here' },
-    '/publish':    { label: 'AI Editor', key: 'publish', full: true,
-                     icon: 'M12 3v4M12 17v4M3 12h4M17 12h4M7.5 7.5l2.5 2.5M14 14l2.5 2.5M16.5 7.5L14 10M10 14l-2.5 2.5',
-                     why: 'It plans the edit, applies it, and gets it ready to post' },
     /* The third application, and it belongs with the other two. The thumbnail
        is made from a frame of the video, in the same sitting as the cut — and
        until now that meant leaving Studio for photo.html, losing the trend you
@@ -230,8 +227,7 @@
     '/ideas':      '#/ideas',
     '/scripts':    '#/scripts',
     '/thumbnails': '#/thumbnails',
-    '/editor':     '#/editor',
-    '/publish':    '#/publish'
+    '/editor':     '#/editor'
   };
   /* The two rows the bundle owns that are not panels in this file: the app's
      own home and its trends page. They have no entry in PANELS, so their words
@@ -241,11 +237,17 @@
   };
 
   var LEAVE = {};
-  /* Nothing is dropped from the app's own rail any more: the two rows it
-     already had for Editor and Publish now point at panels that exist, so
-     removing them would be taking away a working link and adding an identical
-     one back two lines later. */
-  var DROP = [];
+  /* THE AI EDITOR ROW IS DROPPED, ON PURPOSE.
+     Asked for directly: "delete Ai editor not ai clipper". The bundle still
+     ships the row, so taking it out of PANELS alone would leave a rail link
+     pointing at a route this file no longer renders — a dead row, which is
+     worse than the panel being there. DROP removes the bundle's own row, and
+     REWRITE no longer touches '/publish' so nothing points at it.
+
+     publish.html is NOT deleted. It is still a page, it still works, and
+     clipper.js, nova-help.js and the service worker all still reference it.
+     What is gone is the door to it from Studio's rail. */
+  var DROP = ['/publish'];
 
   /* Scoped to one rail, because on a phone there are two. The desktop rail is
      always in the document (hidden below 900px) and the drawer mounts beside
@@ -376,8 +378,10 @@
        rows, and REWRITE above has just pointed them at panels, so by here they
        are findable. If the bundle ever stops shipping them, the fallback puts
        Photo at the end rather than nowhere. */
-    addItem(nav, 'photo', PANELS['/photo'], '#/photo',
-            railItem(side, '#/publish') || railItem(side, '#/editor'));
+    /* Anchored on the Editor row now. It used to prefer the AI Editor's row and
+       fall back to this one; that row is dropped above, so the fallback is the
+       only case left and naming it directly is clearer than a dead ||. */
+    addItem(nav, 'photo', PANELS['/photo'], '#/photo', railItem(side, '#/editor'));
     addItem(nav, 'hype', PANELS['/hype'], '#/hype');
     /* Before Studio, after Hype Lab: the rail reads as make, then measure, and
        the clipper is still making. */
@@ -2793,19 +2797,12 @@
     wireExit(box);
   }
 
-  function aiEditPanel(box) {
-    if (box.dataset.view === 'publish') return;
-    box.dataset.view = 'publish';
-    box.innerHTML =
-      exitBar(tr('publish') || 'AI Editor', 'publish.html') +
-      '<h1 data-t="publish">' + tr('publish') + '</h1>' +
-      '<p class="lede" data-t="st_ai_p">' + tr('st_ai_p') + '</p>' +
-      '<div class="frame tall"><iframe id="ncxPublish" title="AI Editor" ' +
-        'src="publish.html?embed=1" loading="lazy" ' +
-        'allow="camera; microphone; clipboard-write"></iframe></div>' +
-      '<p class="foot"><a href="publish.html" data-t="st_ai_own">' + tr('st_ai_own') + '</a></p>';
-    wireExit(box);
-  }
+  /* aiEditPanel() WAS HERE AND IS GONE WITH THE ROW.
+     It rendered publish.html in a frame for the '/publish' route. The route and
+     the rail row were removed above, so the function had no caller — and a
+     panel renderer nothing can reach is the kind of dead code that gets
+     maintained for a year by mistake. publish.html itself is untouched and
+     still opens on its own. */
 
   function photoPanel(box) {
     if (box.dataset.view === 'photo') return;
@@ -2864,7 +2861,6 @@
       else if (h === '/thumbnails') thumbPanel(box);
       else if (h === '/hype') hypePanel(box);
       else if (h === '/editor') editorPanel(box);
-      else if (h === '/publish') aiEditPanel(box);
       else if (h === '/photo') photoPanel(box);
       else if (h === '/clipper') clipperPanel(box);
       else studioPanel(box);

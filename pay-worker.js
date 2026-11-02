@@ -142,6 +142,30 @@ const PLANS = {
   }
 };
 
+/* ---------------------------------------------------------------------------
+   THE AI TIER SURCHARGE
+   ---------------------------------------------------------------------------
+   pricing.html asks which AI the subscription comes with before it sends
+   anybody to Stripe, and the two paid tiers raise the monthly figure. The
+   amounts live HERE and not there, for the same reason every other amount
+   does: the browser sends a tier id, this file decides what it costs. A page
+   that could send its own surcharge is a page that could send 0.01.
+
+   These mirror the three tiers in pricing.html. If one changes, both change —
+   a page that advertises +2.99 and charges +3.99 is fraud, not a bug.
+
+   basic is zero and adds no line at all, which is the point of it: the plan
+   costs what the plan costs. Pro's surcharge is deliberately the same row as
+   the Family plan's price, an amount this table has already been using.
+   ------------------------------------------------------------------------- */
+const AI_TIERS = {
+  basic:   { name: 'Basic AI', price: null },
+  premium: { name: 'Premium AI',
+             price: { eur: 299, usd: 349, gbp: 259, cny: 2129, chf: 295, inr: 25900, bdt: 34900 } },
+  pro:     { name: 'Pro AI',
+             price: { eur: 699, usd: 799, gbp: 599, cny: 4990, chf: 690, inr: 59900, bdt: 79900 } }
+};
+
 /* Stripe will not take a subscription in every currency in every account, and
    zero-decimal currencies behave differently again. Keeping the list explicit
    means an unsupported one fails here with a sentence rather than at Stripe
@@ -330,10 +354,45 @@ async function checkout(request, env) {
       form.set(`line_items[${i}][price_data][recurring][interval]`, l.plan.interval);
     }
   });
+
+  /* THE AI TIER, AS ITS OWN RECURRING LINE.
+     A separate line rather than an adjusted plan price, so the buyer sees on
+     Stripe's own page what the plan costs and what the AI costs — the same two
+     numbers the checkout showed them, rather than one total they have to take
+     on trust. Only on a subscription, and only above basic: a certificate has
+     no monthly AI and basic adds nothing.
+
+     An unknown tier id is treated as basic rather than refused. The checkout
+     only ever sends one of three strings, so anything else is a stale tab or
+     somebody poking at the endpoint, and neither is worth failing a payment
+     over — it just does not get the upgrade it did not pay for. */
+  const tierId = String((body && body.aiTier) || 'basic').toLowerCase();
+  const tier = AI_TIERS[tierId] || AI_TIERS.basic;
+  let tierCharged = 'basic';
+  if (plan.mode === 'subscription' && tier.price) {
+    const amount = tier.price[currency];
+    if (amount) {
+      const i = lines.length;
+      form.set(`line_items[${i}][quantity]`, '1');
+      form.set(`line_items[${i}][price_data][currency]`, currency);
+      form.set(`line_items[${i}][price_data][unit_amount]`, String(amount));
+      form.set(`line_items[${i}][price_data][product_data][name]`, tier.name);
+      form.set(`line_items[${i}][price_data][recurring][interval]`, plan.interval);
+      tierCharged = tierId;
+    }
+    /* No amount in this currency: the plan still sells, at basic. Refusing the
+       whole checkout over an upgrade would lose the sale as well as the
+       upgrade, and tierCharged staying 'basic' is what the webhook grants. */
+  }
   /* The webhook grants what this names, so it names all of them. The first is
      kept under `plan` as well because that is the key the grant call and the
      return page already read. */
   form.set('metadata[plan]', lines[0].id);
+  /* What the AI tier actually got charged, not what was asked for. The webhook
+     grants from this, so a tier that fell back to basic for want of a price in
+     this currency grants basic — the record says what was paid, which is the
+     only thing it is safe to grant from. */
+  form.set('metadata[ai_tier]', tierCharged);
   if (lines.length > 1) form.set('metadata[plans]', lines.map((l) => l.id).join(','));
   /* THE ONLY THING ABOUT THE BUYER THAT GOES TO STRIPE. A ticket is a random
      string the server worker issued against the account a moment ago; it
@@ -400,6 +459,7 @@ async function verify(url, env) {
   return json({
     paid: s.payment_status === 'paid' || s.status === 'complete',
     plan: (s.metadata && s.metadata.plan) || null,
+    ai_tier: (s.metadata && s.metadata.ai_tier) || 'basic',
     email: s.customer_details ? s.customer_details.email : null,
     amount: s.amount_total,
     currency: s.currency
