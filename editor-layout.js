@@ -142,14 +142,30 @@
         'justify-content:flex-start;align-content:flex-start;',
         'gap:2px;padding:6px 8px;overflow:visible;',
         'border-right:0;border-bottom:1px solid rgba(255,255,255,.1)}',
-      /* Seven across, two rows, so all fourteen are on screen without
-         scrolling and each one is wide enough for its word. */
-      'html[data-nclay="wide"] ' + LEFT + ' nav > *{flex:1 1 13%}',
+      /* SEVEN ACROSS WAS A MEASUREMENT OF ENGLISH.
+         13% of a 350px nav is 46px, which fits "Text" and "Audio" and does not
+         fit "Transições" (58px), "Alterador de voz" (49px) or "Adesivos"
+         (48px). Reported from a Portuguese screenshot where the labels were
+         printing straight through each other, and measured after: every one of
+         the fourteen boxes was 46px wide with text needing up to 58.
+
+         Five across at 20% gives 64px, and the label is now allowed to wrap
+         onto a second line instead of running out of its box — which is what
+         makes this hold in languages nobody has measured yet. German and
+         Portuguese are the long ones; wrapping costs a row of height and
+         removes the whole class of bug. */
+      'html[data-nclay="wide"] ' + LEFT + ' nav > *{flex:1 1 20%}',
       'html[data-nclay="wide"] ' + LEFT + ' nav button{min-width:0;width:100%;',
-        'height:auto;padding:7px 2px;border-radius:9px}',
+        'height:auto;padding:7px 3px;border-radius:9px}',
       /* The rail sized its labels for a 72px-wide strip. There is more room
          now, so they get a readable size instead of staying at 9px. */
-      'html[data-nclay="wide"] ' + LEFT + ' nav button span{font-size:10.5px;line-height:1.25}',
+      /* The label wraps rather than overflowing. The rail sized these for a
+         72px strip and nowrap was safe there because the words were English;
+         it is not safe for a word that is half again as long. overflow-wrap
+         rather than word-break so it splits between words first and only
+         breaks inside one when a single word genuinely cannot fit. */
+      'html[data-nclay="wide"] ' + LEFT + ' nav button span{font-size:10.5px;line-height:1.2;',
+        'white-space:normal;overflow-wrap:anywhere;hyphens:auto;display:block;max-width:100%}',
       'html[data-nclay="wide"] ' + LEFT + ' nav button svg{width:17px;height:17px}',
 
       /* ---- THE TRANSPORT GOES UNDER THE PLAYER -------------------------
@@ -276,7 +292,58 @@
          was caught, and the reason this replacement was measured too. */
       '@media (max-width:1359px){',
         '.nclay-btn{padding:0 8px;font-size:11px;gap:0}',
-        '.nclay-btn span.nclay-word{display:none}}'
+        '.nclay-btn span.nclay-word{display:none}}',
+
+      /* ---- THE EXPORT BUTTON IN CLASSIC, AT 1280 -----------------------
+         Reported as "on the classic the export button is a lil cooked", and
+         it is worse than cooked: measured at 1280 in classic the header's
+         children come to 1388px in a 1278px box, so Export sits 109px PAST
+         the right edge of the window and cannot be clicked at all. In wide at
+         the same width the header fits with room to spare, which is why this
+         only shows up on the layout somebody opts back into.
+
+         This is the crowding the original floor at 1360 was avoiding rather
+         than fixing, and it is not caused by this file — blocking the whole
+         thing still reproduces it. But an unreachable primary action is not
+         something to leave sitting behind a comment.
+
+         Two rules, in order of how much they change. First the header is
+         allowed to compress: its children stop refusing to shrink and the
+         gaps tighten, which is where most of the 110px comes back. Then
+         overflow-x:auto as the floor under it — if some future label pushes
+         it over again the button is scrolled to rather than lost, which is
+         the difference between awkward and unusable. */
+      /* NOT INSIDE A MEDIA QUERY, AND THAT WAS THE FIRST MISTAKE HERE.
+         Scoped to max-width:1359 it did nothing at 1366 — where measurement
+         showed the export button 79px off the right edge, worse than the 1280
+         case it was written for, because 1366 fell straight through the query
+         into the unfixed state. The header overflows whenever its contents
+         are wider than it is, which is not a fact about any particular
+         breakpoint, so neither is the fix. At 1600 classic the header already
+         fits and these rules do nothing: no overflow, no scrollbar. */
+      'html[data-nclay="classic"] ' + SHELL + ' > header{',
+        'overflow-x:auto;overflow-y:hidden;gap:3px}',
+      'html[data-nclay="classic"] ' + SHELL + ' > header > *{min-width:0}',
+      'html[data-nclay="classic"] ' + SHELL + ' > header button{',
+        'padding-left:7px;padding-right:7px}',
+      /* The last fourteen pixels at 1280. Measured down from 110 -> 31 -> 14
+         by the rules above; this is the remainder, and it is the gap between
+         the header's own groups rather than anything inside them. */
+      '@media (max-width:1400px){',
+        'html[data-nclay="classic"] ' + SHELL + ' > header{gap:1px;',
+          'padding-left:8px;padding-right:8px}',
+        'html[data-nclay="classic"] ' + SHELL + ' > header button{',
+          'padding-left:5px;padding-right:5px}}',
+      /* The project name is the one thing in that header nobody needs to read
+         while they are exporting, and it is what the remaining overflow is
+         made of. It keeps its space down to a readable ten characters and
+         gives the rest back. */
+      'html[data-nclay="classic"] ' + SHELL + ' > header input,',
+      'html[data-nclay="classic"] ' + SHELL + ' > header [contenteditable]{',
+        'max-width:10ch;min-width:0}',
+      /* A horizontal scrollbar inside a 56px header eats a third of it. The
+         row still scrolls, it just does not advertise it. */
+      'html[data-nclay="classic"] ' + SHELL + ' > header::-webkit-scrollbar{height:0}'
     ].join('');
     document.head.appendChild(st);
   }
@@ -314,10 +381,106 @@
     return true;
   }
 
+  /* --------------------------------------------------------------------------
+     THE FLOATING TOOL BUTTONS, LAID OUT INSTEAD OF GUESSED AT
+     --------------------------------------------------------------------------
+     Captions, Beats, Reframe, Looks and Transitions each ship their own pill
+     and each one sets its own `left` in its own file — 18px, 140px, 352px and
+     so on. Those numbers were measured once, against English labels, and they
+     are wrong the moment a word gets longer: in Portuguese "Reenquadrar" runs
+     from 688 to 810 and "Looks" starts at 792, so the two print through each
+     other. Reported from a screenshot, and measured: one overlapping pair at
+     1600px, and the row also crosses the preview.
+
+     So the lefts are overridden and the row is laid out from the buttons' OWN
+     measured widths, left to right, wrapping up a row when it would reach the
+     right edge. That is language-proof in a way a hardcoded offset cannot be:
+     it asks each button how wide it actually is, in whatever language it is
+     currently showing.
+
+     Deliberately not a flex container. The five buttons are created by five
+     different files at five different moments, none of which know about each
+     other, and moving them into a shared parent would mean each of those files
+     finding its button somewhere it did not put it. Positioning them where
+     they already are costs nothing and breaks nothing.
+     ------------------------------------------------------------------------ */
+  var PILLS = '.nccap-btn,.ncbeat-btn,.ncrf-btn,.nclk-btn,.nctr-btn';
+
+  /* THE WIDTH IS NOT STABLE WHEN THE ROW IS FIRST LAID OUT.
+     First attempt placed each button from the width it had at that moment, and
+     the row still overlapped — worse than before, two pairs instead of one.
+     The reason took a measurement: the pills are positioned before the phrase
+     layer has swapped the labels, so "Beats" is measured and "♪ Batidas" is
+     what ends up in the slot. Re-running on nc-lang does not catch it either,
+     because the FIRST translation is applied at load and is not a change.
+
+     So each button is watched for its own size changing, which is the thing
+     that actually invalidates the row, whatever caused it — a translation, a
+     font arriving, a label the tool rewrites itself. */
+  var watched = null;
+  function watch(b) {
+    if (!window.ResizeObserver) return;
+    if (!watched) {
+      watched = new WeakSet();
+      try {
+        window.__ncPillRO = new ResizeObserver(function () { layoutPillsSoon(); });
+      } catch (e) { return; }
+    }
+    if (watched.has(b) || !window.__ncPillRO) return;
+    watched.add(b);
+    try { window.__ncPillRO.observe(b); } catch (e) {}
+  }
+
+  function layoutPills() {
+    var all = [].slice.call(document.querySelectorAll(PILLS))
+                .filter(function (b) {
+                  var s = getComputedStyle(b);
+                  return s.display !== 'none' && s.visibility !== 'hidden';
+                });
+    if (!all.length) return;
+    all.forEach(watch);
+
+    /* Left edge: clear of the media panel in wide, clear of nothing in
+       classic, and always clear of the window edge. */
+    var startX = 16;
+    var gap = 8, rowH = 42;
+    var bottom = window.innerWidth <= 900 ? 8 : 16;
+    var max = window.innerWidth - 16;
+
+    /* Measure every width FIRST, then place. Reading and writing in the same
+       pass means each getBoundingClientRect() is answering after the previous
+       button has already been moved, which is both slower and — once a label
+       has changed underneath it — wrong. */
+    var widths = all.map(function (b) {
+      return Math.ceil(b.getBoundingClientRect().width) || 90;
+    });
+
+    var x = startX, row = 0;
+    all.forEach(function (b, i) {
+      var w = widths[i];
+      if (x + w > max && x > startX) { row++; x = startX; }
+      b.style.setProperty('left', x + 'px', 'important');
+      b.style.setProperty('right', 'auto', 'important');
+      b.style.setProperty('bottom', (bottom + row * rowH) + 'px', 'important');
+      x += w + gap;
+    });
+  }
+
+  /* Re-run whenever anything that changes a width changes: the window, the
+     language (every label changes at once), and the arrival of a button that
+     was not in the DOM yet — the five files create theirs whenever they get
+     round to it. */
+  var pillTimer = null;
+  function layoutPillsSoon() {
+    clearTimeout(pillTimer);
+    pillTimer = setTimeout(layoutPills, 60);
+  }
+
   window.NC_LAYOUT = {
     get: pref,
     set: function (v) { setPref(v === 'classic' ? 'classic' : 'wide'); apply(); },
-    apply: apply
+    apply: apply,
+    pills: layoutPills
   };
 
   /* Painted before the button exists, so the layout is right from the first
@@ -329,6 +492,30 @@
     var t = setInterval(function () {
       if (button() || tries++ > 80) clearInterval(t);
     }, 250);
+
+    /* The pills arrive late and independently, so the row is re-laid out as
+       they appear rather than once at boot. The observer is cheap — it only
+       acts when something matching PILLS is actually added. */
+    layoutPillsSoon();
+    try {
+      new MutationObserver(function (recs) {
+        for (var i = 0; i < recs.length; i++) {
+          var added = recs[i].addedNodes;
+          for (var j = 0; j < added.length; j++) {
+            var n = added[j];
+            if (n.nodeType === 1 && (n.matches && n.matches(PILLS) ||
+                                     n.querySelector && n.querySelector(PILLS))) {
+              layoutPillsSoon();
+              return;
+            }
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    } catch (e) { /* no observer, the resize and language hooks still fire */ }
+
+    window.addEventListener('resize', layoutPillsSoon);
+    /* Every label changes at once, so every width does. nova.js fires this. */
+    window.addEventListener('nc-lang', layoutPillsSoon);
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
