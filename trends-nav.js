@@ -189,6 +189,11 @@
     '/audio':      { label: 'Audio editor', key: 'st_aud_h',
                      icon: 'M3 12h2l2-7 3 14 3-11 2 4h6',
                      why: 'Open a sound, cut it, fade it, save it' },
+    /* The seventh tool, and the one that looks backwards. Every other panel
+       here helps make the next video; this one reads the ones already out. */
+    '/posted':     { label: 'What you posted', key: 'st_post_h',
+                     icon: 'M4 5h16v11H4zM9 20h6M12 16v4M9 8l5 3-5 3z',
+                     why: 'Your posted videos, the numbers they earned, and what to change' },
     '/trends':     { label: 'Trend Spotter', key: 'st_trends_h',
                      icon: 'M3 17l6-6 4 4 7-7M14 8h7v7',
                      why: 'Find what is actually rising in your niche' },
@@ -394,6 +399,7 @@
        the clipper is still making. */
     addItem(nav, 'clipper', PANELS['/clipper'], '#/clipper');
     addItem(nav, 'audio', PANELS['/audio'], '#/audio');
+    addItem(nav, 'posted', PANELS['/posted'], '#/posted');
     addItem(nav, 'studio', PANELS['/studio'], '#/studio');
   }
 
@@ -2695,6 +2701,21 @@
       'Reload the page; if it keeps happening the file is missing from the server.</p>';
   }
 
+  /* posted.js draws this one. Same arrangement as the clipper and the audio
+     editor: the panel is its own file and this one only routes to it. */
+  function postedPanel(box) {
+    if (window.NC_POSTED && typeof window.NC_POSTED.mount === 'function') {
+      window.NC_POSTED.mount(box);
+      return;
+    }
+    if (box.dataset.view === 'posted-missing') return;
+    box.dataset.view = 'posted-missing';
+    box.innerHTML =
+      '<h1>' + (tr('st_post_h') || 'What you have posted') + '</h1>' +
+      '<p class="lede">posted.js did not load, so there is nothing to show. Reload the page; ' +
+      'if it keeps happening the file is missing from the server.</p>';
+  }
+
   function studioPanel(box) {
     if (box.dataset.view === 'studio') return;
     box.dataset.view = 'studio';
@@ -2888,6 +2909,7 @@
       else if (h === '/photo') photoPanel(box);
       else if (h === '/clipper') clipperPanel(box);
       else if (h === '/audio') audioPanel(box);
+      else if (h === '/posted') postedPanel(box);
       else studioPanel(box);
       /* A panel opened from halfway down the trends list should start at the
          top of itself, not wherever the last screen was scrolled to. */
