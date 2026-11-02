@@ -65,9 +65,13 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
   }
+  /* Hours only once there are hours. A clip reads 0:42, a two-hour stream
+     reads 2:00:00 — the first version printed that as 120:00, which is a
+     number nobody has ever written down about a video. */
   function clock(sec) {
     sec = Math.max(0, Math.round(sec || 0));
-    var m = Math.floor(sec / 60), s = sec % 60;
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    if (h) return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     return m + ':' + String(s).padStart(2, '0');
   }
   function tags(c) {
@@ -170,10 +174,36 @@
   /* -------------------------------------------------------------------------
      THE ASK
      ----------------------------------------------------------------------- */
+  /* THE TWO LIMITS, AND WHY EACH ONE IS WHERE IT IS.
+
+     TWO HOURS AT THE TOP is enforced for real, by videoTo below — Gemini
+     simply stops watching at 7200 seconds, so a four-hour stream is billed as
+     two hours and answers about the first half rather than running up a bill
+     nobody agreed to. It is a cap on the watching, not a refusal: paste a long
+     stream and you get the first two hours, and the page says so.
+
+     TWO MINUTES AT THE BOTTOM is a refusal, and it is a judgement about the
+     answer rather than the cost. Under two minutes there is no long video to
+     find the good part OF — the whole thing is already the clip, and what
+     comes back is three overlapping windows onto the same ninety seconds, each
+     with a confident score. That is worse than nothing because it looks like
+     an answer.
+
+     The length is read off the video by the model, not looked up: the only
+     place a duration could otherwise come from is YouTube's Data API, which
+     would mean a new endpoint on ai-worker.js and a redeploy — and the whole
+     point of this feature is that it needed neither. */
+  var MAX_SECONDS = 7200;      /* two hours of watching, hard */
+  var MIN_SECONDS = 120;       /* under this there is nothing to find */
+
   function prompt() {
     var band = S.want === '15-30' ? '15 to 30 seconds'
              : S.want === '60-90' ? '60 to 90 seconds' : '30 to 60 seconds';
-    return 'You are finding the moments in this video that would work as standalone short ' +
+    return 'FIRST, the length. Report how long this video is in seconds as "seconds". If it is ' +
+      'under ' + MIN_SECONDS + ' seconds, answer {"seconds":<the length>,"chapters":[]} and ' +
+      'nothing else — do not find clips in it. A video that short is already the clip, and ' +
+      'cutting it up produces three overlapping windows onto the same moment.\n\n' +
+      'You are finding the moments in this video that would work as standalone short ' +
       'videos for a teenage creator. Watch it properly — do not guess from the title.\n\n' +
       'Each clip must be ' + band + ' long and must make sense on its own to somebody who has ' +
       'never seen the rest. A clip that needs the previous ten minutes explained is a bad clip ' +
@@ -183,7 +213,7 @@
       '80 is useless. Use the full range.\n\n' +
       'Group them into chapters that describe what that stretch of the video is about.\n\n' +
       'Answer with ONE line of JSON and nothing else:\n' +
-      '{"video":"<what the video is, max 12 words>",' +
+      '{"video":"<what the video is, max 12 words>","seconds":<how long the video is>,' +
       '"chapters":[{"name":"<max 8 words>","clips":[' +
       '{"start":<seconds>,"end":<seconds>,"title":"<max 7 words, how a clipper would title it>",' +
       '"score":<0-100>,"why":"<why it stops the scroll, max 30 words>",' +
@@ -209,6 +239,10 @@
 
     window.ncAsk(prompt(), {
       video: 'https://www.youtube.com/watch?v=' + id,
+      /* The cap that does the work. Past two hours Gemini stops watching, so
+         a six-hour stream costs what two hours costs instead of what six do. */
+      videoFrom: 0,
+      videoTo: MAX_SECONDS,
       maxTokens: 4000,
       temperature: 0.4
     }).then(function (r) {
@@ -411,6 +445,18 @@
     if (!S.data) return;
 
     var flat = allClips();
+    var secs = Math.round(S.data.seconds || 0);
+
+    /* Too short, and say which it was rather than "no clips found" — the
+       difference between "your video is 90 seconds" and "the AI found
+       nothing" is the difference between knowing what to do next and not. */
+    if (!flat.length && secs > 0 && secs < MIN_SECONDS) {
+      host.appendChild(el('div', 'ncclip-note',
+        'That video is <b>' + clock(secs) + '</b> long, and the clipper needs at least ' +
+        '<b>two minutes</b> to work with. Under that there is no long video to find the good ' +
+        'part of — the whole thing is already the clip. Paste something longer.'));
+      return;
+    }
     if (!flat.length) {
       host.appendChild(el('p', 'ncclip-msg',
         'Nothing in that video came back as worth clipping.'));
@@ -419,7 +465,20 @@
 
     if (S.data.video) {
       host.appendChild(el('p', 'ncclip-msg',
-        '<b>' + esc(S.data.video) + '</b> — ' + flat.length + ' moments worth cutting.'));
+        '<b>' + esc(S.data.video) + '</b>' +
+        (secs ? ' · ' + clock(secs) + ' long' : '') +
+        ' — ' + flat.length +
+        (flat.length === 1 ? ' moment' : ' moments') + ' worth cutting.'));
+    }
+
+    /* Longer than the cap: the answer only covers the first two hours, and a
+       list of timestamps that silently stops at 2:00:00 would otherwise look
+       like the back half of the stream simply had nothing in it. */
+    if (secs > MAX_SECONDS) {
+      host.appendChild(el('div', 'ncclip-note',
+        'That video is <b>' + clock(secs) + '</b> long, so only the <b>first two hours</b> were ' +
+        'watched. Everything below comes from that part. To get at the rest, upload it in ' +
+        'pieces or use a link that starts later.'));
     }
 
     if (S.sort === 'score') {
@@ -452,7 +511,8 @@
       '<h1>AI clipper</h1>' +
       '<p class="lede">Paste a long video and NovaClip watches it, then tells you which ' +
       'moments would work on their own — where each one starts and ends, how strong it ' +
-      'is, and what to put in the caption.</p>' +
+      'is, and what to put in the caption. It reads <b>up to two hours</b>, and needs the ' +
+      'video to be <b>at least two minutes</b> long. Public YouTube videos only.</p>' +
       '<div class="card"><div class="ncclip-body"></div></div>';
     render();
   }

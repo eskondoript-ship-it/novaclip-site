@@ -76,7 +76,24 @@
 
          Everything is scoped to the attribute as well, so turning it off is
          one attribute and not a page reload. */
-      '@media (min-width:1360px){',
+      /* THE FLOOR WAS 1360 AND THAT WAS TOO HIGH.
+         It was set there because at 1280 the header's export group runs off
+         the right edge — but blocking this whole file still reproduced that,
+         so it was never this layout's bug, and the floor was treating it as
+         if it were. The effect was that a 1280 laptop got the shipped layout
+         and no toggle, which from the outside looks exactly like the feature
+         not existing. Reported as "the capcut layout is still not on the
+         editor", and measured: at 1280 the timeline came out 994px with the
+         nav back in a vertical strip.
+
+         1280 is also where the argument for this layout is strongest. The
+         timeline goes from 994px to the full 1280 — 286 more pixels, about
+         three more seconds in view at the default zoom, on the size of screen
+         that can least afford to lose them.
+
+         Still a floor rather than none: under 1280 the panels genuinely do
+         not fit beside each other and the phone layout is the right one. */
+      '@media (min-width:1280px){',
       'html[data-nclay="wide"] ' + SHELL + '{',
         'display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0}',
 
@@ -243,15 +260,23 @@
       /* THE TOGGLE IS NOT WORTH THE EXPORT BUTTON, AND ORDER DECIDES WHETHER
          THAT IS TRUE. The header's children come to 1253px at 1280 wide, 102
          of which is this button, and the export group runs off the right
-         edge. So it is not drawn below 1360 — the layout still applies there
-         and NC_LAYOUT.set() still switches it.
+         edge.
 
-         This rule was first written ABOVE the one that sets display:inline-flex.
-         A media query adds no specificity, so the later rule won and the
-         button stayed on screen at every width — the hide did nothing at all,
-         and the header still overflowed. Measured again afterwards, which is
-         the only reason it was caught. */
-      '@media (max-width:1359px){.nclay-btn{display:none !important}}'
+         Hiding it was the wrong half of that trade. The layout now applies at
+         1280, and a layout you cannot see the switch for is one nobody knows
+         they have — which is how this went unnoticed. So below 1360 the button
+         SHRINKS instead of disappearing: the word "Layout:" goes, leaving just
+         Wide or Classic, which is 102px down to about 58 and leaves the export
+         group where it was. The title attribute still says what it does.
+
+         The old hide-rule was first written ABOVE the one that sets
+         display:inline-flex. A media query adds no specificity, so the later
+         rule won and the button stayed on screen at every width — the hide did
+         nothing at all. Measured again afterwards, which is the only reason it
+         was caught, and the reason this replacement was measured too. */
+      '@media (max-width:1359px){',
+        '.nclay-btn{padding:0 8px;font-size:11px;gap:0}',
+        '.nclay-btn span.nclay-word{display:none}}'
     ].join('');
     document.head.appendChild(st);
   }
@@ -275,7 +300,7 @@
     b.type = 'button';
     b.className = 'nclay-btn';
     b.title = 'Timeline across the whole window, or back to the original layout';
-    b.innerHTML = 'Layout: <b></b>';
+    b.innerHTML = '<span class="nclay-word">Layout: </span><b></b>';
     b.onclick = function () {
       setPref(pref() === 'wide' ? 'classic' : 'wide');
       apply();
