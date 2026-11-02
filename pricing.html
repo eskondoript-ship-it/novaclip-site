@@ -140,11 +140,34 @@ h1 .g { background: linear-gradient(90deg,var(--nc-cyan,#00F0FF),var(--nc-pink,#
 html[data-device="phone-s"] .bt { padding: 9px 13px; font-size: .8rem; gap: 4px; }
 html[data-device="phone-s"] .btsave { display: none; }
 
-#checkout { position: fixed; inset: 0; z-index: 999; display: none; align-items: center; justify-content: center;
-  background: rgba(5,6,10,0.86); backdrop-filter: blur(8px); padding: 20px; overflow-y: auto; }
+/* TWO SCROLLBARS, AND THE TOP OF THE DIALOG UNREACHABLE.
+   Reported from a photograph of the buy screen: two scroll wheels and the
+   whole page not visible. Both come from this rule as it was written, and the
+   AI tier chooser is only what made the box tall enough to expose them.
+
+   align-items:center inside a scrolling container is the bug. When the child
+   is taller than the container, centring pushes it over the edge in BOTH
+   directions — and a scroll container cannot scroll backwards past its own
+   start, so the overflow above the top is not merely hidden, it is
+   unreachable. margin:auto on the child does the same centring while there is
+   room and degrades to flex-start when there is not, which is the whole
+   difference.
+
+   The second scrollbar is the page behind. #checkout scrolls because it has
+   to, and <body> went on scrolling underneath it, so a wheel over the dialog
+   moved one and a wheel two pixels outside it moved the other. The page is
+   locked while the dialog is open — :has is already used elsewhere in this
+   repo, and closeCheckout() clears a class as well so this does not depend on
+   it alone. */
+#checkout { position: fixed; inset: 0; z-index: 999; display: none; align-items: flex-start; justify-content: center;
+  background: rgba(5,6,10,0.86); backdrop-filter: blur(8px); padding: 20px; overflow-y: auto;
+  overscroll-behavior: contain; }
 #checkout.show { display: flex; }
+html:has(#checkout.show), body:has(#checkout.show),
+html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
 .cobox { background: var(--nc-bg2,#101725); border: 1px solid rgba(0,240,255,0.32); border-radius: 22px; padding: 28px;
-  width: min(460px, 96vw); position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  width: min(460px, 96vw); position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  margin: auto; }
 .coclose { position: absolute; top: 6px; right: 8px; background: none; border: none;
   color: var(--nc-dim,#7E8AA6); font-size: 1.5rem; line-height: 1; cursor: pointer;
   width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
@@ -1400,8 +1423,14 @@ function openCheckout(planName, priceText, cycle, planId) {
   }
 
   document.getElementById('checkout').classList.add('show');
+  document.documentElement.classList.add('nc-co-open');
+  document.body.classList.add('nc-co-open');
 }
-window.closeCheckout = function () { document.getElementById('checkout').classList.remove('show'); };
+window.closeCheckout = function () {
+  document.getElementById('checkout').classList.remove('show');
+  document.documentElement.classList.remove('nc-co-open');
+  document.body.classList.remove('nc-co-open');
+};
 
 /* AND THE KEY EVERYBODY ALREADY TRIES. The x is back and is a 44px target,
    but a dialog covering the page should also close the way every other dialog
@@ -1464,6 +1493,8 @@ function openLessonCheckout(item) {
       ' — coins cover 40% of a lesson and no more.</span>';
   }
   document.getElementById('checkout').classList.add('show');
+  document.documentElement.classList.add('nc-co-open');
+  document.body.classList.add('nc-co-open');
 }
 
 async function payForLesson() {

@@ -54,6 +54,19 @@
             sort: 'score', want: '30-60', mine: false };
   var BOX = null;
 
+  /* nova.js owns the dictionary; this panel only asks it. The fallback is the
+     exact English the key replaced, so a page where nova.js has not finished
+     loading still reads properly rather than showing a key name. */
+  function t(key, fallback) {
+    try {
+      if (typeof window.tr === 'function') {
+        var v = window.tr(key);
+        if (v) return v;
+      }
+    } catch (e) {}
+    return fallback;
+  }
+
   function el(tag, cls, html) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -160,15 +173,16 @@
      whose video it is, because the answer genuinely changes. */
   function noteHTML() {
     if (S.mine) {
-      return 'You have told NovaClip this is <b>your own video</b>. The timestamps below are a ' +
-             'cut list — take them to the Editor and cut away. If it is not yours, untick that ' +
-             'box: what comes back is then a plan for your own version, not something to ' +
-             're-upload.';
+      return t('st_clip_note_mine',
+        'You have told NovaClip this is <b>your own video</b>. The timestamps below are a ' +
+        'cut list — take them to the Editor and cut away. If it is not yours, untick that ' +
+        'box: what comes back is then a plan for your own version, not something to re-upload.');
     }
-    return 'The video stays on YouTube. NovaClip never downloads it, never re-cuts it and ' +
-           'never posts it — re-uploading somebody else’s video is theirs to allow, not ' +
-           'ours, and there is no clip length that makes it legal. What you get is the ' +
-           '<b>brief</b>: which moments work, why, and what to say, so you can make your own.';
+    return t('st_clip_note_theirs',
+      'The video stays on YouTube. NovaClip never downloads it, never re-cuts it and ' +
+      'never posts it — re-uploading somebody else’s video is theirs to allow, not ' +
+      'ours, and there is no clip length that makes it legal. What you get is the ' +
+      '<b>brief</b>: which moments work, why, and what to say, so you can make your own.');
   }
 
   /* -------------------------------------------------------------------------
@@ -296,9 +310,9 @@
   function copyText(btn, text, was) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(
-        function () { flash(btn, 'Copied', was); },
-        function () { flash(btn, 'Could not copy', was); });
-    } else flash(btn, 'Could not copy', was);
+        function () { flash(btn, t('st_clip_copied', 'Copied'), was); },
+        function () { flash(btn, t('st_clip_nocopy', 'Could not copy'), was); });
+    } else flash(btn, t('st_clip_nocopy', 'Could not copy'), was);
   }
 
   function card(c, rank) {
@@ -317,18 +331,19 @@
     if (c.why) main.appendChild(el('div', 'ncclip-why', esc(c.why)));
     if (c.hook) main.appendChild(el('div', 'ncclip-hook', '“' + esc(c.hook) + '”'));
     if (c.caption) {
-      var t = tags(c);
+      var tg = tags(c);
       main.appendChild(el('div', 'ncclip-cap',
-        esc(c.caption) + (t ? ' <span class="ncclip-tags">' + esc(t) + '</span>' : '')));
+        esc(c.caption) + (tg ? ' <span class="ncclip-tags">' + esc(tg) + '</span>' : '')));
     }
 
     var acts = el('div', 'ncclip-acts');
 
-    var play = el('button', 'pri', '▶ Watch this bit');
+    var play = el('button', 'pri', '▶ ' + esc(t('st_clip_watch', 'Watch this bit')));
     play.type = 'button';
     play.onclick = function () {
       var old = main.querySelector('iframe');
-      if (old) { old.remove(); play.textContent = '▶ Watch this bit'; return; }
+      if (old) { old.remove();
+        play.textContent = '▶ ' + t('st_clip_watch', 'Watch this bit'); return; }
       var f = document.createElement('iframe');
       f.className = 'ncclip-play';
       f.allow = 'accelerometer; clipboard-write; encrypted-media; picture-in-picture';
@@ -338,15 +353,16 @@
               '?start=' + Math.round(c.start || 0) + '&end=' + Math.round(c.end || 0) +
               '&autoplay=1&rel=0';
       main.appendChild(f);
-      play.textContent = '✕ Close the player';
+      play.textContent = '✕ ' + t('st_clip_close', 'Close the player');
     };
     acts.appendChild(play);
 
-    var cap = el('button', '', 'Copy the caption');
+    var cap = el('button', '', esc(t('st_clip_copycap', 'Copy the caption')));
     cap.type = 'button';
     cap.onclick = function () {
-      var t = tags(c);
-      copyText(cap, (c.caption || '') + (t ? '\n\n' + t : ''), 'Copy the caption');
+      var tg = tags(c);
+      copyText(cap, (tg ? (c.caption || '') + '\n\n' + tg : (c.caption || '')),
+               t('st_clip_copycap', 'Copy the caption'));
     };
     acts.appendChild(cap);
 
@@ -354,11 +370,11 @@
        a brief, so the button is not offered at all rather than being offered
        and then refusing. */
     if (S.mine) {
-      var cut = el('button', '', '✂ Copy the in/out');
+      var cut = el('button', '', '✂ ' + esc(t('st_clip_inout', 'Copy the in/out')));
       cut.type = 'button';
       cut.onclick = function () {
         copyText(cut, clock(c.start) + ' - ' + clock(c.end) + '  ' + (c.title || ''),
-                 '✂ Copy the in/out');
+                 '✂ ' + t('st_clip_inout', 'Copy the in/out'));
       };
       acts.appendChild(cut);
     }
@@ -378,10 +394,11 @@
     var find = el('div', 'ncclip-find');
     var input = el('input');
     input.type = 'url';
-    input.placeholder = 'Paste a YouTube link…';
+    input.placeholder = t('st_clip_paste', 'Paste a YouTube link…');
     input.value = S.url;
     input.setAttribute('aria-label', 'YouTube video link');
-    var go = el('button', 'ncclip-go', S.busy ? 'Watching…' : 'Find the clips');
+    var go = el('button', 'ncclip-go', S.busy ? t('st_clip_watching', 'Watching…')
+                                              : t('st_clip_find', 'Find the clips'));
     go.type = 'button';
     go.disabled = S.busy;
     find.appendChild(input); find.appendChild(go);
@@ -389,7 +406,7 @@
 
     var opts = el('div', 'ncclip-opts');
 
-    var lenWrap = el('label', '', 'Clip length ');
+    var lenWrap = el('label', '', esc(t('st_clip_len', 'Clip length')) + ' ');
     var len = el('select');
     [['15-30', '15–30s'], ['30-60', '30–60s'], ['60-90', '60–90s']].forEach(function (o) {
       var op = el('option', '', o[1]);
@@ -402,9 +419,9 @@
     opts.appendChild(lenWrap);
 
     if (S.data) {
-      var sortWrap = el('label', '', 'Sort by ');
+      var sortWrap = el('label', '', esc(t('st_clip_sort', 'Sort by')) + ' ');
       var sort = el('select');
-      [['score', 'Score'], ['time', 'Time']].forEach(function (o) {
+      [['score', t('st_clip_score', 'Score')], ['time', t('st_clip_time', 'Time')]].forEach(function (o) {
         var op = el('option', '', o[1]);
         op.value = o[0];
         if (o[0] === S.sort) op.selected = true;
@@ -421,7 +438,7 @@
     mine.checked = S.mine;
     mine.onchange = function () { S.mine = mine.checked; render(); };
     mineWrap.appendChild(mine);
-    mineWrap.appendChild(document.createTextNode(' This is my own video'));
+    mineWrap.appendChild(document.createTextNode(' ' + t('st_clip_mine', 'This is my own video')));
     opts.appendChild(mineWrap);
     host.appendChild(opts);
 
@@ -436,9 +453,9 @@
     input.onkeydown = function (e) { if (e.key === 'Enter') start(); };
 
     if (S.busy) {
-      host.appendChild(el('p', 'ncclip-msg',
+      host.appendChild(el('p', 'ncclip-msg', esc(t('st_clip_busy',
         'Google is watching the whole video. On a long one this takes a minute — ' +
-        'it is reading it, not searching for it.'));
+        'it is reading it, not searching for it.'))));
       return;
     }
     if (S.err) { host.appendChild(el('p', 'ncclip-msg', esc(S.err))); return; }
@@ -452,23 +469,26 @@
        nothing" is the difference between knowing what to do next and not. */
     if (!flat.length && secs > 0 && secs < MIN_SECONDS) {
       host.appendChild(el('div', 'ncclip-note',
-        'That video is <b>' + clock(secs) + '</b> long, and the clipper needs at least ' +
-        '<b>two minutes</b> to work with. Under that there is no long video to find the good ' +
-        'part of — the whole thing is already the clip. Paste something longer.'));
+        t('st_clip_short',
+          'That video is <b>{d}</b> long, and the clipper needs at least <b>two minutes</b> to ' +
+          'work with. Under that there is no long video to find the good part of — the whole ' +
+          'thing is already the clip. Paste something longer.')
+          .replace('{d}', clock(secs))));
       return;
     }
     if (!flat.length) {
       host.appendChild(el('p', 'ncclip-msg',
-        'Nothing in that video came back as worth clipping.'));
+        esc(t('st_clip_nothing', 'Nothing in that video came back as worth clipping.'))));
       return;
     }
 
     if (S.data.video) {
       host.appendChild(el('p', 'ncclip-msg',
         '<b>' + esc(S.data.video) + '</b>' +
-        (secs ? ' · ' + clock(secs) + ' long' : '') +
-        ' — ' + flat.length +
-        (flat.length === 1 ? ' moment' : ' moments') + ' worth cutting.'));
+        (secs ? ' · ' + t('st_clip_dur', '{d} long').replace('{d}', clock(secs)) : '') +
+        ' — ' + t(flat.length === 1 ? 'st_clip_found1' : 'st_clip_found',
+                  flat.length === 1 ? '{n} moment worth cutting' : '{n} moments worth cutting')
+                  .replace('{n}', flat.length) + '.'));
     }
 
     /* Longer than the cap: the answer only covers the first two hours, and a
@@ -476,13 +496,15 @@
        like the back half of the stream simply had nothing in it. */
     if (secs > MAX_SECONDS) {
       host.appendChild(el('div', 'ncclip-note',
-        'That video is <b>' + clock(secs) + '</b> long, so only the <b>first two hours</b> were ' +
-        'watched. Everything below comes from that part. To get at the rest, upload it in ' +
-        'pieces or use a link that starts later.'));
+        t('st_clip_long',
+          'That video is <b>{d}</b> long, so only the <b>first two hours</b> were watched. ' +
+          'Everything below comes from that part. To get at the rest, upload it in pieces or ' +
+          'use a link that starts later.')
+          .replace('{d}', clock(secs))));
     }
 
     if (S.sort === 'score') {
-      host.appendChild(el('div', 'ncclip-chap', 'Best first'));
+      host.appendChild(el('div', 'ncclip-chap', esc(t('st_clip_best', 'Best first'))));
       flat.slice().sort(function (a, b) { return (b.c.score || 0) - (a.c.score || 0); })
         .forEach(function (x, i) { host.appendChild(card(x.c, i + 1)); });
       return;
@@ -508,11 +530,12 @@
     styles();
     BOX = box;
     box.innerHTML =
-      '<h1>AI clipper</h1>' +
-      '<p class="lede">Paste a long video and NovaClip watches it, then tells you which ' +
-      'moments would work on their own — where each one starts and ends, how strong it ' +
-      'is, and what to put in the caption. It reads <b>up to two hours</b>, and needs the ' +
-      'video to be <b>at least two minutes</b> long. Public YouTube videos only.</p>' +
+      '<h1 data-t="st_clipper_h">' + esc(t('st_clipper_h', 'AI Clipper')) + '</h1>' +
+      '<p class="lede" data-t="st_clipper_p">' + t('st_clipper_p',
+        'Paste a long video and NovaClip watches it, then tells you which moments would ' +
+        'work on their own — where each one starts and ends, how strong it is, and what to ' +
+        'put in the caption. It reads up to two hours, and needs the video to be at least ' +
+        'two minutes long. Public YouTube videos only.') + '</p>' +
       '<div class="card"><div class="ncclip-body"></div></div>';
     render();
   }
