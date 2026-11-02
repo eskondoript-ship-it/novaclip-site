@@ -182,6 +182,13 @@
     '/clipper':    { label: 'AI Clipper', key: 'st_clipper_h',
                      icon: 'M6 3v12M18 3v12M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM18 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
                      why: 'Paste a long video and find the moments worth cutting' },
+    /* The sixth tool. A waveform, a selection and the eight edits — the
+       simple audio editor that was asked for. voice-changer.js, mixer.js and
+       beats.js all work on a clip already in a project; this one owns a loose
+       file and rewrites its samples, which is a different job. */
+    '/audio':      { label: 'Audio editor', key: 'st_aud_h',
+                     icon: 'M3 12h2l2-7 3 14 3-11 2 4h6',
+                     why: 'Open a sound, cut it, fade it, save it' },
     '/trends':     { label: 'Trend Spotter', key: 'st_trends_h',
                      icon: 'M3 17l6-6 4 4 7-7M14 8h7v7',
                      why: 'Find what is actually rising in your niche' },
@@ -386,6 +393,7 @@
     /* Before Studio, after Hype Lab: the rail reads as make, then measure, and
        the clipper is still making. */
     addItem(nav, 'clipper', PANELS['/clipper'], '#/clipper');
+    addItem(nav, 'audio', PANELS['/audio'], '#/audio');
     addItem(nav, 'studio', PANELS['/studio'], '#/studio');
   }
 
@@ -2671,6 +2679,22 @@
       'Reload the page; if it keeps happening the file is missing from the server.</p>';
   }
 
+  /* audio-editor.js draws this one, same arrangement as the clipper: the
+     panel is a separate file because it is a tool in its own right, and this
+     file only routes to it. */
+  function audioPanel(box) {
+    if (window.NC_AUDIO_ED && typeof window.NC_AUDIO_ED.mount === 'function') {
+      window.NC_AUDIO_ED.mount(box);
+      return;
+    }
+    if (box.dataset.view === 'audio-missing') return;
+    box.dataset.view = 'audio-missing';
+    box.innerHTML =
+      '<h1>' + (tr('st_aud_h') || 'Audio editor') + '</h1>' +
+      '<p class="lede">audio-editor.js did not load, so there is nothing to show. ' +
+      'Reload the page; if it keeps happening the file is missing from the server.</p>';
+  }
+
   function studioPanel(box) {
     if (box.dataset.view === 'studio') return;
     box.dataset.view = 'studio';
@@ -2863,6 +2887,7 @@
       else if (h === '/editor') editorPanel(box);
       else if (h === '/photo') photoPanel(box);
       else if (h === '/clipper') clipperPanel(box);
+      else if (h === '/audio') audioPanel(box);
       else studioPanel(box);
       /* A panel opened from halfway down the trends list should start at the
          top of itself, not wherever the last screen was scrolled to. */

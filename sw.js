@@ -2873,7 +2873,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v134';
+const CACHE = 'novaclip-v135';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2961,6 +2961,7 @@ const SHELL = [
      and it says so rather than appearing broken. */
   '/clipfinder.js',
   '/clipper.js',
+  '/audio-editor.js',
   /* Puts the name on a free export. Cached beside export-fix.js because the two
      are the export path between them — that one chooses the recorder, this one
      decides what the recorder is handed — and because an offline export that
