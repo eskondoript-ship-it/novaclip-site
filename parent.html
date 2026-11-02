@@ -451,6 +451,10 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
 </style>
 <script src='nova-mascot.js' defer></script>
 <script src='nova-guide.js' defer></script>
+<!-- The uploaded parent-dashboard design, ported to CSS over this page's own
+     markup. Nothing here moves an element or changes a behaviour; see the top
+     of the file for what was left out of the design and why. -->
+<link rel="stylesheet" href="parent-skin.css">
 </head>
 <body>
 <!-- The rail every other page has. nova.js fills it and drives its width from
@@ -837,25 +841,24 @@ html[data-theme="dark"] #dash .card{ box-shadow:none; }
       <h3><span data-t='par_billing'>Plans & billing</span> <small data-t='par_billing_s'>Manage your NovaClip subscription. Everything here sits behind your parent PIN.</small></h3>
       <div id='planpick' style='display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:16px;'></div>
 
-      <h3 style='margin-top:10px' data-t='par_savedcard'>Saved card</h3>
-      <div id='savedcard' style='display:none; background:linear-gradient(135deg,#12203a,#1a1030); border:1px solid rgba(0,240,255,0.3); border-radius:14px; padding:16px 18px; margin-bottom:12px;'>
-        <div style='font-family:monospace; letter-spacing:2px; font-size:1.1rem;' id='cardnum'>•••• •••• •••• ••••</div>
-        <div style='display:flex; justify-content:space-between; margin-top:8px; font-size:0.85rem; color:#b8bccb;'><span id='cardname'>—</span><span id='cardexp'>—</span></div>
-        <button class='btn' style='margin-top:12px; background:transparent; border:1px solid rgba(255,46,151,0.5); color:#FF2E97;' id='removecard' data-t='par_removecard'>Remove card</button>
-      </div>
-      <div id='cardform'>
-        <input type='text' id='ccname' placeholder='Name on card'>
-        <input type='text' id='ccnum' placeholder='Card number' inputmode='numeric' maxlength='19'>
-        <div style='display:flex; gap:10px;'>
-          <input type='text' id='ccexp' placeholder='MM/YY' maxlength='5' style='flex:1'>
-          <input type='text' id='cccvc' placeholder='CVC' maxlength='4' inputmode='numeric' style='flex:1'>
-        </div>
-        <label style='display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#b8bccb; margin:6px 0 12px;'>
-          <input type='checkbox' id='savecard' style='accent-color:#00F0FF;'> Save this card for next time
-        </label>
-        <button class='btn' id='savecardbtn' data-t='par_savecardbtn'>Save payment method</button>
-      </div>
-      <div class='notice' style='border-left-color:#FF2E97; background:rgba(255,46,151,0.06);'>Pitch build — do not enter a real card. This demonstrates the billing flow only. In production, card data would go straight to a certified payment processor (Stripe/Adyen) and never touch NovaClip's servers — we'd store only a token, never the real number.</div>
+      <!-- THE CARD FORM IS GONE, AND IT SHOULD NEVER HAVE BEEN HERE.
+           It collected a full card number and a CVC in plain inputs on a static
+           page, validated them, and then told the parent "Payment method
+           entered for this session" when nothing had been sent anywhere. A pink
+           "do not enter a real card" notice above it does not fix that: it was a
+           working card form on a payment screen, and somebody types a real
+           number into those.
+
+           pricing.html says in its own markup why the site does not do this —
+           "a page that touches a card number is in PCI DSS scope, and this one
+           is a static file on GitHub Pages" — and the card number is typed on
+           Stripe's own page instead. This page now sends people there, which is
+           where the money already works. -->
+      <h3 style='margin-top:10px' data-t='par_pay_h'>Paying</h3>
+      <p class='sub' data-t='par_pay_p'>Card details are entered on Stripe's own page, never on
+         NovaClip. We never see the number.</p>
+      <a class='btn' href='pricing.html' style='display:inline-block; text-decoration:none'
+         data-t='par_pay_go'>Go to plans and payment</a>
     </div>
     </section>
   </div>
@@ -1319,7 +1322,6 @@ function unlock() {
   document.getElementById('s_unlocks').textContent = (JSON.parse(localStorage.getItem('nc_unlocked') || '[]')).length;
   document.getElementById('actlog').innerHTML = lines.length ? lines.join('<br>') : 'No AI chats yet on this device.';
   renderPlans();
-  renderSavedCard();
   /* Tabs first: the panels have to exist and the right one has to be visible
      before anything below measures itself into them. */
   pdBuildTabs();
@@ -1777,37 +1779,18 @@ function renderPlans() {
   ).join('');
 }
 window.choosePlan = function(id) {
-  if (!localStorage.getItem('nc_card')) { alert('Add a payment method below first.'); return; }
-  localStorage.setItem('nc_plan', id); renderPlans();
-  alert('Plan selected (pitch build — no real charge).');
+  /* Paying happens on pricing.html, which hands off to Stripe. This page used
+     to set nc_plan itself and say "Plan selected (pitch build — no real
+     charge)", which told a parent they had chosen a plan when nothing had been
+     bought and nothing had been sent anywhere. */
+  try { localStorage.setItem('nc_plan_wanted', id); } catch (e) {}
+  location.href = 'pricing.html';
 };
 
-function renderSavedCard() {
-  const card = JSON.parse(localStorage.getItem('nc_card') || 'null');
-  document.getElementById('savedcard').style.display = card ? 'block' : 'none';
-  document.getElementById('cardform').style.display = card ? 'none' : 'block';
-  if (card) {
-    document.getElementById('cardnum').textContent = '•••• •••• •••• ' + card.last4;
-    document.getElementById('cardname').textContent = card.name;
-    document.getElementById('cardexp').textContent = card.exp;
-  }
-}
-document.getElementById('savecardbtn').onclick = () => {
-  const num = document.getElementById('ccnum').value.replace(/\s/g, '');
-  const name = document.getElementById('ccname').value.trim();
-  const exp = document.getElementById('ccexp').value.trim();
-  const cvc = document.getElementById('cccvc').value.trim();
-  if (name.length < 2 || num.length < 12 || !/^\d\d\/\d\d$/.test(exp) || cvc.length < 3) { alert('Please fill all card fields (MM/YY format).'); return; }
-  if (document.getElementById('savecard').checked) {
-    // pitch build: store ONLY last 4 + name + expiry — never full number or CVC
-    localStorage.setItem('nc_card', JSON.stringify({ last4: num.slice(-4), name, exp }));
-    renderSavedCard();
-    alert('Card saved for next time (only the last 4 digits are kept on this device).');
-  } else {
-    alert('Payment method entered for this session (not saved).');
-  }
-};
-document.getElementById('removecard').onclick = () => { localStorage.removeItem('nc_card'); localStorage.removeItem('nc_plan'); renderSavedCard(); renderPlans(); };
+/* renderSavedCard() is gone too. It addressed #savedcard, #cardform, #cardnum,
+   #cardname and #cardexp, all of which went with the form, so leaving it in
+   place would have thrown on every render of the plans panel and taken the
+   rest of the panel down with it. */
 
 /* ============================================================================
    COMMENT SAFETY SCANNER

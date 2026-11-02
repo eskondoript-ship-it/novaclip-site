@@ -1,0 +1,256 @@
+/* ============================================================================
+   PARENT DASHBOARD — THE UPLOADED DESIGN, AS CSS
+   ============================================================================
+   WHAT THIS IS
+
+   A .tsx mock-up of a parent dashboard arrived. It is the fourth design to come
+   into this repo that way, and the check in .claude/skills/check-upload said
+   the same thing it said the first three times: no network code anywhere, the
+   whole data layer two hardcoded arrays, nothing dangerous in it, and a React +
+   Tailwind + lucide toolchain this site does not have.
+
+   So the design is ported and the data is not. Everything here is a stylesheet
+   over parent.html's existing markup — the same card, btn, field, notice, stat
+   and pdpanel classes the page already uses. No behaviour changed, no element
+   moved, nothing rebuilt. That is how profile.html and studio-nexus.css were
+   handled before this.
+
+   WHAT WAS LEFT OUT OF THE DESIGN, AND WHY
+
+   The mock-up is a SURVEILLANCE dashboard. Its clips carry
+   status:'flagged' with flagReason 'Detected late-night screen activity (past
+   curfew: 10:00 PM) & high voice volume', and aiNotes saying 'Activity occurred
+   45 mins after Bedtime Lock settings'. NovaClip does not watch a child's
+   screen, does not measure voice volume, does not log what they do and does not
+   keep their videos. Building those panels would mean inventing the data, on a
+   page parents read, about children — and privacy.html promises the opposite.
+
+   So the Activity Stream and AI Insights tabs are not here. What IS here is
+   what parent.html already has and the design has a shape for: the rules that
+   follow the child between devices, the fortnight of screen time actually used,
+   the sections switched off, the PIN, and the AI chats stored on this device.
+
+   WHAT THE DESIGN GAVE US
+
+   Light slate ground with white cards, indigo as the single accent, rounded-xl
+   corners, soft one-pixel borders instead of glow, and a flat tab strip. The
+   page was dark with cyan and magenta gradients; this is the change. Both
+   themes are defined, because the site has a theme switch and a light-only
+   parent page would fight it — the design's palette is the light one, and the
+   dark one is built from the same hues rather than inverted.
+
+   GOES WITH: parent.html (which loads it) and sw.js (cache bump).
+   ========================================================================== */
+
+:root {
+  --pd-ground:#f1f5f9;      /* slate-100 */
+  --pd-card:#ffffff;
+  --pd-line:#e2e8f0;        /* slate-200 */
+  --pd-line-soft:#f1f5f9;
+  --pd-ink:#1e293b;         /* slate-800 */
+  --pd-ink-strong:#0f172a;  /* slate-900 */
+  --pd-soft:#64748b;        /* slate-500 */
+  --pd-faint:#94a3b8;       /* slate-400 */
+  --pd-accent:#4f46e5;      /* indigo-600 */
+  --pd-accent-soft:#eef2ff; /* indigo-50 */
+  --pd-accent-line:#c7d2fe;
+  --pd-good:#059669;        /* emerald-600 */
+  --pd-good-soft:#ecfdf5;
+  --pd-warn:#d97706;        /* amber-600 */
+  --pd-warn-soft:#fffbeb;
+  --pd-warn-line:#fde68a;
+  --pd-shadow:0 1px 2px rgba(15,23,42,.06), 0 1px 3px rgba(15,23,42,.04);
+  --pd-shadow-lift:0 4px 12px rgba(15,23,42,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pd-ground:#0b1220;
+    --pd-card:#131c2e;
+    --pd-line:#243049;
+    --pd-line-soft:#1b2438;
+    --pd-ink:#e2e8f0;
+    --pd-ink-strong:#f8fafc;
+    --pd-soft:#94a3b8;
+    --pd-faint:#64748b;
+    --pd-accent:#818cf8;
+    --pd-accent-soft:#1e1b4b;
+    --pd-accent-line:#3730a3;
+    --pd-good:#34d399;
+    --pd-good-soft:#052e23;
+    --pd-warn:#fbbf24;
+    --pd-warn-soft:#2a2008;
+    --pd-warn-line:#78350f;
+    --pd-shadow:0 1px 2px rgba(0,0,0,.4);
+    --pd-shadow-lift:0 4px 14px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"] {
+  --pd-ground:#0b1220;
+  --pd-card:#131c2e;
+  --pd-line:#243049;
+  --pd-line-soft:#1b2438;
+  --pd-ink:#e2e8f0;
+  --pd-ink-strong:#f8fafc;
+  --pd-soft:#94a3b8;
+  --pd-faint:#64748b;
+  --pd-accent:#818cf8;
+  --pd-accent-soft:#1e1b4b;
+  --pd-accent-line:#3730a3;
+  --pd-good:#34d399;
+  --pd-good-soft:#052e23;
+  --pd-warn:#fbbf24;
+  --pd-warn-soft:#2a2008;
+  --pd-warn-line:#78350f;
+  --pd-shadow:0 1px 2px rgba(0,0,0,.4);
+  --pd-shadow-lift:0 4px 14px rgba(0,0,0,.45);
+}
+
+/* ---- the ground -------------------------------------------------------- */
+body { background: var(--pd-ground) !important; color: var(--pd-ink) !important; }
+
+.wrap, .pdtop, .pdpanel { color: var(--pd-ink); }
+.pdtitle, h1, h2 { color: var(--pd-ink-strong) !important; }
+.sub, .hint, .sthint { color: var(--pd-soft) !important; }
+
+/* ---- cards ------------------------------------------------------------- */
+/* rounded-xl, a one-pixel line and the smallest shadow — the design marks a
+   card by its edge, not by a glow. */
+.card {
+  background: var(--pd-card) !important;
+  border: 1px solid var(--pd-line) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--pd-shadow) !important;
+  padding: 20px 22px !important;
+}
+.card h3 {
+  color: var(--pd-ink-strong) !important;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+.card h3 small {
+  display: block;
+  color: var(--pd-soft) !important;
+  font-weight: 400;
+  margin-top: 3px;
+}
+
+/* ---- the tab strip ----------------------------------------------------- */
+/* Flat, with the active tab carrying the accent as a soft fill rather than an
+   underline. The page's own markup is a row of buttons, so this needs no new
+   element. */
+.pdtop { border-bottom: 1px solid var(--pd-line) !important; background: transparent !important; }
+.pdtop button, [role="tab"] {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  color: var(--pd-soft) !important;
+  font-weight: 600;
+  padding: 8px 14px !important;
+  transition: background .15s, color .15s;
+}
+.pdtop button:hover, [role="tab"]:hover { color: var(--pd-ink) !important; }
+[role="tab"][aria-selected="true"] {
+  background: var(--pd-accent-soft) !important;
+  color: var(--pd-accent) !important;
+  border-color: var(--pd-accent-line) !important;
+}
+
+/* ---- buttons ----------------------------------------------------------- */
+.btn {
+  background: var(--pd-accent) !important;
+  border: 1px solid var(--pd-accent) !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: none !important;
+  padding: 9px 16px !important;
+}
+.btn:hover { filter: brightness(1.07); }
+.btn:focus-visible { outline: 2px solid var(--pd-accent); outline-offset: 2px; }
+
+/* ---- fields ------------------------------------------------------------ */
+.field, input[type="text"], input[type="email"], input[type="number"],
+input[type="password"], select, textarea {
+  background: var(--pd-card) !important;
+  border: 1px solid var(--pd-line) !important;
+  border-radius: 10px !important;
+  color: var(--pd-ink) !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--pd-accent) !important;
+  outline-offset: 1px;
+  border-color: var(--pd-accent) !important;
+}
+label { color: var(--pd-soft); }
+
+/* ---- stats ------------------------------------------------------------- */
+/* The design's tile: a big figure, a quiet caption under it, no border between
+   them. */
+.stat {
+  background: var(--pd-card) !important;
+  border: 1px solid var(--pd-line) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--pd-shadow) !important;
+  padding: 16px 18px !important;
+}
+.stat b {
+  color: var(--pd-ink-strong) !important;
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.stat span { color: var(--pd-soft) !important; font-size: .78rem; }
+.stbig { color: var(--pd-ink-strong) !important; font-variant-numeric: tabular-nums; }
+
+/* ---- notices ----------------------------------------------------------- */
+/* Amber for a caution, emerald for an all-clear, indigo for the rest — the
+   design's three. A left rule rather than a full tinted box, so a page with
+   several of them does not turn into stripes. */
+.notice {
+  background: var(--pd-accent-soft) !important;
+  border: 1px solid var(--pd-accent-line) !important;
+  border-left: 3px solid var(--pd-accent) !important;
+  border-radius: 0 10px 10px 0 !important;
+  color: var(--pd-ink) !important;
+}
+.notice.warn, .notice[data-kind="warn"] {
+  background: var(--pd-warn-soft) !important;
+  border-color: var(--pd-warn-line) !important;
+  border-left-color: var(--pd-warn) !important;
+}
+.notice.ok, .notice[data-kind="ok"] {
+  background: var(--pd-good-soft) !important;
+  border-color: var(--pd-good) !important;
+  border-left-color: var(--pd-good) !important;
+}
+
+/* ---- the screen-time bars --------------------------------------------- */
+.stbars { gap: 6px; }
+.stbars > * { border-radius: 6px 6px 0 0 !important; }
+.strule { border-color: var(--pd-line) !important; }
+.sttop { color: var(--pd-soft) !important; }
+
+/* ---- the activity log -------------------------------------------------- */
+.log {
+  background: var(--pd-ground) !important;
+  border: 1px solid var(--pd-line) !important;
+  border-radius: 10px !important;
+  color: var(--pd-soft) !important;
+  padding: 12px 14px !important;
+  line-height: 1.7;
+}
+
+/* ---- the sidebar ------------------------------------------------------- */
+/* nova.js paints the rail from its own tokens, so this only softens the seam
+   against the new light ground rather than restyling the rail itself. */
+.sidebar { border-right: 1px solid var(--pd-line) !important; }
+
+/* ---- small print ------------------------------------------------------- */
+.gstep, .gsep { color: var(--pd-soft) !important; border-color: var(--pd-line) !important; }
+.two { gap: 14px; }
+
+@media (max-width: 560px) {
+  .card { padding: 16px 16px !important; border-radius: 12px !important; }
+  .stat b { font-size: 1.45rem; }
+}
