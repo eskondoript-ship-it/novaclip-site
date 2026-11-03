@@ -1224,6 +1224,25 @@ export default {
         continue;
       }
 
+      /* NO OTHER VENDOR, BUT THERE MAY BE ANOTHER MODEL HERE.
+         A 503 from Gemini is almost always about the one model being hammered
+         rather than about Gemini: gemini-3.6-flash can be overloaded while
+         gemini-2.5-flash-lite answers straight away. Until now the only thing
+         that moved to a sibling model was a RETIRED one (`gone`, above), so a
+         worker with a single vendor key gave up the moment Gemini said 503 —
+         and the page read "The AI is overloaded right now" with three other
+         usable models sitting unused in the allowlist. That is the failure a
+         classroom sees.
+         This runs only after othersFor() has come back empty, so a deployment
+         with two vendor keys still prefers the other vendor, exactly as
+         before. modelsFor() keeps text on text and image on image, so it
+         cannot answer "draw me a thumbnail" with a model that cannot draw,
+         and triedM stops it offering the same model twice. */
+      if (!next && SWITCHABLE.has(lastStatus)) {
+        const sibling = modelsFor(at, model, triedM)[0];
+        if (sibling) { atModel = sibling; upstream = null; continue; }
+      }
+
       if (!next) break;
       at = next;
       atModel = DEFAULT_MODEL[next];
