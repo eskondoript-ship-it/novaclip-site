@@ -2651,13 +2651,9 @@ function ncBuildBar() {
   guideBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     /* The button asks "how do I use THIS PAGE?", so nova-guide.js answers it —
-       it has the written detail for twenty-four pages. The site tour in
-       nova-instructions.js answers a different question, "what is this site?",
-       and it shows itself once on a first visit.
-
-       The tour is the fallback rather than the first choice, so that a page
-       nova-guide.js has never heard of still has something behind the "?"
-       instead of a toast apologising. */
+       it has the written detail for twenty-four pages, and it only ever opens
+       because somebody pressed this. The first-visit site tour that used to
+       sit behind it as a last resort has been removed. */
     /* The screen helper first. It resolves which screen this actually is —
        which Studio route, which framed tool — and hands the matching
        walkthrough to the same card, so the bar's "?" and the Help button no
@@ -2665,7 +2661,9 @@ function ncBuildBar() {
        fallback for a page where nova-help.js has not loaded. */
     if (window.NC_HELP && window.NC_HELP.guide) { window.NC_HELP.guide(); return; }
     if (window.ncGuide && window.ncGuide.show) { window.ncGuide.show(); return; }
-    if (window.NC_HOWTO && window.NC_HOWTO.open(true)) return;
+    /* The site tour used to be the last fallback here. It is gone, so a page
+       nova-guide.js has never heard of says so rather than opening a tour
+       about something else. */
     toast('The page guide has not loaded on this page.');
   });
   bar.appendChild(guideBtn);
@@ -3092,32 +3090,18 @@ function ncBuildBurger(bar) {
 }
 
 /* ============================================================================
-   THE SITE TOUR
+   THE SITE TOUR — REMOVED
    ============================================================================
-   nova-instructions.js is four screens explaining what NovaClip is, shown once
-   on a first visit. It used to be five separate per-page walkthroughs, each
-   loaded by its own <script> tag on its own page, which meant a newcomer met a
-   new modal every time they arrived somewhere and never got told what the site
-   was for.
+   Four screens explaining what NovaClip is, shown once on a first visit, used
+   to load from here. Taken out on request: the first thing a newcomer met was
+   a dialog over the top of the site, and the site explains itself faster than
+   the tour did.
 
-   Loaded from here rather than from a tag on every page. It is one tour for
-   the whole site and nova.js is the one file every page already has, so the
-   alternative was thirty-five identical script tags and a thirty-sixth page
-   shipping one day without one. It also keeps the hand-deploy honest: this
-   file and that file go together, and nothing else has to.
-
-   Failing to load is not an error worth reporting. The tour is orientation, so
-   a visitor who never sees it has missed a nicety, not a feature — and the "?"
-   falls back to nova-guide.js either way. */
-function ncLoadTour() {
-  if (NC_EMBED) return;
-  if (window.NC_HOWTO || document.getElementById('nc-tour-js')) return;
-  const s = document.createElement('script');
-  s.id = 'nc-tour-js';
-  s.src = 'nova-instructions.js';
-  s.defer = true;
-  document.head.appendChild(s);
-}
+   What is deliberately still here: the age gate and the cookie choice, which
+   are not orientation and are not optional on a site for 13-18s; and
+   nova-guide.js behind the "?", which has the written detail for twenty-four
+   pages and only ever appears when somebody asks for it.
+   ========================================================================= */
 
 /* ============================================================================
    A WAY OFF EVERY PAGE
@@ -7824,7 +7808,6 @@ window.addEventListener('DOMContentLoaded', () => {
      exist by then or they mount into the sidebar and the bar comes up empty. */
   ncBuildBar();
   ncHelpEverywhere();
-  ncLoadTour();
   /* The class is already on <html> from parse time; this is only the button
      catching up with it, now that there is a button. */
   ncApplyRail(ncRailHidden());

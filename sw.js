@@ -2873,7 +2873,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v139';
+const CACHE = 'novaclip-v140';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3006,7 +3006,6 @@ const SHELL = [
   /* The five step-by-step walkthroughs, for the same reason and one more: the
      editor and the photo editor both work with the network off, so their
      instructions have to as well. */
-  '/nova-instructions.js',
   '/categories.js',
   /* The nine drawn backgrounds. Cached because they are the floor under every
      category: a page served offline without this file is a page with the
