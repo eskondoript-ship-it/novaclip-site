@@ -155,5 +155,148 @@
     return attempt(0);
   };
 
-  window.NC_EXPORT = { candidates: candidates, extFor: extFor };
+  /* ==========================================================================
+     THE FROZEN STRETCHES IN AN EXPORTED CLIP
+     ==========================================================================
+     Reported as "when i export a clip a big part of the clip freezes after
+     exported", and it is not a codec problem — it is the clock.
+
+     The export loop runs on the wall clock:
+
+         const F = (performance.now() - y) / 1e3;      // timeline position
+         if (Math.abs(V.currentTime - b) > .25) V.currentTime = b;
+         Wd(v, c.width, c.height, F, ...);             // draw at F
+
+     F is real elapsed time, the seek is fired and not waited for, and the
+     draw happens immediately. So while a source video is still seeking or
+     has not buffered the moment it was sent to, the canvas is painted with
+     the frame it is still showing — the previous one — and captureStream
+     dutifully records that same picture again and again. Meanwhile F marches
+     on. That is the freeze, and it is worst at the start of a clip, which is
+     where the first real seek happens: the editor pre-loads each source to
+     readyState 2 at time zero, but a clip whose sourceStart is forty seconds
+     in has to go and fetch that part when its turn comes.
+
+     THE FIX IS TO STOP TIME RATHER THAN TO DRAW HARDER
+
+     While any source is seeking or starved, two things happen together:
+
+       - the recorder is paused, so nothing is written;
+       - performance.now() is held still, so the loop recomputes the same F,
+         re-draws the same frame and asks for the same seek instead of
+         skipping ahead.
+
+     Both halves are needed. Pausing alone would drop the stalled section out
+     of the video; freezing the clock alone would record the stall. Together
+     the export simply takes a little longer than the timeline and the file
+     that comes out is complete.
+
+     performance.now is patched only between picking the encoder and the
+     recorder stopping, and it is restored by the stop event, by a wrapped
+     stop(), and by a long backstop timer, because leaving a patched clock
+     behind would be a far worse bug than the one being fixed.
+
+     STALL_CAP exists so a genuinely broken source cannot hang an export for
+     ever: after that long the wait is abandoned, the clock resumes, and the
+     export carries on with whatever is on screen — the old behaviour, which
+     is the right thing to fall back to.
+     ========================================================================== */
+
+  var STALL_CAP = 8000;     /* ms to wait on one stall before giving up */
+  var videos = [];          /* export sources, weakly kept */
+
+  /* The export builds its sources with document.createElement('video') and
+     never attaches them, so this is the only place they can be seen from. */
+  var madeEl = document.createElement;
+  document.createElement = function (tag) {
+    var el = madeEl.apply(document, arguments);
+    try {
+      if (String(tag).toLowerCase() === 'video') {
+        videos.push(el);
+        if (videos.length > 400) videos = videos.slice(-200);
+      }
+    } catch (e) {}
+    return el;
+  };
+
+  function stalled() {
+    for (var i = 0; i < videos.length; i++) {
+      var v = videos[i];
+      if (!v || !v.src || v.isConnected) continue;   /* on-page video is preview, not export */
+      if (v.seeking) return true;
+      if (!v.paused && v.readyState < 2) return true;
+    }
+    return false;
+  }
+
+  function hold(recorder) {
+    /* The function itself, not a bound copy. Restoring a bound copy leaves
+       performance.now subtly different from how it was found, and the next
+       export then binds that, so every export adds a layer. */
+    var realNow = performance.now;
+    var now = function () { return realNow.call(performance); };
+    var lost = 0;             /* total ms the clock has been held */
+    var since = 0;            /* when the current stall began, real ms */
+    var done = false;
+    var raf = 0;
+
+    performance.now = function () { return now() - lost - (since ? now() - since : 0); };
+
+    function release() {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(raf);
+      performance.now = realNow;
+    }
+
+    function tick() {
+      if (done) return;
+      var t = now();
+      if (since && t - since > STALL_CAP) {       /* give up on this one */
+        lost += t - since; since = 0;
+        try { if (recorder.state === 'paused') recorder.resume(); } catch (e) {}
+      } else if (stalled()) {
+        if (!since) {
+          since = t;
+          try { if (recorder.state === 'recording') recorder.pause(); } catch (e) {}
+        }
+      } else if (since) {
+        lost += t - since; since = 0;
+        try { if (recorder.state === 'paused') recorder.resume(); } catch (e) {}
+      }
+      raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+
+    /* addEventListener rather than onstop: the bundle assigns onstop itself
+       and whichever of us wrote last would win. */
+    try { recorder.addEventListener('stop', release); } catch (e) {}
+    var stop = recorder.stop;
+    try {
+      recorder.stop = function () { release(); return stop.apply(recorder, arguments); };
+    } catch (e) {}
+    setTimeout(release, 2 * 60 * 60 * 1000);        /* backstop: two hours */
+
+    return { release: release, held: function () { return lost; } };
+  }
+
+  var held = null;
+  var pick = window.__ncPickRecorder;
+  window.__ncPickRecorder = function () {
+    return Promise.resolve(pick.apply(null, arguments)).then(function (picked) {
+      if (picked && picked.recorder) {
+        try { if (held) held.release(); } catch (e) {}
+        held = hold(picked.recorder);
+      }
+      return picked;
+    });
+  };
+
+  window.NC_EXPORT = {
+    candidates: candidates,
+    extFor: extFor,
+    /* For the test harness: how long the clock was held on the last export. */
+    heldMs: function () { return held ? held.held() : 0; },
+    stalled: stalled
+  };
 })();
