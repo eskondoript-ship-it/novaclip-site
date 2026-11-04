@@ -349,6 +349,47 @@ function inspectImages(payload) {
 }
 const RATE_MAX = 20;             // requests per IP...
 const RATE_WINDOW = 60;          // ...per this many seconds
+
+/* ---------------------------------------------------------------------------
+   THE FREE AI BUDGET
+   ---------------------------------------------------------------------------
+   The rate limit above is abuse protection: it stops one connection hammering
+   the key. It is not cost control, because twenty requests a minute, forever,
+   is an enormous amount of Gemini.
+
+   Cost control is this. Every free user gets a monthly allowance measured in
+   credits, where one credit is one ordinary answer. Nothing is taken away —
+   the editor, the audio editor, the 54 tools and NovaClassics never touch this
+   because they never call a model. Only the AI is metered, which is the only
+   thing that costs anything per person: EUR 3.00 a year now, EUR 5.05 from
+   January 2027, against a conversion rate where most people never pay.
+
+   WHY CREDITS AND NOT A CALL COUNT
+
+   The calls are not the same size. The worker's own note on grounding puts a
+   grounded scan at "about as much as eighteen ordinary AI answers", so
+   counting calls would let a handful of Trend Spotter scans cost more than a
+   month of everything else while reading as a fraction of the allowance.
+
+   WHERE THE NUMBERS COME FROM, AND HOW TO TUNE THEM
+
+   120 credits is deliberately generous: three grounded trend scans (54) and
+   still around sixty ordinary answers left, which is more AI than a person
+   gets through in a month of real editing. It is set to be a ceiling on the
+   unlucky, not a wall the ordinary user meets.
+
+   The grounded sub-cap is not arbitrary either — pricing.html has sold the
+   free tier as "Three trend scans a month" since the plans went up, and
+   nothing in this codebase has ever enforced it. This does.
+
+   Do not take 120 as measured: it is a starting point. /health reports what
+   is actually being consumed, so tune it from real numbers rather than from
+   this comment.
+   --------------------------------------------------------------------------- */
+const BUDGET_CREDITS   = 120;    // free credits per calendar month
+const BUDGET_GROUNDED  = 3;      // grounded scans a month, free tier
+const BUDGET_TTL       = 40 * 24 * 60 * 60;   // seconds; outlives any month
+const COST = { text: 1, tts: 1, image: 10, video: 10, grounded: 18 };
 const UPSTREAM_TIMEOUT_MS = 45000;
 
 /* Jarvis's voice. POST /tts turns text into MP3 with Gemini's TTS model. The
@@ -368,12 +409,14 @@ const TTS_MAX_TEXT = 2000;              // characters
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  /* X-NC-Uid and X-NC-Tier carry the budget identity. Leaving them out here
+     makes the browser's preflight refuse the request before it is ever sent. */
+  'Access-Control-Allow-Headers': 'Content-Type, X-NC-Uid, X-NC-Tier',
   /* A cross-origin response hides every header the server does not name here,
      so without this the page can see the answer but not who wrote it. It is
      two strings and it is what lets nova.js say "Gemini is out, OpenAI
      answered" instead of leaving somebody to wonder why the voice changed. */
-  'Access-Control-Expose-Headers': 'X-NovaClip-Provider, X-NovaClip-Switched, X-NovaClip-Model, X-NovaClip-Cache, X-NovaClip-Grounding',
+  'Access-Control-Expose-Headers': 'X-NovaClip-Provider, X-NovaClip-Switched, X-NovaClip-Model, X-NovaClip-Cache, X-NovaClip-Grounding, X-NC-Budget-Left, X-NC-Budget-Max, X-NC-Budget-Kind, X-NC-Budget-Grounded-Left',
   'Access-Control-Max-Age': '86400'
 };
 
@@ -475,6 +518,102 @@ async function upstreamFetch(provider, model, payload, key, signal, search) {
    Cloudflare runs many, so it is a speed bump rather than a limit — which is
    why step 4 above is recommended rather than optional in spirit. */
 const memory = new Map();
+
+/* What this one request is worth, in credits. Read off the request rather
+   than off the endpoint, because the same endpoint serves a cheap answer and
+   an expensive grounded one. */
+function creditsFor(path, body) {
+  if (path === '/tts') return COST.tts;
+  var grounded = false, image = false, video = false;
+  try {
+    if (body && body.search === true) grounded = true;
+    var p = (body && body.payload) || {};
+    if (Array.isArray(p.tools) && JSON.stringify(p.tools).indexOf('oogleSearch') >= 0) grounded = true;
+    if (body && /image/i.test(String(body.model || ''))) image = true;
+    var parts = JSON.stringify(p.contents || '');
+    if (parts.indexOf('file_data') >= 0 || parts.indexOf('fileData') >= 0) video = true;
+  } catch (e) {}
+  if (grounded) return COST.grounded;
+  if (video) return COST.video;
+  if (image) return COST.image;
+  return COST.text;
+}
+
+function monthKey() {
+  var d = new Date();
+  return d.getUTCFullYear() + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2);
+}
+
+/* The browser mints a random id once and sends it. It is not proof of
+   anything and it is not meant to be: somebody who clears their storage gets
+   a fresh allowance, and somebody who edits the header gets as many as they
+   like. It is a budget, not a lock — it stops the ordinary heavy user costing
+   more than they are worth, which is where effectively all of the money goes.
+   Tying it to the account would need leaderboard-worker.js to issue a signed
+   token; that is the right next step and it is not this change. */
+function budgetKey(request, ip) {
+  var uid = request.headers.get('X-NC-Uid') || '';
+  if (!/^[A-Za-z0-9_-]{8,64}$/.test(uid)) uid = 'ip:' + ip;
+  return 'bud:' + monthKey() + ':' + uid;
+}
+
+/* Trusting a header that says "I have paid" is obviously spoofable. It is
+   accepted anyway, for now, because the alternative today is metering people
+   who are paying — which is worse than letting a determined teenager past a
+   budget. Signed tokens close this. */
+function claimsPaid(request) {
+  return /^(tools|family|bundle)$/.test(String(request.headers.get('X-NC-Tier') || ''));
+}
+
+/* Returns null when the request may proceed, or an object describing the
+   refusal. Without a KV binding there is nowhere to keep a month's counter,
+   so the budget is simply not enforced and /health says as much — a budget
+   that resets whenever an isolate recycles would be worse than none, because
+   it would read as working. */
+async function budget(env, request, ip, path, body) {
+  if (!env.RL) return { allow: true, off: true };
+  if (claimsPaid(request)) return { allow: true, paid: true };
+
+  var key = budgetKey(request, ip);
+  var rec;
+  try { rec = JSON.parse((await env.RL.get(key)) || '{"c":0,"g":0}'); }
+  catch (e) { rec = { c: 0, g: 0 }; }
+
+  var cost = creditsFor(path, body);
+  var grounded = cost === COST.grounded;
+
+  if (grounded && rec.g >= BUDGET_GROUNDED) {
+    return { allow: false, kind: 'grounded', left: Math.max(0, BUDGET_CREDITS - rec.c) };
+  }
+  if (rec.c + cost > BUDGET_CREDITS) {
+    return { allow: false, kind: 'credits', left: Math.max(0, BUDGET_CREDITS - rec.c) };
+  }
+
+  rec.c += cost;
+  if (grounded) rec.g += 1;
+  try { await env.RL.put(key, JSON.stringify(rec), { expirationTtl: BUDGET_TTL }); }
+  catch (e) { /* a failed write must not refuse a request that was in budget */ }
+
+  return { allow: true, left: Math.max(0, BUDGET_CREDITS - rec.c), spent: cost,
+           groundedLeft: Math.max(0, BUDGET_GROUNDED - rec.g) };
+}
+
+/* Give back what budget() just took. Only for an answer that turned out to
+   cost nothing — at the moment that means a search-cache hit. */
+async function refund(env, request, ip, path, body) {
+  if (!env.RL || claimsPaid(request)) return null;
+  var key = budgetKey(request, ip);
+  var rec;
+  try { rec = JSON.parse((await env.RL.get(key)) || '{"c":0,"g":0}'); }
+  catch (e) { return null; }
+  var cost = creditsFor(path, body);
+  rec.c = Math.max(0, rec.c - cost);
+  if (cost === COST.grounded) rec.g = Math.max(0, rec.g - 1);
+  try { await env.RL.put(key, JSON.stringify(rec), { expirationTtl: BUDGET_TTL }); }
+  catch (e) { return null; }
+  return { left: Math.max(0, BUDGET_CREDITS - rec.c),
+           groundedLeft: Math.max(0, BUDGET_GROUNDED - rec.g) };
+}
 
 async function rateLimited(env, ip) {
   const key = 'rl:' + ip;
@@ -602,6 +741,9 @@ export default {
         key: !!env.GEMINI_API_KEY,
         keys: { gemini: !!env.GEMINI_API_KEY, openrouter: !!env.OPENROUTER_API_KEY, openai: !!env.OPENAI_API_KEY },
         kv: !!env.RL,
+        /* A budget with nowhere to keep a month's counter is not a budget. */
+        budget: env.RL ? (BUDGET_CREDITS + ' credits/month, ' + BUDGET_GROUNDED + ' grounded')
+                       : 'off — needs the RL KV binding',
         models: ALLOWED_MODELS,
         /* The order a request falls through when a vendor runs out, with only
            the vendors this deployment can actually reach. One key configured
@@ -970,6 +1112,27 @@ export default {
     try { body = JSON.parse(raw); }
     catch (e) { return fail(400, 'That request was not valid JSON.'); }
 
+    /* The monthly allowance. After the rate limit (which is about abuse) and
+       after the parse (because what a request costs depends on what is in
+       it), before anything is sent to a vendor. */
+    const bud = await budget(env, request, ip, url.pathname, body);
+    if (!bud.allow) {
+      const msg = bud.kind === 'grounded'
+        ? 'That is this month\'s third Trend Spotter scan used up. The editor, the ' +
+          'tools and everything else carry on working — the live scan comes back ' +
+          'next month, or straight away on a paid plan.'
+        : 'This month\'s free AI allowance is used up. Nothing else stops: the editor, ' +
+          'the audio editor, all 54 tools and NovaClassics do not use it. The allowance ' +
+          'refills at the start of next month.';
+      const r = fail(429, msg);
+      try {
+        r.headers.set('X-NC-Budget-Left', '0');
+        r.headers.set('X-NC-Budget-Max', String(BUDGET_CREDITS));
+        r.headers.set('X-NC-Budget-Kind', bud.kind);
+      } catch (e) {}
+      return r;
+    }
+
     if (url.pathname === '/tts') {
       /* Speech. { text, voice? } in, an MP3 out, same key and rate limit as
          everything else. jarvis.js calls this so it can answer out loud with a
@@ -1111,10 +1274,22 @@ export default {
                                  typeof body.searchQuery === 'string' ? body.searchQuery : '']);
         const hit = await env.RL.get(cacheK);
         if (hit) {
+          /* An answer that came out of the cache cost nothing to produce, so
+             charging the month's allowance for it would be charging for
+             nothing. The budget is taken before the request is parsed far
+             enough to know this, so it is given back here.
+             This is also what makes a classroom affordable: thirty pupils
+             asking the same thing about the same trend on the same afternoon
+             is one paid search and twenty-nine free ones, and none of them
+             loses eighteen credits for it. */
+          const back = await refund(env, request, ip, url.pathname, body);
           return new Response(hit, {
             status: 200,
             headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS,
-                       'X-NovaClip-Cache': 'hit' }
+                       'X-NovaClip-Cache': 'hit',
+                       ...(back ? { 'X-NC-Budget-Left': String(back.left),
+                                    'X-NC-Budget-Max': String(BUDGET_CREDITS),
+                                    'X-NC-Budget-Grounded-Left': String(back.groundedLeft) } : {}) }
           });
         }
       } catch (e) { cacheK = ''; }   /* a broken cache must never break an answer */
@@ -1284,7 +1459,16 @@ export default {
       /* Whether the answer actually saw the live web, so the page can say so
          instead of presenting an ungrounded guess as a search. */
       ...(search ? { 'X-NovaClip-Grounding':
-            dropped ? 'dropped' : hits ? 'search-api' : grounded ? 'gemini' : 'none' } : {})
+            dropped ? 'dropped' : hits ? 'search-api' : grounded ? 'gemini' : 'none' } : {}),
+      /* What is left of the month's allowance. Sent on every answer so the
+         page can show it going down rather than only announcing it at zero —
+         a budget somebody can watch is a budget they can plan around, and the
+         first time anyone hears about it should not be when it runs out. */
+      ...(bud && !bud.off && !bud.paid ? {
+        'X-NC-Budget-Left': String(bud.left),
+        'X-NC-Budget-Max': String(BUDGET_CREDITS),
+        'X-NC-Budget-Grounded-Left': String(bud.groundedLeft)
+      } : {})
     };
 
     /* Gemini passes through untouched; the chat-completions vendors are folded

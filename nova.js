@@ -7057,6 +7057,31 @@ async function ncAsk(prompt, opts) {
   let via = null, answered = '', switchedFrom = '', code = 0, grounding = '';
 
   {
+    /* WHO THE MONTHLY AI ALLOWANCE IS COUNTED AGAINST.
+       A random id minted once and kept. It identifies nothing about anybody —
+       it is not an account, it is not sent anywhere else, and clearing site
+       data mints a new one. Its whole job is to stop one heavy user being
+       counted as the whole internet, and to stop a school full of pupils
+       behind one address being counted as one person, which is what happens
+       if the worker keys the budget on the IP it can see.
+       The tier goes with it so somebody paying is not metered. The worker
+       knows perfectly well that a header can be edited; see its own note. */
+    function ncAiHeaders() {
+      const h = { 'Content-Type': 'application/json' };
+      try {
+        let id = localStorage.getItem('nc_uid');
+        if (!id) {
+          id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) +
+               Math.random().toString(36).slice(2))).replace(/[^A-Za-z0-9_-]/g, '');
+          localStorage.setItem('nc_uid', id);
+        }
+        h['X-NC-Uid'] = id;
+        const p = window.ncPro && window.ncPro();
+        if (p && p.tier) h['X-NC-Tier'] = String(p.tier);
+      } catch (e) { /* private window: no id, the worker falls back to the IP */ }
+      return h;
+    }
+
     /* One request down one route, in a form all three of them take. */
     async function send(route) {
       /* Ollama speaks its own request and reply shape. Rather than teach every
@@ -7094,7 +7119,7 @@ async function ncAsk(prompt, opts) {
           })
         };
       }
-      const res = await fetch(NC_AI_WORKER,{ method: 'POST', headers: { 'Content-Type': 'application/json' },
+      const res = await fetch(NC_AI_WORKER,{ method: 'POST', headers: ncAiHeaders(),
         body: JSON.stringify({ provider: route.provider, model: route.model, payload: body,
           search: opts.search === true,
           /* What to type into a search engine, when the caller knows. The
@@ -7205,6 +7230,23 @@ async function ncAsk(prompt, opts) {
              grounding rather than the answer when Google's separate search
              quota runs out, and says so here. */
           ground = r.headers.get('X-NovaClip-Grounding') || '';
+          /* What is left of the month's AI allowance. Parked on window and in
+             storage so a counter can show it going down, rather than the
+             first mention of a budget being the moment it runs out. Absent on
+             a paid plan and when the worker has no KV to count in, and the
+             reader has to cope with that: no number means no budget, not
+             zero. */
+          const left = r.headers.get('X-NC-Budget-Left');
+          if (left !== null && left !== '') {
+            window.NC_BUDGET = {
+              left: parseInt(left, 10),
+              max: parseInt(r.headers.get('X-NC-Budget-Max') || '0', 10),
+              groundedLeft: parseInt(r.headers.get('X-NC-Budget-Grounded-Left') || '0', 10),
+              at: Date.now()
+            };
+            try { localStorage.setItem('nc_budget', JSON.stringify(window.NC_BUDGET)); } catch (e) {}
+            try { window.dispatchEvent(new CustomEvent('nc-budget', { detail: window.NC_BUDGET })); } catch (e) {}
+          }
         } catch (e) {}
         return { ok: true, raw: out.raw, status: r.status, by: by || route.provider,
                  from: from, ground: ground };
