@@ -2873,7 +2873,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v137';
+const CACHE = 'novaclip-v138';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2945,6 +2945,7 @@ const SHELL = [
   /* The timeline tabs. Storage and DOM only — nothing fetched — so it works
      offline like the rest of the editor's behaviour. */
   '/editor-timelines.js',
+  '/editor-follow.js',
   /* The per-panel help. Its steps are written into the file rather than asked
      of the model, which is the whole point of them — a help button that needs
      the network is missing exactly when somebody is stuck on a train. */
