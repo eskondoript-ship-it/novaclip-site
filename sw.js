@@ -2873,7 +2873,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v143';
+const CACHE = 'novaclip-v145';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2946,8 +2946,8 @@ const SHELL = [
      offline like the rest of the editor's behaviour. */
   '/editor-timelines.js',
   '/editor-follow.js',
-  '/editor-watermark.js',
   '/editor-import.js',
+  '/editor-perf.js',
   /* The per-panel help. Its steps are written into the file rather than asked
      of the model, which is the whole point of them — a help button that needs
      the network is missing exactly when somebody is stuck on a train. */
@@ -2958,6 +2958,11 @@ const SHELL = [
   '/mixer-ui.js',
   /* Picks a video encoder that actually emits bytes on this machine. */
   '/export-fix.js',
+  /* Keeps the export's frame loop alive when the tab is hidden and Chrome
+     stops serving requestAnimationFrame. Cached for the same reason as
+     export-fix.js: an export started offline must not be the one that comes
+     back with half its picture missing. */
+  '/export-awake.js',
   /* The clip finder: type a channel, see what actually works on it, and get a
      plan for your own version. Cached because the panel, the ranking and the
      wording all work without a connection — only the lookup itself needs one,

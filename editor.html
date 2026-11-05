@@ -1986,8 +1986,8 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      four default lanes that file seeds a new project with. -->
 <script src='editor-timelines.js' defer></script>
 <script src='editor-follow.js' defer></script>
-<script src='editor-watermark.js' defer></script>
 <script src='editor-import.js' defer></script>
+<script src='editor-perf.js' defer></script>
 <!-- "How do I use this panel?" — one card per rail panel, per inspector tab
      and for the editor itself. It measures the bundle's columns rather than
      injecting into them, so it does not care when React re-renders. -->
@@ -1999,6 +1999,12 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      deferred-order sensitive against export-fix.js: that one picks the
      recorder, this one decides what the recorder is handed. -->
 <script src='watermark.js' defer></script>
+<!-- Keeps the export's frame loop running when Chrome stops serving
+     requestAnimationFrame to a hidden or covered tab, which otherwise ends the
+     video track mid-export while the audio carries on. Must load AFTER
+     watermark.js: both wrap captureStream, and this one has to see the stream
+     the bundle is actually handed so it can tell when that stream is stopped. -->
+<script src='export-awake.js' defer></script>
 <!-- Type a channel name, see what actually works on it, and get a plan for your
      own version. Loaded after footage.js on purpose: it offers a button through
      to that picker when one is present, since the footage you can legally cut
