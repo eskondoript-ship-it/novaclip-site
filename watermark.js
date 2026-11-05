@@ -10,21 +10,37 @@
    determined to strip it were never going to pay, and everybody else sees the
    name.
 
-   So this is built against what the one-click removers actually do, which is
-   take ONE rectangular mask and inpaint it on every frame:
+   What is left after a deliberate trade, below:
 
-     · the mark MOVES between five anchors every few seconds, so a single mask
-       is wrong for most of the video
-     · it rotates and changes size and opacity a little at each move, so
-       template matching does not lock on
-     · one anchor is inside the frame rather than in a corner, so a crop does
-       not get rid of it and inpainting it damages the subject
-     · a second, very faint, very large diagonal mark sits under the whole
-       frame — removing it means touching every pixel, not a box
+     · one readable mark, fixed in the bottom-right corner
      · a repeating low-amplitude pattern is laid over the picture. It is
        invisible at normal viewing, survives re-encoding, and still correlates
        afterwards, so a stripped video can still be shown to have come from
        here. This is the part that genuinely does not come off.
+
+   WHAT WAS TAKEN OUT, AND WHAT THAT COSTS
+
+   This file used to be built against what the one-click removers actually do,
+   which is take ONE rectangular mask and inpaint it on every frame. Three
+   things fought that, and all three are now gone by request, because they made
+   the exports look busy:
+
+     · the mark MOVED between five anchors every few seconds, so a single mask
+       was wrong for most of the video;
+     · one of those anchors sat inside the picture rather than in a corner, so
+       a crop did not get rid of it and inpainting it damaged the subject;
+     · a very faint, very large diagonal mark sat under the whole frame, so
+       removing it meant touching every pixel rather than a box.
+
+   Be clear-eyed about what that means: a mark that never moves is one mask,
+   and one mask is exactly the case every automatic remover is written for. A
+   corner mark is also removed by cropping, which costs nothing. The visible
+   mark is now a courtesy, not a defence.
+
+   The noise layer is untouched and is what still ties a stripped file back
+   here, so the claim worth making is provenance, not prevention. If the
+   visible mark ever needs to deter rather than label, bring back the movement
+   first — it was the cheapest of the three and did the most work.
 
    HOW IT ATTACHES
 
@@ -55,18 +71,12 @@
      video. Below ~0.03 it survives a downscale to a thumbnail and vanishes;
      above ~0.07 people crop the video rather than upgrade. */
   var MARK = 0.045;
-  var MOVE_EVERY = 4.0;      /* seconds between hops */
 
-  /* Five anchors as fractions of the frame. The fourth is deliberately off the
-     edge-safe area and into the picture: a corner-only watermark is removed by
-     cropping 8% off the frame, which costs the thief nothing. */
-  var SPOTS = [
-    { x: 0.045, y: 0.055, a: 'left',  b: 'top'    },
-    { x: 0.955, y: 0.055, a: 'right', b: 'top'    },
-    { x: 0.955, y: 0.945, a: 'right', b: 'bottom' },
-    { x: 0.370, y: 0.560, a: 'left',  b: 'middle' },
-    { x: 0.045, y: 0.945, a: 'left',  b: 'bottom' }
-  ];
+  /* One fixed anchor, bottom right, as a fraction of the frame. 0.955/0.945
+     keeps it inside the title-safe area, so it is not clipped by a player that
+     overscans and it does not collide with the progress bar most platforms
+     draw along the bottom edge. */
+  var SPOT = { x: 0.955, y: 0.945, a: 'right', b: 'bottom' };
 
   function paid() {
     try { return !!(window.ncProHas && window.ncProHas('tools')); } catch (e) { return false; }
@@ -115,23 +125,15 @@
     return c;
   }
 
-  function drawMarks(ctx, w, h, t, state) {
+  /* No `t` any more: nothing here changes over the length of the export. The
+     seed is still per-export, so the size and opacity are not identical across
+     every NovaClip video, but within one file the mark is perfectly still —
+     which is the point of the change, and the reason a single mask now works
+     against it. */
+  function drawMarks(ctx, w, h, state) {
     var short = Math.min(w, h);
-    var step = Math.floor(t / MOVE_EVERY);
-    var r = rnd(state.seed + step * 2654435761);
-    var spot = SPOTS[step % SPOTS.length];
-
-    /* ---- the faint diagonal, under everything ---------------------------- */
-    ctx.save();
-    ctx.globalAlpha = 0.055;
-    ctx.translate(w / 2, h / 2);
-    ctx.rotate(-Math.PI / 9);
-    ctx.font = '800 ' + Math.round(short * 0.20) + 'px "Plus Jakarta Sans", Inter, system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(WORD, 0, 0);
-    ctx.restore();
+    var r = rnd(state.seed);
+    var spot = SPOT;
 
     /* ---- the invisible pattern ------------------------------------------- */
     if (state.tile) {
@@ -145,13 +147,14 @@
 
     /* ---- the readable mark ----------------------------------------------- */
     var size = short * MARK * (0.92 + r() * 0.16);
-    var tilt = (r() - 0.5) * 0.09;              /* radians, ±2.6° */
     var alpha = 0.52 + r() * 0.16;
     var px = spot.x * w, py = spot.y * h;
 
+    /* The small random tilt went with the movement. On a mark that hops it
+       reads as deliberate and stops template matching locking on; on one that
+       sits still in a corner for the whole video it just reads as crooked. */
     ctx.save();
     ctx.translate(px, py);
-    ctx.rotate(tilt);
     ctx.textAlign = spot.a;
     ctx.textBaseline = spot.b;
     ctx.font = '800 ' + Math.round(size) + 'px "Plus Jakarta Sans", Inter, system-ui, sans-serif';
@@ -213,18 +216,18 @@
     var state = {
       seed: seedOf(w + 'x' + h + ':' + Date.now()),
       tile: null,
-      t0: 0,
       raf: 0
     };
     try { state.tile = noiseTile(state.seed); } catch (e) { state.tile = null; }
 
     var stream = orig.call(out, fps);
 
-    function tick(now) {
-      if (!state.t0) state.t0 = now;
+    /* No timestamp is read any more: the mark does not change over time, so a
+       frame is a frame whenever it arrives. */
+    function tick() {
       try {
         ctx.drawImage(src, 0, 0, w, h);
-        drawMarks(ctx, w, h, (now - state.t0) / 1000, state);
+        drawMarks(ctx, w, h, state);
       } catch (e) { /* a frame that cannot be copied is better skipped than fatal */ }
       state.raf = requestAnimationFrame(tick);
     }
