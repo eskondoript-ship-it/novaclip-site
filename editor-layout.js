@@ -306,151 +306,140 @@
       '}',   /* end of the min-width:1360 block */
 
       /* ====================================================================
-         STUDIO — the browser is the workbench, the player sits beside it
+         STUDIO — the shape a cutting room actually has
          ====================================================================
-         Asked for from a Filmora screenshot. The thing that makes that window
-         read the way it does is the share of it each region gets, measured
-         off the screenshot at 1166px wide:
+         Asked for from a Captions screenshot, and the useful thing about
+         that screenshot is that it is not a new idea. Read left to right it
+         is: a narrow rail of tools, the panel for whichever one is open, the
+         picture, the properties of what is selected, and the timeline across
+         the bottom under all of it. Premiere, Resolve, Final Cut and CapCut
+         are the same five regions in the same order. It is what the work
+         wants, which is why everyone converges on it.
 
-             browser (categories + grid)   0 .. 725     62%
-             player                      725 .. 1166    38%
-             timeline                    full width along the bottom
+         WHAT THIS REPLACES. The first studio gave the browser 52% of the
+         window and stacked the inspector underneath it, from a Filmora
+         reference where the library IS the screen. That is right for
+         picking a sticker out of forty and wrong for everything else: it
+         spent half the window on a panel you touch for ten seconds and then
+         ignore, and it put the properties of the selected clip as far from
+         the picture as the layout allowed.
 
-         Wide already puts the timeline across the bottom and the tabs along
-         the top. What it does not do is give the browser any room: it is
-         352px of a 1600px window, 22%, because that panel started life as a
-         drawer you opened to drag one file out of. Anything you pick FROM a
-         library — an effect, a transition, a sticker, a title — you pick by
-         looking at forty of them, and forty thumbnails do not go in 352px.
-         Measured in wide at 1600: the panel's grid is three tiles across.
-         Here it is eight.
+             before   rail+panel 980 | picture 935 | properties under panel
+             after    rail 92 + panel 320 | picture takes the rest | props 360
 
-         Built as an extra attribute rather than a third value of data-nclay,
-         so every rule above still matches and studio is wide plus a handful
-         of overrides. One attribute, nothing re-specified, and no chance of
-         the two arrangements disagreeing about the parts they share.
+         The picture keeps the height it gained — that fix stays, it was the
+         right one — and now gets the width as well.
 
-         WHAT HAD TO GIVE. Taking the browser to 62% leaves 608px at 1600 for
-         what is currently preview AND inspector side by side. The inspector
-         is 368 of those, which would leave the picture 240px wide — so in
-         this layout the right-hand column stacks: player on top, inspector
-         beneath it. That is also where Filmora keeps its properties, and it
-         means nothing is lost, only moved.
-
-         52vw rather than the 62% off the screenshot. 62% of a 1366 laptop is
-         847px of browser and 519 for the picture, and the picture is still
-         the thing being judged. 52vw gives the browser six tiles across at
-         1366 and keeps the player above 650. Clamped at both ends: never so
-         narrow the grid is pointless, never so wide the player is a stamp. */
-      'html[data-ncstudio]{--ncb:clamp(420px,52vw,980px)}',
+         THE RAIL STANDS BACK UP. Wide lays the fourteen tools down as a
+         horizontal block on top of the panel, which is the CapCut look. This
+         one is the other convention: a column of icons down the edge, label
+         under glyph, the open one marked. 92px is what fits "Transitions" at
+         a readable size without wrapping; the bundle's own 64px rail could
+         not, which is why the labels were 9px.
+         ==================================================================== */
+      'html[data-ncstudio]{--ncacc:#7C5CFF;--ncacc2:#A78BFA;--ncrail:92px;',
+        '--ncpanel:clamp(248px,19vw,340px);--ncprops:clamp(290px,22vw,380px)}',
 
       '@media (min-width:1280px){',
 
-      /* the browser takes the floor */
-      'html[data-ncstudio] ' + LEFT + '{width:var(--ncb) !important;',
-        'max-width:none !important;flex-basis:var(--ncb) !important}',
-      'html[data-ncstudio] ' + LEFT + ' > .flex-row{width:100% !important}',
+      /* ---- the left column: rail + the open tool's panel --------------- */
+      'html[data-ncstudio] ' + LEFT + '{',
+        'width:calc(var(--ncrail) + var(--ncpanel)) !important;max-width:none !important;',
+        'flex-basis:calc(var(--ncrail) + var(--ncpanel)) !important}',
+      /* undo wide's "tabs lie down": the rail is a column again */
+      'html[data-ncstudio] ' + LEFT + ' > .flex-row{flex-direction:row;width:100% !important}',
+      'html[data-ncstudio] ' + LEFT + ' nav{',
+        'width:var(--ncrail) !important;flex:0 0 var(--ncrail);',
+        'flex-direction:column;flex-wrap:nowrap;align-content:stretch;',
+        'gap:3px;padding:8px 7px;overflow-y:auto;overflow-x:hidden;',
+        'border-right:1px solid rgba(255,255,255,.08);border-bottom:0}',
+      'html[data-ncstudio] ' + LEFT + ' nav > *{flex:0 0 auto;width:100%}',
+      'html[data-ncstudio] ' + LEFT + ' nav button{',
+        'width:100%;min-width:0;height:auto;padding:9px 2px;border-radius:10px;',
+        'display:flex;flex-direction:column;align-items:center;gap:5px}',
+      'html[data-ncstudio] ' + LEFT + ' nav button span{',
+        'font-size:10px;line-height:1.15;white-space:normal;overflow-wrap:anywhere;',
+        'text-align:center;display:block;max-width:100%}',
+      'html[data-ncstudio] ' + LEFT + ' nav button svg{width:18px;height:18px}',
 
-      /* THE TABS STOP BEING FIFTHS. Wide gives each tab flex:1 1 20% because
-         it is dividing 352px and five across is what fits a word. Across
-         980px that same rule makes each tab 196px of mostly empty space, in
-         three rows. Here they size to their own labels and flow as one row,
-         which is the row the screenshot has — and still wrap on their own if
-         a translation needs them to, rather than because a percentage said
-         so. */
-      'html[data-ncstudio] ' + LEFT + ' nav > *{flex:0 0 auto}',
-      'html[data-ncstudio] ' + LEFT + ' nav button{min-width:76px;width:auto;',
-        'padding:7px 11px}',
-      'html[data-ncstudio] ' + LEFT + ' nav button span{font-size:11px}',
-
-      /* ---- THE PLAYER GETS THE WHOLE COLUMN ----------------------------
-         First attempt stacked the inspector under the player, and the
-         picture paid for it twice over: the pane came out 935 wide by 402
-         tall, of which the player's own chrome takes about 80, so a 16:9
-         clip fitted to 320px of height and came out 570 wide — 61% of the
-         width sitting there. On the 1:1 project in the report it is a third.
-         Reported simply as "the video is small", and it was right.
-
-         Shortening the inspector only moves the number: at a 150px cap the
-         picture reaches 606, still most of a pane wasted. The player needs
-         the COLUMN, not a slightly larger share of half of it.
-
-         So the inspector moves out of that column and under the browser,
-         where the reference keeps its properties anyway, and the player
-         spans both rows of the right-hand side. One more grid row on the
-         main area does it, and display:contents on the preview row is what
-         lets its two children be placed independently — the same trick the
-         timeline already uses to span past the media panel. */
-      /* THE INSPECTOR'S ROW IS A LENGTH, NOT auto, AND THAT IS THE WHOLE
-         TRICK. With `minmax(0,1fr) auto auto` the browser's row collapsed to
-         nothing — measured `0px 558px 340px`, the media panel 980x0 and the
-         inspector sitting where it should have been. A grid item spanning
-         two tracks has its height distributed to INTRINSIC tracks before
-         flexible ones, so the player's 558px went entirely into the auto row
-         and the 1fr row was left with nothing to do.
-
-         Giving row two a definite length takes it out of that competition:
-         the span can only be satisfied by growing row one, which is the
-         flexible one, which is the browser. */
-      'html[data-ncstudio] ' + MAIN + '{',
-        'grid-template-rows:minmax(0,1fr) min(24%,200px) auto}',
+      /* ---- the picture, and the properties beside it ------------------- */
+      /* Back to a plain row: preview | drag handle | inspector. The first
+         studio dissolved this with display:contents to move the inspector
+         across the window; nothing needs moving now, so it goes back to
+         what the bundle ships and the drag handle works again. */
+      'html[data-ncstudio] ' + MAIN + '{grid-template-rows:minmax(0,1fr) auto}',
       'html[data-ncstudio] ' + LEFT + '{grid-column:1;grid-row:1}',
-      'html[data-ncstudio] ' + PROW + '{display:contents}',
-      /* the picture: right-hand column, both rows of it */
-      'html[data-ncstudio] ' + PROW + ' > div.flex-1{',
-        'grid-column:2;grid-row:1 / 3;min-height:0;min-width:0}',
-      /* the inspector: under the browser, which has width to spare */
+      'html[data-ncstudio] ' + PROW + '{display:flex;flex-direction:row;',
+        'grid-column:2;grid-row:1;min-height:0}',
+      'html[data-ncstudio] ' + PROW + ' > div.flex-1{min-width:0;min-height:0}',
+      'html[data-ncstudio] ' + PROW + ' > div.w-1{display:block}',
       'html[data-ncstudio] ' + PROW + ' > div.min-w-0.shrink-0{',
-        'grid-column:1;grid-row:2}',
-      /* and the timeline drops to the new third row, still full width */
-      'html[data-ncstudio] ' + MID + ' > div.shrink-0{grid-row:3}',
-      /* The drag handle set a WIDTH between two columns. There are no two
-         columns here, and a col-resize grip lying on its side that moves the
-         wrong axis is worse than no grip, so it goes. */
-      'html[data-ncstudio] ' + PROW + ' > div.w-1{display:none}',
-      /* 38% WAS TOO MUCH, AND THE PICTURE PAID FOR IT.
-         Reported as the video being small, and it was: at 1915x1010 the
-         preview pane came out 935 wide by 378 tall and the picture inside it
-         528x297 — 56% of the width it had. A 16:9 clip in a pane that wide
-         and that short fits by HEIGHT, so every pixel taken off the top of
-         the inspector is width the picture gets back. On the 1:1 project in
-         the report it is worse still: a square fitted to 378 is about a
-         third of the pane.
+        'width:var(--ncprops) !important;max-width:none !important;',
+        'height:auto !important;max-height:none;min-width:0;overflow:auto;',
+        'border-top:0;border-left:1px solid rgba(255,255,255,.08)}',
+      'html[data-ncstudio] ' + MID + ' > div.shrink-0{grid-row:2}',
 
-         min() rather than a flat percentage so the inspector stops taking a
-         share of very tall windows it has no use for, while still shrinking
-         out of the way on short ones. It keeps its own scrollbar, so
-         nothing in it becomes unreachable — it is a shorter panel, not a
-         smaller one. */
-      'html[data-ncstudio] ' + PROW + ' > div.min-w-0.shrink-0{',
-        'width:var(--ncb) !important;max-width:none !important;height:auto !important;',
-        'height:100%;overflow:auto;min-width:0;min-height:0;',
-        'border-top:1px solid rgba(255,255,255,.1)}',
-
-      /* The transport is fixed to the centre of the picture, and the picture
-         no longer starts at 352. Same sum, with the browser's width in it. */
+      /* The transport is centred on the picture, which now starts after the
+         rail and the panel and ends before the properties. --ncinsp is no
+         longer part of the sum: the inspector is beside the picture rather
+         than under it, so it takes nothing off the bottom. */
       'html[data-ncstudio] ' + SHELL + ' > header > div:has(> button[title^="Play/Pause"]),',
       'html[data-ncstudio] ' + SHELL + ' > header > div[class*="font-mono"]{',
-        'left:calc(var(--ncb) + (100vw - var(--ncb)) / 2)}',
-
-      /* AND IT HAS TO CLEAR THE INSPECTOR NOW.
-         Wide lifts the transport to just above the timeline, because in wide
-         the bottom of the picture is dead space. In studio it is not: the
-         inspector sits there, and the first build put the play button and the
-         timecode straight on top of "No clip selected".
-
-         So the lift gains the inspector's height. It cannot be written as a
-         constant — the inspector is content-height up to a 38% cap, so it is
-         204px with a clip selected and less without — and CSS cannot measure
-         a sibling. A ResizeObserver keeps --ncinsp honest instead, which
-         costs one number per resize and is the only way this stays right
-         while the panel changes size under it. */
+        'left:calc(var(--ncrail) + var(--ncpanel) + ',
+        '(100vw - var(--ncrail) - var(--ncpanel) - var(--ncprops)) / 2)}',
       'html[data-ncstudio] ' + SHELL + ' > header > div:has(> button[title^="Play/Pause"]){',
-        'bottom:calc(var(--ncinsp,0px) + min(42vh,340px) + 52px)}',
+        'bottom:calc(min(42vh,340px) + 52px)}',
       'html[data-ncstudio] ' + SHELL + ' > header > div[class*="font-mono"]{',
-        'bottom:calc(var(--ncinsp,0px) + min(42vh,340px) + 16px)}',
+        'bottom:calc(min(42vh,340px) + 16px)}',
 
-      '}',   /* end of studio */
+      '}',   /* end of studio layout */
+
+      /* ---- STUDIO IS PURPLE ---------------------------------------------
+         The reference's accent, and the only part of this that is taste
+         rather than ergonomics. Done by overriding the compiled Tailwind
+         brand classes rather than by editing the bundle, so it is one
+         stylesheet to undo and it cannot be lost in a rebuild. Scoped to
+         the attribute, so Wide and Classic stay the blue they have always
+         been — this is a property of the layout somebody chose, not a
+         repaint of the product.
+
+         Fifteen classes because that is how many the bundle actually uses;
+         the list came from grepping the compiled CSS rather than from
+         guessing which ones mattered, because the one that is missed is
+         always the one on the button you look at most. */
+      'html[data-ncstudio] .bg-brand-500{background-color:var(--ncacc) !important}',
+      'html[data-ncstudio] .bg-brand-400{background-color:var(--ncacc2) !important}',
+      'html[data-ncstudio] .bg-brand-400\\/60{background-color:rgba(167,139,250,.6) !important}',
+      'html[data-ncstudio] .bg-brand-500\\/10{background-color:rgba(124,92,255,.10) !important}',
+      'html[data-ncstudio] .bg-brand-500\\/15{background-color:rgba(124,92,255,.15) !important}',
+      'html[data-ncstudio] .bg-brand-500\\/20{background-color:rgba(124,92,255,.20) !important}',
+      'html[data-ncstudio] .border-brand-500{border-color:var(--ncacc) !important}',
+      'html[data-ncstudio] .border-brand-500\\/50{border-color:rgba(124,92,255,.5) !important}',
+      'html[data-ncstudio] .border-t-brand-400{border-top-color:var(--ncacc2) !important}',
+      'html[data-ncstudio] .from-brand-400{--tw-gradient-from:#A78BFA var(--tw-gradient-from-position) !important;',
+        '--tw-gradient-to:rgba(167,139,250,0) var(--tw-gradient-to-position) !important;',
+        '--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to) !important}',
+      'html[data-ncstudio] .from-brand-500{--tw-gradient-from:#7C5CFF var(--tw-gradient-from-position) !important;',
+        '--tw-gradient-to:rgba(124,92,255,0) var(--tw-gradient-to-position) !important;',
+        '--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to) !important}',
+      'html[data-ncstudio] .to-brand-600{--tw-gradient-to:#6D28D9 var(--tw-gradient-to-position) !important}',
+      'html[data-ncstudio] .ring-brand-400{--tw-ring-color:rgba(167,139,250,.6) !important}',
+      'html[data-ncstudio] .text-brand-400{color:var(--ncacc2) !important}',
+      'html[data-ncstudio] .text-brand-300{color:#C4B5FD !important}',
+      'html[data-ncstudio] .shadow-glow{box-shadow:0 0 20px rgba(124,92,255,.45) !important}',
+
+      /* The open tool gets the reference's marker: a bar down its left edge
+         rather than only a tinted box, which is what makes it readable at a
+         glance in a column of fourteen. */
+      '@media (min-width:1280px){',
+        'html[data-ncstudio] ' + LEFT + ' nav button.bg-brand-500,',
+        'html[data-ncstudio] ' + LEFT + ' nav button[class*="bg-brand-500"]{',
+          'position:relative;background-color:rgba(124,92,255,.16) !important;',
+          'color:#EDE9FE !important}',
+        'html[data-ncstudio] ' + LEFT + ' nav button[class*="bg-brand-500"]::before{',
+          'content:"";position:absolute;left:-7px;top:7px;bottom:7px;width:3px;',
+          'border-radius:0 3px 3px 0;background:var(--ncacc)}',
+      '}',
 
       /* ---- BELOW 1280, WHERE NEITHER GRID APPLIES ----------------------
          Studio and wide both start at 1280; under that the editor falls back
@@ -698,24 +687,42 @@
        classic, and always clear of the window edge. */
     var startX = 16;
     var gap = 8, rowH = 42;
-
-    /* In studio the bottom-left of the window is the inspector, so starting
-       at x=16 just moves the problem off the timeline and onto that instead
-       — measured covering the Transform fields. The one strip that is dead
-       space in this layout is the bottom of the picture, so the row starts
-       where the browser column ends. Falls back to 16 if the column cannot
-       be measured, which is where it was. */
-    try {
-      if (document.documentElement.hasAttribute('data-ncstudio')) {
-        var lp = document.querySelector(LEFT);
-        if (lp) {
-          var lw = Math.round(lp.getBoundingClientRect().width);
-          if (lw > 200 && lw < window.innerWidth - 360) startX = lw + 16;
-        }
-      }
-    } catch (e) {}
     var bottom = window.innerWidth <= 900 ? 8 : 16;
     var max = window.innerWidth - 16;
+
+    /* ---- IN STUDIO THEY LIVE IN THE TIMELINE'S TOOLBAR ----------------
+       These five have been chased around the window twice. On the timeline
+       they covered the tracks; lifted above it they covered the inspector;
+       moved right of the panel they ended up on the picture, because the
+       picture grew into the space they had been using.
+
+       The reference does not have this problem because it does not have a
+       floating row — it has a strip along the top of the timeline holding
+       Split, Delete and Duplicate. That is the right home for these: a
+       toolbar of things you do to the edit, in the one band of the window
+       that is already a toolbar and is half empty.
+
+       Measured off the timeline's own top edge rather than a constant, and
+       started clear of the controls the bundle already puts there. If the
+       timeline cannot be found this falls back to the old bottom-left
+       corner, which is wrong in the way it used to be rather than newly. */
+    var studioBar = false;
+    try {
+      if (document.documentElement.hasAttribute('data-ncstudio')) {
+        var tlEl = document.querySelector(MID + ' > div.min-h-0.shrink-0');
+        if (tlEl) {
+          var tb = tlEl.getBoundingClientRect();
+          if (tb.height > 80 && tb.top > 0 && tb.top < window.innerHeight) {
+            /* Sit in the band, not on the ruler under it. */
+            bottom = Math.round(window.innerHeight - tb.top - 6 - rowH);
+            startX = 548;                    /* past Snap / +Video / +Audio / +Text */
+            studioBar = true;
+          }
+        }
+      }
+    } catch (e) { studioBar = false; }
+
+    if (!studioBar) {
 
     /* ---- AND THEY SIT ABOVE THE TIMELINE, NOT ON IT ------------------
        Reported as the tracks being unreachable, with the row of pills drawn
@@ -746,6 +753,7 @@
         }
       }
     } catch (e) { /* keep the old offset */ }
+    }
 
     /* Measure every width FIRST, then place. Reading and writing in the same
        pass means each getBoundingClientRect() is answering after the previous

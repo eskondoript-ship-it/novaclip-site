@@ -7068,8 +7068,40 @@ async function ncAsk(prompt, opts) {
        if the worker keys the budget on the IP it can see.
        The tier goes with it so somebody paying is not metered. The worker
        knows perfectly well that a header can be edited; see its own note. */
+    /* ----------------------------------------------------------------------
+       THE SITE AND THE WORKER DRIFT, AND THE SITE MUST SURVIVE IT
+       ----------------------------------------------------------------------
+       novaclip.org deploys itself from main. The Workers are deployed by
+       hand. So the page is routinely newer than the worker it is talking to,
+       and that is not an accident to be fixed — it is how this is shipped.
+
+       It took Trend Spotter down. The page sends X-NC-Uid and X-NC-Tier for
+       the AI budget; a worker from before that change answers the preflight
+       with `Access-Control-Allow-Headers: Content-Type`, so the BROWSER
+       refuses to send the request at all. Nothing reaches the worker, fetch
+       throws, and every AI feature on the site reports "Could not reach the
+       AI. Check your connection." — which is true in the narrowest sense and
+       useless in every other, because the connection is fine, the worker is
+       up, and the key works. Diagnosed by preflighting it with curl: the
+       deployed worker allowed Content-Type and nothing else.
+
+       A header that only matters for metering is not worth an outage. So the
+       first network-level failure drops them and retries, and the answer is
+       remembered for the session: the budget stops being enforced for that
+       visitor until the worker catches up, and everything else keeps working.
+
+       Deliberately NOT a reason to stop sending them. They are how the budget
+       knows who is who, and the moment the worker is deployed they start
+       working again with no change here. ------------------------------------ */
+    let ncAiPlainHeaders = false;
+    try {
+      ncAiPlainHeaders = sessionStorage.getItem('nc_ai_plain') === '1';
+    } catch (e) {}
+
     function ncAiHeaders() {
       const h = { 'Content-Type': 'application/json' };
+      /* Already found out the hard way this session: ask for nothing extra. */
+      if (ncAiPlainHeaders) return h;
       try {
         let id = localStorage.getItem('nc_uid');
         if (!id) {
@@ -7121,17 +7153,32 @@ async function ncAsk(prompt, opts) {
           })
         };
       }
-      const res = await fetch(NC_AI_WORKER,{ method: 'POST', headers: ncAiHeaders(),
-        body: JSON.stringify({ provider: route.provider, model: route.model, payload: body,
-          search: opts.search === true,
-          /* What to type into a search engine, when the caller knows. The
-             worker uses it to do the search itself for a few dollars per
-             thousand instead of Gemini's thirty-five, and to key the cache —
-             so the same public question is paid for once. Without it the
-             worker falls back to Gemini's own grounding. */
-          searchQuery: opts.searchQuery || '' }) });
+      /* A blocked preflight and a dead network look identical from here —
+         both are a TypeError out of fetch with no status. So the cheap thing
+         is tried first: if the extra headers were on, drop them and go again
+         once. If that works, the headers were the problem and the rest of
+         the session skips them; if it fails too, the original failure is
+         rethrown and the caller reports a connection fault, which it then
+         genuinely is. */
+      const aiFetch = async function () {
+        const hdrs = ncAiHeaders();
+        const payloadJson = JSON.stringify({ provider: route.provider, model: route.model,
+          payload: body, search: opts.search === true,
+          searchQuery: opts.searchQuery || '' });
+        try {
+          return await fetch(NC_AI_WORKER, { method: 'POST', headers: hdrs, body: payloadJson });
+        } catch (e) {
+          if (ncAiPlainHeaders || !hdrs['X-NC-Uid']) throw e;
+          ncAiPlainHeaders = true;
+          try { sessionStorage.setItem('nc_ai_plain', '1'); } catch (e2) {}
+          return await fetch(NC_AI_WORKER, { method: 'POST',
+            headers: { 'Content-Type': 'application/json' }, body: payloadJson });
+        }
+      };
+      const res = await aiFetch();
       return { res: res, raw: await res.text().catch(function () { return ''; }) };
     }
+
 
     /* ONE ROUTE, TRIED AS FAR AS IT IS WORTH TRYING.
        The two retries below — dropping thinkingConfig, and asking again with a
