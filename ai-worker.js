@@ -240,21 +240,47 @@ function modelsFor(provider, want, tried) {
    precisely this, word for word.
    --------------------------------------------------------------------------- */
 const SEARCH_TTL = 6 * 60 * 60;        // six hours: trends move by the day, not the minute
-const SEARCH_HITS = 6;                 // enough to ground an answer, small enough to stay cheap
+/* Ten rather than six. The count is how many results come back in ONE
+   query, not how many queries are spent, so Brave's monthly allowance is
+   untouched by this and the model gets nearly twice the ground to stand on.
+   Six was thin for a question like "what is happening with X" where the
+   first three hits are reliably the subject's own channel and Wikipedia. */
+const SEARCH_HITS = 10;
+
+/* HOW RECENT THE RESULTS HAVE TO BE.
+   Without this Brave ranks by authority and returns the evergreen pages — a
+   player's ESPN hub, a game's wiki — which are the worst possible grounding
+   for "what is exploding right now". Passed through from the page, because
+   only the page knows whether the reader asked for this week or this
+   quarter.
+
+   Validated against a pattern rather than trusted: it is interpolated into
+   a URL, and a search parameter taken straight from a request body is how a
+   query string stops being yours. Anything unrecognised is dropped. */
+const FRESHNESS = /^(pd|pw|pm|py|\d{4}-\d{2}-\d{2}to\d{4}-\d{2}-\d{2})$/;
+function freshParam(v) {
+  const f = typeof v === 'string' ? v.trim() : '';
+  return FRESHNESS.test(f) ? '&freshness=' + encodeURIComponent(f) : '';
+}
 
 const SEARCH_API = {
   brave: {
-    req: (k, q) => [
-      'https://api.search.brave.com/res/v1/web/search?count=' + SEARCH_HITS + '&q=' + encodeURIComponent(q),
+    req: (k, q, fresh) => [
+      'https://api.search.brave.com/res/v1/web/search?count=' + SEARCH_HITS +
+        freshParam(fresh) + '&q=' + encodeURIComponent(q),
       { headers: { Accept: 'application/json', 'X-Subscription-Token': k } }
     ],
     read: (j) => ((j.web && j.web.results) || []).map(r => ({ title: r.title, uri: r.url, text: r.description || '' }))
   },
   serper: {
-    req: (k, q) => [
+    req: (k, q, fresh) => [
       'https://google.serper.dev/search',
       { method: 'POST', headers: { 'X-API-KEY': k, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q: q, num: SEARCH_HITS }) }
+        /* Serper spells the same idea differently; pw/pm map onto its tbs
+           qdr: values and anything else is left off. */
+        body: JSON.stringify(Object.assign({ q: q, num: SEARCH_HITS },
+          fresh === 'pw' ? { tbs: 'qdr:w' } : fresh === 'pm' ? { tbs: 'qdr:m' } :
+          fresh === 'pd' ? { tbs: 'qdr:d' } : {})) }
     ],
     read: (j) => (j.organic || []).map(r => ({ title: r.title, uri: r.link, text: r.snippet || '' }))
   }
@@ -262,12 +288,12 @@ const SEARCH_API = {
 
 /* Never throws and never blocks the answer: a search that fails returns no
    hits, and the caller falls back to Gemini's own grounding. */
-async function webSearch(env, q) {
+async function webSearch(env, q, fresh) {
   const which = SEARCH_API[(env.SEARCH_PROVIDER || 'brave').toLowerCase()] || SEARCH_API.brave;
   try {
     const abort = new AbortController();
     const timer = setTimeout(() => abort.abort(), 6000);
-    const [url, init] = which.req(env.SEARCH_API_KEY, q);
+    const [url, init] = which.req(env.SEARCH_API_KEY, q, fresh);
     const r = await fetch(url, Object.assign({ signal: abort.signal }, init));
     clearTimeout(timer);
     if (!r.ok) return [];
@@ -1553,7 +1579,7 @@ export default {
     const sq = typeof body.searchQuery === 'string' ? body.searchQuery.trim().slice(0, 200) : '';
 
     if (search && env.SEARCH_API_KEY && sq) {
-      const found = await webSearch(env, sq);
+      const found = await webSearch(env, sq, body.freshness);
       if (found.length) {
         payload = withContext(payload, sq, found);
         hits = found;

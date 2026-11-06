@@ -1525,7 +1525,37 @@
            worker's cache, so the whole class scanning "minecraft" after school
            pays for one search between them. */
         { search: true, maxTokens: 2000,
-          searchQuery: t + ' trending videos ' + (when || 'this week') + ' youtube tiktok shorts' });
+          /* "<niche> news trending", not the video keyword soup this used to
+             send. The old query was `ronaldo trending videos this month
+             youtube tiktok shorts`, which asks a search engine for VIDEOS
+             ABOUT RONALDO — so Brave returned exactly that: TikTok
+             compilation pages, "Ronaldo Short Videos", his own channel. A
+             scan then described viral skill clips while the actual story of
+             the week went unmentioned. Reported with that example, and
+             reproduced against the live Worker:
+
+               ronaldo trending videos this month youtube tiktok shorts
+                 -> TikTok compilations -> "viral skills and hat-tricks"
+               ronaldo news trending
+                 -> ESPN, MARCA -> "retired from international football"
+
+             Checked on a format niche too, because the worry with a newsy
+             query is losing the trends that are a video style rather than an
+             event: "minecraft news trending" returned the Switch 2 version
+             announcement from GameRant, not listicles. Both get real news. */
+          searchQuery: t + ' news trending',
+          /* The window the reader picked, as a date filter rather than words
+             in the query. Brave ranks on authority by default and hands back
+             the evergreen pages — a player's ESPN hub, a game's wiki — which
+             is the worst possible grounding for what is exploding today.
+             Three months has no named value, so it goes as a range. */
+          freshness: when === 'week' ? 'pw'
+                   : when === 'season' ? (function () {
+                       var d = new Date(), to = d.toISOString().slice(0, 10);
+                       d.setDate(d.getDate() - 90);
+                       return d.toISOString().slice(0, 10) + 'to' + to;
+                     }())
+                   : 'pm' });
       if (raw && raw.err) throw new Error(raw.err);
       var body = (raw && typeof raw === 'object') ? (raw.text || '') : String(raw || '');
       var m = body.match(/\{[\s\S]*\}/);
