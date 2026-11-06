@@ -199,6 +199,89 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
   padding:10px 12px; border-left:2px solid color-mix(in srgb,currentColor 25%,transparent); }
 .hint { font-size:.76rem; opacity:.55; margin-top:4px; line-height:1.5; }
 .saved { color:#6EE7A8; font-size:.84rem; }
+
+/* ==========================================================================
+   THE ACADEMY, RESTYLED — a place you study in, not a shop
+   ==========================================================================
+   Asked for from an LMS screenshot. What makes that layout work is not the
+   colour, it is that the page answers two questions at once: what is there
+   to learn, and where am I in it. The old page only answered the first — a
+   dropdown and a grid of cards, which is a catalogue.
+
+   So the Learn tab becomes two columns. The shelf keeps the main one. The
+   new right-hand column is where you are: what you can spend, whether your
+   free lesson is still going, and the skills you can filter by as a list you
+   can read rather than a <select> you have to open. Teach and NovaCoins stay
+   one column — they are forms, and a form in two columns is a worse form.
+
+   GREEN, AND NOT MUCH OF IT. The reference is green on near-black. Taken as
+   the accent only: headings, the selected skill, the progress ring, the free
+   badge. The violet-to-cyan gradient on every button was the loudest thing
+   on the page and it is gone from here. "Not too AI-like" was the brief, and
+   the way a page reads as generated is glow on everything, a gradient on
+   every surface and a badge claiming intelligence — so there is one accent,
+   flat cards, and no badges that claim anything.
+
+   Scoped under .ac- classes and to this page. The <select id='cat'> is kept
+   in the DOM and only visually hidden, because academy.js reads and writes
+   it; the skill list is a face for it, not a replacement.
+   ========================================================================== */
+.ac-wrap { max-width: 1180px; }
+.ac-grid { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 22px; align-items: start; }
+@media (max-width: 1040px) { .ac-grid { grid-template-columns: minmax(0,1fr); } }
+
+.ac-card { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.075);
+  border-radius: 16px; padding: 16px 17px; margin-bottom: 14px; }
+html[data-theme="light"] .ac-card { background: rgba(0,0,0,.025); border-color: rgba(0,0,0,.09); }
+.ac-card-h { font-size: .7rem; letter-spacing: .13em; text-transform: uppercase;
+  opacity: .55; font-weight: 700; margin-bottom: 11px; }
+
+/* ---- where you are: three tiles, all of them real numbers -------------- */
+.ac-stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 0 0 20px; }
+@media (max-width: 620px) { .ac-stats { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.ac-stat { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.075);
+  border-radius: 14px; padding: 13px 15px; }
+html[data-theme="light"] .ac-stat { background: rgba(0,0,0,.025); border-color: rgba(0,0,0,.09); }
+.ac-stat .k { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; opacity: .5;
+  font-weight: 700; }
+.ac-stat .v { font-size: 1.55rem; font-weight: 800; line-height: 1.15; margin-top: 5px;
+  font-variant-numeric: tabular-nums; }
+.ac-stat .v.on { color: #34D399; }
+.ac-stat .n { font-size: .74rem; opacity: .5; margin-top: 3px; }
+
+/* ---- the skills, as a list instead of a dropdown ----------------------- */
+.ac-cats { display: flex; flex-direction: column; gap: 2px; }
+.ac-cats button { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
+  border: 0; background: transparent; color: inherit; font: inherit; font-size: .9rem;
+  padding: 9px 10px; border-radius: 10px; cursor: pointer; opacity: .74; }
+.ac-cats button:hover { background: rgba(255,255,255,.05); opacity: 1; }
+html[data-theme="light"] .ac-cats button:hover { background: rgba(0,0,0,.04); }
+.ac-cats button.on { opacity: 1; font-weight: 700; color: #34D399;
+  background: color-mix(in srgb, #34D399 12%, transparent); }
+/* The bar down the edge is what makes the open one findable in a list of
+   eight without reading any of them. */
+.ac-cats button.on { position: relative; }
+.ac-cats button.on::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 3px; border-radius: 0 3px 3px 0; background: #34D399; }
+.ac-cats .ct { margin-left: auto; font-size: .76rem; opacity: .55; font-variant-numeric: tabular-nums; }
+.ac-hidefield { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; }
+
+/* ---- the shelf, calmer -------------------------------------------------- */
+.ac-h { font-size: 1.02rem; font-weight: 700; margin: 0 0 12px; }
+.ac-wrap .shelf { grid-template-columns: repeat(auto-fill, minmax(238px,1fr)); gap: 13px; }
+.ac-wrap .lesson { background: rgba(255,255,255,.035); border-color: rgba(255,255,255,.075);
+  border-radius: 16px; padding: 16px 17px; }
+html[data-theme="light"] .ac-wrap .lesson { background: rgba(0,0,0,.025); border-color: rgba(0,0,0,.09); }
+.ac-wrap .lesson h3 { font-size: 1.01rem; font-weight: 700; }
+.ac-wrap .lesson button { background: #34D399; color: #04140E; }
+.ac-wrap .lesson button:hover { background: #4ADE80; }
+.ac-wrap .price.coins { color: #34D399; }
+.ac-wrap .freepill { background: #34D399; color: #04140E; }
+.ac-wrap .tabs button.on { border-color: #34D399;
+  background: color-mix(in srgb, #34D399 13%, transparent); }
+.ac-wrap .grad { background: linear-gradient(90deg, #34D399, #A7F3D0);
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
 </style>
 </head>
 <body>
@@ -219,7 +302,7 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
 
 <div id='orbs'><div class='orb a'></div><div class='orb b'></div></div>
 
-<div class='wrap'>
+<div class='wrap ac-wrap'>
   <h1><span class='grad' data-t='ac_title'>The Academy</span></h1>
   <p class='sub' data-t='ac_sub'>Lesson packs made by NovaClip creators, for NovaClip creators. Everything
      here was written by somebody who earned the certificate first — and everything here is a thing you
@@ -232,8 +315,12 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
   </div>
 
   <section id='pane-learn'>
-    <div class='field' style='max-width:260px'>
-      <label data-t='ac_filter'>What do you want to get better at</label>
+    <!-- The select is what academy.js reads and writes, so it stays in the
+         DOM and is only taken off screen. #acCats below is a face for it:
+         every click sets this and fires a change, so one of them is still the
+         single source of truth. -->
+    <div class='field ac-hidefield'>
+      <label data-t='ac_filter' for='cat'>What do you want to get better at</label>
       <select id='cat'>
         <option value='' data-t='ac_all'>Everything</option>
         <option value='editing'>Editing</option>
@@ -245,8 +332,43 @@ button.go { padding:14px 26px; border-radius:12px; border:0; cursor:pointer; fon
         <option value='other'>Other</option>
       </select>
     </div>
-    <div class='shelf' id='shelf'></div>
-    <p class='muted' id='shelfnote'></p>
+
+    <div class='ac-grid'>
+      <div class='ac-main'>
+        <!-- Three tiles, and every one of them is a number this page already
+             knows. Nothing here is a placeholder or an estimate: the count is
+             what was rendered, the coins are the balance the rail loaded, and
+             the free lesson is the flag academy.js already keeps. -->
+        <div class='ac-stats'>
+          <div class='ac-stat'>
+            <div class='k' data-t='ac_s_shelf'>On the shelf</div>
+            <div class='v' id='acCount'>—</div>
+            <div class='n' id='acCountNote' data-t='ac_s_shelf_n'>lessons you can read</div>
+          </div>
+          <div class='ac-stat'>
+            <div class='k' data-t='ac_s_coins'>Your NovaCoins</div>
+            <div class='v' id='acCoins'>—</div>
+            <div class='n' data-t='ac_s_coins_n'>earned on NovaClip</div>
+          </div>
+          <div class='ac-stat'>
+            <div class='k' data-t='ac_s_free'>First lesson</div>
+            <div class='v' id='acFree'>—</div>
+            <div class='n' id='acFreeNote'></div>
+          </div>
+        </div>
+
+        <h2 class='ac-h' id='acShelfH' data-t='ac_shelf_h'>Lessons</h2>
+        <div class='shelf' id='shelf'></div>
+        <p class='muted' id='shelfnote'></p>
+      </div>
+
+      <aside class='ac-side'>
+        <div class='ac-card'>
+          <div class='ac-card-h' data-t='ac_filter'>What do you want to get better at</div>
+          <nav class='ac-cats' id='acCats'></nav>
+        </div>
+      </aside>
+    </div>
   </section>
 
   <section id='pane-coins' hidden>

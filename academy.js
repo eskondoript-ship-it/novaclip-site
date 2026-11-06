@@ -93,9 +93,11 @@
       .then(function (rows) {
         if (!rows.length) {
           note.textContent = 'Nothing here yet. If you have a certificate, the Teach tab is how it gets here.';
+          acTiles(0);
           return;
         }
         note.textContent = '';
+        acTiles(rows.length);
         $('shelf').innerHTML = rows.map(function (r) {
           return '<article class="lesson">' +
             (r.firstFree && FREE_ON
@@ -576,6 +578,67 @@
   }
 
   /* ------------------------------------------------------------------- wiring */
+
+  /* ------------------------------------------------------------------------
+     THE THREE TILES, AND THE SKILL LIST
+     ------------------------------------------------------------------------
+     Both are faces for things that already exist. acTiles reports what the
+     last shelf() actually rendered rather than a number fetched separately,
+     so the count can never disagree with the cards underneath it. acCats
+     drives the <select> instead of replacing it — one source of truth, and
+     academy.js's own filter code did not have to change.
+
+     Everything here no-ops if its element is missing, because this file is
+     also loaded by a page that does not have the new markup yet.
+     ---------------------------------------------------------------------- */
+  function acTiles(count) {
+    var c = $('acCount');
+    if (c) c.textContent = String(count);
+    var n = $('acCountNote');
+    if (n) n.textContent = count === 1 ? 'lesson you can read' : 'lessons you can read';
+
+    /* The coin balance is loaded into #balance by the NovaCoins tab and by
+       the rail. Read from there rather than asking the server again: a second
+       request for a number already on the page is a second chance to show a
+       different one. */
+    var co = $('acCoins'), bal = $('balance');
+    if (co) {
+      var v = bal && bal.textContent && bal.textContent.trim();
+      co.textContent = (v && v !== '—') ? v : '—';
+    }
+
+    var f = $('acFree'), fn = $('acFreeNote');
+    if (f) {
+      f.textContent = FREE.used ? 'Spent' : 'Free';
+      f.className = 'v' + (FREE.used ? '' : ' on');
+      if (fn) fn.textContent = FREE.used
+        ? 'you have taken yours'
+        : 'your first one costs nothing';
+    }
+  }
+
+  function acCats() {
+    var host = $('acCats'), sel = $('cat');
+    if (!host || !sel) return;
+    host.innerHTML = '';
+    [].forEach.call(sel.options, function (o) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = o.textContent;
+      b.setAttribute('data-v', o.value);
+      if (o.value === sel.value) b.className = 'on';
+      b.onclick = function () {
+        if (sel.value === o.value) return;
+        sel.value = o.value;
+        /* The change event, not a direct call to shelf(): whatever else is
+           listening to this select goes on working. */
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        acCats();
+      };
+      host.appendChild(b);
+    });
+  }
+
   function boot() {
     $('tab-learn').onclick = function () {
       $('tab-learn').classList.add('on'); $('tab-teach').classList.remove('on');
@@ -606,6 +669,10 @@
       coins();
     };
     $('publish').onclick = publish;
+    acCats();
+    /* The phrase layer rewrites the <option> text after load, so the list is
+       rebuilt once the labels have settled rather than pinned to English. */
+    window.addEventListener('nc-lang', acCats);
     $('p-save').onclick = saveProfile;
     $('r-close').onclick = function () { $('readcard').hidden = true; };
   }
