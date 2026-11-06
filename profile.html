@@ -620,9 +620,9 @@ a { color:var(--pt-text); }
      carries the account.
      ========================================================================== -->
 <script type='module'>
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp } from '/vendor/firebase/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
-  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  from '/vendor/firebase/firebase-auth.js';
 
 /* Same project as analytics.html. A Firebase web config is not a secret — it
    identifies the project and is protected by authorised domains and rules, not

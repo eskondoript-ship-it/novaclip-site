@@ -9479,7 +9479,90 @@ window.ncSlang = function () {
        ncProHas('tools')  priority AI, longer exports, extra effects, skins
        ncProHas('family') parental controls, PIN, activity overview
      ========================================================================== */
+  /* ==========================================================================
+     OWNER MODE — everything on, on one device, for testing
+     --------------------------------------------------------------------------
+     WHAT IT IS. A switch that makes ncPro() answer "yes, everything" on this
+     browser and nowhere else, so the paid screens can be opened and tested
+     without buying anything and without the trial running out mid-test.
+
+     WHAT IT IS NOT, said plainly because this is a security-sensitive file:
+     it is NOT a security boundary and it cannot be one. Every gate it opens
+     is a gate in the browser, and anything in the browser belongs to whoever
+     is holding it. That is not a weakness introduced here — the free trial
+     already hands every visitor the identical record for eight weeks, so
+     this grants nothing a stranger could not already have by waiting zero
+     minutes. The things that actually cost money are refused on the server:
+     the AI worker's per-address daily ceiling does not read this, does not
+     read nc_pro, and cannot be talked out of it by anything the browser says.
+
+     WHY A HASH. This repository is public, so a passphrase written here is
+     not a passphrase. Only its SHA-256 is stored; the phrase itself lives
+     outside the repo. Change it by running
+         echo -n 'your phrase' | shasum -a 256
+     and pasting the result over OWNER_HASH.
+
+     HOW TO USE IT. Add #nc-owner to any page on the site and answer the
+     prompt. ncOwnerOff() in the console turns it off again, and so does
+     clearing site data. While it is on, every page carries a small marker in
+     the corner — a test mode you cannot see is a test mode you forget you
+     left on, and then "it works on my machine" becomes a bug report.
+     ========================================================================== */
+  const OWNER_HASH = '0484309c7bca6e6abd6004598877d38aa909e7100eb841b2ade987ff8c2a198f';
+  const OWNER_KEY  = 'nc_owner';
+  /* A paid record, not a trial one: no `until`, so nothing expires it. */
+  const OWNER_PLAN = { tools: true, family: true, bundle: true, owner: true };
+
+  function ownerOn() {
+    try { return localStorage.getItem(OWNER_KEY) === '1'; } catch (e) { return false; }
+  }
+  window.ncOwnerOff = function () {
+    try { localStorage.removeItem(OWNER_KEY); } catch (e) {}
+    const b = document.getElementById('ncOwnerBadge'); if (b) b.remove();
+    return 'owner mode off — reload the page';
+  };
+
+  function ownerBadge() {
+    if (!ownerOn() || document.getElementById('ncOwnerBadge') || !document.body) return;
+    const b = document.createElement('div');
+    b.id = 'ncOwnerBadge';
+    b.textContent = 'OWNER MODE';
+    b.title = 'Everything is unlocked on this device only. ncOwnerOff() to stop.';
+    b.style.cssText = 'position:fixed;left:6px;top:6px;z-index:2147483647;pointer-events:none;' +
+      'font:800 9px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;padding:3px 6px;' +
+      'border-radius:5px;background:rgba(255,77,106,.9);color:#fff;opacity:.75';
+    document.body.appendChild(b);
+  }
+
+  async function ownerUnlock() {
+    if (location.hash !== '#nc-owner') return;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    const said = prompt('Owner mode — passphrase:');
+    if (!said) return;
+    let hex = '';
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(said));
+      hex = [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+    } catch (e) { alert('This browser cannot hash — owner mode needs HTTPS or localhost.'); return; }
+    /* Compared whole. A prefix compare on a secret is how a secret stops
+       being one, and the habit is worth keeping even where the stakes are
+       only a test switch. */
+    if (hex.length !== OWNER_HASH.length || hex !== OWNER_HASH) { alert('No.'); return; }
+    try { localStorage.setItem(OWNER_KEY, '1'); } catch (e) {}
+    ownerBadge();
+    alert('Owner mode on. Everything is unlocked on this device. ncOwnerOff() to stop.');
+    location.reload();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { ownerBadge(); ownerUnlock(); });
+  } else { ownerBadge(); ownerUnlock(); }
+
   window.ncPro = function () {
+    /* Owner mode answers before storage, so nothing that rewrites nc_pro —
+       the trial expiring, a sign-out, a sync — can switch it off underneath
+       a test that is halfway through. */
+    if (ownerOn()) return OWNER_PLAN;
     let p;
     try { p = JSON.parse(localStorage.getItem('nc_pro') || 'null'); } catch (e) { return null; }
     if (!p) return null;

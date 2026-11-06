@@ -2873,7 +2873,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v149';
+const CACHE = 'novaclip-v150';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -2894,6 +2894,12 @@ const SHELL = [
   /* Analytics is the page most likely to be opened on a train, and its charts
      came from a CDN until now — which is to say they did not come at all. */
   '/vendor/chart.umd.js',
+  /* Sign-in, served from here rather than gstatic. Precached for the same
+     reason the grade and the mixer are: a page that cannot load its auth
+     SDK is a page nobody can log into, and a school filter or a plane is a
+     normal Tuesday for this app. */
+  '/vendor/firebase/firebase-app.js',
+  '/vendor/firebase/firebase-auth.js',
   /* The Studio's skin and its panels. Both are small and both belong to the
      page above — the tiles and the tabs are markup this file's own script
      writes, so shipping analytics.html without them offline would leave three
