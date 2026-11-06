@@ -2873,7 +2873,7 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v150';
+const CACHE = 'novaclip-v151';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3060,6 +3060,7 @@ const SHELL = [
   '/editor-looks.js',
   '/editor-trans.js',
   '/editor-layout.js',
+  '/editor-quickedit.js',
   /* The AI panel's manners. Without it the panel still runs every tool, and
      answers each one in a 10px box that cuts the sentence off — so offline is
      the worst place to be missing it, because offline is where the tools fail

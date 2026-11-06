@@ -971,6 +971,7 @@ const UI_T = {
   ui_su_in: { en:"Sign in", zh:"登录", hi:"साइन इन", es:"Iniciar sesión", ar:"تسجيل الدخول", fr:"Se connecter", bn:"সাইন ইন", pt:"Entrar", ru:"Вход", ur:"سائن اِن", id:"Masuk", de:"Anmelden", ja:"サインイン", tr:"Giriş yap", ko:"로그인", fa:"ورود", uk:"Увійти", it:"Accedi", pl:"Zaloguj się", vi:"Đăng nhập" },
   ui_su_have: { en:"I already have one", zh:"我已经有了", hi:"मेरे पास पहले से है", es:"Ya tengo uno", ar:"لديّ واحد بالفعل", fr:"J'en ai déjà un", bn:"আমার আগে থেকেই আছে", pt:"Já tenho um", ru:"У меня уже есть", ur:"میرے پاس پہلے سے ہے", id:"Saya sudah punya", de:"Ich habe schon eins", ja:"すでに持っています", tr:"Zaten var", ko:"이미 있습니다", fa:"از قبل دارم", uk:"У мене вже є", it:"Ne ho già uno", pl:"Już mam", vi:"Tôi đã có rồi" },
   ui_su_new: { en:"I need to make one", zh:"我需要创建一个", hi:"मुझे बनाना है", es:"Necesito crear uno", ar:"أحتاج إنشاء واحد", fr:"Je dois en créer un", bn:"আমাকে একটা বানাতে হবে", pt:"Preciso de criar um", ru:"Мне нужно создать", ur:"مجھے بنانا ہے", id:"Saya perlu membuatnya", de:"Ich brauche eins", ja:"新しく作ります", tr:"Yeni oluşturmam gerek", ko:"새로 만들어야 합니다", fa:"باید یکی بسازم", uk:"Мені треба створити", it:"Devo crearne uno", pl:"Muszę założyć", vi:"Tôi cần tạo một cái" },
+  ui_su_must: { en:"An account is needed to carry on — it keeps your projects on this device and any other.", pt:"É preciso uma conta para continuar — guarda os teus projetos neste e noutros aparelhos." },
   ui_su_skip: { en:"Have a look round first", zh:"先四处看看", hi:"पहले थोड़ा देख लूँ", es:"Primero echar un vistazo", ar:"أتجوّل أولًا", fr:"Je regarde d'abord", bn:"আগে একটু ঘুরে দেখি", pt:"Ver primeiro", ru:"Сначала осмотрюсь", ur:"پہلے دیکھ لوں", id:"Lihat-lihat dulu", de:"Erst mal umsehen", ja:"まず見てみる", tr:"Önce bir bakayım", ko:"먼저 둘러보기", fa:"اول یک نگاهی می‌اندازم", uk:"Спершу роззирнуся", it:"Prima do un'occhiata", pl:"Najpierw się rozejrzę", vi:"Xem quanh trước đã" },
   ui_su_both: { en:"Both boxes, please.", zh:"两个都要填。", hi:"दोनों भरें।", es:"Rellena las dos casillas.", ar:"املأ الحقلين من فضلك.", fr:"Les deux champs, s'il te plaît.", bn:"দুটো ঘরই পূরণ করো।", pt:"Preenche os dois campos.", ru:"Заполни оба поля.", ur:"دونوں خانے بھریں۔", id:"Isi kedua kolomnya.", de:"Bitte beide Felder.", ja:"両方の欄を入力してください。", tr:"Lütfen iki alanı da doldur.", ko:"두 칸 모두 입력해 주세요.", fa:"لطفاً هر دو کادر را پر کن.", uk:"Заповни обидва поля.", it:"Compila entrambi i campi.", pl:"Wypełnij oba pola.", vi:"Vui lòng điền cả hai ô." },
   ui_su_wait: { en:"One moment…", zh:"请稍候…", hi:"एक पल…", es:"Un momento…", ar:"لحظة…", fr:"Un instant…", bn:"এক মুহূর্ত…", pt:"Um momento…", ru:"Минутку…", ur:"ایک لمحہ…", id:"Sebentar…", de:"Einen Moment…", ja:"少々お待ちください…", tr:"Bir saniye…", ko:"잠시만요…", fa:"یک لحظه…", uk:"Хвилинку…", it:"Un attimo…", pl:"Chwileczkę…", vi:"Chờ một chút…" },
@@ -8428,8 +8429,100 @@ window.addEventListener('DOMContentLoaded', () => {
     ncGuardSync();
     if (NC_AGE_EXEMPT.test(location.pathname)) return;
     if (window.ncAgeGate) ncAgeGate();
-    ncSignupGate();
-    ncCategoryGate();
+    /* THE FIRST FIVE MINUTES ARE LEFT ALONE. See ncSignupSchedule. */
+    ncSignupSchedule();
+  }
+
+  /* ==========================================================================
+     NOBODY IS ASKED FOR ANYTHING IN THEIR FIRST FIVE MINUTES
+     --------------------------------------------------------------------------
+     This used to fire the signup sheet and the category question on the first
+     page load, one after the other, on top of the age gate and the cookie
+     bar. Four things in somebody's face before they had seen what the site
+     does — and the ask that matters, "make an account", landed when they had
+     the least reason to say yes.
+
+     So the two that are ours to move are moved. They now wait until somebody
+     has actually spent FIVE MINUTES here, counted across pages and only while
+     the tab is visible, which is the first moment the question has an answer
+     worth having.
+
+     WHAT DOES NOT MOVE, and why:
+
+       the age gate     a 13+ site has to know before anything else, and the
+                        parent/consent machinery hangs off it
+       the cookie bar   consent has to be asked before the thing it consents
+                        to, which is the whole point of it
+
+     Both of those are obligations rather than marketing, so neither is mine
+     to delay for a nicer first impression.
+
+     AND IF THEY LEAVE BEFORE THE FIVE MINUTES ARE UP. The clock is kept, not
+     reset: a visit that ends early sets nc_signup_due, and the NEXT visit
+     opens with the sheet and no way past it. That is what was asked for, and
+     it is worth being clear-eyed about the trade — see the note on
+     mandatory mode in ncSignupSheet.
+     ========================================================================== */
+  const NC_SIGNUP_AFTER_MS = 5 * 60 * 1000;
+  const NC_USE_KEY  = 'nc_use_ms';
+  const NC_DUE_KEY  = 'nc_signup_due';
+  const NC_TICK_MS  = 10000;
+
+  function ncUsedMs() {
+    try { return parseInt(localStorage.getItem(NC_USE_KEY) || '0', 10) || 0; }
+    catch (e) { return 0; }
+  }
+
+  function ncSignupWanted() {
+    if (window.NC_EMBED) return false;
+    if (NC_SIGNUP_SKIP.test(location.pathname)) return false;
+    if (ncAge() < NC_MIN_AGE) return false;         // the age gate owns this moment
+    try {
+      if (localStorage.getItem('nc_username')) return false;
+    } catch (e) { return false; }
+    return ncSyncOn();
+  }
+
+  function ncSignupSchedule() {
+    if (!ncSignupWanted()) { ncCategoryGate(); return; }
+
+    /* Owed from a visit that ended early: ask now, and mean it. */
+    let due = false;
+    try { due = localStorage.getItem(NC_DUE_KEY) === '1'; } catch (e) {}
+    if (due) { ncSignupGate(true); return; }
+
+    let used = ncUsedMs();
+    if (used >= NC_SIGNUP_AFTER_MS) { ncSignupGate(false); return; }
+
+    /* Counted in ticks while the tab is actually in front of somebody. A
+       page left open in a background tab overnight is not five minutes of
+       using NovaClip, and treating it as such is how this becomes the thing
+       it was moved away from. */
+    const timer = setInterval(function () {
+      if (document.hidden) return;
+      used += NC_TICK_MS;
+      try { localStorage.setItem(NC_USE_KEY, String(used)); } catch (e) {}
+      if (used >= NC_SIGNUP_AFTER_MS) {
+        clearInterval(timer);
+        try { localStorage.removeItem(NC_DUE_KEY); } catch (e) {}
+        if (ncSignupWanted()) ncSignupGate(false);
+      }
+    }, NC_TICK_MS);
+
+    /* Leaving early is what arms the next visit. pagehide rather than
+       beforeunload: beforeunload is not fired on mobile when the browser is
+       swiped away, which is exactly how a short first visit ends on a phone. */
+    window.addEventListener('pagehide', function () {
+      if (!ncSignupWanted()) return;
+      if (ncUsedMs() >= NC_SIGNUP_AFTER_MS) return;
+      try { localStorage.setItem(NC_DUE_KEY, '1'); } catch (e) {}
+    });
+
+    /* The category question rides along at the same moment rather than
+       being a second interruption of its own. */
+    setTimeout(function () {
+      if (!document.getElementById('ncSignup')) ncCategoryGate();
+    }, Math.max(0, NC_SIGNUP_AFTER_MS - used) + 1200);
   }
 
   /* ==========================================================================
@@ -8836,7 +8929,7 @@ window.addEventListener('DOMContentLoaded', () => {
      ========================================================================== */
   var NC_SIGNUP_SKIP = /(^|\/)(parent|shield|report|privacy|terms|profile|offline)\.html$/i;
 
-  function ncSignupGate() {
+  function ncSignupGate(must) {
     if (window.NC_EMBED) return;
     if (NC_SIGNUP_SKIP.test(location.pathname)) return;
     if (ncAge() < NC_MIN_AGE) return;                 // the age gate owns this moment
@@ -8854,13 +8947,16 @@ window.addEventListener('DOMContentLoaded', () => {
        key is already here, so nothing they have done is lost. */
     try {
       if (localStorage.getItem('nc_username')) return;
-      if (localStorage.getItem('nc_signup_skipped')) return;
+      /* "Have a look round first" is honoured for the ordinary five-minute
+         ask and deliberately NOT for the owed one: somebody who left early
+         is being asked precisely because they did. */
+      if (!must && localStorage.getItem('nc_signup_skipped')) return;
     } catch (e) { return; }
     if (!ncSyncOn()) return;                          // no worker configured: nothing to join
 
     /* account.js is not on most pages. Fetched once, here, rather than added
        to twenty-nine script tags for a sheet most visits never see. */
-    ncNeed('account.js', function () { ncSignupSheet(); });
+    ncNeed('account.js', function () { ncSignupSheet(must); });
   }
 
   function ncNeed(src, then) {
@@ -8873,7 +8969,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(t);
   }
 
-  function ncSignupSheet() {
+  function ncSignupSheet(must) {
     if (!window.NC_ACCOUNT || document.getElementById('ncSignup')) return;
 
     var o = document.createElement('div');
@@ -8933,15 +9029,46 @@ window.addEventListener('DOMContentLoaded', () => {
     var btn = o.querySelector('#ncSuGo'), say = o.querySelector('#ncSuSay');
     var mode = 'new';
 
-    function done() { o.remove(); }
+    function done() {
+      /* Signing up or signing in pays off the debt from the short visit, so
+         the wall does not come back on the next page. Keyed on the username
+         actually being there rather than on which button was pressed. */
+      try {
+        if (localStorage.getItem('nc_username')) {
+          localStorage.removeItem('nc_signup_due');
+          localStorage.setItem('nc_use_ms', String(5 * 60 * 1000));
+        }
+      } catch (e) {}
+      o.remove();
+    }
     function tell(msg, good) { say.style.color = good ? '#34d399' : '#fb7185'; say.textContent = msg; }
 
-    o.querySelector('#ncSuSkip').onclick = function () {
-      /* Remembered, so it is asked once rather than on every page of a look
-         round — which would be the same wall wearing a friendlier hat. */
-      try { localStorage.setItem('nc_signup_skipped', '1'); } catch (e) {}
-      done();
-    };
+    /* MANDATORY MODE — the owed ask, after a visit that ended early.
+       The way out is removed rather than hidden: a button that is only
+       display:none is a button, and this one has to actually not work.
+       "Sign in instead" stays, because somebody who already has an account
+       must not be walled out of their own.
+
+       Worth saying where it will be read: this is a hard wall in front of
+       people who have seen the site for under five minutes, and some of
+       them will close the tab instead. That is the cost of the rule, not a
+       bug in it. If the sign-up rate goes down rather than up, this is the
+       first thing to take back out. */
+    if (must) {
+      var sk = o.querySelector('#ncSuSkip');
+      if (sk) sk.remove();
+      var note = document.createElement('div');
+      note.style.cssText = 'margin-top:14px;font-size:.8rem;line-height:1.5;color:#a8a29e;text-align:center';
+      note.textContent = tr('ui_su_must') || 'An account is needed to carry on — it keeps your projects.';
+      o.querySelector('#ncSuSay').after(note);
+    } else {
+      o.querySelector('#ncSuSkip').onclick = function () {
+        /* Remembered, so it is asked once rather than on every page of a look
+           round — which would be the same wall wearing a friendlier hat. */
+        try { localStorage.setItem('nc_signup_skipped', '1'); } catch (e) {}
+        done();
+      };
+    }
 
     o.querySelector('#ncSuHave').onclick = function () {
       mode = mode === 'new' ? 'in' : 'new';
