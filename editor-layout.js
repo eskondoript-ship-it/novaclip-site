@@ -112,7 +112,37 @@
          not fit beside each other and the phone layout is the right one. */
       '@media (min-width:1280px){',
       'html[data-nclay="wide"] ' + SHELL + '{',
-        'display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0}',
+        'display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0;',
+        /* THE GRID ONLY CONSTRAINS IF THE GRID HAS A HEIGHT.
+           minmax(0,1fr) looks like it caps the middle row and it does not:
+           in a container whose own height comes from its content, 1fr
+           resolves to max-content and the row grows to whatever is inside
+           it. With twenty tracks loaded that put the timeline's bottom edge
+           48px below the window — measured at 1915x1010, timeline bottom
+           1058 — so the last track and the horizontal scrollbar were simply
+           off the screen, under a row of floating buttons that were also
+           sitting on top of it.
+
+           Pinning the shell to the viewport is what makes 1fr mean what it
+           reads as. dvh rather than vh because a phone browser's toolbars
+           change the viewport as you scroll, and vh is the one that does not
+           notice. overflow:hidden is the promise that nothing escapes: every
+           region inside already scrolls on its own — the timeline has two
+           vertical scrollers of its own, measured at 1400px of track inside
+           254px of window — so there is nothing left that needs the page to
+           grow. */
+        /* MINUS WHATEVER IS ABOVE IT. The editor is not always the whole
+           window: opened inside Studio it sits under a 52px "Studio home /
+           Editor / Open on its own page" bar, and a shell told it is 100dvh
+           tall then ends 52px below the bottom of the screen, taking the
+           last track and the timeline's scrollbar with it. Measured exactly
+           that way — shell 52..1062 in a 1010 window.
+
+           The offset cannot be written here because it depends on what the
+           page wraps the editor in, so it is measured and kept in --nctop.
+           Default 0 for the normal case where the editor IS the page. */
+        'height:calc(100dvh - var(--nctop,0px));',
+        'max-height:calc(100dvh - var(--nctop,0px));overflow:hidden}',
 
       /* The main row becomes the grid that holds the panels AND the timeline.
          Two columns: the media side at its own width, everything else taking
@@ -333,16 +363,68 @@
         'padding:7px 11px}',
       'html[data-ncstudio] ' + LEFT + ' nav button span{font-size:11px}',
 
-      /* right column: player over inspector */
-      'html[data-ncstudio] ' + PROW + '{flex-direction:column}',
-      'html[data-ncstudio] ' + PROW + ' > div.flex-1{min-height:0}',
+      /* ---- THE PLAYER GETS THE WHOLE COLUMN ----------------------------
+         First attempt stacked the inspector under the player, and the
+         picture paid for it twice over: the pane came out 935 wide by 402
+         tall, of which the player's own chrome takes about 80, so a 16:9
+         clip fitted to 320px of height and came out 570 wide — 61% of the
+         width sitting there. On the 1:1 project in the report it is a third.
+         Reported simply as "the video is small", and it was right.
+
+         Shortening the inspector only moves the number: at a 150px cap the
+         picture reaches 606, still most of a pane wasted. The player needs
+         the COLUMN, not a slightly larger share of half of it.
+
+         So the inspector moves out of that column and under the browser,
+         where the reference keeps its properties anyway, and the player
+         spans both rows of the right-hand side. One more grid row on the
+         main area does it, and display:contents on the preview row is what
+         lets its two children be placed independently — the same trick the
+         timeline already uses to span past the media panel. */
+      /* THE INSPECTOR'S ROW IS A LENGTH, NOT auto, AND THAT IS THE WHOLE
+         TRICK. With `minmax(0,1fr) auto auto` the browser's row collapsed to
+         nothing — measured `0px 558px 340px`, the media panel 980x0 and the
+         inspector sitting where it should have been. A grid item spanning
+         two tracks has its height distributed to INTRINSIC tracks before
+         flexible ones, so the player's 558px went entirely into the auto row
+         and the 1fr row was left with nothing to do.
+
+         Giving row two a definite length takes it out of that competition:
+         the span can only be satisfied by growing row one, which is the
+         flexible one, which is the browser. */
+      'html[data-ncstudio] ' + MAIN + '{',
+        'grid-template-rows:minmax(0,1fr) min(24%,200px) auto}',
+      'html[data-ncstudio] ' + LEFT + '{grid-column:1;grid-row:1}',
+      'html[data-ncstudio] ' + PROW + '{display:contents}',
+      /* the picture: right-hand column, both rows of it */
+      'html[data-ncstudio] ' + PROW + ' > div.flex-1{',
+        'grid-column:2;grid-row:1 / 3;min-height:0;min-width:0}',
+      /* the inspector: under the browser, which has width to spare */
+      'html[data-ncstudio] ' + PROW + ' > div.min-w-0.shrink-0{',
+        'grid-column:1;grid-row:2}',
+      /* and the timeline drops to the new third row, still full width */
+      'html[data-ncstudio] ' + MID + ' > div.shrink-0{grid-row:3}',
       /* The drag handle set a WIDTH between two columns. There are no two
          columns here, and a col-resize grip lying on its side that moves the
          wrong axis is worse than no grip, so it goes. */
       'html[data-ncstudio] ' + PROW + ' > div.w-1{display:none}',
+      /* 38% WAS TOO MUCH, AND THE PICTURE PAID FOR IT.
+         Reported as the video being small, and it was: at 1915x1010 the
+         preview pane came out 935 wide by 378 tall and the picture inside it
+         528x297 — 56% of the width it had. A 16:9 clip in a pane that wide
+         and that short fits by HEIGHT, so every pixel taken off the top of
+         the inspector is width the picture gets back. On the 1:1 project in
+         the report it is worse still: a square fitted to 378 is about a
+         third of the pane.
+
+         min() rather than a flat percentage so the inspector stops taking a
+         share of very tall windows it has no use for, while still shrinking
+         out of the way on short ones. It keeps its own scrollbar, so
+         nothing in it becomes unreachable — it is a shorter panel, not a
+         smaller one. */
       'html[data-ncstudio] ' + PROW + ' > div.min-w-0.shrink-0{',
-        'width:100% !important;max-width:none !important;height:auto !important;',
-        'max-height:38%;overflow:auto;',
+        'width:var(--ncb) !important;max-width:none !important;height:auto !important;',
+        'height:100%;overflow:auto;min-width:0;min-height:0;',
         'border-top:1px solid rgba(255,255,255,.1)}',
 
       /* The transport is fixed to the centre of the picture, and the picture
@@ -613,8 +695,54 @@
        classic, and always clear of the window edge. */
     var startX = 16;
     var gap = 8, rowH = 42;
+
+    /* In studio the bottom-left of the window is the inspector, so starting
+       at x=16 just moves the problem off the timeline and onto that instead
+       — measured covering the Transform fields. The one strip that is dead
+       space in this layout is the bottom of the picture, so the row starts
+       where the browser column ends. Falls back to 16 if the column cannot
+       be measured, which is where it was. */
+    try {
+      if (document.documentElement.hasAttribute('data-ncstudio')) {
+        var lp = document.querySelector(LEFT);
+        if (lp) {
+          var lw = Math.round(lp.getBoundingClientRect().width);
+          if (lw > 200 && lw < window.innerWidth - 360) startX = lw + 16;
+        }
+      }
+    } catch (e) {}
     var bottom = window.innerWidth <= 900 ? 8 : 16;
     var max = window.innerWidth - 16;
+
+    /* ---- AND THEY SIT ABOVE THE TIMELINE, NOT ON IT ------------------
+       Reported as the tracks being unreachable, with the row of pills drawn
+       over them. Measured at 1915x1010: all five were on the timeline,
+       covering the bottom 97px of it — which is where the audio track and
+       whatever is under it live.
+
+       The stylesheet above has tried to lift them for a while and never
+       could: layoutPills writes `bottom` as an inline !important, and an
+       inline !important beats a stylesheet !important, so the CSS rule was
+       dead the whole time. That is why this is fixed in the code that
+       actually wins rather than by adding another rule it would ignore.
+
+       Measured off the timeline rather than from min(42vh,340px) repeated
+       here, because the two drifting apart is how this comes back. If the
+       timeline cannot be found the old behaviour stands, which is wrong in
+       the same way it was before rather than newly broken. */
+    try {
+      var tl = document.querySelector(MID + ' > div.min-h-0.shrink-0');
+      if (tl) {
+        var box = tl.getBoundingClientRect();
+        if (box.height > 40) {
+          /* How much of the timeline is actually on screen. It can hang off
+             the bottom of the window, and lifting the pills by its full
+             height would then push them up over the picture for no reason. */
+          var visible = Math.max(0, Math.min(window.innerHeight, box.bottom) - box.top);
+          bottom += Math.round(visible) + 10;
+        }
+      }
+    } catch (e) { /* keep the old offset */ }
 
     /* Measure every width FIRST, then place. Reading and writing in the same
        pass means each getBoundingClientRect() is answering after the previous
@@ -652,6 +780,29 @@
      inspector instead of on it. Everywhere else the variable stays unset and
      the calc() falls back to 0px, which is the wide behaviour exactly.
      -------------------------------------------------------------------------- */
+  /* How far down the window the editor shell actually starts. Zero when the
+     editor is the whole page, 52 when Studio wraps it in its own bar. Read
+     rather than assumed, because it is a fact about the host page. */
+  function trackShellTop() {
+    var sh = document.querySelector(SHELL);
+    if (!sh) return false;
+    function read() {
+      /* offsetTop walks up to the page, so a scrolled window does not make
+         this flicker the way getBoundingClientRect().top would. */
+      var t = 0, el = sh;
+      while (el && el.offsetParent) { t += el.offsetTop; el = el.offsetParent; }
+      if (t < 0 || t > 400) t = 0;        /* nonsense: better to use none */
+      document.documentElement.style.setProperty('--nctop', Math.round(t) + 'px');
+    }
+    read();
+    window.addEventListener('resize', read);
+    /* The bar can appear after the editor does, so re-read once things settle
+       rather than trusting the first frame. */
+    setTimeout(read, 600); setTimeout(read, 2000);
+    window.__ncTopRead = read;
+    return true;
+  }
+
   var inspRO = null;
   function trackInspector() {
     var el = document.querySelector(PROW + ' > div.min-w-0.shrink-0');
@@ -684,11 +835,12 @@
 
   function boot() {
     var tries = 0;
-    var gotBtn = false, gotInsp = false;
+    var gotBtn = false, gotInsp = false, gotTop = false;
     var t = setInterval(function () {
       if (!gotBtn) gotBtn = button();
       if (!gotInsp) gotInsp = trackInspector();
-      if ((gotBtn && gotInsp) || tries++ > 80) clearInterval(t);
+      if (!gotTop) gotTop = trackShellTop();
+      if ((gotBtn && gotInsp && gotTop) || tries++ > 80) clearInterval(t);
     }, 250);
 
     /* The pills arrive late and independently, so the row is re-laid out as
@@ -714,6 +866,29 @@
     window.addEventListener('resize', layoutPillsSoon);
     /* Every label changes at once, so every width does. nova.js fires this. */
     window.addEventListener('nc-lang', layoutPillsSoon);
+
+    /* ---- TELL THE BUNDLE ITS PICTURE CHANGED SIZE --------------------
+       The editor measures the preview canvas on a resize event and at no
+       other time. This file changes the shape of everything around that
+       canvas AFTER React has mounted and measured it, so the canvas keeps
+       whatever size it was given before the layout existed — a small picture
+       in a large empty pane, which is exactly how it was reported.
+
+       The toggle already fires a resize for this reason. Boot did not, so
+       the very first paint of a session was the one that got it wrong, which
+       is the worst one to get wrong. Three times rather than once because
+       the thing being waited for is a React commit and a web font, and
+       neither announces itself: 0 for the common case, then after the
+       --nctop re-reads above, then once more when everything has settled.
+       A resize event the editor does not need costs it one measurement. */
+    var nudge = function () {
+      try {
+        if (window.__ncTopRead) window.__ncTopRead();
+        if (window.__ncInspRead) window.__ncInspRead();
+        window.dispatchEvent(new Event('resize'));
+      } catch (e) {}
+    };
+    setTimeout(nudge, 350); setTimeout(nudge, 1200); setTimeout(nudge, 2600);
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
