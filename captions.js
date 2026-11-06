@@ -411,9 +411,9 @@
        nodes and writing nodeValue, so it finds "CC Captions" in the span and
        leaves the <svg> alone. Setting textContent here instead would be the
        bug — it would wipe the icon the first time the language changed. */
-    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 16 16" aria-hidden="true">' +
-      '<rect x="1.1" y="3.1" width="13.8" height="9.8" rx="2.2"/>' +
-      '<path d="M6.4 6.9a1.9 1.9 0 1 0 0 2.2M11.3 6.9a1.9 1.9 0 1 0 0 2.2"/>' +
+    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 24 24" aria-hidden="true">' +
+      '<rect width="18" height="14" x="3" y="5" rx="2" ry="2"/>' +
+      '<path d="M7 15h4M15 15h2M7 11h2M13 11h4"/>' +
       '</svg><span>CC Captions</span>';
     b.title = 'Caption this clip from your script';
     b.onclick = open;

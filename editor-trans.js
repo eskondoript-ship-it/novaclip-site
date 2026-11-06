@@ -559,9 +559,9 @@
     /* Two overlapping frames: one shot handing over to the next. The panel's
        own <h4> keeps "⇄ Transitions" — that key carries all nineteen
        languages and is the one string here worth not disturbing. */
-    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 16 16" aria-hidden="true">' +
-      '<rect x="1.1" y="3.6" width="8.4" height="8.8" rx="1.7"/>' +
-      '<path d="M6.5 3.6h6.2a2.2 2.2 0 0 1 2.2 2.2v4.4a2.2 2.2 0 0 1-2.2 2.2H6.5"/>' +
+    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 24 24" aria-hidden="true">' +
+      '<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/>' +
+      '<path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>' +
       '</svg><span>Transitions</span>';
     b.title = 'Browse every transition, running';
     b.onclick = open;

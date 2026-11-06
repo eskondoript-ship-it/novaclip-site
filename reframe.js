@@ -269,8 +269,8 @@
     b.type = 'button';
     /* Crop marks: two overlapping rules, which is what reframing to another
        aspect actually is. The ⤢ it replaces read as "fullscreen". */
-    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 16 16" aria-hidden="true">' +
-      '<path d="M4.6 1.4v10h10M1.4 4.6h10v10"/>' +
+    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 24 24" aria-hidden="true">' +
+      '<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/>' +
       '</svg><span>Reframe</span>';
     b.title = 'Crop the whole project to another shape';
     b.onclick = open;

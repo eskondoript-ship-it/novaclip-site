@@ -301,8 +301,8 @@
        loses the ♪ because the icon IS the ♪ now — see i18n-ui.js, where the
        plain "Beats" key was added alongside the old "♪ Beats" one so the
        translation did not quietly stop matching. */
-    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 16 16" aria-hidden="true">' +
-      '<path d="M2.2 6.6v2.8M5.4 4.1v7.8M8.6 2.4v11.2M11.8 5.2v5.6M14.6 7.1v1.8"/>' +
+    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 24 24" aria-hidden="true">' +
+      '<path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"/>' +
       '</svg><span>Beats</span>';
     b.title = 'Find the beat and cut to it';
     b.onclick = open;

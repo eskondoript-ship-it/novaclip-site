@@ -505,7 +505,10 @@
       PILLS.split(',').map(function (s) { return s + '{display:inline-flex;align-items:center;gap:7px}'; }).join('') +
       PILLS.split(',').map(function (s) { return s + ' .ncpill-i'; }).join(',') +
         '{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;',
-        'stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}',
+        /* stroke 2 on a 24 grid is exactly what the rail's icons are drawn at,
+            which is the whole point of this line: at 1.6 on a 16 grid these
+            read a shade heavier than everything around them. */
+        'stroke-width:2;stroke-linecap:round;stroke-linejoin:round}',
 
       '.nclay-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;',
         'border-radius:9px;cursor:pointer;flex:0 0 auto;white-space:nowrap;',

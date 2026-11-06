@@ -971,7 +971,8 @@ const UI_T = {
   ui_su_in: { en:"Sign in", zh:"登录", hi:"साइन इन", es:"Iniciar sesión", ar:"تسجيل الدخول", fr:"Se connecter", bn:"সাইন ইন", pt:"Entrar", ru:"Вход", ur:"سائن اِن", id:"Masuk", de:"Anmelden", ja:"サインイン", tr:"Giriş yap", ko:"로그인", fa:"ورود", uk:"Увійти", it:"Accedi", pl:"Zaloguj się", vi:"Đăng nhập" },
   ui_su_have: { en:"I already have one", zh:"我已经有了", hi:"मेरे पास पहले से है", es:"Ya tengo uno", ar:"لديّ واحد بالفعل", fr:"J'en ai déjà un", bn:"আমার আগে থেকেই আছে", pt:"Já tenho um", ru:"У меня уже есть", ur:"میرے پاس پہلے سے ہے", id:"Saya sudah punya", de:"Ich habe schon eins", ja:"すでに持っています", tr:"Zaten var", ko:"이미 있습니다", fa:"از قبل دارم", uk:"У мене вже є", it:"Ne ho già uno", pl:"Już mam", vi:"Tôi đã có rồi" },
   ui_su_new: { en:"I need to make one", zh:"我需要创建一个", hi:"मुझे बनाना है", es:"Necesito crear uno", ar:"أحتاج إنشاء واحد", fr:"Je dois en créer un", bn:"আমাকে একটা বানাতে হবে", pt:"Preciso de criar um", ru:"Мне нужно создать", ur:"مجھے بنانا ہے", id:"Saya perlu membuatnya", de:"Ich brauche eins", ja:"新しく作ります", tr:"Yeni oluşturmam gerek", ko:"새로 만들어야 합니다", fa:"باید یکی بسازم", uk:"Мені треба створити", it:"Devo crearne uno", pl:"Muszę założyć", vi:"Tôi cần tạo một cái" },
-  ui_su_must: { en:"An account is needed to carry on — it keeps your projects on this device and any other.", pt:"É preciso uma conta para continuar — guarda os teus projetos neste e noutros aparelhos." },
+  ui_su_later: { en:"Not right now", pt:"Agora não" },
+  ui_su_must: { en:"An account keeps your projects — on this device and any other.", pt:"Uma conta guarda os teus projetos — neste aparelho e noutros." },
   ui_su_skip: { en:"Have a look round first", zh:"先四处看看", hi:"पहले थोड़ा देख लूँ", es:"Primero echar un vistazo", ar:"أتجوّل أولًا", fr:"Je regarde d'abord", bn:"আগে একটু ঘুরে দেখি", pt:"Ver primeiro", ru:"Сначала осмотрюсь", ur:"پہلے دیکھ لوں", id:"Lihat-lihat dulu", de:"Erst mal umsehen", ja:"まず見てみる", tr:"Önce bir bakayım", ko:"먼저 둘러보기", fa:"اول یک نگاهی می‌اندازم", uk:"Спершу роззирнуся", it:"Prima do un'occhiata", pl:"Najpierw się rozejrzę", vi:"Xem quanh trước đã" },
   ui_su_both: { en:"Both boxes, please.", zh:"两个都要填。", hi:"दोनों भरें।", es:"Rellena las dos casillas.", ar:"املأ الحقلين من فضلك.", fr:"Les deux champs, s'il te plaît.", bn:"দুটো ঘরই পূরণ করো।", pt:"Preenche os dois campos.", ru:"Заполни оба поля.", ur:"دونوں خانے بھریں۔", id:"Isi kedua kolomnya.", de:"Bitte beide Felder.", ja:"両方の欄を入力してください。", tr:"Lütfen iki alanı da doldur.", ko:"두 칸 모두 입력해 주세요.", fa:"لطفاً هر دو کادر را پر کن.", uk:"Заповни обидва поля.", it:"Compila entrambi i campi.", pl:"Wypełnij oba pola.", vi:"Vui lòng điền cả hai ô." },
   ui_su_wait: { en:"One moment…", zh:"请稍候…", hi:"एक पल…", es:"Un momento…", ar:"لحظة…", fr:"Un instant…", bn:"এক মুহূর্ত…", pt:"Um momento…", ru:"Минутку…", ur:"ایک لمحہ…", id:"Sebentar…", de:"Einen Moment…", ja:"少々お待ちください…", tr:"Bir saniye…", ko:"잠시만요…", fa:"یک لحظه…", uk:"Хвилинку…", it:"Un attimo…", pl:"Chwileczkę…", vi:"Chờ một chút…" },
@@ -8489,7 +8490,13 @@ window.addEventListener('DOMContentLoaded', () => {
     /* Owed from a visit that ended early: ask now, and mean it. */
     let due = false;
     try { due = localStorage.getItem(NC_DUE_KEY) === '1'; } catch (e) {}
-    if (due) { ncSignupGate(true); return; }
+    if (due) {
+      /* Refused a moment ago: leave them alone for the rest of this tab,
+         and ask again next time. See the note in ncSignupSheet. */
+      var hushed = false;
+      try { hushed = sessionStorage.getItem('nc_signup_hushed') === '1'; } catch (e) {}
+      if (!hushed) { ncSignupGate(true); return; }
+    }
 
     let used = ncUsedMs();
     if (used >= NC_SIGNUP_AFTER_MS) { ncSignupGate(false); return; }
@@ -9043,31 +9050,45 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     function tell(msg, good) { say.style.color = good ? '#34d399' : '#fb7185'; say.textContent = msg; }
 
-    /* MANDATORY MODE — the owed ask, after a visit that ended early.
-       The way out is removed rather than hidden: a button that is only
-       display:none is a button, and this one has to actually not work.
-       "Sign in instead" stays, because somebody who already has an account
-       must not be walled out of their own.
+    /* THE OWED ASK, after a visit that ended early — and it can be refused.
+       This was a hard wall for one revision: the skip button was removed
+       from the DOM so the sheet could not be got past. That was asked for
+       and then asked back, which is the right call — a wall in front of
+       somebody who has seen the site for four minutes mostly teaches them
+       to close the tab, and a sign-up taken at knifepoint is not worth more
+       than one taken later.
 
-       Worth saying where it will be read: this is a hard wall in front of
-       people who have seen the site for under five minutes, and some of
-       them will close the tab instead. That is the cost of the rule, not a
-       bug in it. If the sign-up rate goes down rather than up, this is the
-       first thing to take back out. */
+       So it still asks, and asks harder than the five-minute version: the
+       sheet opens the moment they return rather than waiting, and the way
+       out is worded as a postponement rather than a dismissal. But it IS a
+       way out, and it works.
+
+       The difference that remains between the two is what the refusal
+       costs. A skip from the polite ask is remembered for good. A skip from
+       this one is remembered only for the session, so the next visit asks
+       again — which is the part of "they have to do it" worth keeping. */
+    o.querySelector('#ncSuSkip').onclick = function () {
+      try {
+        if (must) {
+          /* sessionStorage, not local: this lapses when the tab closes, so
+             coming back tomorrow asks again. */
+          sessionStorage.setItem('nc_signup_hushed', '1');
+        } else {
+          /* Remembered, so it is asked once rather than on every page of a
+             look round — which would be the same wall in a friendlier hat. */
+          localStorage.setItem('nc_signup_skipped', '1');
+        }
+      } catch (e) {}
+      done();
+    };
     if (must) {
       var sk = o.querySelector('#ncSuSkip');
-      if (sk) sk.remove();
+      if (sk) sk.textContent = tr('ui_su_later') || 'Not right now';
       var note = document.createElement('div');
       note.style.cssText = 'margin-top:14px;font-size:.8rem;line-height:1.5;color:#a8a29e;text-align:center';
-      note.textContent = tr('ui_su_must') || 'An account is needed to carry on — it keeps your projects.';
+      note.textContent = tr('ui_su_must') ||
+        'An account keeps your projects — on this device and any other.';
       o.querySelector('#ncSuSay').after(note);
-    } else {
-      o.querySelector('#ncSuSkip').onclick = function () {
-        /* Remembered, so it is asked once rather than on every page of a look
-           round — which would be the same wall wearing a friendlier hat. */
-        try { localStorage.setItem('nc_signup_skipped', '1'); } catch (e) {}
-        done();
-      };
     }
 
     o.querySelector('#ncSuHave').onclick = function () {
