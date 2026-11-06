@@ -1540,8 +1540,15 @@ export default {
     let cacheK = '';
     if (search && env.RL) {
       try {
+        /* Every input that changes the ANSWER is in the key. The second
+           query and the freshness window were added after this line was
+           written, and leaving them out would have been the quiet kind of
+           bug: a scan for "this week" would be served the cached answer
+           from someone's "last three months", and look perfectly fine. */
         cacheK = await cacheKey([provider, model, body.payload,
-                                 typeof body.searchQuery === 'string' ? body.searchQuery : '']);
+                                 typeof body.searchQuery === 'string' ? body.searchQuery : '',
+                                 typeof body.searchQuery2 === 'string' ? body.searchQuery2 : '',
+                                 typeof body.freshness === 'string' ? body.freshness : '']);
         const hit = await env.RL.get(cacheK);
         if (hit) {
           /* An answer that came out of the cache cost nothing to produce, so
@@ -1576,12 +1583,47 @@ export default {
     let payload = body.payload;
     let hits = null;
     let grounded = search;
-    const sq = typeof body.searchQuery === 'string' ? body.searchQuery.trim().slice(0, 200) : '';
+    const clean = (v) => typeof v === 'string' ? v.trim().slice(0, 200) : '';
+    const sq = clean(body.searchQuery);
+    /* ------------------------------------------------------------------
+       TWO SEARCHES, BECAUSE ONE QUERY SHAPE HAS ONE BLIND SPOT
+       ------------------------------------------------------------------
+       A news-shaped query finds EVENTS. A platform-shaped one finds
+       FORMATS — the sound, the edit, the challenge that is everywhere and
+       that nobody has written an article about. Neither finds the other,
+       and a trend scanner that can only see one of them is half a product.
+
+       Measured on one niche, same moment, both grounded:
+
+         minecraft news trending      -> the Switch 2 version announcement
+         minecraft tiktok trend viral -> the "Chicken Jockey" challenge
+
+       Both are real and only one of them is news. A third shape, asking
+       Reddit what people are talking about, was tried and dropped: it
+       returned "sharing personal takes on Minecraft debates", which is
+       true of every week there has ever been.
+
+       Sequentially, not in parallel: Brave's free plan allows one query a
+       second and two at once is how you get a 429 on the half you needed.
+       The second search is best-effort — webSearch never throws, so a
+       failure here just means fewer results, never a failed scan. */
+    const sq2 = clean(body.searchQuery2);
 
     if (search && env.SEARCH_API_KEY && sq) {
-      const found = await webSearch(env, sq, body.freshness);
+      let found = await webSearch(env, sq, body.freshness);
+      if (sq2 && sq2 !== sq) {
+        const more = await webSearch(env, sq2, body.freshness);
+        /* Merged on the URL. The two queries overlap on the big stories,
+           which is a vote of confidence rather than a problem — but the
+           model should not see the same page twice and count it twice. */
+        const seen = new Set(found.map(h => h.uri));
+        for (const h of more) if (!seen.has(h.uri)) { seen.add(h.uri); found.push(h); }
+      }
       if (found.length) {
-        payload = withContext(payload, sq, found);
+        /* Both questions go in the header, so the model can tell which
+           results answer which and is not told one query produced all of
+           them. */
+        payload = withContext(payload, sq2 && sq2 !== sq ? sq + '" and "' + sq2 : sq, found);
         hits = found;
         grounded = false;
       }

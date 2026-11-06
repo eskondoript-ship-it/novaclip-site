@@ -1544,6 +1544,14 @@
              event: "minecraft news trending" returned the Switch 2 version
              announcement from GameRant, not listicles. Both get real news. */
           searchQuery: t + ' news trending',
+          /* The second shape. News finds events; this finds the formats —
+             the sound, the edit, the challenge that is everywhere and that
+             nobody has written an article about yet. On "minecraft" the news
+             query returned the Switch 2 announcement and this one returned
+             the "Chicken Jockey" challenge: both real, only one of them
+             news, and a trend scanner that sees only one is half a product.
+             The Worker runs both and merges them on URL. */
+          searchQuery2: t + ' tiktok trend viral',
           /* The window the reader picked, as a date filter rather than words
              in the query. Brave ranks on authority by default and hands back
              the evergreen pages — a player's ESPN hub, a game's wiki — which
