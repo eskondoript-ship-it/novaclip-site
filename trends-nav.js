@@ -1679,9 +1679,9 @@
           }).join('') + '</div>';
       }
 
-      html += groundNote(list[0] && list[0].ungrounded);
       html += sourcesHTML(list[0] && list[0].sources);
-      out.innerHTML = html;
+      /* Prepended, so it is the first thing read rather than the last. */
+      out.innerHTML = groundNote(list[0] && list[0].ungrounded) + html;
 
       out.querySelectorAll('[data-open]').forEach(function (b) {
         b.addEventListener('click', function (e) {
@@ -1777,9 +1777,26 @@
      run out, and wrong that there was nothing to show. Now the scan comes
      back ungrounded and says which it was, because an ungrounded answer
      presented as a searched one is the worst of the three outcomes. */
+  /* AT THE TOP, AND NOT WHISPERED. This was a faded footnote under the last
+     card, which is the one place somebody reading trend results will never
+     look — they read the trends and leave. Measured in the wild: a scan came
+     back ungrounded, the note was there the whole time, and it still read as
+     a working live search.
+
+     For this page that is the worst possible failure. Everywhere else on the
+     site an ungrounded answer is a slightly weaker answer; here liveness IS
+     the product, and "what was trending when the model was trained" dressed
+     up as "what is trending now" is not a degraded result, it is a wrong one.
+     So it moves above the cards and is given a border and a colour.
+
+     Still a notice rather than an error, because the scan did return
+     something and it may well be useful — it is just old. */
   function groundNote(ungrounded) {
     if (!ungrounded) return '';
-    return '<p class="foot" data-t="st_nolive" style="margin-top:22px;opacity:.8">' +
+    return '<p data-t="st_nolive" style="margin:0 0 18px;padding:11px 14px;' +
+           'border:1px solid rgba(255,180,67,.45);border-left-width:3px;' +
+           'border-radius:10px;background:rgba(255,180,67,.09);' +
+           'font-size:.9rem;line-height:1.55">' +
            esc(tr('st_nolive')) + '</p>';
   }
 
