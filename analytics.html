@@ -95,11 +95,25 @@ if(b){r.style.background=b;r.setAttribute('data-skin',s);}}catch(e){}})();</scri
      edge case. The file is the same v4.4.1 build, taken from the npm tarball,
      with its MIT licence beside it in vendor/.
      The CDN stays as a fallback for the one case the local copy cannot cover:
-     a stale service worker cache that predates this file existing. -->
+     a stale service worker cache that predates this file existing.
+
+     THE FALLBACK IS PINNED BY HASH. It is the only line on this site that
+     runs code the site does not host, so it is the only line where somebody
+     else's bad day becomes our malware. A pinned VERSION is not enough on its
+     own — it names which file to fetch, not which bytes are acceptable — so
+     integrity names the bytes. If jsDelivr ever served anything but this
+     exact build the browser refuses to run it and the dashboard stays blank,
+     which is the correct failure: a blank chart is a nuisance, a swapped
+     chart.js runs on every page it is loaded into.
+
+     sha384 computed from the file jsDelivr serves today (205,399 bytes).
+     crossorigin is required with integrity or the check cannot be made. -->
 <script src='vendor/chart.umd.js'></script>
 <script>
   if (typeof Chart === 'undefined') {
-    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>');
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" ' +
+      'integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" ' +
+      'crossorigin="anonymous"><\/script>');
   }
 </script>
 <style>

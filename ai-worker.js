@@ -389,6 +389,132 @@ const RATE_WINDOW = 60;          // ...per this many seconds
 const BUDGET_CREDITS   = 120;    // free credits per calendar month
 const BUDGET_GROUNDED  = 3;      // grounded scans a month, free tier
 const BUDGET_TTL       = 40 * 24 * 60 * 60;   // seconds; outlives any month
+
+/* ---------------------------------------------------------------------------
+   THE CEILING NOTHING GETS PAST
+   ---------------------------------------------------------------------------
+   Both halves of the budget's identity come from the caller and neither is
+   proof of anything. The two comments below this one say so honestly, and
+   they are right, but together they add up to more than either admits:
+
+     X-NC-Tier   claims "I have paid" and skips the budget entirely
+     X-NC-Uid    names the bucket, so a new value is a new allowance
+
+   Either one alone makes the monthly budget optional. The second does not
+   even need the first — a loop that changes the uid on every request never
+   meets a budget at all. The only thing standing between this key and a script was
+   RATE_MAX: 20 requests a minute, which is 28,800 a day from one address,
+   and at image prices that is a bill worth noticing.
+
+   So there is now a per-IP, per-DAY credit ceiling that is checked before
+   anything else and that no header can skip — not a forged tier, not a fresh
+   uid. It is the backstop; the monthly budget stays exactly as it was and
+   goes on doing the job it was written for.
+
+   WHY IT IS THIS BIG. A school is one address. Thirty pupils behind one
+   staffroom NAT doing a lively lesson is perhaps 600 text calls and sixty
+   images — about 1,200 credits in an afternoon, and that has to go through
+   without anybody noticing a limit exists. 3,000 is that with headroom.
+
+   What it costs an abuser: 3,000 credits is 300 images or 3,000 text calls a
+   day from one address, down from 28,800 requests. Not zero — a ceiling is
+   not a lock, and someone with a phone hotspot has another address — but it
+   turns "leave it running overnight" from a four-figure bill into a capped
+   one, and that is the difference worth having.
+
+   Tune it from real numbers: /health reports the day's spend for the calling
+   address, so it can be read rather than guessed at. */
+const IP_DAY_CREDITS   = 3000;
+const IP_DAY_TTL       = 3 * 24 * 60 * 60;    // seconds; outlives any day
+
+/* ---------------------------------------------------------------------------
+   THE ALARM
+   ---------------------------------------------------------------------------
+   WHAT A PHONE CAN AND CANNOT BE MADE TO DO, first, because the rest of this
+   is pointless if the alert lands somewhere silent.
+
+   AIRPLANE MODE: nothing arrives. The radios are off. No service, no price,
+   no trick changes that — the only exception is a phone left on wi-fi with
+   airplane mode on, which does still receive. This code cannot fix that and
+   neither can anything else.
+
+   SILENT / DO NOT DISTURB: yes, but only through an app that has been given
+   permission to override them, which means the phone end matters as much as
+   this end. Two that work:
+
+     Pushover, priority 2 — repeats until acknowledged and can be set to
+     ignore the silent switch and Do Not Disturb per-app. This is the one
+     this function speaks natively.
+
+     A phone call — both iOS and Android let repeated calls from the same
+     number through DND. That needs a telephony account, so it is left as a
+     webhook: point ALERT_WEBHOOK at whatever places the call.
+
+   HOW IT IS CONFIGURED. Secrets on the Worker, never in this file, because
+   this repository is public and an alert token in it is an alert token
+   anybody can use to spam the phone it protects:
+
+     ALERT_PUSHOVER_TOKEN + ALERT_PUSHOVER_USER   emergency push
+     ALERT_WEBHOOK                                anything else: ntfy,
+                                                  Discord, a call service
+
+   Both are optional and both can be set at once. With neither, alerting is
+   simply off and /health says so rather than pretending.
+
+   WHY IT IS RATE-LIMITED HARDER THAN THE THING IT WATCHES. An alarm that
+   fires three hundred times is an alarm that gets muted, and a muted alarm
+   is worse than none because it is still believed in. One alert per kind per
+   hour, counted in KV, and the message says how many times it happened
+   rather than sending one per event.
+   --------------------------------------------------------------------------- */
+const ALERT_EVERY = 60 * 60;    // seconds between alerts of the same kind
+
+/* Fire-and-forget by design: an alert that fails must never turn into a
+   failed request for the person using the site. Every path returns quietly. */
+async function alarm(env, kind, detail) {
+  try {
+    const on = (env.ALERT_PUSHOVER_TOKEN && env.ALERT_PUSHOVER_USER) || env.ALERT_WEBHOOK;
+    if (!on || !env.RL) return;
+
+    /* One per kind per hour. The counter keeps running so the message can say
+       how big it got, which is the part that tells you whether it is one
+       curious person or something worth getting out of bed for. */
+    const seen = 'alm:' + kind;
+    const n = (parseInt((await env.RL.get(seen)) || '0', 10) || 0) + 1;
+    await env.RL.put(seen, String(n), { expirationTtl: ALERT_EVERY });
+    if (n !== 1) return;                       /* already alerted this hour */
+
+    const text = 'NovaClip: ' + kind + '\n' + detail +
+                 '\n\nFurther hits this hour are counted, not re-sent.';
+
+    if (env.ALERT_PUSHOVER_TOKEN && env.ALERT_PUSHOVER_USER) {
+      await fetch('https://api.pushover.net/1/messages.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          token: env.ALERT_PUSHOVER_TOKEN,
+          user: env.ALERT_PUSHOVER_USER,
+          title: 'NovaClip alarm',
+          message: text,
+          /* 2 = emergency: repeats until acknowledged on the device, and is
+             the priority that an override-silence rule can be keyed on. */
+          priority: '2',
+          retry: '60',          /* ask again every minute... */
+          expire: '3600',       /* ...for an hour, or until acknowledged */
+          sound: 'siren'
+        })
+      });
+    }
+    if (env.ALERT_WEBHOOK) {
+      await fetch(env.ALERT_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'ai-worker', kind: kind, detail: detail,
+                               text: text, at: new Date().toISOString() })
+      });
+    }
+  } catch (e) { /* never let the alarm break the request it was watching */ }
+}
 const COST = { text: 1, tts: 1, image: 10, video: 10, grounded: 18 };
 const UPSTREAM_TIMEOUT_MS = 45000;
 
@@ -544,6 +670,21 @@ function monthKey() {
   return d.getUTCFullYear() + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2);
 }
 
+function dayKey() {
+  return new Date().toISOString().slice(0, 10);          /* YYYY-MM-DD, UTC */
+}
+
+/* The one bucket that is keyed on something the caller cannot choose. Every
+   other identity here arrives in a header; this one is the connecting
+   address, which Cloudflare fills in and a request cannot overwrite. */
+function ipDayKey(ip) { return 'ipd:' + dayKey() + ':' + ip; }
+
+async function ipDaySpend(env, ip) {
+  if (!env.RL) return 0;
+  try { return parseInt((await env.RL.get(ipDayKey(ip))) || '0', 10) || 0; }
+  catch (e) { return 0; }
+}
+
 /* The browser mints a random id once and sends it. It is not proof of
    anything and it is not meant to be: somebody who clears their storage gets
    a fresh allowance, and somebody who edits the header gets as many as they
@@ -572,20 +713,65 @@ function claimsPaid(request) {
    it would read as working. */
 async function budget(env, request, ip, path, body) {
   if (!env.RL) return { allow: true, off: true };
-  if (claimsPaid(request)) return { allow: true, paid: true };
+
+  var cost0 = creditsFor(path, body);
+
+  /* THE CEILING FIRST, AND ABOVE THE PAID CHECK ON PURPOSE.
+     Everything below this point can be skipped by a header. This cannot:
+     it is charged to the connecting address before the tier claim is even
+     read, so a forged "I have paid" and a freshly minted uid both still
+     land in the same daily bucket. */
+  var ipKey = ipDayKey(ip);
+  var ipSpent = 0;
+  try { ipSpent = parseInt((await env.RL.get(ipKey)) || '0', 10) || 0; }
+  catch (e) { ipSpent = 0; }
+
+  if (ipSpent + cost0 > IP_DAY_CREDITS) {
+    /* THE ONE SIGNAL WORTH WAKING SOMEBODY FOR. Running a whole address's
+       daily ceiling dry is not something ordinary use does — it is 300 image
+       generations from one connection in a day. A busy classroom gets
+       nowhere near it, which is what makes it worth an alarm rather than a
+       log line. */
+    await alarm(env, 'daily-ceiling-hit',
+      'One address has burned its whole ' + IP_DAY_CREDITS + '-credit day.\n' +
+      'IP: ' + ip + '\n' +
+      'Claimed paid: ' + (claimsPaid(request) ? 'yes (header, unverified)' : 'no') + '\n' +
+      'Spending is now refused for this address until UTC midnight. The key is ' +
+      'not exposed and nothing is broken — this is the cap doing its job.');
+    return { allow: false, kind: 'ipday',
+             left: 0, ipLeft: Math.max(0, IP_DAY_CREDITS - ipSpent) };
+  }
+  try { await env.RL.put(ipKey, String(ipSpent + cost0), { expirationTtl: IP_DAY_TTL }); }
+  catch (e) { /* a failed write must not refuse a request that was in budget */ }
+  var ipLeft = Math.max(0, IP_DAY_CREDITS - (ipSpent + cost0));
+
+  /* Paid callers are not metered per month — that is the existing bargain and
+     it stands. They have still been charged to the ceiling above. */
+  if (claimsPaid(request)) return { allow: true, paid: true, ipLeft: ipLeft, spent: cost0 };
 
   var key = budgetKey(request, ip);
   var rec;
   try { rec = JSON.parse((await env.RL.get(key)) || '{"c":0,"g":0}'); }
   catch (e) { rec = { c: 0, g: 0 }; }
 
-  var cost = creditsFor(path, body);
+  var cost = cost0;
   var grounded = cost === COST.grounded;
 
+  /* The ceiling was charged before this bucket was read, so a refusal here
+     has to hand it back. Otherwise a classroom where everyone has used their
+     month up would drain the address's whole day on requests that never
+     reached Gemini — the budget would be eating the backstop. */
+  async function unchargeIp() {
+    try { await env.RL.put(ipKey, String(ipSpent), { expirationTtl: IP_DAY_TTL }); }
+    catch (e) {}
+  }
+
   if (grounded && rec.g >= BUDGET_GROUNDED) {
+    await unchargeIp();
     return { allow: false, kind: 'grounded', left: Math.max(0, BUDGET_CREDITS - rec.c) };
   }
   if (rec.c + cost > BUDGET_CREDITS) {
+    await unchargeIp();
     return { allow: false, kind: 'credits', left: Math.max(0, BUDGET_CREDITS - rec.c) };
   }
 
@@ -595,13 +781,26 @@ async function budget(env, request, ip, path, body) {
   catch (e) { /* a failed write must not refuse a request that was in budget */ }
 
   return { allow: true, left: Math.max(0, BUDGET_CREDITS - rec.c), spent: cost,
+           ipLeft: ipLeft,
            groundedLeft: Math.max(0, BUDGET_GROUNDED - rec.g) };
 }
 
 /* Give back what budget() just took. Only for an answer that turned out to
    cost nothing — at the moment that means a search-cache hit. */
 async function refund(env, request, ip, path, body) {
-  if (!env.RL || claimsPaid(request)) return null;
+  if (!env.RL) return null;
+
+  /* The ceiling is charged to everyone, so it is given back to everyone —
+     including the paid caller who returns below without touching the monthly
+     bucket. Done first so an early return cannot skip it. */
+  var back = creditsFor(path, body);
+  try {
+    var ik = ipDayKey(ip);
+    var was = parseInt((await env.RL.get(ik)) || '0', 10) || 0;
+    await env.RL.put(ik, String(Math.max(0, was - back)), { expirationTtl: IP_DAY_TTL });
+  } catch (e) { /* a refund that fails is a charge that stands; never fatal */ }
+
+  if (claimsPaid(request)) return null;
   var key = budgetKey(request, ip);
   var rec;
   try { rec = JSON.parse((await env.RL.get(key)) || '{"c":0,"g":0}'); }
@@ -744,6 +943,14 @@ export default {
         /* A budget with nowhere to keep a month's counter is not a budget. */
         budget: env.RL ? (BUDGET_CREDITS + ' credits/month, ' + BUDGET_GROUNDED + ' grounded')
                        : 'off — needs the RL KV binding',
+        /* Said out loud because a cap and an alarm that are quietly switched
+           off read exactly like ones that are working. */
+        ceiling: env.RL ? (IP_DAY_CREDITS + ' credits/day per address, which no header skips')
+                        : 'off — needs the RL KV binding',
+        alarm: !env.RL ? 'off — needs the RL KV binding'
+             : (env.ALERT_PUSHOVER_TOKEN && env.ALERT_PUSHOVER_USER) ? 'pushover, emergency priority'
+             : env.ALERT_WEBHOOK ? 'webhook'
+             : 'off — set ALERT_PUSHOVER_TOKEN + ALERT_PUSHOVER_USER, or ALERT_WEBHOOK',
         models: ALLOWED_MODELS,
         /* The order a request falls through when a vendor runs out, with only
            the vendors this deployment can actually reach. One key configured

@@ -98,6 +98,57 @@ const SAVE_COOLDOWN_MS = 3000;       // one save per key per 3s
 const SAVE_MAX_BYTES = 64 * 1024;
 const MODES = ['easy', 'medium', 'hard', 'ranked'];
 
+/* ---------------------------------------------------------------------------
+   THE ALARM — the twin of the one in ai-worker.js
+   ---------------------------------------------------------------------------
+   THESE TWO COPIES MUST STAY IN STEP. The workers are deployed separately and
+   by hand, so they cannot import from each other without a build step this
+   repository deliberately does not have. Changing one means changing the
+   other; the settings and the behaviour are identical on purpose.
+
+   Read the long note in ai-worker.js for what a phone can actually be made to
+   do. The short version: airplane mode cannot be beaten by anything, silent
+   and Do Not Disturb can be, but only by an app that has been given
+   permission to override them. Pushover priority 2 is the one this speaks.
+
+   Secrets live on the Worker, never in this file — the repository is public.
+
+     ALERT_PUSHOVER_TOKEN + ALERT_PUSHOVER_USER
+     ALERT_WEBHOOK
+   --------------------------------------------------------------------------- */
+const ALERT_EVERY = 60 * 60;
+
+async function alarm(env, kind, detail) {
+  try {
+    const on = (env.ALERT_PUSHOVER_TOKEN && env.ALERT_PUSHOVER_USER) || env.ALERT_WEBHOOK;
+    if (!on || !env.DB) return;
+    const seen = 'alm:' + kind;
+    const n = (parseInt((await env.DB.get(seen)) || '0', 10) || 0) + 1;
+    await env.DB.put(seen, String(n), { expirationTtl: ALERT_EVERY });
+    if (n !== 1) return;
+    const text = 'NovaClip: ' + kind + '\n' + detail +
+                 '\n\nFurther hits this hour are counted, not re-sent.';
+    if (env.ALERT_PUSHOVER_TOKEN && env.ALERT_PUSHOVER_USER) {
+      await fetch('https://api.pushover.net/1/messages.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          token: env.ALERT_PUSHOVER_TOKEN, user: env.ALERT_PUSHOVER_USER,
+          title: 'NovaClip alarm', message: text,
+          priority: '2', retry: '60', expire: '3600', sound: 'siren'
+        })
+      });
+    }
+    if (env.ALERT_WEBHOOK) {
+      await fetch(env.ALERT_WEBHOOK, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'leaderboard-worker', kind, detail,
+                               text, at: new Date().toISOString() })
+      });
+    }
+  } catch (e) { /* an alarm must never break the request it was watching */ }
+}
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
@@ -1770,7 +1821,24 @@ export default {
       const want = await hmacHex(env.GRANT_SECRET, [ticket, plan, session, ts].join('|'));
       /* Compared whole, not prefix: a length-leaking compare on a signature is
          how a signature stops being one. */
-      if (want.length !== sig.length || want !== sig) return json({ error: 'bad signature' }, 403);
+      if (want.length !== sig.length || want !== sig) {
+        /* THE LOUDEST SIGNAL ON THIS WORKER. Nothing reaches this line by
+           accident: a wrong signature on the endpoint that hands out paid
+           plans means somebody found it, read what it wants, and tried to
+           forge the one thing they could not read. The pay worker never
+           fails this check, so a single occurrence is already news.
+
+           It is also safe to shout about, because the attempt FAILED — the
+           signature is the door and it held. This is the alarm telling you
+           somebody tried the handle, not that they got in. */
+        await alarm(env, 'forged-entitlement-grant',
+          'Somebody tried to grant themselves a paid plan with a bad signature.\n' +
+          'Plan asked for: ' + plan + '\n' +
+          'From: ' + (request.headers.get('CF-Connecting-IP') || 'unknown') + '\n' +
+          'It was REFUSED — GRANT_SECRET held. Nothing was given away.\n' +
+          'If this repeats, rotate GRANT_SECRET on both workers.');
+        return json({ error: 'bad signature' }, 403);
+      }
 
       /* Already done? Say so and stop — a Stripe retry is not a second sale. */
       if (await env.DB.get('gsess:' + session)) return json({ ok: true, already: true });
