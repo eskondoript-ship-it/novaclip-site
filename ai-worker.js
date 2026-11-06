@@ -276,11 +276,48 @@ async function webSearch(env, q) {
   } catch (e) { return []; }
 }
 
-/* The results, pasted in front of the prompt the page wrote. */
+/* The results, pasted in front of the prompt the page wrote.
+
+   AND THE GOOGLE SEARCH TOOL COMES BACK OFF, which is the whole bug this
+   paragraph exists for. nova.js asks for grounding two ways at once: it sets
+   search:true with a searchQuery, AND it puts tools:[{google_search:{}}] in
+   the payload, because before this Worker could search for itself that tool
+   WAS the grounding. Once we have done the search ourselves the tool is not
+   merely redundant, it is the expensive half: grounding with Google Search
+   is metered separately from ordinary generation and its free allowance is
+   far smaller, so the call comes back 429 while the same prompt without the
+   tool answers fine.
+
+   Measured against the live Worker. Identical request, the only difference
+   being the tool:
+
+       with    tools:[{google_search:{}}]   429  "out of free quota"
+       without                              200  grounding: search-api
+
+   And the 429 was invisible from the outside: nova.js retries once without
+   the search, that smaller call succeeds, and the page shows a confident
+   answer from training data. Reported as Trend Spotter not live searching,
+   which is exactly what it was.
+
+   Stripped here rather than in nova.js because only this end knows whether a
+   Brave search actually happened. With no SEARCH_API_KEY, or on a search
+   that came back empty, withContext is never called and the tool stays
+   exactly where it was — which is correct, because then it IS the grounding. */
 function withContext(payload, q, hits) {
   let copy;
   try { copy = JSON.parse(JSON.stringify(payload)); } catch (e) { return payload; }
   if (!copy.contents || !copy.contents[0] || !Array.isArray(copy.contents[0].parts)) return payload;
+
+  if (Array.isArray(copy.tools)) {
+    /* Only the search tool goes. A payload may legitimately carry others and
+       dropping those would break whatever asked for them. */
+    copy.tools = copy.tools.filter(function (t) {
+      if (!t || typeof t !== 'object') return true;
+      return !('google_search' in t || 'googleSearch' in t ||
+               'google_search_retrieval' in t || 'googleSearchRetrieval' in t);
+    });
+    if (!copy.tools.length) delete copy.tools;
+  }
   const lines = hits.map((h, i) =>
     (i + 1) + '. ' + h.title + ' — ' + h.uri + '\n   ' + String(h.text || '').slice(0, 300)).join('\n');
   copy.contents[0].parts.unshift({ text:
