@@ -45,15 +45,32 @@
   'use strict';
   if (window.NC_LAYOUT) return;
 
-  var KEY = 'nc_editor_layout';          /* 'wide' (CapCut-like) or 'classic' */
+  var KEY = 'nc_editor_layout';   /* 'studio' | 'wide' (CapCut-like) | 'classic' */
   var SHELL = '#root > div.flex-col';
   var MAIN  = SHELL + ' > div.flex-1';
   var LEFT  = MAIN + ' > div.shrink-0:first-child';
   var MID   = MAIN + ' > div.flex-col';
+  var PROW  = MID + ' > div.flex-1';        /* preview | handle | inspector */
 
+  /* The five floating tool pills, each created by a different file. Declared
+     up here with the other selectors because css() reads it: it used to be
+     assigned halfway down, which happened to be before the first apply() and
+     so happened to work — a load-order coincidence, not a guarantee. */
+  var PILLS = '.nccap-btn,.ncbeat-btn,.ncrf-btn,.nclk-btn,.nctr-btn';
+
+  var ORDER = ['studio', 'wide', 'classic'];
+  var NAMES = { studio: 'Studio', wide: 'Wide', classic: 'Classic' };
+
+  /* STUDIO IS THE DEFAULT, AND ONLY FOR SOMEBODY WHO HAS NOT CHOSEN.
+     An empty key means a person who never touched the toggle, so they get the
+     new arrangement. A key that says 'wide' is somebody who picked wide back
+     when wide was the default and the button said so — changing that under
+     them is how a preference stops meaning anything. */
   function pref() {
-    try { return localStorage.getItem(KEY) === 'classic' ? 'classic' : 'wide'; }
-    catch (e) { return 'wide'; }
+    try {
+      var v = localStorage.getItem(KEY);
+      return ORDER.indexOf(v) >= 0 ? v : 'studio';
+    } catch (e) { return 'studio'; }
   }
   function setPref(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
 
@@ -258,6 +275,131 @@
 
       '}',   /* end of the min-width:1360 block */
 
+      /* ====================================================================
+         STUDIO — the browser is the workbench, the player sits beside it
+         ====================================================================
+         Asked for from a Filmora screenshot. The thing that makes that window
+         read the way it does is the share of it each region gets, measured
+         off the screenshot at 1166px wide:
+
+             browser (categories + grid)   0 .. 725     62%
+             player                      725 .. 1166    38%
+             timeline                    full width along the bottom
+
+         Wide already puts the timeline across the bottom and the tabs along
+         the top. What it does not do is give the browser any room: it is
+         352px of a 1600px window, 22%, because that panel started life as a
+         drawer you opened to drag one file out of. Anything you pick FROM a
+         library — an effect, a transition, a sticker, a title — you pick by
+         looking at forty of them, and forty thumbnails do not go in 352px.
+         Measured in wide at 1600: the panel's grid is three tiles across.
+         Here it is eight.
+
+         Built as an extra attribute rather than a third value of data-nclay,
+         so every rule above still matches and studio is wide plus a handful
+         of overrides. One attribute, nothing re-specified, and no chance of
+         the two arrangements disagreeing about the parts they share.
+
+         WHAT HAD TO GIVE. Taking the browser to 62% leaves 608px at 1600 for
+         what is currently preview AND inspector side by side. The inspector
+         is 368 of those, which would leave the picture 240px wide — so in
+         this layout the right-hand column stacks: player on top, inspector
+         beneath it. That is also where Filmora keeps its properties, and it
+         means nothing is lost, only moved.
+
+         52vw rather than the 62% off the screenshot. 62% of a 1366 laptop is
+         847px of browser and 519 for the picture, and the picture is still
+         the thing being judged. 52vw gives the browser six tiles across at
+         1366 and keeps the player above 650. Clamped at both ends: never so
+         narrow the grid is pointless, never so wide the player is a stamp. */
+      'html[data-ncstudio]{--ncb:clamp(420px,52vw,980px)}',
+
+      '@media (min-width:1280px){',
+
+      /* the browser takes the floor */
+      'html[data-ncstudio] ' + LEFT + '{width:var(--ncb) !important;',
+        'max-width:none !important;flex-basis:var(--ncb) !important}',
+      'html[data-ncstudio] ' + LEFT + ' > .flex-row{width:100% !important}',
+
+      /* THE TABS STOP BEING FIFTHS. Wide gives each tab flex:1 1 20% because
+         it is dividing 352px and five across is what fits a word. Across
+         980px that same rule makes each tab 196px of mostly empty space, in
+         three rows. Here they size to their own labels and flow as one row,
+         which is the row the screenshot has — and still wrap on their own if
+         a translation needs them to, rather than because a percentage said
+         so. */
+      'html[data-ncstudio] ' + LEFT + ' nav > *{flex:0 0 auto}',
+      'html[data-ncstudio] ' + LEFT + ' nav button{min-width:76px;width:auto;',
+        'padding:7px 11px}',
+      'html[data-ncstudio] ' + LEFT + ' nav button span{font-size:11px}',
+
+      /* right column: player over inspector */
+      'html[data-ncstudio] ' + PROW + '{flex-direction:column}',
+      'html[data-ncstudio] ' + PROW + ' > div.flex-1{min-height:0}',
+      /* The drag handle set a WIDTH between two columns. There are no two
+         columns here, and a col-resize grip lying on its side that moves the
+         wrong axis is worse than no grip, so it goes. */
+      'html[data-ncstudio] ' + PROW + ' > div.w-1{display:none}',
+      'html[data-ncstudio] ' + PROW + ' > div.min-w-0.shrink-0{',
+        'width:100% !important;max-width:none !important;height:auto !important;',
+        'max-height:38%;overflow:auto;',
+        'border-top:1px solid rgba(255,255,255,.1)}',
+
+      /* The transport is fixed to the centre of the picture, and the picture
+         no longer starts at 352. Same sum, with the browser's width in it. */
+      'html[data-ncstudio] ' + SHELL + ' > header > div:has(> button[title^="Play/Pause"]),',
+      'html[data-ncstudio] ' + SHELL + ' > header > div[class*="font-mono"]{',
+        'left:calc(var(--ncb) + (100vw - var(--ncb)) / 2)}',
+
+      /* AND IT HAS TO CLEAR THE INSPECTOR NOW.
+         Wide lifts the transport to just above the timeline, because in wide
+         the bottom of the picture is dead space. In studio it is not: the
+         inspector sits there, and the first build put the play button and the
+         timecode straight on top of "No clip selected".
+
+         So the lift gains the inspector's height. It cannot be written as a
+         constant — the inspector is content-height up to a 38% cap, so it is
+         204px with a clip selected and less without — and CSS cannot measure
+         a sibling. A ResizeObserver keeps --ncinsp honest instead, which
+         costs one number per resize and is the only way this stays right
+         while the panel changes size under it. */
+      'html[data-ncstudio] ' + SHELL + ' > header > div:has(> button[title^="Play/Pause"]){',
+        'bottom:calc(var(--ncinsp,0px) + min(42vh,340px) + 52px)}',
+      'html[data-ncstudio] ' + SHELL + ' > header > div[class*="font-mono"]{',
+        'bottom:calc(var(--ncinsp,0px) + min(42vh,340px) + 16px)}',
+
+      '}',   /* end of studio */
+
+      /* ---- BELOW 1280, WHERE NEITHER GRID APPLIES ----------------------
+         Studio and wide both start at 1280; under that the editor falls back
+         to the arrangement it shipped with, and that arrangement's header
+         does not fit. Measured at 1100: Split, Duplicate, Delete, Project
+         settings and Export all sit past the right edge, Export by 268px —
+         not clipped, unreachable.
+
+         This is not new and it is not caused here: wide has done the same
+         thing for as long as it has existed, and it was the default, so this
+         is what that window size has always been. But it is the DEFAULT's
+         problem now, and the same treatment classic already carries fixes
+         it, so it stops being a comment and becomes two rules.
+
+         Kept to max-width:1279 on purpose. Classic's copy of this is
+         unscoped because classic crowds at every size; wide and studio only
+         crowd below their own floor, and the 10ch cap on the project name is
+         not something to inflict on a 1920 window that has room for it. */
+      '@media (max-width:1279px){',
+        'html[data-nclay="wide"] ' + SHELL + ' > header{',
+          'overflow-x:auto;overflow-y:hidden;gap:2px;',
+          'padding-left:8px;padding-right:8px}',
+        'html[data-nclay="wide"] ' + SHELL + ' > header > *{min-width:0}',
+        'html[data-nclay="wide"] ' + SHELL + ' > header button{',
+          'padding-left:6px;padding-right:6px}',
+        'html[data-nclay="wide"] ' + SHELL + ' > header input,',
+        'html[data-nclay="wide"] ' + SHELL + ' > header [contenteditable]{',
+          'max-width:10ch;min-width:0}',
+        'html[data-nclay="wide"] ' + SHELL + ' > header::-webkit-scrollbar{height:0}',
+      '}',
+
       /* The phone layout is its own arrangement and wins. It is below the
          gate above anyway, but this is kept explicit: two layout files racing
          over the same elements is how both end up wrong. */
@@ -265,6 +407,23 @@
         'html[data-nclay="wide"] .nclk-btn,html[data-nclay="wide"] .nctr-btn,',
         'html[data-nclay="wide"] .nccap-btn,html[data-nclay="wide"] .ncbeat-btn,',
         'html[data-nclay="wide"] .ncrf-btn{bottom:8px}}',
+
+      /* ---- THE FIVE PILLS NOW CARRY ICONS ------------------------------
+         Captions, Beats, Reframe, Looks and Transitions each used to open
+         with a character — ♪, ⤢, ✦, ⇄ — picked because it was one keystroke,
+         not because it meant anything. ⤢ is the fullscreen glyph and the
+         button crops; ✦ is a sparkle and the button grades. Each file now
+         draws a real 15px icon instead.
+
+         The rule lives here, once, rather than in five stylesheets, because
+         this file already owns where these five sit and what they line up
+         with. They are five separate files with five separate css() blocks
+         and no way to agree on a number between them; this is the only place
+         that already knows about all of them. */
+      PILLS.split(',').map(function (s) { return s + '{display:inline-flex;align-items:center;gap:7px}'; }).join('') +
+      PILLS.split(',').map(function (s) { return s + ' .ncpill-i'; }).join(',') +
+        '{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;',
+        'stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}',
 
       '.nclay-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;',
         'border-radius:9px;cursor:pointer;flex:0 0 auto;white-space:nowrap;',
@@ -350,9 +509,19 @@
 
   function apply() {
     css();
-    document.documentElement.setAttribute('data-nclay', pref());
+    var p = pref();
+    var el = document.documentElement;
+    /* Studio IS wide, plus the overrides keyed off the second attribute, so
+       data-nclay carries 'wide' for it and every rule written for wide goes
+       on matching without being listed twice. */
+    el.setAttribute('data-nclay', p === 'classic' ? 'classic' : 'wide');
+    if (p === 'studio') el.setAttribute('data-ncstudio', '1');
+    else el.removeAttribute('data-ncstudio');
     var b = document.querySelector('.nclay-btn b');
-    if (b) b.textContent = pref() === 'wide' ? 'Wide' : 'Classic';
+    if (b) b.textContent = NAMES[p] || 'Studio';
+    /* The inspector counts in studio and not in the other two, so the
+       variable is re-read on every switch, not only when the panel resizes. */
+    try { if (window.__ncInspRead) window.__ncInspRead(); } catch (e) {}
   }
 
   /* The toggle goes in the header, beside the editor's own controls. Inserted
@@ -366,10 +535,12 @@
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'nclay-btn';
-    b.title = 'Timeline across the whole window, or back to the original layout';
+    b.title = 'Studio: a full-width browser beside the player. ' +
+              'Wide: timeline across the whole window. ' +
+              'Classic: the layout the editor shipped with.';
     b.innerHTML = '<span class="nclay-word">Layout: </span><b></b>';
     b.onclick = function () {
-      setPref(pref() === 'wide' ? 'classic' : 'wide');
+      setPref(ORDER[(ORDER.indexOf(pref()) + 1) % ORDER.length]);
       apply();
       /* The editor measures its own canvas on resize and nowhere else, so it
          has to be told the shape changed or the preview keeps the old size. */
@@ -404,8 +575,6 @@
      finding its button somewhere it did not put it. Positioning them where
      they already are costs nothing and breaks nothing.
      ------------------------------------------------------------------------ */
-  var PILLS = '.nccap-btn,.ncbeat-btn,.ncrf-btn,.nclk-btn,.nctr-btn';
-
   /* THE WIDTH IS NOT STABLE WHEN THE ROW IS FIRST LAID OUT.
      First attempt placed each button from the width it had at that moment, and
      the row still overlapped — worse than before, two pairs instead of one.
@@ -476,9 +645,35 @@
     pillTimer = setTimeout(layoutPills, 60);
   }
 
+  /* --------------------------------------------------------------------------
+     HOW TALL THE INSPECTOR IS, KEPT IN A CSS VARIABLE
+     --------------------------------------------------------------------------
+     Only studio needs it, and only so the transport can sit above the
+     inspector instead of on it. Everywhere else the variable stays unset and
+     the calc() falls back to 0px, which is the wide behaviour exactly.
+     -------------------------------------------------------------------------- */
+  var inspRO = null;
+  function trackInspector() {
+    var el = document.querySelector(PROW + ' > div.min-w-0.shrink-0');
+    if (!el) return false;
+    function read() {
+      var h = pref() === 'studio' ? Math.round(el.getBoundingClientRect().height) : 0;
+      document.documentElement.style.setProperty('--ncinsp', h + 'px');
+    }
+    read();
+    if (window.ResizeObserver && !inspRO) {
+      try { (inspRO = new ResizeObserver(read)).observe(el); } catch (e) {}
+    }
+    window.addEventListener('resize', read);
+    /* The toggle changes whether it counts at all, so apply() re-reads it. */
+    window.__ncInspRead = read;
+    return true;
+  }
+
   window.NC_LAYOUT = {
     get: pref,
-    set: function (v) { setPref(v === 'classic' ? 'classic' : 'wide'); apply(); },
+    set: function (v) { setPref(ORDER.indexOf(v) >= 0 ? v : 'studio'); apply(); },
+    options: ORDER.slice(),
     apply: apply,
     pills: layoutPills
   };
@@ -489,8 +684,11 @@
 
   function boot() {
     var tries = 0;
+    var gotBtn = false, gotInsp = false;
     var t = setInterval(function () {
-      if (button() || tries++ > 80) clearInterval(t);
+      if (!gotBtn) gotBtn = button();
+      if (!gotInsp) gotInsp = trackInspector();
+      if ((gotBtn && gotInsp) || tries++ > 80) clearInterval(t);
     }, 250);
 
     /* The pills arrive late and independently, so the row is re-laid out as

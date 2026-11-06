@@ -566,7 +566,14 @@
     var b = document.createElement('button');
     b.className = 'nclk-btn';
     b.type = 'button';
-    b.textContent = '✦ Looks';
+    /* Half-filled circle — the grading mark every editor uses for contrast
+       and colour, which is what a Look is. The panel's own heading keeps its
+       ✦ star: that string is a title, not a control, and leaving it alone
+       means its dictionary entry goes on matching. */
+    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 16 16" aria-hidden="true">' +
+      '<circle cx="8" cy="8" r="6.4"/>' +
+      '<path d="M8 1.6a6.4 6.4 0 0 1 0 12.8z" fill="currentColor" stroke="none"/>' +
+      '</svg><span>Looks</span>';
     b.title = 'A whole grade in one press';
     b.onclick = open;
     document.body.appendChild(b);

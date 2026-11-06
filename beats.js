@@ -296,7 +296,14 @@
     var b = document.createElement('button');
     b.className = 'ncbeat-btn';
     b.type = 'button';
-    b.textContent = '♪ Beats';
+    /* Bars rather than a quaver: this finds the beat in a waveform, and a
+       level meter says that where a music note only says "audio". The label
+       loses the ♪ because the icon IS the ♪ now — see i18n-ui.js, where the
+       plain "Beats" key was added alongside the old "♪ Beats" one so the
+       translation did not quietly stop matching. */
+    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 16 16" aria-hidden="true">' +
+      '<path d="M2.2 6.6v2.8M5.4 4.1v7.8M8.6 2.4v11.2M11.8 5.2v5.6M14.6 7.1v1.8"/>' +
+      '</svg><span>Beats</span>';
     b.title = 'Find the beat and cut to it';
     b.onclick = open;
     document.body.appendChild(b);

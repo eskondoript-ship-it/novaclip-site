@@ -267,7 +267,11 @@
     var b = document.createElement('button');
     b.className = 'ncrf-btn';
     b.type = 'button';
-    b.textContent = '⤢ Reframe';
+    /* Crop marks: two overlapping rules, which is what reframing to another
+       aspect actually is. The ⤢ it replaces read as "fullscreen". */
+    b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 16 16" aria-hidden="true">' +
+      '<path d="M4.6 1.4v10h10M1.4 4.6h10v10"/>' +
+      '</svg><span>Reframe</span>';
     b.title = 'Crop the whole project to another shape';
     b.onclick = open;
     document.body.appendChild(b);
