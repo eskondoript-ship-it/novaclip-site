@@ -2918,7 +2918,10 @@
    signed you straight back in; and both pages' auth listeners had no branch
    for a null user, so nothing ever moved the UI back to signed-out. Both are
    cached pages, so the bump is what delivers the fix. */
-const CACHE = 'novaclip-v167';
+/* v168 adds editor-webgl.js (NEW) and vendor/gl-transitions/ (NEW): 200 GPU
+   transitions behind a measured capability gate. The shader bundle is not
+   precached on purpose — see the note beside editor-webgl.js in SHELL. */
+const CACHE = 'novaclip-v168';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3117,6 +3120,12 @@ const SHELL = [
      correct — the pack falls back to the constants it had before — but the
      sliders do nothing without both. */
   '/editor-fx-edit.js',
+  /* The WebGL gate. Small, and cached with the editor so the decision runs
+     offline too. vendor/gl-transitions/transitions.js is deliberately NOT
+     here: it is 608KB that only a device passing the gate can use, and
+     precaching it would make every school laptop pay for a feature it is
+     never going to get. It is fetched on demand, after the check. */
+  '/editor-webgl.js',
   '/editor-layout.js',
   '/editor-quickedit.js',
   /* The AI panel's manners. Without it the panel still runs every tool, and

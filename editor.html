@@ -2122,6 +2122,21 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      owning behaviour it did not write. -->
 <script src='editor-fx-edit.js' defer></script>
 
+<!-- THE GPU TRANSITIONS. 200 gl-transitions, vendored in
+     vendor/gl-transitions/ with their credits. Until this file the whole site
+     had zero WebGL contexts — 189 getContext calls, every one '2d'.
+
+     IT DECIDES FOR ITSELF WHETHER TO TURN ON, per device, every load. Not
+     "does WebGL exist": a managed school laptop usually SAYS yes and then
+     renders in SwiftShader on the CPU, which is slower than the 2D path it
+     would replace. So it compiles a real transition and times real frames,
+     and only registers the 200 if the measured cost clears a frame budget.
+     A device that fails keeps the canvas transitions, which work.
+
+     The 608KB shader bundle is fetched only AFTER that check passes, so a
+     machine that cannot use them never downloads them. -->
+<script src='editor-webgl.js' defer></script>
+
 <!-- THE LAYOUT. The timeline shipped inside the centre column, so it stopped
      where the media panel started and the bottom-left of the window was a
      media browser nobody looks at while cutting. Every editor built for this
