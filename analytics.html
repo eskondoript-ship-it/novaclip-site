@@ -2078,7 +2078,14 @@ window.ncReconnect = function () {
   connect();
 };
 
-onAuthStateChanged(auth, (user) => { if (user) signedInUI(user.displayName); });
+onAuthStateChanged(auth, (user) => {
+  if (user) { signedInUI(user.displayName); return; }
+  /* Null means the session ended — signed out here, signed out in another
+     tab, or expired. The sign-out on this page reloads, so this mostly
+     catches the other two; without it they leave a signed-in panel over a
+     session that no longer exists. */
+  try { location.reload(); } catch (e) {}
+});
 // coming back from the redirect fallback
 getRedirectResult(auth).then(r => { if (r) afterSignIn(r); }).catch(e => note(explainAuth(e)));
 </script>

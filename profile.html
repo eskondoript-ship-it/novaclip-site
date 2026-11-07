@@ -588,6 +588,14 @@ a { color:var(--pt-text); }
     if (!confirm('Sign out on this device?\n\nYour progress stays in this browser and stays on the server. ' +
                  'You will need your username and password, or your recovery code, to sign back in.')) return;
     NC_ACCOUNT.signOut();
+    /* And out of Google, if that module has loaded. Without this the Firebase
+       session outlives the local one and signs you back in on the next
+       render — see the note on NC_GOOGLE_OUT further down this file. */
+    try {
+      if (typeof window.NC_GOOGLE_OUT === 'function') {
+        window.NC_GOOGLE_OUT().then(paint, paint);
+      }
+    } catch (e) {}
     paint();
   };
 
@@ -621,7 +629,7 @@ a { color:var(--pt-text); }
      ========================================================================== -->
 <script type='module'>
 import { initializeApp } from '/vendor/firebase/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut }
   from '/vendor/firebase/firebase-auth.js';
 
 /* Same project as analytics.html. A Firebase web config is not a secret — it
@@ -727,7 +735,40 @@ if (btn) {
 
 /* Coming back from the redirect path, and the already-signed-in case. */
 getRedirectResult(auth).then(r => { if (r && r.user) useAccount(r.user); }).catch(() => {});
-onAuthStateChanged(auth, u => { if (u) useAccount(u); });
+
+/* ==========================================================================
+   SIGNING OUT HAS TO SIGN OUT OF GOOGLE TOO
+   ==========================================================================
+   Reported: sign out, and the page still thinks you are signed in. Two
+   separate faults, and either one alone is enough to cause it.
+
+   ONE. The Sign out button lives in the ordinary script above, which cannot
+   see `auth` because that is scoped to this module. So it called
+   NC_ACCOUNT.signOut(), which forgets the username, the key and the recovery
+   code on this device — and left the Google session completely untouched.
+   Firebase persists that session in IndexedDB across reloads by design, so it
+   survived, and the listener below then handed the same user straight back.
+   You were signed out of NovaClip and still signed in to Google, which from
+   the outside looks exactly like sign out not working.
+
+   TWO. The listener was `u => { if (u) useAccount(u); }` with no else.
+   onAuthStateChanged fires with null the moment a session ends — that is how
+   it reports a sign-out, an expiry, or a sign-out in another tab. With
+   nothing handling null the UI had no path back to its signed-out state, so
+   even a successful sign-out left "Hello, <name>" on screen.
+   ========================================================================== */
+window.NC_GOOGLE_OUT = function () {
+  try { return signOut(auth).catch(function () {}); }
+  catch (e) { return Promise.resolve(); }
+};
+
+onAuthStateChanged(auth, u => {
+  if (u) { useAccount(u); return; }
+  /* Signed out: put the button back and clear the greeting, so the page
+     shows the state it is actually in. */
+  if (btn) btn.disabled = false;
+  say('', '', '');
+});
 </script>
 
 </body>

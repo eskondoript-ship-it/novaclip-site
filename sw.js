@@ -2913,7 +2913,12 @@
 /* v166: drag an effect out of the FX library onto the clip bar and it lands
    as a removable chip instead of a number in a panel — the CapCut gesture.
    editor-fx-edit.js is a cached shell file. */
-const CACHE = 'novaclip-v166';
+/* v167: signing out of NovaClip now signs out of Google too. profile.html
+   cleared the local keys and left the Firebase session alive, which then
+   signed you straight back in; and both pages' auth listeners had no branch
+   for a null user, so nothing ever moved the UI back to signed-out. Both are
+   cached pages, so the bump is what delivers the fix. */
+const CACHE = 'novaclip-v167';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
