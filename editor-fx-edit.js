@@ -511,21 +511,19 @@
     css();
     var ui = window.NC_TRANS_UI, pack = window.NC_FX_PACK;
     if (!ui || !pack) return;
-    var effectsMode = !!(panel.querySelector('.cats .cat.on') &&
-      panel.querySelector('.cats .cat.on').textContent === 'Effects');
     panel.querySelectorAll('.tile').forEach(function (tile) {
       if (tile.querySelector('.ncfe-gear')) return;
-      /* The tile does not carry its id, so it is matched by its heading
-         against the catalogue — the same text the tile was built from. */
-      var b = tile.querySelector('b');
-      if (!b) return;
-      var name = b.textContent.trim();
-      var src = effectsMode ? ui.effects : ui.list;
-      var id = Object.keys(src).filter(function (k) { return src[k][0] === name; })[0];
+      /* data-fx / data-trans, which editor-trans.js puts on every tile. The
+         first version matched the heading text against the catalogue and
+         found nothing, because the NEW badge is appended INSIDE the <b> —
+         so the heading reads "StarburstNEW" and no catalogue label equals
+         it. The attribute was there the whole time. */
+      var id = tile.getAttribute('data-fx') || tile.getAttribute('data-trans');
       if (!id) return;
       /* Only ours: editor-fx.js's painters have no parameters and no easing
          wrapper, so offering an editor for them would promise nothing. */
-      var mine = effectsMode ? pack.PAINT[id] : pack.TPAINT[id];
+      var isFx = !!tile.getAttribute('data-fx');
+      var mine = isFx ? pack.PAINT[id] : pack.TPAINT[id];
       if (!mine) return;
       var gear = document.createElement('button');
       gear.type = 'button';
@@ -534,21 +532,261 @@
       gear.title = 'Edit ' + name;
       gear.onclick = function (e) {
         e.stopPropagation(); e.preventDefault();
-        editor(id, effectsMode ? 'fx' : 'tr');
+        editor(id, isFx ? 'fx' : 'tr');
       };
       tile.appendChild(gear);
+    });
+  }
+
+  /* =========================================================================
+     DRAG IT ON, AND SEE IT AS A BUTTON — THE CAPCUT SHAPE
+     =========================================================================
+     Asked for: drag an effect onto the clip, and have it show as a button
+     rather than a percentage buried in a properties panel.
+
+     WHAT THE BUNDLE WOULD AND WOULD NOT GIVE ME, measured before building
+     rather than assumed. A timeline clip carries NO handle back to its id:
+     no data attribute holds it, no element has the clip's name as its own
+     text, and the production React build exposes no fiber to read props
+     from. Dropping onto one specific clip is therefore not something a
+     sidecar can do honestly — it would have to guess which clip was under
+     the cursor from pixel arithmetic over a scale and scroll offset the
+     bundle also does not expose, and guess wrong at the edges.
+
+     What IS reliable is the store: selectedClipId, selectClip and
+     updateClipEffects all exist and work. So the drop applies to the
+     SELECTED clip, and the bar says so in as many words rather than leaving
+     somebody to discover it by dropping on the wrong one. Clicking a clip to
+     select it is one motion the editor already supports; the drag is the
+     second. It is the CapCut gesture with one honest caveat printed on it.
+
+     The bar is this file's own element, docked above the timeline, because
+     every attempt to anchor to the bundle's layout found nothing stable to
+     anchor to. */
+  var BARCSS = [
+    '.ncfx-bar{position:fixed;left:50%;transform:translateX(-50%);z-index:30;',
+      'display:flex;align-items:center;gap:7px;max-width:min(880px,94vw);',
+      'padding:6px 9px;border-radius:12px;background:rgba(11,10,20,.93);',
+      'border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px);',
+      'font:600 10px/1 system-ui;overflow-x:auto;scrollbar-width:none}',
+    '.ncfx-bar::-webkit-scrollbar{display:none}',
+    '.ncfx-bar.drop{border-color:#7C5CFF;background:rgba(124,92,255,.2)}',
+    '.ncfx-bar>i{font-style:normal;color:#7E8AA6;white-space:nowrap;flex:0 0 auto}',
+    '.ncfx-chip{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;',
+      'padding:5px 6px 5px 9px;border-radius:999px;cursor:pointer;white-space:nowrap;',
+      'color:#E6E9F2;background:rgba(124,92,255,.22);border:1px solid rgba(124,92,255,.5)}',
+    '.ncfx-chip:hover{background:rgba(124,92,255,.36)}',
+    '.ncfx-chip b{font-weight:700}',
+    '.ncfx-chip u{text-decoration:none;color:#A78BFA;font-size:9px;opacity:.85}',
+    '.ncfx-chip span{display:grid;place-items:center;width:15px;height:15px;border-radius:50%;',
+      'background:rgba(0,0,0,.4);color:#C9D1E4;font-size:11px;line-height:1}',
+    '.ncfx-chip span:hover{background:#ff4d6a;color:#fff}',
+    '.nctr .tile[draggable]{cursor:grab}',
+    '.nctr .tile.dragging{opacity:.5}'
+  ].join('');
+
+  function barcss() {
+    if (document.getElementById('ncfx-barcss')) return;
+    var s = document.createElement('style');
+    s.id = 'ncfx-barcss'; s.textContent = BARCSS;
+    document.head.appendChild(s);
+  }
+
+  var bar = null;
+
+  function selClip() {
+    try {
+      var st = window.__ncStore.getState();
+      return st.clips.filter(function (c) { return c.id === st.selectedClipId; })[0] || null;
+    } catch (e) { return null; }
+  }
+
+  /* The effects actually on the selected clip: every non-zero key of its
+     effects object, named from whichever catalogue knows it. The bundle's own
+     36 are included — somebody wanting to see what is on a clip does not care
+     which file implements it. */
+  function activeOn(clip) {
+    if (!clip || !clip.effects) return [];
+    var ui = window.NC_TRANS_UI, out = [];
+    for (var k in clip.effects) {
+      if (!Object.prototype.hasOwnProperty.call(clip.effects, k)) continue;
+      var v = clip.effects[k];
+      if (!(typeof v === 'number' && v > 0.001)) continue;
+      var label = k;
+      try { if (ui && ui.effects[k]) label = ui.effects[k][0]; } catch (e) {}
+      if (label === k) label = k.replace(/([A-Z])/g, ' $1').replace(/^./, function (c) { return c.toUpperCase(); });
+      out.push({ id: k, label: label, v: v, mine: !!(window.NC_FX_PACK && window.NC_FX_PACK.PAINT[k]) });
+    }
+    return out;
+  }
+
+  function setEffect(id, v) {
+    var clip = selClip();
+    if (!clip) return false;
+    try {
+      var st = window.__ncStore.getState();
+      if (typeof st.pushHistory === 'function') st.pushHistory();
+      var one = {}; one[id] = v;
+      st.updateClipEffects(clip.id, one);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function place() {
+    if (!bar) return;
+    /* Above the pill row if it is there, otherwise above the bottom edge.
+       Measured rather than hard-coded, the same way editor-layout.js places
+       the pills, because the timeline's height changes with the layout. */
+    var y = 118;
+    try {
+      var pill = document.querySelector('.nctr-btn');
+      if (pill) {
+        var r = pill.getBoundingClientRect();
+        if (r.height) y = Math.max(54, window.innerHeight - r.top + 8);
+      }
+    } catch (e) {}
+    bar.style.bottom = y + 'px';
+  }
+
+  function paintBar() {
+    var clip = selClip();
+    var list = activeOn(clip);
+    if (!bar) {
+      barcss();
+      bar = document.createElement('div');
+      bar.className = 'ncfx-bar';
+      document.body.appendChild(bar);
+      ['dragenter', 'dragover'].forEach(function (ev) {
+        bar.addEventListener(ev, function (e) {
+          e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+          bar.classList.add('drop');
+        });
+      });
+      ['dragleave', 'drop'].forEach(function (ev) {
+        bar.addEventListener(ev, function () { bar.classList.remove('drop'); });
+      });
+      bar.addEventListener('drop', onDrop);
+    }
+    place();
+    if (!clip) { bar.style.display = 'none'; return; }
+    bar.style.display = '';
+    bar.textContent = '';
+    var hint = document.createElement('i');
+    hint.textContent = list.length ? 'On this clip:' : 'Drag an effect here →';
+    bar.appendChild(hint);
+
+    list.forEach(function (fx) {
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'ncfx-chip';
+      chip.title = fx.mine ? 'Click to edit · × to remove' : 'Click to adjust · × to remove';
+      var b = document.createElement('b'); b.textContent = fx.label;
+      var u = document.createElement('u'); u.textContent = Math.round(fx.v * 100) + '%';
+      var x = document.createElement('span'); x.textContent = '×'; x.title = 'Remove';
+      chip.appendChild(b); chip.appendChild(u); chip.appendChild(x);
+      x.onclick = function (e) {
+        e.stopPropagation();
+        if (setEffect(fx.id, 0)) paintBar();
+      };
+      chip.onclick = function () {
+        /* Only ours has an editor. The bundle's own effects have no
+           parameters here, so clicking one opens the library at it rather
+           than an editor that would be empty. */
+        if (fx.mine && window.NC_FX_EDIT.editor) {
+          if (!document.querySelector('.nctr')) window.NC_TRANS_UI.open();
+          setTimeout(function () { window.NC_FX_EDIT.editor(fx.id, 'fx'); }, 90);
+        } else if (window.NC_FX_PACK) {
+          window.NC_FX_PACK.openEffects();
+        }
+      };
+      bar.appendChild(chip);
+    });
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    var id = '', kind = 'fx';
+    try {
+      id = e.dataTransfer.getData('text/nc-fx') || '';
+      kind = e.dataTransfer.getData('text/nc-kind') || 'fx';
+    } catch (err) {}
+    if (!id) return;
+    var clip = selClip();
+    if (!clip) return;
+    if (kind === 'tr') {
+      try {
+        var st = window.__ncStore.getState();
+        if (typeof st.pushHistory === 'function') st.pushHistory();
+        st.setClipTransition(clip.id, 'out', { type: id, duration: cfg(id).duration });
+      } catch (err) {}
+    } else {
+      setEffect(id, cfg(id).strength || 0.7);
+    }
+    paintBar();
+  }
+
+  /* Make the library's tiles draggable. Same identification as the gears:
+     by the heading text against the catalogue, because a tile carries no id. */
+  function draggables() {
+    var panel = document.querySelector('.nctr');
+    if (!panel) return;
+    var ui = window.NC_TRANS_UI;
+    if (!ui) return;
+    panel.querySelectorAll('.tile').forEach(function (tile) {
+      if (tile.getAttribute('draggable') === 'true') return;
+      var id = tile.getAttribute('data-fx') || tile.getAttribute('data-trans');
+      if (!id) return;
+      tile.setAttribute('draggable', 'true');
+      tile.addEventListener('dragstart', function (e) {
+        try {
+          e.dataTransfer.setData('text/nc-fx', id);
+          e.dataTransfer.setData('text/nc-kind',
+            tile.getAttribute('data-fx') ? 'fx' : 'tr');
+          e.dataTransfer.effectAllowed = 'copy';
+        } catch (err) {}
+        tile.classList.add('dragging');
+        paintBar();
+      });
+      tile.addEventListener('dragend', function () { tile.classList.remove('dragging'); });
     });
   }
 
   window.NC_FX_EDIT.editor = editor;
   window.NC_FX_EDIT.applyNow = applyNow;
   window.NC_FX_EDIT.gears = gears;
+  window.NC_FX_EDIT.bar = paintBar;
 
   try {
-    var mo = new MutationObserver(function () { gears(); });
+    var mo = new MutationObserver(function () { gears(); draggables(); });
     var start = function () { mo.observe(document.body, { childList: true, subtree: true }); };
     if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
   } catch (e) {}
+
+  /* The bar follows the selection. Subscribing to the store is exact and
+     costs nothing; the interval is only a floor in case the store is replaced
+     during a project load. */
+  function watch() {
+    try {
+      var st = window.__ncStore;
+      if (!st) return false;
+      var last = '';
+      st.subscribe(function () {
+        var s = st.getState();
+        var sig = String(s.selectedClipId) + '|' +
+          JSON.stringify((s.clips.filter(function (c) { return c.id === s.selectedClipId; })[0] || {}).effects || {});
+        if (sig === last) return;
+        last = sig;
+        paintBar();
+      });
+      paintBar();
+      window.addEventListener('resize', place);
+      return true;
+    } catch (e) { return false; }
+  }
+  if (!watch()) {
+    var wt = 0;
+    var wi = setInterval(function () { if (watch() || ++wt > 80) clearInterval(wi); }, 150);
+  }
 
   if (!wrap()) {
     var tries = 0;

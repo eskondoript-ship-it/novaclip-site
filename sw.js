@@ -2910,7 +2910,10 @@
 /* v165 adds editor-fx-edit.js (NEW): parameter sliders, duration, delay and
    a draggable easing curve for the 43 effects and 38 transitions in the pack.
    editor.html is re-fetched for the script tag. */
-const CACHE = 'novaclip-v165';
+/* v166: drag an effect out of the FX library onto the clip bar and it lands
+   as a removable chip instead of a number in a panel — the CapCut gesture.
+   editor-fx-edit.js is a cached shell file. */
+const CACHE = 'novaclip-v166';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
