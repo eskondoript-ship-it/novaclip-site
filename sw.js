@@ -2903,7 +2903,11 @@
    the rail, which nothing outside the bundle can add to, and this pack's 51
    behind a pill — and somebody looking for a new effect found the first one
    three times running and concluded the effects were never added. */
-const CACHE = 'novaclip-v163';
+/* v164: the project-rename handler in editor.html read a cached _title
+   400ms after the keystroke and threw when React had replaced the toolbar in
+   between. Seen in a real session as "Cannot read properties of null
+   (reading 'value')". It now uses the event's own target. */
+const CACHE = 'novaclip-v164';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

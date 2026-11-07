@@ -1679,11 +1679,23 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
           /* Renaming in the toolbar is renaming the project. Debounced because
              this fires per keystroke and each one rewrites the index. */
           var t = null;
-          _title.addEventListener('input', function () {
+          _title.addEventListener('input', function (e) {
             clearTimeout(t);
+            /* THE ELEMENT FROM THE EVENT, NOT THE MODULE-LEVEL CACHE.
+               _title is a cached lookup that other code clears when React
+               replaces the toolbar, and this callback runs 400ms after the
+               keystroke — long enough for that to happen in between. Caught
+               in a real session as:
+
+                 TypeError: Cannot read properties of null (reading 'value')
+
+               The event's own target cannot be null here, because the
+               listener is attached to it. */
+            var el = (e && e.target) || _title;
             t = setTimeout(function () {
               var id = currentId(); if (!id) return;
-              var v = (_title.value || '').trim().slice(0, 60) || 'Untitled Project';
+              if (!el) return;
+              var v = (el.value || '').trim().slice(0, 60) || 'Untitled Project';
               touchIndex(id, { name: v });
               paintBtn();
             }, 400);
