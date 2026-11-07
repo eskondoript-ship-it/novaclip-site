@@ -2162,12 +2162,100 @@
   };
   function heavy(id) { return (COST[id] || 0) > 33.3; }
 
+  /* ---- A SIGNPOST IN THE PANEL PEOPLE ACTUALLY OPEN ----------------------
+     The editor has two Effects panels and they are not the same one.
+
+       the left rail's "Effects"   drawn by the React bundle from its own
+                                   fixed list. Says "36 effects available"
+                                   and always will — nothing outside the
+                                   bundle can add a row to it.
+       the FX library pill         this pack's 51, plus 82 transitions.
+
+     Somebody looking for an effect clicks the one in the rail, counts 36,
+     and concludes the new ones were never added. That happened three times
+     in one session to the person who asked for them, which is not a user
+     failing to read — it is two panels with the same name and no connection
+     between them.
+
+     So the rail panel gets one line pointing at the other one. It is found
+     by its own subtitle, "<n> effects available", because that <p> is the
+     only stable handle the bundle gives: no id, no data attribute, and a
+     className of Tailwind utilities that a rebuild would renumber. The
+     number is read rather than assumed, so if the bundle's list ever changes
+     size the signpost still matches what is above it.
+
+     Inline styles, because React owns className on its own nodes — though
+     not on this one, which is ours; the inline rule is for the neighbours'
+     stylesheet rather than for React. */
+  function openEffectsLibrary() {
+    var ui = window.NC_TRANS_UI;
+    if (!ui || typeof ui.open !== 'function') return;
+    if (!document.querySelector('.nctr')) ui.open();   /* open() toggles */
+    setTimeout(function () {
+      var panel = document.querySelector('.nctr');
+      if (!panel) return;
+      var tabs = panel.querySelectorAll('.cats .cat');
+      for (var i = 0; i < tabs.length; i++) {
+        if (tabs[i].textContent !== 'Effects') continue;
+        if (tabs[i].className.indexOf('on') < 0) tabs[i].click();
+        break;
+      }
+      var q = panel.querySelector('.q');
+      if (q) { try { q.focus(); } catch (e) {} }
+    }, 70);
+  }
+
+  function signpost() {
+    var ps = document.querySelectorAll('p');
+    for (var i = 0; i < ps.length; i++) {
+      var p = ps[i];
+      if (!/^\d+\s+effects available$/.test((p.textContent || '').trim())) continue;
+      var host = p.parentNode;
+      if (!host || host.querySelector('.ncfx-more')) return;   /* already placed */
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ncfx-more';
+      /* COUNTED FROM THE CATALOGUE THE CLICK ACTUALLY OPENS, not from this
+         pack's own total. Saying "+43 more" beside "36 available" promises
+         79 and then opens a panel holding 51 — because 8 of those 51 were
+         catalogued before this file existed. A signpost whose number does
+         not match the room it points at is worse than no signpost. */
+      var lib = 0;
+      try { lib = Object.keys(window.NC_TRANS_UI.effects).length; } catch (e) {}
+      if (!lib) lib = Object.keys(FXCAT).length;
+      b.textContent = 'Open the FX library — ' + lib + ' effects →';
+      b.title = 'Film, lens, glitch, stylise and warp — ' + lib +
+                ' effects, in the panel this one cannot list';
+      b.style.cssText = 'display:block;margin:6px 0 0;padding:5px 9px;width:100%;' +
+        'font:600 10px/1.3 inherit;text-align:left;cursor:pointer;' +
+        'color:#C4B5FD;background:rgba(124,92,255,.14);' +
+        'border:1px solid rgba(124,92,255,.42);border-radius:8px;';
+      b.onmouseenter = function () { b.style.background = 'rgba(124,92,255,.26)'; };
+      b.onmouseleave = function () { b.style.background = 'rgba(124,92,255,.14)'; };
+      b.onclick = openEffectsLibrary;
+      host.insertBefore(b, p.nextSibling);
+      return;
+    }
+  }
+
   window.NC_FX_PACK = {
     PAINT: PAINT, TPAINT: TPAINT, FXCAT: FXCAT, TCAT: TCAT,
     register: register, ready: false,
     cost: COST, heavy: heavy,
+    signpost: signpost, openEffects: openEffectsLibrary,
     counts: { effects: Object.keys(PAINT).length, transitions: Object.keys(TPAINT).length }
   };
+
+  /* The rail panel is mounted and unmounted as the rail is clicked, so this
+     rides an observer rather than running once. Cheap: it only walks <p>
+     elements, and it returns the moment it has placed the row. */
+  try {
+    var mo = new MutationObserver(function () { signpost(); });
+    if (document.body) mo.observe(document.body, { childList: true, subtree: true });
+    else document.addEventListener('DOMContentLoaded', function () {
+      mo.observe(document.body, { childList: true, subtree: true });
+    });
+  } catch (e) {}
 
   /* editor-fx.js and editor-trans.js may or may not have run yet depending
      on script order, and the editor is a bundle that boots asynchronously.

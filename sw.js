@@ -2898,7 +2898,12 @@
    shell file, so the bump is what delivers it. UNPROVEN on slow hardware —
    a fast container shows 0-2ms either way, which is the measurement being
    too easy rather than the fix being unnecessary. */
-const CACHE = 'novaclip-v162';
+/* v163: the rail's Effects panel now carries a row pointing at the FX
+   library. The editor has two panels called Effects — the bundle's own 36 in
+   the rail, which nothing outside the bundle can add to, and this pack's 51
+   behind a pill — and somebody looking for a new effect found the first one
+   three times running and concluded the effects were never added. */
+const CACHE = 'novaclip-v163';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
