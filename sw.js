@@ -2891,7 +2891,14 @@
    missing, it was behind a button promising something else. editor-trans.js
    is a cached shell file, so without this bump a returning visitor keeps the
    mislabelled pill and the 43 new effects stay just as hard to find. */
-const CACHE = 'novaclip-v161';
+/* v162: media-probe.js builds its import thumbnail through createImageBitmap,
+   which decodes and resizes off the main thread, instead of drawImage(video)
+   which does both synchronously inside a 'seeked' handler. Reported from an
+   AMD 3020e as a 1879ms main-thread freeze on importing one clip. Cached
+   shell file, so the bump is what delivers it. UNPROVEN on slow hardware —
+   a fast container shows 0-2ms either way, which is the measurement being
+   too easy rather than the fix being unnecessary. */
+const CACHE = 'novaclip-v162';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

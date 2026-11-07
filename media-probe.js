@@ -210,17 +210,56 @@
           resolve(out);
         };
         var t = setTimeout(give, 4000);
-        v.onseeked = function () {
+
+        function stamp(src) {
           try {
             var c = document.createElement('canvas');
             c.width = 160; c.height = 90;
             var cx = c.getContext('2d');
             if (cx) {
-              cx.drawImage(v, 0, 0, c.width, c.height);
+              cx.drawImage(src, 0, 0, c.width, c.height);
               out.thumbnail = c.toDataURL('image/jpeg', 0.6);
             }
           } catch (e) { out.thumbnail = ''; }
           give();
+        }
+
+        /* ------------------------------------------------------------------
+           createImageBitmap FIRST, AND WHY IT MATTERS ON A SLOW MACHINE
+           ------------------------------------------------------------------
+           Reported from an AMD 3020e (2 cores, 2 threads, 6W):
+
+               media-probe.js [Violation] 'seeked' handler took 1879ms
+
+           Nearly two seconds of frozen main thread on importing one clip.
+           The cost is not the JPEG — a 160x90 encode is nothing. It is
+           drawImage(video) forcing a full frame of that clip to be decoded
+           and scaled synchronously, inside an event handler, on two cores.
+
+           createImageBitmap is asynchronous and does both the decode and the
+           resize off the main thread, so the only thing left on it is
+           drawing a 160x90 bitmap and encoding it — microseconds. The
+           thumbnail arrives a moment later instead of the page stopping.
+
+           Falls back to the old path when createImageBitmap is missing or
+           rejects, so the thumbnail is never lost — the comment above still
+           holds: failing here costs a thumbnail and nothing else. The
+           resize options are ignored by browsers that do not implement
+           them, which costs the off-thread resize and keeps the off-thread
+           decode, still the better half of the win. */
+        v.onseeked = function () {
+          if (typeof createImageBitmap === 'function') {
+            try {
+              createImageBitmap(v, {
+                resizeWidth: 160, resizeHeight: 90, resizeQuality: 'low'
+              }).then(function (bmp) {
+                stamp(bmp);
+                try { bmp.close(); } catch (e) {}
+              }, function () { stamp(v); });
+              return;
+            } catch (e) { /* synchronous throw: fall through to the old path */ }
+          }
+          stamp(v);
         };
         v.onerror = give;
         /* A frame slightly in, because frame zero of a lot of footage is black
