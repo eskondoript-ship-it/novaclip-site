@@ -2880,7 +2880,13 @@
    that the cached editor.html never asks for the new file and the whole pack
    is dead on a returning visitor, which is the exact failure this bump
    exists to prevent. All procedural: no assets, nothing licensed. */
-const CACHE = 'novaclip-v159';
+/* v160: editor-perf.js scales its idle redraw to navigator.hardwareConcurrency
+   — 6fps on two threads or fewer, 10 on four, the unchanged 20 above that. It
+   is a cached shell file, so without this bump a returning visitor on a weak
+   machine keeps the 20fps copy and gets none of it. Reported from an AMD 3020e
+   (2 threads, 6W): a still picture cost 20-35% CPU there against 50-60% for
+   playing, which is the throttle working and still too expensive. */
+const CACHE = 'novaclip-v160';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

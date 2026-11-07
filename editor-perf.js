@@ -52,8 +52,52 @@
   if (window.NC_PERF) return;
 
   var DPR_CAP  = 1.5;    /* still sharper than CSS pixels, a quarter less fill than 2 */
-  var IDLE_FPS = 20;
   var QUIET_MS = 400;
+
+  /* ---- THE IDLE RATE SCALES WITH HOW MANY CORES THERE ARE -----------------
+     Twenty was tuned against Chromium with its CPU throttled 6x, which is a
+     fast machine pretending to be slow. It is not the same shape as a real
+     slow machine, and a report from one said so:
+
+         AMD 3020e, 2 cores / 2 threads, 6W, Vega 3, 8GB
+           NovaClip playing a clip      50-60% CPU
+           NovaClip showing a still     20-35% CPU
+           NovaClip resident            ~500MB
+
+     The throttle was working — idle really is about half of playing rather
+     than equal to it — but on two threads, twenty repaints a second of a
+     picture that is not changing still costs between a third and two thirds
+     of a core. That is the headroom the heavier effect painters need, spent
+     on redrawing something nobody changed.
+
+     WHY IT IS SAFE TO GO LOWER, from idle() below: this rate applies only
+     when the editor is not playing, not exporting, and has seen no pointer,
+     key, wheel, focus or input event for QUIET_MS. Dragging an effect's
+     strength slider fires input and pointermove, so it runs at full speed —
+     the throttle has never applied to anything a person was interacting with.
+
+     WHAT THE IDLE REDRAW IS ACTUALLY FOR is insurance, and the note above
+     says so honestly: from outside the bundle there is no safe way to know
+     what it considers dirty, so the picture is repainted on a timer in case
+     something changed that this file cannot see. Lowering the rate lengthens
+     the worst case before such a change appears. At 6fps that worst case is
+     167ms, which is below what anybody notices on a still frame, and it is
+     bounded — the picture cannot stay stale, it can only be a sixth of a
+     second late.
+
+     ONLY EVER DOWNWARDS, AND NEVER ON UNKNOWN HARDWARE. Four threads or
+     fewer get a lower rate; everything else keeps the twenty it has always
+     had, so no machine that was fine today changes behaviour. A browser that
+     does not report hardwareConcurrency is treated as plenty rather than as
+     few, because guessing "slow" on unknown hardware would make the preview
+     lag on machines that never needed this. */
+  var CORES = (function () {
+    var n = navigator.hardwareConcurrency;
+    return (typeof n === 'number' && n > 0) ? n : 8;   /* unknown: assume plenty */
+  }());
+  var IDLE_FPS = CORES <= 2 ? 6
+               : CORES <= 4 ? 10
+               : 20;
 
   /* ---- 1. the pixel ratio the bundle sizes its canvas from ---------------- */
   var realDpr = window.devicePixelRatio || 1;
@@ -138,6 +182,8 @@
     dprCap: DPR_CAP,
     realDpr: realDpr,
     idleFps: IDLE_FPS,
+    cores: CORES,          /* so `NC_PERF.cores` and `.idleFps` can be read off
+                              a real machine instead of guessed at */
     isIdle: idle,
     held: function () { return pending.size; }
   };
