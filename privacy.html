@@ -187,7 +187,7 @@ a.back { margin-bottom:0; }
   <h1>Privacy</h1>
   <p class='lede big'>Most people using NovaClip are teenagers. This page
      is written to be read by them, not by a lawyer.</p>
-  <p class='updated'>Last updated 1 November 2026 · NovaClip · novaclip.org ·
+  <p class='updated'>Last updated 7 November 2026 · NovaClip · novaclip.org ·
      <a href='/terms.html'>Terms of Use</a></p>
 
   <div class='card'>
@@ -369,7 +369,8 @@ a.back { margin-bottom:0; }
     <tr><td>Someone checks a certificate number at <b>/verify.html</b></td><td>The number they typed</td><td>The same worker, which answers with the name, the certificate and the date that number was issued against — and nothing else. Anyone holding the number can do this, which is the point of it: the number is printed on the certificate for exactly that purpose</td></tr>
     <tr><td>Finish a run in Typing, Flap, Reaction or Aim</td><td>The score, and the name the board shows you under — your display name if you set one, otherwise your username, otherwise a connected channel's name. Nothing else about the run, and nothing at all if you have set none of those: the board asks you for a name first rather than sending one you did not choose</td><td>Our Cloudflare Worker (Cloudflare KV storage). The board is public, so the name and score on it are visible to anyone playing that game</td></tr>
     <tr><td>Paste a link into the <b>AI Clipper</b> in Studio</td><td>The YouTube link you pasted, and nothing else. <b>The video itself is never downloaded</b> — not by this browser and not by our worker</td><td>Our Cloudflare Worker, which passes the link to Google's Gemini API. <b>Google fetches and watches the video at their end</b>, which is the only way it is allowed to work, and sends back a list of timestamps. It only works on public videos: unlisted and private ones are refused by Google, not by us. Nothing is cut, re-encoded, uploaded or posted anywhere</td></tr>
-    <tr><td>Research trends or connect a channel</td><td>The search, or the channel you authorised</td><td>YouTube's own API</td></tr>
+    <tr><td>Run a scan in <b>Trend Spotter</b></td><td>The niche you typed, and nothing else — not your username, not your channel, not what you have edited. It is sent as two ordinary web searches: the niche plus <i>news trending</i>, and the niche plus <i>tiktok trend viral</i>. Towards the end of a month only the first is sent</td><td>Our Cloudflare Worker, which runs the searches through <b>Brave Search</b> and then pastes the resulting page titles and links into the question it asks Google's Gemini. Brave sees the search text and our worker's address, not yours. The answer is cached for six hours, so a class all scanning the same niche sends one search between them</td></tr>
+    <tr><td>Connect a channel</td><td>The channel you authorised</td><td>YouTube's own API</td></tr>
     <tr><td>Use the globe or map views</td><td>The place being looked at</td><td>Google Maps and ArcGIS map tiles</td></tr>
     <tr><td>Use meme templates</td><td>The caption text</td><td>memegen.link, which draws the image</td></tr>
     <tr><td>Open the <b>Photos</b> library in the editor</td><td>What you searched for, or the category you pressed</td><td>Wikipedia's own API, and the picture you choose is fetched from Wikimedia. No account, no key, nothing about you attached to the request</td></tr>

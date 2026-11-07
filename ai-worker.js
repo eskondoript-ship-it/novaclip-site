@@ -247,6 +247,73 @@ const SEARCH_TTL = 6 * 60 * 60;        // six hours: trends move by the day, not
    first three hits are reliably the subject's own channel and Wikipedia. */
 const SEARCH_HITS = 10;
 
+/* ---------------------------------------------------------------------------
+   THE SEARCH ALLOWANCE, AND WHY THE SECOND QUERY IS THE FIRST THING DROPPED
+   ---------------------------------------------------------------------------
+   Brave's free plan is 2,000 queries a calendar month. Scanning with two
+   query shapes costs two of them, so the honest number is 1,000 scans a
+   month rather than 2,000 — a real halving, and worth being deliberate
+   about rather than discovering on the 28th.
+
+   WHAT RUNNING OUT ACTUALLY DOES TODAY, which is worse than it sounds.
+   webSearch() returns [] on any failure, 429 included, by design: a search
+   that does not answer must never fail a scan. But look at where [] lands
+   in the handler — `found.length` is 0, so `grounded` stays true, so the
+   request goes to Gemini WITH its own google_search tool still attached.
+   That is precisely the path that produced the 429 outage we tracked down
+   earlier: Gemini's grounding is metered separately with a far smaller
+   allowance. So exhausting Brave does not degrade the scanner, it walks it
+   straight back into the known-bad failure.
+
+   Hence a counter rather than a flag. Every Brave query is counted in KV
+   under the month, and the SECOND query is dropped once the remaining
+   allowance is down to the reserve. The reserve is what keeps the feature
+   alive: the last slice of the month is spent one-query-per-scan, which is
+   half the insight but a working scanner, instead of two-query scans until
+   the allowance dies mid-month and every scan after it 429s.
+
+   Degrading beats stopping, and it is the second query that goes, because
+   the news-shaped one is the one that is never empty.
+
+   SEARCH_BUDGET is overridable from the environment because the number
+   belongs to whatever plan is actually being paid for, not to this file.
+   Set SEARCH_SECOND=off to turn the second query off outright and get the
+   full 2,000 scans back at half the coverage.
+   --------------------------------------------------------------------------- */
+const SEARCH_BUDGET  = 2000;                  // Brave free plan, per calendar month
+const SEARCH_RESERVE = 200;                   // kept back for single-query scans
+const SEARCH_CT_TTL  = 40 * 24 * 60 * 60;     // seconds; outlives any month
+
+function searchCountKey() { return 'sq:' + monthKey(); }
+
+async function searchSpent(env) {
+  if (!env.RL) return 0;
+  try { return parseInt((await env.RL.get(searchCountKey())) || '0', 10) || 0; }
+  catch (e) { return 0; }
+}
+
+/* Counted where the query is actually spent, so no caller can forget to.
+   Best-effort: a KV write that fails must not fail the search it is
+   describing — an uncounted query is a worse number, not a broken scan. */
+async function searchCount(env, n) {
+  if (!env.RL || !n) return;
+  try {
+    const was = await searchSpent(env);
+    await env.RL.put(searchCountKey(), String(was + n), { expirationTtl: SEARCH_CT_TTL });
+  } catch (e) {}
+}
+
+/* Is there room this month for the second query shape? Off by environment
+   switch, off when the allowance is down to the reserve, on otherwise. With
+   no RL binding there is no counter, so this answers on the switch alone —
+   the same thing it did before any of this existed. */
+async function secondSearchOk(env) {
+  if (String(env.SEARCH_SECOND || '').toLowerCase() === 'off') return false;
+  if (!env.RL) return true;
+  const cap = parseInt(env.SEARCH_BUDGET || SEARCH_BUDGET, 10) || SEARCH_BUDGET;
+  return (await searchSpent(env)) < Math.max(0, cap - SEARCH_RESERVE);
+}
+
 /* HOW RECENT THE RESULTS HAVE TO BE.
    Without this Brave ranks by authority and returns the evergreen pages — a
    player's ESPN hub, a game's wiki — which are the worst possible grounding
@@ -296,6 +363,12 @@ async function webSearch(env, q, fresh) {
     const [url, init] = which.req(env.SEARCH_API_KEY, q, fresh);
     const r = await fetch(url, Object.assign({ signal: abort.signal }, init));
     clearTimeout(timer);
+    /* Counted here and nowhere else: this is the one line in the Worker that
+       spends a query. Counted on any answer from the provider, including a
+       refusal — over-counting makes the second query retire slightly early,
+       which is the harmless direction. A timeout or a DNS failure never
+       reached them and falls to the catch below, uncounted. */
+    await searchCount(env, 1);
     if (!r.ok) return [];
     const j = await r.json();
     return which.read(j).filter(h => h && h.uri && h.title).slice(0, SEARCH_HITS);
@@ -1025,6 +1098,23 @@ export default {
            of a plain search API for the same list of pages. */
         grounding: env.SEARCH_API_KEY ? ((env.SEARCH_PROVIDER || 'brave') + ' (search API)') : 'gemini-builtin',
         search_cache: env.RL ? (SEARCH_TTL / 3600) + 'h in KV' : 'off — no RL KV binding',
+        /* The search allowance, so the second query shape retiring is
+           something you can SEE rather than infer from thinner scans. Tune
+           SEARCH_BUDGET from the plan actually being paid for. */
+        search_budget: env.RL ? (function (spent) {
+          const cap = parseInt(env.SEARCH_BUDGET || SEARCH_BUDGET, 10) || SEARCH_BUDGET;
+          const two = spent < Math.max(0, cap - SEARCH_RESERVE);
+          return {
+            month: monthKey(),
+            spent: spent,
+            cap: cap,
+            left: Math.max(0, cap - spent),
+            second_query: String(env.SEARCH_SECOND || '').toLowerCase() === 'off'
+              ? 'off — SEARCH_SECOND=off'
+              : (two ? 'on' : 'retired — inside the ' + SEARCH_RESERVE + '-query reserve'),
+            scans_left: Math.max(0, cap - spent) / (two ? 2 : 1)
+          };
+        }(await searchSpent(env))) : 'off — no RL KV binding',
         note: (['gemini', 'openrouter', 'openai']
           .filter(function (p) { return !!env[SECRET[p]]; })
           .join(', ') || 'none') + ' — Settings > Variables and Secrets > Add secret (GEMINI_API_KEY, OPENROUTER_API_KEY, OPENAI_API_KEY).'
@@ -1610,8 +1700,15 @@ export default {
     const sq2 = clean(body.searchQuery2);
 
     if (search && env.SEARCH_API_KEY && sq) {
+      /* Decided BEFORE a query is spent, not between the two. Asking after
+         the first search reads a counter this same scan has just bumped, so
+         the reserve edge lands one query earlier than the reserve says it
+         does — and worse, it is a different edge depending on whether the
+         first search reached the provider. One decision, from one number,
+         and a scan is then wholly two-query or wholly one-query. */
+      const asked2 = !!(sq2 && sq2 !== sq) && await secondSearchOk(env);
       let found = await webSearch(env, sq, body.freshness);
-      if (sq2 && sq2 !== sq) {
+      if (asked2) {
         const more = await webSearch(env, sq2, body.freshness);
         /* Merged on the URL. The two queries overlap on the big stories,
            which is a vote of confidence rather than a problem — but the
@@ -1622,8 +1719,8 @@ export default {
       if (found.length) {
         /* Both questions go in the header, so the model can tell which
            results answer which and is not told one query produced all of
-           them. */
-        payload = withContext(payload, sq2 && sq2 !== sq ? sq + '" and "' + sq2 : sq, found);
+           them. One question when only one was asked. */
+        payload = withContext(payload, asked2 ? sq + '" and "' + sq2 : sq, found);
         hits = found;
         grounded = false;
       }

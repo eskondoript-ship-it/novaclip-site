@@ -1550,7 +1550,16 @@
              query returned the Switch 2 announcement and this one returned
              the "Chicken Jockey" challenge: both real, only one of them
              news, and a trend scanner that sees only one is half a product.
-             The Worker runs both and merges them on URL. */
+             The Worker runs both and merges them on URL.
+
+             SENT ALWAYS, RUN AT THE WORKER'S DISCRETION. Two shapes cost two
+             of Brave's 2,000 free queries a month, so this is 1,000 scans
+             rather than 2,000. The Worker counts what it spends and asks
+             only the news shape once the month is down to its reserve —
+             a thinner scan instead of a dead one. Nothing here changes when
+             that happens, and nothing should: the page does not know the
+             allowance and must not be trusted to ration it. /health on the
+             AI worker reports which mode it is in. */
           searchQuery2: t + ' tiktok trend viral',
           /* The window the reader picked, as a date filter rather than words
              in the query. Brave ranks on authority by default and hands back
