@@ -2082,6 +2082,24 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      editor-trans.js. -->
 <script src='editor-trans.js' defer></script>
 
+<!-- THE BIG PACK: 43 more effects and 38 more transitions, taking the library
+     to 61 effects and 86 transitions (counted, not estimated — the old totals
+     were 18+3 painters in editor-fx.js and 46 entries in editor-trans.js).
+     Everything in it is procedural, so it needs no assets and nothing is
+     licensed from anybody.
+
+     LOADS AFTER BOTH OF THE ABOVE, and that is not a preference. It adds keys
+     to NC_FX.PAINT and NC_FX.TPAINT, which editor-fx.js creates, and to
+     NC_TRANS_UI.list and .effects, which editor-trans.js creates. It retries
+     for eight seconds if they are not up yet rather than assuming an order a
+     future edit to this file could silently break — but with the tags in this
+     order it registers on the first attempt.
+
+     It only ever ADDS a key, never replaces one, and warns on the console if
+     an id already exists, so it can never quietly shadow a painter
+     editor-fx.js already owns. -->
+<script src='editor-fx-pack.js' defer></script>
+
 <!-- THE LAYOUT. The timeline shipped inside the centre column, so it stopped
      where the media panel started and the bottom-left of the window was a
      media browser nobody looks at while cutting. Every editor built for this

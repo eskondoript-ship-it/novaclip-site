@@ -2873,7 +2873,14 @@
    profile.html rather than from the rail: the six files it needs are in the
    shell again, and profile.html has to be re-fetched or the frame that loads
    it does not exist. */
-const CACHE = 'novaclip-v158';
+/* v159 adds editor-fx-pack.js (NEW): 43 effects and 38 transitions on top of
+   the 18 painters in editor-fx.js and the 44 transitions in editor-trans.js,
+   taking the pickable totals to 51 effects and 82 transitions. editor.html is
+   re-fetched because the script tag that loads the pack lives in it — without
+   that the cached editor.html never asks for the new file and the whole pack
+   is dead on a returning visitor, which is the exact failure this bump
+   exists to prevent. All procedural: no assets, nothing licensed. */
+const CACHE = 'novaclip-v159';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3059,6 +3066,13 @@ const SHELL = [
   '/editor-phone.js',
   '/editor-looks.js',
   '/editor-trans.js',
+  /* The big pack: 43 effects and 38 transitions, all procedural, no assets.
+     Cached with the editor rather than fetched on demand because without it
+     the two panels come up listing the old 44 transitions and 8 effects with
+     no sign that anything is missing — the worst kind of offline failure,
+     where the feature is quietly smaller rather than visibly absent. Goes
+     with editor-fx.js and editor-trans.js, whose registries it adds to. */
+  '/editor-fx-pack.js',
   '/editor-layout.js',
   '/editor-quickedit.js',
   /* The AI panel's manners. Without it the panel still runs every tool, and
