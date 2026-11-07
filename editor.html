@@ -2112,6 +2112,16 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      editor-fx.js already owns. -->
 <script src='editor-fx-pack.js' defer></script>
 
+<!-- EDITING an effect or transition rather than only picking one: parameter
+     sliders, duration, delay and a draggable cubic-bezier easing curve, which
+     is what was asked for with a picture of gl-transitions.com.
+
+     AFTER editor-fx-pack.js, because it wraps that file's painters — and only
+     that file's. editor-fx.js's own painters take a bare strength, have no
+     parameters and no easing, so wrapping them would mean this file silently
+     owning behaviour it did not write. -->
+<script src='editor-fx-edit.js' defer></script>
+
 <!-- THE LAYOUT. The timeline shipped inside the centre column, so it stopped
      where the media panel started and the bottom-left of the window was a
      media browser nobody looks at while cutting. Every editor built for this

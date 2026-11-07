@@ -2907,7 +2907,10 @@
    400ms after the keystroke and threw when React had replaced the toolbar in
    between. Seen in a real session as "Cannot read properties of null
    (reading 'value')". It now uses the event's own target. */
-const CACHE = 'novaclip-v164';
+/* v165 adds editor-fx-edit.js (NEW): parameter sliders, duration, delay and
+   a draggable easing curve for the 43 effects and 38 transitions in the pack.
+   editor.html is re-fetched for the script tag. */
+const CACHE = 'novaclip-v165';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3100,6 +3103,12 @@ const SHELL = [
      where the feature is quietly smaller rather than visibly absent. Goes
      with editor-fx.js and editor-trans.js, whose registries it adds to. */
   '/editor-fx-pack.js',
+  /* The parameter and timing editor. Goes with editor-fx-pack.js: it wraps
+     that file's painters to apply easing and parameters, and that file reads
+     its values back through NC_FX_EDIT.param(). Either one alone is still
+     correct — the pack falls back to the constants it had before — but the
+     sliders do nothing without both. */
+  '/editor-fx-edit.js',
   '/editor-layout.js',
   '/editor-quickedit.js',
   /* The AI panel's manners. Without it the panel still runs every tool, and

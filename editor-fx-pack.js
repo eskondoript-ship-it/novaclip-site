@@ -253,6 +253,22 @@
     return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
   }
 
+  /* ---- PARAMETERS, WHEN THE EDITOR IS THERE ------------------------------
+     editor-fx-edit.js declares a named parameter for the painters below that
+     genuinely have a second dimension, and gives the user a slider for it.
+     This reads the current value, falling back to exactly the constant that
+     was hard-coded before — so with that file absent, or before it loads,
+     every painter here behaves precisely as it did. A slider that does
+     nothing is worse than no slider, so every key read here is wired into
+     the arithmetic below rather than merely accepted. */
+  function P(id, key, fallback) {
+    try {
+      var e = window.NC_FX_EDIT;
+      if (e && typeof e.param === 'function') return e.param(id, key, fallback);
+    } catch (err) {}
+    return fallback;
+  }
+
   var PAINT = {}, TPAINT = {}, FXCAT = {}, TCAT = {};
 
   /* =========================================================================
@@ -417,7 +433,7 @@
   PAINT.bokeh = function (g, w, h, v) {
     var b = blurCopy(2, g, w, h, Math.max(3, Math.min(w, h) * 0.02));
     var step = Math.max(14, Math.round(Math.min(w, h) / 26));
-    var r = step * 0.46;
+    var r = step * 0.46 * P('bokeh', 'size', 1);
     var t = sc(3, w, h), tg = t.getContext('2d');
     tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, w, h);
     var small = sc(4, Math.max(2, Math.round(w / step)), Math.max(2, Math.round(h / step)));
@@ -474,7 +490,7 @@
      look nothing alike. */
   PAINT.pincushion = function (g, w, h, v) {
     var src = copyOf(2, g, w, h);
-    var k = v * 0.45, steps = 26;
+    var k = v * P('pincushion', 'amount', 0.45), steps = 26;
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
     /* Concentric rings redrawn at a radius-dependent scale. Twenty-six rings
        is enough that the seams disappear and cheap enough to stay on the
@@ -502,7 +518,10 @@
     over(g, glow, 'lighter', v * 0.3);
     var t = sc(3, w, h), tg = t.getContext('2d');
     tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, w, h);
-    var gap = Math.max(2, Math.round(h / 240));
+    /* Floor FIRST, then scale. Rounding h/240 * param before the Math.max
+       meant every value of the slider landed on the same clamped 2 at
+       preview size. */
+    var gap = Math.max(1, Math.round(Math.max(2, h / 240) * P('crt', 'gap', 1)));
     tg.fillStyle = 'rgba(0,0,0,' + (0.55 * v) + ')';
     for (var y = 0; y < h; y += gap * 2) tg.fillRect(0, y, w, gap);
     var sw = Math.max(3, Math.round(w / 420));
@@ -630,7 +649,7 @@
   PAINT.dither = function (g, w, h, v) {
     var M = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
     perPixel(g, w, h, function (d, W, H) {
-      var levels = Math.max(2, Math.round(10 - v * 8));
+      var levels = Math.max(2, Math.round(P('dither', 'levels', 4)));
       var step = 255 / (levels - 1), inv = 1 / step;
       /* The matrix offset only has sixteen possible values, and x and y come
          free from a nested loop — the modulo and divide per pixel to recover
@@ -752,8 +771,9 @@
        count and both were too high. A sixth scale is a 2.25x saving on the
        pixel count alone, and the blobs this produces are large by nature so
        the detail was never there to lose. */
+    var oilRad = P('oil', 'radius', 2);
     perPixelSmall(g, w, h, 6, function (d, sw, sh) {
-      var rad = Math.max(1, Math.round(1 + v * 3)), bins = 12;
+      var rad = Math.max(1, Math.round(oilRad)), bins = 12;
       var src = new Uint8ClampedArray(d);
       var cR = new Float32Array(bins), cG = new Float32Array(bins),
           cB = new Float32Array(bins), cnt = new Float32Array(bins);
@@ -786,7 +806,10 @@
      — a voronoi that jitters every frame is unwatchable. */
   PAINT.stainedglass = function (g, w, h, v) {
     var cells = Math.round(26 + (1 - v) * 60);
-    var step = Math.max(10, Math.round(Math.min(w, h) / cells));
+    /* The parameter scales the STEP, not the cell count. Scaling the count
+       did nothing: step has a lower floor and on a small canvas both ends of
+       the slider clamped to it, so the knob moved and the picture did not. */
+    var step = Math.max(4, Math.round(Math.min(w, h) / cells * P('stainedglass', 'cells', 1)));
     var small = sc(4, Math.max(2, Math.round(w / step)), Math.max(2, Math.round(h / step)));
     var smg = small.getContext('2d');
     smg.setTransform(1, 0, 0, 1, 0, 0); smg.clearRect(0, 0, small.width, small.height);
@@ -985,7 +1008,7 @@
      tuned so the centre stays readable. */
   PAINT.twirl = function (g, w, h, v) {
     var src = copyOf(2, g, w, h);
-    var steps = 30, maxA = v * 2.2;
+    var steps = 30, maxA = v * P('twirl', 'turns', 2.2);
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
     for (var i = steps; i >= 1; i--) {
       var r0 = i / steps;
@@ -1039,7 +1062,7 @@
      thick glass, which is a different thing from frost. */
   PAINT.glassblocks = function (g, w, h, v) {
     var src = copyOf(2, g, w, h);
-    var n = Math.max(3, Math.round(4 + (1 - v) * 10));
+    var n = Math.max(3, Math.round(P('glassblocks', 'grid', 7)));
     var bw = w / n, bh = h / n, z = 1 + v * 0.5;
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
     for (var r = 0; r < n; r++) {
@@ -1061,7 +1084,7 @@
      music-video look and three lines of drawImage. */
   PAINT.tunnel = function (g, w, h, v) {
     var src = copyOf(2, g, w, h);
-    var n = Math.round(2 + v * 7);
+    var n = Math.max(1, Math.round(P('tunnel', 'depth', 5)));
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
     for (var i = 1; i <= n; i++) {
       var s = Math.pow(0.72, i);
@@ -1108,9 +1131,14 @@
   PAINT.motionblur = function (g, w, h, v) {
     var src = copyOf(2, g, w, h);
     var n = 10, span = v * w * 0.06;
+    var ang = P('motionblur', 'angle', 0) * Math.PI / 180;
+    var ux = Math.cos(ang), uy = Math.sin(ang);
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
     g.globalAlpha = 1 / n;
-    for (var i = 0; i < n; i++) g.drawImage(src, (i / (n - 1) - 0.5) * span, 0);
+    for (var i = 0; i < n; i++) {
+      var o = (i / (n - 1) - 0.5) * span;
+      g.drawImage(src, o * ux, o * uy);
+    }
     g.restore();
   };
 
@@ -1118,7 +1146,7 @@
      "trippy" look without needing frame history. */
   PAINT.echo = function (g, w, h, v) {
     var src = copyOf(2, g, w, h);
-    var n = Math.round(2 + v * 5);
+    var n = Math.max(1, Math.round(P('echo', 'ghosts', 4)));
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
     g.globalCompositeOperation = 'lighter';
     for (var i = 1; i <= n; i++) {
@@ -1333,7 +1361,7 @@
   /* Venetian blinds, vertical. The bundle has a horizontal `shutter`; this
      is the other axis and it is feathered, which the bundle's is not. */
   TPAINT.venetian = function (g, w, h, p, dir) {
-    var c = cover(p, dir), n = 12, bw = w / n;
+    var c = cover(p, dir), n = Math.round(P('venetian', 'slats', 12)), bw = w / n;
     maskWith(g, w, h, function (mg) {
       /* A solid part plus a short feathered leading edge, not one gradient
          across the whole opened width. With the gradient spanning the
@@ -1364,7 +1392,7 @@
   /* Horizontal blinds that open from alternating sides, which is what makes
      it read as blinds rather than as bars. */
   TPAINT.blinds = function (g, w, h, p, dir) {
-    var c = cover(p, dir), n = 10, bh = h / n;
+    var c = cover(p, dir), n = Math.round(P('blinds', 'slats', 10)), bh = h / n;
     maskPath(g, w, h, function (mg) {
       for (var i = 0; i < n; i++) {
         var x = (i % 2 === 0) ? 0 : w * (1 - c);
@@ -1377,7 +1405,7 @@
      which is one path rather than a loop over wedges. */
   TPAINT.spiral = function (g, w, h, p, dir) {
     var c = cover(p, dir);
-    var R = Math.sqrt(w * w + h * h) / 2, turns = 2.2;
+    var R = Math.sqrt(w * w + h * h) / 2, turns = P('spiral', 'turns', 2.2);
     maskPath(g, w, h, function (mg) {
       mg.beginPath();
       mg.moveTo(w / 2, h / 2);
@@ -1465,7 +1493,7 @@
   /* Tiles flipping over one after another, on a diagonal delay so it reads
      as a wave crossing the frame. */
   TPAINT.tilesflip = function (g, w, h, p, dir) {
-    var c = cover(p, dir), n = 7;
+    var c = cover(p, dir), n = Math.round(P('tilesflip', 'tiles', 7));
     var tw = w / n, th = h / n;
     maskPath(g, w, h, function (mg) {
       for (var r = 0; r < n; r++) {
@@ -1484,7 +1512,7 @@
 
   /* Blocks sliding in by row, alternating direction. */
   TPAINT.blockslide = function (g, w, h, p, dir) {
-    var c = cover(p, dir), rows = 9, bh = h / rows;
+    var c = cover(p, dir), rows = Math.round(P('blockslide', 'rows', 9)), bh = h / rows;
     maskPath(g, w, h, function (mg) {
       for (var r = 0; r < rows; r++) {
         var d2 = (r % 2 === 0) ? 1 : -1;
@@ -1498,7 +1526,7 @@
      from the hash so it is the same every time the transition plays — a
      shuffle that is different on every render cannot be previewed. */
   TPAINT.mosaicshuffle = function (g, w, h, p, dir) {
-    var c = cover(p, dir), n = 12;
+    var c = cover(p, dir), n = Math.round(P('mosaicshuffle', 'tiles', 12));
     var tw = w / n, th = h / n;
     maskPath(g, w, h, function (mg) {
       for (var r = 0; r < n; r++) {
@@ -1515,7 +1543,7 @@
   /* Ink bleed: overlapping blobs growing from fixed seeds. Reads as ink
      because the blobs are irregular and they merge. */
   TPAINT.inkbleed = function (g, w, h, p, dir) {
-    var c = cover(p, dir), seeds = 14;
+    var c = cover(p, dir), seeds = Math.round(P('inkbleed', 'blots', 14));
     var R = Math.sqrt(w * w + h * h) * 0.42;
     maskWith(g, w, h, function (mg) {
       mg.fillStyle = '#000';
@@ -1560,7 +1588,7 @@
 
   /* Melt: the frame drips downward in columns at different rates. */
   TPAINT.melt = function (g, w, h, p, dir) {
-    var c = cover(p, dir), n = 26, cw = w / n;
+    var c = cover(p, dir), n = Math.round(P('melt', 'columns', 26)), cw = w / n;
     maskPath(g, w, h, function (mg) {
       for (var i = 0; i < n; i++) {
         var rate = 0.6 + hash2(i, 71, 8) * 0.9;
@@ -1848,7 +1876,7 @@
     var band = Math.max(2, Math.round(h / 90));
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
     for (var y = 0; y < h; y += band) {
-      var dx = Math.sin(y / h * 12 + c * 10) * w * 0.07 * k;
+      var dx = Math.sin(y / h * P('wobble', 'waves', 12) + c * 10) * w * 0.07 * k;
       g.drawImage(src, 0, y, w, band, dx, y, w, band);
     }
     g.restore();
@@ -1871,7 +1899,7 @@
     g.drawImage(src, 0, 0);
     for (var i = steps; i >= 1; i--) {
       var r0 = i / steps;
-      var a = c * 3.4 * r0, s = 1 - c * 0.55;
+      var a = c * P('vortex', 'spin', 3.4) * r0, s = 1 - c * 0.55;
       g.save();
       g.beginPath(); g.arc(w / 2, h / 2, R * r0, 0, 6.2832); g.clip();
       g.translate(w / 2, h / 2); g.rotate(a); g.scale(s, s); g.translate(-w / 2, -h / 2);
@@ -1900,7 +1928,8 @@
        flare rather than a glow. */
     g.fillStyle = 'rgba(255,230,200,' + (0.3 * k) + ')';
     g.fillRect(0, h / 2 - h * 0.006, w, h * 0.012);
-    for (var i = 1; i <= 3; i++) {
+    var gh = Math.round(P('lensflare', 'ghosts', 3));
+    for (var i = 1; i <= gh; i++) {
       var gx = x + (w / 2 - x) * i * 0.7, r = Math.min(w, h) * 0.04 * i;
       var g2 = g.createRadialGradient(gx, h / 2, 0, gx, h / 2, r);
       g2.addColorStop(0, 'rgba(160,255,210,' + (0.18 * k) + ')');
@@ -1957,7 +1986,7 @@
   TPAINT.glasswipe = function (g, w, h, p, dir) {
     var c = cover(p, dir);
     var src = copyOf(2, g, w, h);
-    var x = c * w, bw = w * 0.16;
+    var x = c * w, bw = w * P('glasswipe', 'band', 0.16);
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
     g.beginPath(); g.rect(x - bw / 2, 0, bw, h); g.clip();
     var z = 1.35;
@@ -1981,7 +2010,7 @@
 
   /* Ripple grid: a grid of cells each rippling on a delay from the centre. */
   TPAINT.ripplegrid = function (g, w, h, p, dir) {
-    var c = cover(p, dir), n = 10;
+    var c = cover(p, dir), n = Math.round(P('ripplegrid', 'cells', 10));
     var tw = w / n, th = h / n;
     var src = copyOf(2, g, w, h);
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
