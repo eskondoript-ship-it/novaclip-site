@@ -495,6 +495,9 @@
         modes.querySelectorAll('.cat').forEach(function (x) { x.className = 'cat'; });
         b.className = 'cat on';
         panel.querySelector('.cats.sub-cats').style.display = m === 'Transitions' ? '' : 'none';
+        /* placehold is a hoisted function declaration further down this same
+           function, so it is defined by the time any click can fire. */
+        placehold();
         fill();
       };
       modes.appendChild(b);
@@ -504,7 +507,15 @@
     var q = document.createElement('input');
     q.className = 'q';
     q.type = 'search';
-    q.placeholder = 'Search transitions — soft, whip, glitch, burn…';
+    /* The placeholder follows the tab. It said "Search transitions" on the
+       Effects tab too, which is a small lie that tells somebody hunting for
+       an effect they are in the wrong place. */
+    function placehold() {
+      q.placeholder = state.mode === 'Effects'
+        ? 'Search effects — film, lens, glitch, neon, oil…'
+        : 'Search transitions — soft, whip, glitch, burn…';
+    }
+    placehold();
     q.oninput = function () { state.q = q.value; fill(); };
     hd.appendChild(q);
 
@@ -559,11 +570,31 @@
     /* Two overlapping frames: one shot handing over to the next. The panel's
        own <h4> keeps "⇄ Transitions" — that key carries all nineteen
        languages and is the one string here worth not disturbing. */
+    /* "FX library", NOT "Transitions". The panel has held both transitions
+       and effects since the Effects tab went in, and the pill never said so
+       — which was a quiet bug until somebody went looking for an effect,
+       clicked Effects in the rail, got the bundle's short list instead, and
+       reported the effect missing. It was not missing; it was behind a
+       button whose label promised something else. 51 effects and 82
+       transitions is far too much to leave sitting behind the wrong word. */
     b.innerHTML = '<svg class="ncpill-i" viewBox="0 0 24 24" aria-hidden="true">' +
       '<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/>' +
       '<path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>' +
-      '</svg><span>Transitions</span>';
-    b.title = 'Browse every transition, running';
+      '</svg><span>FX library</span>';
+    /* COUNTED WHEN ASKED, NOT WHEN BUILT. boot() waits for __ncStore before
+       it makes this button, and editor-fx-pack.js registers its 43 effects
+       on its own retry loop — so whichever wins the race, a count taken
+       here can be the pre-pack 8. The pack fires `nc-fx-pack` when it has
+       registered, so the title is written now and rewritten then, and also
+       refreshed on click for anything that registers later still. */
+    function retitle() {
+      b.title = 'Every effect and transition, running — ' +
+                Object.keys(FXCAT).length + ' effects, ' +
+                Object.keys(CAT).length + ' transitions';
+    }
+    retitle();
+    window.addEventListener('nc-fx-pack', retitle);
+    b.addEventListener('pointerenter', retitle);
     b.onclick = open;
     document.body.appendChild(b);
   }

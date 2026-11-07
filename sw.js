@@ -2886,7 +2886,12 @@
    machine keeps the 20fps copy and gets none of it. Reported from an AMD 3020e
    (2 threads, 6W): a still picture cost 20-35% CPU there against 50-60% for
    playing, which is the throttle working and still too expensive. */
-const CACHE = 'novaclip-v160';
+/* v161: the FX pill said "Transitions" while the panel behind it held both
+   transitions AND effects. Reported as an effect being missing — it was not
+   missing, it was behind a button promising something else. editor-trans.js
+   is a cached shell file, so without this bump a returning visitor keeps the
+   mislabelled pill and the 43 new effects stay just as hard to find. */
+const CACHE = 'novaclip-v161';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
