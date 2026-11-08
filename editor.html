@@ -2137,6 +2137,18 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      machine that cannot use them never downloads them. -->
 <script src='editor-webgl.js' defer></script>
 
+<!-- THE FIVE TOOLS MOVE INTO THE RAIL. CC Captions, Beats, Reframe, Looks and
+     the FX library were pills floating across the bottom, over the preview —
+     the one part of the screen that should carry no chrome. They are tools,
+     and the editor already has a column of tools down the left.
+
+     Also removes the timeline's "+ Video / + Audio / + Text" row, which
+     duplicates rail items that do the same job with a whole panel each.
+
+     LAST of the editor scripts, because it needs all five pills to exist
+     before it can move them; it retries while they appear. -->
+<script src='editor-rail.js' defer></script>
+
 <!-- THE LAYOUT. The timeline shipped inside the centre column, so it stopped
      where the media panel started and the bottom-left of the window was a
      media browser nobody looks at while cutting. Every editor built for this

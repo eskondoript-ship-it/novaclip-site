@@ -2925,7 +2925,10 @@
    Slide, Spin, Zoom, Distortion, Flash, Cinematic, Camera, Glitch, Blur,
    Push — instead of all landing under one "GPU" label. The panel already
    filtered by category; only the word was missing. */
-const CACHE = 'novaclip-v169';
+/* v170 adds editor-rail.js (NEW): the five floating tool pills move into the
+   left rail and the timeline's duplicate + Video / + Audio / + Text row goes.
+   editor.html is re-fetched for the script tag. */
+const CACHE = 'novaclip-v170';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3130,6 +3133,11 @@ const SHELL = [
      precaching it would make every school laptop pay for a feature it is
      never going to get. It is fetched on demand, after the check. */
   '/editor-webgl.js',
+  /* The rail. Without it the five pills come back to floating over the
+     preview and the duplicate + buttons return — a visibly different editor
+     for a returning visitor, which is exactly what the cache bump exists to
+     prevent. */
+  '/editor-rail.js',
   '/editor-layout.js',
   '/editor-quickedit.js',
   /* The AI panel's manners. Without it the panel still runs every tool, and
