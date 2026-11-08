@@ -2950,7 +2950,16 @@
 /* v177: the FX library dock is reverted — it broke the tile sizing, put the
    panel over the timeline and lost the preview. The align-self:start fix it
    turned up is real and stays. */
-const CACHE = 'novaclip-v177';
+/* v178 is the one that matters most of the recent lot, because it is a fix
+   and not a feature. activePainters() in editor-fx.js consulted PAINT_ORDER,
+   a literal list of that file's own eighteen painters, so all 43 effects
+   registered by editor-fx-pack.js were never called on the video: they were
+   in the library, their tile previews animated, applying one put a chip on
+   the clip, and the picture did not change. Measured before and after on the
+   preview canvas at a fixed playhead — 0% of pixels changed before, and the
+   effect is plainly there after.
+ */
+const CACHE = 'novaclip-v178';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

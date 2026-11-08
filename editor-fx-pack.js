@@ -92,11 +92,34 @@
 
   /* ---- private scratch pool ---------------------------------------------- */
   var _p = [];
+  /* HANDED BACK CLEAN, EVERY TIME.
+     These scratch canvases are shared by index across all 43 painters, and
+     setting .width or .height is the only thing that resets a 2D context —
+     so when a painter asks for a scratch at the size it already is, which is
+     the normal case, it inherits whatever composite mode, alpha, filter and
+     transform the last painter left on it. Several painters set
+     globalCompositeOperation to 'difference' or 'overlay' and never put it
+     back, and a clearRect under a stale composite mode does not necessarily
+     clear.
+
+     That did not matter while only editor-fx.js's own eighteen painters could
+     run. It matters now that all 43 can, because runPaint() calls them one
+     after another on the same frame, so one effect could quietly cancel the
+     next — measured: clarity takes the test frame's mean from 50 to 17 on its
+     own, and did nothing at all when it ran second.
+
+     Resetting here rather than in each painter: there are 43 of them and the
+     next one written would forget. */
   function sc(n, w, h) {
     var c = _p[n];
     if (!c) { c = _p[n] = document.createElement('canvas'); }
     if (c.width !== w) c.width = w;
     if (c.height !== h) c.height = h;
+    var g = c.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'source-over';
+    g.globalAlpha = 1;
+    g.filter = 'none';
     return c;
   }
   /* A scratch that already holds a copy of the frame, which is what most of

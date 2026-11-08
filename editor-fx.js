@@ -874,11 +874,33 @@
     g.restore();
   };
 
+  /* EVERY REGISTERED PAINTER, NOT JUST THE EIGHTEEN THIS FILE WROTE.
+     PAINT_ORDER is a literal list of this file's own painters, and it was
+     the only thing consulted here. So an effect registered into NC_FX.PAINT
+     by another file — all 43 in editor-fx-pack.js, and the ISF set after
+     them — was never once called on the video. It appeared in the FX
+     library, its tile preview animated (the panel calls painters directly,
+     not through here), applying it put a chip on the clip, and the picture
+     did not change. 61 painters existed and 18 could run.
+
+     PAINT_ORDER stays, because for those eighteen the order is load-bearing
+     and the comment above it explains why: a halftone before a mirror
+     mirrors the dots. What it is now is the *ordering* for the ones that
+     need one, not the guest list. Anything else active runs after them, in
+     registration order, which for a pack stacked on top of the base effects
+     is the right place for it anyway. */
   function activePainters(fx) {
-    var out = [];
+    var out = [], named = {};
     for (var i = 0; i < PAINT_ORDER.length; i++) {
       var k = PAINT_ORDER[i];
+      named[k] = true;
       if (fx && fx[k] > 0) out.push(k);
+    }
+    if (!fx) return out;
+    for (var k2 in PAINT) {
+      if (named[k2]) continue;
+      if (!Object.prototype.hasOwnProperty.call(PAINT, k2)) continue;
+      if (fx[k2] > 0) out.push(k2);
     }
     return out;
   }
