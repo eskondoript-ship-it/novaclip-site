@@ -2947,7 +2947,10 @@
 /* v176: the library tiles were collapsing to 2-3px and showing as grey
    lines — a <button> grid item stretched to a row its own text height had
    collapsed. align-self:start fixes it. The docked column is also wider. */
-const CACHE = 'novaclip-v176';
+/* v177: the FX library dock is reverted — it broke the tile sizing, put the
+   panel over the timeline and lost the preview. The align-self:start fix it
+   turned up is real and stays. */
+const CACHE = 'novaclip-v177';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3157,9 +3160,6 @@ const SHELL = [
      for a returning visitor, which is exactly what the cache bump exists to
      prevent. */
   '/editor-rail.js',
-  /* The dock. Without it the library goes back to floating over the preview
-     at a third of the usable height. */
-  '/editor-fx-dock.js',
   '/editor-layout.js',
   '/editor-quickedit.js',
   /* The AI panel's manners. Without it the panel still runs every tool, and
