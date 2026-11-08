@@ -227,8 +227,21 @@
         'display:inline-flex;align-items:center;box-sizing:border-box;cursor:pointer;',
         'font:600 11px/1 Inter,system-ui,sans-serif}',
       '.nctr .cat.on{background:#00F0FF;color:#04121a;border-color:#00F0FF}',
+      /* grid-auto-rows:max-content is the other half of the tile-height fix,
+         and without it the first half made things worse rather than better.
+         The implicit rows were sizing to about 13px — the tile's text height,
+         because a <button>'s content height comes from its text and not from
+         its block children. align-self:start stopped the tile being squashed
+         INTO that row, so it painted its full 181px instead... straight over
+         the five tiles below it. Measured: tiles 181px tall on a 13px row
+         stride, every one overlapping the next, which on screen is a column
+         of dark stripes and not a preview. Reported twice as "i still cannot
+         see the preview", and both times the canvases were full of correct
+         pixels — 51 tiles, 51 different images — stacked on top of each
+         other. Sizing the rows to their content gives a 192px stride for a
+         181px tile and an 11px gap, which is exactly right. */
       '.nctr .grid{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 15px 14px;',
-        'display:grid;grid-template-columns:1fr 1fr;gap:11px}',
+        'display:grid;grid-template-columns:1fr 1fr;gap:11px;grid-auto-rows:max-content}',
       /* align-self:start is load-bearing, not cosmetic. A <button> resolves
          its content height from its TEXT, not from its block children, so a
          grid row sized by these buttons collapses — and align-items:normal
@@ -658,6 +671,37 @@
     hd.innerHTML = '<h4>⇄ Transitions</h4>'
       + '<p class="sub">Every tile is running the real transition, on two frames. '
       + 'Click to set it at the end of the selected clip; shift-click for the start.</p>';
+
+    /* THE HEADING HAS TO FOLLOW THE TAB. It did not: the panel said
+       "⇄ Transitions", "running the real transition" and "Pick a clip, then
+       a transition" while you were looking at 51 effects, which is the same
+       family of bug as the transition categories showing on the Effects tab.
+
+       The Transitions wording is restored verbatim rather than rebuilt,
+       because that exact string is an i18n key carrying all nineteen
+       languages and retyping it would drop every translation. The Effects
+       wording is new and therefore English-only for now — which is what the
+       two tab labels above it already are, so it is consistent rather than a
+       new gap. */
+    function retitle() {
+      var fx = state.mode === 'Effects';
+      var h = hd.querySelector('h4'), s = hd.querySelector('.sub');
+      if (h) h.textContent = fx ? '✦ Effects' : '⇄ Transitions';
+      if (s) {
+        s.textContent = fx
+          ? 'Every tile is running the real effect on a frame. Click to put it on '
+            + 'the selected clip, or drag it onto the FX lane to run it for part of the video.'
+          : 'Every tile is running the real transition, on two frames. '
+            + 'Click to set it at the end of the selected clip; shift-click for the start.';
+      }
+      /* ft is a var in this same function and so is hoisted; by the time any
+         tab click can fire it has been assigned. */
+      if (ft) {
+        var bb = ft.querySelector('b');
+        if (bb) bb.textContent = fx ? 'Pick a clip, then an effect.'
+                                    : 'Pick a clip, then a transition.';
+      }
+    }
     /* Two things in one panel rather than a third pill in the corner: they
        are both "pick a look and put it on the clip", and the editor's bottom
        edge is crowded enough. */
@@ -674,6 +718,7 @@
         modes.querySelectorAll('.cat').forEach(function (x) { x.className = 'cat'; });
         b.className = 'cat on';
         panel.querySelector('.cats.sub-cats').style.display = m === 'Transitions' ? '' : 'none';
+        retitle();
         /* placehold is a hoisted function declaration further down this same
            function, so it is defined by the time any click can fire. */
         placehold();
@@ -730,6 +775,11 @@
     var ft = document.createElement('div');
     ft.className = 'ft';
     ft.innerHTML = '<b>Pick a clip, then a transition.</b>';
+    /* Now that ft exists, make the heading, the subtitle and this line agree
+       with whichever tab the panel is opening on — which is not always
+       Transitions, because the rail's Effects item opens it straight onto
+       Effects. */
+    retitle();
     var x = document.createElement('button');
     x.type = 'button';
     x.className = 'x';

@@ -2962,7 +2962,18 @@
 /* v179 adds editor-fx-bars.js (NEW): the FX lane on the timeline. An effect
    dropped on it runs for the length of its bar instead of for the whole
    clip, which is what an effect being usable at all depends on. */
-const CACHE = 'novaclip-v179';
+/* v180: the FX library's tiles were overlapping each other. The implicit
+   grid rows sized to about 13px — a <button> takes its content height from
+   its text — while each tile painted its full 181px straight over the ones
+   below, so the panel was a column of dark stripes and "i still cannot see
+   the preview" was reported three times. grid-auto-rows:max-content gives a
+   192px stride for a 181px tile. The panel's heading also follows its tab
+   now instead of saying "Transitions" over 51 effects, and Reframe is gone
+   from the rail on request. */
+/* v181 is v180's fixes on top of v179's FX lane. The branch keeps its own
+   number because its SHELL carries editor-fx-bars.js and main's does not,
+   and two different shells must never share a cache name. */
+const CACHE = 'novaclip-v181';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

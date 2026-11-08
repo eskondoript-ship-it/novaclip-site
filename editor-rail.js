@@ -11,7 +11,8 @@
  *                     bigger one.
  *     Looks       ->  its own rail item
  *     Captions    ->  its own rail item
- *     Reframe     ->  its own rail item
+ *     Reframe     ->  removed entirely, on request. Its pill stays hidden so
+ *                     it cannot come back floating over the preview.
  *     Beats       ->  the strip above the timeline, as an icon. It is the
  *                     only one of the five that acts ON the timeline rather
  *                     than on a clip's appearance, and it belongs next to it.
@@ -49,15 +50,24 @@
     { sel: '.nclk-btn',  label: 'Looks',    key: 'ui_rail_looks',
       icon: 'M12 3a9 9 0 1 0 9 9 4 4 0 0 1-4-4h-1a4 4 0 0 1-4-4V3z' },
     { sel: '.nccap-btn', label: 'Captions', key: 'ui_rail_cc',
-      icon: 'M3 5h18v14H3zM7 10h4M7 14h7M15 10h2' },
-    { sel: '.ncrf-btn',  label: 'Reframe',  key: 'ui_rail_reframe',
-      icon: 'M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4' }
+      icon: 'M3 5h18v14H3zM7 10h4M7 14h7M15 10h2' }
   ];
   /* Not rail items: one rides the Transitions entry, one rides the timeline. */
   var FX_SEL = '.nctr-btn';
   var BEAT_SEL = '.ncbeat-btn';
+  /* REFRAME IS GONE, asked for directly: "delete reframe".
+     It is listed here and not in TOOLS because deleting a rail item is only
+     half of it — the rail item was never the control, it was a stand-in for
+     reframe.js's own .ncrf-btn pill, and dropping it from TOOLS alone would
+     have taken the tidy rail entry away and let the original pill come back
+     floating over the preview, which is the state the rail exists to fix.
+     So it keeps being hidden, it just no longer gets an entry. reframe.js
+     itself is left on disk and untouched: nothing now opens it, and that is
+     a one-line change away from being undone if it is wanted back. */
+  var GONE = ['.ncrf-btn'];
   /* Every pill this file takes over, so none is left floating. */
-  var ALL = TOOLS.map(function (t) { return t.sel; }).concat([FX_SEL, BEAT_SEL]);
+  var ALL = TOOLS.map(function (t) { return t.sel; })
+                 .concat([FX_SEL, BEAT_SEL]).concat(GONE);
 
   var CSS = [
     '.ncrail-i{color:#8B93AD;cursor:pointer;border:0;background:none}',
