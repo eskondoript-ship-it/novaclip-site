@@ -2959,7 +2959,15 @@
    preview canvas at a fixed playhead — 0% of pixels changed before, and the
    effect is plainly there after.
  */
-const CACHE = 'novaclip-v178';
+/* v180: the FX library's tiles were overlapping each other. The implicit
+   grid rows sized to about 13px — a <button> takes its content height from
+   its text — while each tile painted its full 181px straight over the ones
+   below, so the panel was a column of dark stripes and "i still cannot see
+   the preview" was reported three times. grid-auto-rows:max-content gives a
+   192px stride for a 181px tile. The panel's heading also follows its tab
+   now instead of saying "Transitions" over 51 effects, and Reframe is gone
+   from the rail on request. */
+const CACHE = 'novaclip-v180';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
