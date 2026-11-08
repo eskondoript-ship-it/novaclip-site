@@ -2941,7 +2941,10 @@
 /* v174 adds editor-fx-dock.js (NEW): the FX library moves out of a floating
    dialog over the preview and into the editor's left column, where the grid
    gets about three times the height. */
-const CACHE = 'novaclip-v174';
+/* v175: the transition-category row no longer shows on the Effects tab, and
+   the parameter editor fills the docked left column the way the reference
+   lays it out. */
+const CACHE = 'novaclip-v175';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

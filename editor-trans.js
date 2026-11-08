@@ -521,6 +521,15 @@
 
     var cats = document.createElement('div');
     cats.className = 'cats sub-cats';
+    /* HIDDEN AT CREATION WHEN THE PANEL OPENS ON EFFECTS, not only when a
+       tab is clicked. state.mode persists between opens, so reopening
+       straight onto the Effects tab rendered this row — the TRANSITION
+       categories: Smooth, Motion, Glitch, Light, Shape and the ten the GPU
+       set adds — above a grid of effects they do not filter. Reported as
+       "Glitch is showing on the Effects tab", and that is exactly what it
+       was: the only code that hid the row lived in the tab's click handler,
+       so a panel that opened already on Effects never ran it. */
+    cats.style.display = state.mode === 'Transitions' ? '' : 'none';
     CATS.forEach(function (c) {
       var b = document.createElement('button');
       b.type = 'button';

@@ -63,11 +63,26 @@
       'padding:9px 12px 12px !important;flex:1 1 auto !important;min-height:0 !important;',
       'overflow-y:auto !important}',
     '.nctr.ncdock .ft{padding:8px 12px !important;font-size:10.5px !important}',
-    /* The parameter editor fills the column too, so editing a transition
-       looks like the reference: controls down the left, picture to the
-       right. */
-    '.nctr.ncdock .ncfe{border-radius:0 !important}',
+    /* ---- THE EDITOR FILLS THE COLUMN, AND THAT IS THE REFERENCE ---------
+       I tried it as a bottom section first, so the library stayed visible
+       while you adjusted. It measured badly and, more to the point, it is
+       not what was asked for. The reference has ONLY "transition
+       parameters" and "timing" down its left side — no list of transitions
+       beside them. Splitting a 283px column between a grid and a full
+       editor gave the grid 70px, which is less than one 107px tile, and
+       took room from the controls at the same time. Both halves worse.
+
+       So the editor takes the column, with Back returning to the grid. */
     '.nctr.ncdock .ncfe-prev{max-width:100% !important}',
+    '.nctr.ncdock .ncfe-bd{padding:9px 12px !important;gap:10px !important}',
+    '.nctr.ncdock .ncfe-hd{padding:8px 12px !important}',
+    '.nctr.ncdock .ncfe-ft{padding:8px 12px !important}',
+    /* A column this narrow cannot carry a 78px label, a slider and a readout
+       on one line without the slider becoming a stub. */
+    '.nctr.ncdock .ncfe-row{grid-template-columns:62px 1fr 34px !important;gap:6px !important}',
+    '.nctr.ncdock .ncfe-row label{font-size:10px !important}',
+    '.nctr.ncdock .ncfe{position:absolute !important;inset:0 !important;',
+      'border-radius:0 !important}',
     /* React's own panel for whichever rail item is lit, hidden while ours is
        up. Hidden, not removed: React is managing those nodes. */
     '.ncdock-host > *:not(.nctr){visibility:hidden !important}',
