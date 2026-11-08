@@ -295,6 +295,7 @@
      beginning and an end to run through, it has a strength. Three of them,
      because one preview cannot tell you what a slider does. */
   function fillEffects() {
+    fxStop(); fxTiles = [];
     var grid = panel.querySelector('.grid');
     grid.textContent = '';
     tiles = [];
@@ -335,12 +336,99 @@
       m.querySelector('b').appendChild(tag);
       m.querySelector('span').textContent = meta[1];
       tile.appendChild(m);
-      tile.title = 'Click: 70% · Shift-click: full · Alt-click: subtle';
+      tile.title = 'Click: 70% · Shift-click: full · Alt-click: subtle · Point at it to see it move';
       tile.onclick = function (e) {
         applyFx(id, e.shiftKey ? STRENGTHS[2] : e.altKey ? STRENGTHS[0] : STRENGTHS[1]);
       };
       grid.appendChild(tile);
+      fxTiles.push({ id: id, g: g, w: W, h: H, A: A });
     });
+    wireFxHover(grid);
+  }
+
+  /* ---- the same idea for effects ---------------------------------------
+     An effect tile was drawn once at 0.7 and left there, which is cheap but
+     tells you nothing about the ones that move — grain, glitch, the CRT,
+     anything time-based looks like a still of itself. Pointing at one runs
+     its strength up and back down, so you see what it does AND how far it
+     goes, and the tile returns to its still when you leave.
+
+     Still one canvas at a time. Nothing animates until it is pointed at. */
+  var fxTiles = [];
+  var fxHot = null, fxRaf = 0, fxT0 = 0;
+
+  function fxStill(t) {
+    try {
+      t.g.setTransform(1, 0, 0, 1, 0, 0);
+      t.g.clearRect(0, 0, t.w, t.h);
+      t.g.drawImage(t.A, 0, 0, t.w, t.h);
+      var F = fx();
+      if (F && F.PAINT[t.id]) F.PAINT[t.id](t.g, t.w, t.h, 0.7, 0);
+    } catch (e) {}
+  }
+  function fxById(id) {
+    for (var i = 0; i < fxTiles.length; i++) if (fxTiles[i].id === id) return fxTiles[i];
+    return null;
+  }
+  function fxStop() {
+    if (fxRaf) cancelAnimationFrame(fxRaf);
+    fxRaf = 0;
+    var t = fxHot && fxById(fxHot);
+    fxHot = null;
+    if (t) fxStill(t);
+  }
+  function fxStart(id) {
+    if (fxHot === id) return;
+    fxStop();
+    var t = fxById(id);
+    if (!t) return;
+    var reduced = false;
+    try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    if (reduced) { fxStill(t); return; }
+    fxHot = id; fxT0 = performance.now();
+    var last = 0;
+    function frame(now) {
+      if (fxHot !== id || !panel) { fxRaf = 0; return; }
+      if (now - last < FRAME_MS) { fxRaf = requestAnimationFrame(frame); return; }
+      last = now;
+      /* 0 -> 1 -> 0 over 2.2s, so the full range is shown and the tile ends
+         where it started. */
+      var u = ((now - fxT0) / 2200) % 1;
+      var v = u < 0.5 ? u * 2 : (1 - u) * 2;
+      try {
+        t.g.setTransform(1, 0, 0, 1, 0, 0);
+        t.g.clearRect(0, 0, t.w, t.h);
+        t.g.drawImage(t.A, 0, 0, t.w, t.h);
+        var F = fx();
+        if (F && F.PAINT[t.id]) F.PAINT[t.id](t.g, t.w, t.h, v, 0);
+      } catch (e) {}
+      fxRaf = requestAnimationFrame(frame);
+    }
+    fxRaf = requestAnimationFrame(frame);
+  }
+  function wireFxHover(grid) {
+    if (!grid || grid.getAttribute('data-ncfxhover')) return;
+    grid.setAttribute('data-ncfxhover', '1');
+    grid.addEventListener('pointerover', function (e) {
+      var tile = e.target && e.target.closest && e.target.closest('.tile');
+      if (!tile) return;
+      var id = tile.getAttribute('data-fx');
+      if (id) fxStart(id);
+    });
+    grid.addEventListener('pointerout', function (e) {
+      var tile = e.target && e.target.closest && e.target.closest('.tile');
+      if (!tile) return;
+      if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+      if (fxHot === tile.getAttribute('data-fx')) fxStop();
+    });
+    grid.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse') return;
+      var tile = e.target && e.target.closest && e.target.closest('.tile');
+      if (!tile) return;
+      var id = tile.getAttribute('data-fx');
+      if (!id) return;
+      if (fxHot === id) fxStop(); else fxStart(id);
+    }, { passive: true });
   }
 
   function applyFx(id, v) {
@@ -431,39 +519,121 @@
      ========================================================================== */
   var FRAME_MS = 1000 / 30;
 
-  function tick() {
-    if (raf) cancelAnimationFrame(raf);
-    var t0 = performance.now(), lastDraw = 0;
+  /* ==========================================================================
+     ONLY WHAT YOU ARE POINTING AT MOVES
+     ==========================================================================
+     Every transition tile used to animate the whole time the panel was open:
+     82 canvases, each running a real transition painter over two frames, at
+     30fps, for as long as you were browsing. The earlier pass here cut that
+     to the tiles on screen and halved the rate, which helped and still left
+     a dozen painters running while somebody read a label.
+
+     Now one runs: the one under the pointer. Everything else holds a single
+     still frame drawn once, at the midpoint, which is where a transition
+     shows what it is. Pointing at a tile starts it; moving away stops it and
+     leaves the still behind.
+
+     ON A TOUCHSCREEN THERE IS NO HOVER, so a tap does it instead — tap once
+     to watch it, tap again or tap another to move on. Applying still needs
+     the tile's own click, which a tap also fires; the two coexist because
+     the tap only ever ADDS motion, it never swallows the click.
+
+     Measured in the editor before this: 60fps with the panel shut, 53fps
+     with it open, worst frames 50ms. The work is now proportional to one
+     tile rather than to how many fit on screen, which matters most on the
+     machines this site is actually used on.
+     ========================================================================== */
+  var hot = null;          /* the tile id being watched, or null */
+  var hotRaf = 0;
+  var hotT0 = 0;
+
+  function still(t) {
+    /* The midpoint: both shots visible, the shape of the transition clear.
+       Drawn once per tile, and again only if the tile is rebuilt. */
+    try { drawFrame(t.g, t.w, t.h, t.id, 0.5, t.A, t.B); } catch (e) {}
+  }
+
+  function stillAll() {
+    for (var i = 0; i < tiles.length; i++) still(tiles[i]);
+  }
+
+  function byId(id) {
+    for (var i = 0; i < tiles.length; i++) if (tiles[i].id === id) return tiles[i];
+    return null;
+  }
+
+  function stopHot() {
+    if (hotRaf) cancelAnimationFrame(hotRaf);
+    hotRaf = 0;
+    var t = hot && byId(hot);
+    hot = null;
+    if (t) still(t);                 /* leave the still behind, not the last frame */
+  }
+
+  function startHot(id) {
+    if (hot === id) return;
+    stopHot();
+    var t = byId(id);
+    if (!t) return;
     var reduced = false;
     try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
-
-    function visible(cv, box) {
-      var r = cv.getBoundingClientRect();
-      return r.bottom > box.top - 40 && r.top < box.bottom + 40;
-    }
-
+    if (reduced) { still(t); return; }   /* honour it: hold the midpoint */
+    hot = id;
+    hotT0 = performance.now();
+    var last = 0;
     function frame(now) {
-      if (!panel) { raf = 0; return; }
-      if (!reduced && now - lastDraw < FRAME_MS) { raf = requestAnimationFrame(frame); return; }
-      lastDraw = now;
-      /* 2.2s per cycle with a pause at each end, so a tile is readable rather
-         than a strobe. Reduced motion holds the midpoint instead. */
-      var p;
-      if (reduced) p = 0.5;
-      else {
-        var u = ((now - t0) / 2200) % 1;
-        p = u < 0.12 ? 0 : u > 0.78 ? 1 : (u - 0.12) / 0.66;
-      }
-      var grid = panel.querySelector('.grid');
-      var box = grid ? grid.getBoundingClientRect() : { top: 0, bottom: 1e5 };
-      for (var i = 0; i < tiles.length; i++) {
-        var t = tiles[i];
-        if (!visible(t.g.canvas, box)) continue;
-        try { drawFrame(t.g, t.w, t.h, t.id, 1 - p, t.A, t.B); } catch (e) {}
-      }
-      raf = reduced ? 0 : requestAnimationFrame(frame);
+      if (hot !== id || !panel) { hotRaf = 0; return; }
+      if (now - last < FRAME_MS) { hotRaf = requestAnimationFrame(frame); return; }
+      last = now;
+      /* 2.2s per cycle with a pause at each end, so it reads as a transition
+         rather than a strobe. */
+      var u = ((now - hotT0) / 2200) % 1;
+      var p = u < 0.12 ? 0 : u > 0.78 ? 1 : (u - 0.12) / 0.66;
+      try { drawFrame(t.g, t.w, t.h, t.id, 1 - p, t.A, t.B); } catch (e) {}
+      hotRaf = requestAnimationFrame(frame);
     }
-    raf = requestAnimationFrame(frame);
+    hotRaf = requestAnimationFrame(frame);
+  }
+
+  /* One listener on the grid rather than 82 on the tiles: the grid is
+     rebuilt on every search keystroke and category change, and per-tile
+     listeners would be rebound every time. */
+  function wireHover(grid) {
+    if (!grid || grid.getAttribute('data-nchover')) return;
+    grid.setAttribute('data-nchover', '1');
+    grid.addEventListener('pointerover', function (e) {
+      var tile = e.target && e.target.closest && e.target.closest('.tile');
+      if (!tile) return;
+      var id = tile.getAttribute('data-trans');
+      if (id) startHot(id);
+    });
+    grid.addEventListener('pointerout', function (e) {
+      var tile = e.target && e.target.closest && e.target.closest('.tile');
+      if (!tile) return;
+      /* Moving between two children of the same tile fires out then over;
+         ignore the ones that stay inside. */
+      if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+      if (hot === tile.getAttribute('data-trans')) stopHot();
+    });
+    /* Touch: a tap starts it. The tile's own click still applies the
+       transition — this only adds the motion. */
+    grid.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse') return;
+      var tile = e.target && e.target.closest && e.target.closest('.tile');
+      if (!tile) return;
+      var id = tile.getAttribute('data-trans');
+      if (!id) return;
+      if (hot === id) stopHot(); else startHot(id);
+    }, { passive: true });
+  }
+
+  function tick() {
+    /* Not a loop any more. Draw every tile once and wire the grid; after
+       that nothing runs until somebody points at something. */
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    stopHot();
+    stillAll();
+    wireHover(panel && panel.querySelector('.grid'));
   }
 
   function close() {
