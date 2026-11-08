@@ -2976,7 +2976,11 @@
 /* v182 adds editor-dock.js (NEW): the FX library sits in the right-hand
    panel instead of floating over the preview, and the effects grid gets the
    category chips the transitions already had. */
-const CACHE = 'novaclip-v182';
+/* v183: the dock was putting the wrong thing in the right-hand panel. The
+   browser belongs on the left, CapCut-style; the right-hand panel is where
+   an effect's own controls go — the sliders and the timing curve. Both are
+   placed now, so the grid and the controls are visible at once. */
+const CACHE = 'novaclip-v183';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

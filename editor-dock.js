@@ -48,30 +48,66 @@
   var MIN_VIEWPORT = 900;   /* px of window width before docking is offered */
   var MIN_COLUMN   = 240;   /* px of column width worth docking into */
 
-  var panel = null, column = null, ro = null, docked = false, pending = 0;
+  var panel = null, editor = null;            /* .nctr (library), .ncfe (controls) */
+  var leftCol = null, rightCol = null;
+  var roL = null, roR = null, pending = 0;
+  var dockedPanel = false, dockedEditor = false;
 
-  /* THE RIGHT-HAND PANEL, the one that otherwise reads "nothing selected".
-     Asked for with that panel circled: "put the panel here".
+  /* TWO COLUMNS, TWO DIFFERENT THINGS IN THEM.
 
-     The editor has two `.glass` columns — the left one wraps the icon rail
-     and the Media Library, the right one holds Transform / Colour / Effects
-     / Audio. They are told apart by position rather than by class, because
-     the only class difference between them is flex-row against flex-col,
-     which is a layout detail a rebuild could flip without meaning anything.
-     The right-hand one is the one further right, and that stays true however
-     it is built. */
-  function findColumn() {
-    var glass = document.querySelectorAll('.glass');
-    var best = null, bestX = -1;
-    for (var i = 0; i < glass.length; i++) {
-      var r = glass[i].getBoundingClientRect();
+     Corrected after getting it backwards: "i said put the editing effects
+     like in the second image there not the transitions effect page". The
+     circled right-hand panel was never meant to hold the BROWSER — it is
+     where an effect's own controls belong, the sliders and the timing curve
+     from the gl-transitions picture. The browser goes on the left, which is
+     where CapCut keeps it and where the first attempt had it.
+
+     So the library panel (.nctr) docks left and the parameter editor (.ncfe)
+     docks right, and when you open an effect's settings you can see the grid
+     and its controls at the same time instead of one replacing the other.
+
+     The columns are told apart by position, not by class. The editor has two
+     `.glass` blocks — the left wraps the icon rail and the Media Library, the
+     right holds Transform / Colour / Effects / Audio — and the only class
+     difference is flex-row against flex-col, a layout detail a rebuild could
+     flip without meaning anything. Left-most and right-most stay true
+     however it is built. */
+  function glassColumns() {
+    var all = document.querySelectorAll('.glass'), out = [];
+    for (var i = 0; i < all.length; i++) {
+      var r = all[i].getBoundingClientRect();
       if (r.width < MIN_COLUMN || r.height < 200) continue;
-      if (r.left > bestX) { bestX = r.left; best = glass[i]; }
+      out.push({ el: all[i], x: r.left });
     }
-    /* One column only, or none wide enough: there is no right-hand panel to
-       dock into, so stay floating rather than cover the left one. */
-    if (!best || bestX < window.innerWidth * 0.5) return null;
-    return best;
+    out.sort(function (a, b) { return a.x - b.x; });
+    return out;
+  }
+
+  /* The left block contains the icon rail as well, and the library should
+     not sit on top of the rail. So inside it, take the panel area — the
+     child that does not hold the rail. */
+  function findLeftColumn() {
+    var cols = glassColumns();
+    if (cols.length < 2) return null;
+    var g = cols[0].el;
+    var inner = g.querySelector('.min-w-0.flex-1.overflow-hidden');
+    if (inner && inner.getBoundingClientRect().width >= MIN_COLUMN) return inner;
+    var best = null, bestW = 0;
+    for (var i = 0; i < g.children.length; i++) {
+      var c = g.children[i];
+      if (c.querySelector && c.querySelector('.ncrail-i')) continue;   /* the rail */
+      var w = c.getBoundingClientRect().width;
+      if (w > bestW) { bestW = w; best = c; }
+    }
+    return bestW >= MIN_COLUMN ? best : null;
+  }
+
+  function findRightColumn() {
+    var cols = glassColumns();
+    if (cols.length < 2) return null;
+    var last = cols[cols.length - 1];
+    if (last.x < window.innerWidth * 0.5) return null;
+    return last.el;
   }
 
   function css() {
@@ -79,14 +115,14 @@
     var s = document.createElement('style');
     s.id = 'nc-dock-css';
     s.textContent = [
-      /* Rounded on the inner edge, square against the window, so it reads as
-         part of the right-hand column rather than a card dropped on top. */
-      '.nctr.nc-docked{border-radius:14px 0 0 14px;box-shadow:-14px 18px 40px rgba(0,0,0,.4)}',
+      /* The library sits in the LEFT column: square against the icon rail,
+         rounded away from it. */
+      '.nctr.nc-docked{border-radius:0 14px 14px 0;box-shadow:14px 18px 40px rgba(0,0,0,.4)}',
       /* CAPCUT PACKS MORE THAN TWO ACROSS. The floating panel was 430px wide
          and two fixed columns suited it; the dock is about 300px, where two
          194px columns do not fit at all. auto-fill lets the same grid be two
-         narrow tiles in the column and three or four if the column is
-         dragged wider, without this file knowing the number. */
+         narrow tiles in the column and three or four if it is wider, without
+         this file knowing the number. */
       '.nctr.nc-docked .grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:9px;',
         'padding:10px 11px 12px}',
       '.nctr.nc-docked .hd{padding:12px 13px 9px}',
@@ -94,68 +130,114 @@
       '.nctr.nc-docked .m b{font-size:.78rem}',
       '.nctr.nc-docked .m span{font-size:.67rem;line-height:1.38}',
       '.nctr.nc-docked .ft{padding:9px 12px;font-size:11px}',
-      /* The parameter editor fills the panel, so it inherits the dock for
-         free. Only its preview needs to stop assuming a 430px panel. */
-      '.nctr.nc-docked .ncfe-prev{max-width:100%}',
-      '.nctr.nc-docked .ncfe-curve{max-width:100%}',
-      '.nctr.nc-docked .ncfe-row{grid-template-columns:66px 1fr 34px}'
+
+      /* THE CONTROLS GO IN THE RIGHT COLUMN, ON THEIR OWN.
+         .ncfe is a child of .nctr and is normally position:absolute inset:0,
+         so it covers the library. Switching it to fixed takes it out of the
+         library's box entirely and lets it be measured onto the other side
+         of the screen, without reparenting it — .nctr sets no transform,
+         filter or perspective, so it is not a containing block for a fixed
+         child and its overflow:hidden does not clip one either. Verified in
+         the browser rather than taken on trust: the editor measures the full
+         right column, not a sliver of the left one. */
+      '.ncfe.nc-docked-edit{position:fixed;inset:auto;z-index:100003;',
+        'border-radius:14px 0 0 14px;box-shadow:-14px 18px 40px rgba(0,0,0,.45);',
+        'border:1px solid rgba(255,255,255,.14)}',
+      '.ncfe.nc-docked-edit .ncfe-prev{max-width:100%}',
+      '.ncfe.nc-docked-edit .ncfe-curve{max-width:100%}',
+      '.ncfe.nc-docked-edit .ncfe-row{grid-template-columns:72px 1fr 38px}'
     ].join('');
     document.head.appendChild(s);
   }
 
+  function place(el, rect, cls) {
+    el.classList.add(cls);
+    /* Inline and !important: .nctr's own rule carries left/bottom/width/
+       max-height and .ncfe's carries inset, and both are stylesheet rules
+       their own files still need for the undocked case. */
+    el.style.setProperty('left', Math.round(rect.left) + 'px', 'important');
+    el.style.setProperty('top', Math.round(rect.top) + 'px', 'important');
+    el.style.setProperty('right', 'auto', 'important');
+    el.style.setProperty('bottom', 'auto', 'important');
+    el.style.setProperty('width', Math.round(rect.width) + 'px', 'important');
+    el.style.setProperty('height', Math.round(rect.height) + 'px', 'important');
+    el.style.setProperty('max-height', 'none', 'important');
+  }
+
+  function clear(el, cls) {
+    if (!el) return;
+    el.classList.remove(cls);
+    ['left', 'top', 'right', 'bottom', 'width', 'height', 'max-height']
+      .forEach(function (k) { el.style.removeProperty(k); });
+  }
+
   function undock() {
-    if (!panel || !docked) return;
-    docked = false;
-    panel.classList.remove('nc-docked');
-    ['left', 'top', 'width', 'height', 'max-height', 'bottom'].forEach(function (k) {
-      panel.style.removeProperty(k);
-    });
+    if (dockedPanel) { clear(panel, 'nc-docked'); dockedPanel = false; }
+    if (dockedEditor) { clear(editor, 'nc-docked-edit'); dockedEditor = false; }
+  }
+
+  function usable(el) {
+    if (!el || !el.isConnected) return null;
+    var r = el.getBoundingClientRect();
+    return (r.width >= MIN_COLUMN && r.height >= 200) ? r : null;
   }
 
   function apply() {
-    if (!panel || !panel.isConnected) return;
     if (window.innerWidth < MIN_VIEWPORT) { undock(); return; }
-    if (!column || !column.isConnected) column = findColumn();
-    if (!column) { undock(); return; }
-    var r = column.getBoundingClientRect();
-    if (r.width < MIN_COLUMN || r.height < 200) { undock(); return; }
+    if (!leftCol || !leftCol.isConnected) leftCol = findLeftColumn();
+    if (!rightCol || !rightCol.isConnected) rightCol = findRightColumn();
     css();
-    docked = true;
-    panel.classList.add('nc-docked');
-    /* Inline and !important, because .nctr's own rule is a stylesheet rule
-       with left/bottom/width/max-height in it and this has to win without
-       editing that rule — editor-trans.js owns it and still needs it for the
-       floating case. */
-    panel.style.setProperty('left', Math.round(r.left) + 'px', 'important');
-    panel.style.setProperty('top', Math.round(r.top) + 'px', 'important');
-    panel.style.setProperty('bottom', 'auto', 'important');
-    panel.style.setProperty('width', Math.round(r.width) + 'px', 'important');
-    panel.style.setProperty('height', Math.round(r.height) + 'px', 'important');
-    panel.style.setProperty('max-height', 'none', 'important');
+
+    if (panel && panel.isConnected) {
+      var lr = usable(leftCol);
+      if (lr) { place(panel, lr, 'nc-docked'); dockedPanel = true; }
+      else if (dockedPanel) { clear(panel, 'nc-docked'); dockedPanel = false; }
+    }
+
+    /* The controls panel only exists while an effect is being edited. */
+    editor = panel ? panel.querySelector('.ncfe') : null;
+    if (editor) {
+      var rr = usable(rightCol);
+      if (rr) { place(editor, rr, 'nc-docked-edit'); dockedEditor = true; }
+      else if (dockedEditor) { clear(editor, 'nc-docked-edit'); dockedEditor = false; }
+    } else { dockedEditor = false; }
   }
 
-  function watchColumn() {
-    if (ro || !column || typeof ResizeObserver !== 'function') return;
-    ro = new ResizeObserver(function () {
-      if (pending) return;
-      pending = requestAnimationFrame(function () { pending = 0; apply(); });
-    });
-    ro.observe(column);
+  function watchColumns() {
+    if (typeof ResizeObserver !== 'function') return;
+    if (!roL && leftCol) {
+      roL = new ResizeObserver(nudge); roL.observe(leftCol);
+    }
+    if (!roR && rightCol) {
+      roR = new ResizeObserver(nudge); roR.observe(rightCol);
+    }
   }
 
-  /* The panel is created lazily, the first time the library is opened, so
-     this watches for it rather than looking once. One rAF per batch, and it
-     only ever reads document.body's direct children — the undebounced
-     full-document scan in an earlier version of editor-rail.js is what hung
-     the editor before DOMContentLoaded, and that mistake is not worth
-     repeating for a panel that appears once. */
+  function nudge() {
+    if (pending) return;
+    pending = requestAnimationFrame(function () { pending = 0; apply(); });
+  }
+
+  /* The library panel is created the first time it is opened, and the
+     controls panel is created inside it each time an effect is edited — so
+     both are watched for rather than looked up once. One rAF per batch, and
+     nothing here ever scans the whole document: the undebounced
+     full-document scan in an early editor-rail.js is what hung the editor
+     before DOMContentLoaded. */
+  var innerObs = null;
   function hunt() {
-    if (panel && panel.isConnected) return;
-    panel = document.querySelector('.nctr');
+    if (!panel || !panel.isConnected) {
+      panel = document.querySelector('.nctr');
+      if (innerObs) { innerObs.disconnect(); innerObs = null; }
+    }
     if (!panel) return;
-    column = findColumn();
-    watchColumn();
-    apply();
+    if (!innerObs) {
+      innerObs = new MutationObserver(nudge);
+      innerObs.observe(panel, { childList: true });
+    }
+    if (!leftCol || !leftCol.isConnected) leftCol = findLeftColumn();
+    if (!rightCol || !rightCol.isConnected) rightCol = findRightColumn();
+    watchColumns();
   }
 
   var obs = new MutationObserver(function () {
@@ -164,12 +246,9 @@
   });
 
   function boot() {
-    hunt();
+    hunt(); apply();
     obs.observe(document.body, { childList: true });
-    window.addEventListener('resize', function () {
-      if (pending) return;
-      pending = requestAnimationFrame(function () { pending = 0; apply(); });
-    });
+    window.addEventListener('resize', nudge);
   }
 
   if (document.readyState === 'loading') {
@@ -178,13 +257,24 @@
 
   window.NC_DOCK = {
     state: function () {
-      var r = column ? column.getBoundingClientRect() : null;
-      return { panel: !!(panel && panel.isConnected), column: !!column, docked: docked,
-               rect: r ? { x: Math.round(r.left), y: Math.round(r.top),
-                           w: Math.round(r.width), h: Math.round(r.height) } : null };
+      var m = function (el) {
+        if (!el) return null;
+        var r = el.getBoundingClientRect();
+        return { x: Math.round(r.left), y: Math.round(r.top),
+                 w: Math.round(r.width), h: Math.round(r.height) };
+      };
+      return { panel: !!(panel && panel.isConnected), editor: !!(editor && editor.isConnected),
+               dockedPanel: dockedPanel, dockedEditor: dockedEditor,
+               left: m(leftCol), right: m(rightCol),
+               panelRect: m(panel), editorRect: m(editor) };
     },
     apply: apply,
     undock: undock,
-    rescan: function () { panel = null; column = null; if (ro) { ro.disconnect(); ro = null; } hunt(); }
+    rescan: function () {
+      panel = null; editor = null; leftCol = null; rightCol = null;
+      if (roL) { roL.disconnect(); roL = null; }
+      if (roR) { roR.disconnect(); roR = null; }
+      hunt(); apply();
+    }
   };
 })();
