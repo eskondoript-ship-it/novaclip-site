@@ -2938,7 +2938,10 @@
 /* v173 adds vendor/isf/ (NEW): 97 single-pass ISF effects on the GPU path,
    behind the same capability gate. Not precached — like the transitions
    bundle, only a device that passes the gate can use a byte of it. */
-const CACHE = 'novaclip-v173';
+/* v174 adds editor-fx-dock.js (NEW): the FX library moves out of a floating
+   dialog over the preview and into the editor's left column, where the grid
+   gets about three times the height. */
+const CACHE = 'novaclip-v174';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3148,6 +3151,9 @@ const SHELL = [
      for a returning visitor, which is exactly what the cache bump exists to
      prevent. */
   '/editor-rail.js',
+  /* The dock. Without it the library goes back to floating over the preview
+     at a third of the usable height. */
+  '/editor-fx-dock.js',
   '/editor-layout.js',
   '/editor-quickedit.js',
   /* The AI panel's manners. Without it the panel still runs every tool, and

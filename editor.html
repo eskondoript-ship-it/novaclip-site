@@ -2157,6 +2157,17 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      before it can move them; it retries while they appear. -->
 <script src='editor-rail.js' defer></script>
 
+<!-- THE FX LIBRARY DOCKS INTO THE LEFT COLUMN. It was a floating dialog over
+     the preview, and too small to use: measured at 1500x900 the panel was
+     388px tall and its grid got 127 of that, against a 107px tile. One row
+     visible, eighty-one scrolled away.
+
+     The element is moved into the editor's own left column and restyled to
+     fill it — not rebuilt, so editor-trans.js keeps owning the tiles, the
+     search, the categories and the parameter editor. AFTER editor-rail.js,
+     because the rail is what opens it. -->
+<script src='editor-fx-dock.js' defer></script>
+
 <!-- THE LAYOUT. The timeline shipped inside the centre column, so it stopped
      where the media panel started and the bottom-left of the window was a
      media browser nobody looks at while cutting. Every editor built for this
