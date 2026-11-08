@@ -116,6 +116,18 @@ h1 .g { background: linear-gradient(90deg,var(--nc-cyan,#00F0FF),var(--nc-pink,#
 .cta { width: 100%; padding: 12px; border-radius: 30px; border: none; font-weight: 800; cursor: pointer; background: rgba(255,255,255,0.08); color: var(--nc-text,#EAF2FF); border: 1px solid rgba(255,255,255,0.2); transition: .25s; }
 .plan.best .cta { background: linear-gradient(90deg,var(--nc-pink,#FF2E97),var(--nc-violet2,#7209B7)); border: none; }
 .cta:hover { transform: translateY(-2px); box-shadow: 0 0 24px rgba(0,240,255,0.35); }
+/* THE BUTTON HAS TO LOOK LIKE IT ADDS TO A CART, because it does and nobody
+   could tell. "Start free trial" and "Get Master" read as "this begins now",
+   so a buyer pressed one expecting a payment screen and got a cart they did
+   not know they were filling. The trolley says what happens next before it
+   happens. It lives in its own span, NOT in the button's text, because the
+   button's label is translated by writing textContent over the whole element
+   — an emoji typed into the label is wiped the first time the page renders in
+   Portuguese or in Gen Z mode, which is the quiet way this kind of thing
+   half-works. aria-hidden because the label beside it already says it, and a
+   screen reader announcing "shopping trolley Get Master" is worse. */
+.cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.ctacart { font-size: 1.05em; line-height: 1; flex: 0 0 auto; }
 .note { margin-top: 30px; color: var(--nc-dim,#7E8AA6); font-size: 0.85rem; max-width: 620px; margin-left: auto; margin-right: auto; line-height: 1.7; }
 .backlnk { display: inline-block; margin-bottom: 18px; color: var(--nc-dim,#7E8AA6); }
 
@@ -481,7 +493,7 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
               <li data-t='f_shield'>Content blocking on YouTube, TikTok, Instagram and Twitch &mdash; nine categories, your own allow and block lists, and a log of what it stopped</li>
         <li data-t='f_nothing'>Nothing your child makes is ever uploaded &mdash; editing happens on their own device</li>
 </ul>
-      <button class='cta' data-t='cta_trial'>Start free trial</button>
+      <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_trial'>Start free trial</span></button>
     </div>
 
     <div class='plan' data-plan='tools' data-kind='sub'>
@@ -493,7 +505,7 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
         <li data-t='f8'>Extra effects & transitions</li>
         <li data-t='f9'>No watermark on your exports</li>
       </ul>
-      <button class='cta' data-t='cta_upgrade'>Upgrade tools</button>
+      <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_upgrade'>Upgrade tools</span></button>
     </div>
 
     <div class='plan best' data-plan='bundle' data-kind='sub'>
@@ -506,7 +518,7 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
         <li id='saveline' data-eur='1.99' data-usd='2.99' data-gbp='1.49' data-cny='9.9' data-chf='1.90' data-inr='150' data-bdt='200'>Save €1.99 every month</li>
         <li data-t='f12'>Priority support</li>
       </ul>
-      <button class='cta' data-t='cta_bundle'>Get the bundle</button>
+      <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_bundle'>Get the bundle</span></button>
     </div>
 
     <div class='plan' data-plan='basic' data-kind='once'>
@@ -519,7 +531,7 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
         <li data-t='f16'>Verified badge on your profile</li>
       </ul>
       <div class="certtasks" data-tier="Basic Certificate"></div>
-      <button class='cta' data-t='cta_basic'>Get Basic</button>
+      <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_basic'>Get Basic</span></button>
     </div>
 
     <div class='plan' data-plan='advanced' data-kind='once'>
@@ -532,7 +544,7 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
         <li data-t='f19'>Gold verified badge</li>
       </ul>
       <div class="certtasks" data-tier="Advanced Certificate"></div>
-      <button class='cta' data-t='cta_adv'>Get Advanced</button>
+      <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_adv'>Get Advanced</span></button>
     </div>
 
     <div class='plan best' data-plan='master' data-kind='once'>
@@ -547,7 +559,7 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
         <li data-t='f23'>Platinum verified badge</li>
       </ul>
       <div class="certtasks" data-tier="Master Certificate"></div>
-      <button class='cta' data-t='cta_master'>Get Master</button>
+      <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_master'>Get Master</span></button>
     </div>
   </div>
 
@@ -850,11 +862,66 @@ window.cartQty = function (i, d) {
 };
 window.cartRemove = function (i) { CART.splice(i, 1); saveCart(); renderCart(); };
 
+/* WHO IS BUYING THIS.
+   Asked for: somebody who is not signed in should have to sign in before they
+   can buy.
+
+   The honest reason it matters, which is not the one you would guess: the
+   purchase does go through without an account — pay-return.html grants the
+   entitlement by writing nc_pro into localStorage, so the buyer gets what
+   they paid for straight away. The problem is that the grant lives in that
+   browser and nowhere else. Clear the site data, switch to the phone, or come
+   back on the school laptop, and a paid plan is simply gone, with no username
+   to look it up by and nothing to restore it from. Signing in first is what
+   gives the payment something to be attached to later.
+
+   Read straight out of localStorage rather than through NC_ACCOUNT, because
+   account.js is not one of this page's scripts and adding it here to ask one
+   question would be a whole auth module loaded on the pricing page for a
+   boolean. Two ways to be signed in and either counts: a NovaClip username,
+   or a Google sign-in from profile.html. */
+function signedIn() {
+  try {
+    if ((localStorage.getItem('nc_username') || '').trim()) return true;
+    const g = JSON.parse(localStorage.getItem('nc_google') || 'null');
+    return !!(g && (g.uid || g.email));
+  } catch (e) { return false; }
+}
+
+/* The cart is in localStorage, so it is still there when they come back —
+   which is worth saying, because the thing that stops people signing in at a
+   checkout is the fear of losing what they picked. */
+function askSignIn() {
+  const note = document.getElementById('cartnote');
+  if (!note) return;
+  note.innerHTML =
+    '<b>Sign in first.</b> Without an account a plan is only remembered in this browser &mdash; ' +
+    'clear your history or open NovaClip on your phone and it is gone, with no way to get it ' +
+    'back. Signing in gives it somewhere to live. Your cart is saved on this device and will ' +
+    'still be here when you return. <button type="button" id="cartsignin" class="cobtn" ' +
+    'style="margin-top:10px">Sign in or make an account</button>';
+  const b = document.getElementById('cartsignin');
+  if (b) b.onclick = function () {
+    /* Where to come back to. profile.html does not read this today, so it is
+       a breadcrumb for the person and for a later change, not a promise the
+       page is making. */
+    try { sessionStorage.setItem('nc_after_signin', 'pricing.html'); } catch (e) {}
+    location.href = 'profile.html';
+  };
+}
+
 function wireCartPay() {
   const cp = document.getElementById('cartpay');
   if (!cp) return;
   cp.onclick = () => {
   if (!CART.length) return;
+  /* Before the PIN and before the lesson checks, for the same reason those
+     run before Stripe: the earliest no is the kindest one. */
+  if (!signedIn()) { askSignIn(); return; }
+  /* Signed in now: take the "Sign in first" message down, or it sits there
+     contradicting the PIN gate that just opened over it. */
+  const _n = document.getElementById('cartnote');
+  if (_n && /cartsignin/.test(_n.innerHTML)) _n.innerHTML = '';
   /* Checked before the PIN, for the same reason the worker checks a field
      before it spends a rate-limit slot: being asked to approve something that
      was never going to go through is worse than being told no. */

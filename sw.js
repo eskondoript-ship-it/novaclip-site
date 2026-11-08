@@ -2980,7 +2980,11 @@
    browser belongs on the left, CapCut-style; the right-hand panel is where
    an effect's own controls go — the sliders and the timing curve. Both are
    placed now, so the grid and the controls are visible at once. */
-const CACHE = 'novaclip-v183';
+/* v184: a trolley on the plan buttons so it is clear they fill a cart rather
+   than start a payment; checkout asks you to sign in first; and signing in
+   with Google now asks for a username instead of quietly slugging your real
+   name into the box. */
+const CACHE = 'novaclip-v184';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

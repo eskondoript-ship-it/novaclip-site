@@ -646,6 +646,14 @@ const firebaseConfig = {
 const auth = getAuth(initializeApp(firebaseConfig));
 
 const btn = document.getElementById('gGo');
+
+/* This module cannot see the page script's esc() — that one lives inside its
+   own function scope — and say() writes with innerHTML, so anything coming
+   from Google or from a text field has to be escaped before it goes in. A
+   display name is whatever the person typed into their Google account. */
+const esc = (t) => String(t == null ? '' : t)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
 const say = (kind, title, body) => {
   const el = document.getElementById('gSay');
   if (!el) return;
@@ -695,20 +703,60 @@ function useAccount(user) {
     }));
   } catch (e) {}
 
-  const u = document.getElementById('nUser');
-  const suggestion = slug(name);
-  if (u && !u.value && suggestion.length >= 3) {
-    u.value = suggestion;
-    u.dispatchEvent(new Event('input', { bubbles: true }));
-  }
   if (btn) {
     btn.disabled = true;
     const label = btn.querySelector('span');
     if (label) label.textContent = 'Signed in as ' + name;
   }
-  say('ok', 'Hello, ' + name,
-    (u && u.value ? 'Your username is filled in &mdash; pick a password and press Create it. ' : '') +
-    'Studio will not ask you to sign in again on this device.');
+
+  /* ALREADY HAS A NOVACLIP USERNAME: nothing to ask. Signing in with Google
+     again on a device that already made an account should not drag the
+     person back through the form. */
+  let existing = '';
+  try { existing = (localStorage.getItem('nc_username') || '').trim(); } catch (e) {}
+  if (existing) {
+    say('ok', 'Hello, ' + esc(name),
+      'You are signed in as <b>' + esc(existing) + '</b>. ' +
+      'Studio will not ask you to sign in again on this device.');
+    return;
+  }
+
+  /* ASK FOR THE USERNAME, do not quietly decide it.
+     Asked for: "when someone sign in with google ask for their username".
+     Google gives a real name; NovaClip wants a handle, and those are not the
+     same thing — a 13-year-old signing in with a school account was getting
+     their full legal name slugged into the box, and because the box was
+     already filled the page read as though the decision had been made for
+     them. The suggestion is still offered, because typing one from nothing
+     is worse, but it is now SELECTED rather than just present: the first
+     keystroke replaces it, which is what "here is a suggestion, change it if
+     you like" looks like in a text field.
+
+     The field is also scrolled to and focused, because on a phone the form
+     is below the fold and the old copy said "your username is filled in"
+     about a box that was not on screen. */
+  const u = document.getElementById('nUser');
+  const suggestion = slug(name);
+  if (u) {
+    if (!u.value && suggestion.length >= 3) {
+      u.value = suggestion;
+      /* The input event is what drives the live preview and the availability
+         check — assigning .value alone updates nothing, which is the usual
+         way this kind of prefill silently half-works. */
+      u.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    try { u.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+    setTimeout(function () {
+      try { u.focus(); u.select(); } catch (e) {}
+    }, 260);
+  }
+
+  say('ok', 'Hello, ' + esc(name),
+    'Now pick your <b>username</b> &mdash; it is what everyone else on NovaClip sees, ' +
+    'so it does not have to be your real name.' +
+    (u && u.value ? ' We have suggested <b>' + esc(u.value) + '</b>; type over it if you want ' +
+      'something else.' : '') +
+    ' Then choose a password and press Create it.');
 }
 
 if (btn) {
