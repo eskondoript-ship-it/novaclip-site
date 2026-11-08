@@ -2935,7 +2935,10 @@
 /* v172: Clip finder's floating launcher leaves the editor, the rail's
    Effects item opens the FX library on its Effects tab the way Transitions
    already does, and the chips drop the percentage. */
-const CACHE = 'novaclip-v172';
+/* v173 adds vendor/isf/ (NEW): 97 single-pass ISF effects on the GPU path,
+   behind the same capability gate. Not precached — like the transitions
+   bundle, only a device that passes the gate can use a byte of it. */
+const CACHE = 'novaclip-v173';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

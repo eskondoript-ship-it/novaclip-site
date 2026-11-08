@@ -53,6 +53,7 @@
   if (window.NC_WEBGL) return;
 
   var BUNDLE = 'vendor/gl-transitions/transitions.js';
+  var ISF_BUNDLE = 'vendor/isf/effects.js';
   var KEY = 'nc_webgl_verdict';          /* remembered, with the reason */
 
   /* Known software rasterisers. Matching one is a hard no: these are all CPU
@@ -99,6 +100,93 @@
       'void main(){ fragColor = transition(uv); }\n';
   }
 
+  /* ---- ISF, which is a different format and a different GLSL ------------
+     gl-transitions declare vec4 transition(vec2) and are written for GLSL
+     ES 3.00. ISF shaders write straight into gl_FragColor with texture2D and
+     varying — GLSL ES 1.00. WebGL2 compiles both, so rather than rewriting
+     109 shaders into the newer dialect, they get a 1.00 harness of their
+     own. Translating somebody else's shader is how you inherit the job of
+     maintaining it.
+
+     The macros below are ISF's standard surface. They are defines rather
+     than functions so that IMG_PIXEL(img, p) works whatever `img` is named —
+     the sampler's name comes from the shader's own INPUTS, not from us. */
+  /* isf_FragNormCoord is a VARYING, computed here. The first version
+     declared it in the fragment shader as
+
+         vec2 isf_FragNormCoord = vec2(vv.x, 1.0 - vv.y);
+
+     which is a global initialised from a varying — illegal in GLSL ES 1.00,
+     where globals must have constant initialisers. All 109 failed to
+     compile on that one line, with the same error. Computing it in the
+     vertex shader is both legal and what the ISF spec actually describes. */
+  /* The shared half of every ISF vertex shader. isf_vertShaderInit() is
+     ISF's own name for this: a shader that ships its own .vs declares extra
+     varyings and calls it rather than repeating the setup. 15 of the 109 do
+     exactly that, and without the function they failed to link with
+     "FRAGMENT varying texcoord0 does not match any VERTEX varying". */
+  var ISF_VERT_HEAD =
+    'attribute vec2 p;\n' +
+    'varying vec2 isf_FragNormCoord;\n' +
+    'uniform vec2 RENDERSIZE;\n' +
+    'void isf_vertShaderInit(){\n' +
+    '  vec2 uv = p * 0.5 + 0.5;\n' +
+    /* flipped, because a texture uploaded from a canvas arrives upside down
+       relative to ISF's coordinate space */
+    '  isf_FragNormCoord = vec2(uv.x, 1.0 - uv.y);\n' +
+    '  gl_Position = vec4(p, 0.0, 1.0);\n' +
+    '}\n';
+  var ISF_VERT_MAIN = 'void main(){ isf_vertShaderInit(); }\n';
+
+  /* Every uniform the shader declares, as a GLSL declaration block. Needed
+     in BOTH stages: a paired .vs reads the shader's own inputs — v002 Dilate
+     uses `amount` and Mirror Edge uses `angle` in the vertex shader — and
+     declaring them only in the fragment shader left those failing with
+     "'amount' : undeclared identifier" from the vertex compiler. */
+  function uniformBlock(def) {
+    var out = '';
+    for (var i = 0; i < (def.uniforms || []).length; i++) {
+      var u = def.uniforms[i];
+      out += 'uniform ' + (u.t === 'int' ? 'int' : u.t === 'bool' ? 'bool' : u.t) +
+             ' ' + u.k + ';\n';
+    }
+    return out;
+  }
+
+  function isfVert(def) {
+    /* The shader's own vertex code when it has one — it brings its own
+       main() — otherwise the plain one. */
+    return ISF_VERT_HEAD + uniformBlock(def) +
+           (def && def.vs ? def.vs : ISF_VERT_MAIN);
+  }
+
+  function isfFrag(def) {
+    var img = def.img || 'inputImage';
+    var decl = uniformBlock(def);
+    return 'precision highp float;\n' +
+      'varying vec2 isf_FragNormCoord;\n' +
+      'uniform sampler2D ' + img + ';\n' +
+      'uniform vec2 RENDERSIZE;\n' +
+      'uniform float TIME;\n' +
+      'uniform float TIMEDELTA;\n' +
+      'uniform int PASSINDEX;\n' +
+      'uniform vec4 DATE;\n' +
+      'uniform int FRAMEINDEX;\n' +
+      /* ISF generates a _<name>_imgRect per image input; a few shaders read
+         it directly. Full frame, normalised, which is what it always is
+         here since nothing is rendering into an atlas. */
+      'uniform vec4 _' + img + '_imgRect;\n' +
+      'uniform vec2 _' + img + '_imgSize;\n' +
+      'uniform bool _' + img + '_flip;\n' +
+      decl +
+      '#define IMG_THIS_PIXEL(i) texture2D(i, isf_FragNormCoord)\n' +
+      '#define IMG_THIS_NORM_PIXEL(i) texture2D(i, isf_FragNormCoord)\n' +
+      '#define IMG_NORM_PIXEL(i, uv) texture2D(i, vec2((uv).x, 1.0 - (uv).y))\n' +
+      '#define IMG_PIXEL(i, px) texture2D(i, vec2((px).x / RENDERSIZE.x, 1.0 - (px).y / RENDERSIZE.y))\n' +
+      '#define IMG_SIZE(i) RENDERSIZE\n' +
+      def.glsl + '\n';
+  }
+
   function compile(gl, type, src) {
     var sh = gl.createShader(type);
     gl.shaderSource(sh, src);
@@ -115,6 +203,23 @@
     var v = compile(gl, gl.VERTEX_SHADER, VERT);
     if (v.err) return { err: 'vertex: ' + v.err };
     var f = compile(gl, gl.FRAGMENT_SHADER, fragFor(glsl));
+    if (f.err) { gl.deleteShader(v.sh); return { err: f.err }; }
+    var pr = gl.createProgram();
+    gl.attachShader(pr, v.sh); gl.attachShader(pr, f.sh);
+    gl.linkProgram(pr);
+    gl.deleteShader(v.sh); gl.deleteShader(f.sh);
+    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) {
+      var log = gl.getProgramInfoLog(pr);
+      gl.deleteProgram(pr);
+      return { err: 'link: ' + (log || 'failed') };
+    }
+    return { pr: pr };
+  }
+
+  function isfProgram(gl, def) {
+    var v = compile(gl, gl.VERTEX_SHADER, isfVert(def));
+    if (v.err) return { err: 'vertex: ' + v.err };
+    var f = compile(gl, gl.FRAGMENT_SHADER, isfFrag(def));
     if (f.err) { gl.deleteShader(v.sh); return { err: f.err }; }
     var pr = gl.createProgram();
     gl.attachShader(pr, v.sh); gl.attachShader(pr, f.sh);
@@ -230,6 +335,69 @@
     return a;
   }
 
+  /* ---- drawing one ISF effect ------------------------------------------
+     An effect is one frame in, one frame out — no second texture, no
+     progress. The strength slider every other effect in this editor has
+     becomes a cross-fade between the original frame and the shaded one,
+     because ISF has no notion of strength and a knob that only goes "on"
+     is not a knob. */
+  Renderer.prototype.drawISF = function (name, def, src, w, h, params, t) {
+    if (!this.init()) return false;
+    var gl = this.gl;
+    if (this.cv.width !== w) this.cv.width = w;
+    if (this.cv.height !== h) this.cv.height = h;
+    var key = 'isf:' + name;
+    if (!this.progs[key]) this.progs[key] = isfProgram(gl, def);
+    var got = this.progs[key];
+    if (got.err) return false;
+    var pr = got.pr;
+    gl.viewport(0, 0, w, h);
+    gl.useProgram(pr);
+    var loc = gl.getAttribLocation(pr, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.texA);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+    var iu = gl.getUniformLocation(pr, def.img || 'inputImage');
+    if (iu) gl.uniform1i(iu, 0);
+    var rs = gl.getUniformLocation(pr, 'RENDERSIZE');
+    if (rs) gl.uniform2f(rs, w, h);
+    var img = def.img || 'inputImage';
+    var ir = gl.getUniformLocation(pr, '_' + img + '_imgRect');
+    if (ir) gl.uniform4f(ir, 0, 0, 1, 1);
+    var is = gl.getUniformLocation(pr, '_' + img + '_imgSize');
+    if (is) gl.uniform2f(is, w, h);
+    var ifl = gl.getUniformLocation(pr, '_' + img + '_flip');
+    if (ifl) gl.uniform1i(ifl, 0);
+    var tu = gl.getUniformLocation(pr, 'TIME');
+    if (tu) gl.uniform1f(tu, t || 0);
+    var td = gl.getUniformLocation(pr, 'TIMEDELTA');
+    if (td) gl.uniform1f(td, 1 / 30);
+    var pi = gl.getUniformLocation(pr, 'PASSINDEX');
+    if (pi) gl.uniform1i(pi, 0);
+    var fi = gl.getUniformLocation(pr, 'FRAMEINDEX');
+    if (fi) gl.uniform1i(fi, Math.round((t || 0) * 30));
+    var us = def.uniforms || [];
+    for (var i = 0; i < us.length; i++) {
+      var spec = us[i], u = gl.getUniformLocation(pr, spec.k);
+      if (!u) continue;
+      var val = spec.d;
+      if (params && typeof params[spec.k] !== 'undefined') val = params[spec.k];
+      switch (spec.t) {
+        case 'float': gl.uniform1f(u, +val || 0); break;
+        case 'int':   gl.uniform1i(u, Math.round(+val) || 0); break;
+        case 'bool':  gl.uniform1i(u, (val === true || +val >= 0.5) ? 1 : 0); break;
+        case 'vec2':  gl.uniform2fv(u, toVec(val, 2)); break;
+        case 'vec4':  gl.uniform4fv(u, toVec(val, 4)); break;
+      }
+    }
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    return true;
+  };
+
   var R = new Renderer();
 
   /* ---- the gate ---------------------------------------------------------- */
@@ -312,6 +480,10 @@
 
     return load(BUNDLE).then(function () {
       register();
+      /* The ISF bundle is a second, separate fetch. If it fails the 200
+         transitions still work — one library missing is not both. */
+      return load(ISF_BUNDLE).then(registerISF, function () {});
+    }).then(function () {
       return finish();
     }, function (e) {
       state.verdict = { ok: false, why: String(e.message || e) };
@@ -401,8 +573,70 @@
     return n;
   }
 
+  /* ---- registering the ISF effects --------------------------------------
+     Into NC_FX.PAINT, where every other effect in the editor lives, so the
+     FX library lists them, the gear edits them, the chip bar shows them and
+     dragging applies them — all of it machinery that already exists.
+
+     Prefixed `isf:` for the same reason the transitions are `gl:`: 109 names
+     from somebody else's collection would otherwise collide with the 61
+     painters already registered. There is already a Glow, a Mosaic, a Swirl.
+
+     The strength argument cross-fades between the original frame and the
+     shaded one. ISF has no strength of its own, and an effect that can only
+     be fully on does not belong beside 61 that can be dialled. */
+  function registerISF() {
+    var T = window.ISF_EFFECTS, fx = window.NC_FX, ui = window.NC_TRANS_UI;
+    if (!T || !fx) return 0;
+    var n = 0;
+    var dead = [];
+    Object.keys(T).forEach(function (name) {
+      var def = T[name], id = 'isf:' + name;
+      if (fx.PAINT[id]) return;
+      /* COMPILE IT BEFORE LISTING IT. 12 of the 109 do not build on WebGL2:
+         four want persistent feedback buffers, one wants an external
+         texture, and the rest use GLSL ES 3.00 syntax or constructs ES 1.00
+         forbids — non-constant loop bounds, array constructors, uvec2.
+         Fixing those means rewriting shaders this project does not own and
+         inheriting the job of maintaining them. Registering them anyway
+         would put a dozen tiles in the panel that render nothing, which is
+         the failure mode this session has spent the most time undoing. */
+      var probe = R.init() && isfProgram(R.gl, def);
+      if (!probe || probe.err) { dead.push(name); return; }
+      R.progs['isf:' + name] = probe;
+      fx.PAINT[id] = function (g, w, h, v) {
+        if (!(v > 0.002)) return;
+        var src = document.createElement('canvas');
+        src.width = w; src.height = h;
+        src.getContext('2d').drawImage(g.canvas, 0, 0);
+        var ps = {};
+        try {
+          var c = window.NC_FX_EDIT && window.NC_FX_EDIT.cfg(id);
+          if (c && c.params) ps = c.params;
+        } catch (e) {}
+        if (!R.drawISF(name, def, src, w, h, ps, performance.now() / 1000)) return;
+        g.save();
+        g.setTransform(1, 0, 0, 1, 0, 0);
+        g.globalAlpha = Math.min(1, v);
+        g.drawImage(R.cv, 0, 0, w, h);
+        g.restore();
+      };
+      if (ui && ui.effects && !ui.effects[id]) {
+        ui.effects[id] = [name,
+          (def.desc || (def.cat || 'Effect')) + (def.credit ? ' — ' + def.credit : '')];
+      }
+      if (def.params && def.params.length && window.NC_FX_EDIT) {
+        try { window.NC_FX_EDIT.PARAMS[id] = def.params.slice(); } catch (e) {}
+      }
+      n++;
+    });
+    state.isf = n;
+    state.isfDead = dead;
+    return n;
+  }
+
   window.NC_WEBGL = {
-    decide: decide, bench: bench, renderer: function () {
+    decide: decide, bench: bench, registerISF: registerISF, renderer: function () {
       return R.init() ? rendererString(R.gl) : '';
     },
     state: state, R: R, BUDGET_MS: BUDGET_MS
