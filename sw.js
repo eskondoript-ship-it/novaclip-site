@@ -2959,7 +2959,10 @@
    preview canvas at a fixed playhead — 0% of pixels changed before, and the
    effect is plainly there after.
  */
-const CACHE = 'novaclip-v178';
+/* v179 adds editor-fx-bars.js (NEW): the FX lane on the timeline. An effect
+   dropped on it runs for the length of its bar instead of for the whole
+   clip, which is what an effect being usable at all depends on. */
+const CACHE = 'novaclip-v179';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3164,6 +3167,12 @@ const SHELL = [
      precaching it would make every school laptop pay for a feature it is
      never going to get. It is fetched on demand, after the check. */
   '/editor-webgl.js',
+  /* The FX lane on the timeline. Cached with the editor because without it a
+     project that has bars loses the lane and every bar on it stops applying,
+     which reads as "my effects were deleted" rather than as a file that
+     failed to load. The bars themselves are in localStorage, so they survive
+     and come back as soon as this file does. */
+  '/editor-fx-bars.js',
   /* The rail. Without it the five pills come back to floating over the
      preview and the duplicate + buttons return — a visibly different editor
      for a returning visitor, which is exactly what the cache bump exists to

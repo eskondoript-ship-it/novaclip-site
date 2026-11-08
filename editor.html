@@ -2145,6 +2145,22 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      machine that cannot use them never downloads them. -->
 <script src='editor-webgl.js' defer></script>
 
+<!-- EFFECTS AS BARS ON THE TIMELINE, the way CapCut does it: an FX lane above
+     the clips, and an effect you drop on it runs for the length of its bar
+     instead of for the whole clip.
+
+     AFTER editor-fx.js, and that is not a preference. It chains
+     window.__ncGrade, so it has to load once editor-fx.js has installed its
+     hook — loading first would mean wrapping grade.js and being wrapped by
+     editor-fx.js, which puts the time gate on the inside of the thing it is
+     supposed to be gating, and every effect would run for the whole clip
+     again with no sign that anything was wrong.
+
+     AFTER editor-fx-edit.js too, because clicking a bar opens that file's
+     editor panel, and the lane accepts the same drag (text/nc-fx) that file
+     already fires from the library tiles. -->
+<script src='editor-fx-bars.js' defer></script>
+
 <!-- THE FIVE TOOLS MOVE INTO THE RAIL. CC Captions, Beats, Reframe, Looks and
      the FX library were pills floating across the bottom, over the preview —
      the one part of the screen that should carry no chrome. They are tools,
