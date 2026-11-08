@@ -2944,7 +2944,10 @@
 /* v175: the transition-category row no longer shows on the Effects tab, and
    the parameter editor fills the docked left column the way the reference
    lays it out. */
-const CACHE = 'novaclip-v175';
+/* v176: the library tiles were collapsing to 2-3px and showing as grey
+   lines — a <button> grid item stretched to a row its own text height had
+   collapsed. align-self:start fixes it. The docked column is also wider. */
+const CACHE = 'novaclip-v176';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

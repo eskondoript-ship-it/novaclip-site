@@ -229,7 +229,16 @@
       '.nctr .cat.on{background:#00F0FF;color:#04121a;border-color:#00F0FF}',
       '.nctr .grid{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 15px 14px;',
         'display:grid;grid-template-columns:1fr 1fr;gap:11px}',
+      /* align-self:start is load-bearing, not cosmetic. A <button> resolves
+         its content height from its TEXT, not from its block children, so a
+         grid row sized by these buttons collapses — and align-items:normal
+         then stretches each button to that collapsed row. Measured: tile
+         3px tall with a 107px canvas and an 88px label overflowing a hidden
+         overflow, which renders as a thin grey line where a preview should
+         be. Taking the tile out of the stretch makes it use its own content
+         height, which it computes correctly. 3px -> 197px. */
       '.nctr .tile{border:1px solid var(--nc-line2,rgba(255,255,255,.14));border-radius:12px;overflow:hidden;',
+        'align-self:start;',
         'background:rgba(255,255,255,.03);cursor:pointer;text-align:left;padding:0;color:inherit;font:inherit}',
       '.nctr .tile:hover{border-color:var(--nc-cyan,#00F0FF)}',
       '.nctr .tile canvas{display:block;width:100%;height:auto;background:#05070e}',

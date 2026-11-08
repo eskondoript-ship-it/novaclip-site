@@ -57,11 +57,18 @@
     '.nctr.ncdock .cats{gap:4px !important;margin-top:7px !important}',
     '.nctr.ncdock .cats .cat{padding:3px 7px !important;font-size:9.5px !important}',
     '.nctr.ncdock .q{margin-top:7px !important;padding:7px 9px !important;font-size:11.5px !important}',
-    /* One tile per row at 283px, which is what the width allows, and the
-       grid gets whatever is left — which is now most of the column. */
-    '.nctr.ncdock .grid{grid-template-columns:1fr !important;gap:8px !important;',
-      'padding:9px 12px 12px !important;flex:1 1 auto !important;min-height:0 !important;',
-      'overflow-y:auto !important}',
+    /* ---- THE COLUMN IS WIDER WHILE THE LIBRARY IS IN IT -----------------
+       283px is enough for a media list and not enough for a grid of video
+       previews. The column is flex-1 inside a flex row, so a min-width
+       widens it and the preview keeps the rest. */
+    '.ncdock-host{min-width:min(420px,32vw) !important}',
+    /* Two columns when there is room for two, one when there is not. */
+    '.nctr.ncdock .grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr)) !important;',
+      'gap:9px !important;padding:9px 11px 12px !important;',
+      'flex:1 1 auto !important;min-height:0 !important;overflow-y:auto !important}',
+    /* The tile collapse is fixed at source in editor-trans.js with
+       align-self:start — display:block and aspect-ratio were both tried
+       here first and neither moved it off 3px. */
     '.nctr.ncdock .ft{padding:8px 12px !important;font-size:10.5px !important}',
     /* ---- THE EDITOR FILLS THE COLUMN, AND THAT IS THE REFERENCE ---------
        I tried it as a bottom section first, so the library stayed visible
