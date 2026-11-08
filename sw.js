@@ -2973,7 +2973,10 @@
 /* v181 is v180's fixes on top of v179's FX lane. The branch keeps its own
    number because its SHELL carries editor-fx-bars.js and main's does not,
    and two different shells must never share a cache name. */
-const CACHE = 'novaclip-v181';
+/* v182 adds editor-dock.js (NEW): the FX library sits in the right-hand
+   panel instead of floating over the preview, and the effects grid gets the
+   category chips the transitions already had. */
+const CACHE = 'novaclip-v182';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3184,6 +3187,11 @@ const SHELL = [
      failed to load. The bars themselves are in localStorage, so they survive
      and come back as soon as this file does. */
   '/editor-fx-bars.js',
+  /* The dock. Without it the FX library reverts to floating over the middle
+     of the preview — not broken, but not what was asked for, and a returning
+     visitor getting the new panel with none of its placement would read as
+     the layout having come undone. */
+  '/editor-dock.js',
   /* The rail. Without it the five pills come back to floating over the
      preview and the duplicate + buttons return — a visibly different editor
      for a returning visitor, which is exactly what the cache bump exists to

@@ -85,6 +85,50 @@
   };
   var CATS = ['All', 'New', 'Smooth', 'Motion', 'Glitch', 'Light', 'Shape'];
 
+  /* EFFECT CATEGORIES, asked for with a CapCut screenshot of its Trending /
+     Lens / Nightclub / Retro list. The transitions have carried a category
+     since they were written; the effects never did — an effect entry is
+     [label, description] and nothing else — so one grid of 51 tiles was the
+     only way to look at them, and finding the one you wanted meant scrolling
+     past fifty you did not.
+
+     Every one of the 51 is in exactly one group, deliberately: a tile that
+     appears under three headings makes the count meaningless and the list
+     longer rather than shorter. The groups are what the effect DOES to the
+     picture, which is how somebody looks for one — "I want it to look old",
+     not "I want a convolution".
+
+     Nothing outside this map changes when an effect is added: an id missing
+     from it falls into All only, which is the old behaviour, so forgetting
+     to classify a new effect hides it from a filter but never from the
+     library. */
+  var FXGROUP = {
+    /* light thrown around the frame */
+    bloom: 'Light', rays: 'Light', halation: 'Light', orton: 'Light',
+    anamorphic: 'Light', starburst: 'Light', highlightglow: 'Light', leak: 'Light',
+    /* what a real lens does, good and bad */
+    dreamy: 'Lens', chroma: 'Lens', tiltshift: 'Lens', bokeh: 'Lens',
+    lensdirt: 'Lens', pincushion: 'Lens',
+    /* old film and old television */
+    bleach: 'Retro', crossprocess: 'Retro', cyanotype: 'Retro', platinum: 'Retro',
+    crt: 'Retro', vhstrack: 'Retro', interlace: 'Retro', dither: 'Retro',
+    /* broken on purpose */
+    badsignal: 'Glitch', datamosh: 'Glitch', pixelsort: 'Glitch',
+    /* drawn rather than photographed */
+    edges: 'Art', neonedge: 'Art', sketch: 'Art', cartoon: 'Art',
+    oil: 'Art', stainedglass: 'Art',
+    /* the colour itself */
+    duotone: 'Colour', infrared: 'Colour', thermal: 'Colour', nightvision: 'Colour',
+    solarize: 'Colour', threshold: 'Colour', clarity: 'Colour', vibrance: 'Colour',
+    splittone: 'Colour',
+    /* the geometry of the frame */
+    fisheye: 'Warp', kaleid: 'Warp', twirl: 'Warp', frost: 'Warp',
+    glassblocks: 'Warp', tunnel: 'Warp', mirror4: 'Warp', polar: 'Warp',
+    /* smear */
+    radialblur: 'Blur', motionblur: 'Blur', echo: 'Blur'
+  };
+  var FX_CATS = ['All', 'Light', 'Lens', 'Colour', 'Retro', 'Art', 'Warp', 'Blur', 'Glitch'];
+
   /* THE EFFECTS HAVE THE SAME PROBLEM THE TRANSITIONS HAD. The editor's
      Effects panel is drawn by the bundle from a list inside the bundle, so the
      eight painters added to editor-fx.js — duotone, tilt-shift, chromatic
@@ -198,7 +242,11 @@
   /* ==========================================================================
      THE PANEL
      ========================================================================== */
-  var panel = null, state = { q: '', cat: 'All', mode: 'Transitions' }, raf = 0, tiles = [];
+  /* cat and fxcat are separate on purpose: the two tabs have different
+     category lists, so one shared field would leave "Shape" selected when
+     you switched to Effects and filter everything out. */
+  var panel = null, state = { q: '', cat: 'All', fxcat: 'All', mode: 'Transitions' },
+      raf = 0, tiles = [];
 
   function css() {
     if (document.getElementById('nctr-css')) return;
@@ -316,6 +364,8 @@
     var q = state.q.trim().toLowerCase();
     var ids = Object.keys(FXCAT).filter(function (id) {
       if (!F || !F.PAINT || !F.PAINT[id]) return false;
+      /* An id with no group is in All and nowhere else — see FXGROUP. */
+      if (state.fxcat && state.fxcat !== 'All' && FXGROUP[id] !== state.fxcat) return false;
       if (!q) return true;
       return (FXCAT[id][0] + ' ' + FXCAT[id][1] + ' ' + id).toLowerCase().indexOf(q) >= 0;
     });
@@ -717,7 +767,7 @@
         state.mode = m;
         modes.querySelectorAll('.cat').forEach(function (x) { x.className = 'cat'; });
         b.className = 'cat on';
-        panel.querySelector('.cats.sub-cats').style.display = m === 'Transitions' ? '' : 'none';
+        buildCats();
         retitle();
         /* placehold is a hoisted function declaration further down this same
            function, so it is defined by the time any click can fire. */
@@ -753,20 +803,31 @@
        "Glitch is showing on the Effects tab", and that is exactly what it
        was: the only code that hid the row lived in the tab's click handler,
        so a panel that opened already on Effects never ran it. */
-    cats.style.display = state.mode === 'Transitions' ? '' : 'none';
-    CATS.forEach(function (c) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'cat' + (c === state.cat ? ' on' : '');
-      b.textContent = c;
-      b.onclick = function () {
-        state.cat = c;
-        cats.querySelectorAll('.cat').forEach(function (x) { x.className = 'cat'; });
-        b.className = 'cat on';
-        fill();
-      };
-      cats.appendChild(b);
-    });
+    /* The row is no longer hidden on the Effects tab — it now carries that
+       tab's OWN categories instead of the transitions', which is what made
+       hiding it the right answer before. buildCats() is called again on
+       every tab change, so the chips always belong to what is below them. */
+    function buildCats() {
+      var fxTab = state.mode === 'Effects';
+      var list = fxTab ? FX_CATS : CATS;
+      var current = fxTab ? (state.fxcat || 'All') : state.cat;
+      cats.textContent = '';
+      cats.style.display = '';
+      list.forEach(function (c) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'cat' + (c === current ? ' on' : '');
+        b.textContent = c;
+        b.onclick = function () {
+          if (state.mode === 'Effects') state.fxcat = c; else state.cat = c;
+          cats.querySelectorAll('.cat').forEach(function (x) { x.className = 'cat'; });
+          b.className = 'cat on';
+          fill();
+        };
+        cats.appendChild(b);
+      });
+    }
+    buildCats();
     hd.appendChild(cats);
 
     var grid = document.createElement('div');

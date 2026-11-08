@@ -2161,6 +2161,18 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      already fires from the library tiles. -->
 <script src='editor-fx-bars.js' defer></script>
 
+<!-- THE FX LIBRARY MOVES INTO THE RIGHT-HAND PANEL, the one that otherwise
+     reads "nothing selected". It does NOT reparent anything — the panel stays
+     a child of <body> and stays fixed; only its left/top/width/height are
+     measured off that column. The earlier attempt at docking reparented into
+     React's DOM and lost the preview and the panel both (reverted in
+     93b07ad).
+
+     AFTER editor-trans.js, which creates the panel and owns its floating
+     geometry, and after editor-fx-edit.js, whose parameter editor is
+     position:absolute inset:0 inside that panel and so inherits the dock. -->
+<script src='editor-dock.js' defer></script>
+
 <!-- THE FIVE TOOLS MOVE INTO THE RAIL. CC Captions, Beats, Reframe, Looks and
      the FX library were pills floating across the bottom, over the preview —
      the one part of the screen that should carry no chrome. They are tools,
