@@ -373,9 +373,17 @@
         g.restore();
       };
       if (ui && ui.list && !ui.list[id]) {
-        ui.list[id] = [name.replace(/([A-Z])/g, ' $1').trim(), 'GPU', 1,
+        /* The shader's own category, not a flat "GPU". Two hundred tiles
+           under one label is a list you scroll past, not a library you
+           browse — and the panel already filters by category, so the only
+           thing missing was the word. Slide 52, Spin 27, Zoom 26,
+           Distortion 21, Flash 19, Cinematic 18, Camera 16, Glitch 12,
+           Blur 6, Push 3. */
+        var c = def.cat || 'Other';
+        ui.list[id] = [name.replace(/([A-Z])/g, ' $1').trim(), c, 1,
                        (def.desc || 'A GPU transition.') +
                        (def.author ? ' — ' + def.author : '')];
+        if (ui.cats && ui.cats.indexOf(c) < 0) ui.cats.push(c);
       }
       /* The shader's own @range annotations become the editor's sliders, so
          150 of these arrive with real parameters and nobody hand-wrote one. */

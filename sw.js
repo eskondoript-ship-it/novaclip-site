@@ -2921,7 +2921,11 @@
 /* v168 adds editor-webgl.js (NEW) and vendor/gl-transitions/ (NEW): 200 GPU
    transitions behind a measured capability gate. The shader bundle is not
    precached on purpose — see the note beside editor-webgl.js in SHELL. */
-const CACHE = 'novaclip-v168';
+/* v169: the 200 GPU transitions now register under their real categories —
+   Slide, Spin, Zoom, Distortion, Flash, Cinematic, Camera, Glitch, Blur,
+   Push — instead of all landing under one "GPU" label. The panel already
+   filtered by category; only the word was missing. */
+const CACHE = 'novaclip-v169';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
