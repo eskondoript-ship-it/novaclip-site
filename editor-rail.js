@@ -133,30 +133,69 @@
     }
   }
 
-  /* ---- the FX library rides the Transitions rail item -------------------- */
+  /* ---- the FX library rides the rail items that already name it ----------
+     BOTH of them. The rail has a Transitions entry and an Effects entry, and
+     the FX library has a tab for each — so each rail item opens the library
+     on its own tab. The alternative was new rail entries beside them, which
+     would have meant two things called Transitions and two called Effects,
+     one of each being the smaller, worse one. The editor has already proved
+     that confusing: a person hunting for an added effect clicked the rail's
+     Effects three separate times, counted 36, and concluded the 43 new ones
+     were never added.
+
+     The bundle's own handler is stopped in the capture phase. Its panels
+     list 26 transitions and 36 effects; the library lists 82 and 51
+     including those. Letting both run opens the smaller one behind the
+     bigger one. */
+  var BIND = [
+    { word: 'Transitions', key: 'transitions', tab: 'Transitions',
+      title: 'Every transition, running' },
+    { word: 'Effects',     key: 'effects',     tab: 'Effects',
+      title: 'Every effect, running' }
+  ];
+
+  function openLibrary(tab) {
+    if (!document.querySelector('.nctr')) {
+      var pill = document.querySelector(FX_SEL);
+      if (pill) pill.click();
+    }
+    setTimeout(function () {
+      var panel = document.querySelector('.nctr');
+      if (!panel) return;
+      var tabs = panel.querySelectorAll('.cats .cat');
+      for (var i = 0; i < tabs.length; i++) {
+        if (tabs[i].textContent !== tab) continue;
+        if (tabs[i].className.indexOf('on') < 0) tabs[i].click();
+        break;
+      }
+    }, 80);
+    mark();
+  }
+
   function bindTransitions(nav) {
-    var btns = nav.querySelectorAll('button');
+    var btns = nav.querySelectorAll('button'), bound = 0;
     for (var i = 0; i < btns.length; i++) {
       var b = btns[i];
       if (b.classList.contains('ncrail-i')) continue;
-      if (b.getAttribute('data-ncfx-bound')) return true;
+      if (b.getAttribute('data-ncfx-bound')) { bound++; continue; }
       var txt = (b.textContent || '').trim();
-      if (txt !== 'Transitions' && txt !== phrase('transitions', 'Transitions')) continue;
-      b.setAttribute('data-ncfx-bound', '1');
-      b.title = 'Every transition and effect, running';
-      /* Capture phase, and the bundle's own handler is stopped: its panel
-         lists 26 of the 82 this one has, so letting both run would open the
-         smaller one behind the bigger one. */
-      b.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var pill = document.querySelector(FX_SEL);
-        if (pill) pill.click();
-        mark();
-      }, true);
-      return true;
+      for (var j = 0; j < BIND.length; j++) {
+        var spec = BIND[j];
+        if (txt !== spec.word && txt !== phrase(spec.key, spec.word)) continue;
+        b.setAttribute('data-ncfx-bound', spec.tab);
+        b.title = spec.title;
+        (function (tab) {
+          b.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openLibrary(tab);
+          }, true);
+        }(spec.tab));
+        bound++;
+        break;
+      }
     }
-    return false;
+    return bound >= BIND.length;
   }
 
   /* ---- Beats goes on the timeline strip ---------------------------------- */

@@ -681,7 +681,13 @@
       chip.className = 'ncfx-chip';
       chip.title = fx.mine ? 'Click to edit · × to remove' : 'Click to adjust · × to remove';
       var b = document.createElement('b'); b.textContent = fx.label;
-      var u = document.createElement('u'); u.textContent = Math.round(fx.v * 100) + '%';
+      /* NO PERCENTAGE. A chip is the thing itself, the way CapCut shows it —
+         "Starburst", not "Starburst 70%". The strength still exists and is
+         still editable; it belongs in the editor behind the chip, not
+         printed on the face of a button whose job is to say what is on the
+         clip. A number there turns a label into a readout. */
+      var u = document.createElement('u'); u.textContent = '';
+      u.style.display = 'none';
       var x = document.createElement('span'); x.textContent = '×'; x.title = 'Remove';
       chip.appendChild(b); chip.appendChild(u); chip.appendChild(x);
       x.onclick = function (e) {

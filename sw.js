@@ -2932,7 +2932,10 @@
    joins the rail, Beats moves to the timeline strip — and the 38 canvas
    transitions added yesterday become visible at all, having been filtered
    out of their own panel for want of a TRANS entry. */
-const CACHE = 'novaclip-v171';
+/* v172: Clip finder's floating launcher leaves the editor, the rail's
+   Effects item opens the FX library on its Effects tab the way Transitions
+   already does, and the chips drop the percentage. */
+const CACHE = 'novaclip-v172';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
