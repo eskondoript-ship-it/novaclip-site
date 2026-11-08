@@ -2145,9 +2145,29 @@
   function register() {
     var fx = window.NC_FX, ui = window.NC_TRANS_UI;
     if (!fx) return false;
+    /* ---- A TRANSITION NEEDS A TRANS ENTRY TO BE LISTED -------------------
+       editor-trans.js builds its grid with
+
+           Object.keys(CAT).filter(id => F.TRANS[id] && matches(id))
+
+       so a transition with a painter, a catalogue entry and no TRANS entry
+       is registered, runnable, and INVISIBLE. All 38 added here were exactly
+       that: the catalogue held 82 and the panel drew 44, and the 38 missing
+       were mine. Nothing in the editor said so — there is no error for a
+       transition nobody can reach.
+
+       TRANS returns the frame transform, TPAINT paints the pixels, and a
+       pure painter wants no transform at all. Read off the ones that already
+       work rather than guessed: luma, grain and invert all return {a:1} —
+       fully opaque, untransformed, painter does everything. */
+    var TRANSSTUB = {};
+    Object.keys(TPAINT).forEach(function (k) {
+      TRANSSTUB[k] = function () { return { a: 1 }; };
+    });
     var r = {
       paint:  mergeNew(fx.PAINT, PAINT, 'PAINT'),
       tpaint: mergeNew(fx.TPAINT, TPAINT, 'TPAINT'),
+      trans:  mergeNew(fx.TRANS, TRANSSTUB, 'TRANS'),
       fxcat:  ui ? mergeNew(ui.effects, FXCAT, 'effects catalogue') : { added: 0, clashed: [] },
       tcat:   ui ? mergeNew(ui.list, TCAT, 'transition catalogue') : { added: 0, clashed: [] }
     };

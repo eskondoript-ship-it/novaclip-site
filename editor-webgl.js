@@ -372,6 +372,10 @@
         g.drawImage(R.cv, 0, 0, w, h);
         g.restore();
       };
+      /* Same requirement as the canvas pack: editor-trans.js lists a
+         transition only if F.TRANS[id] exists. The GPU ones paint entirely
+         in the shader, so the frame transform is the identity — {a:1}. */
+      if (!fx.TRANS[id]) fx.TRANS[id] = function () { return { a: 1 }; };
       if (ui && ui.list && !ui.list[id]) {
         /* The shader's own category, not a flat "GPU". Two hundred tiles
            under one label is a list you scroll past, not a library you

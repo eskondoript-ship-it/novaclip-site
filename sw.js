@@ -2928,7 +2928,11 @@
 /* v170 adds editor-rail.js (NEW): the five floating tool pills move into the
    left rail and the timeline's duplicate + Video / + Audio / + Text row goes.
    editor.html is re-fetched for the script tag. */
-const CACHE = 'novaclip-v170';
+/* v171: the FX library now opens from the rail's Transitions item, Looks
+   joins the rail, Beats moves to the timeline strip — and the 38 canvas
+   transitions added yesterday become visible at all, having been filtered
+   out of their own panel for want of a TRANS entry. */
+const CACHE = 'novaclip-v171';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
