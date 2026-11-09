@@ -40,15 +40,51 @@
 
   /* Written out rather than assembled, because the codec strings are exact
      and a template that builds them is a template that gets one wrong. */
+  /* H.264 PROFILES, BEST FIRST, and the reason this list is not one entry.
+     Every H.264 candidate used to be avc1.42E01E — Baseline profile, Level
+     3.0 — and both halves of that are wrong for what this exports. Baseline
+     has no CABAC and no B-frames, so at a fixed bitrate it is simply worse
+     than High at the same number of bits; Level 3.0 tops out at 1620
+     macroblocks, which is 720x576, so asking for it on a 1080p export is
+     out of spec before the encoder starts. Reported as "the export video
+     quality is very bad", and this is the part of that which is decided
+     here.
+
+     High and Main are offered first and Baseline stays at the end, so a
+     browser that will not do better still gets exactly what it got before:
+     isTypeSupported filters the list, and anything missing simply falls
+     through. The levels go 4.2, 4.0, then 3.1, which covers 1080p60, 1080p30
+     and 720p respectively — the browser picks the first it supports, so the
+     level is never lower than the picture needs.
+
+     HONEST LIMIT: this container's Chromium offers Baseline and nothing else,
+     so the improvement is not measurable here — only the fallback is, and
+     that is verified. On a desktop Chrome, which encodes H.264 through the
+     platform, High is normally available. */
+  var H264 = [
+    'video/mp4;codecs=avc1.64002A,mp4a.40.2',   /* High  @ L4.2 */
+    'video/mp4;codecs=avc1.640028,mp4a.40.2',   /* High  @ L4.0 */
+    'video/mp4;codecs=avc1.64001F,mp4a.40.2',   /* High  @ L3.1 */
+    'video/mp4;codecs=avc1.4D402A,mp4a.40.2',   /* Main  @ L4.2 */
+    'video/mp4;codecs=avc1.4D4028,mp4a.40.2',   /* Main  @ L4.0 */
+    'video/mp4;codecs=avc1.64002A', 'video/mp4;codecs=avc1.640028',
+    'video/mp4;codecs=avc1.64001F', 'video/mp4;codecs=avc1.4D4028',
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2',   /* Baseline @ L3.0 — the old one */
+    'video/mp4;codecs=avc1.42E01E', 'video/mp4',
+    'video/webm;codecs=h264'
+  ];
+
   var BY_CODEC = {
-    'h.264': ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1.42E01E', 'video/mp4',
-              'video/webm;codecs=h264'],
+    'h.264': H264,
     'h.265': ['video/mp4;codecs=hvc1.1.6.L93.B0,mp4a.40.2', 'video/mp4;codecs=hev1', 'video/mp4'],
     'vp9':   ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp9', 'video/webm'],
     'vp8':   ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp8', 'video/webm'],
     'av1':   ['video/webm;codecs=av01,opus', 'video/webm;codecs=av01', 'video/mp4;codecs=av01']
   };
-  var MP4_FAMILY = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  /* The MP4 family leads with the same best-first H.264 list, so choosing
+     the container without touching the codec box does not quietly drop to
+     Baseline. */
+  var MP4_FAMILY = H264.concat(['video/webm;codecs=vp8,opus', 'video/webm']);
   var WEBM_FAMILY = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
   /* The order things are actually likely to work in, when everything asked
      for has failed. vp8 before vp9 on purpose: it is the older, softer,
@@ -126,9 +162,50 @@
     });
   }
 
+  /* WHAT MediaRecorder ACTUALLY DELIVERS, which is not what it is asked for.
+     Reported as "the export video quality is very bad". Measured here, on a
+     1080p canvas of moving colour and text recorded for three seconds, by
+     reading the finished file back with ffprobe:
+
+         asked  4 Mbps  ->  delivered 2.53 Mbps
+         asked  8 Mbps  ->  delivered 2.87 Mbps
+         asked 24 Mbps  ->  delivered 8.36 Mbps
+
+     videoBitsPerSecond is advisory and this encoder lands near a third of
+     it. The export dialog's default is 8, so a 1080p export was being
+     written at roughly 2.9 Mbps — which is a fine number for 480p and a
+     visibly bad one for 1920x1080. That is the whole complaint.
+
+     THIS ONLY TOUCHES THE DEFAULT. 8 is the number the dialog starts on, and
+     nobody who has thought about bitrate lands on exactly 8 by accident, so
+     it is treated as "I did not choose" and replaced with something the
+     resolution deserves. Any other value is passed through untouched —
+     somebody who typed 4 because they want a small file still gets 4, and
+     somebody who typed 30 still gets 30. The floor is a floor, never a cap.
+
+     The numbers are the request, not the result: at roughly a third
+     delivered, 1080p asking for 20 lands near 7 Mbps, which is a normal
+     bitrate for 1080p30 H.264 and about what a phone writes. */
+  var DEFAULT_BPS = 8e6;
+  function autoRate(stream, bps) {
+    if (Math.abs(bps - DEFAULT_BPS) > 1) return bps;      /* chosen on purpose */
+    var h = 0;
+    try {
+      var t = stream.getVideoTracks && stream.getVideoTracks()[0];
+      var g = t && t.getSettings && t.getSettings();
+      if (g && g.height) h = g.height;
+    } catch (e) {}
+    if (!h) return bps;
+    if (h >= 2000) return 60e6;        /* 4K  */
+    if (h >= 1400) return 36e6;        /* 1440p */
+    if (h >= 1000) return 20e6;        /* 1080p */
+    if (h >= 700)  return 12e6;        /* 720p  */
+    return bps;                        /* smaller than that, 8 is plenty */
+  }
+
   window.__ncPickRecorder = function (stream, format, codec, bps) {
     var list = candidates(format, codec);
-    var rate = Math.max(1, Number(bps) || 8e6);
+    var rate = autoRate(stream, Math.max(1, Number(bps) || 8e6));
 
     function attempt(i) {
       if (i >= list.length) {

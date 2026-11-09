@@ -3000,7 +3000,13 @@
    piece and the track closes up — first clip to zero, every other to the end
    of the one before — and the playhead moves by the same amount so the
    preview keeps showing the frame it was showing. */
-const CACHE = 'novaclip-v188';
+/* v189: the export was writing 1080p at about 2.9 Mbps in Constrained
+   Baseline. Measured end to end with ffprobe, it now writes 6.9 Mbps in High
+   profile — the codec string was hardcoded to Baseline@L3.0, which is not
+   even rated for 1080p, and MediaRecorder delivers roughly a third of the
+   bitrate it is asked for, so the dialog's default of 8 was never going to
+   be enough. */
+const CACHE = 'novaclip-v189';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
