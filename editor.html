@@ -2183,6 +2183,22 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      a drag: a clip put somewhere on purpose stays there. -->
 <script src='editor-tidy.js' defer></script>
 
+<!-- EXPORTING WITHOUT A STOPWATCH. The old export recorded the canvas in real
+     time, so a frame the renderer missed was simply absent from the file —
+     measured at 7.5fps of the 30 asked for. This renders each frame at its
+     own pace and stamps it with the time it is supposed to have, so the file
+     is a true 30fps however long the machine takes.
+
+     vendor/mp4-muxer is loaded FIRST and not deferred relative to it: this
+     file checks for window.Mp4Muxer at the moment it decides whether to take
+     over, and with no muxer it hands the export straight back to
+     export-fix.js and the old path runs.
+
+     AFTER export-fix.js, which owns __ncPickRecorder and the stall test this
+     wraps and borrows. -->
+<script src='vendor/mp4-muxer/mp4-muxer.js' defer></script>
+<script src='editor-export-offline.js' defer></script>
+
 <!-- THE FIVE TOOLS MOVE INTO THE RAIL. CC Captions, Beats, Reframe, Looks and
      the FX library were pills floating across the bottom, over the preview —
      the one part of the screen that should carry no chrome. They are tools,

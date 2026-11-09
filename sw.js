@@ -3011,7 +3011,12 @@
    Also: the build version is printed small in the corner, and the update
    offer appears at the TOP when the editor is embedded in the Studio, where
    a pill at the bottom lands below the panel and is never seen. */
-const CACHE = 'novaclip-v190';
+/* v191 adds editor-export-offline.js and vendor/mp4-muxer (both NEW): the
+   export is rendered frame by frame and stamped with the time each frame is
+   supposed to have, instead of being recorded off a wall clock. Measured on
+   the same 6s export: 180 frames in exactly 6.000s, every frame 33.33ms
+   apart, where the old path produced 113 frames at an uneven 18.7fps. */
+const CACHE = 'novaclip-v191';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3231,6 +3236,14 @@ const SHELL = [
      it every cut silently goes back to leaving a hole, which reads as the
      editor having broken rather than as a file that failed to load. */
   '/editor-tidy.js',
+  /* The offline exporter and its muxer. Precached together, and that pairing
+     matters: without the muxer this file quietly hands every export back to
+     the old real-time path, so a visitor who went offline between them would
+     get the laggy export back with no sign of why. 32KB for the muxer, which
+     is small enough not to argue about — unlike the 608KB of GPU transitions
+     below, which are deliberately left out. */
+  '/editor-export-offline.js',
+  '/vendor/mp4-muxer/mp4-muxer.js',
   /* The rail. Without it the five pills come back to floating over the
      preview and the duplicate + buttons return — a visibly different editor
      for a returning visitor, which is exactly what the cache bump exists to

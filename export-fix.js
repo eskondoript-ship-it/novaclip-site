@@ -306,7 +306,19 @@
     return false;
   }
 
+  /* THE OFFLINE EXPORTER USES BOTH OF THESE.
+     editor-export-offline.js renders frame by frame on a clock of its own,
+     and it needs exactly the two things this file already worked out: which
+     sources are not ready to be drawn yet, and a way to tell this file to
+     keep its hands off the clock while somebody else is driving it. Two
+     patched performance.now()s at once would be a clock nobody owns. */
+  window.__ncExportStalled = function () { return stalled(); };
+
   function hold(recorder) {
+    /* Offline rendering owns the clock, so there is nothing to freeze and
+       nothing to pause: a frame is simply not captured until its sources are
+       ready, which is the same idea without the wall clock in it. */
+    if (window.__ncOfflineExport) return function () {};
     /* The function itself, not a bound copy. Restoring a bound copy leaves
        performance.now subtly different from how it was found, and the next
        export then binds that, so every export adds a layer. */
