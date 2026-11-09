@@ -2984,7 +2984,11 @@
    than start a payment; checkout asks you to sign in first; and signing in
    with Google now asks for a username instead of quietly slugging your real
    name into the box. */
-const CACHE = 'novaclip-v184';
+/* v185: opening the FX library painted every tile in one synchronous loop —
+   82 painters on 186x104 canvases before the browser could draw anything.
+   Measured at 8x CPU throttle: the longest blocked task goes from 407ms to
+   113ms for transitions and from 863ms to 473ms for effects. */
+const CACHE = 'novaclip-v185';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
