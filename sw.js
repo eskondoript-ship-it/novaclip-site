@@ -3016,7 +3016,12 @@
    supposed to have, instead of being recorded off a wall clock. Measured on
    the same 6s export: 180 frames in exactly 6.000s, every frame 33.33ms
    apart, where the old path produced 113 frames at an uneven 18.7fps. */
-const CACHE = 'novaclip-v191';
+/* v192: the offline export now measures what the machine can draw before it
+   commits to a frame rate, so a slow render finishes in about the length of
+   the clip instead of four times it. It also caps how long a frame may wait
+   on its sources — without that, one stale <video> left half-loaded by an
+   earlier export made a two-effect export hang for ever. */
+const CACHE = 'novaclip-v192';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

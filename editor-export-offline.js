@@ -79,6 +79,11 @@
   if (window.NC_EXPORT_OFFLINE) return;
 
   var FPS_FALLBACK = 30;
+  var WARMUP_MS = 700;          /* how long to watch the renderer before choosing */
+  var FPS_STEPS = [30, 25, 24, 20, 15, 12];   /* what it is allowed to settle on */
+  var FPS_FLOOR = 12;           /* below this, choppiness is worse than waiting */
+  var WAIT_CAP_MS = 600;        /* longest one frame may wait on its sources */
+  var GIVE_UP_AFTER = 3;        /* capped waits before the stall test is dropped */
   var KEY_EVERY_S = 2;          /* a keyframe at least this often */
   var AUDIO_RATE = 48000;
   var AUDIO_BPS = 128000;
@@ -262,6 +267,83 @@
     }).catch(function () { return false; });
   }
 
+  /* ---- THE SOURCES HAVE TO FOLLOW THE VIRTUAL CLOCK ---------------------
+     This is the bug that made a two-effect export hang rather than merely
+     take a while, and it is the same shape as the reason the old path
+     dropped frames.
+
+     The export's <video> elements PLAY, in real time, because that is how
+     the bundle advances them. The virtual clock does not: it moves one
+     frame-time per frame actually captured, so on a renderer managing seven
+     frames a second it runs at a quarter of real speed. Within a second the
+     sources are hundreds of milliseconds ahead of the timeline position
+     being drawn, the bundle notices the drift and re-seeks, and a seek stops
+     the next frame being captured — which stops the clock advancing, which
+     lets the sources run further ahead. Measured: a six-second timeline that
+     never finished at all.
+
+     So during an offline export the sources are driven instead of played.
+     They are paused, and each time a frame is kept every active one is
+     advanced by exactly one frame-time, scaled by its own playbackRate so a
+     clip with a speed change still lands where it should. The bundle's own
+     drift check then never fires, because there is no drift.
+
+     Active means the bundle has called play() on it and not paused it — an
+     element it is not currently showing must not be wound forward, or it
+     arrives at its own clip already past the start. */
+  var drivenVideos = [];
+  var patchedMedia = false;
+
+  function markActive() {
+    if (patchedMedia) return;
+    patchedMedia = true;
+    var P = HTMLMediaElement.prototype;
+    var play = P.play, pause = P.pause;
+    P.play = function () {
+      try { this.__ncActive = true; } catch (e) {}
+      if (window.__ncOfflineExport && !this.isConnected && this.src) {
+        /* Swallow the play: this file moves it by hand from now on. A
+           rejected promise here would be an unhandled rejection in the
+           bundle, so one that resolves is handed back. */
+        return Promise.resolve();
+      }
+      return play.apply(this, arguments);
+    };
+    P.pause = function () {
+      try { if (!window.__ncOfflineExport) this.__ncActive = false; } catch (e) {}
+      return pause.apply(this, arguments);
+    };
+  }
+
+  function collectVideos() {
+    drivenVideos = [];
+    try {
+      var all = document.querySelectorAll('video');
+      for (var i = 0; i < all.length; i++) {
+        if (!all[i].isConnected && all[i].src) drivenVideos.push(all[i]);
+      }
+    } catch (e) {}
+  }
+
+  /* The export creates its sources as it goes, so the list is refreshed
+     rather than taken once. */
+  function advanceSources(step) {
+    try {
+      var all = document.querySelectorAll('video');
+      for (var i = 0; i < all.length; i++) {
+        var v = all[i];
+        if (v.isConnected || !v.src) continue;        /* on-page video is the preview */
+        if (!v.paused) { try { v.pause(); } catch (e) {} }
+        if (!v.__ncActive) continue;
+        var rate = v.playbackRate || 1;
+        var next = v.currentTime + step * rate;
+        if (isFinite(next) && next >= 0) {
+          try { v.currentTime = next; } catch (e) {}
+        }
+      }
+    } catch (e) {}
+  }
+
   /* ENCODE SOMETHING BEFORE PROMISING TO ENCODE EVERYTHING.
      isConfigSupported is a claim, not a result, and the cost of it being
      wrong here is a finished export with a declared audio track and nothing
@@ -311,38 +393,41 @@
        configure here would take the whole export down. */
     if (w % 2 || h % 2) return null;
 
-    try {
-      /* THE AUDIO TRACK IS DECLARED ONLY IF IT CAN BE FILLED.
-         Declaring one and then writing no chunks produces a file with a
-         six-second audio stream containing nothing — ffprobe reports the
-         duration and zero packets, and a player shows a silent film. That
-         is exactly what the first version of this file shipped on a machine
-         with no AAC encoder, so the decision is made before the muxer is
-         built rather than discovered when the chunks fail to arrive. */
-      var cfg = {
-        target: target,
-        video: { codec: 'avc', width: w, height: h, frameRate: fps },
-        fastStart: 'in-memory',              /* the moov atom first, so it plays while downloading */
-        firstTimestampBehavior: 'offset'
-      };
-      if (withAudio) cfg.audio = { codec: 'aac', sampleRate: AUDIO_RATE, numberOfChannels: 2 };
-      muxer = new M.Muxer(cfg);
-      encoder = new VideoEncoder({
-        output: function (chunk, meta) {
-          try { muxer.addVideoChunk(chunk, meta); } catch (e) { ok = false; }
-        },
-        error: function () { ok = false; }
-      });
-      encoder.configure({
-        codec: 'avc1.640028',                /* High @ 4.0 — see export-fix.js */
-        width: w, height: h, bitrate: bps, framerate: fps,
-        latencyMode: 'quality',
-        avc: { format: 'avc' }
-      });
-    } catch (e) { return null; }
+    /* BUILT AFTER THE FRAME RATE IS KNOWN, not before. The muxer is told the
+       frame rate when it is constructed and the encoder is configured with
+       it, so neither can exist until the warm-up has decided what this
+       machine can sustain. */
+    function build() {
+      try {
+        var cfg = {
+          target: target,
+          video: { codec: 'avc', width: w, height: h, frameRate: fps },
+          fastStart: 'in-memory',            /* the moov atom first, so it plays while downloading */
+          firstTimestampBehavior: 'offset'
+        };
+        if (withAudio) cfg.audio = { codec: 'aac', sampleRate: AUDIO_RATE, numberOfChannels: 2 };
+        muxer = new M.Muxer(cfg);
+        encoder = new VideoEncoder({
+          output: function (chunk, meta) {
+            try { muxer.addVideoChunk(chunk, meta); } catch (e) { ok = false; }
+          },
+          error: function () { ok = false; }
+        });
+        encoder.configure({
+          codec: 'avc1.640028',              /* High @ 4.0 — see export-fix.js */
+          width: w, height: h, bitrate: bps, framerate: fps,
+          latencyMode: 'quality',
+          avc: { format: 'avc' }
+        });
+        return true;
+      } catch (e) { return false; }
+    }
 
+    var asked = fps;                 /* what was requested, before measuring */
+    var waitingSince = 0, capped = 0, trustStall = true;
     var frames = 0, stopped = false, paused = false, started = 0;
     var rafId = 0;
+    var warm = { until: 0, draws: 0, done: false };
     var realNow = performance.now;
     var baseReal = realNow.call(performance);
     var api;
@@ -354,22 +439,117 @@
        to be. */
     function virtualNow() { return baseReal + (frames * 1000 / fps); }
 
+  /* A STALL CANNOT BE ALLOWED TO LAST FOR EVER, which the real-time path
+     already knew: export-fix.js gives up on one after STALL_CAP and carries
+     on with whatever is on screen. This had no such cap and so could wait
+     for all time — and did. Measured on a two-effect export that never
+     finished: the stall test answered "not ready" 951 times out of 979.
+
+     The reason is worth writing down. export-fix.js keeps every <video> the
+     page has ever created, up to 400 of them, and reports a stall if ANY of
+     them is seeking or starved. An element from an earlier export that was
+     abandoned half-loaded is not connected, still has a src, and sits at
+     readyState 1 for ever — so the test is permanently true and nothing
+     ever captures. The real-time path rode over it because its cap expired
+     and it simply recorded; this one had nothing to expire.
+
+     So: a frame waits at most WAIT_CAP_MS for its sources, and after
+     GIVE_UP_AFTER frames have had to be taken anyway the test is dropped for
+     the rest of the export. A stale element cannot make a stall, and a real
+     stall still gets its wait — just not an unlimited one. */
     function sourcesReady() {
+      var ready = true;
       try {
-        if (typeof window.__ncExportStalled === 'function') return !window.__ncExportStalled();
-      } catch (e) {}
-      return true;
+        if (trustStall && typeof window.__ncExportStalled === 'function') {
+          ready = !window.__ncExportStalled();
+        }
+      } catch (e) { ready = true; }
+      if (ready) { waitingSince = 0; return true; }
+
+      var t = realNow.call(performance);
+      if (!waitingSince) { waitingSince = t; return false; }
+      if (t - waitingSince < WAIT_CAP_MS) return false;
+
+      waitingSince = 0;
+      if (++capped >= GIVE_UP_AFTER) trustStall = false;
+      return true;                       /* take the frame regardless */
     }
 
     /* One capture per animation frame, AFTER the bundle has drawn. rAF
        callbacks run in the order they were registered, and this one is
        registered from inside a callback, so it lands after the draw that the
        loop scheduled for the same frame. */
+    /* HOW FAST CAN THIS MACHINE ACTUALLY DRAW?
+       Asked for after the first version shipped: "a 30 fps export takes
+       15min ~that is very bad school gonna reject me". It did, and the
+       reason is arithmetic: rendering is as fast as the machine draws, so a
+       renderer managing 7 frames a second needs four seconds of work for
+       every second of 30fps video.
+
+       Taking four times the clip's length is not a trade worth making for
+       somebody with a lesson to hand in. So before any frame is kept, the
+       loop is watched for WARMUP_MS to see what it really sustains, and the
+       output frame rate is set to something the machine can hit. The file is
+       still perfectly evenly spaced — every frame exactly 1/fps apart, which
+       is the whole point of this file — it just has fewer of them, and it
+       finishes in about the length of the clip instead of four times it.
+
+       Measured here: a clean project draws about 25/s, one effect takes it
+       to about 12/s. Those land on 24fps and 20fps respectively rather than
+       on 2.5x the wall time.
+
+       The warm-up draws the same timeline position over and over, because
+       the virtual clock does not advance until frames are being kept. That
+       flatters the renderer slightly — no seeking between positions — so the
+       measurement is multiplied by 0.9 before it is believed.
+
+       It never goes ABOVE what was asked for, and never below FPS_FLOOR:
+       past a certain point choppiness is worse than waiting, and somebody
+       who would rather wait can still export at a smaller size. */
+    function chooseFps(drawsPerSecond) {
+      /* 1.4, not 1.0: the render is allowed to take forty per cent longer
+         than the clip in exchange for keeping the frame rate that was asked
+         for. A machine drawing 25/s keeps 30fps and finishes in about 1.2x
+         the clip's length, which is a trade worth making; one drawing 8/s
+         drops to 12fps rather than spending four times the length on
+         smoothness nobody asked to wait for. */
+      var usable = drawsPerSecond * 1.4;
+      for (var i = 0; i < FPS_STEPS.length; i++) {
+        var step = FPS_STEPS[i];
+        if (step > fps) continue;                /* never more than asked for */
+        if (step <= usable) return step;
+      }
+      return Math.max(FPS_FLOOR, Math.min(fps, FPS_STEPS[FPS_STEPS.length - 1]));
+    }
+
     function pump() {
       if (stopped) return;
       rafId = requestAnimationFrame(function () {
         rafId = 0;
         if (stopped) return;
+
+        if (!warm.done) {
+          warm.draws++;
+          if (realNow.call(performance) >= warm.until) {
+            warm.done = true;
+            var rate = warm.draws * 1000 / WARMUP_MS;
+            var picked = chooseFps(rate);
+            if (picked !== fps) {
+              fps = picked;
+              if (api.__onFpsChange) { try { api.__onFpsChange(picked, rate); } catch (e) {} }
+            }
+            api.__measured = { drawsPerSecond: Math.round(rate * 10) / 10, fps: fps };
+            /* Kept on the module so an export can be looked at afterwards —
+               by a test, or by somebody asking why their file is 24fps. */
+            window.NC_EXPORT_OFFLINE.last = {
+              drawsPerSecond: api.__measured.drawsPerSecond, fps: fps, asked: asked
+            };
+            if (!build()) { if (onFail) onFail(); return; }
+          }
+          pump();
+          return;
+        }
+
         if (!paused && sourcesReady()) {
           try {
             var frame = new VideoFrame(canvas, {
@@ -379,6 +559,9 @@
             encoder.encode(frame, { keyFrame: frames % Math.max(1, Math.round(fps * KEY_EVERY_S)) === 0 });
             frame.close();
             frames++;
+            /* Wind the sources on by exactly the amount the clock just
+               moved, so the next draw finds them where it expects. */
+            advanceSources(1 / fps);
           } catch (e) { ok = false; }
         }
         pump();
@@ -406,7 +589,12 @@
       onerror: null,
       start: function () {
         started = realNow.call(performance);
+        warm.until = started + WARMUP_MS;
+        markActive();
         window.__ncOfflineExport = true;
+        /* The virtual clock is installed from the first moment, so the
+           timeline does not advance during the warm-up: the loop redraws the
+           same position and the measurement costs no footage. */
         try { performance.now = virtualNow; } catch (e) {}
         pump();
       },
@@ -419,11 +607,22 @@
         if (rafId) cancelAnimationFrame(rafId);
         try { performance.now = realNow; } catch (e) {}
         window.__ncOfflineExport = false;
+        if (!encoder) {                    /* stopped inside the warm-up */
+          try { window.NC_EXPORT_OFFLINE.last = { error: 'stopped during warm-up' }; } catch (e) {}
+          if (onFail) onFail();
+          return;
+        }
         finish().then(function (blob) {
-          if (!ok || !blob || !blob.size) { if (onFail) onFail(); return; }
+          if (!ok || !blob || !blob.size) {
+            try { window.NC_EXPORT_OFFLINE.last = { error: 'encoder produced nothing' }; } catch (e) {}
+            if (onFail) onFail(); return;
+          }
           try { if (api.ondataavailable) api.ondataavailable({ data: blob }); } catch (e) {}
           try { if (api.onstop) api.onstop({}); } catch (e) {}
-        }, function () { if (onFail) onFail(); });
+        }, function (e) {
+          try { window.NC_EXPORT_OFFLINE.last = { error: String((e && e.message) || e) }; } catch (x) {}
+          if (onFail) onFail();
+        });
       },
       addEventListener: function (type, fn) {
         if (type === 'dataavailable') api.ondataavailable = fn;
