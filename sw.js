@@ -3006,7 +3006,12 @@
    even rated for 1080p, and MediaRecorder delivers roughly a third of the
    bitrate it is asked for, so the dialog's default of 8 was never going to
    be enough. */
-const CACHE = 'novaclip-v189';
+/* v190: deleting a clip only closes the gap when that clip was touching
+   another one — a lone clip can be deleted without dragging the lane about.
+   Also: the build version is printed small in the corner, and the update
+   offer appears at the TOP when the editor is embedded in the Studio, where
+   a pill at the bottom lands below the panel and is never seen. */
+const CACHE = 'novaclip-v190';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3321,6 +3326,14 @@ self.addEventListener('activate', (event) => {
    rather than the worker deciding on its own. */
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+  /* Which build is actually serving this page. Asked for implicitly and
+     repeatedly: several rounds of "it is still not fixed" turned out to be
+     screenshots of a build from before the fix, and there was no way for
+     either side to tell. The page puts this where a screenshot will catch
+     it. */
+  if (event.data && event.data.type === 'VERSION' && event.source) {
+    try { event.source.postMessage({ type: 'VERSION', cache: CACHE }); } catch (e) {}
+  }
 });
 
 const IMAGE_OR_FONT = /\.(?:png|jpe?g|gif|webp|avif|svg|ico|woff2?|ttf|otf)$/i;

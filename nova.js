@@ -10193,6 +10193,7 @@ window.ncSlang = function () {
       /* Ask the server whether there is a newer worker. Without this a tab
          that stays open for days never finds out. */
       setInterval(function () { reg.update().catch(function () {}); }, 60 * 60 * 1000);
+      askVersion();
     }).catch(function (e) {
       /* Not fatal and not worth a dialog: the site works without it. */
       if (window.console && console.warn) console.warn('NovaClip: service worker not registered —', e && e.message);
@@ -10268,11 +10269,70 @@ window.ncSlang = function () {
 
   /* A quiet pill, not a modal. It never steals focus and never reloads on its
      own, because the pages that show it are the ones holding work. */
+  /* WHICH BUILD IS ON SCREEN.
+     Three separate "it is still not fixed" reports turned out to be
+     screenshots of a build from before the fix, and neither side could tell
+     from looking. The cache name in sw.js is the only honest answer to that
+     question — it is the thing that decides which files are being served —
+     so the page asks the worker for it and prints it small and out of the
+     way, where a screenshot catches it without anybody having to open a
+     console.
+
+     It says the CACHE, not a number in a file: a version baked into the page
+     would describe the page you fetched, and the whole problem is the page
+     you got from the cache instead. */
+  function showBuild(cache) {
+    window.NC_BUILD = cache || '';
+    if (!cache) return;
+    /* THE EDITOR ONLY. window.NC_BUILD is set everywhere, because it costs
+       nothing and answers the question from a console on any page — but the
+       visible marker belongs where the confusion happens. A version number
+       in the corner of the home page is clutter on a page nobody is
+       debugging. */
+    var here = (location.pathname.split('/').pop() || '').toLowerCase();
+    if (here !== 'editor.html') return;
+    try {
+      var id = 'ncbuild';
+      var el = document.getElementById(id);
+      if (!el) {
+        el = document.createElement('div');
+        el.id = id;
+        el.style.cssText = 'position:fixed;left:6px;bottom:4px;z-index:2147483000;' +
+          'font:500 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;' +
+          'color:rgba(140,150,173,.55);pointer-events:none;user-select:none;' +
+          'letter-spacing:.04em';
+        document.body.appendChild(el);
+      }
+      el.textContent = String(cache).replace(/^novaclip-/, '');
+    } catch (e) {}
+  }
+
+  function askVersion() {
+    try {
+      var c = navigator.serviceWorker.controller;
+      if (!c) return;                       /* first visit: nothing serving yet */
+      navigator.serviceWorker.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'VERSION') showBuild(e.data.cache);
+      });
+      c.postMessage({ type: 'VERSION' });
+    } catch (e) {}
+  }
+
   function offerReload(worker) {
     if (document.getElementById('ncupdate')) return;
     var box = document.createElement('div');
     box.id = 'ncupdate';
-    box.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;' +
+    /* TOP WHEN EMBEDDED, bottom otherwise. The Studio runs this editor inside
+       an iframe, and position:fixed in an iframe is fixed to the IFRAME's
+       viewport — so a pill at the bottom lands below the panel the iframe
+       sits in and is never seen. That is why update offers went unanswered
+       in the Studio and a stale build kept being reported as unfixed. The
+       top of the iframe is always on screen, because that is where the panel
+       starts. */
+    var embedded = false;
+    try { embedded = window.top !== window; } catch (e) { embedded = true; }
+    box.style.cssText = 'position:fixed;left:50%;' + (embedded ? 'top:12px;' : 'bottom:18px;') +
+      'transform:translateX(-50%);z-index:99999;' +
       'display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;border-radius:999px;' +
       'background:#12172a;color:#EAF2FF;border:1px solid rgba(167,139,250,.45);' +
       'box-shadow:0 16px 40px rgba(0,0,0,.5);font:600 13px/1.3 "Segoe UI",system-ui,sans-serif;' +

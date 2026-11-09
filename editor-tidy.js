@@ -60,40 +60,66 @@
 
   function q(t) { return Math.round(t * 1000) / 1000; }
 
-  /* Close every gap on one track. Returns the moves it made, so the playhead
-     can be moved by the same amount, or null if there was nothing to do. */
-  function closeTrack(trackId) {
-    var st = state();
-    if (!st || !st.clips || !trackId) return null;
+  /* THE RUN THAT WAS TOUCHING IT, AND NOTHING ELSE.
+     The first version closed every gap on the track, and that was too much:
+     deleting one half of a cut also dragged a clip twelve seconds further
+     along the lane right up to the join, destroying a gap somebody had left
+     on purpose. "Connect the videos" means close the join that was just
+     broken, not re-flow the lane.
 
-    var on = [];
+     So the shift is local. Starting at the deleted clip's end, clips that
+     butt up against each other form a run; that run moves back by the
+     deleted clip's length and stops at the first clip that was not touching
+     the one before it. A gap further down the lane is somebody's decision
+     and stays where they put it. */
+  function clipsOn(trackId) {
+    var st = state(), out = [];
+    if (!st || !st.clips) return out;
     for (var i = 0; i < st.clips.length; i++) {
-      if (st.clips[i].trackId === trackId) on.push(st.clips[i]);
+      if (st.clips[i].trackId === trackId) out.push(st.clips[i]);
     }
-    if (!on.length) return null;
-    on.sort(function (a, b) { return (a.start || 0) - (b.start || 0); });
+    out.sort(function (a, b) { return (a.start || 0) - (b.start || 0); });
+    return out;
+  }
 
-    var at = 0, moves = [];
-    for (var j = 0; j < on.length; j++) {
-      var c = on[j], from = c.start || 0;
-      if (Math.abs(from - at) > EPS) {
-        moves.push({ id: c.id, from: from, to: q(at), dur: c.duration || 0 });
-      }
-      at += (c.duration || 0);
-    }
-    if (!moves.length) return null;
-
+  function applyMoves(moves) {
+    if (!moves || !moves.length) return null;
+    var st = state();
+    if (!st) return null;
     var byId = {};
-    for (var k = 0; k < moves.length; k++) byId[moves[k].id] = moves[k].to;
-
-    /* setState rather than moveClip: moveClip calls pushHistory, and the
-       action this is tidying up after has already pushed one. Going through
-       it would make a single cut take two presses of Undo to put back. */
+    for (var i = 0; i < moves.length; i++) byId[moves[i].id] = moves[i].to;
+    /* setState rather than moveClip: moveClip pushes history and the action
+       being tidied up after has already pushed one. Going through it would
+       make a single cut take two presses of Undo to put back. */
     var next = st.clips.map(function (c) {
       return byId[c.id] === undefined ? c : Object.assign({}, c, { start: byId[c.id] });
     });
     try { store().setState({ clips: next }); } catch (e) { return null; }
     return moves;
+  }
+
+  /* Shift the contiguous run that starts at `from` back by `by` seconds. */
+  function rippleFrom(trackId, from, by) {
+    if (!(by > EPS)) return null;
+    var on = clipsOn(trackId), moves = [], edge = from;
+    for (var i = 0; i < on.length; i++) {
+      var c = on[i], a = c.start || 0;
+      if (a < from - EPS) continue;             /* before the hole: untouched */
+      if (Math.abs(a - edge) > EPS) break;      /* a real gap: the run ends here */
+      moves.push({ id: c.id, from: a, to: q(a - by), dur: c.duration || 0 });
+      edge = a + (c.duration || 0);
+    }
+    return applyMoves(moves);
+  }
+
+  /* Nothing in front of the first clip, so take its run to the start. This is
+     the "goes automatically to the start if no video is behind it" half. */
+  function pullToStart(trackId) {
+    var on = clipsOn(trackId);
+    if (!on.length) return null;
+    var first = on[0].start || 0;
+    if (first <= EPS) return null;
+    return rippleFrom(trackId, first, first);
   }
 
   /* Where the playhead should go, given what moved. `gone` is the range the
@@ -129,9 +155,19 @@
     try { if (st.setPlayhead) st.setPlayhead(q(target)); } catch (e) {}
   }
 
-  function tidy(trackId, gone) {
-    var moves = closeTrack(trackId);
+  function tidyAfterDelete(trackId, gone) {
+    if (!gone) return null;
+    var moves = rippleFrom(trackId, gone.end, gone.end - gone.start);
+    /* The hole was at the very front and nothing filled it: whatever is now
+       first still belongs at zero. */
+    if (!moves && gone.start <= EPS) moves = pullToStart(trackId);
     if (moves) followPlayhead(moves, gone);
+    return moves;
+  }
+
+  function tidyAfterSplit(trackId) {
+    var moves = pullToStart(trackId);
+    if (moves) followPlayhead(moves, null);
     return moves;
   }
 
@@ -148,17 +184,43 @@
 
     var patch = {};
 
+  /* WAS THIS CLIP JOINED TO ANOTHER ONE?
+     Asked for after the first version shipped: "only connect the videos when
+     someone cuts and deletes, no just delete". The first version closed the
+     track on ANY delete, so removing a clip that was sitting on its own
+     dragged everything else on that lane backwards — which is a bigger edit
+     than was asked for and nothing to do with cutting.
+
+     A cut is the thing that produces two clips touching edge to edge, so
+     "was it touching a neighbour" IS "did this come from a cut", without
+     having to remember that it did. Delete a piece that was joined to
+     something and the join is kept; delete a clip standing on its own and
+     nothing else moves. */
+  function joined(clip) {
+    var st = state();
+    if (!st || !clip) return false;
+    var a = clip.start || 0, b = a + (clip.duration || 0);
+    for (var i = 0; i < st.clips.length; i++) {
+      var o = st.clips[i];
+      if (o.id === clip.id || o.trackId !== clip.trackId) continue;
+      var oa = o.start || 0, ob = oa + (o.duration || 0);
+      if (Math.abs(ob - a) < EPS || Math.abs(oa - b) < EPS) return true;
+    }
+    return false;
+  }
+
     patch.deleteClip = function (id) {
-      /* Read the clip BEFORE it is gone — its track is the one to close, and
-         its range is what tells the playhead where it used to be. */
+      /* Read the clip BEFORE it is gone — its track is the one to close, its
+         range tells the playhead where it used to be, and whether it was
+         touching anything decides whether to close at all. */
       var before = state(), clip = null;
       if (before) for (var i = 0; i < before.clips.length; i++) {
         if (before.clips[i].id === id) clip = before.clips[i];
       }
-      var track = clip ? clip.trackId : null;
+      var track = clip && joined(clip) ? clip.trackId : null;
       var gone = clip ? { start: clip.start || 0, end: (clip.start || 0) + (clip.duration || 0) } : null;
       var out = origDelete.apply(this, arguments);
-      if (track) tidy(track, gone);
+      if (track) tidyAfterDelete(track, gone);
       return out;
     };
 
@@ -168,14 +230,14 @@
         if (before) for (var i = 0; i < before.clips.length; i++) {
           if (before.clips[i].id === id) clip = before.clips[i];
         }
-        var track = clip ? clip.trackId : null;
+        var track = clip && joined(clip) ? clip.trackId : null;
         var gone = clip ? { start: clip.start || 0, end: (clip.start || 0) + (clip.duration || 0) } : null;
         var out = origRipple.apply(this, arguments);
         /* rippleDelete already pulls the rest of the track back by the
            deleted clip's length. That leaves any gap that was there before
            exactly where it was, so this still has something to do — and if it
-           does not, closeTrack returns null and nothing happens. */
-        if (track) tidy(track, gone);
+           does not, rippleFrom finds nothing to move and nothing happens. */
+        if (track) tidyAfterDelete(track, gone);
         return out;
       };
     }
@@ -191,7 +253,7 @@
         /* A split makes no hole of its own. This is here for the half of the
            request about a clip that was already adrift: cut it, and the track
            it is on closes up to the front. */
-        if (track) tidy(track, null);
+        if (track) tidyAfterSplit(track);
         return out;
       };
     }
@@ -211,12 +273,12 @@
   window.NC_TIDY = {
     wrapped: function () { return wrapped; },
     /* For a test, and for anyone who wants to close a track by hand. */
-    close: function (trackId) { return tidy(trackId, null); },
+    close: function (trackId) { return tidyAfterSplit(trackId); },
     closeAll: function () {
       var st = state(), out = [];
       if (!st) return out;
       for (var i = 0; i < st.tracks.length; i++) {
-        var m = tidy(st.tracks[i].id, null);
+        var m = tidyAfterSplit(st.tracks[i].id);
         if (m) out.push({ track: st.tracks[i].id, moves: m });
       }
       return out;
