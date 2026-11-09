@@ -2988,7 +2988,11 @@
    82 painters on 186x104 canvases before the browser could draw anything.
    Measured at 8x CPU throttle: the longest blocked task goes from 407ms to
    113ms for transitions and from 863ms to 473ms for effects. */
-const CACHE = 'novaclip-v185';
+/* v186: effects and transitions get a row each on the timeline. The TR row
+   is drawn from the clips rather than from a list of its own, so dropping a
+   transition on it sets clip.transitionIn/Out and dragging its edge sets the
+   duration — nothing is duplicated and the row cannot drift out of step. */
+const CACHE = 'novaclip-v186';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

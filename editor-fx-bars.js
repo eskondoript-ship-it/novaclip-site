@@ -101,7 +101,8 @@
   var DEF_V    = 0.85;   /* strength a freshly dropped bar carries */
 
   var bars = [];
-  var lane = null;
+  var lane = null;        /* effects */
+  var trLane = null;      /* transitions */
   var host = null;
   var sel  = null;       /* iid of the selected bar */
   var obs  = null;
@@ -276,18 +277,44 @@
       '  background:rgba(0,0,0,.45);color:#fff;font:700 10px system-ui,sans-serif;',
       '  text-decoration:none;cursor:pointer}',
       '.nc-fxbar:hover u{display:grid}',
+      /* The transitions row reads differently on purpose: a cyan bar on a
+         cyan-tinted strip, against the violet of the effects row, so which
+         row you are looking at is obvious without reading the TR/FX tag. */
+      '.nc-trlane{background:linear-gradient(180deg,rgba(0,240,255,.07),rgba(0,240,255,.02))}',
+      '.nc-trlane .nc-fxlane-tag{color:#67E8F9}',
+      '.nc-trlane .nc-fxlane-hint{color:rgba(103,232,249,.5)}',
+      '.nc-trbar{background:linear-gradient(180deg,#22D3EE,#0891B2)}',
+      '.nc-trbar b{color:#04121a}',
+      '.nc-trbar.on{border-color:#fff;box-shadow:0 0 0 1px #fff,0 1px 6px rgba(34,211,238,.7)}',
+      '.nc-trbar{cursor:default}',
+      '.nc-trbar i{cursor:ew-resize}',
       '.nc-fxbar u:hover{background:#ff4d6a}'
     ].join('');
     document.head.appendChild(s);
   }
 
-  function makeLane() {
+  /* TWO LANES, ONE FOR EACH KIND.
+     Asked for: "make the effects and transitions have its own timeline".
+     They were sharing one strip and the transitions were not even allowed on
+     it — dropping one said "transitions go on a clip" and nothing happened,
+     which is a refusal where a row should have been.
+
+     They are genuinely different things and the rows reflect that. An effect
+     bar is free: it starts where you drop it and lasts as long as you drag
+     it, and this file owns the list. A TRANSITION is not free — it belongs to
+     a cut, the bundle already stores it as clip.transitionIn/transitionOut,
+     and there is nowhere else for it to live. So the transition row is drawn
+     FROM the store rather than from a list of this file's own: drop one and
+     it snaps to the nearest cut, drag its edge and it sets that transition's
+     duration, delete it and the clip loses it. Nothing is duplicated, so the
+     row cannot drift out of step with the clips underneath it. */
+  function makeLane(kind) {
     css();
     var el = document.createElement('div');
-    el.className = 'nc-fxlane';
+    el.className = kind === 'tr' ? 'nc-fxlane nc-trlane' : 'nc-fxlane';
     var tag = document.createElement('span');
     tag.className = 'nc-fxlane-tag';
-    tag.textContent = 'FX';
+    tag.textContent = kind === 'tr' ? 'TR' : 'FX';
     el.appendChild(tag);
 
     /* The same drag the FX library already fires for the chip bar:
@@ -309,7 +336,12 @@
         kind = e.dataTransfer.getData('text/nc-kind') || 'fx';
       } catch (err) {}
       if (!id) return;
-      if (kind !== 'fx') { flash('Transitions go on a clip, not on the FX lane'); return; }
+      var want = kind === 'tr' ? 'tr' : 'fx';
+      if (want !== (el === trLane ? 'tr' : 'fx')) {
+        flash(want === 'tr' ? 'Transitions go on the TR row' : 'Effects go on the FX row');
+        return;
+      }
+      if (want === 'tr') { dropTransition(id, xToTime(e.clientX)); return; }
       if (!windowable(id)) { flash(label(id) + ' cannot be timed — drop it on the clip'); return; }
       add(id, xToTime(e.clientX));
     });
@@ -329,9 +361,16 @@
     var h = findHost();
     if (!h) return false;
     if (h !== host) { host = h; }
-    if (!lane || !lane.isConnected) lane = makeLane();
+    if (!lane || !lane.isConnected) lane = makeLane('fx');
+    if (!trLane || !trLane.isConnected) trLane = makeLane('tr');
+    /* Order, top down: TR, then FX, then the clips. A transition happens at
+       the cut and an effect sits over the picture, so the row nearer the
+       clips is the one that acts on them for longer. */
     if (lane.parentElement !== host || host.firstChild !== lane) {
       host.insertBefore(lane, host.firstChild);
+    }
+    if (trLane.parentElement !== host || host.firstChild !== trLane) {
+      host.insertBefore(trLane, host.firstChild);
     }
     watch();
     return true;
@@ -523,6 +562,7 @@
       }
     } else if (hint) { hint.remove(); }
     for (var j = 0; j < bars.length; j++) lane.appendChild(barEl(bars[j]));
+    renderTr();
     live();
   }
 
@@ -536,6 +576,169 @@
       for (var j = 0; j < bars.length; j++) if (bars[j].iid === iid) b = bars[j];
       all[i].classList.toggle('live', !!b && t >= b.start && t < b.start + b.dur);
     }
+  }
+
+  /* ==========================================================================
+     TRANSITIONS: READ OFF THE CLIPS, NOT KEPT HERE
+     ========================================================================== */
+
+  /* Every cut a transition could sit on: each clip's start and end. */
+  function cuts() {
+    var st = state(), out = [];
+    if (!st || !st.clips) return out;
+    for (var i = 0; i < st.clips.length; i++) {
+      var c = st.clips[i], a = c.start || 0, d = c.duration || 0;
+      out.push({ t: a, clip: c, dir: 'in' });
+      out.push({ t: a + d, clip: c, dir: 'out' });
+    }
+    return out;
+  }
+
+  /* The bundle stores a transition as {type, duration} on the clip. An `in`
+     occupies the clip's first `duration` seconds, an `out` its last. */
+  function trBars() {
+    var st = state(), out = [];
+    if (!st || !st.clips) return out;
+    for (var i = 0; i < st.clips.length; i++) {
+      var c = st.clips[i], a = c.start || 0, d = c.duration || 0;
+      if (c.transitionIn && c.transitionIn.type && c.transitionIn.duration > 0) {
+        out.push({ iid: c.id + ':in', clip: c.id, dir: 'in', fx: c.transitionIn.type,
+                   start: a, dur: Math.min(c.transitionIn.duration, d) });
+      }
+      if (c.transitionOut && c.transitionOut.type && c.transitionOut.duration > 0) {
+        var td = Math.min(c.transitionOut.duration, d);
+        out.push({ iid: c.id + ':out', clip: c.id, dir: 'out', fx: c.transitionOut.type,
+                   start: a + d - td, dur: td });
+      }
+    }
+    return out;
+  }
+
+  function trLabel(id) {
+    try {
+      var ui = window.NC_TRANS_UI;
+      if (ui && ui.list && ui.list[id]) return ui.list[id][0];
+    } catch (e) {}
+    return id;
+  }
+
+  function setTr(clipId, dir, value) {
+    var st = state();
+    if (!st || !st.setClipTransition) return false;
+    try {
+      if (typeof st.pushHistory === 'function') st.pushHistory();
+      st.setClipTransition(clipId, dir, value);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* Dropped on the TR row: put it on the nearest cut. A transition that does
+     not land on a cut is not a transition, so there is no "where you dropped
+     it" to honour — the useful thing is to say which cut it went to. */
+  function dropTransition(id, t) {
+    var list = cuts();
+    if (!list.length) { flash('Put a clip on the timeline first'); return; }
+    var best = null, bestD = Infinity;
+    for (var i = 0; i < list.length; i++) {
+      var d = Math.abs(list[i].t - t);
+      if (d < bestD) { bestD = d; best = list[i]; }
+    }
+    if (!best) return;
+    var dur = Math.min(DEF_DUR, (best.clip.duration || DEF_DUR));
+    if (setTr(best.clip.id, best.dir, { type: id, duration: dur })) {
+      flash(trLabel(id) + ' on the cut at ' + best.t.toFixed(2) + 's — drag its edge to set how long');
+      render();
+    }
+  }
+
+  function trBarEl(b) {
+    var el = document.createElement('div');
+    el.className = 'nc-fxbar nc-trbar';
+    el.setAttribute('data-iid', b.iid);
+    el.title = trLabel(b.fx) + ' — drag an end to set how long, × to remove';
+
+    var t = document.createElement('b');
+    t.textContent = trLabel(b.fx);
+    el.appendChild(t);
+
+    var l = document.createElement('i'); l.className = 'l';
+    var r = document.createElement('i'); r.className = 'r';
+    el.appendChild(l); el.appendChild(r);
+
+    var x = document.createElement('u');
+    x.textContent = '×';
+    x.title = 'Remove';
+    x.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+    x.addEventListener('click', function (e) {
+      e.stopPropagation(); e.preventDefault();
+      /* null is how the bundle's own UI clears one. */
+      setTr(b.clip, b.dir, null);
+      render();
+    });
+    el.appendChild(x);
+
+    el.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();
+      /* ONLY THE ENDS MOVE. The body is not draggable, because moving a
+         transition means moving it to a different cut, and dragging it a few
+         pixels is not how anybody says that — they drop a new one on the cut
+         they want. Dragging the body here would have to either snap back or
+         silently retarget another clip. */
+      var mode = e.target === l ? 'l' : e.target === r ? 'r' : null;
+      if (!mode) {
+        var s0 = state();
+        if (s0 && s0.selectClip) { try { s0.selectClip(b.clip); } catch (err) {} }
+        return;
+      }
+      var t0 = xToTime(e.clientX), d0 = b.dur, moved = false;
+      function move(ev) {
+        var dt = xToTime(ev.clientX) - t0;
+        /* An `in` grows from the clip's start, so dragging its right edge
+           lengthens it; an `out` ends at the clip's end, so dragging its
+           LEFT edge lengthens it. */
+        var grow = (b.dir === 'in') ? (mode === 'r' ? dt : -dt)
+                                    : (mode === 'l' ? -dt : dt);
+        var nd = d0 + grow;
+        if (nd < MIN_DUR) nd = MIN_DUR;
+        var st = state(), clip = null;
+        if (st) for (var i = 0; i < st.clips.length; i++) if (st.clips[i].id === b.clip) clip = st.clips[i];
+        var cap = clip ? (clip.duration || nd) : nd;
+        if (nd > cap) nd = cap;
+        if (Math.abs(nd - b.dur) * pps() > 1) moved = true;
+        b.dur = nd;
+        if (b.dir === 'out' && clip) b.start = (clip.start || 0) + (clip.duration || 0) - nd;
+        place(el, b);
+      }
+      function up() {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up, true);
+        if (moved) setTr(b.clip, b.dir, { type: b.fx, duration: q(b.dur) });
+        render();
+      }
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up, true);
+    });
+
+    place(el, b);
+    return el;
+  }
+
+  function renderTr() {
+    if (!trLane) return;
+    var old = trLane.querySelectorAll('.nc-fxbar');
+    for (var i = 0; i < old.length; i++) old[i].remove();
+    var list = trBars();
+    var hint = trLane.querySelector('.nc-fxlane-hint');
+    if (!list.length) {
+      if (!hint) {
+        hint = document.createElement('span');
+        hint.className = 'nc-fxlane-hint';
+        hint.textContent = 'Drag a transition here to put it on the nearest cut';
+        trLane.appendChild(hint);
+      }
+    } else if (hint) { hint.remove(); }
+    for (var j = 0; j < list.length; j++) trLane.appendChild(trBarEl(list[j]));
   }
 
   /* ==========================================================================
@@ -554,7 +757,7 @@
   /* ==========================================================================
      BOOT
      ========================================================================== */
-  var zoom = 0, subbed = false;
+  var zoom = 0, subbed = false, lastTrSig = null;
 
   function sub() {
     if (subbed) return;
@@ -572,6 +775,24 @@
           for (var j = 0; j < bars.length; j++) if (bars[j].iid === iid) place(all[i], bars[j]);
         }
       }
+      /* The transitions row is drawn from the clips, so it has to be redrawn
+         when they change — a trim, a split, an undo, or a transition set from
+         the library rather than from this row. Compared as a signature rather
+         than redrawn every tick, because this fires on every playhead frame
+         during playback and rebuilding the row sixty times a second would be
+         its own lag report. */
+      var sig = '';
+      try {
+        for (var i = 0; i < st.clips.length; i++) {
+          var c = st.clips[i];
+          sig += c.id + '|' + (c.start || 0) + '|' + (c.duration || 0) + '|' +
+                 ((c.transitionIn && c.transitionIn.type) || '') + ':' +
+                 ((c.transitionIn && c.transitionIn.duration) || 0) + '|' +
+                 ((c.transitionOut && c.transitionOut.type) || '') + ':' +
+                 ((c.transitionOut && c.transitionOut.duration) || 0) + ';';
+        }
+      } catch (e) {}
+      if (sig !== lastTrSig) { lastTrSig = sig; renderTr(); }
       live();
     });
     subbed = true;
