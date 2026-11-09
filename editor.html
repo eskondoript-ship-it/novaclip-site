@@ -2173,6 +2173,16 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      position:absolute inset:0 inside that panel and so inherits the dock. -->
 <script src='editor-dock.js' defer></script>
 
+<!-- A CUT DOES NOT LEAVE A HOLE. Delete a piece and the track closes up —
+     first clip to zero, every other clip to the end of the one before it —
+     and the playhead moves by the same amount so the preview keeps showing
+     the frame it was showing.
+
+     Wraps the store's own splitClip and deleteClip through setState, so it
+     needs the store to exist and retries until it does. Nothing here runs on
+     a drag: a clip put somewhere on purpose stays there. -->
+<script src='editor-tidy.js' defer></script>
+
 <!-- THE FIVE TOOLS MOVE INTO THE RAIL. CC Captions, Beats, Reframe, Looks and
      the FX library were pills floating across the bottom, over the preview —
      the one part of the screen that should carry no chrome. They are tools,

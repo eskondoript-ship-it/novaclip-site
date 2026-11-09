@@ -2996,7 +2996,11 @@
    A 16:9 project leaves none and it stays column-width; 1:1 gives it 483px
    and three tiles across; 9:16 gives it 586px and four. It never covers the
    picture — the width is measured to the picture's left edge. */
-const CACHE = 'novaclip-v187';
+/* v188 adds editor-tidy.js (NEW): a cut no longer leaves a hole. Delete a
+   piece and the track closes up — first clip to zero, every other to the end
+   of the one before — and the playhead moves by the same amount so the
+   preview keeps showing the frame it was showing. */
+const CACHE = 'novaclip-v188';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3212,6 +3216,10 @@ const SHELL = [
      visitor getting the new panel with none of its placement would read as
      the layout having come undone. */
   '/editor-dock.js',
+  /* Closing a track up after a cut. Cached with the editor because without
+     it every cut silently goes back to leaving a hole, which reads as the
+     editor having broken rather than as a file that failed to load. */
+  '/editor-tidy.js',
   /* The rail. Without it the five pills come back to floating over the
      preview and the duplicate + buttons return — a visibly different editor
      for a returning visitor, which is exactly what the cache bump exists to
