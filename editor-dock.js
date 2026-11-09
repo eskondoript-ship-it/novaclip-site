@@ -47,10 +47,13 @@
 
   var MIN_VIEWPORT = 900;   /* px of window width before docking is offered */
   var MIN_COLUMN   = 240;   /* px of column width worth docking into */
+  var MAX_LIB_W    = 620;   /* px, the widest the library is allowed to grow */
+  var PREVIEW_GAP  = 10;    /* px of air between the library and the picture */
 
   var panel = null, editor = null;            /* .nctr (library), .ncfe (controls) */
   var leftCol = null, rightCol = null;
-  var roL = null, roR = null, pending = 0;
+  var roL = null, roR = null, roP = null, pending = 0;
+  var previewEl = null;
   var dockedPanel = false, dockedEditor = false;
 
   /* TWO COLUMNS, TWO DIFFERENT THINGS IN THEM.
@@ -100,6 +103,49 @@
       if (w > bestW) { bestW = w; best = c; }
     }
     return bestW >= MIN_COLUMN ? best : null;
+  }
+
+  /* THE PICTURE DOES NOT USE THE ROOM IT IS GIVEN, so the library can have
+     the rest of it. Asked for: "make the menu bigger cause the preview aint
+     using all of the space most sapce in empty".
+
+     It depends entirely on the project's aspect ratio, which is why this is
+     measured every time rather than set to a number. Measured in a 1600px
+     window:
+
+       16:9  the picture spans 412..1228 and the left column ends at 396.
+             Sixteen pixels of slack. There is nothing to take, and the
+             library stays the width of the column, exactly as before.
+       1:1   the picture spans 587..1054. The library can run from the
+             column's left edge to 577 — 486px instead of 302, about sixty
+             per cent wider, which at minmax(128px,1fr) is three tiles across
+             instead of two.
+
+     A 9:16 project leaves more still. The cap stops it becoming a wall of
+     tiles on a wide monitor.
+
+     The preview is found as the biggest canvas on the page, ignoring
+     anything inside the library itself — its own tiles are canvases too, and
+     once the panel is wide enough they are not trivially smaller. */
+  function findPreview() {
+    var all = document.querySelectorAll('canvas'), best = null, bestA = 0;
+    for (var i = 0; i < all.length; i++) {
+      var c = all[i];
+      if (c.closest && c.closest('.nctr')) continue;
+      var r = c.getBoundingClientRect();
+      if (r.width < 150 || r.height < 80) continue;
+      var a = r.width * r.height;
+      if (a > bestA) { bestA = a; best = r; previewEl = c; }
+    }
+    return best;
+  }
+
+  function libWidth(colRect) {
+    var pv = findPreview();
+    if (!pv) return colRect.width;
+    var room = Math.floor(pv.left - PREVIEW_GAP - colRect.left);
+    if (room > MAX_LIB_W) room = MAX_LIB_W;
+    return room > colRect.width ? room : colRect.width;
   }
 
   function findRightColumn() {
@@ -190,8 +236,13 @@
 
     if (panel && panel.isConnected) {
       var lr = usable(leftCol);
-      if (lr) { place(panel, lr, 'nc-docked'); dockedPanel = true; }
-      else if (dockedPanel) { clear(panel, 'nc-docked'); dockedPanel = false; }
+      if (lr) {
+        /* A plain object rather than the live rect, so widening the panel
+           cannot feed back into the next measurement. */
+        place(panel, { left: lr.left, top: lr.top,
+                       width: libWidth(lr), height: lr.height }, 'nc-docked');
+        dockedPanel = true;
+      } else if (dockedPanel) { clear(panel, 'nc-docked'); dockedPanel = false; }
     }
 
     /* The controls panel only exists while an effect is being edited. */
@@ -210,6 +261,15 @@
     }
     if (!roR && rightCol) {
       roR = new ResizeObserver(nudge); roR.observe(rightCol);
+    }
+    /* The library's width is measured off the picture, so changing the
+       project's aspect ratio has to re-measure it — 16:9 to 1:1 moves the
+       picture's left edge by 175px and that is the whole of the extra room.
+       Watching the canvas is simpler than watching the store for a setting
+       whose name this file would otherwise have to know. */
+    if (previewEl && previewEl.isConnected) {
+      if (roP && roP.__el !== previewEl) { roP.disconnect(); roP = null; }
+      if (!roP) { roP = new ResizeObserver(nudge); roP.__el = previewEl; roP.observe(previewEl); }
     }
   }
 
@@ -237,6 +297,7 @@
     }
     if (!leftCol || !leftCol.isConnected) leftCol = findLeftColumn();
     if (!rightCol || !rightCol.isConnected) rightCol = findRightColumn();
+    findPreview();                 /* sets previewEl for watchColumns */
     watchColumns();
   }
 
@@ -274,6 +335,8 @@
       panel = null; editor = null; leftCol = null; rightCol = null;
       if (roL) { roL.disconnect(); roL = null; }
       if (roR) { roR.disconnect(); roR = null; }
+      if (roP) { roP.disconnect(); roP = null; }
+      previewEl = null;
       hunt(); apply();
     }
   };

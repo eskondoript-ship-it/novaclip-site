@@ -2992,7 +2992,11 @@
    is drawn from the clips rather than from a list of its own, so dropping a
    transition on it sets clip.transitionIn/Out and dragging its edge sets the
    duration — nothing is duplicated and the row cannot drift out of step. */
-const CACHE = 'novaclip-v186';
+/* v187: the FX library grows into whatever room the picture is not using.
+   A 16:9 project leaves none and it stays column-width; 1:1 gives it 483px
+   and three tiles across; 9:16 gives it 586px and four. It never covers the
+   picture — the width is measured to the picture's left edge. */
+const CACHE = 'novaclip-v187';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
