@@ -3046,7 +3046,25 @@
    rather than a pitch. Both now list what ncProHas('tools') really gates,
    which also added the one benefit nobody had advertised: analytics.html has
    always shown free users one video rating and subscribers all of them. */
-const CACHE = 'novaclip-v194';
+/* v195: the Studio stops rendering an empty dashboard at people.
+
+   #dash had no display rule anywhere, so it was block from first paint for
+   everybody, and enterDash()'s `style.display = 'block'` — the line whose
+   whole job was to reveal it — had always been a no-op. Nobody noticed
+   because it only shows up when you are NOT connected: measured on a
+   signed-out load, the page was 3,934px tall and about 2,400px of that was
+   fourteen chart cards holding roughly 150 characters between them.
+
+   It is 1,076px now, and nothing empty is drawn: the dashboard and the four
+   skeleton tiles wait for a channel, the monthly-trend card drops its plot
+   area rather than holding a 300px hole open under its own heading, and what
+   stands in that space instead is a list of the six panels that fill once a
+   channel is on — each naming which API answers it.
+
+   Hiding the canvas was not enough and measuring said so: .yearbody is a
+   two-column grid, so the empty chart column still stretched to 202px beside
+   the legend. Same hole, canvas removed. The column goes. */
+const CACHE = 'novaclip-v195';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

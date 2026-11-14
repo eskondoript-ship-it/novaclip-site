@@ -156,6 +156,20 @@ h1 .grad { background: linear-gradient(90deg, var(--nc-mag,#F72585), var(--nc-vi
    shape, the column on the right says what the shape was. */
 .yearbody { display: grid; grid-template-columns: minmax(0,1fr) 230px; gap: 20px; align-items: stretch; }
 .yearchart { position: relative; min-width: 0; min-height: 300px; }
+/* COLLAPSED WHEN THERE IS NOTHING TO PLOT.
+   min-height held a 300px hole open under the heading for anyone without a
+   connected channel, with the explanation stranded at the bottom of it. The
+   sentence is the whole content in that state, so the card shrinks to it and
+   the legend beside it keeps saying what the three lines will mean. */
+   Hiding the canvas alone was not enough and measuring said so: .yearbody is
+   a two-column grid, so the empty chart column still stretched to 202px to
+   match the legend beside it — a hole the same shape as before, just with the
+   canvas taken out of it. The whole column goes, and the legend takes the
+   full width. */
+#yearwrap.is-empty .yearbody { display: block; }
+#yearwrap.is-empty .yearchart { display: none; }
+#yearwrap.is-empty .yearnotes { flex-direction: row; flex-wrap: wrap; }
+#yearwrap.is-empty .ynote { flex: 1 1 210px; }
 .yearnotes { display: flex; flex-direction: column; gap: 10px; }
 .ynote { border-left: 3px solid var(--c,#00E5FF); padding: 2px 0 2px 11px; }
 .ynote b { display: block; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase;
@@ -322,7 +336,36 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
 .moneybox.off { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: var(--nc-dim,#9fb0cc); }
 
 /* ---- Channel dashboard ---- */
-#studio{margin:0 0 22px}
+/* THE DASHBOARD IS NOT THERE UNTIL THERE IS SOMETHING IN IT.
+
+   #dash had no display rule at all, so it rendered from first paint for
+   everybody — and enterDash()'s `style.display = 'block'` had always been a
+   no-op, which is why nobody noticed. Measured on a signed-out load: the page
+   was 3,934px tall, and roughly 2,400px of that was fourteen chart cards
+   holding about 150 characters between them. Fourteen empty canvases is not a
+   dashboard "waiting for data", it is a wall telling somebody the product is
+   broken before they have pressed anything.
+
+   enterDash() is the only thing that reveals it, and it runs only after
+   YouTube has actually returned a channel. */
+#dash{display:none}
+
+/* What stands there instead, until then. */
+#studiopitch{border:1px solid var(--nc-line,#2a3144);border-radius:16px;padding:18px 20px;margin:0 0 22px}
+#studiopitch h3{margin:0 0 4px;font-size:1rem;font-weight:800}
+#studiopitch p.sp-sub{margin:0 0 14px;color:var(--nc-dim,#7E8AA6);font-size:.88rem;line-height:1.6}
+#studiopitch ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+#studiopitch li{display:flex;gap:9px;align-items:flex-start;font-size:.88rem;line-height:1.5}
+#studiopitch li b{display:block;font-weight:700}
+#studiopitch li span.sp-k{flex:0 0 auto;width:7px;height:7px;border-radius:50%;margin-top:7px;
+  background:var(--nc-cyan,#00F0FF)}
+#studiopitch li i{font-style:normal;color:var(--nc-dim,#7E8AA6);font-size:.82rem}
+/* Same reasoning as #dash, one step down. The four tiles are skeletons until
+   studioFill() has numbers, and a skeleton means "this is loading" — which is
+   a lie told to somebody who has not connected anything and for whom nothing
+   is loading. They appear with the dashboard. */
+#studio{display:none;margin:0 0 22px}
 .sthead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .sthead h2{font-size:1.25rem;font-weight:700;letter-spacing:-.02em}
 .stsince{font-size:.8rem;color:var(--nc-dim,#7E8AA6)}
@@ -432,6 +475,31 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
     <div id='authmsg'></div>
     <p class='hint' id='connecthint' data-t='analytics_hint'>Connect your channel to load your analytics.</p>
   </div>
+
+  <!-- WHAT STANDS WHERE THE EMPTY DASHBOARD USED TO.
+       Every line here names a panel that really exists on this page and says
+       where its numbers come from, because the two APIs are not the same
+       thing and which one answered decides what can be shown. It is removed
+       the moment a channel connects — see enterDash(). -->
+  <section id='studiopitch'>
+    <h3>What this Studio shows once your channel is on it</h3>
+    <p class='sp-sub'>Nothing here is a sample or a placeholder. Connect a channel and these fill
+      with its own numbers; until then there is nothing honest to draw.</p>
+    <ul>
+      <li><span class='sp-k'></span><span><b>Twelve months of views, watch time and subscribers</b>
+        <i>Month by month, from your channel's own history.</i></span></li>
+      <li><span class='sp-k'></span><span><b>Where viewers come from, and who they are</b>
+        <i>Traffic sources, countries, age and gender — the YouTube Analytics API, not totals.</i></span></li>
+      <li><span class='sp-k'></span><span><b>Watch time and average view duration</b>
+        <i>The number YouTube actually pays attention to, per day.</i></span></li>
+      <li><span class='sp-k'></span><span><b>Every upload rated</b>
+        <i>Hook, title, thumbnail and consistency, with the one change worth making.</i></span></li>
+      <li><span class='sp-k'></span><span><b>Fair Fight</b>
+        <i>You against a channel your own size, size-normalised so big channels get no free points.</i></span></li>
+      <li><span class='sp-k'></span><span><b>Your creator level</b>
+        <i>Worked out from four numbers, and the only panel here that needs no connection at all.</i></span></li>
+    </ul>
+  </section>
 
   <!-- Channel dashboard: the shape YouTube Studio opens on — the four numbers
        first, then the detail. Rendered before any request finishes so the page
@@ -759,6 +827,14 @@ async function enterDash() {
   }
   document.getElementById('connectrow').style.display = 'none';
   document.getElementById('dash').style.display = 'block';
+  /* The four headline tiles have numbers in them by the time this runs —
+     studioFill() is called with the channel a few lines before enterDash(). */
+  const head = document.getElementById('studio');
+  if (head) head.style.display = 'block';
+  /* The dashboard is real now, so the description of it goes. Leaving both up
+     puts "what this Studio shows" directly above the thing it is describing. */
+  const pitch = document.getElementById('studiopitch');
+  if (pitch) pitch.style.display = 'none';
   /* Without the full ladder: inside a dashboard that is already twelve panels
      deep, twelve more rungs is noise. progress.html is where the whole ladder
      belongs, and it shows it. */
@@ -985,6 +1061,7 @@ async function renderYearChart() {
      offline, or simply be slow. Returning here would leave a titled card with
      an empty hole in it and no explanation — so say what happened instead. */
   if (typeof Chart === 'undefined') {
+    wrap.classList.add('is-empty');
     yearSay('The chart library did not load — an ad blocker or a dropped connection will do that. ' +
       'The numbers below are unaffected.', true);
     return;
@@ -993,6 +1070,7 @@ async function renderYearChart() {
   if (!ytToken) {
     /* No invented year. A chart of made-up months would look exactly like a
        real one, which is the reason not to draw it. */
+    wrap.classList.add('is-empty');
     yearSay('Connect your channel and this fills in with your last twelve months.');
     if (notes) {
       notes.innerHTML = YEAR_SERIES.map(s =>
@@ -1026,11 +1104,16 @@ async function renderYearChart() {
   }));
 
   if (!rows.length) {
+    wrap.classList.add('is-empty');
     yearSay('YouTube has no monthly data for this channel yet. It appears once the channel has some watch history.', true);
     return;
   }
 
   if (yearChart) { try { yearChart.destroy(); } catch (e) {} yearChart = null; }
+
+  /* There are rows, so the canvas is needed again — a reconnect in the same
+     tab goes down this path without the page reloading. */
+  wrap.classList.remove('is-empty');
 
   const ink = yearInk();
   yearChart = new Chart(document.getElementById('c_year').getContext('2d'), {
