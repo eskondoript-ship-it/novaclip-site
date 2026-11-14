@@ -3021,7 +3021,32 @@
    the clip instead of four times it. It also caps how long a frame may wait
    on its sources — without that, one stale <video> left half-loaded by an
    earlier export made a two-effect export hang for ever. */
-const CACHE = 'novaclip-v193';
+/* v193: a channel switcher for people with more than one YouTube channel, the
+   NexusStream skin extended across the whole Studio, and step 7 on
+   publish.html — one caption rewritten per platform, handed to the phone's
+   share sheet. */
+/* v194: new monthly prices (7 / 11 / 15 euro) and the end of "Kids' Tools".
+
+   The prices live in FOUR files and all four had to move together:
+   pricing.html advertises them, parent.html offers them to the parent,
+   pay-worker.js is what Stripe actually charges, and the bundle's "save X a
+   month" line is arithmetic on the other two. pay-worker.js says it best in
+   its own comment — a page that advertises 6.99 and charges 7.99 is fraud,
+   not a bug — so there is a test that recomputes every currency rather than
+   trusting that seven columns were retyped correctly.
+
+   The plan is "Creator Tools" now, in twenty languages and in Gen Z mode.
+   This site is for 13 to 18 year olds and the line above the plans says
+   "everything a teenager needs"; it was selling them a plan called "Kids'".
+
+   Also three stale claims, all of them the same claim. v94 deleted "game
+   skins" from pricing.html and pro.html as a paid feature with nothing behind
+   it, and missed parent.html and terms.html — the page a parent reads before
+   paying, and the page where a description of what is sold is a promise
+   rather than a pitch. Both now list what ncProHas('tools') really gates,
+   which also added the one benefit nobody had advertised: analytics.html has
+   always shown free users one video rating and subscribers all of them. */
+const CACHE = 'novaclip-v194';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

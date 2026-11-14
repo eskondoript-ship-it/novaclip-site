@@ -273,7 +273,12 @@ th { color:var(--nc-dim,#8c96ad); font-weight:600; font-size:0.85rem; }
   <table>
     <tr><th>Plan</th><th>What it is</th><th>How it is billed</th></tr>
     <tr><td>Family Dashboard</td><td>Parental controls, activity overview, content blocking, comment scanning</td><td>Monthly or yearly subscription</td></tr>
-    <tr><td>Kids' Tools Upgrade</td><td>Priority AI, longer exports, extra effects, game skins</td><td>Monthly or yearly subscription</td></tr>
+    <!-- "game skins" stood here too. v94 removed that claim from pricing.html
+         and pro.html as a paid feature with nothing behind it, and left it in
+         the TERMS — the one place on the site where a description of what is
+         sold is a promise rather than a pitch. The list now matches the five
+         things ncProHas('tools') actually gates. -->
+    <tr><td>Creator Tools</td><td>Priority AI, longer exports, extra effects, every upload rated, no watermark</td><td>Monthly or yearly subscription</td></tr>
     <tr><td>Family Bundle</td><td>Both of the above, plus priority support</td><td>Monthly or yearly subscription</td></tr>
     <tr><td>Certificates</td><td>Basic, Advanced and Master creator credentials</td><td>One-time payment</td></tr>
   </table>

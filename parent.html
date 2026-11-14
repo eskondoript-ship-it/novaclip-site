@@ -1499,13 +1499,13 @@ window.addEventListener('hashchange', () => pdShow(location.hash.slice(1), false
    renders a blank price while a request is in flight is worse than an offer
    that renders a month-old one — and these change about never. */
 const OFFER_PRICES = {
-  eur: { sym: '€', dash: 6.99, tools: 4.99, bundle: 9.99, save: 1.99 },
-  usd: { sym: '$',      dash: 7.99, tools: 5.99, bundle: 10.99, save: 2.99 },
-  gbp: { sym: '£', dash: 5.99, tools: 4.49, bundle: 8.99, save: 1.49 },
-  chf: { sym: 'CHF ',   dash: 6.90, tools: 4.90, bundle: 9.90, save: 1.90 },
-  cny: { sym: '¥', dash: 49.9, tools: 39.9, bundle: 79.9, save: 9.9 },
-  inr: { sym: '₹', dash: 599,  tools: 449,  bundle: 899,  save: 150 },
-  bdt: { sym: '৳', dash: 799,  tools: 599,  bundle: 1199, save: 200 }
+  eur: { sym: '€', dash: 7,    tools: 11,    bundle: 15,    save: 3 },
+  usd: { sym: '$',      dash: 7.99, tools: 12.99, bundle: 16.99, save: 3.99 },
+  gbp: { sym: '£', dash: 5.99, tools: 9.99,  bundle: 12.99, save: 2.99 },
+  chf: { sym: 'CHF ',   dash: 6.90, tools: 10.90, bundle: 14.90, save: 2.90 },
+  cny: { sym: '¥', dash: 49.9, tools: 79.9,  bundle: 109.9, save: 19.9 },
+  inr: { sym: '₹', dash: 599,  tools: 949,   bundle: 1299,  save: 249 },
+  bdt: { sym: '৳', dash: 799,  tools: 1249,  bundle: 1699,  save: 349 }
 };
 /* The dashboard's own esc() is a const inside the render function, so it does
    not reach here. Plan names come from nc_pro, which arrives over the sync
@@ -1573,8 +1573,13 @@ function renderOffers() {
       ? 'They have asked the AI tutors <b>' + chats + ' question' + (chats > 1 ? 's' : '') +
         '</b> on this device. The Tools upgrade puts those answers in the priority queue and ' +
         'lifts the export length in the editor.'
-      : 'Priority AI answers, longer editor exports, the full effects set and the game skins.';
-    cards.push({ name: "Kids' Tools Upgrade", hook: hook, cost: cur.tools, best: false });
+      /* WAS "...the full effects set and the game skins." v94 deleted that
+         claim from pricing.html and pro.html because no game file has ever
+         checked ncProHas, and missed this copy of it — so the one page a
+         PARENT reads before paying was still the one advertising it. The
+         ratings are real: analytics.html gates them on ncProHas('tools'). */
+      : 'Priority AI answers, longer editor exports, the full effects set, and every upload rated instead of just the latest.';
+    cards.push({ name: 'Creator Tools', hook: hook, cost: cur.tools, best: false });
   }
 
   /* The bundle is only an offer if it is actually cheaper than what is left to
@@ -1762,9 +1767,9 @@ function renderPay() {
 
 // --- Plans & billing (inside PIN-gated dashboard) ---
 const PLANS = [
-  { id: 'dash', name: 'Family Dashboard', price: '€6.99/mo' },
-  { id: 'tools', name: 'Kids\u0027 Tools', price: '€4.99/mo' },
-  { id: 'bundle', name: 'Family Bundle', price: '€9.99/mo' },
+  { id: 'dash', name: 'Family Dashboard', price: '€7/mo' },
+  { id: 'tools', name: 'Creator Tools', price: '€11/mo' },
+  { id: 'bundle', name: 'Family Bundle', price: '€15/mo' },
   { id: 'cert_basic', name: 'Basic Certificate', price: '€24.99' },
   { id: 'cert_adv', name: 'Advanced Certificate', price: '€49.99' },
   { id: 'cert_master', name: 'Master Certificate', price: '€99.99' }

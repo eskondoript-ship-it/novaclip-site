@@ -483,7 +483,7 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
 <div class='grid'>
     <div class='plan' data-plan='family' data-kind='sub'>
       <h3 data-t='fam_dash'>Family Dashboard</h3>
-      <div class='price' data-eur='6.99' data-usd='7.99' data-gbp='5.99' data-cny='49.9' data-chf='6.90' data-inr='599' data-bdt='799'><small class='per' data-t='permonth'>/month</small></div>
+      <div class='price' data-eur='7' data-usd='7.99' data-gbp='5.99' data-cny='49.9' data-chf='6.90' data-inr='599' data-bdt='799'><small class='per' data-t='permonth'>/month</small></div>
       <ul>
         <li data-t='f1'>Parental controls & PIN access</li>
         <li data-t='f2'>Activity overview of your kid's usage</li>
@@ -497,13 +497,28 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
     </div>
 
     <div class='plan' data-plan='tools' data-kind='sub'>
-      <h3 data-t='kids_up'>Kids' Tools Upgrade</h3>
-      <div class='price' data-eur='4.99' data-usd='5.99' data-gbp='4.49' data-cny='39.9' data-chf='4.90' data-inr='449' data-bdt='599'><small class='per' data-t='permonth'>/month</small></div>
+      <h3 data-t='creator_tools'>Creator Tools</h3>
+      <div class='price' data-eur='11' data-usd='12.99' data-gbp='9.99' data-cny='79.9' data-chf='10.90' data-inr='949' data-bdt='1249'><small class='per' data-t='permonth'>/month</small></div>
       <ul>
+        <!-- THESE ARE THE FIVE THINGS ncProHas('tools') ACTUALLY GATES, which
+             is also exactly what pro.html lists. The page only had four: video
+             ratings were gated in analytics.html and advertised nowhere, which
+             is the same fault as advertising something that is not gated, just
+             pointing the other way.
+
+             A sixth bullet was drafted here promising game skins. v94 deleted
+             precisely that claim from this page because no game file has ever
+             checked for it. It is not coming back.
+
+             The first four are left word for word as they are, because each
+             one is already translated into twenty languages; rewriting the
+             English for its own sake would leave nineteen of those saying
+             something subtly different from the page they are on. -->
         <li data-t='f6'>Priority AI answers</li>
         <li data-t='f7'>Longer editor exports</li>
         <li data-t='f8'>Extra effects & transitions</li>
         <li data-t='f9'>No watermark on your exports</li>
+        <li data-t='f9b'>Every upload rated, not just your latest</li>
       </ul>
       <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_upgrade'>Upgrade tools</span></button>
     </div>
@@ -511,11 +526,18 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
     <div class='plan best' data-plan='bundle' data-kind='sub'>
       <span class='tag' data-t='bestvalue'>BEST VALUE</span>
       <h3 data-t='fam_bundle'>Family Bundle</h3>
-      <div class='price' data-eur='9.99' data-usd='10.99' data-gbp='8.99' data-cny='79.9' data-chf='9.90' data-inr='899' data-bdt='1199'><small class='per' data-t='permonth'>/month</small></div>
+      <div class='price' data-eur='15' data-usd='16.99' data-gbp='12.99' data-cny='109.9' data-chf='14.90' data-inr='1299' data-bdt='1699'><small class='per' data-t='permonth'>/month</small></div>
       <ul>
         <li data-t='f10'>Family Dashboard included</li>
-        <li data-t='f11'>Kids' Tools Upgrade included</li>
-        <li id='saveline' data-eur='1.99' data-usd='2.99' data-gbp='1.49' data-cny='9.9' data-chf='1.90' data-inr='150' data-bdt='200'>Save €1.99 every month</li>
+        <li data-t='f11'>Creator Tools included</li>
+        <!-- EVERY NUMBER HERE IS THE TWO PLANS MINUS THE BUNDLE, IN THAT
+             CURRENCY. It is a factual claim on a price, so it is not a round
+             number somebody liked the look of: eur 7 + 11 - 15 = 3, usd 7.99
+             + 12.99 - 16.99 = 3.99, gbp 5.99 + 9.99 - 12.99 = 2.99, chf 6.90
+             + 10.90 - 14.90 = 2.90, cny 49.9 + 79.9 - 109.9 = 19.9, inr 599 +
+             949 - 1299 = 249, bdt 799 + 1249 - 1699 = 349. Change a plan price
+             and this line is wrong until it is changed with it. -->
+        <li id='saveline' data-eur='3' data-usd='3.99' data-gbp='2.99' data-cny='19.9' data-chf='2.90' data-inr='249' data-bdt='349'>Save €3 every month</li>
         <li data-t='f12'>Priority support</li>
       </ul>
       <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_bundle'>Get the bundle</span></button>
@@ -579,7 +601,12 @@ function fmt(cur, val) {
   let n = Number(val);
   if (c.dec === 0) n = Math.round(n);
   else if (cur === 'cny') n = (n % 1 === 0 ? n : n.toFixed(1));
-  else n = n.toFixed(2);
+  /* A whole number keeps no decimals. The monthly plans are now flat euros —
+     7, 11, 15 — and toFixed(2) printed them as "€7.00", which reads like a
+     price that was meant to be 6.99 and slipped. Anything with real cents
+     (7.99, 24.99, and every yearly figure that is not a round multiple) is
+     untouched, because for those the decimals are the price. */
+  else n = (n % 1 === 0 ? String(n) : n.toFixed(2));
   return c.sym + n;
 }
 function guessCurrency() {
@@ -667,7 +694,7 @@ document.getElementById('curpick').onchange = (e) => renderPrices(e.target.value
 //     Plans left as '' fall back to the demo checkout.
 const STRIPE_LINKS = {
   'Family Dashboard':    { month: '', year: '' },
-  "Kids' Tools Upgrade": { month: '', year: '' },
+  'Creator Tools':       { month: '', year: '' },
   'Family Bundle':       { month: '', year: '' },
   'Basic Certificate':   { once: '' },
   'Advanced Certificate':{ once: '' },

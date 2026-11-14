@@ -111,19 +111,19 @@ const PLANS = {
     name: 'NovaClip Family Plus',
     mode: 'subscription',
     interval: 'month',
-    price: { eur: 699, usd: 799, gbp: 599, cny: 4990, chf: 690, inr: 59900, bdt: 79900 }
+    price: { eur: 700, usd: 799, gbp: 599, cny: 4990, chf: 690, inr: 59900, bdt: 79900 }
   },
   tools: {
     name: 'NovaTools Creator',
     mode: 'subscription',
     interval: 'month',
-    price: { eur: 499, usd: 599, gbp: 449, cny: 3990, chf: 490, inr: 44900, bdt: 59900 }
+    price: { eur: 1100, usd: 1299, gbp: 999, cny: 7990, chf: 1090, inr: 94900, bdt: 124900 }
   },
   bundle: {
     name: 'NovaClip Bundle',
     mode: 'subscription',
     interval: 'month',
-    price: { eur: 999, usd: 1099, gbp: 899, cny: 7990, chf: 990, inr: 89900, bdt: 119900 }
+    price: { eur: 1500, usd: 1699, gbp: 1299, cny: 10990, chf: 1490, inr: 129900, bdt: 169900 }
   },
   basic: {
     name: 'Creator Course — Basic',
