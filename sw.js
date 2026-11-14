@@ -3087,7 +3087,7 @@
       which is why it survived.
 
    12,675px -> 3,420px, and the charts survive a round trip through the tabs. */
-const CACHE = 'novaclip-v199';
+const CACHE = 'novaclip-v200';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

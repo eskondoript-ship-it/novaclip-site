@@ -75,6 +75,9 @@
      difference is flex-row against flex-col, a layout detail a rebuild could
      flip without meaning anything. Left-most and right-most stay true
      however it is built. */
+  var GAP = 8;         /* breathing room above the timeline */
+  var MIN_PANEL = 260;  /* below this a docked panel is not worth docking */
+
   function glassColumns() {
     var all = document.querySelectorAll('.glass'), out = [];
     for (var i = 0; i < all.length; i++) {
@@ -196,6 +199,52 @@
     document.head.appendChild(s);
   }
 
+  /* WHERE THE TIMELINE STARTS, SO THE PANEL CAN STOP THERE.
+
+     Both docked panels take the full height of the column they sit in. In the
+     Studio layout that column ends above the timeline and all is well. In
+     CLASSIC it does not: measured at 1917x997 with the library open, .nctr ran
+     from y=109 to y=1048 while the track labels start at y=834 — 214px of the
+     timeline underneath a panel, including every track name. Reported twice as
+     "the timeline is not completely visible", and the first fix (syncing the
+     two columns' scrolling) was a real bug but not this one.
+
+     The timeline is found from its own furniture rather than by class: the
+     track-label column walked upwards until an ancestor also contains the Snap
+     control, which is the toolbar above the ruler. That ancestor is the whole
+     timeline block, and its top is the line no panel may cross. Tailwind class
+     strings are not a stable handle; "the box that holds both the lanes and
+     the Snap button" is. */
+  function timelineTop() {
+    var labels = document.querySelector('.w-44.shrink-0.overflow-y-auto');
+    if (!labels) return 0;
+    var e = labels.parentElement, hops = 0;
+    while (e && hops++ < 6) {
+      var bs = e.querySelectorAll('button');
+      for (var i = 0; i < bs.length; i++) {
+        if ((bs[i].textContent || '').trim() === 'Snap') {
+          return e.getBoundingClientRect().top;
+        }
+      }
+      e = e.parentElement;
+    }
+    /* No Snap button found — an older build, or it was renamed. The labels'
+       own top is a worse answer but still better than covering them. */
+    return labels.getBoundingClientRect().top;
+  }
+
+  /* The column height a panel may actually use. */
+  function roomIn(rect) {
+    var limit = timelineTop();
+    if (!(limit > 0)) return rect.height;
+    var room = limit - GAP - rect.top;
+    /* Never crush it to nothing: below this the panel is unusable and the
+       honest thing is to leave it full height and overlap, which at least
+       still works as a panel. */
+    if (room < MIN_PANEL) return rect.height;
+    return Math.min(rect.height, room);
+  }
+
   function place(el, rect, cls) {
     el.classList.add(cls);
     /* Inline and !important: .nctr's own rule carries left/bottom/width/
@@ -240,7 +289,7 @@
         /* A plain object rather than the live rect, so widening the panel
            cannot feed back into the next measurement. */
         place(panel, { left: lr.left, top: lr.top,
-                       width: libWidth(lr), height: lr.height }, 'nc-docked');
+                       width: libWidth(lr), height: roomIn(lr) }, 'nc-docked');
         dockedPanel = true;
       } else if (dockedPanel) { clear(panel, 'nc-docked'); dockedPanel = false; }
     }
@@ -249,7 +298,14 @@
     editor = panel ? panel.querySelector('.ncfe') : null;
     if (editor) {
       var rr = usable(rightCol);
-      if (rr) { place(editor, rr, 'nc-docked-edit'); dockedEditor = true; }
+      /* The right column gets the same treatment for the same reason: in
+         Classic it runs past the timeline too, and the effect editor covering
+         the right-hand end of every lane is the same bug on the other side. */
+      if (rr) {
+        place(editor, { left: rr.left, top: rr.top, width: rr.width, height: roomIn(rr) },
+              'nc-docked-edit');
+        dockedEditor = true;
+      }
       else if (dockedEditor) { clear(editor, 'nc-docked-edit'); dockedEditor = false; }
     } else { dockedEditor = false; }
   }

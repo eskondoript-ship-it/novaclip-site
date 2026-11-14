@@ -12,13 +12,25 @@
  * pixels and a number and NOTHING ELSE — no clip, no id, no context. So a
  * painter cannot look up "what did the user set for me, on this clip".
  *
- * The honest consequence, stated here rather than discovered later: settings
- * are PER EFFECT, not per clip. Set Oil paint to a radius of 3 and every clip
- * using Oil paint gets radius 3. For one person cutting one video — which is
- * what this editor is for — that is almost always what they meant anyway. It
- * is wrong for a project that deliberately uses the same effect twice at
- * different settings, and that case needs the bundle's own clip schema to
- * carry the parameters, which is not something a sidecar can add.
+ * THAT PARAGRAPH USED TO END HERE, AND IT WAS WRONG.
+ *
+ * What stood here said settings are per effect and not per clip — set Oil
+ * paint to a radius of 3 and every clip using Oil paint gets radius 3 — and
+ * called it a limit that "needs the bundle's own clip schema to carry the
+ * parameters, which is not something a sidecar can add". It was reported as
+ * the bug it is: "when i change an effect on a clip if there are other clips
+ * with it they change too".
+ *
+ * The premise was right and the conclusion was not. A painter really is
+ * handed pixels and a number. But it RUNS INSIDE window.__ncGrade(ctx, clip,
+ * parts), which is handed the clip — so remembering whose frame is being
+ * drawn at the top of that hook gives every painter beneath it a clip
+ * without changing one painter signature or touching the clip schema.
+ *
+ * settings[id] is now the effect's defaults, which is what a fresh drop of it
+ * starts from and what the editor edits when no clip is selected.
+ * settings[id + '@' + clipId] is what one clip asked for. See PER CLIP, NOT
+ * PER EFFECT further down.
  *
  * Duration is the exception and is genuinely per clip, because the bundle
  * already stores it: setClipTransition(id, dir, {type, duration}).
@@ -117,8 +129,119 @@
     return settings[id];
   }
   function save() {
+    prune();
     try { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); } catch (e) {}
   }
+
+  /* =========================================================================
+     PER CLIP, NOT PER EFFECT
+     =========================================================================
+     The header of this file used to promise the opposite, and said so plainly
+     as a limit: "settings are PER EFFECT, not per clip. Set Oil paint to a
+     radius of 3 and every clip using Oil paint gets radius 3." That was true
+     and it was reported as the bug it is — "when i change an effect on a clip
+     if there are other clips with it they change too".
+
+     The reason given was that a painter is handed fn(g, w, h, v) and nothing
+     else: no clip, no id, no context, so it cannot look up what this clip
+     wanted. That part is still true. What the note missed is that the painter
+     does not have to: it runs INSIDE window.__ncGrade(ctx, clip, parts), which
+     is handed the clip. Wrapping that hook and remembering whose frame is
+     being drawn gives every painter underneath it a clip for free, without
+     changing a single painter signature.
+
+     So settings[id] stays as the effect's own defaults — what a fresh drop of
+     that effect starts from — and settings[id + '@' + clipId] holds what one
+     clip asked for. Reads prefer the clip's copy and fall back to the
+     default; the editor writes to the clip's copy whenever a clip is
+     selected, created from the default the first time it is touched.
+
+     This makes the old behaviour reachable rather than lost: with no clip
+     selected the editor still edits the effect's defaults, which is what you
+     want when setting up a look before applying it anywhere. */
+
+  var paintClip = null;      /* whose frame is being painted, during a paint */
+  var gradeHooked = false;
+
+  function keyFor(id, clipId) { return clipId ? id + '@' + clipId : id; }
+
+  function selectedClipId() {
+    try {
+      var st = window.__ncStore.getState();
+      return st && st.selectedClipId ? st.selectedClipId : null;
+    } catch (e) { return null; }
+  }
+
+  /* Reading. The clip's own copy if it has one, otherwise the effect's. */
+  function cfgFor(id, clipId) {
+    if (clipId) {
+      var k = keyFor(id, clipId);
+      if (settings[k]) return settings[k];
+    }
+    return cfg(id);
+  }
+
+  /* Writing. With a clip selected this hands back that clip's copy, made from
+     the effect's defaults the first time it is asked for — so opening the
+     editor on a clip shows what it already looks like rather than resetting
+     it, and the first slider drag is the thing that forks it. */
+  function cfgForEdit(id) {
+    var clipId = selectedClipId();
+    if (!clipId) return cfg(id);
+    var k = keyFor(id, clipId);
+    if (!settings[k]) {
+      var base = cfg(id);
+      var copy = { duration: base.duration, delay: base.delay,
+                   curve: base.curve.slice(), params: {} };
+      if (typeof base.strength === 'number') copy.strength = base.strength;
+      for (var pk in base.params) {
+        if (Object.prototype.hasOwnProperty.call(base.params, pk)) copy.params[pk] = base.params[pk];
+      }
+      settings[k] = copy;
+    }
+    return settings[k];
+  }
+
+  /* A clip's settings outlive the clip otherwise: delete a clip and its entry
+     sits in localStorage for ever, and a project with a lot of cutting would
+     grow this without limit. Only runs when the store is readable, so a save
+     during startup never throws anything away. */
+  function prune() {
+    var st;
+    try { st = window.__ncStore && window.__ncStore.getState(); } catch (e) { return; }
+    if (!st || !st.clips) return;
+    var alive = {};
+    for (var i = 0; i < st.clips.length; i++) alive[st.clips[i].id] = true;
+    for (var k in settings) {
+      if (!Object.prototype.hasOwnProperty.call(settings, k)) continue;
+      var at = k.indexOf('@');
+      if (at < 0) continue;
+      if (!alive[k.slice(at + 1)]) delete settings[k];
+    }
+  }
+
+  /* The hook that makes all of the above possible. __ncGrade is the per-frame
+     render hook and it is handed the clip; everything a painter does happens
+     inside this call, so a module-scoped id set here is readable from any
+     painter without passing anything through. Restored in a finally, and the
+     previous value is saved rather than nulled because grade hooks nest. */
+  function hookGrade() {
+    if (gradeHooked) return true;
+    var prev = window.__ncGrade;
+    if (typeof prev !== 'function') return false;
+    window.__ncGrade = function (ctx, clip) {
+      var before = paintClip;
+      paintClip = (clip && clip.id) || null;
+      try { return prev.apply(this, arguments); }
+      finally { paintClip = before; }
+    };
+    gradeHooked = true;
+    return true;
+  }
+  (function waitGrade() {
+    if (hookGrade()) return;
+    setTimeout(waitGrade, 200);
+  })();
 
   /* ---- the curve ---------------------------------------------------------
      cubic-bezier(x1,y1,x2,y2) with P0 at (0,0) and P3 at (1,1), exactly as
@@ -156,7 +279,7 @@
       var real = fx.PAINT[id];
       if (typeof real !== 'function') return;
       fx.PAINT[id] = function (g, w, h, v) {
-        window.NC_FX_EDIT.current = cfg(id).params;
+        window.NC_FX_EDIT.current = cfgFor(id, paintClip).params;
         return real(g, w, h, v);
       };
     });
@@ -165,7 +288,7 @@
       var real = fx.TPAINT[id];
       if (typeof real !== 'function') return;
       fx.TPAINT[id] = function (g, w, h, p, dir) {
-        var c = cfg(id);
+        var c = cfgFor(id, paintClip);
         window.NC_FX_EDIT.current = c.params;
         /* Delay first, then easing. The delay eats the front of the run, so
            a 0.2 delay means nothing happens for the first fifth and the
@@ -188,7 +311,8 @@
      the fallback and behaves exactly as it did before. */
   function param(id, key, fallback) {
     try {
-      var p = settings[id] && settings[id].params;
+      var c = cfgFor(id, paintClip);
+      var p = c && c.params;
       if (p && typeof p[key] === 'number') return p[key];
     } catch (e) {}
     return fallback;
@@ -196,7 +320,8 @@
 
   window.NC_FX_EDIT = {
     PARAMS: PARAMS, CURVES: CURVES,
-    cfg: cfg, save: save, param: param, solve: solve, wrap: wrap,
+    cfg: cfg, cfgFor: cfgFor, cfgForEdit: cfgForEdit, keyFor: keyFor,
+    save: save, param: param, solve: solve, wrap: wrap,
     current: {}
   };
 
@@ -339,7 +464,9 @@
     var ui = window.NC_TRANS_UI;
     var meta = (kind === 'tr' ? ui.list[id] : ui.effects[id]) || [id, '', 0, ''];
     var label = meta[0], blurb = kind === 'tr' ? meta[3] : meta[1];
-    var c = cfg(id);
+    /* Per clip when one is selected. Every handler below mutates this object
+       and calls save(), so scoping this single lookup scopes all of them. */
+    var c = cfgForEdit(id);
 
     var box = document.createElement('div');
     box.className = 'ncfe';
@@ -492,7 +619,7 @@
     } catch (e) {}
     if (!clip) { alert('Pick a clip on the timeline first.'); return false; }
     try { if (typeof st.pushHistory === 'function') st.pushHistory(); } catch (e) {}
-    var c = cfg(id);
+    var c = cfgForEdit(id);
     try {
       if (kind === 'tr') {
         st.setClipTransition(clip.id, 'out', { type: id, duration: c.duration });
