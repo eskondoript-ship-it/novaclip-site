@@ -3021,7 +3021,7 @@
    the clip instead of four times it. It also caps how long a frame may wait
    on its sources — without that, one stale <video> left half-loaded by an
    earlier export made a two-effect export hang for ever. */
-const CACHE = 'novaclip-v192';
+const CACHE = 'novaclip-v193';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3083,6 +3083,7 @@ const SHELL = [
      of the few panels on the site that is fully correct with no connection at
      all, and leaving it out would blank it for no reason. */
   '/creator-level.js',
+  '/studio-channels.js',
   /* The grade and its panels. Colour correction is arithmetic on the frame
      already in memory, so unlike the photo picker this one works offline. */
   '/grade.js',

@@ -1983,6 +1983,9 @@ function signedInUI(name) {
       auth.signOut().then(() => location.reload());
     };
   }
+  /* The channel switcher sits in the dashboard header, which survives
+     connectrow being hidden. Redraw it whenever the signed-in state changes. */
+  if (window.NC_CH) NC_CH.render();
 }
 
 function ytProvider() {
@@ -2036,8 +2039,30 @@ async function afterSignIn(result) {
     return;
   }
   if (data.items && data.items.length) {
-    rememberChannel(data.items[0].snippet.title);
-    signedInUI(data.items[0].snippet.title);
+    const got = data.items[0];
+    rememberChannel(got.snippet.title);
+    /* Remember it by id, so a second channel becomes a name in the switcher's
+       list rather than something to go and find again. */
+    if (window.NC_CH) NC_CH.seen(got);
+
+    signedInUI(got.snippet.title);
+
+    /* A switch was asked for by id. Google decides what its picker offers and
+       which account the person taps, so the channel that comes back is not
+       necessarily the one that was requested — say so rather than drawing one
+       channel's numbers under another channel's name.
+
+       After signedInUI, not before: that function clears the message box. */
+    const want = window.__ncWantChannel;
+    window.__ncWantChannel = null;
+    if (want && got.id !== want) {
+      const wanted = (window.NC_CH ? NC_CH.list() : []).filter(c => c.id === want)[0];
+      note('Google signed you in to <b>' + String(got.snippet.title).replace(/</g, '&lt;') + '</b>' +
+           (wanted ? ', not ' + String(wanted.title).replace(/</g, '&lt;') : '') +
+           '. The dashboard below is for that channel. To get the other one, switch channels again and ' +
+           'pick it on Google’s screen — if it is not offered there, it is on a different Google account.');
+    }
+
     /* The token is in localStorage now, so the page's own loader can pick it up
        and draw the dashboard — no reload, and no second copy of that logic. */
     if (typeof boot === 'function') boot();
@@ -2078,12 +2103,84 @@ window.ncReconnect = function () {
   connect();
 };
 
+/* CHANGING CHANNEL.
+   The switcher chip lives in studio-channels.js, which can run on any page;
+   this is the half that can only live here, because the auth objects do.
+
+   An access token belongs to the identity that was picked on Google's screen,
+   so there is no way to re-aim one at another channel — the switch has to go
+   back through Google. Two things make that work rather than loop:
+
+     prompt=select_account  — show the account/channel picker. Without it
+       Google re-issues for whoever is already signed in, which is exactly
+       what made the old sign-out-and-back-in dance land on the same channel
+       every time.
+     prompt=consent         — and show the permission screen, which is where
+       a brand channel is actually chosen for a YouTube scope.
+
+   The stored token is dropped first so nothing on the page keeps drawing the
+   old channel's numbers while Google is open. auth.signOut() is deliberately
+   NOT called: the onAuthStateChanged handler below reloads the page on a null
+   user, which would close the popup flow before it finished. */
+window.ncSwitchChannel = async function (wantId) {
+  window.__ncWantChannel = wantId || null;
+  try { localStorage.removeItem('nc_yt'); } catch (e) {}
+  tok = null;
+  const row = document.getElementById('connectrow');
+  if (row) row.style.display = 'block';
+  note('Opening Google so you can pick the channel…', true);
+  const p = ytProvider();
+  p.setCustomParameters({ prompt: 'select_account consent' });
+  try {
+    await afterSignIn(await signInWithPopup(auth, p));
+  } catch (e) {
+    if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) {
+      note('Pop-up blocked — sending you to Google instead…', true);
+      try { await signInWithRedirect(auth, p); return; } catch (e2) { note(explainAuth(e2)); return; }
+    }
+    note(explainAuth(e));
+  }
+};
+
+/* Arrived from the switcher on another Studio page, which cannot do the auth
+   itself and so passes the wanted channel in the URL. Strip it from the
+   address bar first: left there, a reload re-opens Google's picker. */
+(function () {
+  let want = null;
+  try { want = new URLSearchParams(location.search).get('switch'); } catch (e) {}
+  if (want === null) return;
+  try {
+    const u = new URL(location.href);
+    u.searchParams.delete('switch');
+    history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+  } catch (e) {}
+  window.ncSwitchChannel(want);
+})();
+
 onAuthStateChanged(auth, (user) => {
-  if (user) { signedInUI(user.displayName); return; }
+  if (user) {
+    try { sessionStorage.removeItem('nc_authreload'); } catch (e) {}
+    signedInUI(user.displayName);
+    return;
+  }
   /* Null means the session ended — signed out here, signed out in another
      tab, or expired. The sign-out on this page reloads, so this mostly
      catches the other two; without it they leave a signed-in panel over a
-     session that no longer exists. */
+     session that no longer exists.
+
+     ONE RELOAD, NOT A LOOP. This fired unconditionally, and nothing about
+     reloading makes the next null any different: a tab whose Firebase session
+     had gone while nc_yt was still in localStorage reloaded, saw null again,
+     and reloaded again, for ever. Found while testing the channel switcher,
+     and it is reachable in normal use — sign out in a second tab and come
+     back to this one. The flag is per tab and is cleared the moment a user
+     does turn up, so a genuine sign-out still gets its one reload. */
+  let looped = false;
+  try {
+    looped = !!sessionStorage.getItem('nc_authreload');
+    sessionStorage.setItem('nc_authreload', '1');
+  } catch (e) {}
+  if (looped) return;
   try { location.reload(); } catch (e) {}
 });
 // coming back from the redirect fallback
@@ -2094,6 +2191,10 @@ getRedirectResult(auth).then(r => { if (r) afterSignIn(r); }).catch(e => note(ex
      dashboard both read. -->
 <script src='creator-level.js'></script>
 <script src='rank.js'></script>
+<!-- The channel switcher. Reads localStorage only, so it draws itself whether
+     or not the sign-in module above has finished; analytics.html supplies the
+     one thing it cannot do for itself, window.ncSwitchChannel. -->
+<script src='studio-channels.js'></script>
 <!-- The NexusStream panels. Reads nothing on its own — the page hands it the
      channel through NX.refresh(), so the order relative to nova.js does not
      matter, but it must come after the page script that defines yta(). -->
