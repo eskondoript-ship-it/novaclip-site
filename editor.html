@@ -2172,6 +2172,10 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
 <!-- A font and a 1-100 size in the Text panel. The clip schema has carried
      fontFamily and fontSize all along; this is the control for them. -->
 <script src='editor-text-style.js' defer></script>
+<!-- Edits: the split-screen comparison the genre is built on. After
+     editor-rail.js is irrelevant — the rail finds its pill by class whenever
+     it appears — but it needs the store, so defer like the rest. -->
+<script src='editor-edits.js' defer></script>
 
 <!-- THE FX LIBRARY MOVES INTO THE RIGHT-HAND PANEL, the one that otherwise
      reads "nothing selected". It does NOT reparent anything — the panel stays

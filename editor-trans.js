@@ -125,9 +125,22 @@
     fisheye: 'Warp', kaleid: 'Warp', twirl: 'Warp', frost: 'Warp',
     glassblocks: 'Warp', tunnel: 'Warp', mirror4: 'Warp', polar: 'Warp',
     /* smear */
-    radialblur: 'Blur', motionblur: 'Blur', echo: 'Blur'
+    radialblur: 'Blur', motionblur: 'Blur', echo: 'Blur',
+    /* THE EDIT LOOK. Asked for with a reference video — the split-screen
+       comparison format. These ten are the ones that format is actually built
+       out of, and the library had 51 effects without them: grain and shake
+       existed only as transitions, which is no use when the whole clip is
+       meant to shake, and vignette, bars, a flat RGB split, a punch-in and
+       crushed blacks were not here in any form. Their own category because
+       scattering them through Light, Colour and Warp is how somebody making
+       one of these ends up hunting six tabs for a look that is one idea. */
+    vignette: 'Edits', grain: 'Edits', shake: 'Edits', punch: 'Edits',
+    bars: 'Edits', rgbsplit: 'Edits', sharpen: 'Edits', tealorange: 'Edits',
+    crushblacks: 'Edits', flicker: 'Edits'
   };
-  var FX_CATS = ['All', 'Light', 'Lens', 'Colour', 'Retro', 'Art', 'Warp', 'Blur', 'Glitch'];
+  /* Edits sits second, right after All: it is the reason most people open
+     this panel now, and a tab nobody scrolls to is a tab nobody finds. */
+  var FX_CATS = ['All', 'Edits', 'Light', 'Lens', 'Colour', 'Retro', 'Art', 'Warp', 'Blur', 'Glitch'];
 
   /* THE EFFECTS HAVE THE SAME PROBLEM THE TRANSITIONS HAD. The editor's
      Effects panel is drawn by the bundle from a list inside the bundle, so the

@@ -50,7 +50,11 @@
     { sel: '.nclk-btn',  label: 'Looks',    key: 'ui_rail_looks',
       icon: 'M12 3a9 9 0 1 0 9 9 4 4 0 0 1-4-4h-1a4 4 0 0 1-4-4V3z' },
     { sel: '.nccap-btn', label: 'Captions', key: 'ui_rail_cc',
-      icon: 'M3 5h18v14H3zM7 10h4M7 14h7M15 10h2' }
+      icon: 'M3 5h18v14H3zM7 10h4M7 14h7M15 10h2' },
+    /* The split-screen comparison builder. Its pill is created off screen by
+       editor-edits.js precisely so this rail is where it shows up. */
+    { sel: '.nced-btn', label: 'Edits', key: 'ui_rail_edits',
+      icon: 'M4 4h16v7H4zM4 13h16v7H4zM9 7.5h6M9 16.5h6' }
   ];
   /* Not rail items: one rides the Transitions entry, one rides the timeline. */
   var FX_SEL = '.nctr-btn';

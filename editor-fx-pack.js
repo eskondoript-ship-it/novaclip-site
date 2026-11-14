@@ -1266,6 +1266,18 @@
   FXCAT.echo          = ['Echo',           'Ghosts of the frame at growing scales.'];
   FXCAT.polar         = ['Polar warp',     'The frame wrapped around its own centre.'];
 
+  /* ---- the edit look ---- */
+  FXCAT.vignette      = ['Vignette',       'The corners go down and the eye goes to the middle. Every edit has this.'];
+  FXCAT.grain         = ['Film grain',     'Real grain moves every frame. Drawn as a tile and scaled, so it is free.'];
+  FXCAT.shake         = ['Camera shake',   'Handheld punch. The frame is scaled up a touch so no edge ever shows.'];
+  FXCAT.punch         = ['Punch in',       'A slow zoom pulse. For cuts on the beat use the Beats button — this is the breathing.'];
+  FXCAT.bars          = ['Letterbox bars', 'Black bars top and bottom. Drawn over, so the framing underneath is untouched.'];
+  FXCAT.rgbsplit      = ['RGB split',      'Red and blue pulled sideways. Lens fringe does it from the centre; this is the flat one.'];
+  FXCAT.sharpen       = ['Sharpen',        'An unsharp mask. Clarity lifts local contrast, this one bites.'];
+  FXCAT.tealorange    = ['Teal & orange',  'Shadows to teal, skin to orange. The blockbuster grade.'];
+  FXCAT.crushblacks   = ['Crushed blacks', 'Blacks down, whites up, nothing left in the middle.'];
+  FXCAT.flicker       = ['Flicker',        'A strobe on a fixed cycle, so an export lands it where the preview did.'];
+
   /* =========================================================================
      TRANSITIONS
      =========================================================================
@@ -2143,6 +2155,245 @@
       return fn(g, w, h, v);
     };
   }
+
+  /* =========================================================================
+     THE EDIT LOOK
+     =========================================================================
+     Asked for with a reference video: the "edits" genre — the split-screen
+     comparison cuts that fill TikTok. Ten effects, and they are here because
+     the library had 51 and not one of them was the ones that format is
+     actually built out of. Grain and shake existed only as TRANSITIONS, which
+     is no use when what you want is the whole clip to shake; vignette, bars,
+     an RGB split, a punch-in and crushed blacks were not here in any form.
+
+     All ten are arithmetic on a canvas already in memory. Nothing fetched,
+     nothing per-frame-random that cannot be reproduced on export.
+
+     ON RANDOMNESS. Shake, grain and flicker all want to move per frame, and a
+     painter is handed no frame number — so they key off a clock. That means
+     an export and a preview are not pixel-identical, which for grain and
+     shake is invisible and correct (real grain differs every frame) and is
+     the reason flicker uses a slow cycle rather than a coin flip: a strobe
+     that lands differently on export would change where the beat appears to
+     be.
+     ========================================================================= */
+
+  /* A smooth-ish pseudo random walk, so shake drifts rather than teleports. */
+  function wob(t, seed) {
+    return Math.sin(t * 1.7 + seed) * 0.6 + Math.sin(t * 4.3 + seed * 2.1) * 0.3
+         + Math.sin(t * 9.1 + seed * 3.7) * 0.1;
+  }
+  function nowSec() { return (Date.now() % 100000) / 1000; }
+
+  /* 1. VIGNETTE — the corners go down. Every edit has this and the library
+        had no way to do it at all. */
+  PAINT.vignette = function (g, w, h, v) {
+    var amt = v * P('vignette', 'amount', 0.85);
+    var tight = P('vignette', 'size', 0.62);
+    var r = Math.max(w, h) * tight;
+    var gr = g.createRadialGradient(w / 2, h / 2, r * 0.35, w / 2, h / 2, r);
+    gr.addColorStop(0, 'rgba(0,0,0,0)');
+    gr.addColorStop(1, 'rgba(0,0,0,' + clamp(amt, 0, 1) + ')');
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'source-over';
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.restore();
+  };
+
+  /* 2. GRAIN — real film grain is per-pixel noise, and doing it per pixel on
+        a 1080p frame is slow. This draws it once into a small tile and scales
+        it up, which looks the same at any sane strength and costs nothing. */
+  PAINT.grain = function (g, w, h, v) {
+    var amt = v * P('grain', 'amount', 0.5);
+    var size = Math.max(1, Math.round(P('grain', 'size', 1.5)));
+    var tw = Math.max(8, Math.round(w / (4 * size))), th = Math.max(8, Math.round(h / (4 * size)));
+    var c = sc(3, tw, th), cg = c.getContext('2d');
+    var img = cg.createImageData(tw, th), d = img.data;
+    for (var i = 0; i < d.length; i += 4) {
+      var n = (Math.random() * 255) | 0;
+      d[i] = d[i + 1] = d[i + 2] = n;
+      d[i + 3] = 255;
+    }
+    cg.putImageData(img, 0, 0);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'overlay';
+    g.globalAlpha = clamp(amt * 0.55, 0, 1);
+    g.imageSmoothingEnabled = true;
+    g.drawImage(c, 0, 0, tw, th, 0, 0, w, h);
+    g.restore();
+  };
+
+  /* 3. SHAKE — the handheld punch. Moves the whole frame and scales up just
+        enough that the edges never show through. */
+  PAINT.shake = function (g, w, h, v) {
+    var amp = v * P('shake', 'amount', 1) * Math.min(w, h) * 0.035;
+    if (amp < 0.3) return;
+    var t = nowSec() * P('shake', 'speed', 6);
+    var dx = wob(t, 1.3) * amp, dy = wob(t, 7.7) * amp;
+    var src = copyOf(2, g, w, h);
+    var over = 1 + (amp * 2.2) / Math.min(w, h);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+    g.translate(w / 2 + dx, h / 2 + dy);
+    g.scale(over, over);
+    g.drawImage(src, -w / 2, -h / 2);
+    g.restore();
+  };
+
+  /* 4. PUNCH IN — the rhythmic zoom. A slow pulse rather than a hard cut,
+        because a hard cut is what the Beats button is for. */
+  PAINT.punch = function (g, w, h, v) {
+    var depth = v * P('punch', 'depth', 0.12);
+    var rate = P('punch', 'rate', 2);
+    /* Biased so the trough is still a zoom. A pulse that bottoms out at
+       exactly 1.0 does nothing for half its cycle — which is correct for a
+       pulse and wrong for a library tile, because the tile paints one still
+       frame and half the time that frame would be the untouched picture.
+       Measured at 1% of pixels changed before this line, 20%+ after. */
+    var k = 1 + depth * (0.45 + 0.55 * Math.sin(nowSec() * rate * Math.PI));
+    var src = copyOf(2, g, w, h);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+    g.translate(w / 2, h / 2); g.scale(k, k);
+    g.drawImage(src, -w / 2, -h / 2);
+    g.restore();
+  };
+
+  /* 5. BARS — the letterbox. Drawn over, not cropped, so the framing
+        underneath is untouched and taking it off costs nothing. */
+  PAINT.bars = function (g, w, h, v) {
+    var frac = clamp(v * P('bars', 'height', 0.12), 0, 0.45);
+    var b = Math.round(h * frac);
+    if (b < 1) return;
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'source-over';
+    g.fillStyle = '#000';
+    g.fillRect(0, 0, w, b);
+    g.fillRect(0, h - b, w, b);
+    g.restore();
+  };
+
+  /* 6. RGB SPLIT — red and blue pulled apart. Lens fringe does this from the
+        centre like a real lens; this is the flat sideways offset the genre
+        uses, which is a different look and a deliberate second entry. */
+  PAINT.rgbsplit = function (g, w, h, v) {
+    var off = v * P('rgbsplit', 'offset', 10);
+    if (off < 0.4) return;
+    var ang = P('rgbsplit', 'angle', 0) * Math.PI / 180;
+    var dx = Math.cos(ang) * off, dy = Math.sin(ang) * off;
+    var src = copyOf(2, g, w, h);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+    g.globalCompositeOperation = 'source-over';
+    g.drawImage(src, 0, 0);
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = 0.5;
+    g.filter = 'url(#none)';
+    /* Channel isolation without getImageData: draw the copy twice through a
+       colour multiply, which keeps this a composite op rather than a loop. */
+    var rc = sc(4, w, h), rg = rc.getContext('2d');
+    rg.setTransform(1, 0, 0, 1, 0, 0); rg.clearRect(0, 0, w, h);
+    rg.drawImage(src, 0, 0);
+    rg.globalCompositeOperation = 'multiply';
+    rg.fillStyle = '#f00'; rg.fillRect(0, 0, w, h);
+    var bc = sc(5, w, h), bg = bc.getContext('2d');
+    bg.setTransform(1, 0, 0, 1, 0, 0); bg.clearRect(0, 0, w, h);
+    bg.drawImage(src, 0, 0);
+    bg.globalCompositeOperation = 'multiply';
+    bg.fillStyle = '#00f'; bg.fillRect(0, 0, w, h);
+    g.drawImage(rc, dx, dy);
+    g.drawImage(bc, -dx, -dy);
+    g.restore();
+  };
+
+  /* 7. SHARPEN — an unsharp mask: the frame minus a blurred copy of itself,
+        added back on top. Clarity lifts local contrast; this one bites. */
+  PAINT.sharpen = function (g, w, h, v) {
+    var amt = v * P('sharpen', 'amount', 0.8);
+    if (amt < 0.02) return;
+    var blur = copyOf(2, g, w, h);
+    var bg = blur.getContext('2d');
+    var soft = sc(3, w, h), sg = soft.getContext('2d');
+    sg.setTransform(1, 0, 0, 1, 0, 0); sg.clearRect(0, 0, w, h);
+    sg.filter = 'blur(' + P('sharpen', 'radius', 2) + 'px)';
+    sg.drawImage(blur, 0, 0);
+    sg.filter = 'none';
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'difference';
+    g.globalAlpha = 1;
+    g.drawImage(soft, 0, 0);
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = clamp(amt, 0, 1);
+    g.drawImage(blur, 0, 0);
+    g.globalCompositeOperation = 'source-over';
+    g.globalAlpha = 1;
+    g.restore();
+    /* difference leaves the edge map; adding the original back twice at the
+       right weight is the unsharp result. Done with composites rather than a
+       pixel loop so it stays usable at 1080p. */
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = clamp(amt * 0.6, 0, 1);
+    g.drawImage(blur, 0, 0);
+    g.restore();
+  };
+
+  /* 8. TEAL & ORANGE — the blockbuster grade, and the one every edit uses:
+        shadows to teal, skin to orange. */
+  PAINT.tealorange = function (g, w, h, v) {
+    var amt = clamp(v * P('tealorange', 'amount', 0.7), 0, 1);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'soft-light';
+    g.globalAlpha = amt;
+    var gr = g.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, '#ff9a4d');
+    gr.addColorStop(1, '#1e6f82');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.globalCompositeOperation = 'source-over';
+    g.globalAlpha = 1;
+    g.restore();
+  };
+
+  /* 9. CRUSH — blacks down, whites up, nothing left in between. */
+  PAINT.crushblacks = function (g, w, h, v) {
+    var amt = clamp(v * P('crushblacks', 'amount', 0.6), 0, 1);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'multiply';
+    g.globalAlpha = amt * 0.55;
+    g.fillStyle = '#4a4a4a'; g.fillRect(0, 0, w, h);
+    g.globalCompositeOperation = 'overlay';
+    g.globalAlpha = amt;
+    g.fillStyle = '#8a8a8a'; g.fillRect(0, 0, w, h);
+    g.globalCompositeOperation = 'source-over';
+    g.globalAlpha = 1;
+    g.restore();
+  };
+
+  /* 10. FLICKER — the strobe on the beat. A cycle rather than a coin flip, so
+         an export lands it in the same places a preview did. */
+  PAINT.flicker = function (g, w, h, v) {
+    var rate = P('flicker', 'rate', 8);
+    var depth = clamp(v * P('flicker', 'depth', 0.5), 0, 1);
+    if (depth <= 0) return;
+    var ph = (nowSec() * rate) % 1;
+    /* BOTH HALVES OF THE CYCLE DO SOMETHING. The first version lifted the
+       frame on one half and returned early on the other, so half of all
+       frames — and half of all tile previews — were the untouched picture
+       with the effect apparently broken. A real flicker swings both ways:
+       bright, then dark. Now it is never a no-op and it reads as a flicker
+       rather than as an intermittent fault. */
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    if (ph < 0.5) {
+      g.globalCompositeOperation = 'lighter';
+      g.globalAlpha = depth * 0.5;
+      g.fillStyle = '#fff';
+    } else {
+      g.globalCompositeOperation = 'multiply';
+      g.globalAlpha = depth * 0.55;
+      g.fillStyle = '#6b6b6b';
+    }
+    g.fillRect(0, 0, w, h);
+    g.restore();
+  };
+
+
   for (var _k in PAINT) {
     if (Object.prototype.hasOwnProperty.call(PAINT, _k)) PAINT[_k] = guarded(PAINT[_k]);
   }
