@@ -53,7 +53,7 @@
 
    WHO GETS IT
 
-   Free exports only. ncProHas('tools') — Kids' Tools Upgrade or the Family
+   Free exports only. ncProHas('tools') — Creator Tools or the Family
    Bundle — turns it off, which is the point: it is the reason to upgrade. A
    paying customer gets a clean file with nothing hidden in it either, because
    a site selling "nothing is uploaded, no adverts" cannot quietly stamp an

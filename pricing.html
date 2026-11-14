@@ -491,6 +491,13 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
         <li data-t='f4'>One-tap report to YouTube's flow</li>
         <li data-t='f5'>No adverts anywhere &mdash; not for your child, and not for you</li>
               <li data-t='f_shield'>Content blocking on YouTube, TikTok, Instagram and Twitch &mdash; nine categories, your own allow and block lists, and a log of what it stopped</li>
+        <!-- Both of these are panels that already exist in parent.html: the
+             screen-time log ncScreenLog() fills, and the AI chat list. They
+             were built and never advertised, which is the opposite fault to
+             the game skins and just as easy to miss. -->
+        <li data-t='f_screen'>Screen time day by day &mdash; and the breaks it has already made them take</li>
+        <li data-t='f_chats'>Every question they have asked the AI tutors</li>
+        <li data-t='f_pin'>A 5-digit PIN and a security question, so it is your dashboard and not theirs</li>
         <li data-t='f_nothing'>Nothing your child makes is ever uploaded &mdash; editing happens on their own device</li>
 </ul>
       <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_trial'>Start free trial</span></button>
@@ -539,6 +546,10 @@ html.nc-co-open, body.nc-co-open { overflow: hidden !important; }
              and this line is wrong until it is changed with it. -->
         <li id='saveline' data-eur='3' data-usd='3.99' data-gbp='2.99' data-cny='19.9' data-chf='2.90' data-inr='249' data-bdt='349'>Save €3 every month</li>
         <li data-t='f12'>Priority support</li>
+        <!-- True by construction rather than by a feature flag, which is why
+             they can be promised without anything needing to enforce them. -->
+        <li data-t='f_onecard'>One payment instead of two</li>
+        <li data-t='f_cancel'>Cancel any time &mdash; both halves stop together</li>
       </ul>
       <button class='cta'><span class='ctacart' aria-hidden='true'>🛒</span><span data-t='cta_bundle'>Get the bundle</span></button>
     </div>
