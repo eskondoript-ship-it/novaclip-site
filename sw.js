@@ -3084,6 +3084,7 @@ const SHELL = [
      all, and leaving it out would blank it for no reason. */
   '/creator-level.js',
   '/studio-channels.js',
+  '/crosspost.js',
   /* The grade and its panels. Colour correction is arithmetic on the frame
      already in memory, so unlike the photo picker this one works offline. */
   '/grade.js',

@@ -342,6 +342,11 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
 <!-- Only for stash(): this page hands the plan over, the Editor carries it
      out. Not deferred, because the plan button reads window.NC_AI_EDIT. -->
 <script src='ai-edit.js'></script>
+<!-- Step 7, "Everywhere else": one caption rewritten per platform, the video
+     handed to the phone's share sheet, and a record of where it has gone.
+     Deferred, so it builds its step after the page's own script has run and
+     #s6 exists for it to insert after. -->
+<script src='crosspost.js' defer></script>
 <script>
 /* ============================================================================
    PUBLISH
@@ -407,6 +412,10 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
       return;
     }
     file = f;
+    /* crosspost.js hands this exact file to the phone's share sheet, so it
+       reads it from here rather than keeping a second copy of the drop
+       handling that would go stale the first time this one changed. */
+    window.__ncClip = f;
     const v = $('vid');
     v.src = URL.createObjectURL(f);
     v.style.display = 'block';
@@ -478,7 +487,9 @@ canvas#thumb{width:100%;max-width:420px;border-radius:14px;border:1px solid var(
     });
   }
   function openSteps() {
-    ['s3', 's4', 's5', 's6'].forEach(id => $(id).classList.remove('off'));
+    /* s7 is built by crosspost.js and is absent if that file did not load, so
+       it is reached through the optional call rather than assumed. */
+    ['s3', 's4', 's5', 's6', 's7'].forEach(id => $(id) && $(id).classList.remove('off'));
     /* The buttons that ask the AI are hidden for a job you took yourself —
        leaving them there is how a "you do it" choice quietly stops meaning
        anything. */
