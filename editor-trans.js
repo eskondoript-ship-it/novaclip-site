@@ -136,7 +136,14 @@
        one of these ends up hunting six tabs for a look that is one idea. */
     vignette: 'Edits', grain: 'Edits', shake: 'Edits', punch: 'Edits',
     bars: 'Edits', rgbsplit: 'Edits', sharpen: 'Edits', tealorange: 'Edits',
-    crushblacks: 'Edits', flicker: 'Edits'
+    crushblacks: 'Edits', flicker: 'Edits',
+    /* Ten that were in NC_FX.PAINT all along with no entry here, so the grid
+       showed 61 of 71. Sorted into the categories they belong to rather than
+       dropped in a pile. */
+    pixelate: 'Art', ascii: 'Art', dots: 'Art', halftone: 'Art', crosshatch: 'Art',
+    posterize: 'Colour',
+    scanlines: 'Retro', vintage: 'Retro',
+    mirror: 'Warp', wave: 'Warp'
   };
   /* Edits sits second, right after All: it is the reason most people open
      this panel now, and a tab nobody scrolls to is a tab nobody finds. */

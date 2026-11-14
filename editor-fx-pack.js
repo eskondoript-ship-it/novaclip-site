@@ -1278,6 +1278,29 @@
   FXCAT.crushblacks   = ['Crushed blacks', 'Blacks down, whites up, nothing left in the middle.'];
   FXCAT.flicker       = ['Flicker',        'A strobe on a fixed cycle, so an export lands it where the preview did.'];
 
+  /* ---- TEN THAT WERE ALREADY HERE AND NEVER LISTED ----------------------
+     Painters in editor-fx.js with no FXCAT entry, so the library drew 61 of
+     71. They had been reachable only from the bundle's own smaller Effects
+     panel, which is the panel this library exists to replace — so adding the
+     library meant these quietly became harder to find, not easier.
+
+     Spotted by the person using it ("i think there are more than 61
+     effects"), which is the second time a count on this page has been wrong
+     in the direction of hiding work that was already done. They carry no
+     parameters — editor-fx-edit.js deliberately does not wrap editor-fx.js's
+     painters — so each gets strength and nothing else, which is what they
+     were written against. */
+  FXCAT.pixelate      = ['Pixelate',       'Big square blocks. Turn it up to lose a face entirely.'];
+  FXCAT.posterize     = ['Posterize',      'Colour snapped to a few flat steps, like a screen print.'];
+  FXCAT.ascii         = ['ASCII',          'The frame redrawn out of text characters.'];
+  FXCAT.scanlines     = ['Scan lines',     'Dark lines across the picture, the way an old monitor photographs.'];
+  FXCAT.dots          = ['Dots',           'The image rebuilt as a grid of dots that grow with brightness.'];
+  FXCAT.halftone      = ['Halftone',       'Print-shop dots at an angle, the newspaper look.'];
+  FXCAT.crosshatch    = ['Crosshatch',     'Shaded with crossing pen strokes.'];
+  FXCAT.mirror        = ['Mirror',         'One half of the frame reflected onto the other.'];
+  FXCAT.wave          = ['Wave',           'The picture pushed into a ripple, like heat off a road.'];
+  FXCAT.vintage       = ['Vintage',        'Warm, faded and soft: old photograph rather than old film.'];
+
   /* =========================================================================
      TRANSITIONS
      =========================================================================
@@ -2183,7 +2206,30 @@
     return Math.sin(t * 1.7 + seed) * 0.6 + Math.sin(t * 4.3 + seed * 2.1) * 0.3
          + Math.sin(t * 9.1 + seed * 3.7) * 0.1;
   }
-  function nowSec() { return (Date.now() % 100000) / 1000; }
+  /* performance.now, NOT Date.now, and the difference is the whole of
+     "make these work on export too".
+
+     The offline exporter replaces performance.now with a virtual clock —
+     `virtualNow() { return baseReal + (frames * 1000 / fps); }` — so it ticks
+     exactly one frame per encoded frame however fast or slow the encoding
+     actually runs. Anything reading it animates at the same rate in the
+     export as in the preview, by construction.
+
+     Date.now is not replaced and cannot be. Reading it meant shake, punch and
+     flicker ran on wall-clock time while the exporter rendered on its own:
+     a ten-second clip encoded in four seconds would have shaken at two and a
+     half times the speed it was set up at, and a slow render would have
+     crawled. The frames were never missing — the effects did apply, because
+     the export records the same canvas the editor draws — they were simply
+     animating to a different clock than the one the person watched.
+
+     editor-fx.js already used performance.now for its own animated painters.
+     This was the odd one out. */
+  function nowSec() {
+    var t;
+    try { t = performance.now(); } catch (e) { t = Date.now(); }
+    return (t % 100000) / 1000;
+  }
 
   /* 1. VIGNETTE — the corners go down. Every edit has this and the library
         had no way to do it at all. */
