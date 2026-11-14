@@ -144,6 +144,12 @@ h1 .grad { background: linear-gradient(90deg, var(--nc-mag,#F72585), var(--nc-vi
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px; }
 .chartcard { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px; }
+/* The sized parent every maintainAspectRatio:false chart has to have. Without
+   it the canvas and its card grow off each other — see the comment on the
+   performance cards in the markup. */
+.cwrap { position: relative; height: 230px; min-width: 0; }
+.cwrap.wide { height: 260px; }
+@media (max-width: 640px) { .cwrap, .cwrap.wide { height: 200px; } }
 
 /* ---- the year chart at the top ---- */
 #yearwrap { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
@@ -579,7 +585,10 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
          is written by the same function that fills the four stat tiles above,
          so by the time the dashboard is shown it is always there. -->
     <div id='ncCreatorLevel' style='margin-bottom:16px'></div>
-    <div class='comprow'>
+    <!-- id so the tab switcher can move it: the toggle controls #dashgrid and
+         nothing else, and a toggle left on screen in a view where that grid is
+         hidden is a switch that visibly does nothing. -->
+    <div class='comprow' id='comprow'>
       <label class='switch'>
         <input type='checkbox' id='compToggle' checked>
         <span class='slider'></span>
@@ -635,11 +644,22 @@ html[data-theme="light"] .perfnote.warn { color: #8A4B00; font-weight: 600; }
       <div class='perfnote' id='perfNote'></div>
       <div class='kpis' id='perfKpis'></div>
       <div class='chartgrid'>
-        <div class='chartcard wide'><h4>Views &amp; watch time by day</h4><canvas id='p_daily' height='110'></canvas></div>
-        <div class='chartcard'><h4>Where viewers come from</h4><canvas id='p_traffic' height='210'></canvas></div>
-        <div class='chartcard'><h4>Top countries</h4><canvas id='p_geo' height='210'></canvas></div>
-        <div class='chartcard'><h4>Who is watching</h4><canvas id='p_demo' height='210'></canvas></div>
-        <div class='chartcard'><h4>Subscribers gained &amp; lost</h4><canvas id='p_subs' height='210'></canvas></div>
+        <!-- EVERY ONE OF THESE NEEDS THE SIZED WRAPPER, AND HERE IS WHY.
+             perfChart() sets maintainAspectRatio:false, which makes Chart.js
+             ignore the canvas height attribute and size to the parent instead.
+             .chartcard has no height, so the parent was content-sized, the
+             canvas grew, the card grew with it, and the loop settled at about
+             1,800px PER CARD. Measured on a connected channel: #perfbox alone
+             was 9,442px of a 12,675px page. The height attributes below are
+             left on as the no-CSS fallback, but they are not what decides.
+
+             The retention panel a few lines down already had this wrapper and
+             was the only chart on the page at a sane height. -->
+        <div class='chartcard wide'><h4>Views &amp; watch time by day</h4><div class='cwrap wide'><canvas id='p_daily' height='110'></canvas></div></div>
+        <div class='chartcard'><h4>Where viewers come from</h4><div class='cwrap'><canvas id='p_traffic' height='210'></canvas></div></div>
+        <div class='chartcard'><h4>Top countries</h4><div class='cwrap'><canvas id='p_geo' height='210'></canvas></div></div>
+        <div class='chartcard'><h4>Who is watching</h4><div class='cwrap'><canvas id='p_demo' height='210'></canvas></div></div>
+        <div class='chartcard'><h4>Subscribers gained &amp; lost</h4><div class='cwrap'><canvas id='p_subs' height='210'></canvas></div></div>
       </div>
       <div class='moneybox' id='moneyBox'></div>
     </div>
@@ -1240,13 +1260,20 @@ async function renderPerformance() {
   perfSay('Straight from your channel, for the ' + perfDays + ' days ending yesterday. Today is left out because it is still counting.');
 
   const [views, mins, avgDur, avgPct, gained, lost] = totals;
+  /* kpi(number, label) — in that order. All six of these had the arguments
+     the other way round, so the main performance row rendered the WORD in
+     1.9rem gradient type and the actual figure in 0.72rem uppercase grey
+     underneath it. It only shows on a connected channel, which is why it
+     survived: "Views" was the headline and 22.4K was the caption. The #kpis
+     row further down this file always passed them correctly, which is what
+     made the two rows look like different components. */
   document.getElementById('perfKpis').innerHTML =
-    kpi('Views', nfmt(views)) +
-    kpi('Watch time', nfmt(Math.round(mins / 60)) + ' h') +
-    kpi('Avg view', hms(avgDur)) +
-    kpi('Avg % watched', (avgPct || 0).toFixed(1) + '%') +
-    kpi('Subs gained', '+' + nfmt(gained)) +
-    kpi('Net subs', (gained - lost >= 0 ? '+' : '') + nfmt(gained - lost));
+    kpi(nfmt(views), 'Views') +
+    kpi(nfmt(Math.round(mins / 60)) + ' h', 'Watch time') +
+    kpi(hms(avgDur), 'Avg view') +
+    kpi((avgPct || 0).toFixed(1) + '%', 'Avg % watched') +
+    kpi('+' + nfmt(gained), 'Subs gained') +
+    kpi((gained - lost >= 0 ? '+' : '') + nfmt(gained - lost), 'Net subs');
 
   /* Same six numbers, up in the telemetry row. Passed rather than refetched:
      this call cost a request and there is no reason to spend a second one. */

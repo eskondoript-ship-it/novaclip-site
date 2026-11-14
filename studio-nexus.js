@@ -210,11 +210,34 @@
      with its own heading, and a tab that made a section further up the page
      appear and disappear would read as the page jumping rather than as a
      filter. It stays put in every view. */
-  var PANELS = ['dashgrid', 'perfbox', 'reviewwrap', 'nxRetainBox', 'nxOptimize'];
+  var PANELS = ['comprow', 'kpis', 'dashgrid', 'perfbox', 'reviewwrap', 'nxRetainBox', 'nxOptimize'];
   var VIEWS = {
-    overview:    ['dashgrid', 'perfbox', 'reviewwrap'],
+    /* OVERVIEW IS ONE PANEL, NOT THREE.
+
+       It used to list dashgrid, perfbox AND reviewwrap — which is nearly
+       everything on the page, so the default view was the whole stack and the
+       other four tabs only ever took things away. Tabs that do not divide
+       anything are decoration, and the page they left behind measured 12,675px
+       on a connected channel.
+
+       What stays is perfbox: the YouTube Analytics API panels — watch time by
+       day, where viewers come from, countries, who is watching, subscribers
+       gained and lost. That is the thing the telemetry tiles above are a
+       summary OF, so the tiles and the view beneath them now agree.
+
+       What left had somewhere to go. dashgrid is the you-vs-them comparison
+       and Competitors is literally its tab; reviewwrap is the ranked-videos
+       panel and that is Videos. Neither is hidden, both are one press away,
+       and nothing is refetched by pressing — select() shows and hides panels
+       that are already built. */
+    overview:    ['perfbox'],
     optimize:    ['nxOptimize'],               // every upload as a card, with its scores
-    competitors: ['dashgrid'],                 // the you-vs-them comparison charts
+    /* kpis and comprow travel with dashgrid. kpis prints subscribers, total
+       views, videos and average views — the same four numbers as the headline
+       tiles at the top of the page, so in Overview it was a second copy of
+       them; drawAll() fills it and the grid together. comprow is the compare
+       toggle, which controls that grid and nothing else. */
+    competitors: ['comprow', 'kpis', 'dashgrid'],
     retention:   ['nxRetainBox', 'perfbox'],
     library:     ['reviewwrap']                // the review and the ranked videos
   };

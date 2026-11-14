@@ -3064,7 +3064,30 @@
    Hiding the canvas was not enough and measuring said so: .yearbody is a
    two-column grid, so the empty chart column still stretched to 202px beside
    the legend. Same hole, canvas removed. The column goes. */
-const CACHE = 'novaclip-v195';
+/* v196: the connected dashboard, which nobody developing this had ever been
+   able to look at. Stubbing the two Google APIs at the fetch boundary showed
+   a 12,675px page, and three separate faults in it:
+
+   1. perfChart() sets maintainAspectRatio:false, which makes Chart.js ignore
+      the canvas height attribute and size to the parent instead. .chartcard
+      has no height, so canvas and card grew off each other and settled at
+      about 1,800px EACH. #perfbox alone was 9,442px. The retention panel in
+      the same file already had the sized wrapper that prevents this and was
+      the only chart on the page at a sane height; the other five have it now.
+      9,442px -> 1,924px.
+   2. The Overview tab listed dashgrid, perfbox AND reviewwrap — nearly the
+      whole page — so the default view was the entire stack and the other four
+      tabs only ever took things away. Overview is the Analytics panels now,
+      which is what the telemetry tiles are a summary of. dashgrid goes to
+      Competitors, where its own tab already was, and takes the compare toggle
+      and the duplicate KPI row with it; reviewwrap goes to Videos.
+   3. kpi() takes (number, label) and all six performance calls passed
+      (label, number), so the main row rendered the WORD in 1.9rem gradient
+      type and the figure in 0.72rem grey underneath. Only visible connected,
+      which is why it survived.
+
+   12,675px -> 3,420px, and the charts survive a round trip through the tabs. */
+const CACHE = 'novaclip-v196';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
