@@ -465,3 +465,210 @@ html[data-theme='light'] #dash {
   .nxo-title { font-size: 0.84rem; }
 }
 @media print { .nxo-bar { display: none; } .nxo-card:hover { transform: none; } }
+
+/* ==========================================================================
+   THE REST OF THE STUDIO
+   ==========================================================================
+   Asked for: "rebuild the entire studio with the theme I gave before".
+
+   The skin above only ever reached #dash — the analytics dashboard — and the
+   .nx-* panels built for it. Everything else a person opens from the Studio
+   rail (Trend Spotter, Video Ideas, Scripts, Thumbnails, AI Clipper, Audio,
+   What you posted, Hype Lab) is drawn by trends-nav.js into `.ncx`, in the
+   site's ordinary card style. So the Studio looked like two products: one
+   panel in the NexusStream look and nine in the old one.
+
+   This section covers the nine. It is additive — fills, edges, label
+   treatment and number face — and deliberately changes no geometry: not one
+   rule here touches width, display, grid-template or flex direction. The
+   layout in trends-nav.js was fought for panel by panel (the comments in it
+   say so), and a skin that re-lays-out ten screens is a skin that breaks ten
+   screens. Every rule below is paint.
+
+   WHAT IS DELIBERATELY LEFT ALONE
+
+   html.nc-x-full — the Editor, Photo and Hype Lab. Those three are an iframe
+   filling the viewport; their own chrome is inside it, where this stylesheet
+   does not reach and should not. All they get from here is the exit bar at
+   the top, so the seam between the Studio and the application is not a plain
+   grey strip above a themed app.
+
+   .ncx-wide — Trend Spotter. It carries that class precisely to say "use the
+   bundle's own design, not trends-nav.js's", and that is still true of its
+   layout. Its cards get the lit edge and nothing else, so it belongs to the
+   same Studio without being rebuilt a second time.
+
+   TOKENS ARE REDECLARED, NOT SHARED
+
+   --nx-cyan and friends are declared on #dash, which .ncx is not inside. They
+   are declared again here rather than moved to :root: a token on :root is a
+   token any page can pick up by accident, and the two blocks are four lines.
+
+   WHY EVERY SELECTOR BELOW STARTS WITH `html body`
+
+   Two separate ties had to be won, and both were found by measuring the
+   rendered border rather than by reading the files.
+
+   trends-nav.js does not ship a stylesheet; it builds one at runtime and
+   appends it to <head>, so its rules always come after this file however the
+   link is ordered. `.ncx .card` here against `.ncx .card` there is a tie on
+   specificity, and a tie goes to whoever is later — which is to say the first
+   version of this section changed precisely nothing on the screen.
+
+   A bare `html` fixed that and still lost in light theme only, which is the
+   more interesting one: the site has `html[data-theme="light"] .card` for
+   every card on every page, and that is (0,2,1) — exactly what `html .ncx
+   .card` is. Dark theme had no equivalent rule, so the skin appeared to work
+   and was in fact half broken. `html body` makes it (0,2,2) and clears both.
+
+   It is specificity rather than !important on purpose: a rule that wants to
+   override one of these later still can, which is not true of !important, and
+   the geometry rules in trends-nav.js that this section deliberately does not
+   touch keep winning by default because nothing here mentions them.
+   ========================================================================== */
+
+.ncx {
+  --nx-cyan: #22d3ee;
+  --nx-fuchsia: #d946ef;
+  --nx-emerald: #10b981;
+  --nx-amber: #f59e0b;
+  --nx-panel: rgba(10, 10, 15, 0.6);
+  --nx-edge: rgba(34, 211, 238, 0.22);
+  --nx-hud: var(--nc-dim, #7E8AA6);
+}
+html[data-theme='light'] .ncx {
+  --nx-panel: rgba(255, 255, 255, 0.72);
+  --nx-edge: rgba(14, 150, 175, 0.3);
+  --nx-hud: #5a6478;
+}
+
+/* THE GRID GOES ON THE PANELS, NOT BEHIND THE PAGE.
+
+   The original lays its grid over the whole background, and the obvious port
+   is a fixed full-screen layer. Three things are already on that layer here,
+   and the first attempt collided with all of them: this site paints
+   `body::before` for its own backdrop wash, `html::before` for the colour
+   bloom and `html::after` for the category photograph (backgrounds/gaming.jpg
+   and its siblings). Writing a grid into body::before did not add a layer, it
+   REPLACED the site's backdrop — and the photo above it meant the grid could
+   not be seen anyway, so the damage would have shipped looking like nothing
+   had happened.
+
+   So the grid goes inside the panels instead, over the panel fill where there
+   is no photograph in the way. It reads as the same surface, it costs no new
+   stacking layer, and the Studio keeps the backdrop it was designed with. */
+
+/* --------------------------------------------------------------------------
+   PANELS
+   --------------------------------------------------------------------------
+   Same single lit edge as the dashboard. .card is the generic one; .idea,
+   .beat, .frame and .meter are the four that carry their own border in
+   trends-nav.js and so would otherwise keep the grey hairline next to a
+   lit one.
+   -------------------------------------------------------------------------- */
+html body .ncx .card,
+html body .ncx .idea,
+html body .ncx .beat,
+html body .ncx .frame,
+html body .ncx-wide .nc-trend-card {
+  /* Grid first, panel colour underneath it. Two background layers on one
+     property so nothing else has to be positioned. */
+  background-image:
+    linear-gradient(to right, rgba(34, 211, 238, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34, 211, 238, 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-color: var(--nx-panel);
+  border: 1px solid var(--nx-edge);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.06), inset 0 0 14px rgba(34, 211, 238, 0.03);
+}
+/* A kept idea marks itself with an inset border in currentColor. Against a lit
+   edge that reads as a smudge, so it gets the accent instead — same signal,
+   and now the only fuchsia on the screen. */
+html body .ncx .idea.kept {
+  border-inline-start: 3px solid var(--nx-fuchsia);
+}
+
+/* --------------------------------------------------------------------------
+   HUD TYPE
+   --------------------------------------------------------------------------
+   The section labels, the chips and the beat headers are already small caps
+   with wide tracking — that shape is most of the NexusStream look, and it was
+   here first. What they were missing is the accent colour, so they read as
+   labels rather than as dimmed body text.
+   -------------------------------------------------------------------------- */
+html body .ncx .sect,
+html body .ncx .beat .bt,
+html body .ncx .idea .shape {
+  color: var(--nx-cyan);
+  opacity: 1;
+}
+html body .ncx .idea .first span,
+html body .ncx .beat .bdo span {
+  color: var(--nx-cyan);
+  opacity: 0.9;
+}
+html body .ncx .chip {
+  border-color: var(--nx-edge);
+  color: var(--nx-cyan);
+}
+html body .ncx .chip.lock { color: var(--nx-hud); border-color: color-mix(in srgb, currentColor 20%, transparent); }
+
+/* Numbers in the monospaced face the reader already has, so a column of them
+   lines up. Only where there ARE numbers: the idea counter, the beat clock
+   and the meter. The original fetched JetBrains Mono for this; two Google
+   fonts on every Studio load is a privacy-policy line and a paragraph of
+   layout shift to change the shape of some digits. */
+html body .ncx .idea .num,
+html body .ncx .beat .btime,
+html body .ncx .meter b {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+html body .ncx .idea .num { color: var(--nx-cyan); }
+
+/* The three message states. `.say.ok` was already cyan — that is where the
+   accent in this skin came from — so only the plain and warning ones need
+   bringing into line. */
+html body .ncx .meter { border-color: var(--nx-edge); background: var(--nx-panel); }
+html body .ncx .meter.over { border-color: color-mix(in srgb, var(--nx-amber) 60%, transparent); }
+
+/* --------------------------------------------------------------------------
+   THE SEAM INTO A FULL-SCREEN APPLICATION
+   --------------------------------------------------------------------------
+   Editor, Photo and Hype Lab are an iframe over the whole viewport with this
+   bar above it. It is the one piece of Studio chrome visible while one of
+   them is open, so it is the one piece that has to match.
+   -------------------------------------------------------------------------- */
+html.nc-x-full body .ncx .exitbar {
+  border-bottom: 1px solid var(--nx-edge);
+  background: var(--nx-panel);
+}
+html.nc-x-full body .ncx .exitbar .who {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nx-cyan);
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   PHONE, AND PAPER
+   -------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+  /* 24px squares inside a panel that is itself only ~340px wide read as a
+     pattern rather than as a surface. Coarser, and fainter. */
+  html body .ncx .card, html body .ncx .idea, html body .ncx .beat, html body .ncx .frame {
+    background-size: 32px 32px;
+    background-image:
+      linear-gradient(to right, rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+  }
+}
+@media print {
+  html body .ncx .card, html body .ncx .idea, html body .ncx .beat, html body .ncx .frame {
+    box-shadow: none !important;
+    border-color: #999 !important;
+    background: none !important;
+  }
+}

@@ -91,6 +91,14 @@ if(b){r.style.background=b;r.setAttribute('data-skin',s);}}catch(e){}})();</scri
 <title>Trend Spotter — NovaClip</title>
 <meta name="description" content="Find what is rising in your niche: trends, the opportunity behind each one, and the video ideas worth making.">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
+<!-- The NexusStream skin. It reached only the analytics dashboard before; its
+     second half covers the Studio panels trends-nav.js draws into .ncx, so the
+     Studio is one product rather than one themed screen and nine untouched
+     ones. Order here decides nothing: trends-nav.js builds its stylesheet at
+     runtime and appends it, so it always lands after this link whatever this
+     file does. The skin's Studio rules settle that on specificity instead —
+     see the note in studio-nexus.css. -->
+<link rel="stylesheet" href="studio-nexus.css">
 <style id="nc-shell">
   /* This app brings its own left rail for its seven sections, so the NovaClip
      rail is deliberately absent — nova.js only fills a .sidebar that a page
