@@ -144,6 +144,14 @@ h1 .grad { background: linear-gradient(90deg, var(--nc-mag,#F72585), var(--nc-vi
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px; }
 .chartcard { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px; }
+/* NOTHING TO CHART MEANS NO CHARTS.
+   Both the "no views in this window" and the "analytics permission was not
+   granted" paths explained themselves at the top of the panel and then left
+   five chart cards standing underneath — a heading each and nothing else.
+   Measured against the real response shapes: five silent cards in both
+   states. The note says the whole truth on its own, so the grid goes. */
+#perfbox.is-empty .chartgrid { display: none; }
+
 /* The sized parent every maintainAspectRatio:false chart has to have. Without
    it the canvas and its card grow off each other — see the comment on the
    performance cards in the markup. */
@@ -965,6 +973,12 @@ function hms(sec) {
   return m + ':' + String(s2).padStart(2, '0');
 }
 
+/* Whether the performance panel is showing its charts or only its note. */
+function perfEmpty(on) {
+  const b = document.getElementById('perfbox');
+  if (b) b.classList.toggle('is-empty', !!on);
+}
+
 function killPerfCharts() {
   for (const k in perfCharts) { try { perfCharts[k].destroy(); } catch (e) {} }
   perfCharts = {};
@@ -1244,6 +1258,7 @@ async function renderPerformance() {
       : 'YouTube would not return your analytics: ' + String(e.message).replace(/</g, '&lt;'), true);
     document.getElementById('perfKpis').innerHTML = '';
     document.getElementById('moneyBox').innerHTML = '';
+    perfEmpty(true);
     /* Drop the three Analytics tiles rather than leaving the last window's
        numbers under the new window's heading. The subscriber tile stays: it
        comes from the Data API and is unaffected by whatever went wrong here. */
@@ -1254,10 +1269,15 @@ async function renderPerformance() {
   if (!totals || !totals[0]) {
     perfSay('No views in the last ' + perfDays + ' days, so there is nothing to chart yet. Upload something and come back.', true);
     document.getElementById('perfKpis').innerHTML = '';
+    perfEmpty(true);
     if (window.NX) NX.refresh({ totals: null, days: perfDays });
     return;
   }
   perfSay('Straight from your channel, for the ' + perfDays + ' days ending yesterday. Today is left out because it is still counting.');
+  /* There are totals, so the grid is wanted again — the 28/90/365 buttons come
+     back through here without the page reloading, and a window with no views
+     must not leave the next one blank. */
+  perfEmpty(false);
 
   const [views, mins, avgDur, avgPct, gained, lost] = totals;
   /* kpi(number, label) — in that order. All six of these had the arguments
