@@ -3087,7 +3087,7 @@
       which is why it survived.
 
    12,675px -> 3,420px, and the charts survive a round trip through the tabs. */
-const CACHE = 'novaclip-v198';
+const CACHE = 'novaclip-v199';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3300,6 +3300,9 @@ const SHELL = [
      failed to load. The bars themselves are in localStorage, so they survive
      and come back as soon as this file does. */
   '/editor-fx-bars.js',
+  '/editor-fx-auto.js',
+  '/editor-timeline-fit.js',
+  '/editor-text-style.js',
   /* The dock. Without it the FX library reverts to floating over the middle
      of the preview — not broken, but not what was asked for, and a returning
      visitor getting the new panel with none of its placement would read as

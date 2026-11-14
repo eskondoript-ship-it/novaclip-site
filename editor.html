@@ -2160,6 +2160,18 @@ html[data-theme="light"] #ncAR .ncar-row{background:rgba(255,255,255,.97);
      editor panel, and the lane accepts the same drag (text/nc-fx) that file
      already fires from the library tiles. -->
 <script src='editor-fx-bars.js' defer></script>
+<!-- The inspector's Effects tab retires here, and the effect editor starts
+     following the selected clip. AFTER editor-fx-edit.js and editor-fx-bars.js:
+     it calls NC_FX_EDIT.editor() and reads NC_TRANS_UI.effects, and a sidecar
+     that loads before the thing it drives spends its first seconds doing
+     nothing and its comments lying about the order. -->
+<script src='editor-fx-auto.js' defer></script>
+<!-- Keeps the two timeline columns scrolling together, so the bottom track is
+     reachable in both at once. Independent of everything above it. -->
+<script src='editor-timeline-fit.js' defer></script>
+<!-- A font and a 1-100 size in the Text panel. The clip schema has carried
+     fontFamily and fontSize all along; this is the control for them. -->
+<script src='editor-text-style.js' defer></script>
 
 <!-- THE FX LIBRARY MOVES INTO THE RIGHT-HAND PANEL, the one that otherwise
      reads "nothing selected". It does NOT reparent anything — the panel stays
