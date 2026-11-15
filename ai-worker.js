@@ -515,7 +515,7 @@ const RATE_WINDOW = 60;          // ...per this many seconds
    unlucky, not a wall the ordinary user meets.
 
    The grounded sub-cap is not arbitrary either — pricing.html has sold the
-   free tier as "Three trend scans a month" since the plans went up, and
+   free tier as a metered live scan since the plans went up, and
    nothing in this codebase has ever enforced it. This does.
 
    Do not take 120 as measured: it is a starting point. /health reports what
@@ -523,7 +523,23 @@ const RATE_WINDOW = 60;          // ...per this many seconds
    this comment.
    --------------------------------------------------------------------------- */
 const BUDGET_CREDITS   = 120;    // free credits per calendar month
-const BUDGET_GROUNDED  = 3;      // grounded scans a month, free tier
+/* ONE LIVE SCAN A WEEK ON THE FREE TIER, not three a month.
+
+   Three a month was what pricing.html sold, and in use it reads as broken:
+   you spend them in one sitting on the day you discover the feature and then
+   every scan for three weeks quietly comes back ungrounded. Reported exactly
+   that way — "idk why but everytime no live search".
+
+   A week is the honest rhythm for this. It is also slightly MORE generous,
+   4.3 a month against 3, while being far harder to burn by accident: there is
+   always one coming, and never a three-week dead zone.
+
+   It is a separate KV key from the monthly credit bucket because it rolls on
+   a different calendar. A counter inside the month record cannot reset on
+   Mondays. */
+const BUDGET_GROUNDED       = 3;      // kept: the monthly backstop
+const BUDGET_GROUNDED_WEEK  = 1;      // live scans a week, free tier
+const GROUNDED_WEEK_TTL     = 21 * 24 * 60 * 60;   // outlives any week
 const BUDGET_TTL       = 40 * 24 * 60 * 60;   // seconds; outlives any month
 
 /* ---------------------------------------------------------------------------
@@ -828,10 +844,33 @@ async function ipDaySpend(env, ip) {
    more than they are worth, which is where effectively all of the money goes.
    Tying it to the account would need leaderboard-worker.js to issue a signed
    token; that is the right next step and it is not this change. */
-function budgetKey(request, ip) {
+/* ISO week, in UTC, so everyone's week turns over at the same instant and
+   nobody gets two scans by flying east. Monday-based: the nearest Thursday
+   decides the year, which is what makes week 1 unambiguous at a year
+   boundary — without it, 31 December can land in week 53 of one year and
+   week 1 of the next depending on which way you round. */
+function weekKey(d) {
+  var t = d ? new Date(d) : new Date();
+  t = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()));
+  var day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  var wk = Math.ceil((((t - y0) / 86400000) + 1) / 7);
+  return t.getUTCFullYear() + '-W' + (wk < 10 ? '0' + wk : String(wk));
+}
+
+function uidOf(request, ip) {
   var uid = request.headers.get('X-NC-Uid') || '';
   if (!/^[A-Za-z0-9_-]{8,64}$/.test(uid)) uid = 'ip:' + ip;
-  return 'bud:' + monthKey() + ':' + uid;
+  return uid;
+}
+
+function groundedWeekKey(request, ip) {
+  return 'gnd:' + weekKey() + ':' + uidOf(request, ip);
+}
+
+function budgetKey(request, ip) {
+  return 'bud:' + monthKey() + ':' + uidOf(request, ip);
 }
 
 /* Trusting a header that says "I have paid" is obviously spoofable. It is
@@ -902,9 +941,20 @@ async function budget(env, request, ip, path, body) {
     catch (e) {}
   }
 
-  if (grounded && rec.g >= BUDGET_GROUNDED) {
-    await unchargeIp();
-    return { allow: false, kind: 'grounded', left: Math.max(0, BUDGET_CREDITS - rec.c) };
+  var gWeekKey = null, gWeekUsed = 0;
+  if (grounded) {
+    gWeekKey = groundedWeekKey(request, ip);
+    try { gWeekUsed = parseInt((await env.RL.get(gWeekKey)) || '0', 10) || 0; }
+    catch (e) { gWeekUsed = 0; }
+    /* The week is the one people actually feel. The month stays as a
+       backstop so a five-week month cannot quietly become five scans. */
+    if (gWeekUsed >= BUDGET_GROUNDED_WEEK || rec.g >= BUDGET_GROUNDED) {
+      await unchargeIp();
+      return { allow: false, kind: 'grounded',
+               left: Math.max(0, BUDGET_CREDITS - rec.c),
+               groundedLeft: 0,
+               nextAt: 'Monday' };
+    }
   }
   if (rec.c + cost > BUDGET_CREDITS) {
     await unchargeIp();
@@ -915,10 +965,17 @@ async function budget(env, request, ip, path, body) {
   if (grounded) rec.g += 1;
   try { await env.RL.put(key, JSON.stringify(rec), { expirationTtl: BUDGET_TTL }); }
   catch (e) { /* a failed write must not refuse a request that was in budget */ }
+  if (grounded && gWeekKey) {
+    try { await env.RL.put(gWeekKey, String(gWeekUsed + 1), { expirationTtl: GROUNDED_WEEK_TTL }); }
+    catch (e) { /* same rule: a failed write never refuses a request */ }
+  }
 
   return { allow: true, left: Math.max(0, BUDGET_CREDITS - rec.c), spent: cost,
            ipLeft: ipLeft,
-           groundedLeft: Math.max(0, BUDGET_GROUNDED - rec.g) };
+           /* What is left THIS WEEK, since that is the limit people meet. */
+           groundedLeft: grounded
+             ? Math.max(0, BUDGET_GROUNDED_WEEK - (gWeekUsed + 1))
+             : Math.max(0, BUDGET_GROUNDED_WEEK - gWeekUsed) };
 }
 
 /* Give back what budget() just took. Only for an answer that turned out to
@@ -943,7 +1000,15 @@ async function refund(env, request, ip, path, body) {
   catch (e) { return null; }
   var cost = creditsFor(path, body);
   rec.c = Math.max(0, rec.c - cost);
-  if (cost === COST.grounded) rec.g = Math.max(0, rec.g - 1);
+  if (cost === COST.grounded) {
+    rec.g = Math.max(0, rec.g - 1);
+    /* A cache hit cost nothing, so it must not spend the week's one scan. */
+    try {
+      var gk = groundedWeekKey(request, ip);
+      var gu = parseInt((await env.RL.get(gk)) || '0', 10) || 0;
+      if (gu > 0) await env.RL.put(gk, String(gu - 1), { expirationTtl: GROUNDED_WEEK_TTL });
+    } catch (e) {}
+  }
   try { await env.RL.put(key, JSON.stringify(rec), { expirationTtl: BUDGET_TTL }); }
   catch (e) { return null; }
   return { left: Math.max(0, BUDGET_CREDITS - rec.c),
@@ -1077,7 +1142,8 @@ export default {
         keys: { gemini: !!env.GEMINI_API_KEY, openrouter: !!env.OPENROUTER_API_KEY, openai: !!env.OPENAI_API_KEY },
         kv: !!env.RL,
         /* A budget with nowhere to keep a month's counter is not a budget. */
-        budget: env.RL ? (BUDGET_CREDITS + ' credits/month, ' + BUDGET_GROUNDED + ' grounded')
+        budget: env.RL ? (BUDGET_CREDITS + ' credits/month, ' + BUDGET_GROUNDED_WEEK +
+                          ' live scan/week (month backstop ' + BUDGET_GROUNDED + ')')
                        : 'off — needs the RL KV binding',
         /* Said out loud because a cap and an alarm that are quietly switched
            off read exactly like ones that are working. */
@@ -1478,9 +1544,9 @@ export default {
     const bud = await budget(env, request, ip, url.pathname, body);
     if (!bud.allow) {
       const msg = bud.kind === 'grounded'
-        ? 'That is this month\'s third Trend Spotter scan used up. The editor, the ' +
-          'tools and everything else carry on working — the live scan comes back ' +
-          'next month, or straight away on a paid plan.'
+        ? 'That is this week\'s live Trend Spotter scan used up. The editor, the ' +
+          'tools and everything else carry on working — a fresh live scan comes ' +
+          'back on Monday, or straight away on a paid plan.'
         : 'This month\'s free AI allowance is used up. Nothing else stops: the editor, ' +
           'the audio editor, all 54 tools and NovaClassics do not use it. The allowance ' +
           'refills at the start of next month.';
