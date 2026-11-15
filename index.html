@@ -333,6 +333,16 @@ section{padding:70px 7vw;position:relative}
 .tool h4{font-size:1.05rem;display:flex;gap:10px;align-items:center}
 .tool span{color:var(--dim);font-size:.9rem}
 
+/* WHAT IT IS — the eight tool rows, in two columns.
+   The only new rule this section needed. .tool already carries the left edge,
+   the hover glow and the type; this puts them in a pair of columns so eight
+   of them read as a list rather than as a long scroll, and drops to one
+   column at the same 820px the .split sections do, so the page has one
+   breakpoint rather than two. The row gap is 0 because .tool has its own
+   padding and a gap on top of it separated the rows from their own edge. */
+.what{display:grid;grid-template-columns:1fr 1fr;gap:0 34px;margin-top:26px}
+@media(max-width:820px){.what{grid-template-columns:1fr}}
+
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:24px;margin-top:28px}
 .stat-num{font-size:3.2rem;font-weight:800;background:linear-gradient(90deg,var(--magenta),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-2px}
@@ -616,11 +626,63 @@ html.nc-rtl .ticker, html.nc-rtl .marquee { direction:ltr; }
   <div class='scroll-hint' data-t='scrolldown'>▼ SCROLL</div>
 </header>
 
+<!-- ===========================================================================
+     WHAT THE SITE IS
+     ===========================================================================
+     Asked for: "explain the site on the landing page but keeping the phrase
+     and looks".
+
+     THE PHRASE IS UNTOUCHED. "Run your channel like a game." is still the
+     headline, still in the same two coloured halves, still the first thing on
+     the page. Nothing above this line changed.
+
+     What changed is that the page now says what the thing IS. Read it from
+     the top as a stranger and the three sections after this one are Smart
+     Coaching, Fair Fights and Every action earns — a feeling, three times.
+     Somebody could reach the footer without learning that NovaClip has a
+     video editor in it, or a trend scanner, or a clipper that watches a
+     five-hour stream and hands back the moments worth cutting. That is the
+     site's own product list, and it was nowhere on its own front page.
+
+     THE LOOKS ARE THE PAGE'S, NOT A NEW ONES. Every class here is one this
+     page already defines and already uses: .sec-label with its pulsing bar,
+     .sec-h with its .thin second line, .lead, the .tool rows from the Smart
+     Coaching section, .reveal for the scroll entrance. One new rule, .what,
+     and it does nothing but put the existing .tool rows in two columns.
+
+     NOT NUMBERED. The three sections below are 01, 02, 03 and renumbering
+     them would mean rewriting three strings in twenty languages for nothing.
+     "By the numbers" further down already proves an unnumbered .sec-label is
+     part of this page's vocabulary, and this section is not a step in the
+     sequence anyway — it is what the sequence is about.
+
+     THE EIGHT ROWS ARE NAMED BY THE RAILS' OWN KEYS — st_trends_h, editor,
+     st_clipper_h and the rest — so the front page cannot drift into calling
+     a tool something the rest of the site does not.
+     =========================================================================== -->
+<section id='what'>
+  <div class='reveal'>
+    <div class='sec-label'><span class='bar'></span> <span data-t='sec_what'>What it is</span></div>
+    <h2 class='sec-h' data-t='what_h'>One tab,<span class='thin'>the whole channel.</span></h2>
+    <p class='lead' data-t='what_lead'>Everything a channel needs, in a browser tab, with nothing to install. Find what is rising, turn it into a script, cut the video, pull the best moments out of a long stream, write one caption that fits every platform — then read the numbers and make the next one better.</p>
+  </div>
+  <div class='what reveal'>
+    <div class='tool'><h4><span data-t='st_trends_h'>Trend Spotter</span></h4><span data-t='w_trends'>What is actually rising in your niche, today.</span></div>
+    <div class='tool'><h4><span data-t='st_scripts_h'>Scripts</span></h4><span data-t='w_scripts'>A trend becomes titles, hooks and a script.</span></div>
+    <div class='tool'><h4><span data-t='editor'>Editor</span></h4><span data-t='w_editor'>Cut, grade, caption and export — in the tab.</span></div>
+    <div class='tool'><h4><span data-t='st_clipper_h'>AI Clipper</span></h4><span data-t='w_clipper'>Paste a two to five hour stream, get the moments worth cutting.</span></div>
+    <div class='tool'><h4><span data-t='photo'>Photo</span></h4><span data-t='w_photo'>Retouch a frame into a 1280x720 thumbnail.</span></div>
+    <div class='tool'><h4><span data-t='st_hype_h'>Hype Lab</span></h4><span data-t='w_hype'>The seconds where a finished edit loses people.</span></div>
+    <div class='tool'><h4><span data-t='st_studio_h'>Studio</span></h4><span data-t='w_studio'>Your views, your watch time, and what to change next.</span></div>
+    <div class='tool'><h4><span data-t='ai'>NovaClip AI</span></h4><span data-t='w_ai'>Three tutors, in your language, built for teen creators.</span></div>
+  </div>
+</section>
+
 <!-- AI / SMART COACHING with rings -->
 <section class='split' id='ai'>
   <div class='slideL'>
     <div class='sec-label'><span class='bar'></span> <span data-t='sec_learn'>01 — Learn &amp; build</span></div>
-    <h2 class='sec-h' data-t='sec1_h1'>Smart<span class='thin' data-t='sec1_h2'>Coaching</span></h2>
+    <h2 class='sec-h' data-t='sec1_h1'>Smart<span class='thin'>Coaching</span></h2>
     <p class='lead' data-t='card_ai_d'>Three tutors — YouTube, Space and Business — spin up answers in your language, tuned to teen creators. Ask, learn, level up.</p>
     <div style='margin-top:22px'>
       <div class='tool'><h4><span data-t='coach1'>Channel Coach</span></h4><span><span data-t='coach1d'>Titles, hooks, growth that actually works</span>.</span></div>
@@ -644,7 +706,7 @@ html.nc-rtl .ticker, html.nc-rtl .marquee { direction:ltr; }
   </div>
   <div class='slideR'>
     <div class='sec-label'><span class='bar'></span> <span data-t='duel_fair'>02 — Fight fair</span></div>
-    <h2 class='sec-h' data-t='sec2_h1'>Fair<span class='thin' data-t='sec2_h2'>Fights</span></h2>
+    <h2 class='sec-h' data-t='sec2_h1'>Fair<span class='thin'>Fights</span></h2>
     <p class='lead' data-t='card_duel_d'>Only battle channels within 20k subs of you. Watch the bars clash — subs and views decide the winner. Win and bank NovaCoins.</p>
   </div>
 </section>

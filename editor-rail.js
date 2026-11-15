@@ -54,7 +54,14 @@
     /* The split-screen comparison builder. Its pill is created off screen by
        editor-edits.js precisely so this rail is where it shows up. */
     { sel: '.nced-btn', label: 'Edits', key: 'ui_rail_edits',
-      icon: 'M4 4h16v7H4zM4 13h16v7H4zM9 7.5h6M9 16.5h6' }
+      icon: 'M4 4h16v7H4zM4 13h16v7H4zM9 7.5h6M9 16.5h6' },
+    /* The floating window, and the editor is where it earns its place: this
+       screen is the whole screen, so the script you are cutting to and your
+       own numbers are both a navigation away, and a timeline position is not
+       something you want to rebuild from memory. nc-float.js leaves its pill
+       off screen for exactly this, the same as Edits above. */
+    { sel: '.ncfloat-btn', label: 'Floating window', key: 'nav_window',
+      icon: 'M3 5h18v14H3zM13 10h7v7h-7zM7 8h3' }
   ];
   /* Not rail items: one rides the Transitions entry, one rides the timeline. */
   var FX_SEL = '.nctr-btn';

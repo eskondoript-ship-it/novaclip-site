@@ -3087,7 +3087,15 @@
       which is why it survived.
 
    12,675px -> 3,420px, and the charts survive a round trip through the tabs. */
-const CACHE = 'novaclip-v206';
+/* v207 adds nc-float.js (NEW): the floating window, and it holds every tab —
+   the seven Studio panels, both AI tabs, the Editor, Photo, Hype Lab,
+   Publish, Academy, Games, Tools, Community, Home, Socials, Profile,
+   History, Family, Pricing. nova.js fetches it on every page after load, so
+   it is cached with the shell rather than left to the network: the launcher
+   is a row in whichever rail the page has, and a rail with one row missing
+   reads as the rail having changed rather than as a file that did not
+   arrive. 15KB. */
+const CACHE = 'novaclip-v207';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3097,6 +3105,11 @@ const SHELL = [
   '/index.html',
   '/offline.html',
   '/nova.js',
+  /* The floating window. nova.js fetches it on every page, so it belongs with
+     nova.js rather than with the editor: its launcher is a row in whichever
+     rail the page has, and a rail that is one row short reads as the rail
+     having been changed rather than as a file that failed to load. */
+  '/nc-float.js',
   /* The UI phrase table. nova.js loads it on every page and translates
      nothing outside the dictionary until it arrives, so an offline launch
      without it comes up in English however the language is set. */
