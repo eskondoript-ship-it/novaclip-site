@@ -1585,6 +1585,7 @@
       list.forEach(function (x) {
         x.sources = raw && raw.sources;
         x.ungrounded = !!(raw && raw.searchFailed);
+        x.ungroundedWhy = (raw && raw.searchFailedWhy) || '';
       });
       return list;
     }
@@ -1728,7 +1729,8 @@
 
       html += sourcesHTML(list[0] && list[0].sources);
       /* Prepended, so it is the first thing read rather than the last. */
-      out.innerHTML = groundNote(list[0] && list[0].ungrounded) + html;
+      out.innerHTML = groundNote(list[0] && list[0].ungrounded,
+                                 list[0] && list[0].ungroundedWhy) + html;
 
       out.querySelectorAll('[data-open]').forEach(function (b) {
         b.addEventListener('click', function (e) {
@@ -1838,13 +1840,30 @@
 
      Still a notice rather than an error, because the scan did return
      something and it may well be useful — it is just old. */
-  function groundNote(ungrounded) {
+  /* WHY, NOT JUST THAT.
+
+     This printed one sentence for every reason a scan came back ungrounded,
+     and the commonest reason by far is the monthly cap: ai-worker.js allows
+     three grounded scans a month on the free tier, because that is what
+     pricing.html sells. Past the third, every scan silently falls back and
+     the panel said "no live search this time" with no hint that a quota
+     existed — reported as "idk why but everytime no live search", which is
+     exactly the question the old note left open.
+
+     The worker names the cause in X-NC-Budget-Kind and nova.js now carries it
+     here. A quota is not a fault and should not read like one, so that case
+     gets its own sentence and says when it comes back. */
+  function groundNote(ungrounded, why) {
     if (!ungrounded) return '';
-    return '<p data-t="st_nolive" style="margin:0 0 18px;padding:11px 14px;' +
+    var quota = (why === 'grounded' || why === 'quota');
+    var body = quota
+      ? esc(tr('st_nolive_quota'))
+      : esc(tr('st_nolive'));
+    return '<p data-t="' + (quota ? 'st_nolive_quota' : 'st_nolive') + '" ' +
+           'style="margin:0 0 18px;padding:11px 14px;' +
            'border:1px solid rgba(255,180,67,.45);border-left-width:3px;' +
            'border-radius:10px;background:rgba(255,180,67,.09);' +
-           'font-size:.9rem;line-height:1.55">' +
-           esc(tr('st_nolive')) + '</p>';
+           'font-size:.9rem;line-height:1.55">' + body + '</p>';
   }
 
   function sourcesHTML(list) {
