@@ -668,7 +668,37 @@ async function alarm(env, kind, detail) {
   } catch (e) { /* never let the alarm break the request it was watching */ }
 }
 const COST = { text: 1, tts: 1, image: 10, video: 10, grounded: 18 };
+/* FORTY-FIVE SECONDS IS RIGHT FOR A SENTENCE AND WRONG FOR A FILM.
+
+   Every upstream call was aborted at 45s. That is a sensible ceiling for a
+   text answer — past it something is hung and another vendor should get the
+   question. It is not a ceiling a video read can meet: Gemini watches the
+   video before it answers, and two hours of footage takes minutes, not
+   seconds. So the AI Clipper's whole reason to exist — long videos — was
+   timing out at 45 seconds and coming back "The model took too long to
+   answer", while short clips worked fine and hid it.
+
+   Awaiting a fetch costs a Worker no CPU, so a long wait here is not the
+   thing that runs a Worker out of its budget; a hung connection with nobody
+   watching it is, which is why there is still a ceiling rather than none.
+
+   Five minutes for a read with a video in it, 45 seconds for everything else.
+   The failover comment below still holds: a timeout on a long prompt will
+   time out again on the next vendor, so it stays switchable rather than
+   fatal. */
 const UPSTREAM_TIMEOUT_MS = 45000;
+const UPSTREAM_TIMEOUT_VIDEO_MS = 300000;
+
+/* A video read is one with a file_data part — the YouTube URL Google fetches
+   at its end. Checked on the payload rather than on a flag from the caller,
+   so nothing can ask for the long timeout by claiming to need it. */
+function hasVideoPart(payload) {
+  try {
+    return (payload.contents || []).some(function (c) {
+      return (c.parts || []).some(function (p) { return p && p.file_data; });
+    });
+  } catch (e) { return false; }
+}
 
 /* Jarvis's voice. POST /tts turns text into MP3 with Gemini's TTS model. The
    voice list is closed so callers cannot experiment against your key, and the
@@ -1164,6 +1194,10 @@ export default {
            of a plain search API for the same list of pages. */
         grounding: env.SEARCH_API_KEY ? ((env.SEARCH_PROVIDER || 'brave') + ' (search API)') : 'gemini-builtin',
         search_cache: env.RL ? (SEARCH_TTL / 3600) + 'h in KV' : 'off — no RL KV binding',
+        /* Visible because a video read that silently aborts at 45s looks like
+           a model failure rather than a setting. */
+        upstream_timeout: (UPSTREAM_TIMEOUT_MS / 1000) + 's, ' +
+                          (UPSTREAM_TIMEOUT_VIDEO_MS / 1000) + 's when a video is attached',
         /* The search allowance, so the second query shape retiring is
            something you can SEE rather than infer from thinner scans. Tune
            SEARCH_BUDGET from the plan actually being paid for. */
@@ -1816,7 +1850,8 @@ export default {
       /* Without a timeout a hung upstream holds the request until Cloudflare
          kills it, and the browser sees a network error rather than a reason. */
       const abort = new AbortController();
-      const timer = setTimeout(() => abort.abort(), UPSTREAM_TIMEOUT_MS);
+      const timer = setTimeout(() => abort.abort(),
+        hasVideoPart(payload) ? UPSTREAM_TIMEOUT_VIDEO_MS : UPSTREAM_TIMEOUT_MS);
       let threw = null;
       try {
         upstream = await upstreamFetch(at, atModel, payload, env[SECRET[at]], abort.signal, grounded);

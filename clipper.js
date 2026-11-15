@@ -80,7 +80,15 @@
             sort: 'score', want: '30-60', mine: false,
             /* multi-pass: which pass is running, how many there are, and what
                has already come back so a long watch shows its work */
-            pass: 0, passes: 0, total: 0, cap: MAX_PASSES, kind: 'yt' };
+            pass: 0, passes: 0, total: 0, cap: MAX_PASSES, kind: 'yt',
+            /* HOW LONG IT ACTUALLY TAKES, shown rather than predicted.
+               Asked directly: "how much time it takes to read the whole
+               video". The honest answer is that it depends on Google — the
+               video is watched at their end and nothing here can measure it
+               in advance. So the page counts, and after one run somebody
+               knows their own number instead of my estimate. */
+            t0: 0, took: 0 };
+  var tick = 0;
   var BOX = null;
 
   /* nova.js owns the dictionary; this panel only asks it. The fallback is the
@@ -416,6 +424,11 @@
     }
     S.id = id; S.err = ''; S.data = null; S.busy = true;
     S.pass = 1; S.passes = 1; S.total = 0;
+    S.t0 = Date.now(); S.took = 0;
+    clearInterval(tick);
+    /* A second is the right grain: the number is minutes long and a counter
+       that flickers reads as noise. */
+    tick = setInterval(function () { if (S.busy) render(); }, 1000);
     render();
 
     var merged = { video: '', seconds: 0, chapters: [] };
@@ -448,14 +461,14 @@
       }
       return chain.then(function () { return merged; });
     }).then(function (all) {
-      S.busy = false;
+      S.busy = false; S.took = Date.now() - S.t0; clearInterval(tick);
       /* How much of the video the answer actually covers, so the page can say
          so instead of letting a list that stops at 4:00:00 look like silence. */
       all.covered = Math.min(all.seconds || 0, S.passes * WINDOW);
       S.data = all;
       render();
     }).catch(function (e) {
-      S.busy = false;
+      S.busy = false; S.took = Date.now() - S.t0; clearInterval(tick);
       /* A later pass failing still leaves real clips from the earlier ones.
          Throwing them away to show an error would be the wrong trade. */
       if (merged.chapters.length) {
@@ -667,7 +680,9 @@
               ' — pass ' + S.pass + ' of ' + S.passes + '. Each one is a separate read of the video, ' +
               'so a long stream takes a few minutes.';
       }
-      host.appendChild(el('p', 'ncclip-msg', esc(msg)));
+      var secs = Math.round((Date.now() - S.t0) / 1000);
+      host.appendChild(el('p', 'ncclip-msg',
+        esc(msg) + ' <b>' + clock(secs) + '</b> so far.'));
       return;
     }
     if (S.err) { host.appendChild(el('p', 'ncclip-msg', esc(S.err))); return; }
@@ -715,7 +730,8 @@
         'run it again to reach the rest.'));
     } else if (secs > WINDOW) {
       host.appendChild(el('div', 'ncclip-note',
-        'All <b>' + clock(secs) + '</b> watched, in ' + S.passes + ' passes.'));
+        'All <b>' + clock(secs) + '</b> watched, in ' + S.passes + ' passes' +
+        (S.took ? ', in <b>' + clock(Math.round(S.took / 1000)) + '</b>' : '') + '.'));
     }
 
     if (S.sort === 'score') {
