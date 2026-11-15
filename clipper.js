@@ -34,6 +34,32 @@
    uploaded, the one you hold the rights to — the same timestamps are a cut
    list, and that is the honest version of the whole business.
 
+   TWO TO FIVE HOURS, WHICH IS WHAT A STREAM IS
+
+   Gemini stops watching somewhere past two hours, and the first version asked
+   for 0..7200 and stopped there — paste a five-hour stream and the back half,
+   which is where the run usually ends, was never looked at. A long video is
+   now watched in two-hour WINDOWS, one call each, and the answers are
+   stitched together with each pass's times moved into the whole video's
+   clock. Three calls cover six hours.
+
+   Each pass is billed for the seconds it watches, so this costs what watching
+   the stream costs; there is no trick that makes five hours cost two. That is
+   why the hours are a control on the panel rather than a silent default, and
+   why the page says which pass it is on instead of sitting on one sentence
+   for several minutes.
+
+   TWITCH LINKS ARE RECOGNISED, NOT WATCHED
+
+   Gemini is handed a URL that Google fetches at their end, and the only ones
+   it accepts that way are public YouTube links. A Twitch VOD is refused by
+   Google, not by this page, and the only way round that would be downloading
+   the VOD — the exact line the section above refuses to cross. So a Twitch
+   link gets the route that works instead of "that does not look like a
+   YouTube link": export the VOD to YouTube from Twitch's own Video Producer
+   if it is your stream, or paste the streamer's YouTube mirror if it is not.
+   A clips.twitch.tv link is told it is already a clip.
+
    WHY THE TOKEN CAP IS 4000 AND NOT 1500
 
    nova.js retries anything that stops at MAX_TOKENS with three times the
@@ -51,7 +77,10 @@
   if (window.NC_CLIPPER) return;
 
   var S = { url: '', id: '', busy: false, err: '', data: null,
-            sort: 'score', want: '30-60', mine: false };
+            sort: 'score', want: '30-60', mine: false,
+            /* multi-pass: which pass is running, how many there are, and what
+               has already come back so a long watch shows its work */
+            pass: 0, passes: 0, total: 0, cap: MAX_PASSES, kind: 'yt' };
   var BOX = null;
 
   /* nova.js owns the dictionary; this panel only asks it. The fallback is the
@@ -96,6 +125,63 @@
   /* Every shape a teenager will actually paste: the long one, the share one,
      the one with a playlist glued on, the one copied out of the app with a
      timestamp already in it. */
+  /* WHAT A TWITCH LINK CAN AND CANNOT DO HERE.
+
+     Asked for directly: "you need to paste links accept youtube and twitch".
+     Recognising the link is easy and worth doing — pasting a Twitch VOD and
+     being told "that does not look like a YouTube link" is the wrong answer
+     to the right idea. Watching it is a different matter.
+
+     Gemini watches a video by being handed a URL that Google fetches at their
+     end, and the only URLs it accepts that way are public YouTube ones. A
+     Twitch VOD is refused — not by this page, by Google. Nothing in this file
+     can change that, and pretending otherwise would mean downloading the VOD,
+     which is the exact line the top of this file refuses to cross.
+
+     So a Twitch link gets the truthful route instead of a dead end. Both of
+     these are things streamers do already and neither needs anything
+     downloaded:
+
+       · Twitch's own Video Producer exports a VOD straight to YouTube. That
+         is a button on the streamer's own dashboard, and the export is public
+         by default, which is exactly what this needs.
+       · Most streamers already mirror their VODs to a YouTube channel. The
+         link to that mirror works here today.
+
+     For somebody clipping their OWN stream the first route is a two-minute
+     job. For somebody clipping a streamer they watch, the second is usually
+     already done. */
+  function twitchId(raw) {
+    var u = String(raw || '').trim();
+    var m = u.match(/twitch\.tv\/videos\/(\d+)/i);
+    if (m) return { kind: 'vod', id: m[1] };
+    m = u.match(/twitch\.tv\/[^\/]+\/clip\/([\w-]+)/i) || u.match(/clips\.twitch\.tv\/([\w-]+)/i);
+    if (m) return { kind: 'clip', id: m[1] };
+    if (/twitch\.tv\//i.test(u)) return { kind: 'other', id: '' };
+    return null;
+  }
+
+  /* The sentence for a link this page cannot watch. One place, so the Twitch
+     case never falls back to "that does not look like a YouTube link". */
+  function linkHelp(raw) {
+    var tw = twitchId(raw);
+    if (tw) {
+      if (tw.kind === 'clip') {
+        return 'That is a Twitch clip, which is already a clip \u2014 there is nothing in it ' +
+               'to find. Paste the full VOD, or the YouTube upload of it.';
+      }
+      if (tw.kind === 'other') {
+        return 'That is a Twitch channel rather than a video. Open the VOD you want and ' +
+               'paste that link \u2014 then read the note below about Twitch.';
+      }
+      return 'Twitch VODs cannot be watched directly: Google fetches the video itself and only ' +
+             'accepts public YouTube links, so nothing here can open twitch.tv. Two ways round ' +
+             'it, both normal: export the VOD to YouTube from Twitch\u2019s own Video Producer ' +
+             'if it is your stream, or paste the streamer\u2019s YouTube upload of it if it is not.';
+    }
+    return 'That does not look like a YouTube link. Paste the whole thing from the address bar.';
+  }
+
   function videoId(raw) {
     var u = String(raw || '').trim();
     if (!u) return '';
@@ -207,16 +293,52 @@
      place a duration could otherwise come from is YouTube's Data API, which
      would mean a new endpoint on ai-worker.js and a redeploy — and the whole
      point of this feature is that it needed neither. */
-  var MAX_SECONDS = 7200;      /* two hours of watching, hard */
-  var MIN_SECONDS = 120;       /* under this there is nothing to find */
+  /* ONE PASS IS TWO HOURS. A STREAM IS NOT.
 
-  function prompt() {
+     Gemini stops watching somewhere past two hours, so the first version
+     asked for 0..7200 and left it there: paste a five-hour stream and you got
+     the first two hours with a note apologising for the rest. For the videos
+     this feature is actually for — a 2 to 5 hour stream — that threw away
+     more than half the material, and the back half of a stream is where the
+     run usually ends.
+
+     So a long video is watched in WINDOWs, one call each, and the answers are
+     stitched together. Three calls cover six hours. Each call is billed for
+     the seconds it watches, so this costs what watching the whole stream
+     costs — there is no trick that makes five hours cost two. What there is
+     instead is a passes control, so somebody can say "just the first two
+     hours" and pay for that deliberately rather than by surprise. */
+  var WINDOW      = 7200;      /* seconds one pass may watch */
+  var MAX_PASSES  = 3;         /* six hours, before anyone asks for more */
+  var HARD_PASSES = 6;         /* twelve; past this it is not a stream */
+  var MIN_SECONDS = 120;       /* under this there is nothing to find */
+  var MAX_SECONDS = WINDOW;    /* kept: what ONE pass covers */
+
+  function prompt(from) {
     var band = S.want === '15-30' ? '15 to 30 seconds'
              : S.want === '60-90' ? '60 to 90 seconds' : '30 to 60 seconds';
-    return 'FIRST, the length. Report how long this video is in seconds as "seconds". If it is ' +
+    /* WINDOWED PASSES REPORT RELATIVE TIMES, AND THE PAGE ADDS THE OFFSET.
+
+       Asking for absolute times on a windowed pass is the obvious thing and
+       it is a trap: the model is shown a clip of the video starting at the
+       offset, so "absolute" means guessing at a number it was never told.
+       Relative is the thing it can actually see, and the addition is
+       arithmetic this page can do without being wrong. */
+    var win = from > 0
+      ? 'You are being shown ONE SEGMENT of a longer video. It begins at ' + clock(from) +
+        ' into the full video. Every start and end you report must be seconds from the ' +
+        'START OF THIS SEGMENT, not from the start of the full video — this page adds the ' +
+        'offset itself.\n\n'
+      : '';
+    return win +
+      'FIRST, the length. Report how long this video is in seconds as "seconds". If it is ' +
       'under ' + MIN_SECONDS + ' seconds, answer {"seconds":<the length>,"chapters":[]} and ' +
       'nothing else — do not find clips in it. A video that short is already the clip, and ' +
       'cutting it up produces three overlapping windows onto the same moment.\n\n' +
+      (from > 0 ? '' :
+        'If this is a long stream, "seconds" is the length of the WHOLE video even though you ' +
+        'may only have been shown part of it. That number decides how much of it gets ' +
+        'watched, so do not report the length of the part you were given.\n\n') +
       'You are finding the moments in this video that would work as standalone short ' +
       'videos for a teenage creator. Watch it properly — do not guess from the title.\n\n' +
       'Each clip must be ' + band + ' long and must make sense on its own to somebody who has ' +
@@ -238,10 +360,54 @@
       'Order the clips inside each chapter by where they happen, not by score.';
   }
 
+  /* One pass. Resolves with the parsed object, or rejects with a sentence. */
+  function watch(id, from, to) {
+    return window.ncAsk(prompt(from), {
+      video: 'https://www.youtube.com/watch?v=' + id,
+      videoFrom: from,
+      videoTo: to,
+      maxTokens: 4000,
+      temperature: 0.4
+    }).then(function (r) {
+      if (!r || r.err) {
+        var why = (r && r.err) || 'The AI did not answer.';
+        if (/not.*public|private|unlisted|unavailable|permission/i.test(why)) {
+          why = 'Google could not open that video. It has to be a PUBLIC YouTube video — ' +
+                'unlisted and private ones are refused, and so are videos that are age-gated ' +
+                'or blocked in some countries.';
+        }
+        throw new Error(why);
+      }
+      var m = String(r.text || '').match(/\{[\s\S]*\}/);
+      if (!m) throw new Error('The AI answered, but not in the shape this page can read. Try again.');
+      var o;
+      try { o = JSON.parse(m[0]); }
+      catch (e) { throw new Error('The AI\u2019s answer was cut off halfway. Try again, or watch fewer hours at once.'); }
+      return o;
+    });
+  }
+
+  /* Fold one pass into what is already there, moving its times into the whole
+     video's clock. Chapters are kept separate rather than merged by name: two
+     passes an hour apart can both be called "the run", and collapsing them
+     would put clips from 0:20 and 3:40 under one heading. */
+  function absorb(into, part, from) {
+    var chapters = (part && part.chapters) || [];
+    chapters.forEach(function (ch) {
+      var clips = (ch.clips || []).map(function (c) {
+        var a = (+c.start || 0) + from, b = (+c.end || 0) + from;
+        return Object.assign({}, c, { start: a, end: b });
+      }).filter(function (c) { return c.end > c.start; });
+      if (!clips.length) return;
+      into.chapters.push({ name: ch.name || '', clips: clips, from: from });
+    });
+    if (!into.video && part && part.video) into.video = part.video;
+  }
+
   function run() {
     var id = videoId(S.url);
     if (!id) {
-      S.err = 'That does not look like a YouTube link. Paste the whole thing from the address bar.';
+      S.err = linkHelp(S.url);
       render(); return;
     }
     if (typeof window.ncAsk !== 'function') {
@@ -249,40 +415,58 @@
       render(); return;
     }
     S.id = id; S.err = ''; S.data = null; S.busy = true;
+    S.pass = 1; S.passes = 1; S.total = 0;
     render();
 
-    window.ncAsk(prompt(), {
-      video: 'https://www.youtube.com/watch?v=' + id,
-      /* The cap that does the work. Past two hours Gemini stops watching, so
-         a six-hour stream costs what two hours costs instead of what six do. */
-      videoFrom: 0,
-      videoTo: MAX_SECONDS,
-      maxTokens: 4000,
-      temperature: 0.4
-    }).then(function (r) {
+    var merged = { video: '', seconds: 0, chapters: [] };
+
+    /* The first pass does double duty: it reports how long the whole video is,
+       which is what decides whether there are any more passes to run. */
+    watch(id, 0, WINDOW).then(function (first) {
+      merged.seconds = +first.seconds || 0;
+      S.total = merged.seconds;
+      absorb(merged, first, 0);
+
+      var want = Math.ceil(merged.seconds / WINDOW) || 1;
+      var passes = Math.max(1, Math.min(want, S.cap, HARD_PASSES));
+      S.passes = passes;
+
+      /* Sequential, not parallel. Three two-hour video calls fired at once is
+         a good way to meet a rate limit, and the page has nothing useful to
+         do with the time it would save. */
+      var chain = Promise.resolve();
+      for (var i = 1; i < passes; i++) {
+        (function (n) {
+          chain = chain.then(function () {
+            S.pass = n + 1;
+            render();
+            var from = n * WINDOW;
+            var to = Math.min(from + WINDOW, merged.seconds || (from + WINDOW));
+            return watch(id, from, to).then(function (part) { absorb(merged, part, from); });
+          });
+        })(i);
+      }
+      return chain.then(function () { return merged; });
+    }).then(function (all) {
       S.busy = false;
-      if (!r || r.err) {
-        S.err = (r && r.err) || 'The AI did not answer.';
-        if (/not.*public|private|unlisted|unavailable|permission/i.test(S.err)) {
-          S.err = 'Google could not open that video. It has to be a PUBLIC YouTube video — ' +
-                  'unlisted and private ones are refused, and so are videos that are age-gated ' +
-                  'or blocked in some countries.';
-        }
-        render(); return;
-      }
-      var m = String(r.text || '').match(/\{[\s\S]*\}/);
-      if (!m) {
-        S.err = 'The AI answered, but not in the shape this page can read. Try again.';
-        render(); return;
-      }
-      try { S.data = JSON.parse(m[0]); }
-      catch (e) {
-        S.err = 'The AI’s answer was cut off halfway. Try a shorter video, or ask again.';
-      }
+      /* How much of the video the answer actually covers, so the page can say
+         so instead of letting a list that stops at 4:00:00 look like silence. */
+      all.covered = Math.min(all.seconds || 0, S.passes * WINDOW);
+      S.data = all;
       render();
     }).catch(function (e) {
       S.busy = false;
-      S.err = 'The AI did not answer: ' + (e && e.message ? e.message : 'unknown');
+      /* A later pass failing still leaves real clips from the earlier ones.
+         Throwing them away to show an error would be the wrong trade. */
+      if (merged.chapters.length) {
+        merged.covered = S.pass > 1 ? (S.pass - 1) * WINDOW : WINDOW;
+        S.data = merged;
+        S.err = 'Watching stopped after ' + clock(merged.covered) + ': ' +
+                (e && e.message ? e.message : 'the AI did not answer') +
+                ' The clips below are from the part that did get watched.';
+      } else {
+        S.err = (e && e.message) || 'The AI did not answer.';
+      }
       render();
     });
   }
@@ -418,6 +602,24 @@
     lenWrap.appendChild(len);
     opts.appendChild(lenWrap);
 
+    /* HOW MUCH OF IT TO WATCH, said in hours because that is how somebody
+       thinks about a stream, and shown before the run rather than after it.
+       Each pass is a separate billed call over two hours of video, so this is
+       the one control on the page that changes what the answer costs — which
+       is why it is a choice and not a silent default. */
+    var hrsWrap = el('label', '', esc(t('st_clip_hours', 'Watch')) + ' ');
+    var hrs = el('select');
+    [[1, 'first 2 hours'], [2, 'first 4 hours'], [3, 'first 6 hours'],
+     [4, 'first 8 hours'], [6, 'up to 12 hours']].forEach(function (o) {
+      var op = el('option', '', o[1]);
+      op.value = String(o[0]);
+      if (o[0] === S.cap) op.selected = true;
+      hrs.appendChild(op);
+    });
+    hrs.onchange = function () { S.cap = Math.max(1, Math.min(HARD_PASSES, parseInt(hrs.value, 10) || 1)); };
+    hrsWrap.appendChild(hrs);
+    opts.appendChild(hrsWrap);
+
     if (S.data) {
       var sortWrap = el('label', '', esc(t('st_clip_sort', 'Sort by')) + ' ');
       var sort = el('select');
@@ -453,9 +655,19 @@
     input.onkeydown = function (e) { if (e.key === 'Enter') start(); };
 
     if (S.busy) {
-      host.appendChild(el('p', 'ncclip-msg', esc(t('st_clip_busy',
+      var msg = t('st_clip_busy',
         'Google is watching the whole video. On a long one this takes a minute — ' +
-        'it is reading it, not searching for it.'))));
+        'it is reading it, not searching for it.');
+      /* On a stream this runs for several minutes across several calls, and a
+         single unchanging sentence for that long reads as a hang. Say which
+         pass is running and what part of the video it is on. */
+      if (S.passes > 1) {
+        var from = (S.pass - 1) * WINDOW;
+        msg = 'Watching ' + clock(from) + '–' + clock(Math.min(from + WINDOW, S.total || from + WINDOW)) +
+              ' — pass ' + S.pass + ' of ' + S.passes + '. Each one is a separate read of the video, ' +
+              'so a long stream takes a few minutes.';
+      }
+      host.appendChild(el('p', 'ncclip-msg', esc(msg)));
       return;
     }
     if (S.err) { host.appendChild(el('p', 'ncclip-msg', esc(S.err))); return; }
@@ -491,16 +703,19 @@
                   .replace('{n}', flat.length) + '.'));
     }
 
-    /* Longer than the cap: the answer only covers the first two hours, and a
-       list of timestamps that silently stops at 2:00:00 would otherwise look
-       like the back half of the stream simply had nothing in it. */
-    if (secs > MAX_SECONDS) {
+    /* Only when the answer really does stop short of the end. A five-hour
+       stream watched in three passes needs no apology; a five-hour stream
+       capped at one pass does, because a list that stops at 2:00:00 otherwise
+       looks like the back half had nothing in it. */
+    var covered = S.data.covered || 0;
+    if (secs > 0 && covered > 0 && covered < secs - 30) {
       host.appendChild(el('div', 'ncclip-note',
-        t('st_clip_long',
-          'That video is <b>{d}</b> long, so only the <b>first two hours</b> were watched. ' +
-          'Everything below comes from that part. To get at the rest, upload it in pieces or ' +
-          'use a link that starts later.')
-          .replace('{d}', clock(secs))));
+        'That video is <b>' + clock(secs) + '</b> long and the <b>first ' + clock(covered) +
+        '</b> were watched. Everything below comes from that part. Raise the hours above and ' +
+        'run it again to reach the rest.'));
+    } else if (secs > WINDOW) {
+      host.appendChild(el('div', 'ncclip-note',
+        'All <b>' + clock(secs) + '</b> watched, in ' + S.passes + ' passes.'));
     }
 
     if (S.sort === 'score') {
