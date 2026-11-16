@@ -678,6 +678,48 @@ html.nc-rtl .ticker, html.nc-rtl .marquee { direction:ltr; }
   </div>
 </section>
 
+<!-- ===========================================================================
+     WHERE TO START
+     ===========================================================================
+     Asked for: "explain to the user what to do in home page but keeping the
+     theme and everything".
+
+     The section above says what NovaClip HAS. A list of tools is not an
+     instruction, and "what do I actually do first" is the question that was
+     still unanswered — which is the question somebody closes a tab over.
+     Five steps, each handing over to the next, ending where the loop starts
+     again.
+
+     NOTHING NEW IS DRAWN. .reward is the row the rewards list already uses
+     further down this page: a monospace number, a bold line, a dim line, and
+     a hover that slides it right. It was built for "150 — Basic Certificate"
+     and it is exactly the shape of a numbered step, so the steps are reward
+     rows with 1 to 5 in them and there is no new CSS at all. The column
+     beside them is .sec-label, .sec-h with its .thin second line and .lead,
+     the same as every other section here, inside the page's own .split.
+
+     The five are named with the rails' own keys, so the instruction and the
+     thing it points at cannot drift apart. Only the five lines under them
+     are new text.
+     =========================================================================== -->
+<section class='split' id='start'>
+  <div class='slideL'>
+    <div class='sec-label'><span class='bar'></span> <span data-t='sec_start'>Where to start</span></div>
+    <h2 class='sec-h' data-t='start_h'>Five steps,<span class='thin'>one video out.</span></h2>
+    <p class='lead' data-t='start_lead'>You do not need an idea to start. Start with what is already climbing in your niche, and every step hands you the next one.</p>
+    <div style='margin-top:26px'>
+      <a href='trends.html'><button class='btn-primary' data-t='startchannel'>Start your channel →</button></a>
+    </div>
+  </div>
+  <div class='slideR'>
+    <div class='reward'><span class='amt'>1</span><div class='txt'><b data-t='st_trends_h'>Trend Spotter</b><span data-t='s_trends'>Type your niche. See what is climbing today.</span></div></div>
+    <div class='reward'><span class='amt'>2</span><div class='txt'><b data-t='st_scripts_h'>Scripts</b><span data-t='s_scripts'>Turn one of them into a title, a hook and the words.</span></div></div>
+    <div class='reward'><span class='amt'>3</span><div class='txt'><b data-t='editor'>Editor</b><span data-t='s_editor'>Cut it, add the music, add the captions.</span></div></div>
+    <div class='reward'><span class='amt'>4</span><div class='txt'><b data-t='photo'>Photo</b><span data-t='s_photo'>Pull a frame out of it and make the thumbnail.</span></div></div>
+    <div class='reward'><span class='amt'>5</span><div class='txt'><b data-t='st_studio_h'>Studio</b><span data-t='s_studio'>Post it, then come back and read what happened.</span></div></div>
+  </div>
+</section>
+
 <!-- AI / SMART COACHING with rings -->
 <section class='split' id='ai'>
   <div class='slideL'>

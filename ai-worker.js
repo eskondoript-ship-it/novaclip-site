@@ -971,7 +971,7 @@ async function budget(env, request, ip, path, body) {
     catch (e) {}
   }
 
-  var gWeekKey = null, gWeekUsed = 0;
+  var gWeekKey = null, gWeekUsed = 0, downgrade = false;
   if (grounded) {
     gWeekKey = groundedWeekKey(request, ip);
     try { gWeekUsed = parseInt((await env.RL.get(gWeekKey)) || '0', 10) || 0; }
@@ -979,11 +979,43 @@ async function budget(env, request, ip, path, body) {
     /* The week is the one people actually feel. The month stays as a
        backstop so a five-week month cannot quietly become five scans. */
     if (gWeekUsed >= BUDGET_GROUNDED_WEEK || rec.g >= BUDGET_GROUNDED) {
-      await unchargeIp();
-      return { allow: false, kind: 'grounded',
-               left: Math.max(0, BUDGET_CREDITS - rec.c),
-               groundedLeft: 0,
-               nextAt: 'Monday' };
+      /* ------------------------------------------------------------------
+         OUT OF LIVE SCANS IS NOT OUT OF ANSWERS.
+         ------------------------------------------------------------------
+         This used to refuse — 429, "that is this week's live Trend Spotter
+         scan used up" — and the page showed that sentence where the trends
+         should have been. Asked for directly: when the weekly is gone, fall
+         back to what the model already knows.
+
+         The page has had a fallback of its own for a while: ncAsk sees the
+         429 and sends the whole thing again with search:false. It works, and
+         it is the wrong place for it. It costs a second round trip, and —
+         this is the part that was actually reported — when that second
+         request fails for any reason at all, the error the reader is shown
+         is the FIRST one, this refusal, which is how a sentence about live
+         scans ends up being the whole answer. One request that comes back
+         ungrounded cannot fail that way.
+
+         So: answer, without the live web, at the price of an ordinary text
+         prompt rather than a scan's eighteen credits. The response says
+         X-NovaClip-Grounding: quota and the panel prints the amber note that
+         already exists for it, so nothing is dressed up as a live scan.
+
+         The monthly credit check below still runs against the new, lower
+         cost — and if THAT is out, the refusal is 'credits', which is true
+         and says the right thing.
+         ------------------------------------------------------------------ */
+      downgrade = true;
+      grounded = false;
+      cost = COST.text;
+      /* The address was charged for a scan a few lines up, and this is not
+         going to be one. Hand back the difference rather than letting a
+         downgraded request cost an address eighteen credits of its day. */
+      try {
+        await env.RL.put(ipKey, String(Math.max(0, ipSpent + cost)),
+                         { expirationTtl: IP_DAY_TTL });
+        ipLeft = Math.max(0, IP_DAY_CREDITS - (ipSpent + cost));
+      } catch (e) {}
     }
   }
   if (rec.c + cost > BUDGET_CREDITS) {
@@ -1002,6 +1034,9 @@ async function budget(env, request, ip, path, body) {
 
   return { allow: true, left: Math.max(0, BUDGET_CREDITS - rec.c), spent: cost,
            ipLeft: ipLeft,
+           /* Answered, but from memory rather than from the web. The handler
+              turns this into search:false and a header the page can read. */
+           downgrade: downgrade,
            /* What is left THIS WEEK, since that is the limit people meet. */
            groundedLeft: grounded
              ? Math.max(0, BUDGET_GROUNDED_WEEK - (gWeekUsed + 1))
@@ -1173,7 +1208,10 @@ export default {
         kv: !!env.RL,
         /* A budget with nowhere to keep a month's counter is not a budget. */
         budget: env.RL ? (BUDGET_CREDITS + ' credits/month, ' + BUDGET_GROUNDED_WEEK +
-                          ' live scan/week (month backstop ' + BUDGET_GROUNDED + ')')
+                          ' live scan/week (month backstop ' + BUDGET_GROUNDED + '); ' +
+                          'past that a scan is answered from the model\'s own knowledge ' +
+                          'at ' + COST.text + ' credit instead of ' + COST.grounded +
+                          ', marked X-NovaClip-Grounding: quota')
                        : 'off — needs the RL KV binding',
         /* Said out loud because a cap and an alarm that are quietly switched
            off read exactly like ones that are working. */
@@ -1702,8 +1740,17 @@ export default {
     }
 
     /* Grounding is a Google-side tool. Refuse rather than silently ignore, so a
-       caller knows their "search the live web" request did not happen. */
-    const search = body.search === true;
+       caller knows their "search the live web" request did not happen.
+
+       UNLESS THE WEEK'S LIVE SCAN IS GONE, in which case budget() has already
+       decided this answer comes from what the model remembers instead of from
+       the web, and charged it as ordinary text. From here on it is simply an
+       unsearched request: no Brave query is spent, Gemini is not asked to
+       ground, and it may fail over to another vendor like any other prompt.
+       The one thing that must not happen is silence about it — see
+       X-NovaClip-Grounding further down, which says 'quota'. */
+    const fromMemory = !!(bud && bud.downgrade);
+    const search = body.search === true && !fromMemory;
     if (search && provider !== 'gemini' && !env.SEARCH_API_KEY) {
       return fail(400, 'Search grounding is a Gemini feature; the ' + provider + ' adapter cannot search. ' +
                        'Set SEARCH_API_KEY and this Worker will do the search itself for any provider.');
@@ -1968,7 +2015,12 @@ export default {
       ...(at !== provider ? { 'X-NovaClip-Switched': provider + '->' + at } : {}),
       /* Whether the answer actually saw the live web, so the page can say so
          instead of presenting an ungrounded guess as a search. */
-      ...(search ? { 'X-NovaClip-Grounding':
+      /* 'quota' is its own word and not 'none' on purpose: the page prints a
+         different sentence for a scan that was never going to be live this
+         week than for one whose search broke. One is a plan, the other is a
+         fault, and they should not read the same. */
+      ...(fromMemory ? { 'X-NovaClip-Grounding': 'quota' }
+        : search ? { 'X-NovaClip-Grounding':
             dropped ? 'dropped' : hits ? 'search-api' : grounded ? 'gemini' : 'none' } : {}),
       /* What is left of the month's allowance. Sent on every answer so the
          page can show it going down rather than only announcing it at zero —

@@ -727,6 +727,27 @@ const T = {
   w_hype: { en:"The seconds where a finished edit loses people.", zh:"成片在哪几秒把观众丢掉。", hi:"तैयार एडिट किन सेकंडों में लोगों को खो देता है।", es:"Los segundos en los que un montaje terminado pierde gente.", ar:"الثواني التي يفقد فيها المونتاج النهائي المشاهدين.", fr:"Les secondes où un montage fini perd les gens.", bn:"তৈরি এডিট ঠিক কোন সেকেন্ডে দর্শক হারায়।", pt:"Os segundos em que uma edição acabada perde gente.", ru:"Секунды, на которых готовый монтаж теряет зрителей.", ur:"تیار ایڈٹ کن سیکنڈوں میں لوگوں کو کھو دیتا ہے۔", id:"Detik-detik saat editan jadi kehilangan penonton.", de:"Die Sekunden, in denen ein fertiger Schnitt Leute verliert.", ja:"完成した編集が視聴者を失う秒数。", tr:"Bitmiş bir kurgunun insanları kaybettiği saniyeler.", ko:"완성된 편집이 사람들을 놓치는 바로 그 초.", fa:"همان ثانیه‌هایی که تدوین آماده، مخاطب را از دست می‌دهد.", uk:"Секунди, на яких готовий монтаж втрачає глядачів.", it:"I secondi in cui un montaggio finito perde le persone.", pl:"Sekundy, w których gotowy montaż traci ludzi.", vi:"Những giây mà bản dựng hoàn chỉnh đánh mất người xem." },
   w_studio: { en:"Your views, your watch time, and what to change next.", zh:"你的播放量、观看时长，以及下一步该改什么。", hi:"आपके व्यूज़, वॉच टाइम, और अगली बार क्या बदलना है।", es:"Tus visitas, tu tiempo de visualización y qué cambiar después.", ar:"مشاهداتك ووقت المشاهدة وما الذي تغيّره بعد ذلك.", fr:"Tes vues, ton temps de visionnage, et quoi changer ensuite.", bn:"আপনার ভিউ, ওয়াচ টাইম, আর পরের বার কী বদলাবেন।", pt:"As tuas visualizações, o tempo de visionamento e o que mudar a seguir.", ru:"Твои просмотры, время просмотра и что поменять дальше.", ur:"آپ کے ویوز، واچ ٹائم، اور اگلی بار کیا بدلنا ہے۔", id:"Tayanganmu, waktu tontonmu, dan apa yang diubah berikutnya.", de:"Deine Aufrufe, deine Wiedergabezeit und was als Nächstes anders wird.", ja:"再生数、視聴時間、そして次に何を変えるか。", tr:"İzlenmelerin, izlenme süren ve bir sonraki sefer neyi değiştireceğin.", ko:"조회수와 시청 시간, 그리고 다음에 무엇을 바꿀지.", fa:"بازدیدها، زمان تماشا، و اینکه دفعه بعد چه را عوض کنی.", uk:"Твої перегляди, час перегляду і що змінити наступного разу.", it:"Le tue visualizzazioni, il tempo di visione e cosa cambiare dopo.", pl:"Twoje wyświetlenia, czas oglądania i co zmienić następnym razem.", vi:"Lượt xem, thời gian xem, và lần tới nên đổi gì." },
   w_ai: { en:"Three tutors, in your language, built for teen creators.", zh:"三位导师，用你的语言，为青少年创作者而做。", hi:"तीन ट्यूटर, आपकी भाषा में, टीन क्रिएटर्स के लिए बने।", es:"Tres tutores, en tu idioma, hechos para creadores adolescentes.", ar:"ثلاثة مدرّسين، بلغتك، مصمَّمون لصنّاع المحتوى المراهقين.", fr:"Trois tuteurs, dans ta langue, pensés pour les créateurs ados.", bn:"তিনজন টিউটর, আপনার ভাষায়, টিন ক্রিয়েটরদের জন্য তৈরি।", pt:"Três tutores, na tua língua, feitos para criadores adolescentes.", ru:"Три наставника, на твоём языке, для подростков-авторов.", ur:"تین ٹیوٹر، آپ کی زبان میں، نوجوان تخلیق کاروں کے لیے بنے۔", id:"Tiga tutor, dalam bahasamu, dibuat untuk kreator remaja.", de:"Drei Tutoren, in deiner Sprache, für junge Creator gemacht.", ja:"3人のチューターが、あなたの言語で。10代のクリエイター向けに作られています。", tr:"Üç eğitmen, senin dilinde, genç içerik üreticileri için yapıldı.", ko:"세 명의 튜터가, 당신의 언어로, 10대 크리에이터를 위해.", fa:"سه مربی، به زبان خودت، ساخته‌شده برای سازندگان نوجوان.", uk:"Троє наставників, твоєю мовою, створені для юних авторів.", it:"Tre tutor, nella tua lingua, pensati per creator adolescenti.", pl:"Trzech korepetytorów, w twoim języku, dla nastoletnich twórców.", vi:"Ba gia sư, bằng ngôn ngữ của bạn, làm cho nhà sáng tạo tuổi teen." },
+  /* ------------------------------------------------------------------
+     WHERE TO START — the second explainer on index.html.
+     ------------------------------------------------------------------
+     "What it is" above says what the site has. This says what to DO with
+     it, which is the other question somebody arrives with and the one the
+     page answered least: a list of tools is not an instruction, and the
+     commonest reason a creator account goes quiet is not knowing what the
+     next move is.
+
+     Five steps, each one handing over to the next, and each named with the
+     rail's own key for that tool so the instruction and the thing it points
+     at cannot end up with different names. Only the five lines are new.
+     ------------------------------------------------------------------ */
+  sec_start: { en:"Where to start", zh:"从哪里开始", hi:"कहाँ से शुरू करें", es:"Por dónde empezar", ar:"من أين تبدأ", fr:"Par où commencer", bn:"কোথা থেকে শুরু", pt:"Por onde começar", ru:"С чего начать", ur:"کہاں سے شروع کریں", id:"Mulai dari mana", de:"Wo anfangen", ja:"どこから始めるか", tr:"Nereden başlamalı", ko:"어디서 시작할까", fa:"از کجا شروع کنیم", uk:"З чого почати", it:"Da dove iniziare", pl:"Od czego zacząć", vi:"Bắt đầu từ đâu" },
+  start_h: { en:"Five steps,<span class='thin'>one video out.</span>", zh:"五步，<span class='thin'>发出第一条视频。</span>", hi:"पाँच कदम,<span class='thin'>एक वीडियो बाहर।</span>", es:"Cinco pasos,<span class='thin'>un vídeo publicado.</span>", ar:"خمس خطوات،<span class='thin'>وفيديو منشور.</span>", fr:"Cinq étapes,<span class='thin'>une vidéo en ligne.</span>", bn:"পাঁচ ধাপ,<span class='thin'>একটি ভিডিও বেরিয়ে গেল।</span>", pt:"Cinco passos,<span class='thin'>um vídeo publicado.</span>", ru:"Пять шагов —<span class='thin'>и видео вышло.</span>", ur:"پانچ قدم،<span class='thin'>ایک ویڈیو باہر۔</span>", id:"Lima langkah,<span class='thin'>satu video tayang.</span>", de:"Fünf Schritte,<span class='thin'>ein Video draußen.</span>", ja:"5つのステップで、<span class='thin'>1本を世に出す。</span>", tr:"Beş adım,<span class='thin'>bir video yayında.</span>", ko:"다섯 단계,<span class='thin'>영상 하나 발행.</span>", fa:"پنج قدم،<span class='thin'>یک ویدیو منتشر.</span>", uk:"П'ять кроків —<span class='thin'>і відео вийшло.</span>", it:"Cinque passi,<span class='thin'>un video pubblicato.</span>", pl:"Pięć kroków,<span class='thin'>jedno wideo w świat.</span>", vi:"Năm bước,<span class='thin'>một video lên sóng.</span>" },
+  start_lead: { en:"You do not need an idea to start. Start with what is already climbing in your niche, and every step hands you the next one.", zh:"开始不需要先有想法。从你的领域里已经在涨的东西开始，每一步都会把下一步交到你手上。", hi:"शुरू करने के लिए आइडिया की ज़रूरत नहीं। जो आपके निच में पहले से चढ़ रहा है उससे शुरू करें — हर कदम आपको अगला कदम थमा देगा।", es:"No necesitas una idea para empezar. Empieza por lo que ya está subiendo en tu nicho, y cada paso te entrega el siguiente.", ar:"لا تحتاج إلى فكرة لتبدأ. ابدأ بما يصعد فعلًا في مجالك، وكل خطوة تسلّمك التالية.", fr:"Pas besoin d'une idée pour commencer. Pars de ce qui monte déjà dans ton créneau, et chaque étape te donne la suivante.", bn:"শুরু করতে আইডিয়া লাগে না। আপনার নিশে যা আগে থেকেই উঠছে তা দিয়ে শুরু করুন — প্রতিটি ধাপ পরেরটা হাতে তুলে দেবে।", pt:"Não precisas de uma ideia para começar. Começa pelo que já está a subir no teu nicho, e cada passo entrega-te o seguinte.", ru:"Чтобы начать, идея не нужна. Начни с того, что уже растёт в твоей нише, и каждый шаг подскажет следующий.", ur:"شروع کرنے کے لیے آئیڈیا کی ضرورت نہیں۔ جو آپ کے شعبے میں پہلے ہی اوپر جا رہا ہے اسی سے شروع کریں — ہر قدم اگلا قدم آپ کے ہاتھ میں دے دے گا۔", id:"Kamu tidak butuh ide untuk mulai. Mulai dari yang sudah naik di nichemu, dan tiap langkah memberimu langkah berikutnya.", de:"Du brauchst keine Idee, um anzufangen. Fang mit dem an, was in deiner Nische schon steigt — jeder Schritt gibt dir den nächsten.", ja:"始めるのにアイデアは要りません。自分のジャンルですでに伸びているものから始めれば、各ステップが次のステップを手渡してくれます。", tr:"Başlamak için fikre ihtiyacın yok. Alanında zaten yükselen şeyle başla; her adım sana bir sonrakini veriyor.", ko:"시작하는 데 아이디어는 필요 없습니다. 내 분야에서 이미 뜨고 있는 것부터 시작하면, 각 단계가 다음 단계를 건네줍니다.", fa:"برای شروع نیازی به ایده نداری. از چیزی شروع کن که همین حالا در حوزه‌ات بالا می‌رود، و هر قدم، قدم بعدی را دستت می‌دهد.", uk:"Щоб почати, ідея не потрібна. Почни з того, що вже зростає у твоїй ніші, і кожен крок підкаже наступний.", it:"Non ti serve un'idea per iniziare. Parti da quello che sta già salendo nella tua nicchia, e ogni passo ti consegna il successivo.", pl:"Nie potrzebujesz pomysłu, żeby zacząć. Zacznij od tego, co już rośnie w twojej niszy, a każdy krok poda ci następny.", vi:"Bạn không cần ý tưởng để bắt đầu. Hãy bắt đầu từ thứ đang lên trong mảng của bạn, và mỗi bước sẽ đưa bạn tới bước tiếp theo." },
+  s_trends: { en:"Type your niche. See what is climbing today.", zh:"输入你的领域，看看今天什么在涨。", hi:"अपना निच लिखें। देखें आज क्या चढ़ रहा है।", es:"Escribe tu nicho. Mira qué sube hoy.", ar:"اكتب مجالك. وانظر ما الذي يصعد اليوم.", fr:"Tape ton créneau. Regarde ce qui monte aujourd'hui.", bn:"আপনার নিশ লিখুন। দেখুন আজ কী উঠছে।", pt:"Escreve o teu nicho. Vê o que está a subir hoje.", ru:"Впиши свою нишу. Посмотри, что растёт сегодня.", ur:"اپنا شعبہ لکھیں۔ دیکھیں آج کیا اوپر جا رہا ہے۔", id:"Ketik nichemu. Lihat apa yang naik hari ini.", de:"Tipp deine Nische ein. Sieh, was heute steigt.", ja:"ジャンルを入力。今日伸びているものを見る。", tr:"Alanını yaz. Bugün ne yükseliyor, gör.", ko:"분야를 입력하세요. 오늘 뜨는 걸 봅니다.", fa:"حوزه‌ات را بنویس. ببین امروز چه بالا می‌رود.", uk:"Впиши свою нішу. Подивись, що зростає сьогодні.", it:"Scrivi la tua nicchia. Guarda cosa sta salendo oggi.", pl:"Wpisz swoją niszę. Zobacz, co dziś rośnie.", vi:"Gõ mảng của bạn. Xem hôm nay thứ gì đang lên." },
+  s_scripts: { en:"Turn one of them into a title, a hook and the words.", zh:"把其中一个变成标题、开场钩子和台词。", hi:"उनमें से एक को टाइटल, हुक और स्क्रिप्ट में बदलें।", es:"Convierte uno en un título, un gancho y el texto.", ar:"حوّل واحدًا منها إلى عنوان وخطّاف ونص.", fr:"Transforme-en un en titre, accroche et texte.", bn:"তার একটিকে টাইটেল, হুক আর স্ক্রিপ্টে বদলান।", pt:"Transforma um deles em título, gancho e texto.", ru:"Преврати один из них в заголовок, зацепку и текст.", ur:"ان میں سے ایک کو ٹائٹل، ہُک اور اسکرپٹ میں بدلیں۔", id:"Ubah salah satunya jadi judul, hook, dan naskah.", de:"Mach aus einem davon Titel, Hook und Text.", ja:"そのひとつをタイトルとフックと台本にする。", tr:"Birini başlığa, kancaya ve metne çevir.", ko:"그중 하나를 제목과 후킹, 대본으로.", fa:"یکی از آن‌ها را به عنوان، قلاب و متن تبدیل کن.", uk:"Переший один із них на заголовок, гачок і текст.", it:"Trasformane uno in titolo, hook e testo.", pl:"Zamień jeden z nich w tytuł, hak i tekst.", vi:"Biến một trong số đó thành tiêu đề, hook và lời thoại." },
+  s_editor: { en:"Cut it, add the music, add the captions.", zh:"剪好它，配上音乐，加上字幕。", hi:"इसे काटें, म्यूज़िक लगाएँ, कैप्शन जोड़ें।", es:"Móntalo, pon la música, pon los subtítulos.", ar:"اقطعه، وأضف الموسيقى، وأضف الترجمة.", fr:"Monte-la, ajoute la musique, ajoute les sous-titres.", bn:"কাটুন, মিউজিক দিন, ক্যাপশন দিন।", pt:"Corta-o, mete a música, mete as legendas.", ru:"Смонтируй, добавь музыку, добавь субтитры.", ur:"اسے کاٹیں، میوزک لگائیں، کیپشن شامل کریں۔", id:"Potong, tambah musik, tambah teks.", de:"Schneide es, leg Musik drunter, setz Untertitel.", ja:"カットして、音楽を入れて、字幕をつける。", tr:"Kes, müziği koy, altyazıyı ekle.", ko:"자르고, 음악 넣고, 자막 붙이고.", fa:"ببُرش، موسیقی بگذار، زیرنویس اضافه کن.", uk:"Зміонтуй, додай музику, додай субтитри.", it:"Montalo, metti la musica, metti i sottotitoli.", pl:"Zmontuj, dodaj muzykę, dodaj napisy.", vi:"Cắt, thêm nhạc, thêm phụ đề." },
+  s_photo: { en:"Pull a frame out of it and make the thumbnail.", zh:"从里面抽一帧，做成封面图。", hi:"उसमें से एक फ़्रेम निकालकर थंबनेल बनाएँ।", es:"Saca un fotograma y haz la miniatura.", ar:"استخرج لقطة منه واصنع الصورة المصغّرة.", fr:"Sors-en une image et fais la miniature.", bn:"এর থেকে একটি ফ্রেম নিয়ে থাম্বনেইল বানান।", pt:"Tira um fotograma e faz a miniatura.", ru:"Вытащи из него кадр и сделай миниатюру.", ur:"اس میں سے ایک فریم نکال کر تھمب نیل بنائیں۔", id:"Ambil satu frame darinya dan buat thumbnail.", de:"Zieh ein Frame heraus und mach das Thumbnail.", ja:"そこから1コマ抜き出してサムネイルにする。", tr:"İçinden bir kare çıkar ve küçük resmi yap.", ko:"거기서 한 프레임을 빼 썸네일을 만듭니다.", fa:"یک فریم از آن بیرون بکش و بندانگشتی را بساز.", uk:"Витягни з нього кадр і зроби мініатюру.", it:"Tira fuori un fotogramma e fai la miniatura.", pl:"Wyciągnij z niego klatkę i zrób miniaturę.", vi:"Rút một khung hình ra và làm thumbnail." },
+  s_studio: { en:"Post it, then come back and read what happened.", zh:"发出去，然后回来看看发生了什么。", hi:"पोस्ट करें, फिर लौटकर देखें क्या हुआ।", es:"Publícalo y vuelve a leer qué pasó.", ar:"انشره، ثم عُد واقرأ ما حدث.", fr:"Publie-la, puis reviens lire ce qui s'est passé.", bn:"পোস্ট করুন, তারপর ফিরে এসে দেখুন কী হলো।", pt:"Publica-o e volta para ler o que aconteceu.", ru:"Выложи, а потом вернись и прочитай, что вышло.", ur:"پوسٹ کریں، پھر واپس آ کر دیکھیں کیا ہوا۔", id:"Posting, lalu kembali dan baca apa yang terjadi.", de:"Poste es und komm zurück, um zu lesen, was passiert ist.", ja:"投稿して、戻ってきて何が起きたかを読む。", tr:"Yayınla, sonra geri gelip ne olduğunu oku.", ko:"올리고, 다시 돌아와 무슨 일이 있었는지 봅니다.", fa:"منتشرش کن، بعد برگرد و بخوان چه شد.", uk:"Виклади, а потім повернись і прочитай, що вийшло.", it:"Pubblicalo, poi torna a leggere com'è andata.", pl:"Opublikuj, a potem wróć i przeczytaj, co się stało.", vi:"Đăng lên, rồi quay lại xem chuyện gì đã xảy ra." },
   sec1_h1: { en:"Smart<span class='thin'>Coaching</span>", zh:"智能<span class='thin'>指导</span>", hi:"स्मार्ट<span class='thin'>कोचिंग</span>", es:"Inteligente<span class='thin'>Entrenamiento</span>", ar:"ذكي<span class='thin'>تدريب</span>", fr:"Intelligent<span class='thin'>Coaching</span>", bn:"স্মার্ট<span class='thin'>কোচিং</span>", pt:"Inteligente<span class='thin'>Treino</span>", ru:"Умный<span class='thin'>Наставничество</span>", ur:"سمارٹ<span class='thin'>کوچنگ</span>", id:"Cerdas<span class='thin'>Pelatihan</span>", de:"Intelligentes<span class='thin'>Coaching</span>", ja:"スマート<span class='thin'>コーチング</span>", tr:"Akıllı<span class='thin'>Koçluk</span>", ko:"스마트<span class='thin'>코칭</span>", fa:"هوشمند<span class='thin'>مربی‌گری</span>", uk:"Розумний<span class='thin'>Наставництво</span>", it:"Intelligente<span class='thin'>Coaching</span>", pl:"Inteligentny<span class='thin'>Coaching</span>", vi:"Thông minh<span class='thin'>Huấn luyện</span>" },
   /* NOT READ ANY MORE. sec1_h1 above now carries both lines as markup,
      the way play_h and nums_h always did. Left in place rather than
@@ -7651,9 +7672,16 @@ async function ncAsk(prompt, opts) {
            via: via ? via.key : '', provider: answered, switched: switched,
            /* Asked for live search and did not get it. The caller decides what
               to say; what it must not do is present this as a searched answer. */
-           searchFailed: !!(opts.search && (grounding === 'dropped' || grounding === 'none')),
-           searchFailedWhy: (opts.search && (grounding === 'dropped' || grounding === 'none'))
-             ? (grounding === 'dropped' ? 'dropped' : 'none') : '' };
+           /* 'quota' joins these: the worker no longer refuses a scan once the
+              week's live one is gone, it answers from what the model already
+              knows and says so here. That is still an answer that did not see
+              the web, so it must still be flagged — what changes is the
+              sentence the panel prints, because a plan is not a fault. */
+           searchFailed: !!(opts.search &&
+             (grounding === 'dropped' || grounding === 'none' || grounding === 'quota')),
+           searchFailedWhy: (opts.search &&
+             (grounding === 'dropped' || grounding === 'none' || grounding === 'quota'))
+             ? grounding : '' };
 }
 
 /* ============================================================================
@@ -10416,8 +10444,45 @@ window.ncSlang = function () {
      the photo tool can have work open, so they ask instead — the same handover,
      at a moment the reader picks.
      -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+     THE DOUBLE LOAD ON ARRIVAL — reported as "a double refresh lag when I
+     enter", and it was this line.
+     --------------------------------------------------------------------------
+     sw.js calls clients.claim() when it activates. On a FIRST visit there is
+     no worker controlling the page, so that claim changes the controller from
+     nothing to the new worker — and this handler could not tell that apart
+     from a new version replacing an old one, so it reloaded. Every first
+     visit to the site paid for a second full page load, immediately, for no
+     benefit whatsoever: the files it reloaded were the files it already had.
+
+     It is worst on a phone, which is the other half of the report. iOS evicts
+     a service worker registration after about a week of not visiting, so for
+     anyone who drops in now and then EVERY visit is a first visit, and every
+     visit double-loads — on the connection least able to afford it.
+
+     Reading it before the claim is the whole trick. By the time
+     controllerchange fires, navigator.serviceWorker.controller is already the
+     new worker, so asking then always says yes. This is captured while the
+     page is being evaluated, when it still holds whatever controlled this
+     navigation: empty on a first visit, the old worker on a repeat one.
+
+     A genuine update still reloads. That is the case this was built for and
+     it is unchanged — it is only "there was nothing here before" that stops.
+     -------------------------------------------------------------------------- */
+  var hadController = !!navigator.serviceWorker.controller;
   var reloading = false;
   navigator.serviceWorker.addEventListener('controllerchange', function () {
+    /* THE FIRST CLAIM IS NOT A SWAP — and it is remembered, which the first
+       version of this fix got wrong. A flag merely read as false forever
+       would also have swallowed a REAL update arriving later on that same
+       first-visit page: somebody who arrives, leaves the tab open, and is
+       still there when a deploy lands would have gone on being served the old
+       worker's files with nothing to tell them. Caught by asking the test
+       what happens when a new worker takes over a page that was uncontrolled
+       when it loaded — it answered "nothing", which is not the deal.
+       So: skip this one, and from here on the page has a controller like any
+       other, and the next change really is a new version. */
+    if (!hadController) { hadController = true; return; }
     if (reloading) return;
     reloading = true;
     location.reload();

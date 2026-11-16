@@ -3103,7 +3103,14 @@
    what was lagging. nc-float.js and nova.js both change, and they have to
    ship together: the hiding lives in nova.js because it runs inside the
    floated page, and nc-float.js is what puts float=1 in its address. */
-const CACHE = 'novaclip-v208';
+/* v209: the mini window now remembers which tool was open and comes back
+   with it on the next page; the home page gained a "Where to start" section;
+   and the first visit to the site stopped loading itself twice — sw.js claims
+   the page, and nova.js could not tell that first claim apart from a new
+   version taking over, so it reloaded for nothing. Worst on a phone, where
+   iOS evicts the registration after about a week and every occasional visit
+   was a first visit. */
+const CACHE = 'novaclip-v209';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

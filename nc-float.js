@@ -99,6 +99,19 @@
   if (/[?&]float=1/.test(location.search)) return;
 
   var KEY = 'nc_float_geom';
+  /* WHICH TOOL WAS OPEN, AND HOW.
+     Geometry was already remembered per tool, so a window came back the size
+     and shape you left it — but only once you had gone and found it again,
+     because every navigation destroyed it and nothing recorded that it had
+     been there. Asked for: remember which tool was open.
+
+     { id, state } — state is 'open' or 'bubble', because a window parked at
+     the edge is a thing somebody chose and coming back expanded would undo
+     that choice. Written whenever either changes, removed by × and only by ×:
+     closing is the one gesture that means "I am done with this", and
+     navigating is not. That is also what keeps it from being a trap — the
+     way out is the button already on the window. */
+  var LAST = 'nc_float_last';
   var MIN_W = 260, MIN_H = 220;
 
   /* THE NOTCH AND THE HOME BAR.
@@ -235,6 +248,15 @@
     all[id] = { x: g.x, y: g.y, w: g.w, h: g.h };
     try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
   }
+
+  /* What was open, for the next page. See LAST at the top. */
+  function remember(state) {
+    try {
+      if (!cur) return;
+      localStorage.setItem(LAST, JSON.stringify({ id: cur.tool.id, state: state }));
+    } catch (e) {}
+  }
+  function forget() { try { localStorage.removeItem(LAST); } catch (e) {} }
 
   /* Keep the whole window on screen. Called on open and on resize, because a
      phone turning sideways is the commonest way a remembered position ends up
@@ -442,10 +464,15 @@
 
   /* ------------------------------------------------------------- the window */
 
-  function close() {
+  /* `keep` is for the close() that open() does to clear the previous window
+     before building the next one: that is not somebody saying they are done,
+     and letting it wipe the memory would mean the only state ever recorded
+     was whatever happened to be last written afterwards. × passes nothing. */
+  function close(keep) {
     if (win && win.parentNode) win.parentNode.removeChild(win);
     if (bubble && bubble.parentNode) bubble.parentNode.removeChild(bubble);
     win = null; bubble = null; bub = null; cur = null;
+    if (!keep) forget();
   }
 
   /* The bubble's own place on screen, kept out of the window's geometry
@@ -465,6 +492,7 @@
     if (!win || !cur) return;
     saveGeom(cur.tool.id, cur.g);
     win.hidden = true;
+    remember('bubble');
     if (bubble) { bubble.hidden = false; placeBubble(); return; }
 
     bubble = document.createElement('button');
@@ -519,6 +547,7 @@
       bubble.hidden = true;
       win.hidden = false;
       place();
+      remember('open');
     }
     bubble.addEventListener('pointerup', up);
     bubble.addEventListener('pointercancel', function (e) {
@@ -530,6 +559,7 @@
       if (e.key !== 'Enter' && e.key !== ' ') return;
       e.preventDefault();
       bubble.hidden = true; win.hidden = false; place();
+      remember('open');
     });
   }
 
@@ -565,7 +595,7 @@
     for (var i = 0; i < FLAT.length; i++) if (FLAT[i].id === id) tool = FLAT[i];
     if (!tool) return null;
     css();
-    close();
+    close(true);
 
     cur = { tool: tool, g: startGeom(tool) };
 
@@ -629,6 +659,7 @@
     });
 
     addEventListener('resize', onResize);
+    remember('open');
     return win;
   }
 
@@ -905,11 +936,38 @@
      Studio bundle after React mounts — so one try is not enough, and watching
      for ever is not either. Twenty tries at 400ms covers a slow phone booting
      a React page and then gives up quietly. */
+  /* BRING BACK WHAT WAS OPEN.
+     The window is a real element on a real page, so navigating destroys it —
+     and the whole point of a floating tool is that it survives the thing you
+     were doing. It comes back on the next page in the state it was left: the
+     same tool, its own remembered size and position, and still parked at the
+     edge if that is where it was.
+
+     This is worth being plain about: a heavy tool left open is a heavy tool
+     on every page until it is closed, because restoring it means loading it.
+     That is the deal the feature asks for and × ends it. The ones that carry
+     Studio's bundle are the ones the picker already marks "heavier".
+
+     Anything it cannot place is dropped rather than guessed at — a remembered
+     id for a tool that no longer exists would otherwise sit in storage
+     failing quietly on every page for ever. */
+  function restore() {
+    var v = null;
+    try { v = JSON.parse(localStorage.getItem(LAST) || 'null'); } catch (e) {}
+    if (!v || !v.id) return;
+    var known = false;
+    for (var i = 0; i < FLAT.length; i++) if (FLAT[i].id === v.id) known = true;
+    if (!known) { forget(); return; }
+    if (!open(v.id)) { forget(); return; }
+    if (v.state === 'bubble') shrink();
+  }
+
   function start() {
     css();
     readSafe();
     pill();
     phoneRow();
+    restore();
     var tries = 0;
     (function again() {
       if (intoSiteRail() || intoStudioRail()) return;
