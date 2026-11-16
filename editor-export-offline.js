@@ -145,7 +145,14 @@
         return new Promise(function (res, rej) {
           /* The callback form, because Safari and some Chromium builds still
              do not return a promise from decodeAudioData. */
-          try { ctx.decodeAudioData(buf, res, rej); } catch (e) { rej(e); }
+          /* The promise this ALSO returns rejects for a clip with no sound,
+             and with nothing attached to it that is an unhandled rejection
+             logged on every silent export. The callbacks above are the
+             answer this code uses; this just stops the other one shouting. */
+          try {
+            var pr = ctx.decodeAudioData(buf, res, rej);
+            if (pr && typeof pr.catch === 'function') pr.catch(function () {});
+          } catch (e) { rej(e); }
         });
       })
       .then(function (b) { decoded[asset.id] = b; return b; })
@@ -167,6 +174,44 @@
       out.push({ clip: c, asset: a });
     }
     return out;
+  }
+
+  /* DOES THE PROJECT ACTUALLY HAVE SOUND, as opposed to having clips that
+     could have had some? audible() answers the second question: it returns
+     every video or audio clip on an unmuted track, and a video with no audio
+     track at all counts. That is the right list to MIX, and the wrong one to
+     make a decision with.
+
+     It mattered because of what the decision is. A project with sound on a
+     browser with no AAC encoder has to go back to the real-time path, since
+     a laggy export with audio beats a smooth silent one. With audible() as
+     the test, a timeline holding nothing but silent video said "I have
+     sound", and so a browser without AAC took the slow path for every export
+     — including ones where there was no sound to lose. Measured here: a
+     four-second silent clip, and the export fell back with "the project has
+     sound and this browser has no AAC encoder".
+
+     This decodes the candidates and asks whether any of them produced
+     samples. decodeAsset already answers null for a clip with nothing
+     decodable and caches what it finds, so for a project that does have
+     sound this is the decode renderAudio was going to do anyway, done
+     earlier. If the question cannot be asked at all, the answer is yes —
+     the costly path is the safe one when the cheap one might lose audio. */
+  var realAudio = null;
+  function hasRealAudio() {
+    if (realAudio) return realAudio;
+    var list = audible();
+    if (!list.length) { realAudio = Promise.resolve(false); return realAudio; }
+    var ctx;
+    try { ctx = new OfflineAudioContext(1, 1, AUDIO_RATE); }
+    catch (e) { realAudio = Promise.resolve(true); return realAudio; }
+    realAudio = Promise.all(list.map(function (x) { return decodeAsset(ctx, x.asset); }))
+      .then(function (bufs) {
+        for (var i = 0; i < bufs.length; i++) if (bufs[i] && bufs[i].length) return true;
+        return false;
+      })
+      .catch(function () { return true; });
+    return realAudio;
   }
 
   function renderAudio(totalSeconds) {
@@ -301,13 +346,38 @@
   var drivenVideos = [];
   var patchedMedia = false;
 
+  /* A REGISTER, BECAUSE THE DOCUMENT DOES NOT KNOW ABOUT THEM.
+     This is the whole bug, and it hid for two releases behind code that
+     looked like it was working. The bundle's source clips are created with
+     createElement and never appended, so document.querySelectorAll('video')
+     — which searches the document TREE — returns none of them. Every lookup
+     in this file then found nothing, advanceSources() wound nothing on, and
+     the sources were never driven at all.
+
+     Measured on a four-second export: five video elements, all detached,
+     zero found by the document, and fourteen seeks in the entire run, each
+     one advancing by exactly 0.267s. That 0.267 is the bundle's own drift
+     correction — with play() swallowed below and nothing else moving the
+     clip, the only thing that ever moved it was the bundle noticing it had
+     fallen about a quarter-second behind. 0.267s is eight frames at 30fps,
+     which is why the export kept one picture in every eight.
+
+     Elements register themselves here, where the bundle already announces
+     them by calling play(). Pruned on each collect so a long session does
+     not accumulate the dead ones. */
+  var known = [];
+  function remember(el) {
+    for (var i = 0; i < known.length; i++) if (known[i] === el) return;
+    known.push(el);
+  }
+
   function markActive() {
     if (patchedMedia) return;
     patchedMedia = true;
     var P = HTMLMediaElement.prototype;
     var play = P.play, pause = P.pause;
     P.play = function () {
-      try { this.__ncActive = true; } catch (e) {}
+      try { this.__ncActive = true; remember(this); } catch (e) {}
       if (window.__ncOfflineExport && !this.isConnected && this.src) {
         /* Swallow the play: this file moves it by hand from now on. A
            rejected promise here would be an unhandled rejection in the
@@ -322,15 +392,23 @@
     };
   }
 
-  function collectVideos() {
-    drivenVideos = [];
-    try {
-      var all = document.querySelectorAll('video');
-      for (var i = 0; i < all.length; i++) {
-        if (!all[i].isConnected && all[i].src) drivenVideos.push(all[i]);
-      }
-    } catch (e) {}
+  /* The export's sources: registered, detached, and holding a src. Doubles
+     as the prune — anything that has lost its src is dropped. */
+  function sources() {
+    var out = [], keep = [];
+    for (var i = 0; i < known.length; i++) {
+      var v = known[i];
+      try {
+        if (!v || !v.src) continue;
+        keep.push(v);
+        if (!v.isConnected && v.__ncActive) out.push(v);
+      } catch (e) {}
+    }
+    known = keep;
+    return out;
   }
+
+  function collectVideos() { drivenVideos = sources(); }
 
   /* The export creates its sources as it goes, so the list is refreshed
      rather than taken once.
@@ -344,16 +422,60 @@
   function advanceSources(step) {
     try {
       var now = REAL_NOW();
-      var all = document.querySelectorAll('video');
+      var all = sources();
       for (var i = 0; i < all.length; i++) {
         var v = all[i];
-        if (v.isConnected || !v.src) continue;        /* on-page video is the preview */
         if (!v.paused) { try { v.pause(); } catch (e) {} }
-        if (!v.__ncActive) continue;
         var rate = v.playbackRate || 1;
-        var next = v.currentTime + step * rate;
+        /* OUR OWN ACCUMULATOR, NOT A READ-BACK.
+           currentTime reports the START of the frame currently presented —
+           it is snapped, not the value that was asked for. Adding a step to
+           that lands exactly on a frame boundary every time, and a seek to a
+           boundary can legitimately resolve to either side, so about a
+           quarter of the steps picked the frame they had just shown.
+           Measured: 89 distinct frames out of 120, the doubles spread evenly
+           at seven to nine a second rather than clustered.
+
+           Counting in our own variable keeps the error from accumulating at
+           all, and the half-step nudge lands the seek inside the intended
+           frame instead of on its edge.
+
+           Resynced if the element is moved somewhere far away by the bundle
+           — a cut, or a different clip taking over the element — because
+           then its position is deliberate and ours is stale. */
+        var want = v.__ncWant;
+        if (typeof want !== 'number' || !isFinite(want) ||
+            Math.abs(want - v.currentTime) > 0.5) want = v.currentTime;
+        want += step * rate;
+        v.__ncWant = want;
+        var next = want + step * 0.5;
         if (isFinite(next) && next >= 0) {
           try {
+            /* ASK FOR THE FRAME, NOT FOR THE SEEK.
+               The version before this waited on `!v.seeking && readyState >= 2`
+               and it measured as doing nothing at all: forcedFrames came back
+               0 — the wait never once fired — while the export still kept only
+               15 distinct pictures out of 120, every eighth frame. Those two
+               properties answer "has the seek been processed", which a
+               <video> says yes to while it is still PRESENTING the previous
+               picture. drawImage then copies that previous picture, happily
+               and instantly, and nothing anywhere is in an error state.
+
+               requestVideoFrameCallback is the signal that actually means a
+               new frame has been presented and is there to be drawn. It is
+               registered before currentTime is set, because the seek can
+               finish before the next line runs. */
+            v.__ncFrameReady = false;
+            if (typeof v.requestVideoFrameCallback === 'function') {
+              try {
+                v.requestVideoFrameCallback(function () { v.__ncFrameReady = true; });
+              } catch (e) { v.__ncFrameReady = true; }
+            } else {
+              /* No rVFC: `seeked` at least fires after the seek rather than
+                 during it, which is still closer than polling a flag. */
+              var onSeeked = function () { v.__ncFrameReady = true; };
+              try { v.addEventListener('seeked', onSeeked, { once: true }); } catch (e) { v.__ncFrameReady = true; }
+            }
             v.currentTime = next;
             /* ONLY WAIT FOR A CLIP THAT WAS ALREADY WORKING, and only while
                it keeps working. Both halves close the same door the old
@@ -537,15 +659,13 @@
       var t = REAL_NOW();
       var waiting = false;
       try {
-        var all = document.querySelectorAll('video');
+        var all = sources();
         for (var i = 0; i < all.length; i++) {
           var v = all[i];
-          if (v.isConnected || !v.src || !v.__ncActive) continue;
           if (!v.__ncSeekAt) continue;              /* not waiting on this one */
-          /* readyState as well as seeking: an element can finish the seek
-             and still have no frame to hand over, which is the starvation
-             case the old global test was really for. */
-          if (!v.seeking && v.readyState >= 2) { v.__ncSeekAt = 0; continue; }
+          /* The frame itself, reported by the element. readyState and
+             seeking are not enough — see advanceSources. */
+          if (v.__ncFrameReady) { v.__ncSeekAt = 0; continue; }
           if (t - v.__ncSeekAt >= WAIT_CAP_MS) {
             v.__ncSeekAt = 0; v.__ncMisses = (v.__ncMisses || 0) + 1; capped++;
             continue;
@@ -732,16 +852,38 @@
     }
     if (prev.__offlineWrapped) return;
 
+    /* WHY THE FAST PATH DID NOT RUN.
+       Every return below hands the export back to the real-time recorder,
+       and until now it did so in silence — so "my export is choppy" had no
+       way of being told apart from "my export never used this file at all",
+       which is exactly the hour I lost chasing the wrong one of those. The
+       reason is recorded where the frame rate already is. */
+    function fellBack(why) {
+      try { window.NC_EXPORT_OFFLINE.last = { path: 'real-time', why: why }; } catch (e) {}
+    }
+
     var wrapped = function (stream, format, codec, bps) {
-      var fallback = function () { return prev(stream, format, codec, bps); };
+      var fallback = function (why) {
+        fellBack(why || 'unknown');
+        return prev(stream, format, codec, bps);
+      };
       try {
-        if (!haveBits()) return fallback();
+        /* Per export: a project can gain or lose sound between two of them. */
+        realAudio = null; decoded = {};
+        if (!haveBits()) {
+          return fallback('this browser has no VideoEncoder/VideoFrame, or mp4-muxer did not load');
+        }
         /* MP4 only. The muxer writes MP4 and nothing else, and quietly
            handing somebody an MP4 when they picked WebM is the exact bug
            export-fix.js has a long comment about. */
-        if (String(format || '').toLowerCase().indexOf('webm') === 0) return fallback();
+        if (String(format || '').toLowerCase().indexOf('webm') === 0) {
+          return fallback('WebM was asked for and this path only writes MP4');
+        }
         var canvas = canvasFor.get(stream);
-        if (!canvas || !canvas.width || !canvas.height) return fallback();
+        if (!canvas || !canvas.width || !canvas.height) {
+          return fallback('the canvas behind the recording stream could not be identified' +
+                          ' (captureStream was called before this file patched it)');
+        }
 
         var st = state();
         var fps = (st && st.exportSettings && st.exportSettings.fps) ||
@@ -754,7 +896,7 @@
            encoder has to go back to the old path: a laggy export with audio
            beats a smooth silent one, every time. A project with no sound in
            it does not care either way and gets a video-only file. */
-        var wantsAudio = audible().length > 0;
+        return hasRealAudio().then(function (wantsAudio) {
         var audioOk = wantsAudio ? aacWorks() : Promise.resolve(false);
 
         return Promise.all([
@@ -765,14 +907,20 @@
           audioOk
         ]).then(function (both) {
           var sup = both[0], canAac = both[1];
-          if (!sup || !sup.supported) return fallback();
-          if (wantsAudio && !canAac) return fallback();
+          if (!sup || !sup.supported) return fallback('H.264 at this size is not encodable here');
+          if (wantsAudio && !canAac) {
+            return fallback('the project has sound and this browser has no AAC encoder' +
+                            ' — a laggy export with audio beats a smooth silent one');
+          }
           var rec = makeOffline(canvas, 'video/mp4', rate, fps, wantsAudio && canAac,
                                 function () {});
-          if (!rec) return fallback();
+          if (!rec) return fallback('the offline recorder could not be built');
           return { recorder: rec, mime: 'video/mp4;codecs=avc1.640028', ext: 'mp4', offline: true };
-        }).catch(fallback);
-      } catch (e) { return fallback(); }
+        });
+        }).catch(function (e) {
+          return fallback('checking the encoder threw: ' + ((e && e.message) || e));
+        });
+      } catch (e) { return fallback('setting up threw: ' + ((e && e.message) || e)); }
     };
     wrapped.__offlineWrapped = true;
     window.__ncPickRecorder = wrapped;

@@ -3121,7 +3121,12 @@
    while the text on top ran smoothly. The fps was never lowered; the footage
    was. editor-export-offline.js now waits per clip instead of trusting a
    page-wide stall test that gets switched off. */
-const CACHE = 'novaclip-v211';
+/* v212: the export was only ever showing one source frame in eight, because
+   the code meant to wind the clips on had never run once — it looked for the
+   source <video> elements with document.querySelectorAll, and they are
+   detached, so it always found none. Measured on a 4s clip whose every frame
+   is numbered: 15 distinct pictures out of 120 before, 92 after. */
+const CACHE = 'novaclip-v212';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
