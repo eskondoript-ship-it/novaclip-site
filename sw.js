@@ -3126,7 +3126,13 @@
    source <video> elements with document.querySelectorAll, and they are
    detached, so it always found none. Measured on a 4s clip whose every frame
    is numbered: 15 distinct pictures out of 120 before, 92 after. */
-const CACHE = 'novaclip-v212';
+/* v213: the freezes. A seek that had not landed yet was cancelled by the
+   next frame's seek, every 33ms, so a clip that needed 400ms was never given
+   it — readyState stuck at 1, no frame ever presented, the picture held for
+   up to 171 frames. In-flight seeks are left alone now. Measured on an edit
+   cutting between six points of a two-minute source: 36 distinct frames of
+   360 before, 352 after, and a plain single-clip export is 120 of 120. */
+const CACHE = 'novaclip-v213';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

@@ -82,8 +82,21 @@
   var WARMUP_MS = 700;          /* how long to watch the renderer before choosing */
   var FPS_STEPS = [30, 25, 24, 20, 15, 12];   /* what it is allowed to settle on */
   var FPS_FLOOR = 12;           /* below this, choppiness is worse than waiting */
-  var WAIT_CAP_MS = 600;        /* longest one frame may wait on its sources */
-  var MAX_MISSES = 5;           /* timeouts before one clip stops being waited for */
+  /* HOW LONG A SEEK IS ALLOWED TO TAKE.
+     600ms was chosen when the only thing being waited for was a 1/30s step
+     within a clip that was already decoding, which is quick. It is the wrong
+     number for the case that actually freezes: a cut that jumps deep into a
+     long source file, where the element has to find a keyframe hundreds of
+     megabytes in. Reported as "it freezes in someplaces" — measured on that
+     export, twelve stalls totalling 9.3 of 19.7 seconds, the longest 1.47s,
+     all of them in the second half where the cuts are.
+
+     A frame that waits is a frame that is RIGHT. A frame that gives up is a
+     duplicate of the one before it, which is the freeze. So the cap is the
+     length of a slow seek rather than the length of a fast one, and the cost
+     of being generous is export time, which the frame-rate measurement
+     already trades against deliberately. */
+  var WAIT_CAP_MS = 2500;       /* longest one frame may wait on its sources */
   /* THE REAL CLOCK, KEPT AT LOAD. An export replaces performance.now with a
      clock that advances one frame-time per CAPTURED frame — so asking
      performance.now() while waiting for a seek would ask a clock that is
@@ -401,6 +414,14 @@
       try {
         if (!v || !v.src) continue;
         keep.push(v);
+        /* LATCHED HERE, where it is actually observable. This used to be
+           read inside advanceSources, straight after a seek was issued —
+           by which time the element has already dropped to readyState 1 and
+           the answer is always no. It was measured never once being set, on
+           an element that had been sitting at readyState 4 a moment before.
+           This runs on every advance and every readiness check, so a healthy
+           element is caught while it is healthy. */
+        if (v.readyState >= 2) v.__ncEverReady = true;
         if (!v.isConnected && v.__ncActive) out.push(v);
       } catch (e) {}
     }
@@ -448,6 +469,19 @@
             Math.abs(want - v.currentTime) > 0.5) want = v.currentTime;
         want += step * rate;
         v.__ncWant = want;
+        /* A SEEK IN FLIGHT IS LEFT ALONE.
+           This is what turned a stall into a freeze. Every captured frame
+           issued a new seek, and a new seek CANCELS the one before it — so
+           an element that needed 400ms to land was never given 400ms, it was
+           interrupted every 33ms for ever. Measured: readyState stuck at 1
+           while currentTime climbed, requestVideoFrameCallback never firing
+           once, and the picture frozen for up to 171 frames.
+
+           __ncWant still advances every frame, so the timeline position is
+           not lost while waiting — when the pending seek does land, the next
+           one goes straight to where the export has got to rather than
+           crawling forward from where it stalled. */
+        if (v.__ncSeekAt && !v.__ncFrameReady) continue;
         var next = want + step * 0.5;
         if (isFinite(next) && next >= 0) {
           try {
@@ -494,8 +528,23 @@
                hang this file was written to prevent. After MAX_MISSES it is
                written off — that one clip only, for the rest of the export,
                with every other source still properly waited for. */
-            if (v.readyState >= 2 && (v.__ncMisses || 0) < MAX_MISSES) v.__ncSeekAt = now;
-            else v.__ncSeekAt = 0;
+            /* EVER ready, not ready RIGHT NOW — and this distinction is the
+               whole of the freeze that was left.
+
+               The guard exists to ignore elements that never loaded, so that
+               a half-dead one from an earlier export cannot hold anything
+               up. readyState looked like the way to ask. It is not: a live
+               element DROPS below 2 while it seeks, and a long seek is
+               precisely when it stays there. So the elements that most
+               needed waiting for were the only ones never waited for.
+
+               Measured on an edit that cuts between six points scattered
+               through a two-minute source: 360 frames, 36 distinct, one
+               freeze of 171 frames — five and a half seconds of one still
+               picture — and forcedFrames 0, because nothing ever waited at
+               all. A sticky flag asks the question that was meant: has this
+               element ever worked? */
+            v.__ncSeekAt = v.__ncEverReady ? now : 0;
           } catch (e) {}
         }
       }
@@ -665,9 +714,27 @@
           if (!v.__ncSeekAt) continue;              /* not waiting on this one */
           /* The frame itself, reported by the element. readyState and
              seeking are not enough — see advanceSources. */
-          if (v.__ncFrameReady) { v.__ncSeekAt = 0; continue; }
+          /* CONSECUTIVE, and this reset is the other half of the freeze.
+             __ncMisses only ever counted up, so one slow seek early in a
+             long export wrote that clip off for the whole of the rest of it
+             — after which nothing waited for it again and every later cut
+             into it froze for as long as it took, with no way back. A clip
+             that answers is a clip that is working; forgive it. */
+          if (v.__ncFrameReady) { v.__ncSeekAt = 0; v.__ncCounted = 0; continue; }
+          /* GIVING UP ON A FRAME IS NOT GIVING UP ON THE SEEK.
+             __ncSeekAt is deliberately left where it is. It is already older
+             than the cap, so every later frame passes this test instantly
+             instead of waiting again — one clip costs one WAIT_CAP_MS for
+             the whole of a stall, not one per frame. Clearing it here is
+             what made a slow seek cost 2.5 seconds thirty times over and
+             turned a twelve-second export into one hundred and seventy-six.
+             And because advanceSources leaves a pending seek alone, the seek
+             that is still in flight now gets the time it needs to land. */
           if (t - v.__ncSeekAt >= WAIT_CAP_MS) {
-            v.__ncSeekAt = 0; v.__ncMisses = (v.__ncMisses || 0) + 1; capped++;
+            /* Once per stall, not once per animation frame. Counting every
+               tick reported 7562 "forced frames" on a 360-frame export,
+               which is a number that tells nobody anything. */
+            if (!v.__ncCounted) { v.__ncCounted = 1; capped++; }
             continue;
           }
           waiting = true;
