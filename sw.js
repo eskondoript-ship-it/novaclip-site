@@ -3110,7 +3110,12 @@
    version taking over, so it reloaded for nothing. Worst on a phone, where
    iOS evicts the registration after about a week and every occasional visit
    was a first visit. */
-const CACHE = 'novaclip-v209';
+/* v210 adds nc-handoff.js (NEW): a finished still in the Photo tool can be
+   dragged onto the video editor, or sent there with one press — including
+   when the Photo tool is in a mini window over the editor, and including on
+   a phone, where there is no drag. photo.html changes with it (NC_PHOTO now
+   hands over the flattened composite) and the two have to ship together. */
+const CACHE = 'novaclip-v210';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
@@ -3120,6 +3125,12 @@ const SHELL = [
   '/index.html',
   '/offline.html',
   '/nova.js',
+  /* Carrying a picture from the Photo tool into the video editor. Cached
+     with the two pages it belongs to rather than with nova.js, because
+     nova.js only fetches it on those two — but cached it must be, or going
+     offline takes the chip out of the Photo bar and the only sign is a
+     button that used to be there. */
+  '/nc-handoff.js',
   /* The floating window. nova.js fetches it on every page, so it belongs with
      nova.js rather than with the editor: its launcher is a row in whichever
      rail the page has, and a rail that is one row short reads as the rail

@@ -2069,6 +2069,16 @@ input[type=color]{width:100%;height:30px;padding:2px;background:var(--panel2);
 
     /* the document, and the pieces needed to change it safely */
     doc: function () { return doc; },
+    /* The flattened picture, at full size — every visible layer with its
+       blend, opacity, mask and adjustments applied. Added for nc-handoff.js,
+       which carries the finished still into the video editor and must send
+       the composite rather than #view, which is only the zoomed preview.
+       The canvas it returns is this tool's own scratch surface and is reused
+       on the next render, so anything keeping it must copy it first. */
+    composite: composite,
+    /* Whether there is a picture at all. Export and Fit are disabled without
+       one and anything else offering to act on the document should be too. */
+    ready: function () { return !!loaded; },
     active: active,
     ctxOf: ctxOf,
     region: region,

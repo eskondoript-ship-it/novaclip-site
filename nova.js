@@ -728,6 +728,20 @@ const T = {
   w_studio: { en:"Your views, your watch time, and what to change next.", zh:"你的播放量、观看时长，以及下一步该改什么。", hi:"आपके व्यूज़, वॉच टाइम, और अगली बार क्या बदलना है।", es:"Tus visitas, tu tiempo de visualización y qué cambiar después.", ar:"مشاهداتك ووقت المشاهدة وما الذي تغيّره بعد ذلك.", fr:"Tes vues, ton temps de visionnage, et quoi changer ensuite.", bn:"আপনার ভিউ, ওয়াচ টাইম, আর পরের বার কী বদলাবেন।", pt:"As tuas visualizações, o tempo de visionamento e o que mudar a seguir.", ru:"Твои просмотры, время просмотра и что поменять дальше.", ur:"آپ کے ویوز، واچ ٹائم، اور اگلی بار کیا بدلنا ہے۔", id:"Tayanganmu, waktu tontonmu, dan apa yang diubah berikutnya.", de:"Deine Aufrufe, deine Wiedergabezeit und was als Nächstes anders wird.", ja:"再生数、視聴時間、そして次に何を変えるか。", tr:"İzlenmelerin, izlenme süren ve bir sonraki sefer neyi değiştireceğin.", ko:"조회수와 시청 시간, 그리고 다음에 무엇을 바꿀지.", fa:"بازدیدها، زمان تماشا، و اینکه دفعه بعد چه را عوض کنی.", uk:"Твої перегляди, час перегляду і що змінити наступного разу.", it:"Le tue visualizzazioni, il tempo di visione e cosa cambiare dopo.", pl:"Twoje wyświetlenia, czas oglądania i co zmienić następnym razem.", vi:"Lượt xem, thời gian xem, và lần tới nên đổi gì." },
   w_ai: { en:"Three tutors, in your language, built for teen creators.", zh:"三位导师，用你的语言，为青少年创作者而做。", hi:"तीन ट्यूटर, आपकी भाषा में, टीन क्रिएटर्स के लिए बने।", es:"Tres tutores, en tu idioma, hechos para creadores adolescentes.", ar:"ثلاثة مدرّسين، بلغتك، مصمَّمون لصنّاع المحتوى المراهقين.", fr:"Trois tuteurs, dans ta langue, pensés pour les créateurs ados.", bn:"তিনজন টিউটর, আপনার ভাষায়, টিন ক্রিয়েটরদের জন্য তৈরি।", pt:"Três tutores, na tua língua, feitos para criadores adolescentes.", ru:"Три наставника, на твоём языке, для подростков-авторов.", ur:"تین ٹیوٹر، آپ کی زبان میں، نوجوان تخلیق کاروں کے لیے بنے۔", id:"Tiga tutor, dalam bahasamu, dibuat untuk kreator remaja.", de:"Drei Tutoren, in deiner Sprache, für junge Creator gemacht.", ja:"3人のチューターが、あなたの言語で。10代のクリエイター向けに作られています。", tr:"Üç eğitmen, senin dilinde, genç içerik üreticileri için yapıldı.", ko:"세 명의 튜터가, 당신의 언어로, 10대 크리에이터를 위해.", fa:"سه مربی، به زبان خودت، ساخته‌شده برای سازندگان نوجوان.", uk:"Троє наставників, твоєю мовою, створені для юних авторів.", it:"Tre tutor, nella tua lingua, pensati per creator adolescenti.", pl:"Trzech korepetytorów, w twoim języku, dla nastoletnich twórców.", vi:"Ba gia sư, bằng ngôn ngữ của bạn, làm cho nhà sáng tạo tuổi teen." },
   /* ------------------------------------------------------------------
+     CARRYING A PICTURE INTO THE EDITOR — nc-handoff.js.
+     The chip in the Photo tool's bar, what it says when it has done its
+     job, and the word on the veil the editor throws up when something is
+     being dragged over it.
+     ------------------------------------------------------------------ */
+  hx_toeditor: { en:"To editor", zh:"发到编辑器", hi:"एडिटर में", es:"Al editor", ar:"إلى المحرّر", fr:"Vers l'éditeur", bn:"এডিটরে", pt:"Para o editor", ru:"В редактор", ur:"ایڈیٹر میں", id:"Ke editor", de:"Zum Editor", ja:"エディターへ", tr:"Editöre", ko:"에디터로", fa:"به ویرایشگر", uk:"У редактор", it:"All'editor", pl:"Do edytora", vi:"Sang trình sửa" },
+  hx_toeditor_d: { en:"Drag this onto the editor, or press it to send the picture there", zh:"把它拖到编辑器上，或者点一下把图片发过去", hi:"इसे एडिटर पर खींचें, या दबाकर तस्वीर वहाँ भेजें", es:"Arrástralo al editor, o púlsalo para enviar la imagen allí", ar:"اسحبه إلى المحرّر، أو اضغطه لإرسال الصورة إلى هناك", fr:"Fais-le glisser sur l'éditeur, ou appuie pour y envoyer l'image", bn:"এটি এডিটরের উপর টেনে নিন, বা চাপ দিয়ে ছবিটি সেখানে পাঠান", pt:"Arrasta isto para o editor, ou carrega para enviar a imagem para lá", ru:"Перетащи это в редактор или нажми, чтобы отправить картинку туда", ur:"اسے ایڈیٹر پر کھینچیں، یا دبا کر تصویر وہاں بھیجیں", id:"Seret ini ke editor, atau tekan untuk mengirim gambarnya ke sana", de:"Zieh das auf den Editor, oder drück es, um das Bild hinzuschicken", ja:"エディターにドラッグするか、押して画像を送ります", tr:"Bunu editörün üzerine sürükle veya basıp resmi oraya gönder", ko:"에디터로 끌어다 놓거나, 눌러서 사진을 보냅니다", fa:"این را روی ویرایشگر بکش، یا بزن تا عکس به آنجا برود", uk:"Перетягни це в редактор або натисни, щоб надіслати зображення туди", it:"Trascinalo sull'editor, o premilo per mandarci l'immagine", pl:"Przeciągnij to na edytor albo naciśnij, żeby wysłać tam obraz", vi:"Kéo cái này sang trình sửa, hoặc bấm để gửi ảnh qua đó" },
+  hx_drop: { en:"Drop it here", zh:"放到这里", hi:"यहाँ छोड़ें", es:"Suéltalo aquí", ar:"أفلته هنا", fr:"Dépose-le ici", bn:"এখানে ছাড়ুন", pt:"Larga aqui", ru:"Отпусти здесь", ur:"یہاں چھوڑیں", id:"Lepas di sini", de:"Hier ablegen", ja:"ここにドロップ", tr:"Buraya bırak", ko:"여기에 놓으세요", fa:"همین‌جا رهایش کن", uk:"Відпусти тут", it:"Rilascialo qui", pl:"Upuść tutaj", vi:"Thả vào đây" },
+  hx_sent: { en:"Sent to the editor.", zh:"已发到编辑器。", hi:"एडिटर में भेज दिया।", es:"Enviado al editor.", ar:"أُرسلت إلى المحرّر.", fr:"Envoyée à l'éditeur.", bn:"এডিটরে পাঠানো হয়েছে।", pt:"Enviada para o editor.", ru:"Отправлено в редактор.", ur:"ایڈیٹر میں بھیج دی گئی۔", id:"Terkirim ke editor.", de:"An den Editor geschickt.", ja:"エディターに送りました。", tr:"Editöre gönderildi.", ko:"에디터로 보냈습니다.", fa:"به ویرایشگر فرستاده شد.", uk:"Надіслано в редактор.", it:"Mandata all'editor.", pl:"Wysłano do edytora.", vi:"Đã gửi sang trình sửa." },
+  /* Not "sent". Nothing received it yet, and saying otherwise is the kind of
+     small lie that costs trust the first time somebody goes looking. */
+  hx_waiting: { en:"Ready — it will be there when you open the editor.", zh:"已准备好——打开编辑器时它就在那里。", hi:"तैयार है — एडिटर खोलते ही वहाँ मिलेगी।", es:"Lista: estará ahí cuando abras el editor.", ar:"جاهزة — ستجدها عند فتح المحرّر.", fr:"Prête — elle sera là quand tu ouvriras l'éditeur.", bn:"তৈরি — এডিটর খুললেই ওখানে পাবেন।", pt:"Pronta — vai lá estar quando abrires o editor.", ru:"Готово — она будет там, когда откроешь редактор.", ur:"تیار — ایڈیٹر کھولیں گے تو وہاں ملے گی۔", id:"Siap — akan ada di sana saat kamu buka editor.", de:"Bereit — es ist da, sobald du den Editor öffnest.", ja:"準備できました。エディターを開けばそこにあります。", tr:"Hazır — editörü açtığında orada olacak.", ko:"준비됐습니다 — 에디터를 열면 거기 있습니다.", fa:"آماده است — وقتی ویرایشگر را باز کنی آنجاست.", uk:"Готово — вона буде там, коли відкриєш редактор.", it:"Pronta — la trovi quando apri l'editor.", pl:"Gotowe — będzie tam, gdy otworzysz edytor.", vi:"Sẵn sàng — nó sẽ ở đó khi bạn mở trình sửa." },
+  hx_failed: { en:"That could not be sent.", zh:"没能发送。", hi:"यह भेजा नहीं जा सका।", es:"No se ha podido enviar.", ar:"تعذّر إرسالها.", fr:"Impossible de l'envoyer.", bn:"এটি পাঠানো গেল না।", pt:"Não foi possível enviar.", ru:"Отправить не удалось.", ur:"یہ بھیجی نہیں جا سکی۔", id:"Tidak bisa dikirim.", de:"Das konnte nicht geschickt werden.", ja:"送れませんでした。", tr:"Gönderilemedi.", ko:"보내지 못했습니다.", fa:"نشد فرستاده شود.", uk:"Не вдалося надіслати.", it:"Non è stato possibile mandarla.", pl:"Nie udało się wysłać.", vi:"Không gửi được." },
+  /* ------------------------------------------------------------------
      WHERE TO START — the second explainer on index.html.
      ------------------------------------------------------------------
      "What it is" above says what the site has. This says what to DO with
@@ -11002,6 +11016,34 @@ else ncCookieBanner();
    reason to fetch it. Its own first line checks the same thing; this check is
    here so the request is never made at all.
    ============================================================================ */
+/* ============================================================================
+   CARRYING A PICTURE BETWEEN THE TWO EDITORS — nc-handoff.js
+   ============================================================================
+   Only two pages can do anything with it — the Photo tool, which sends, and
+   the video editor, which receives — so unlike the mini window this is not
+   fetched everywhere. The test is the pathname, which also catches the two
+   inside Studio: its Photo and Editor panels are iframes of these same two
+   URLs with ?embed=1 on them, and a query string does not change a path.
+
+   NO float=1 GUARD HERE, and that is the point. The Photo tool inside a mini
+   window is precisely where this is worth having: the window sits over the
+   editor, and the picture is dragged from one to the other.
+   ============================================================================ */
+(function () {
+  if (!/\/(photo|editor)\.html$/.test(location.pathname)) return;
+  function go() {
+    if (window.NC_HANDOFF || document.querySelector('script[data-nc-handoff]')) return;
+    var s = document.createElement('script');
+    s.src = 'nc-handoff.js';
+    s.defer = true;
+    s.setAttribute('data-nc-handoff', '1');
+    s.onerror = function () {};
+    (document.head || document.documentElement).appendChild(s);
+  }
+  if (document.readyState === 'complete') setTimeout(go, 0);
+  else window.addEventListener('load', function () { setTimeout(go, 0); });
+})();
+
 (function () {
   if (/[?&]float=1/.test(location.search)) return;
   function go() {
