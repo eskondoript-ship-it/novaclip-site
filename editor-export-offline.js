@@ -83,7 +83,14 @@
   var FPS_STEPS = [30, 25, 24, 20, 15, 12];   /* what it is allowed to settle on */
   var FPS_FLOOR = 12;           /* below this, choppiness is worse than waiting */
   var WAIT_CAP_MS = 600;        /* longest one frame may wait on its sources */
-  var GIVE_UP_AFTER = 3;        /* capped waits before the stall test is dropped */
+  var MAX_MISSES = 5;           /* timeouts before one clip stops being waited for */
+  /* THE REAL CLOCK, KEPT AT LOAD. An export replaces performance.now with a
+     clock that advances one frame-time per CAPTURED frame — so asking
+     performance.now() while waiting for a seek would ask a clock that is
+     stopped until the wait ends, and a timeout measured on it never fires.
+     Taken here, before anything has had a chance to replace it, and used by
+     everything that needs to know how long something has really taken. */
+  var REAL_NOW = performance.now.bind(performance);
   var KEY_EVERY_S = 2;          /* a keyframe at least this often */
   var AUDIO_RATE = 48000;
   var AUDIO_BPS = 128000;
@@ -326,9 +333,17 @@
   }
 
   /* The export creates its sources as it goes, so the list is refreshed
-     rather than taken once. */
+     rather than taken once.
+
+     EACH WIND-ON IS A SEEK, AND A SEEK TAKES TIME. Setting currentTime does
+     not move the picture; it starts a seek that finishes later. Whoever
+     captures the next frame has to wait for it, and the element is marked
+     here so sourcesReady() below knows which ones to wait for and since
+     when. Without that mark the only question anyone could ask was the
+     global one, and the global one is not answerable — see sourcesReady. */
   function advanceSources(step) {
     try {
+      var now = REAL_NOW();
       var all = document.querySelectorAll('video');
       for (var i = 0; i < all.length; i++) {
         var v = all[i];
@@ -338,7 +353,28 @@
         var rate = v.playbackRate || 1;
         var next = v.currentTime + step * rate;
         if (isFinite(next) && next >= 0) {
-          try { v.currentTime = next; } catch (e) {}
+          try {
+            v.currentTime = next;
+            /* ONLY WAIT FOR A CLIP THAT WAS ALREADY WORKING, and only while
+               it keeps working. Both halves close the same door the old
+               global test left open.
+
+               readyState >= 2 means this element has data right now, so
+               after a 33ms step it ought to again, and waiting for it is
+               reasonable. An element abandoned half-loaded by an earlier
+               export sits at readyState 1 for ever: it is never stamped, so
+               it is never waited for, and it cannot cost this export a
+               single millisecond however stuck it is.
+
+               __ncMisses is the second half. If a clip that did look healthy
+               times out again and again it is not going to start working, and
+               600ms a frame for the rest of the run would be worse than the
+               hang this file was written to prevent. After MAX_MISSES it is
+               written off — that one clip only, for the rest of the export,
+               with every other source still properly waited for. */
+            if (v.readyState >= 2 && (v.__ncMisses || 0) < MAX_MISSES) v.__ncSeekAt = now;
+            else v.__ncSeekAt = 0;
+          } catch (e) {}
         }
       }
     } catch (e) {}
@@ -424,7 +460,10 @@
     }
 
     var asked = fps;                 /* what was requested, before measuring */
-    var waitingSince = 0, capped = 0, trustStall = true;
+    /* How many frames had to be taken without a clip being ready. Zero on a
+       healthy export; a large number is the signature of the bug this file
+       has twice now been fixed for, so it is reported rather than kept. */
+    var capped = 0;
     var frames = 0, stopped = false, paused = false, started = 0;
     var rafId = 0;
     var warm = { until: 0, draws: 0, done: false };
@@ -445,34 +484,76 @@
      for all time — and did. Measured on a two-effect export that never
      finished: the stall test answered "not ready" 951 times out of 979.
 
-     The reason is worth writing down. export-fix.js keeps every <video> the
-     page has ever created, up to 400 of them, and reports a stall if ANY of
-     them is seeking or starved. An element from an earlier export that was
-     abandoned half-loaded is not connected, still has a src, and sits at
-     readyState 1 for ever — so the test is permanently true and nothing
-     ever captures. The real-time path rode over it because its cap expired
-     and it simply recorded; this one had nothing to expire.
+     The reason is worth writing down, because it is the whole story of the
+     next bug as well. export-fix.js keeps every <video> the page has ever
+     created, up to 400 of them, and reports a stall if ANY of them is
+     seeking or starved. An element from an earlier export that was abandoned
+     half-loaded is not connected, still has a src, and sits at readyState 1
+     for ever — so the test is permanently true and nothing ever captures.
+     The real-time path rode over it because its cap expired and it simply
+     recorded; this one had nothing to expire.
 
-     So: a frame waits at most WAIT_CAP_MS for its sources, and after
-     GIVE_UP_AFTER frames have had to be taken anyway the test is dropped for
-     the rest of the export. A stale element cannot make a stall, and a real
-     stall still gets its wait — just not an unlimited one. */
+     The first answer to that was to stop trusting the test after three
+     forced frames. It un-hung the export and cost it its motion instead —
+     see sourcesReady() below, which asks a question that can actually be
+     answered rather than giving up on an unanswerable one. */
+    /* ----------------------------------------------------------------------
+       ASK THE CLIPS THIS EXPORT IS DRIVING, NOT THE WHOLE PAGE.
+
+       Reported as the export coming out at a low frame rate "again". It did
+       not: the file was a true, perfectly even 30fps, 592 packets of exactly
+       one frame each. What had gone was the MOTION — only 127 of those 592
+       frames were different pictures, with the distinct ones arriving every
+       eighth frame almost exactly, while the text and effects on top ran
+       smoothly at the full rate. A compositor at full speed over footage
+       that is nearly frozen is a seek that nobody waited for.
+
+       The cause was the paragraph above this one. The old test asked
+       __ncExportStalled(), which answers for EVERY <video> the page has
+       ever made — including ones abandoned half-loaded by an earlier export,
+       which sit unconnected at readyState 1 for ever and are therefore
+       permanently "stalled". So the test was almost always true, the three
+       capped waits were spent within the first couple of seconds, and
+       `capped` never reset: trustStall went false and from then on NOTHING
+       waited for a seek for the rest of the export. Every frame captured
+       whatever the element happened to be holding. A seek costs roughly
+       200-300ms; at 33.3ms a frame that is six to nine frames, and the
+       measured gap was eight.
+
+       Asking per element fixes both halves at once. These are the elements
+       this export is driving by hand — they are unconnected, they have a
+       src, and advanceSources() has just wound each one on and stamped it.
+       A stale element from a previous export is never stamped, so it cannot
+       manufacture a stall no matter what state it is stuck in, and the
+       global give-up that existed to escape it is not needed.
+
+       The cap stays, because an anti-hang rule is why the old code existed
+       and that reason has not gone away. It is per element and per frame
+       now: any one clip holds up any one frame by at most WAIT_CAP_MS, and
+       then that frame is taken without it. Nothing is switched off for the
+       rest of the run, so the very next frame waits properly again.
+       ---------------------------------------------------------------------- */
     function sourcesReady() {
-      var ready = true;
+      var t = REAL_NOW();
+      var waiting = false;
       try {
-        if (trustStall && typeof window.__ncExportStalled === 'function') {
-          ready = !window.__ncExportStalled();
+        var all = document.querySelectorAll('video');
+        for (var i = 0; i < all.length; i++) {
+          var v = all[i];
+          if (v.isConnected || !v.src || !v.__ncActive) continue;
+          if (!v.__ncSeekAt) continue;              /* not waiting on this one */
+          /* readyState as well as seeking: an element can finish the seek
+             and still have no frame to hand over, which is the starvation
+             case the old global test was really for. */
+          if (!v.seeking && v.readyState >= 2) { v.__ncSeekAt = 0; continue; }
+          if (t - v.__ncSeekAt >= WAIT_CAP_MS) {
+            v.__ncSeekAt = 0; v.__ncMisses = (v.__ncMisses || 0) + 1; capped++;
+            continue;
+          }
+          waiting = true;
         }
-      } catch (e) { ready = true; }
-      if (ready) { waitingSince = 0; return true; }
-
-      var t = realNow.call(performance);
-      if (!waitingSince) { waitingSince = t; return false; }
-      if (t - waitingSince < WAIT_CAP_MS) return false;
-
-      waitingSince = 0;
-      if (++capped >= GIVE_UP_AFTER) trustStall = false;
-      return true;                       /* take the frame regardless */
+      } catch (e) { return true; }
+      return !waiting;
     }
 
     /* One capture per animation frame, AFTER the bundle has drawn. rAF
@@ -542,7 +623,9 @@
             /* Kept on the module so an export can be looked at afterwards —
                by a test, or by somebody asking why their file is 24fps. */
             window.NC_EXPORT_OFFLINE.last = {
-              drawsPerSecond: api.__measured.drawsPerSecond, fps: fps, asked: asked
+              drawsPerSecond: api.__measured.drawsPerSecond, fps: fps, asked: asked,
+              /* Filled in as the export runs — read it afterwards. */
+              get forcedFrames() { return capped; }
             };
             if (!build()) { if (onFail) onFail(); return; }
           }

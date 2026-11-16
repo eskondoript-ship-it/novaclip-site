@@ -3115,7 +3115,13 @@
    when the Photo tool is in a mini window over the editor, and including on
    a phone, where there is no drag. photo.html changes with it (NC_PHOTO now
    hands over the flattened composite) and the two have to ship together. */
-const CACHE = 'novaclip-v210';
+/* v211: the export stopped waiting for its clips. A file came back a true,
+   perfectly even 30fps — 592 packets of exactly one frame — of which only
+   127 were different pictures, the distinct ones arriving every eighth frame
+   while the text on top ran smoothly. The fps was never lowered; the footage
+   was. editor-export-offline.js now waits per clip instead of trusting a
+   page-wide stall test that gets switched off. */
+const CACHE = 'novaclip-v211';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
