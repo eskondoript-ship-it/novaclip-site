@@ -3095,7 +3095,15 @@
    is a row in whichever rail the page has, and a rail with one row missing
    reads as the rail having changed rather than as a file that did not
    arrive. 15KB. */
-const CACHE = 'novaclip-v207';
+/* v208 fixes the mini window's minimise button — .ncf{display:flex} was
+   beating the browser's own [hidden]{display:none}, so pressing − flipped a
+   property and hid nothing — and stops a floated page redrawing the chrome
+   the host is already showing: its top bar, rail, badges, Help button, trial
+   notice and full-screen animated backdrop. That backdrop running twice is
+   what was lagging. nc-float.js and nova.js both change, and they have to
+   ship together: the hiding lives in nova.js because it runs inside the
+   floated page, and nc-float.js is what puts float=1 in its address. */
+const CACHE = 'novaclip-v208';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

@@ -101,6 +101,28 @@
   var KEY = 'nc_float_geom';
   var MIN_W = 260, MIN_H = 220;
 
+  /* THE NOTCH AND THE HOME BAR.
+     A phone's window is not its screen. Pinned at y=4 the title bar sits
+     under the status bar on anything with a notch, and the grip at the bottom
+     sits under the home indicator — both of which swallow the touch. The
+     insets are read through CSS custom properties because env() is not
+     readable from JavaScript any other way; they are 0 everywhere else, so
+     this costs a desktop nothing. */
+  var SAFE = { t: 0, r: 0, b: 0, l: 0 };
+  function readSafe() {
+    try {
+      var cs = getComputedStyle(document.documentElement);
+      SAFE.t = parseFloat(cs.getPropertyValue('--ncf-sat')) || 0;
+      SAFE.r = parseFloat(cs.getPropertyValue('--ncf-sar')) || 0;
+      SAFE.b = parseFloat(cs.getPropertyValue('--ncf-sab')) || 0;
+      SAFE.l = parseFloat(cs.getPropertyValue('--ncf-sal')) || 0;
+    } catch (e) {}
+  }
+
+  /* Portrait and narrow is a phone held upright, and that is the one case
+     where half the WIDTH is not a window, it is a column. See halve(). */
+  function tall() { return innerHeight > innerWidth && innerWidth < 760; }
+
   function tr(k) {
     try { return (k && typeof window.tr === 'function' && window.tr(k)) || ''; }
     catch (e) { return ''; }
@@ -219,17 +241,29 @@
      off the edge. */
   function clamp(g) {
     var vw = innerWidth, vh = innerHeight;
-    g.w = Math.max(MIN_W, Math.min(g.w, vw - 8));
-    g.h = Math.max(MIN_H, Math.min(g.h, vh - 8));
-    g.x = Math.max(4, Math.min(g.x, vw - g.w - 4));
-    g.y = Math.max(4, Math.min(g.y, vh - g.h - 4));
+    var l = 4 + SAFE.l, r = 4 + SAFE.r, t = 4 + SAFE.t, b = 4 + SAFE.b;
+    g.w = Math.max(MIN_W, Math.min(g.w, vw - l - r));
+    g.h = Math.max(MIN_H, Math.min(g.h, vh - t - b));
+    g.x = Math.max(l, Math.min(g.x, vw - g.w - r));
+    g.y = Math.max(t, Math.min(g.y, vh - g.h - b));
     return g;
   }
 
+  /* WHERE A WINDOW OPENS THE FIRST TIME.
+     On a laptop, a card in the top-right corner, out of the way of what you
+     were reading. On a phone held upright, the bottom half — which is the
+     shape the request named, and the only one that leaves the thing you were
+     doing visible above it. A card floating in the middle of a 390px screen
+     covers everything and is no better than navigating away. */
   function startGeom(t) {
+    readSafe();
     var saved = geoms()[t.id];
     if (saved && isFinite(saved.x)) return clamp({ x: saved.x, y: saved.y, w: saved.w, h: saved.h });
     var vw = innerWidth, vh = innerHeight;
+    if (tall()) {
+      var hh = Math.max(MIN_H, Math.floor(vh / 2) - 10);
+      return clamp({ x: 8, y: vh - hh - 8 - SAFE.b, w: vw - 16, h: hh });
+    }
     var w = Math.min(420, vw - 24), h = Math.min(580, vh - 90);
     return clamp({ x: vw - w - 16, y: 64, w: w, h: h });
   }
@@ -251,6 +285,26 @@
      holding a tool should look like the rail that lists it, not like a
      dialog from somewhere else. */
   var CSS =
+    /* env() cannot be read from JavaScript. Parked on :root as custom
+       properties, getComputedStyle can. See readSafe(). */
+    ':root{--ncf-sat:env(safe-area-inset-top,0px);--ncf-sar:env(safe-area-inset-right,0px);' +
+      '--ncf-sab:env(safe-area-inset-bottom,0px);--ncf-sal:env(safe-area-inset-left,0px)}' +
+    /* ----------------------------------------------------------------------
+       THE MINIMISE BUTTON DID NOTHING, AND THIS IS THE LINE THAT FIXES IT.
+
+       shrink() sets `win.hidden = true`, which is correct and which the
+       browser honours through its own `[hidden]{display:none}` — a rule of
+       specificity (0,0,1). `.ncf{display:flex}` below is (0,1,0) and beats
+       it, so the property flipped, the bubble appeared, and the window stayed
+       exactly where it was. The same applied in reverse to `.ncf-bub`, so
+       restoring left the bubble sitting on top of the window it had just
+       brought back.
+
+       The test that was supposed to cover this asked the element whether
+       `hidden` was true. It was. That is the property, not the picture.
+       Hiding is now asserted by measuring `display` instead.
+       ---------------------------------------------------------------------- */
+    '.ncf[hidden],.ncf-bub[hidden]{display:none}' +
     '.ncf{position:fixed;z-index:2147483000;display:flex;flex-direction:column;' +
       'background:var(--nc-rail1,#0E1220);color:var(--nc-text,#EAF2FF);' +
       'border:1px solid var(--nc-line2,rgba(255,255,255,.16));' +
@@ -311,6 +365,26 @@
     '.ncf-list button span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
     '.ncf-list button i{flex:0 0 auto;font-style:normal;font-size:9.5px;color:var(--nc-dim,#7E8AA6)}' +
     '.ncf-none{padding:12px 8px;font-size:12px;color:var(--nc-dim,#7E8AA6)}' +
+    /* A FINGER IS NOT A CURSOR. 26px buttons and a 24px grip are fine under a
+       mouse and too small under a thumb, and these four buttons sit in a row
+       at the top of a window somebody is also trying to drag. Keyed on the
+       pointer rather than the width, so a touchscreen laptop gets them too
+       and a narrow desktop window does not. */
+    /* A phone's picker is a sheet, not a dropdown. At the desktop's 276px it
+       sat as a narrow column in the middle of a 390px screen with air down
+       both sides, which is what a menu pinned to a rail row looks like when
+       there is no rail row to pin it to. */
+    '@media (max-width:520px){' +
+      '.ncf-menu{width:calc(100vw - 24px);max-height:min(76vh,560px)}' +
+    '}' +
+    '@media (pointer:coarse){' +
+      '.ncf-hd{gap:4px;padding:10px}' +
+      '.ncf-b{width:34px;height:34px;font-size:15px}' +
+      '.ncf-grip{width:34px;height:34px}' +
+      '.ncf-bub{width:60px;height:60px}' +
+      '.ncf-list button{padding:10px 8px}' +
+      '.ncf-menu input{padding:9px 10px;font-size:16px}' +   /* 16px: anything less and iOS zooms the page on focus */
+    '}' +
     '@media (max-width:520px){.ncf{border-radius:12px}}';
 
   function css() {
@@ -371,39 +445,117 @@
   function close() {
     if (win && win.parentNode) win.parentNode.removeChild(win);
     if (bubble && bubble.parentNode) bubble.parentNode.removeChild(bubble);
-    win = null; bubble = null; cur = null;
+    win = null; bubble = null; bub = null; cur = null;
+  }
+
+  /* The bubble's own place on screen, kept out of the window's geometry
+     because the two move independently once it has been dragged. */
+  var bub = null;
+
+  function placeBubble() {
+    if (!bubble || !bub) return;
+    var s = bubble.offsetWidth || 54;
+    bub.x = Math.max(4 + SAFE.l, Math.min(bub.x, innerWidth - s - 4 - SAFE.r));
+    bub.y = Math.max(4 + SAFE.t, Math.min(bub.y, innerHeight - s - 4 - SAFE.b));
+    bubble.style.left = Math.round(bub.x) + 'px';
+    bubble.style.top = Math.round(bub.y) + 'px';
   }
 
   function shrink() {
     if (!win || !cur) return;
     saveGeom(cur.tool.id, cur.g);
     win.hidden = true;
-    if (bubble) { bubble.hidden = false; return; }
+    if (bubble) { bubble.hidden = false; placeBubble(); return; }
+
     bubble = document.createElement('button');
     bubble.type = 'button';
     bubble.className = 'ncf-bub';
     bubble.title = words(cur.tool);
     bubble.setAttribute('aria-label', words(cur.tool));
     bubble.innerHTML = svg(cur.tool.icon);
-    /* Parked at the nearest side, the way the phone does it. */
-    var right = (cur.g.x + cur.g.w / 2) > innerWidth / 2;
-    bubble.style.left = right ? 'auto' : '12px';
-    bubble.style.right = right ? '12px' : 'auto';
-    bubble.style.top = Math.max(60, Math.min(cur.g.y, innerHeight - 80)) + 'px';
-    bubble.onclick = function () { bubble.hidden = true; win.hidden = false; };
     document.body.appendChild(bubble);
+
+    /* Parked at the nearest side, the way the phone does it. */
+    var size = bubble.offsetWidth || 54;
+    var right = (cur.g.x + cur.g.w / 2) > innerWidth / 2;
+    bub = {
+      x: right ? innerWidth - size - 12 : 12,
+      y: Math.max(60, Math.min(cur.g.y, innerHeight - size - 20))
+    };
+    placeBubble();
+
+    /* AND IT MOVES. A bubble you cannot move is a bubble sitting on top of
+       whatever you parked it over — which on a phone is most of the screen.
+       Drag and tap are the same gesture until the finger has travelled, so
+       the press only counts as a tap if it ends within a few pixels of where
+       it started; anything further is a move and must not also reopen the
+       window. */
+    var sx = 0, sy = 0, ox = 0, oy = 0, moved = false;
+    bubble.addEventListener('pointerdown', function (e) {
+      if (e.button != null && e.button !== 0) return;
+      sx = e.clientX; sy = e.clientY; ox = bub.x; oy = bub.y; moved = false;
+      try { bubble.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+    bubble.addEventListener('pointermove', function (e) {
+      if (!sx && !sy) return;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (!moved && Math.abs(dx) + Math.abs(dy) < 6) return;
+      moved = true;
+      bub.x = ox + dx; bub.y = oy + dy;
+      placeBubble();
+    });
+    function up(e) {
+      try { bubble.releasePointerCapture(e.pointerId); } catch (err) {}
+      sx = sy = 0;
+      if (moved) {
+        /* Snap back to whichever side it was let go nearer, the way the
+           phone does — a bubble loose in the middle is in the way. */
+        var s2 = bubble.offsetWidth || 54;
+        bub.x = (bub.x + s2 / 2) > innerWidth / 2 ? innerWidth - s2 - 12 - SAFE.r : 12 + SAFE.l;
+        placeBubble();
+        return;
+      }
+      bubble.hidden = true;
+      win.hidden = false;
+      place();
+    }
+    bubble.addEventListener('pointerup', up);
+    bubble.addEventListener('pointercancel', function (e) {
+      try { bubble.releasePointerCapture(e.pointerId); } catch (err) {}
+      sx = sy = 0;
+    });
+    /* A keyboard never moves it, so Enter and Space are always a restore. */
+    bubble.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      bubble.hidden = true; win.hidden = false; place();
+    });
   }
 
-  /* Double-tap the header: half the screen, on the side it is already nearer.
-     This is the shape the request actually named. */
+  /* HALF THE SCREEN — AND WHICH HALF DEPENDS ON THE SCREEN.
+     On a laptop, the left or right half, whichever it is already nearer.
+     On a phone held upright, the TOP or BOTTOM half: half of 390px is a
+     195px column, which is not a window, and the half-page app on the phone
+     this was asked for is a card across the bottom with your own page still
+     visible above it. */
   function halve() {
     if (!cur) return;
+    readSafe();
     var vw = innerWidth, vh = innerHeight;
-    var right = (cur.g.x + cur.g.w / 2) > vw / 2;
-    cur.g.w = Math.max(MIN_W, Math.floor(vw / 2) - 12);
-    cur.g.h = vh - 80;
-    cur.g.y = 56;
-    cur.g.x = right ? vw - cur.g.w - 8 : 8;
+    if (tall()) {
+      var low = (cur.g.y + cur.g.h / 2) > vh / 2;
+      cur.g.w = vw - 16;
+      cur.g.h = Math.max(MIN_H, Math.floor(vh / 2) - 10);
+      cur.g.x = 8;
+      cur.g.y = low ? vh - cur.g.h - 8 : 8;
+    } else {
+      var right = (cur.g.x + cur.g.w / 2) > vw / 2;
+      cur.g.w = Math.max(MIN_W, Math.floor(vw / 2) - 12);
+      cur.g.h = vh - 80;
+      cur.g.y = 56;
+      cur.g.x = right ? vw - cur.g.w - 8 : 8;
+    }
     place();
     saveGeom(cur.tool.id, cur.g);
   }
@@ -480,7 +632,14 @@
     return win;
   }
 
-  function onResize() { if (cur && win && !win.hidden) place(); }
+  /* A phone changes innerHeight whenever the address bar slides away, so this
+     runs far more often there than on a laptop — and it is what keeps a
+     window, or a parked bubble, from ending up under an edge that just moved. */
+  function onResize() {
+    readSafe();
+    if (cur && win && !win.hidden) place();
+    if (bubble && !bubble.hidden) placeBubble();
+  }
 
   /* ------------------------------------------------------------- the picker */
 
@@ -571,7 +730,27 @@
        never off the left or the right of the screen. */
     var r = (anchor && anchor.getBoundingClientRect && anchor.getBoundingClientRect()) ||
             { left: 16, right: 16, top: 80, bottom: 80 };
+    /* THE PHONE'S LAUNCHER IS THE HIDDEN PILL, PARKED AT -9999.
+       Opened from the drawer there is nothing on screen to sit beside, and
+       anchoring to where that pill really is would clamp the picker into the
+       top-left corner — technically on screen, and nowhere near the thumb
+       that just pressed the row. Centred and low instead, which is where a
+       sheet belongs on a phone. */
+    if (r.left < 0 || r.left > innerWidth) {
+      var ph = tall();
+      r = { left: 0, right: innerWidth, top: ph ? innerHeight : 80, bottom: ph ? innerHeight : 80 };
+      menu.style.left = '50%';
+      menu.style.transform = 'translateX(-50%)';
+    }
     var mw = menu.offsetWidth, mh = menu.offsetHeight;
+    if (menu.style.transform) {
+      menu.style.top = Math.round(Math.max(8 + SAFE.t,
+        Math.min(r.top - mh - 12, innerHeight - mh - 8 - SAFE.b))) + 'px';
+      document.addEventListener('pointerdown', awayMenu, true);
+      document.addEventListener('keydown', keyMenu, true);
+      try { q.focus({ preventScroll: true }); } catch (e) {}
+      return;
+    }
     var x = Math.min(Math.max(8, r.left), Math.max(8, innerWidth - mw - 8));
     var y = r.bottom + 6 + mh <= innerHeight ? r.bottom + 6
           : Math.max(8, Math.min(r.top - mh - 6, innerHeight - mh - 8));
@@ -677,11 +856,15 @@
   /* The editor's rail is editor-rail.js's, and it adopts pills by class — the
      arrangement Looks, Captions and Edits already use. This leaves one off
      screen for it to find. The picker is anchored on the rail row once that
-     file has moved it, and on the hidden pill only if it never did. */
+     file has moved it, and on the hidden pill only if it never did.
+
+     AND IT IS WHAT THE PHONE USES TOO. See phoneRow(). */
   function pill() {
-    if (document.querySelector('.ncfloat-btn')) return;
-    var b = document.createElement('button');
+    var b = document.querySelector('.ncfloat-btn');
+    if (b) return b;
+    b = document.createElement('button');
     b.type = 'button';
+    b.id = 'ncfloatbtn';
     b.className = 'ncfloat-btn';
     b.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
     b.textContent = label();
@@ -689,6 +872,33 @@
       pick(document.querySelector('[data-ncrail=".ncfloat-btn"]') || b);
     };
     document.body.appendChild(b);
+    return b;
+  }
+
+  /* ON A PHONE THERE IS NO RAIL TO PUT A ROW IN.
+     Measured at 390px: `.sidebar` is display:none, and so are all eleven of
+     its rows — Home and Studio included. The site rail is not a strip down
+     there, it simply is not there. The navigation is #ncbar at the top and
+     the #ncsheet drawer its burger opens, and the launcher was landing in an
+     element nobody could ever see.
+
+     nova.js already has the hook for this. NC_PHONE_EXTRAS is a list of
+     [buttonId, label, icon] that the drawer renders as a labelled row and
+     wires to click the real control — "they click the originals rather than
+     reimplementing them, so there is still exactly one copy of what each
+     button does". Settings, Ask Nova and the page guide already come through
+     it. The hidden pill above has an id for exactly this, and the drawer
+     filters on that id existing, so this costs nothing on a page where the
+     pill was never made.
+
+     It belongs in that row rather than in the list of links above it: the
+     list goes to pages, and this opens something over the one you are on. */
+  function phoneRow() {
+    var b = pill();
+    if (!b) return;
+    var list = window.NC_PHONE_EXTRAS = window.NC_PHONE_EXTRAS || [];
+    for (var i = 0; i < list.length; i++) if (list[i][0] === b.id) return;
+    list.push([b.id, label(), ICON]);
   }
 
   /* The rails are built by other files — nova.js at the end of <body>, the
@@ -697,7 +907,9 @@
      a React page and then gives up quietly. */
   function start() {
     css();
+    readSafe();
     pill();
+    phoneRow();
     var tries = 0;
     (function again() {
       if (intoSiteRail() || intoStudioRail()) return;

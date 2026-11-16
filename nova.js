@@ -1,3 +1,97 @@
+/* ============================================================================
+   A PAGE INSIDE A MINI WINDOW STANDS ITS FURNITURE DOWN — nc-float.js
+   ============================================================================
+   Reported as "the banner lagging", with the top of a floated Trend Spotter
+   circled. Measured inside the window, that top strip was three separate
+   things, all of them a second copy of something the page behind the window
+   was already showing:
+
+     HEADER.nc-topbar    sticky, the hamburger and the wordmark — the circled
+                         bar itself. A sticky header is re-placed on every
+                         scroll frame, and in a 420px iframe it is re-placed
+                         on top of everything below.
+     ASIDE.nc-sidebar    the Studio rail, fixed, 248px wide. In a 420px
+                         window that is sixty per cent of it.
+     #ncOwnerBadge       OWNER MODE, fixed, z-index 2147483647.
+     #ncprobadge         PRO, fixed.
+     #nchq-btn           the Help button — which is why that screenshot has
+                         two of them, one inside the window and one outside.
+
+   AND THE PART THAT WAS ACTUALLY LAGGING. Every one of these pages carries a
+   full-viewport animated backdrop: .nc-atmosphere with three blurred orbs of
+   335 to 405px on Studio, #orbs on the AI pages and the Coder, #orbs plus
+   #stars plus two grid floors on the home page. All of them position:fixed,
+   all of them animating, all of them full-bleed. Opening a mini window ran a
+   second one of those on top of the host's, compositing two full-screen
+   blurred layers in the space of one. That is the lag, and it is why this
+   list includes the pretty things and not just the chrome.
+
+   WHY HERE AND NOT IN nc-float.js. These elements live in the floated
+   DOCUMENT, and nc-float.js lives in the one around it. It could reach across
+   — same origin — but it would be racing the child's own scripts to do it.
+   nova.js is already running inside that document, so it can simply say so.
+   nc-float.js never loads there: its own loop guard sees float=1 and leaves.
+
+   float=1 ONLY EVER APPEARS ON A PAGE INSIDE A MINI WINDOW. nc-float.js puts
+   it there and nothing else does, so this cannot catch an ordinary visit, and
+   ?embed=1 — which studio-ai.html and the Studio panels rely on — keeps
+   exactly the meaning it had.
+
+   WHAT IS NOT IN THE LIST, and deliberately: photo.html's DIV.shell is also
+   fixed and full-screen, and it is the editor itself rather than anything
+   behind it. The list names things; it does not sweep up everything fixed.
+   ============================================================================ */
+(function () {
+  try { if (!/[?&]float=1/.test(location.search)) return; } catch (e) { return; }
+  var hide = [
+    /* chrome the host window already shows */
+    '#ncOwnerBadge', '#ncprobadge', '#nchq-btn',
+    /* The trial notice, which appears on every page and so appeared again in
+       every window — a second copy of "your 2 free weeks start now" laid over
+       the tool, while the host's own TRIAL badge was still on screen above
+       it. Suppressed here only: the page behind the window keeps saying it. */
+    '#nctrialbar',
+    /* the Studio's own navigation: the mini window holds one tool, and the
+       picker that opened it is how you reach another */
+    '.nc-topbar', '.nc-sidebar',
+    /* the animated backdrops — the lag */
+    '.nc-atmosphere', '#orbs', '#stars', '.grid-floor', '.gridfloor'
+  ];
+  /* SPECIFICITY, AND IT TOOK A MEASUREMENT TO FIND OUT.
+     `.nc-topbar{display:none !important}` changed nothing, and nor did the
+     same rule added by hand at the end of <head> — only an inline style moved
+     it. Dumping every rule in the document found why: trends.html carries
+
+         @media (max-width: 900px) {
+           html body.nova .nc-topbar { display: flex !important; ... }
+         }
+
+     at (0,1,3), put there on purpose — its own comment says it "wins on
+     specificity rather than on being later in the cascade", because nova.js
+     appends its stylesheet at runtime and would otherwise win by order. So a
+     plain class at (0,1,0) loses whatever its importance, and so would
+     `html body .nc-topbar` at (0,1,2).
+
+     Doubling the class is the cheap, legal way up: `.nc-topbar.nc-topbar`
+     selects exactly the same elements and counts twice, so prefixed with
+     `html body` it lands at (0,3,2) and wins on the class column. Ids are
+     already past anything here and are left alone. */
+  function strong(sel) {
+    return sel.charAt(0) === '#' ? 'html body ' + sel : 'html body ' + sel + sel;
+  }
+
+  var st = document.createElement('style');
+  st.id = 'ncFloatChild';
+  st.textContent =
+    hide.map(strong).join(',') + '{display:none !important}' +
+    /* The rail is fixed, so nothing reflows when it goes — but the column
+       beside it keeps the gap it was left, and a 420px window cannot spare
+       248px of empty. Same specificity trick, same reason. */
+    'html body.nova .nc-main.nc-main{margin-left:0 !important;padding-left:0 !important}' +
+    'html body .nc-shell.nc-shell,html body .nc-layout.nc-layout{padding-left:0 !important}';
+  (document.head || document.documentElement).appendChild(st);
+})();
+
 const THEMES = { 'Dark':['#0E1117','#1E2130','#FAFAFA'], 'Light':['#FFFFFF','#F0F2F6','#111111'], 'Blue':['#0A1A3F','#14295E','#D6E4FF'], 'Red':['#2B0A0A','#4A1414','#FFD6D6'], 'Green':['#0A2B14','#14472A','#D6FFE0'], 'Rainbow':['#1A0A2B','#2B1450','#FFFFFF'], 'Rainy Window':['#0B1016','#161E28','#D8E4F0'] };
 const LANGS = { en:'English', zh:'中文', hi:'हिन्दी', es:'Español', ar:'العربية', fr:'Français', bn:'বাংলা', pt:'Português', ru:'Русский', ur:'اردو', id:'Bahasa Indonesia', de:'Deutsch', ja:'日本語', tr:'Türkçe', ko:'한국어', fa:'فارسی', uk:'Українська', it:'Italiano', pl:'Polski', vi:'Tiếng Việt' };
 const RTL = ["ar", "fa", "ur"];
