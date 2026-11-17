@@ -97,6 +97,13 @@
      of being generous is export time, which the frame-rate measurement
      already trades against deliberately. */
   var WAIT_CAP_MS = 2500;       /* longest one frame may wait on its sources */
+  /* A pending seek is presumed dead only after a long time. This is a
+     RECOVERY, not a policy: at 6s with the retry disarmed it fired often
+     enough to cost the six-cut export half its distinct frames (208 of 360
+     against 352), and at 6s with the retry armed it bought another 2.5s
+     wait every six seconds and the export stopped finishing at all. Rare
+     and fully armed is the combination that keeps both. */
+  var STUCK_MS = 15000;         /* after this a pending seek is presumed dead */
   /* THE REAL CLOCK, KEPT AT LOAD. An export replaces performance.now with a
      clock that advances one frame-time per CAPTURED frame — so asking
      performance.now() while waiting for a seek would ask a clock that is
@@ -379,6 +386,7 @@
      them by calling play(). Pruned on each collect so a long session does
      not accumulate the dead ones. */
   var known = [];
+  var writingOurs = false;      /* true while advanceSources is the one seeking */
   function remember(el) {
     for (var i = 0; i < known.length; i++) if (known[i] === el) return;
     known.push(el);
@@ -403,6 +411,40 @@
       try { if (!window.__ncOfflineExport) this.__ncActive = false; } catch (e) {}
       return pause.apply(this, arguments);
     };
+
+    /* WHICH CLIP THE BUNDLE IS ACTUALLY STEERING.
+       play() was the only way this file knew a clip was in use, and the
+       bundle does not call play() on all of them. Measured on an export that
+       was right for fourteen seconds and then fell back to one picture every
+       eight frames for the last five: sixteen consecutive eight-frame gaps,
+       which is the cadence of a clip nobody is winding on — the bundle's own
+       drift correction, firing when it notices a quarter-second of lag, and
+       nothing else moving it at all.
+
+       Setting currentTime is the bundle saying where a clip belongs, so that
+       is what is watched. An element it steers is one this file should be
+       driving, whether or not play() was ever called on it, and the position
+       it asks for is adopted rather than argued with. The guard keeps this
+       file's own writes out: those are not the bundle talking. */
+    try {
+      var CT = Object.getOwnPropertyDescriptor(P, 'currentTime');
+      if (CT && CT.get && CT.set) {
+        Object.defineProperty(P, 'currentTime', {
+          configurable: true, enumerable: CT.enumerable,
+          get: function () { return CT.get.call(this); },
+          set: function (v) {
+            try {
+              if (window.__ncOfflineExport && !writingOurs && !this.isConnected && this.src) {
+                remember(this);
+                this.__ncBundleAt = REAL_NOW();
+                this.__ncWant = v;          /* the bundle's position wins */
+              }
+            } catch (e) {}
+            return CT.set.call(this, v);
+          }
+        });
+      }
+    } catch (e) {}
   }
 
   /* The export's sources: registered, detached, and holding a src. Doubles
@@ -422,7 +464,7 @@
            This runs on every advance and every readiness check, so a healthy
            element is caught while it is healthy. */
         if (v.readyState >= 2) v.__ncEverReady = true;
-        if (!v.isConnected && v.__ncActive) out.push(v);
+        if (!v.isConnected && (v.__ncActive || v.__ncBundleAt)) out.push(v);
       } catch (e) {}
     }
     known = keep;
@@ -481,7 +523,30 @@
            not lost while waiting — when the pending seek does land, the next
            one goes straight to where the export has got to rather than
            crawling forward from where it stalled. */
-        if (v.__ncSeekAt && !v.__ncFrameReady) continue;
+        /* ...BUT A SEEK THAT NEVER LANDS CANNOT OWN THE CLIP FOR EVER.
+           Leaving a pending seek alone is what stopped the thrashing, and on
+           its own it created a worse failure: if that seek never completes —
+           a decode that fails, a position the element will not reach — then
+           nothing ever advances or re-issues it again, and the clip spends
+           the whole rest of the export being moved only by the bundle's
+           drift correction. That is one picture every eight frames, starting
+           partway through and never recovering, which is precisely what the
+           last five seconds of the reported export looked like: sixteen
+           consecutive eight-frame gaps from 14.1s to the end.
+
+           So a seek gets a generous window and then is written off and
+           reissued from where the export has got to by now. */
+        if (v.__ncSeekAt && !v.__ncFrameReady) {
+          if (now - v.__ncSeekAt < STUCK_MS) continue;
+          /* Abandon it and seek afresh — but remember that this clip has
+             already failed to deliver once. Re-arming the full wait on the
+             retry is what made the six-cut export stop finishing at all:
+             every retry bought another WAIT_CAP_MS, every six seconds, for
+             the rest of the run. A clip that has proven unreliable stops
+             holding frames up until it proves otherwise, which it does the
+             moment it hands over a frame. */
+          v.__ncSeekAt = 0;
+        }
         var next = want + step * 0.5;
         if (isFinite(next) && next >= 0) {
           try {
@@ -510,7 +575,8 @@
               var onSeeked = function () { v.__ncFrameReady = true; };
               try { v.addEventListener('seeked', onSeeked, { once: true }); } catch (e) { v.__ncFrameReady = true; }
             }
-            v.currentTime = next;
+            writingOurs = true;
+            try { v.currentTime = next; } finally { writingOurs = false; }
             /* ONLY WAIT FOR A CLIP THAT WAS ALREADY WORKING, and only while
                it keeps working. Both halves close the same door the old
                global test left open.
@@ -711,7 +777,7 @@
         var all = sources();
         for (var i = 0; i < all.length; i++) {
           var v = all[i];
-          if (!v.__ncSeekAt) continue;              /* not waiting on this one */
+
           /* The frame itself, reported by the element. readyState and
              seeking are not enough — see advanceSources. */
           /* CONSECUTIVE, and this reset is the other half of the freeze.
@@ -720,7 +786,13 @@
              — after which nothing waited for it again and every later cut
              into it froze for as long as it took, with no way back. A clip
              that answers is a clip that is working; forgive it. */
+          /* NOTICED WHETHER OR NOT WE ARE WAITING ON IT, which this used
+             to sit below a `if (!__ncSeekAt) continue`. A clip that had been
+             not armed — an element whose seek has just been abandoned — is
+             skipped by the test below, so readiness has to be noticed before
+             that skip rather than after it. */
           if (v.__ncFrameReady) { v.__ncSeekAt = 0; v.__ncCounted = 0; continue; }
+          if (!v.__ncSeekAt) continue;              /* not waiting on this one */
           /* GIVING UP ON A FRAME IS NOT GIVING UP ON THE SEEK.
              __ncSeekAt is deliberately left where it is. It is already older
              than the cap, so every later frame passes this test instantly

@@ -3132,7 +3132,14 @@
    up to 171 frames. In-flight seeks are left alone now. Measured on an edit
    cutting between six points of a two-minute source: 36 distinct frames of
    360 before, 352 after, and a plain single-clip export is 120 of 120. */
-const CACHE = 'novaclip-v213';
+/* v214: the freeze that started partway through and never recovered. A
+   pending seek was left alone so it could land — and if it never landed,
+   nothing ever advanced or re-issued it again, so the clip spent the rest of
+   the export moving only on the bundle's drift correction: one picture every
+   eight frames, from 14.1s to the end. It is given a long window and then
+   reissued. Also drives any clip the bundle steers, not only ones it
+   called play() on. */
+const CACHE = 'novaclip-v214';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
