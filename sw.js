@@ -3146,7 +3146,14 @@
    a second to between 2 and 10, 348 of 592 down to 214. Only clips the
    bundle has played are driven again. The stuck-seek recovery v214 also
    added is kept: that part worked. */
-const CACHE = 'novaclip-v215';
+/* v216: the Transitions/Effects page behaves like every other rail page. It
+   used to grow out of the column towards the picture — up to 620px, so most
+   of it sat over the preview — and inside that it drew 128px tiles. On an
+   ordinary 1440 laptop that left exactly one effect visible before it had to
+   scroll. It is the column's width now, like Media, Text and the rest, and
+   the grid, the card text, the header and the footer all come in to suit it:
+   measured 1 effect visible before, 6 after, at the same window size. */
+const CACHE = 'novaclip-v216';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

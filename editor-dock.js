@@ -47,8 +47,6 @@
 
   var MIN_VIEWPORT = 900;   /* px of window width before docking is offered */
   var MIN_COLUMN   = 240;   /* px of column width worth docking into */
-  var MAX_LIB_W    = 620;   /* px, the widest the library is allowed to grow */
-  var PREVIEW_GAP  = 10;    /* px of air between the library and the picture */
 
   var panel = null, editor = null;            /* .nctr (library), .ncfe (controls) */
   var leftCol = null, rightCol = null;
@@ -143,12 +141,24 @@
     return best;
   }
 
+  /* THE COLUMN'S WIDTH, AND NOTHING MORE.
+     This used to grow the library from the column's edge towards the
+     preview, up to MAX_LIB_W, on the reasoning that the gap between them was
+     spare room. Asked to stop: "make the effects/transition page like any
+     other sidebar page when i open cause its a lil bad rn".
+
+     It is a fair complaint. Media, Text, Stickers, Photos and the rest all
+     open as a panel the width of the column; the library alone opened at
+     twice that and laid itself over the picture — measured at 620px against
+     the column's 345 in the reported layout, so two thirds of it was sitting
+     on the preview. A page that behaves differently from every other page in
+     the same rail reads as broken even when it is deliberate.
+
+     The grid inside is what adapts instead: auto-fill with a smaller minimum
+     puts three tiles across the same 345px that used to hold two. Same
+     number of effects on screen, none of it over the preview. */
   function libWidth(colRect) {
-    var pv = findPreview();
-    if (!pv) return colRect.width;
-    var room = Math.floor(pv.left - PREVIEW_GAP - colRect.left);
-    if (room > MAX_LIB_W) room = MAX_LIB_W;
-    return room > colRect.width ? room : colRect.width;
+    return colRect.width;
   }
 
   function findRightColumn() {
@@ -172,13 +182,82 @@
          194px columns do not fit at all. auto-fill lets the same grid be two
          narrow tiles in the column and three or four if it is wider, without
          this file knowing the number. */
-      '.nctr.nc-docked .grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:9px;',
-        'padding:10px 11px 12px}',
-      '.nctr.nc-docked .hd{padding:12px 13px 9px}',
-      '.nctr.nc-docked .m{padding:6px 7px 8px}',
-      '.nctr.nc-docked .m b{font-size:.78rem}',
-      '.nctr.nc-docked .m span{font-size:.67rem;line-height:1.38}',
-      '.nctr.nc-docked .ft{padding:9px 12px;font-size:11px}',
+      /* 72, not 128. Measured in the browser at the two window widths that
+         matter, counting tiles fully inside the panel:
+
+           column 272px (1440 window)   128px -> 1 across, 1 visible
+                                         96px -> 2 across, 4 visible
+                                         72px -> 3 across, 6 visible
+           column 332px (1760 window)   128px -> 2 across, 2 visible
+                                         96px -> 3 across, 6 visible
+                                         72px -> 4 across, 8 visible
+
+         96 looked like enough on a wide screen and is not: on an ordinary
+         1440 laptop it still only fits two. 72 is the first value that puts
+         three across a 272px column, which is the one the complaint was
+         about — "make the preview smaller so it fits more effects in a
+         column". The tile comes out 79px wide there, 73px at four across,
+         which still reads as a transition at a glance. auto-fill does the
+         counting, so a wider column keeps using the room. */
+      '.nctr.nc-docked .grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:7px;',
+        'padding:8px 9px 10px}',
+      /* The tile's own picture comes down with it — these are 16:9 canvases
+         and at three across that is about 56px of height each, so a column
+         now shows three rows where it showed one and a half. */
+      '.nctr.nc-docked .grid canvas{height:auto;aspect-ratio:16/9}',
+      /* THE HEADER WAS A THIRD OF THE PANEL BEFORE A SINGLE TILE.
+         Title, a three-line paragraph explaining that the tiles animate, a
+         search box, and the categories on two wrapped rows — about 250px of
+         740 spent before the grid starts. In a floating 620px panel that is
+         proportionate; in a 338px column it is most of what you can see.
+
+         The paragraph goes (it explains itself the moment you look at a
+         tile, and it stays in the heading's tooltip), and the categories
+         become one row that scrolls sideways instead of wrapping onto two.
+         Nothing is removed from the panel — every category is still
+         reachable, it just does not cost a second row to show them. */
+      '.nctr.nc-docked .hd{padding:9px 10px 7px}',
+      '.nctr.nc-docked .hd .sub{display:none}',
+      '.nctr.nc-docked .hd .sub-cats{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;',
+        'scrollbar-width:none;padding-bottom:2px}',
+      '.nctr.nc-docked .hd .sub-cats::-webkit-scrollbar{display:none}',
+      /* A chip cut off square at the panel's edge reads as a layout bug. The
+         fade says the row carries on and can be pushed sideways, which is
+         the one thing a hidden scrollbar stops it saying. */
+      '.nctr.nc-docked .hd .sub-cats{-webkit-mask-image:linear-gradient(90deg,',
+        '#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,',
+        '#000 calc(100% - 22px),transparent)}',
+      '.nctr.nc-docked .hd .sub-cats .cat{flex:0 0 auto}',
+      /* AND THE GAPS BETWEEN THEM. With the paragraph gone the header still
+         measured 160px of a 440px panel — more height than a whole row of
+         effects — because each of the four remaining pieces is held 9-10px
+         off the one above it and the search box is 39px tall on its own.
+         Those spacings are right in a floating panel with room to breathe.
+         In the column they are the difference between two rows of effects
+         and three, so they come in. */
+      '.nctr.nc-docked .hd h4{font-size:.95rem;line-height:1.25}',
+      '.nctr.nc-docked .hd .cats{margin-top:6px!important}',
+      '.nctr.nc-docked .hd .q{margin-top:6px!important;padding:7px 9px;font-size:.78rem}',
+      '.nctr.nc-docked .hd .sub-cats{margin-top:6px!important}',
+      '.nctr.nc-docked .hd .cat{padding:3px 9px;font-size:.68rem}',
+      /* THE WORDS ARE WHAT WAS EATING THE COLUMN, not the pictures.
+         With three tiles across, a card is 99px of preview and then up to
+         five lines of description underneath — "A feathered edge travels
+         across. The cut most real edits use." — so two and a half rows
+         filled the panel. The sentence is worth having; five lines of it
+         against a 56px thumbnail is not. Clamped to two lines, which is
+         enough to tell two glitches apart, and the full text stays in the
+         title attribute for anyone who hovers. */
+      '.nctr.nc-docked .m{padding:4px 6px 6px}',
+      '.nctr.nc-docked .m b{font-size:.72rem;line-height:1.2}',
+      '.nctr.nc-docked .m span{font-size:.63rem;line-height:1.3;display:-webkit-box;',
+        '-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}',
+      /* The NEW badge was a block of its own on a line of its own. */
+      '.nctr.nc-docked .m .nw,.nctr.nc-docked .m .new,.nctr.nc-docked .m i{',
+        'font-size:.55rem;padding:0 4px;margin:1px 0 2px}',
+      /* The footer is one line of advice and a close button, and it was 49px
+         of a 440px panel. Same reasoning as the header. */
+      '.nctr.nc-docked .ft{padding:6px 10px;font-size:10.5px;line-height:1.3}',
 
       /* THE CONTROLS GO IN THE RIGHT COLUMN, ON THEIR OWN.
          .ncfe is a child of .nctr and is normally position:absolute inset:0,

@@ -418,7 +418,10 @@
       m.querySelector('b').appendChild(tag);
       m.querySelector('span').textContent = meta[1];
       tile.appendChild(m);
-      tile.title = 'Click: 70% · Shift-click: full · Alt-click: subtle · Point at it to see it move';
+      /* The description is in the tooltip as well as under the tile, because
+         docked in the rail column the card clamps it to two lines. */
+      tile.title = meta[1] + '\n\n'
+        + 'Click: 70% · Shift-click: full · Alt-click: subtle · Point at it to see it move';
       tile.onclick = function (e) {
         applyFx(id, e.shiftKey ? STRENGTHS[2] : e.altKey ? STRENGTHS[0] : STRENGTHS[1]);
       };
@@ -619,7 +622,10 @@
       }
       m.querySelector('span').textContent = meta[3];
       tile.appendChild(m);
-      tile.title = 'Click: set at the end · Shift-click: set at the start';
+      /* Same reason as the effects tile above: two lines on the card, all of
+         it in the tooltip. */
+      tile.title = meta[3] + '\n\n'
+        + 'Click: set at the end · Shift-click: set at the start';
       tile.onclick = function (e) { apply(id, e.shiftKey ? 'in' : 'out'); };
       grid.appendChild(tile);
       tiles.push({ id: id, g: cv.getContext('2d'), w: W, h: H, A: A, B: B, el: tile });
@@ -806,6 +812,9 @@
             + 'the selected clip, or drag it onto the FX lane to run it for part of the video.'
           : 'Every tile is running the real transition, on two frames. '
             + 'Click to set it at the end of the selected clip; shift-click for the start.';
+        /* Docked in the rail column the paragraph is hidden to buy the grid
+           its height back (editor-dock.js), so the heading carries it. */
+        if (h) h.title = s.textContent;
       }
       /* ft is a var in this same function and so is hoisted; by the time any
          tab click can fire it has been assigned. */
