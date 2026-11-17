@@ -386,7 +386,6 @@
      them by calling play(). Pruned on each collect so a long session does
      not accumulate the dead ones. */
   var known = [];
-  var writingOurs = false;      /* true while advanceSources is the one seeking */
   function remember(el) {
     for (var i = 0; i < known.length; i++) if (known[i] === el) return;
     known.push(el);
@@ -412,39 +411,25 @@
       return pause.apply(this, arguments);
     };
 
-    /* WHICH CLIP THE BUNDLE IS ACTUALLY STEERING.
-       play() was the only way this file knew a clip was in use, and the
-       bundle does not call play() on all of them. Measured on an export that
-       was right for fourteen seconds and then fell back to one picture every
-       eight frames for the last five: sixteen consecutive eight-frame gaps,
-       which is the cadence of a clip nobody is winding on — the bundle's own
-       drift correction, firing when it notices a quarter-second of lag, and
-       nothing else moving it at all.
+    /* THE BUNDLE'S OWN SEEKS WERE WATCHED HERE, AND IT MADE THINGS WORSE.
+       The idea was sound: play() is not called on every clip, so an element
+       the bundle steers with currentTime should be driven too. Shipped, and
+       measured on the next export — the stretch from 4s to 13s, which had
+       been running at 25 to 30 distinct frames a second, collapsed to
+       between 2 and 10, while the part it was meant to help gained almost
+       nothing. 348 distinct frames of 592 became 214.
 
-       Setting currentTime is the bundle saying where a clip belongs, so that
-       is what is watched. An element it steers is one this file should be
-       driving, whether or not play() was ever called on it, and the position
-       it asks for is adopted rather than argued with. The guard keeps this
-       file's own writes out: those are not the bundle talking. */
-    try {
-      var CT = Object.getOwnPropertyDescriptor(P, 'currentTime');
-      if (CT && CT.get && CT.set) {
-        Object.defineProperty(P, 'currentTime', {
-          configurable: true, enumerable: CT.enumerable,
-          get: function () { return CT.get.call(this); },
-          set: function (v) {
-            try {
-              if (window.__ncOfflineExport && !writingOurs && !this.isConnected && this.src) {
-                remember(this);
-                this.__ncBundleAt = REAL_NOW();
-                this.__ncWant = v;          /* the bundle's position wins */
-              }
-            } catch (e) {}
-            return CT.set.call(this, v);
-          }
-        });
-      }
-    } catch (e) {}
+       The reason is contention. Driving every element the bundle has ever
+       touched means seeking five of them per captured frame, and a software
+       decoder given five seeks at once finishes none of them in time — so
+       the one actually on screen falls back to the bundle's drift
+       correction, which is the eight-frame cadence this whole sequence of
+       fixes has been chasing. Fewer, more accurate seeks beat more of them.
+
+       If this is tried again it needs to drive only the clip under the
+       playhead, which the store can answer: clips carry start and duration,
+       assets carry a url, and an element's src can be matched to it. Not
+       guessed at a second time. */
   }
 
   /* The export's sources: registered, detached, and holding a src. Doubles
@@ -464,7 +449,7 @@
            This runs on every advance and every readiness check, so a healthy
            element is caught while it is healthy. */
         if (v.readyState >= 2) v.__ncEverReady = true;
-        if (!v.isConnected && (v.__ncActive || v.__ncBundleAt)) out.push(v);
+        if (!v.isConnected && v.__ncActive) out.push(v);
       } catch (e) {}
     }
     known = keep;
@@ -575,8 +560,7 @@
               var onSeeked = function () { v.__ncFrameReady = true; };
               try { v.addEventListener('seeked', onSeeked, { once: true }); } catch (e) { v.__ncFrameReady = true; }
             }
-            writingOurs = true;
-            try { v.currentTime = next; } finally { writingOurs = false; }
+            v.currentTime = next;
             /* ONLY WAIT FOR A CLIP THAT WAS ALREADY WORKING, and only while
                it keeps working. Both halves close the same door the old
                global test left open.

@@ -3139,7 +3139,14 @@
    eight frames, from 14.1s to the end. It is given a long window and then
    reissued. Also drives any clip the bundle steers, not only ones it
    called play() on. */
-const CACHE = 'novaclip-v214';
+/* v215 takes back the change v214 shipped. Driving every element the bundle
+   had ever touched meant seeking five clips per captured frame, and a
+   software decoder given five seeks at once finishes none in time — the
+   stretch from 4s to 13s of the next export fell from 25-30 distinct frames
+   a second to between 2 and 10, 348 of 592 down to 214. Only clips the
+   bundle has played are driven again. The stuck-seek recovery v214 also
+   added is kept: that part worked. */
+const CACHE = 'novaclip-v215';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance
