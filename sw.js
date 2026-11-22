@@ -3161,7 +3161,7 @@
    longer string. Every page load handed it back: the end date reset to day one
    and the "your trial has started" banner returned for ever. nc_trial and
    nc_pro now merge on what their fields mean, and 'announce' is never pushed. */
-const CACHE = 'novaclip-v217';
+const CACHE = 'novaclip-v218';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

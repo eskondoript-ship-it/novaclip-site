@@ -712,6 +712,7 @@ const T = {
      something by a name the rest of the site does not use. Only the lines
      under them are new.
      ------------------------------------------------------------------ */
+  hero_what: { en:"A <b>free video editor</b> in your browser, and the tools to plan, make and post.", zh:"浏览器里的<b>免费视频剪辑器</b>，以及策划、制作和发布的工具。", hi:"ब्राउज़र में <b>मुफ़्त वीडियो एडिटर</b>, और प्लान करने, बनाने व पोस्ट करने के टूल।", es:"Un <b>editor de vídeo gratis</b> en tu navegador, y las herramientas para planear, crear y publicar.", ar:"<b>محرّر فيديو مجاني</b> في متصفحك، وأدوات للتخطيط والصنع والنشر.", fr:"Un <b>éditeur vidéo gratuit</b> dans ton navigateur, et les outils pour planifier, créer et publier.", bn:"ব্রাউজারে <b>বিনামূল্যে ভিডিও এডিটর</b>, আর পরিকল্পনা, তৈরি ও পোস্ট করার টুল।", pt:"Um <b>editor de vídeo grátis</b> no teu navegador, e as ferramentas para planear, criar e publicar.", ru:"<b>Бесплатный видеоредактор</b> в браузере и инструменты, чтобы спланировать, снять и выложить.", ur:"براؤزر میں <b>مفت ویڈیو ایڈیٹر</b>، اور منصوبہ بندی، بنانے اور پوسٹ کرنے کے ٹولز۔", id:"<b>Editor video gratis</b> di peramban, plus alat untuk merencanakan, membuat, dan memposting.", de:"Ein <b>kostenloser Videoeditor</b> im Browser, dazu die Werkzeuge zum Planen, Machen und Posten.", ja:"ブラウザで動く<b>無料の動画エディタ</b>と、企画・制作・投稿のためのツール。", tr:"Tarayıcında <b>ücretsiz video düzenleyici</b> ve planlamak, yapmak, paylaşmak için araçlar.", ko:"브라우저에서 바로 쓰는 <b>무료 영상 편집기</b>, 그리고 기획·제작·업로드 도구.", fa:"یک <b>ویرایشگر ویدیوی رایگان</b> در مرورگر، به‌همراه ابزارهای برنامه‌ریزی، ساخت و انتشار.", uk:"<b>Безкоштовний відеоредактор</b> у браузері та інструменти, щоб спланувати, зняти й викласти.", it:"Un <b>editor video gratuito</b> nel browser, e gli strumenti per pianificare, creare e pubblicare.", pl:"<b>Darmowy edytor wideo</b> w przeglądarce i narzędzia do planowania, tworzenia i publikowania.", vi:"<b>Trình chỉnh sửa video miễn phí</b> ngay trên trình duyệt, cùng công cụ để lên kế hoạch, làm và đăng." },
   sec_what: { en:"What it is", zh:"它是什么", hi:"यह क्या है", es:"Qué es", ar:"ما هذا", fr:"Ce que c'est", bn:"এটা কী", pt:"O que é", ru:"Что это", ur:"یہ کیا ہے", id:"Apa ini", de:"Was es ist", ja:"これは何か", tr:"Bu nedir", ko:"이게 뭐냐면", fa:"این چیست", uk:"Що це", it:"Che cos'è", pl:"Czym to jest", vi:"Đây là gì" },
   what_h: { en:"One tab,<span class='thin'>the whole channel.</span>", zh:"一个标签页，<span class='thin'>整个频道。</span>", hi:"एक टैब,<span class='thin'>पूरा चैनल।</span>", es:"Una pestaña,<span class='thin'>todo el canal.</span>", ar:"تبويب واحد،<span class='thin'>القناة كلها.</span>", fr:"Un onglet,<span class='thin'>toute la chaîne.</span>", bn:"একটি ট্যাব,<span class='thin'>পুরো চ্যানেল।</span>", pt:"Um separador,<span class='thin'>o canal inteiro.</span>", ru:"Одна вкладка,<span class='thin'>весь канал.</span>", ur:"ایک ٹیب،<span class='thin'>پورا چینل۔</span>", id:"Satu tab,<span class='thin'>seluruh kanal.</span>", de:"Ein Tab,<span class='thin'>der ganze Kanal.</span>", ja:"タブひとつで、<span class='thin'>チャンネルのすべて。</span>", tr:"Tek sekme,<span class='thin'>tüm kanal.</span>", ko:"탭 하나로,<span class='thin'>채널 전부.</span>", fa:"یک تب،<span class='thin'>تمام کانال.</span>", uk:"Одна вкладка,<span class='thin'>увесь канал.</span>", it:"Una scheda,<span class='thin'>tutto il canale.</span>", pl:"Jedna karta,<span class='thin'>cały kanał.</span>", vi:"Một thẻ,<span class='thin'>cả kênh.</span>" },
   /* "one caption that fits every platform", not "posts for you". publish.html
@@ -5040,9 +5041,97 @@ async function ncSignIn(code) {
   return out;
 }
 
+/* ============================================================================
+   THE EDIT FOLLOWS THE ACCOUNT. THE FOOTAGE DOES NOT.
+   --------------------------------------------------------------------------
+   Everything above syncs by a fixed list of keys. A project cannot be on that
+   list, because its key carries the project's id — novaclip_project:a1b2c3 —
+   so it is matched by shape instead.
+
+   WHAT A PROJECT IS. Four to six kilobytes of JSON: the tracks, the clips and
+   where they were cut, the effects, the text, the markers, the settings. It is
+   the list of decisions, not the video. The video is never in it.
+
+   EXCEPT FOR ONE THING, AND IT MATTERS. Each asset carries a `thumbnail`, and
+   the project index carries a `thumb`, both base64 JPEGs — and those are
+   frames of somebody's actual footage. The whole product rests on the footage
+   staying on the device, so a frame of it must not travel either. They are
+   stripped before anything is pushed. They are also most of the bytes, so the
+   payload drops to about a third.
+
+   WHAT THIS DOES AND DOES NOT SAVE. Clearing browser data takes the footage
+   with it, and no backup here can bring that back, because it was never sent.
+   What comes back is the edit: every cut, every effect, in order, waiting for
+   the clips to be pointed at again. That is the part that took the evening. */
+const NC_PROJECT_KEY = /^novaclip_project(s|_current)?(:|$)/;
+function ncIsSyncable(k) {
+  return NC_SYNC_KEYS.indexOf(k) >= 0 || NC_PROJECT_KEY.test(k);
+}
+
+/* A frame of their video is their video. */
+function ncStripFrames(raw) {
+  try {
+    const scrub = function (x) {
+      if (Array.isArray(x)) return x.map(scrub);
+      if (x && typeof x === 'object') {
+        const r = {};
+        for (const k in x) {
+          if ((k === 'thumbnail' || k === 'thumb' || k === 'poster')
+              && typeof x[k] === 'string' && x[k].slice(0, 5) === 'data:') continue;
+          r[k] = scrub(x[k]);
+        }
+        return r;
+      }
+      return x;
+    };
+    return JSON.stringify(scrub(JSON.parse(raw)));
+  } catch (e) { return raw; }
+}
+
+/* Projects merge on `at`, the moment they were last saved — the one field that
+   actually says which copy is newer. The index is a list, so it merges entry
+   by entry on the same field, and a local thumbnail is kept because the remote
+   copy deliberately has none. */
+function ncMergeProject(key, mineRaw, theirsRaw) {
+  let a = null, b = null;
+  try { a = JSON.parse(mineRaw); } catch (e) {}
+  try { b = JSON.parse(theirsRaw); } catch (e) {}
+  if (b === null || b === undefined) return null;
+  if (a === null || a === undefined) return theirsRaw;
+
+  if (Array.isArray(a) && Array.isArray(b)) {            /* novaclip_projects */
+    const byId = {};
+    a.forEach(function (e) { if (e && e.id) byId[e.id] = e; });
+    b.forEach(function (e) {
+      if (!e || !e.id) return;
+      const mine = byId[e.id];
+      if (!mine) { byId[e.id] = e; return; }
+      if ((+e.at || 0) > (+mine.at || 0)) {
+        /* keep the picture this device already has: the other side has none */
+        byId[e.id] = mine.thumb ? Object.assign({}, e, { thumb: mine.thumb }) : e;
+      }
+    });
+    const out = Object.keys(byId).map(function (k) { return byId[k]; })
+      .sort(function (x, y) { return (+y.at || 0) - (+x.at || 0); });
+    const s = JSON.stringify(out);
+    return s === mineRaw ? null : s;
+  }
+  if (typeof a !== 'object' || typeof b !== 'object') return null;  /* _current */
+  return (+b.at || 0) > (+a.at || 0) ? theirsRaw : null;
+}
+
 function ncCollect() {
   const data = {};
   NC_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+  /* The projects, by shape rather than by name, with the frames taken out. */
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !NC_PROJECT_KEY.test(k) || data[k] !== undefined) continue;
+      const v = localStorage.getItem(k);
+      if (v !== null) data[k] = ncStripFrames(v);
+    }
+  } catch (e) {}
   /* 'announce' is a note to THIS browser that it still owes somebody a banner,
      not account state. It was being pushed because the trial pushes the moment
      it is granted, which is before the banner has been on screen long enough
@@ -5117,9 +5206,14 @@ function ncMerge(remote) {
      another device. */
   const numeric = { nc_points: 1, nc_flap_best: 1, nc_aim_best: 1, nc_reaction_best: -1 };
   for (const k in remote) {
-    if (NC_SYNC_KEYS.indexOf(k) < 0) continue;
+    if (!ncIsSyncable(k)) continue;
     const mine = localStorage.getItem(k), theirs = remote[k];
     if (mine === theirs) continue;
+    if (NC_PROJECT_KEY.test(k)) {
+      const merged = mine === null ? theirs : ncMergeProject(k, mine, theirs);
+      if (merged !== null && merged !== mine) { localStorage.setItem(k, merged); changed++; }
+      continue;
+    }
     if (numeric[k]) {
       const a = parseInt(mine, 10) || 0, b = parseInt(theirs, 10) || 0;
       /* Direction matters. Everything here is "keep the bigger number" except
@@ -5166,6 +5260,28 @@ function ncSyncSoon() {
   clearTimeout(ncPushTimer);
   ncPushTimer = setTimeout(() => ncPush().catch(e => console.warn('sync push failed', e)), 4000);
 }
+
+/* SAVING AN EDIT HAS TO ARM THE PUSH, AND NOTHING WAS DOING IT.
+   Points, skills and plans all call ncSyncSoon when they change. The editor
+   cannot: it is a bundle of its own and writes novaclip_project:… straight to
+   localStorage, with no way to reach into this file. So the backup only went
+   up when the page was closed — and a tab that crashes, or a phone that kills
+   it, never gets there. Watching the write is the one hook that does not mean
+   editing the bundle. */
+(function ncWatchProjectSaves() {
+  try {
+    const set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k, v) {
+      const out = set.apply(this, arguments);
+      try {
+        if (this === window.localStorage && typeof k === 'string' && NC_PROJECT_KEY.test(k)) {
+          ncSyncSoon();
+        }
+      } catch (e) {}
+      return out;
+    };
+  } catch (e) {}
+})();
 async function ncSyncBoot() {
   if (!ncSyncOn()) return;
   try {

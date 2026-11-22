@@ -213,6 +213,13 @@ h1 .n{color:var(--cyan);text-shadow:0 0 40px rgba(0,240,255,.4);display:inline-b
 h1 .m{color:var(--magenta);text-shadow:0 0 40px rgba(255,46,151,.4);display:inline-block;animation:fadeSlide .8s .75s both,neonPulse2 3s 2s ease-in-out infinite}
 @keyframes neonPulse{0%,100%{text-shadow:0 0 40px rgba(0,240,255,.4)}50%{text-shadow:0 0 70px rgba(0,240,255,.8),0 0 20px rgba(0,240,255,.6)}}
 @keyframes neonPulse2{0%,100%{text-shadow:0 0 40px rgba(255,46,151,.4)}50%{text-shadow:0 0 70px rgba(255,46,151,.8),0 0 20px rgba(255,46,151,.6)}}
+/* ONE PLAIN SENTENCE, BEFORE THE SLOGAN GETS CLEVER. "Run your channel like a
+   game" is the phrase and it stays, but it tells somebody who has never heard
+   of a creator toolkit nothing at all about what this is. This line does. */
+.hero-what{margin:22px 0 0;max-width:620px;font-size:clamp(1rem,1.7vw,1.2rem);
+  line-height:1.5;color:var(--dim);animation:fadeSlide 1s .75s both}
+.hero-what b{color:var(--fg,#fff);font-weight:700}
+@media (max-width:760px){.hero-what{margin-top:16px;font-size:1rem}}
 .console{margin:28px 0 32px;font-family:'Consolas',monospace;font-size:clamp(.95rem,1.6vw,1.15rem);color:var(--dim);max-width:620px;min-height:3.2em;animation:fadeSlide 1s .9s both}
 .console .cursor{color:var(--cyan);animation:cur .8s step-end infinite}
 @keyframes cur{50%{opacity:0}}
@@ -613,6 +620,7 @@ html.nc-rtl .ticker, html.nc-rtl .marquee { direction:ltr; }
   </div>
   <span class='eyebrow' data-t='eyebrow'>For teen creators · 13–18</span>
   <h1><span class='hl1' data-t='hero_line1'>Run your <b class='n'>channel</b></span><span class='hl2' data-t='hero_line2'>like a <b class='m'>game.</b></span></h1>
+  <p class='hero-what' data-t='hero_what'>A <b>free video editor</b> in your browser, and the tools to plan, make and post.</p>
   <div class='console' aria-hidden='true'><span id='type'></span><span class='cursor'>▋</span></div>
   <div class='herobtns'>
     <a href='analytics.html'><button class='btn-primary' data-t='startchannel'>Start your channel →</button></a>
