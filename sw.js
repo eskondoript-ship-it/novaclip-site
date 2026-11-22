@@ -3153,7 +3153,15 @@
    scroll. It is the column's width now, like Media, Text and the rest, and
    the grid, the card text, the header and the footer all come in to suit it:
    measured 1 effect visible before, 6 after, at the same window size. */
-const CACHE = 'novaclip-v216';
+/* v217: the trial countdown stood still. The account sync merges non-numeric
+   keys by keeping whichever side is the longer string — right for a list,
+   meaningless for a dated record. nc_trial is pushed the moment the trial is
+   granted, which is before the start banner has been on screen long enough to
+   be forgotten, so the server's copy kept 'announce' and was permanently the
+   longer string. Every page load handed it back: the end date reset to day one
+   and the "your trial has started" banner returned for ever. nc_trial and
+   nc_pro now merge on what their fields mean, and 'announce' is never pushed. */
+const CACHE = 'novaclip-v217';
 
 /* Kept deliberately short: the shell of the site and the things a first
    offline launch cannot do without. Every extra file here is another chance

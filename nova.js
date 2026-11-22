@@ -5043,7 +5043,66 @@ async function ncSignIn(code) {
 function ncCollect() {
   const data = {};
   NC_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+  /* 'announce' is a note to THIS browser that it still owes somebody a banner,
+     not account state. It was being pushed because the trial pushes the moment
+     it is granted, which is before the banner has been on screen long enough
+     to be forgotten — so the server kept a copy carrying it, that copy was a
+     longer string than the local one, and the merge below handed it back on
+     every single load. The banner came back for ever and the end date came
+     back with it. */
+  if (data.nc_trial) {
+    try {
+      const t = JSON.parse(data.nc_trial);
+      if (t && t.announce) { delete t.announce; data.nc_trial = JSON.stringify(t); }
+    } catch (e) {}
+  }
   return data;
+}
+
+/* THE TRIAL IS A DATED RECORD, AND LENGTH SAYS NOTHING ABOUT A DATE.
+   The general rule below — keep whichever side is the longer string — is right
+   for a list, where longer means more was collected. For nc_trial it is
+   meaningless: it handed back whichever copy happened to serialise longer,
+   dragging that copy's end date along with it, so a trial could be reset to
+   its first day by the sync. These two merge on what the fields mean.
+
+   Across devices the trial follows the account, so neither side may extend it:
+   more rounds wins, and on the same round the EARLIER end date wins, which is
+   the one a second device cannot push out by being opened later. */
+function ncMergeTrial(mineRaw, theirsRaw) {
+  let a = null, b = null;
+  try { a = JSON.parse(mineRaw); } catch (e) {}
+  try { b = JSON.parse(theirsRaw); } catch (e) {}
+  if (!b || typeof b !== 'object') return null;      /* nothing usable remotely */
+  if (!a || typeof a !== 'object') return theirsRaw;
+  const out = Object.assign({}, a);
+  const ra = a.rounds || 1, rb = b.rounds || 1;
+  if (rb > ra) { out.rounds = rb; out.until = b.until; }
+  else if (rb === ra && b.until && a.until
+           && Date.parse(b.until) < Date.parse(a.until)) { out.until = b.until; }
+  if (a.started && b.started) out.started = Date.parse(b.started) < Date.parse(a.started)
+    ? b.started : a.started;
+  else out.started = a.started || b.started;
+  /* Once it has ended anywhere it has ended everywhere. */
+  if (b.ended) { out.ended = true; out.endedAt = out.endedAt || b.endedAt; }
+  delete out.announce;                                /* never arrives from away */
+  const s = JSON.stringify(out);
+  return s === mineRaw ? null : s;
+}
+
+/* A plan somebody is PAYING for always beats a trial, whichever is longer as a
+   string. Between two trials the later grant wins, because that is the round
+   the account has reached. */
+function ncMergePro(mineRaw, theirsRaw) {
+  let a = null, b = null;
+  try { a = JSON.parse(mineRaw); } catch (e) {}
+  try { b = JSON.parse(theirsRaw); } catch (e) {}
+  if (!b || typeof b !== 'object') return null;
+  if (!a || typeof a !== 'object') return theirsRaw;
+  if (a.trial && !b.trial) return theirsRaw;          /* theirs is paid */
+  if (!a.trial) return null;                          /* mine is paid, keep it */
+  const sa = Date.parse(a.since || 0) || 0, sb = Date.parse(b.since || 0) || 0;
+  return sb > sa ? theirsRaw : null;
 }
 /* Merging, not overwriting. Two devices both hold a points total; taking the
    server's blindly would wipe a session played offline, so points and counters
@@ -5072,6 +5131,12 @@ function ncMerge(remote) {
         ? (b > 0 && (a === 0 || b < a))
         : (b > a);
       if (better) { localStorage.setItem(k, String(b)); changed++; }
+    } else if (k === 'nc_trial' || k === 'nc_pro') {
+      /* Dated entitlement records. Merged on what the fields mean, never on
+         which string is longer — see ncMergeTrial above for why. */
+      const merged = mine === null ? theirs
+        : (k === 'nc_trial' ? ncMergeTrial(mine, theirs) : ncMergePro(mine, theirs));
+      if (merged !== null && merged !== mine) { localStorage.setItem(k, merged); changed++; }
     } else if (mine === null || String(theirs).length > String(mine).length) {
       localStorage.setItem(k, theirs); changed++;
     }
