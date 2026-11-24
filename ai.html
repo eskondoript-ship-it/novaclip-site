@@ -278,10 +278,14 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
         <div>
           <label class='f' for='subject'>What about?</label>
           <select id='subject' class='f'>
-            <option value='youtube'>YouTube &amp; Shorts growth</option>
+            <!-- Explicitly selected rather than relying on being first: a new
+                 option added above this line would silently become the default,
+                 and the YouTube coach is what this page is for. -->
+            <option value='youtube' selected>YouTube &amp; Shorts growth</option>
             <option value='gaming'>Gaming clips</option>
             <option value='business'>Money &amp; side hustles</option>
             <option value='space'>Space &amp; science</option>
+            <option value='general'>Anything else</option>
           </select>
         </div>
         <div>
@@ -500,7 +504,16 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
     business:'You are NovaClip, a money and side-hustle tutor for teenagers. Realistic about what a ' +
              'teenager can actually earn, and honest about what is a scam. ',
     space:   'You are NovaClip, a space and science tutor for teenagers. Rockets, black holes, ' +
-             'missions, and why any of it matters. '
+             'missions, and why any of it matters. ',
+    /* The catch-all. The four above are coaches with a subject; this one takes
+       whatever is actually being asked — homework, a skill, a thing they are
+       stuck on — and is deliberately told to say when a question is outside
+       what it knows, because a general tutor with no subject to anchor it is
+       the one most likely to answer confidently about nothing. */
+    general: 'You are NovaClip, a general tutor for teenagers. Answer whatever they ask, whether it ' +
+             'is schoolwork, a skill they are learning, something they are stuck on, or making videos. ' +
+             'Work out what they are really asking before you answer it. If a question is outside what ' +
+             'you know well, say which part you are unsure of rather than answering all of it evenly. '
   };
 
   /* The safety method, kept word for word from the page this replaces. It is
@@ -538,7 +551,9 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   }
   const genz = () => (typeof ncGenZ === 'function') ? ncGenZ() : true;
   function persona() {
-    return PERSONAS[$('subject').value] + METHOD + catNote() + (genz() ? SLANG() : PLAIN) + proDepth().extra +
+    /* || youtube: an unknown value used to put the literal word "undefined" at
+       the head of the prompt, which the model then had to ignore. */
+    return (PERSONAS[$('subject').value] || PERSONAS.youtube) + METHOD + catNote() + (genz() ? SLANG() : PLAIN) + proDepth().extra +
            (typeof langInstruction === 'function' ? langInstruction() : '');
   }
   function paintVibe() { $('vibe').textContent = genz() ? 'Gen Z 🔥' : 'Plain English'; }
