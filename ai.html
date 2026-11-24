@@ -551,9 +551,19 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
   }
   const genz = () => (typeof ncGenZ === 'function') ? ncGenZ() : true;
   function persona() {
+    const subject = $('subject').value;
+    /* catNote() says "the creator makes X content", which is right for the four
+       coaches and wrong here: Anything else is the one subject where the
+       question is often not about their channel at all. With a category set to
+       Sports, "write a description for my website" came back as three TikTok
+       bios full of football emojis, because the only concrete noun in the
+       prompt was the one this sentence put there. Same reasoning as the clip
+       extractor and the thumbnail prompt above: a category helps a prompt that
+       is already about their channel, and hijacks one that is not. */
+    const note = subject === 'general' ? '' : catNote();
     /* || youtube: an unknown value used to put the literal word "undefined" at
        the head of the prompt, which the model then had to ignore. */
-    return (PERSONAS[$('subject').value] || PERSONAS.youtube) + METHOD + catNote() + (genz() ? SLANG() : PLAIN) + proDepth().extra +
+    return (PERSONAS[subject] || PERSONAS.youtube) + METHOD + note + (genz() ? SLANG() : PLAIN) + proDepth().extra +
            (typeof langInstruction === 'function' ? langInstruction() : '');
   }
   function paintVibe() { $('vibe').textContent = genz() ? 'Gen Z 🔥' : 'Plain English'; }
