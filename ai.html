@@ -755,7 +755,23 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
       'teenager. About: ' + idea,
       { model: 'gemini-2.5-flash-image' });
     $('thumbBtn').disabled = false;
-    if (r.err) return say('thumbSay', 'no', 'Could not reach the AI', r.err);
+    /* A quota message written for the text models is wrong here. Google meters
+       image generation on its own, far smaller allowance, so this tab can be
+       out while every other tab on the page is fine — and "come back in a few
+       minutes", which is true of the text quota, sends somebody away to retry
+       something that will still be empty. ai-worker.js has one image model in
+       ALLOWED_MODELS and images deliberately never fall back to a text model,
+       so when that one says 429 there is nothing else to ask. */
+    if (r.err) {
+      const quota = /out of free|quota|rate limit|exhausted/i.test(r.err);
+      return say('thumbSay', 'no',
+        quota ? 'The image allowance is used up' : 'Could not reach the AI',
+        quota
+          ? 'Google meters pictures separately from text, on a much smaller allowance, and this ' +
+            'one has run out. Every other tab on this page still works. It does not always come ' +
+            'back within minutes — if you need a thumbnail today, make it in the Photo tool.'
+          : r.err);
+    }
     if (!r.image) return say('thumbSay', 'no', 'No image came back',
       'The image model may be busy. The text models on the other tabs are unaffected — try again in a minute.');
     say('thumbSay', 'yes', 'Done', 'Shrink it on screen before you commit — if it does not read small, it does not work.');
