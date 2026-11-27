@@ -527,6 +527,16 @@ img#thumbOut{width:100%;max-width:560px;border-radius:16px;margin-top:16px;displ
     'do not be encouraging about something that will waste their time. ' +
     'If you do not know, say you do not know rather than inventing statistics. ' +
     'End with one single next action. ' +
+    /* The answer is written into textContent, so markdown arrives as
+       punctuation: a recording of this page shows "**The Strategy:**" and
+       "**My Pick:**" printed with the asterisks, all the way down a good
+       answer. nova-help.js and editor-help.js have said "no markdown" since
+       they were written; this prompt was the one that never did. Plain
+       numbered lines still come out as numbered lines, which is the structure
+       that was wanted — it is only the bold markers that were noise. */
+    'FORMATTING: write plain text. No markdown, no asterisks for bold, no hash ' +
+    'headings, no backticks. Separate points with a blank line, and number a list ' +
+    'with "1." at the start of the line. ' +
     'SAFETY: your reader is 13-18. Never ask for or repeat personal details, never suggest meeting anyone ' +
     'from the internet, never suggest anything that needs a parent\'s card or bank account without saying ' +
     'to ask them first, and if they mention being hurt, bullied or unsafe, tell them to talk to a trusted ' +
