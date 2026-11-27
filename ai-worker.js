@@ -85,7 +85,8 @@
      candidates[].content.parts. A search request also carries the live results
      in groundingMetadata.groundingChunks[].web.uri/title, which ncAsk turns
      into a clickable source list. For openrouter and openai: the answer is
-     normalized into that same shape. /tts answers with the MP3 itself. On any
+     normalized into that same shape. /tts answers with the audio itself, as a
+     WAV. On any
      failure: { "error": "<reason a person can act on>" } with a real HTTP status.
    ============================================================================ */
 
@@ -700,15 +701,69 @@ function hasVideoPart(payload) {
   } catch (e) { return false; }
 }
 
-/* Jarvis's voice. POST /tts turns text into MP3 with Gemini's TTS model. The
+/* Jarvis's voice. POST /tts turns text into a WAV with Gemini's TTS model. The
    voice list is closed so callers cannot experiment against your key, and the
    text is capped at roughly a breath's worth of speech — Jarvis's replies are
    already kept short, and there is no reason to allow a script to read a novel
-   through your free quota. */
+   through your free quota.
+
+   IT SAID MP3 AND IT WAS NEVER MP3, AND IT NEVER WORKED
+
+   This asked for generationConfig.audioConfig = { audioEncoding: 'MP3' }.
+   There is no such field on this API. Google did not ignore it, it refused the
+   whole request:
+
+       400  Invalid JSON payload received. Unknown name "audioConfig"
+            at 'generation_config': Cannot find field.
+
+   So every press of the voice button since this shipped answered 400, and the
+   message a listener saw was whatever that status mapped to. Measured against
+   the deployed worker before this change.
+
+   What the model actually returns is raw signed 16-bit little-endian PCM, one
+   channel, with a mimeType of audio/L16;codec=pcm;rate=24000. No browser plays
+   that: <audio> wants a container. So the bytes are given a 44-byte WAV header
+   here and served as audio/wav, which every browser does play, and the format
+   is no longer a sentence in a comment that disagrees with the code. */
 const TTS_MODEL = 'gemini-2.5-flash-tts';
 const TTS_VOICE = 'Orus';               // calm, measured male — the default Jarvis
 const TTS_VOICES = ['Orus', 'Charon', 'Zephyr', 'Puck', 'Kore', 'Fenrir', 'Aoede', 'Leda'];
 const TTS_MAX_TEXT = 2000;              // characters
+
+/* The sample rate Gemini says it used, read off the mimeType it sent back
+   rather than assumed. It has been 24000 every time, but a header that says
+   24000 over 48000 samples is a recording at half speed, and that is a bug
+   nobody would look for in a worker. */
+function pcmRate(mime) {
+  const m = /rate=(\d+)/.exec(String(mime || ''));
+  const n = m ? parseInt(m[1], 10) : 0;
+  return (n >= 8000 && n <= 192000) ? n : 24000;
+}
+
+/* Raw PCM with a WAV header in front of it. Mono, 16-bit, which is what this
+   model returns; nothing here tries to be a general converter. */
+function wavFromPcm(pcm, rate) {
+  const channels = 1, bits = 16;
+  const blockAlign = channels * bits / 8;
+  const out = new Uint8Array(44 + pcm.length);
+  const view = new DataView(out.buffer);
+  const ascii = (at, s) => { for (let i = 0; i < s.length; i++) out[at + i] = s.charCodeAt(i); };
+  ascii(0, 'RIFF');
+  view.setUint32(4, 36 + pcm.length, true);   /* everything after this field */
+  ascii(8, 'WAVE');
+  ascii(12, 'fmt ');
+  view.setUint32(16, 16, true);               /* PCM fmt chunk is 16 bytes */
+  view.setUint16(20, 1, true);                /* 1 = uncompressed PCM */
+  view.setUint16(22, channels, true);
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bits, true);
+  ascii(36, 'data');
+  view.setUint32(40, pcm.length, true);
+  out.set(pcm, 44);
+  return out;
+}
 
 /* CORS is wide open on purpose: the site is static and may be served from
    novaclip.org, a Pages preview host, and file:// during development. The key
@@ -1655,8 +1710,7 @@ export default {
             contents: [{ parts: [{ text: text }] }],
             generationConfig: {
               responseModalities: ['AUDIO'],
-              speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
-              audioConfig: { audioEncoding: 'MP3' }
+              speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } }
             }
           }),
           signal: abort.signal
@@ -1694,10 +1748,18 @@ export default {
         bytes = Uint8Array.from(atob(inline.data), function (c) { return c.charCodeAt(0); });
       } catch (e) { return fail(502, 'The speech service sent audio this worker could not decode.'); }
 
-      return new Response(bytes, {
+      /* Anything already in a container goes out untouched — if this model
+         ever starts answering with real MP3, that is a better answer than a
+         WAV and nothing here should get in its way. Bare PCM is the case that
+         needs the header. */
+      const mime = String(inline.mimeType || '');
+      const isPcm = /audio\/(l16|pcm)|codec=pcm/i.test(mime);
+      const audio = isPcm ? wavFromPcm(bytes, pcmRate(mime)) : bytes;
+
+      return new Response(audio, {
         status: 200,
         headers: {
-          'Content-Type': inline.mimeType || 'audio/mpeg',
+          'Content-Type': isPcm ? 'audio/wav' : (mime || 'audio/mpeg'),
           'Cache-Control': 'no-store',
           ...CORS
         }
